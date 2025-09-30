@@ -53,69 +53,54 @@
     <!-- Decap CMS mounts here -->
     <div id="nc-root" class="cms-root"></div>
 
+    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+
     <script>
-      // We’ll manually init so we can try multiple config locations.
+      // Inline Decap config so we don't rely on /admin/config.yml being served
       window.CMS_MANUAL_INIT = true;
 
-      function bootCMS() {
-        // Optional: show quick links to test locations when `?debug=1` is present
-        const showDebug = new URLSearchParams(location.search).has('debug');
-        if (showDebug) {
-          const links = [
-            './config.yml',
-            'config.yml',
-            '/admin/config.yml',
-            '/admin/config.yaml',
-            '/config.yml'
-          ].map(p => `<li><a style="color:#8ab4f8" href="${p}" target="_blank" rel="noopener">${p}</a></li>`).join('');
-
-          const el = document.getElementById('nc-root');
-          el.insertAdjacentHTML('beforebegin', `
-            <div style="max-width:680px;margin:16px auto 0;padding:12px;border:1px solid #333;border-radius:8px;background:#13161c">
-              <strong>Debug mode:</strong> Click a path below to see if your <code>config.yml</code> is reachable.
-              <ul style="margin:8px 0 0 18px">${links}</ul>
-            </div>`);
-        }
-        // Try common locations in order. You can add/remove paths as needed.
-        const candidates = [
-          './config.yml',         // relative to /admin/
-          'config.yml',           // another relative form
-          '/admin/config.yml',    // absolute
-          '/admin/config.yaml',   // absolute, alt extension
-          '/config.yml'           // site root as a last resort
-        ];
-
-        // Probe a path; if it’s good, init Decap with that path.
-        const tryNext = () => {
-          const p = candidates.shift();
-          if (!p) {
-            const el = document.getElementById('nc-root');
-            el.innerHTML = `
-              <div style="max-width:680px;margin:24px auto;padding:16px;border:1px solid #333;border-radius:8px;background:#13161c">
-                <h2 style="margin:0 0 8px">Error loading the CMS configuration</h2>
-                <p style="margin:0 0 8px;color:#9aa3ad">
-                  I tried <code>/admin/config.yml</code>, <code>/admin/config.yaml</code> and <code>/config.yml</code>, but none were found.
-                </p>
-                <p style="margin:0;color:#9aa3ad">
-                  Make sure the file exists in your deployed app, or move it to one of those paths.
-                </p>
-              </div>`;
-            return;
-          }
-
-          // Test the path without parsing, just to see if the file exists (avoids a CMS error page).
-          fetch(p + '?t=' + Date.now(), { cache: 'no-store' })
-            .then(res => {
-              if (!res.ok) throw new Error('not found');
-              // Great — init Decap pointing at this config URL.
-              CMS.init({ configPath: p + '?v=' + Date.now() });
-            })
-            .catch(tryNext);
+      (function () {
+        const config = {
+          backend: {
+            name: "github",
+            repo: "niallclarke-spec/couponpro",
+            branch: "main",
+            base_url: "https://couponpro-o4fjo.ondigitalocean.app",
+            auth_endpoint: "/auth"
+          },
+          media_folder: "assets/uploads",
+          public_folder: "/assets/uploads",
+          media_library: { name: "git" },
+          collections: [
+            {
+              name: "uploads",
+              label: "Uploads",
+              label_singular: "Upload",
+              description: "Simple media uploads into assets/uploads",
+              files: [
+                {
+                  file: "assets/uploads/.keep",
+                  label: "Upload Media",
+                  name: "media",
+                  fields: [
+                    { label: "Upload files", name: "files", widget: "file", multiple: true, allow_multiple: true }
+                  ]
+                }
+              ]
+            }
+          ]
         };
 
-        tryNext();
-      }
+        function start() {
+          if (window.CMS && window.CMS.init) {
+            window.CMS.init({ config });
+          } else {
+            setTimeout(start, 50);
+          }
+        }
+
+        start();
+      })();
     </script>
-    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js" onload="bootCMS()"></script>
   </body>
 </html>
