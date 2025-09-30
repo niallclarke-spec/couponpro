@@ -1,12 +1,13 @@
 backend:
   name: github
-  repo: YOUR_GITHUB_USERNAME/YOUR_REPO
+  repo: niallclarke-spec/couponpro
   branch: main
-# For live GitHub auth later, add:
-#  base_url: https://your-oauth-app.domain
-#  auth_endpoint: /auth
+  # After we deploy the OAuth bridge, add:
+  # base_url: https://<your-oauth-domain>
+  # auth_endpoint: /auth
 
-local_backend: true
+# For production keep local_backend off. Use ?local_backend=true only on localhost.
+# local_backend: true
 
 media_folder: "assets/templates"      # where uploads are stored in the repo
 public_folder: "/assets/templates"    # how the site references them
