@@ -2,18 +2,12 @@ backend:
   name: github
   repo: niallclarke-spec/couponpro
   branch: main
-  # After we deploy the OAuth bridge, add:
+  # When we add OAuth, we’ll add:
   # base_url: https://<your-oauth-domain>
   # auth_endpoint: /auth
 
-# For production keep local_backend off. Use ?local_backend=true only on localhost.
-# local_backend: true
-
-media_folder: "assets/templates"      # where uploads are stored in the repo
-public_folder: "/assets/templates"    # how the site references them
-
-media_library:
-  name: "git"
+media_folder: "assets/templates"
+public_folder: "/assets/templates"
 
 collections:
   - label: "Promo Templates"
@@ -34,7 +28,6 @@ collections:
               - { label: "Name", name: "name", widget: "string" }
               - { label: "Notes (internal)", name: "meta", widget: "text", required: false }
               - { label: "Max Font (fallback px)", name: "maxFontPx", widget: "number", required: false }
-
               - label: "Variants"
                 name: "variants"
                 widget: "object"
