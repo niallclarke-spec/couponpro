@@ -53,12 +53,13 @@
     <!-- Decap CMS mounts here -->
     <div id="nc-root" class="cms-root"></div>
 
+    <script>
+      window.CMS_MANUAL_INIT = true;
+    </script>
     <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
 
     <script>
       // Inline Decap config so we don't rely on /admin/config.yml being served
-      window.CMS_MANUAL_INIT = true;
-
       (function () {
         const config = {
           backend: {
