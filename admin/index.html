@@ -58,11 +58,31 @@
       window.CMS_MANUAL_INIT = true;
 
       function bootCMS() {
+        // Optional: show quick links to test locations when `?debug=1` is present
+        const showDebug = new URLSearchParams(location.search).has('debug');
+        if (showDebug) {
+          const links = [
+            './config.yml',
+            'config.yml',
+            '/admin/config.yml',
+            '/admin/config.yaml',
+            '/config.yml'
+          ].map(p => `<li><a style="color:#8ab4f8" href="${p}" target="_blank" rel="noopener">${p}</a></li>`).join('');
+
+          const el = document.getElementById('nc-root');
+          el.insertAdjacentHTML('beforebegin', `
+            <div style="max-width:680px;margin:16px auto 0;padding:12px;border:1px solid #333;border-radius:8px;background:#13161c">
+              <strong>Debug mode:</strong> Click a path below to see if your <code>config.yml</code> is reachable.
+              <ul style="margin:8px 0 0 18px">${links}</ul>
+            </div>`);
+        }
         // Try common locations in order. You can add/remove paths as needed.
         const candidates = [
-          '/admin/config.yml',       // what we expect
-          '/admin/config.yaml',      // alt extension
-          '/config.yml'              // in case it’s in site root
+          './config.yml',         // relative to /admin/
+          'config.yml',           // another relative form
+          '/admin/config.yml',    // absolute
+          '/admin/config.yaml',   // absolute, alt extension
+          '/config.yml'           // site root as a last resort
         ];
 
         // Probe a path; if it’s good, init Decap with that path.
