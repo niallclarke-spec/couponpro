@@ -53,12 +53,16 @@
     <!-- Decap CMS mounts here -->
     <div id="nc-root" class="cms-root"></div>
 
-    <!-- Decap CMS core -->
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <!-- Decap CMS: manual init with absolute config URL -->
     <script>
-      // Ensure we don't use manual init; just load config.yml explicitly with a cache-buster
-      if (window.CMS_MANUAL_INIT) delete window.CMS_MANUAL_INIT;
-      CMS.init({ config: 'config.yml?v=' + Date.now() });
+      // Force manual init so we can point Decap at the exact config file.
+      window.CMS_MANUAL_INIT = true;
+
+      function bootCMS() {
+        // Use an absolute path to avoid any relative-path/BaseURL issues.
+        CMS.init({ configPath: '/admin/config.yml?v=' + Date.now() });
+      }
     </script>
+    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js" onload="bootCMS()"></script>
   </body>
 </html>
