@@ -53,14 +53,47 @@
     <!-- Decap CMS mounts here -->
     <div id="nc-root" class="cms-root"></div>
 
-    <!-- Decap CMS: manual init with absolute config URL -->
     <script>
-      // Force manual init so we can point Decap at the exact config file.
+      // We’ll manually init so we can try multiple config locations.
       window.CMS_MANUAL_INIT = true;
 
       function bootCMS() {
-        // Use an absolute path to avoid any relative-path/BaseURL issues.
-        CMS.init({ configPath: '/admin/config.yml?v=' + Date.now() });
+        // Try common locations in order. You can add/remove paths as needed.
+        const candidates = [
+          '/admin/config.yml',       // what we expect
+          '/admin/config.yaml',      // alt extension
+          '/config.yml'              // in case it’s in site root
+        ];
+
+        // Probe a path; if it’s good, init Decap with that path.
+        const tryNext = () => {
+          const p = candidates.shift();
+          if (!p) {
+            const el = document.getElementById('nc-root');
+            el.innerHTML = `
+              <div style="max-width:680px;margin:24px auto;padding:16px;border:1px solid #333;border-radius:8px;background:#13161c">
+                <h2 style="margin:0 0 8px">Error loading the CMS configuration</h2>
+                <p style="margin:0 0 8px;color:#9aa3ad">
+                  I tried <code>/admin/config.yml</code>, <code>/admin/config.yaml</code> and <code>/config.yml</code>, but none were found.
+                </p>
+                <p style="margin:0;color:#9aa3ad">
+                  Make sure the file exists in your deployed app, or move it to one of those paths.
+                </p>
+              </div>`;
+            return;
+          }
+
+          // Test the path without parsing, just to see if the file exists (avoids a CMS error page).
+          fetch(p + '?t=' + Date.now(), { cache: 'no-store' })
+            .then(res => {
+              if (!res.ok) throw new Error('not found');
+              // Great — init Decap pointing at this config URL.
+              CMS.init({ configPath: p + '?v=' + Date.now() });
+            })
+            .catch(tryNext);
+        };
+
+        tryNext();
       }
     </script>
     <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js" onload="bootCMS()"></script>
