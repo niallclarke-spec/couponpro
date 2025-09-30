@@ -52,8 +52,8 @@
     <script>window.CMS_MANUAL_INIT = true;</script>
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
     <script>
-      // Load config relative to /admin/
-      CMS.init({ config: 'config.yml' });
+      // Always load the live config from /admin and bust caches
+      CMS.init({ config: '/admin/config.yml?v=' + Date.now() });
     </script>
   </body>
 </html>
