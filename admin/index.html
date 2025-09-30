@@ -36,6 +36,13 @@
         max-width: 1200px;
         margin: 0 auto;
       }
+      .login-wrap { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); z-index: 10; }
+      .login-card { width: 320px; background:#12151c; border:1px solid #262b35; border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); }
+      .login-card h2 { margin:0 0 12px; font-size:18px; }
+      .login-card label { display:block; font-size:13px; color:#9aa3ad; margin:12px 0 6px; }
+      .login-card input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2d3442; background:#0b0c10; color:#e9eef5; }
+      .login-card button { width:100%; margin-top:14px; padding:10px 12px; border:0; border-radius:8px; background:#e94d65; color:#fff; font-weight:700; cursor:pointer; }
+      .login-card .err { color:#ff8080; font-size:12px; min-height:14px; margin-top:8px; }
     </style>
   </head>
   <body>
@@ -152,7 +159,50 @@
         ],
       };
 
-      CMS.init({ config: cmsConfig });
+      (function(){
+        const USER = 'admin';
+        const PASS = 'pasword123!'; // as requested
+        const KEY = 'ct_admin_ok';
+
+        function bootCMS(){ CMS.init({ config: cmsConfig }); }
+
+        if (sessionStorage.getItem(KEY) === '1') {
+          bootCMS();
+          return;
+        }
+
+        // Build a tiny login overlay
+        const wrap = document.createElement('div');
+        wrap.className = 'login-wrap';
+        wrap.innerHTML = `
+          <div class="login-card">
+            <h2>Admin Sign In</h2>
+            <label>Username</label>
+            <input id="lg-user" type="text" autocomplete="username" placeholder="admin" />
+            <label>Password</label>
+            <input id="lg-pass" type="password" autocomplete="current-password" placeholder="••••••••" />
+            <button id="lg-btn">Continue</button>
+            <div class="err" id="lg-err"></div>
+          </div>`;
+        document.body.appendChild(wrap);
+
+        const $u = wrap.querySelector('#lg-user');
+        const $p = wrap.querySelector('#lg-pass');
+        const $b = wrap.querySelector('#lg-btn');
+        const $e = wrap.querySelector('#lg-err');
+        $u.value = '';
+        $p.value = '';
+        $b.addEventListener('click', () => {
+          if ($u.value === USER && $p.value === PASS) {
+            sessionStorage.setItem(KEY, '1');
+            wrap.remove();
+            bootCMS();
+          } else {
+            $e.textContent = 'Invalid credentials';
+          }
+        });
+        $p.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') $b.click(); });
+      })();
     </script>
   </body>
 </html>
