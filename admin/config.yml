@@ -4,13 +4,8 @@ backend:
   name: github
   repo: niallclarke-spec/couponpro
   branch: main
-  # --- Enable this when your OAuth bridge (codetag-auth) has a Live URL ---
-  # base_url: https://<your-auth-app-domain>
-  # auth_endpoint: /auth
-  # ----------------------------------------------------------------------
-  # When we add OAuth, we’ll add:
-  # base_url: https://<your-oauth-domain>
-  # auth_endpoint: /auth
+  base_url: https://couponpro-o4fjo.ondigitalocean.app
+  auth_endpoint: /auth
 
 media_folder: "assets/templates"
 public_folder: "/assets/templates"
