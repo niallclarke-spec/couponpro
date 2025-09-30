@@ -52,8 +52,107 @@
     <script>window.CMS_MANUAL_INIT = true;</script>
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
     <script>
-      // Load the config (no external media library needed for repo storage)
-      CMS.init({ config: '/admin/config.yml?v=' + Date.now() });
+      // Inline config to avoid YAML fetch/caching/CDN headers issues
+      const cmsConfig = {
+        backend: {
+          name: 'github',
+          repo: 'niallclarke-spec/couponpro',
+          branch: 'main',
+          // When we deploy the OAuth bridge:
+          // base_url: 'https://<your-oauth-domain>',
+          // auth_endpoint: '/auth',
+        },
+        media_folder: 'assets/templates',
+        public_folder: '/assets/templates',
+        collections: [
+          {
+            label: 'Promo Templates',
+            name: 'templates',
+            format: 'json',
+            editor: { preview: false },
+            files: [
+              {
+                label: 'Templates JSON',
+                name: 'templates_json',
+                file: 'templates.json',
+                fields: [
+                  {
+                    label: 'Templates',
+                    name: 'templates',
+                    widget: 'list',
+                    collapsed: true,
+                    summary: '{{fields.name}}',
+                    fields: [
+                      { label: 'Name', name: 'name', widget: 'string' },
+                      { label: 'Notes (internal)', name: 'meta', widget: 'text', required: false },
+                      { label: 'Max Font (fallback px)', name: 'maxFontPx', widget: 'number', required: false },
+                      {
+                        label: 'Variants',
+                        name: 'variants',
+                        widget: 'object',
+                        fields: [
+                          {
+                            label: 'Square',
+                            name: 'square',
+                            widget: 'object',
+                            collapsed: true,
+                            fields: [
+                              { label: 'Image', name: 'src', widget: 'image', choose_url: false },
+                              { label: 'Max Font (px)', name: 'maxFontPx', widget: 'number', required: false },
+                              {
+                                label: 'Box',
+                                name: 'box',
+                                widget: 'object',
+                                required: false,
+                                collapsed: true,
+                                fields: [
+                                  { label: 'Left %', name: 'leftPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 10 },
+                                  { label: 'Top %', name: 'topPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 50 },
+                                  { label: 'Width %', name: 'widthPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 80 },
+                                  { label: 'Height %', name: 'heightPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 10 },
+                                  { label: 'H Align', name: 'hAlign', widget: 'select', options: ['left','center','right'], default: 'center' },
+                                  { label: 'V Align', name: 'vAlign', widget: 'select', options: ['top','middle','bottom'], default: 'middle' },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            label: 'Story',
+                            name: 'story',
+                            widget: 'object',
+                            collapsed: true,
+                            fields: [
+                              { label: 'Image', name: 'src', widget: 'image', choose_url: false },
+                              { label: 'Max Font (px)', name: 'maxFontPx', widget: 'number', required: false },
+                              {
+                                label: 'Box',
+                                name: 'box',
+                                widget: 'object',
+                                required: false,
+                                collapsed: true,
+                                fields: [
+                                  { label: 'Left %', name: 'leftPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 10 },
+                                  { label: 'Top %', name: 'topPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 50 },
+                                  { label: 'Width %', name: 'widthPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 80 },
+                                  { label: 'Height %', name: 'heightPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 10 },
+                                  { label: 'H Align', name: 'hAlign', widget: 'select', options: ['left','center','right'], default: 'center' },
+                                  { label: 'V Align', name: 'vAlign', widget: 'select', options: ['top','middle','bottom'], default: 'middle' },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      CMS.init({ config: cmsConfig });
     </script>
   </body>
 </html>
