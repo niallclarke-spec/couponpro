@@ -1,8 +1,11 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>CodeTag Admin</title>
     <style>
       html,body { height: 100%; margin: 0; }
@@ -36,13 +39,6 @@
         max-width: 1200px;
         margin: 0 auto;
       }
-      .login-wrap { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); z-index: 10; }
-      .login-card { width: 320px; background:#12151c; border:1px solid #262b35; border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); }
-      .login-card h2 { margin:0 0 12px; font-size:18px; }
-      .login-card label { display:block; font-size:13px; color:#9aa3ad; margin:12px 0 6px; }
-      .login-card input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2d3442; background:#0b0c10; color:#e9eef5; }
-      .login-card button { width:100%; margin-top:14px; padding:10px 12px; border:0; border-radius:8px; background:#e94d65; color:#fff; font-weight:700; cursor:pointer; }
-      .login-card .err { color:#ff8080; font-size:12px; min-height:14px; margin-top:8px; }
     </style>
   </head>
   <body>
@@ -53,156 +49,16 @@
         <p>Manage templates and upload promo images.</p>
       </div>
     </header>
+
+    <!-- Decap CMS mounts here -->
     <div id="nc-root" class="cms-root"></div>
 
-    <!-- Prevent double-initialization -->
-    <script>window.CMS_MANUAL_INIT = true;</script>
+    <!-- Decap CMS core -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
     <script>
-      // Inline config to avoid YAML fetch/caching/CDN headers issues
-      const cmsConfig = {
-        backend: {
-          name: 'github',
-          repo: 'niallclarke-spec/couponpro',
-          branch: 'main',
-          // 👇 replace with YOUR OAuth bridge URL after you deploy it in the next steps
-          base_url: 'https://codetag-auth.ondigitalocean.app',
-          auth_endpoint: '/auth'
-        },
-        media_folder: 'assets/templates',
-        public_folder: '/assets/templates',
-        collections: [
-          {
-            label: 'Promo Templates',
-            name: 'templates',
-            format: 'json',
-            editor: { preview: false },
-            files: [
-              {
-                label: 'Templates JSON',
-                name: 'templates_json',
-                file: 'templates.json',
-                fields: [
-                  {
-                    label: 'Templates',
-                    name: 'templates',
-                    widget: 'list',
-                    collapsed: true,
-                    summary: '{{fields.name}}',
-                    fields: [
-                      { label: 'Name', name: 'name', widget: 'string' },
-                      { label: 'Notes (internal)', name: 'meta', widget: 'text', required: false },
-                      { label: 'Max Font (fallback px)', name: 'maxFontPx', widget: 'number', required: false },
-                      {
-                        label: 'Variants',
-                        name: 'variants',
-                        widget: 'object',
-                        fields: [
-                          {
-                            label: 'Square',
-                            name: 'square',
-                            widget: 'object',
-                            collapsed: true,
-                            fields: [
-                              { label: 'Image', name: 'src', widget: 'image', choose_url: false },
-                              { label: 'Max Font (px)', name: 'maxFontPx', widget: 'number', required: false },
-                              {
-                                label: 'Box',
-                                name: 'box',
-                                widget: 'object',
-                                required: false,
-                                collapsed: true,
-                                fields: [
-                                  { label: 'Left %', name: 'leftPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 10 },
-                                  { label: 'Top %', name: 'topPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 50 },
-                                  { label: 'Width %', name: 'widthPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 80 },
-                                  { label: 'Height %', name: 'heightPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 10 },
-                                  { label: 'H Align', name: 'hAlign', widget: 'select', options: ['left','center','right'], default: 'center' },
-                                  { label: 'V Align', name: 'vAlign', widget: 'select', options: ['top','middle','bottom'], default: 'middle' },
-                                ],
-                              },
-                            ],
-                          },
-                          {
-                            label: 'Story',
-                            name: 'story',
-                            widget: 'object',
-                            collapsed: true,
-                            fields: [
-                              { label: 'Image', name: 'src', widget: 'image', choose_url: false },
-                              { label: 'Max Font (px)', name: 'maxFontPx', widget: 'number', required: false },
-                              {
-                                label: 'Box',
-                                name: 'box',
-                                widget: 'object',
-                                required: false,
-                                collapsed: true,
-                                fields: [
-                                  { label: 'Left %', name: 'leftPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 10 },
-                                  { label: 'Top %', name: 'topPct', widget: 'number', min: 0, max: 100, step: 0.1, default: 50 },
-                                  { label: 'Width %', name: 'widthPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 80 },
-                                  { label: 'Height %', name: 'heightPct', widget: 'number', min: 1, max: 100, step: 0.1, default: 10 },
-                                  { label: 'H Align', name: 'hAlign', widget: 'select', options: ['left','center','right'], default: 'center' },
-                                  { label: 'V Align', name: 'vAlign', widget: 'select', options: ['top','middle','bottom'], default: 'middle' },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      (function(){
-        const USER = 'admin';
-        const PASS = 'pasword123!'; // as requested
-        const KEY = 'ct_admin_ok';
-
-        function bootCMS(){ CMS.init({ config: cmsConfig }); }
-
-        if (sessionStorage.getItem(KEY) === '1') {
-          bootCMS();
-          return;
-        }
-
-        // Build a tiny login overlay
-        const wrap = document.createElement('div');
-        wrap.className = 'login-wrap';
-        wrap.innerHTML = `
-          <div class="login-card">
-            <h2>Admin Sign In</h2>
-            <label>Username</label>
-            <input id="lg-user" type="text" autocomplete="username" placeholder="admin" />
-            <label>Password</label>
-            <input id="lg-pass" type="password" autocomplete="current-password" placeholder="••••••••" />
-            <button id="lg-btn">Continue</button>
-            <div class="err" id="lg-err"></div>
-          </div>`;
-        document.body.appendChild(wrap);
-
-        const $u = wrap.querySelector('#lg-user');
-        const $p = wrap.querySelector('#lg-pass');
-        const $b = wrap.querySelector('#lg-btn');
-        const $e = wrap.querySelector('#lg-err');
-        $u.value = '';
-        $p.value = '';
-        $b.addEventListener('click', () => {
-          if ($u.value === USER && $p.value === PASS) {
-            sessionStorage.setItem(KEY, '1');
-            wrap.remove();
-            bootCMS();
-          } else {
-            $e.textContent = 'Invalid credentials';
-          }
-        });
-        $p.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') $b.click(); });
-      })();
+      // Ensure we don't use manual init; just load config.yml explicitly with a cache-buster
+      if (window.CMS_MANUAL_INIT) delete window.CMS_MANUAL_INIT;
+      CMS.init({ config: 'config.yml?v=' + Date.now() });
     </script>
   </body>
 </html>
