@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CodeTag Admin</title>
+    <style>
+      html,body { height: 100%; margin: 0; }
+      body {
+        background: #0b0c10;
+        color: #e9eef5;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      }
+      header {
+        padding: 18px 20px;
+        background: #0b0c10;
+        border-bottom: 1px solid #262b35;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      header h1 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 18px;
+      }
+      header p {
+        margin: 6px 0 0;
+        color: #9aa3ad;
+        font-size: 13px;
+      }
+      header img.logo { height:28px; }
+      .cms-root {
+        height: calc(100% - 70px);
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
+      <div>
+        <h1>CodeTag Admin</h1>
+        <p>Manage templates and upload promo images.</p>
+      </div>
+    </header>
+    <div id="nc-root" class="cms-root"></div>
+
+    <!-- Prevent double-initialization -->
+    <script>window.CMS_MANUAL_INIT = true;</script>
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      // Load config relative to /admin/
+      CMS.init({ config: 'config.yml' });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+{
+  "templates": [
+    {
+      "name": "Flash Sale",
+      "meta": "Big bottom pill; centered text.",
+      "variants": {
+        "square": {
+          "src": "assets/templates/flash-sale/flash-sale-square.png",
+          "maxFontPx": 94,
+          "box": {
+            "leftPct": 56.5,
+            "topPct": 62.7,
+            "widthPct": 30,
+            "heightPct": 5,
+            "hAlign": "center",
+            "vAlign": "bottom"
+          }
+        },
+        "story": {
+          "src": "assets/templates/flash-sale/flash-sale-story.png",
+          "maxFontPx": 70,
+          "box": {
+            "leftPct": 56,
+            "topPct": 51,
+            "widthPct": 31,
+            "heightPct": 12,
+            "hAlign": "center",
+            "vAlign": "bottom"
+          }
+        }
+      }
+    },
+    {
+      "name": "September Sale",
+      "meta": "Centered badge mid/low; tweak as needed.",
+      "variants": {
+        "square": {
+          "src": "assets/templates/september-sale/september-sale-square.png",
+          "maxFontPx": 73,
+          "box": {
+            "leftPct": 32.5,
+            "topPct": 75,
+            "widthPct": 34,
+            "heightPct": 16,
+            "hAlign": "center",
+            "vAlign": "middle"
+          }
+        },
+        "story": {
+          "src": "assets/templates/september-sale/september-sale-story.png",
+          "maxFontPx": 78,
+          "box": {
+            "leftPct": 30,
+            "topPct": 68,
+            "widthPct": 40,
+            "heightPct": 20,
+            "hAlign": "center",
+            "vAlign": "middle"
+          }
+        }
+      }
+    },
+    {
+      "name": "September Sale 2",
+      "meta": "Alt artwork; bottom bar.",
+      "variants": {
+        "square": {
+          "src": "assets/templates/september-sale-2/September-2-square.png",
+          "maxFontPx": 44,
+          "box": {
+            "leftPct": 49,
+            "topPct": 70,
+            "widthPct": 20,
+            "heightPct": 14,
+            "hAlign": "center",
+            "vAlign": "bottom"
+          }
+        },
+        "story": {
+          "src": "assets/templates/september-sale-2/September-2-story.png",
+          "maxFontPx": 45,
+          "box": {
+            "leftPct": 49,
+            "topPct": 68,
+            "widthPct": 20,
+            "heightPct": 12,
+            "hAlign": "center",
+            "vAlign": "bottom"
+          }
+        }
+      }
+    },
+    {
+      "variants": {
+        "story": {
+          "box": {
+            "leftPct": 10,
+            "topPct": 50,
+            "widthPct": 80,
+            "heightPct": 10,
+            "hAlign": "center",
+            "vAlign": "middle"
+          },
+          "src": "/assets/templates/28-4-min.png",
+          "maxFontPx": 80
+        },
+        "square": {
+          "box": {
+            "leftPct": 10,
+            "topPct": 50,
+            "widthPct": 80,
+            "heightPct": 10,
+            "hAlign": "center",
+            "vAlign": "middle"
+          },
+          "src": "/assets/templates/30-2-.png"
+        }
+      },
+      "name": "Niall",
+      "maxFontPx": 80,
+      "logo": false
+    }
+  ]
+}
