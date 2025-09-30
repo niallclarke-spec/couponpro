@@ -51,12 +51,8 @@
     <!-- Prevent double-initialization -->
     <script>window.CMS_MANUAL_INIT = true;</script>
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms-git.js"></script>
     <script>
-      // Register the git media library
-      CMS.registerMediaLibrary(window.DecapCmsGit);
-
-      // Always load the live config from /admin and bust caches
+      // Load the config (no external media library needed for repo storage)
       CMS.init({ config: '/admin/config.yml?v=' + Date.now() });
     </script>
   </body>
