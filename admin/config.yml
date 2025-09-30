@@ -1,7 +1,13 @@
+# Decap CMS config
+# NOTE: This works without OAuth. When your OAuth bridge is live, uncomment base_url/auth_endpoint in the backend block below.
 backend:
   name: github
   repo: niallclarke-spec/couponpro
   branch: main
+  # --- Enable this when your OAuth bridge (codetag-auth) has a Live URL ---
+  # base_url: https://<your-auth-app-domain>
+  # auth_endpoint: /auth
+  # ----------------------------------------------------------------------
   # When we add OAuth, we’ll add:
   # base_url: https://<your-oauth-domain>
   # auth_endpoint: /auth
