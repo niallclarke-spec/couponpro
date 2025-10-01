@@ -1,5 +1,3 @@
-# Decap CMS config
-
 backend:
   name: github
   repo: niallclarke-spec/couponpro
@@ -7,23 +5,46 @@ backend:
   base_url: https://couponpro-o4fjo.ondigitalocean.app
   auth_endpoint: /auth
 
-# Where uploaded assets are written in your repo
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
-media_library:
-  name: git
-
-# Basic collection so the CMS UI can load.
-# (You can expand/replace this with your real content model later.)
 collections:
-  - name: uploads
-    label: Uploads
-    label_singular: Upload
-    description: Simple media uploads into assets/uploads
-    files:
-      - file: "assets/uploads/.keep"     # placeholder file so the folder exists in Git
-        label: Upload Media
-        name: media
-        fields:
-          - { label: "Upload files", name: "files", widget: "file", multiple: true, allow_multiple: true }
+  - name: templates
+    label: Templates
+    label_singular: Template
+    description: Upload templates (each with a square and story PNG)
+    folder: "assets/templates"
+    create: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}/meta"
+    identifier_field: name
+    fields:
+      - name: name
+        label: Template Name
+        widget: string
+        hint: Visible name in the front-end dropdown.
+      - name: slug
+        label: Slug
+        widget: slug
+        hint: Folder name. Auto-generated from Template Name.
+      - name: square
+        label: Square PNG
+        widget: image
+        allow_multiple: false
+        choose_url: false
+        media_folder: "assets/templates/{{slug}}"
+        public_folder: "/assets/templates/{{slug}}"
+        pattern:
+          - ".*\\.png$"
+          - "PNG files only"
+      - name: story
+        label: Story PNG
+        widget: image
+        allow_multiple: false
+        choose_url: false
+        media_folder: "assets/templates/{{slug}}"
+        public_folder: "/assets/templates/{{slug}}"
+        pattern:
+          - ".*\\.png$"
+          - "PNG files only"
