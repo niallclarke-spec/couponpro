@@ -394,24 +394,63 @@
       if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
     });
 
+    // --- Helper for fetching JSON with cache-busting ---
+    async function fetchJSON(path){
+      const r = await fetch(path + (path.includes('?') ? '' : ('?ts=' + Date.now())), { cache:'no-store' });
+      if(!r.ok) throw new Error('HTTP ' + r.status + ' on ' + path);
+      return await r.json();
+    }
+
     (async function init(){
-      // Try templates.json first; then auto-detect files
       try {
-        const r = await fetch('templates.json?ts=' + Date.now(), { cache:'no-store' });
-        if (!r.ok) throw new Error('no json');
-        const data = await r.json();
-        const arr = Array.isArray(data) ? data : (data.templates || []);
-        if (arr.length){ TEMPLATES = arr; if (els.tplStatus) els.tplStatus.textContent = `Loaded ${arr.length} from templates.json`; }
-      } catch(e) {
+        // 1) Prefer the new manifest from the admin: /assets/templates/index.json
+        const idx = await fetchJSON('/assets/templates/index.json');
+        const list = Array.isArray(idx) ? idx : (idx.templates || []);
+        if (!list.length) throw new Error('empty index');
+
+        // 2) Load each template's meta.json and normalize into our in-memory structure
+        const metas = await Promise.all(list.map(async (item) => {
+          const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+          const meta = await fetchJSON(`/assets/templates/${slug}/meta.json`);
+          const name = meta.name || item.name || slug;
+          const sq = meta.square || {}; const st = meta.story || {};
+          return {
+            name,
+            variants: {
+              square: { src: sq.image || `/assets/templates/${slug}/square.png`, box: sq.box || null },
+              story:  { src: st.image || `/assets/templates/${slug}/story.png`,  box: st.box || null }
+            }
+          };
+        }));
+
+        TEMPLATES = metas.filter(Boolean);
+        if(!TEMPLATES.length) throw new Error('no metas');
+
+        // 3) Populate dropdown and load first template previews
+        els.template.innerHTML = '';
+        TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
+        current = 0;
+        const s=getVariant('square'); const st=getVariant('story');
+        if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
+        setStatus('');
+        return;
+      } catch(err){
+        console.warn('[init] templates manifest not found/invalid, falling back to probe:', err.message);
+      }
+
+      // --- Fallback to legacy image probing if manifest is missing ---
+      try {
         const probes = await Promise.all(CANDIDATES.map(probe));
         const hits = probes.filter(p=>p.ok).map(p=>p.src);
-        if (!hits.length){ if (els.tplStatus) els.tplStatus.textContent = 'No images found. Place PNGs beside index.html or in /templates.'; TEMPLATES = normalizeTemplates([]); return; }
-        if (els.tplStatus) els.tplStatus.textContent = `Detected ${hits.length} image${hits.length>1?'s':''}`;
+        if (!hits.length){ setStatus('No templates detected.'); return; }
         TEMPLATES = normalizeTemplates(hits);
+        els.template.innerHTML='';
+        TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
+        const s=getVariant('square'); const st=getVariant('story'); if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
+      } catch(e){
+        console.error('[init] failed to probe images', e);
+        setStatus('Failed to load templates.');
       }
-      if(!TEMPLATES.length){ setStatus('No templates detected.'); return; }
-      els.template.innerHTML=''; TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
-      const s=getVariant('square'); const st=getVariant('story'); if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
     })();
   </script>
 </body>
