@@ -183,7 +183,7 @@
               identifier_field: "name",
               fields: [
                 { label: "Template Name", name: "name", widget: "string", hint: "Shown in the front-end dropdown." },
-                { label: "Slug", name: "slug", widget: "slug", required: true, hint: "Folder name; generated from Template Name.", slugify: (values) => (values && values.name ? values.name : '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') },
+                { label: "Slug", name: "slug", widget: "slug", required: true, hint: "Folder name; auto-generated from Template Name." },
                 {
                   label: "Square Image (PNG only)", name: "square", widget: "object",
                   fields: [
