@@ -15,6 +15,13 @@
       "meta": "assets/templates/new/meta.json"
     },
     {
+      "slug": "pink",
+      "name": "pink",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/pink/meta.json"
+    },
+    {
       "slug": "red",
       "name": "Red",
       "square": "",
