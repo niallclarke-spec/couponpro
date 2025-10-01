@@ -7,6 +7,49 @@
   <meta name="robots" content="noindex" />
 </head>
 <body>
+  <!-- Manual config loader (prevents 404 on config.yml) -->
+  <script src="https://unpkg.com/js-yaml@4/dist/js-yaml.min.js"></script>
+  <script>
+    window.CMS_MANUAL_INIT = true;
+    (function () {
+      const CONFIG_URL = './config.yml';
+      function log(msg){ try{ console.log('[admin]', msg); }catch(_){} }
+      function fatal(msg){
+        const p = document.createElement('pre');
+        p.textContent = 'Error loading the CMS configuration:\n\n' + msg;
+        p.style.whiteSpace = 'pre-wrap';
+        p.style.font = '14px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif';
+        p.style.color = '#e9eef5';
+        p.style.background = '#1f2430';
+        p.style.padding = '24px';
+        document.body.appendChild(p);
+      }
+      async function boot(){
+        try{
+          const res = await fetch(CONFIG_URL, { cache: 'no-store' });
+          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          const text = await res.text();
+          const cfg = jsyaml.load(text);
+          let tries = 0;
+          (function wait(){
+            tries++;
+            if (window.CMS && typeof window.CMS.init === 'function'){
+              try { window.CMS.init({ config: cfg }); log('CMS.init with inline config'); }
+              catch(e){ fatal(e.message); }
+            } else if (tries < 200) {
+              setTimeout(wait, 50);
+            } else {
+              fatal('Decap CMS failed to load.');
+            }
+          })();
+        }catch(e){
+          fatal('Failed to load config.yml (' + e.message + ').');
+        }
+      }
+      document.addEventListener('DOMContentLoaded', boot);
+    })();
+  </script>
+  <!-- Load Decap after we set CMS_MANUAL_INIT -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 
   <script>
