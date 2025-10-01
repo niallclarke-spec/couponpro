@@ -12,7 +12,13 @@
   <script>
     window.CMS_MANUAL_INIT = true;
     (function () {
-      const CONFIG_URL = './config.yml';
+      const CONFIG_CANDIDATES = [
+        './config.yml',
+        'config.yml',
+        location.pathname.replace(/\/[^/]*$/, '/') + 'config.yml',
+        '/admin/config.yml',
+        '/config.yml'
+      ];
       function log(msg){ try{ console.log('[admin]', msg); }catch(_){} }
       function fatal(msg){
         const p = document.createElement('pre');
@@ -26,10 +32,23 @@
       }
       async function boot(){
         try{
-          const res = await fetch(CONFIG_URL, { cache: 'no-store' });
-          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
-          const text = await res.text();
-          const cfg = jsyaml.load(text);
+          let cfg = null, usedUrl = null, lastErr = null;
+          for (const url of CONFIG_CANDIDATES) {
+            try {
+              const res = await fetch(url, { cache: 'no-store' });
+              if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+              const text = await res.text();
+              cfg = jsyaml.load(text);
+              usedUrl = url;
+              break;
+            } catch (e) {
+              lastErr = e;
+            }
+          }
+          if (!cfg) {
+            throw new Error('Could not fetch config.yml from any known path. Last error: ' + (lastErr && lastErr.message));
+          }
+          log('Loaded config from ' + usedUrl);
           let tries = 0;
           (function wait(){
             tries++;
@@ -43,7 +62,7 @@
             }
           })();
         }catch(e){
-          fatal('Failed to load config.yml (' + e.message + ').');
+          fatal('Failed to load config.yml (' + (e && e.message ? e.message : e) + ').');
         }
       }
       document.addEventListener('DOMContentLoaded', boot);
