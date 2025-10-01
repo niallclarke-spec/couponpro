@@ -1,0 +1,25 @@
+{
+  "square": {
+    "box": {
+      "leftPct": 56.5,
+      "topPct": 62.7,
+      "widthPct": 30,
+      "heightPct": 5,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "image": "/assets/templates/29-1-.png"
+  },
+  "story": {
+    "box": {
+      "leftPct": 56.5,
+      "topPct": 62.7,
+      "widthPct": 30,
+      "heightPct": 5,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "image": "/assets/templates/34.png"
+  },
+  "name": "TEstwwe"
+}
