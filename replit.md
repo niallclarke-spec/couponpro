@@ -57,4 +57,5 @@ A static web application that generates promotional images for coupon codes. Use
 - **Access Admin**: Navigate to `/admin/` to manage templates
 
 ## Deployment
-Configured for autoscale deployment with static file serving.
+- **Production**: Currently deployed on Digital Ocean at https://couponpro-o4fjo.ondigitalocean.app
+- **Replit Deployment**: Also configured for autoscale deployment with static file serving (optional)
