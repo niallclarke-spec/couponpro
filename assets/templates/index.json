@@ -1,9 +1,6 @@
 {
   "templates": [
     { "slug": "flash-sale",         "name": "Flash Sale" },
-    { "slug": "september-sale",     "name": "September Sale" },
-    { "slug": "september-sale-2",   "name": "September Sale 2" },
-    { "slug": "test",               "name": "Test" },
     { "slug": "testwwe",            "name": "Testwwe" }
   ]
 }
