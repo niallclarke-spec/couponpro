@@ -47,4 +47,4 @@ collections:
         public_folder: "/assets/templates/{{slug}}"
         pattern:
           - ".*\\.png$"
-          - "PNG files only"
+          - "PNG files only" 
