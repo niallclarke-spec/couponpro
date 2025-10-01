@@ -123,6 +123,59 @@
   <script>
     console.log('[Coupon App] build', 'v2025-09-29-auto-fit');
 
+    // === GitHub auto-discovery for templates ===
+    const GH_OWNER  = 'niallclarke-spec';
+    const GH_REPO   = 'couponpro';
+    const GH_BRANCH = 'main';
+    const ghApi    = (p) => `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${p}?ref=${GH_BRANCH}`;
+    const sitePath = (p) => '/' + String(p).replace(/^\/+/, '');
+    async function ghJson(url){
+      const r = await fetch(url, { headers:{ 'Accept':'application/vnd.github+json' }, cache:'no-store' });
+      if(!r.ok){ throw new Error(`${r.status} ${r.statusText} – ${await r.text()}`); }
+      return r.json();
+    }
+    async function listTemplatesFromGitHub(){
+      try{
+        const entries = await ghJson(ghApi('assets/templates'));
+        const dirs = entries.filter(e => e.type === 'dir');
+        const results = [];
+        for (const d of dirs){
+          const slug = d.name;
+          const items = await ghJson(ghApi(`assets/templates/${slug}`));
+          let name = slug, metaJson = null;
+          const meta = items.find(i => i.type==='file' && i.name.toLowerCase() === 'meta.json');
+          if (meta){
+            try{
+              metaJson = await (await fetch(meta.download_url, { cache:'no-store' })).json();
+              if (metaJson && metaJson.name) name = metaJson.name;
+            }catch(_){ metaJson = null; }
+          }
+          const pngs = items.filter(i => i.type==='file' && /\.png$/i.test(i.name))
+                            .map(i => `assets/templates/${slug}/${i.name}`);
+          const by = (s) => pngs.find(p => p.toLowerCase().includes(s));
+          const squareSrc = by('square') || by('sq') || pngs[0] || '';
+          const storySrc  = by('story')  || by('st') || pngs[1] || pngs[0] || '';
+          if (!squareSrc && !storySrc) continue; // skip empty folders
+          const squareBox = metaJson?.square?.box || metaJson?.box || null;
+          const storyBox  = metaJson?.story?.box  || metaJson?.box || null;
+          const squareMax = metaJson?.square?.maxFontPx || metaJson?.maxFontPx || null;
+          const storyMax  = metaJson?.story?.maxFontPx  || metaJson?.maxFontPx || null;
+          results.push({
+            name,
+            variants:{
+              square:{ src: sitePath(squareSrc), box: squareBox, maxFontPx: squareMax },
+              story: { src: sitePath(storySrc),  box: storyBox,  maxFontPx: storyMax  }
+            }
+          });
+        }
+        results.sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+        return results;
+      }catch(err){
+        console.warn('[templates] GitHub discovery failed:', err.message);
+        return [];
+      }
+    }
+
     // ---------- Elements ----------
     const els = {
       coupon:   document.getElementById('coupon'),
@@ -402,94 +455,62 @@
     }
 
     (async function init(){
-      // Helper: try fetchJSON, return null on error
-      async function tryFetchJSON(path) {
-        try { return await fetchJSON(path); }
-        catch(e){ return null; }
-      }
-      // 1) Try to load /assets/templates/index.json as manifest of template slugs
-      let indexList = [];
-      let indexJson = await tryFetchJSON('/assets/templates/index.json');
-      if (indexJson) {
-        indexList = Array.isArray(indexJson) ? indexJson : (indexJson.templates || []);
-      }
-      // If index.json is missing or no templates, fallback to scanning
-      if (!indexList.length) {
-        // Fallback: try to probe a set of possible slugs (could be replaced with directory listing if available)
-        // Predefined slugs, expand as needed
-        const possibleSlugs = [
-          'default','classic','promo','dark','light','blue','red','gold','1','2','3','4','5','coupon','offer','main','template-1','template-2','template-3',
-        ];
-        // Probe for meta.json existence
-        indexList = [];
-        await Promise.all(possibleSlugs.map(async (slug) => {
-          const meta = await tryFetchJSON(`/assets/templates/${slug}/meta.json`);
-          if (meta) indexList.push({slug, ...meta});
-        }));
-        // If still nothing, fallback to legacy probe
-        if (!indexList.length) {
+      try{
+        // 1) Try GitHub auto-discovery first
+        let discovered = await listTemplatesFromGitHub();
+
+        // 2) If nothing found, fall back to /assets/templates/index.json
+        if (!discovered.length){
+          try{
+            const r = await fetch('/assets/templates/index.json?ts='+Date.now(), { cache:'no-store' });
+            if (r.ok){
+              const idx = await r.json();
+              const list = Array.isArray(idx) ? idx : (idx.templates || []);
+              if (list.length){
+                discovered = await Promise.all(list.map(async (item)=>{
+                  const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+                  // try meta
+                  let meta=null; try{ meta = await (await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`, { cache:'no-store' })).json(); }catch(_){ }
+                  const name = meta?.name || item.name || slug;
+                  const squareSrc = (item.square && (item.square.image||item.square)) || `/assets/templates/${slug}/square.png`;
+                  const storySrc  = (item.story  && (item.story.image ||item.story )) || `/assets/templates/${slug}/story.png`;
+                  const squareBox = meta?.square?.box || meta?.box || null;
+                  const storyBox  = meta?.story ?.box || meta?.box || null;
+                  const squareMax = meta?.square?.maxFontPx || meta?.maxFontPx || null;
+                  const storyMax  = meta?.story ?.maxFontPx || meta?.maxFontPx || null;
+                  return { name, variants:{ square:{ src:squareSrc, box:squareBox, maxFontPx:squareMax }, story:{ src:storySrc, box:storyBox, maxFontPx:storyMax } } };
+                }));
+                discovered = discovered.filter(Boolean);
+              }
+            }
+          }catch(_){ /* ignore */ }
+        }
+
+        // 3) Legacy probe fallback (local PNGs next to index.html)
+        if (!discovered.length){
           try {
             const probes = await Promise.all(CANDIDATES.map(probe));
             const hits = probes.filter(p=>p.ok).map(p=>p.src);
-            if (!hits.length){ setStatus('No templates detected.'); return; }
-            TEMPLATES = normalizeTemplates(hits);
-            els.template.innerHTML='';
-            TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
-            const s=getVariant('square'); const st=getVariant('story'); if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
-            setStatus('');
-            return;
-          } catch(e){
-            console.error('[init] failed to probe images', e);
-            setStatus('Failed to load templates.');
-            return;
-          }
+            if (hits.length){
+              TEMPLATES = normalizeTemplates(hits);
+              populateSelect();
+              setStatus('');
+              return;
+            }
+          } catch(e){ console.error('[init] image probe failed', e); }
+          setStatus('No templates detected.');
+          return;
         }
+
+        // 4) Use discovered templates
+        TEMPLATES = discovered;
+        populateSelect();
+        setStatus('');
+
+      }catch(err){
+        console.error('[init] failed:', err);
+        setStatus('Failed to initialize templates.');
       }
-      // 2) For all detected template slugs, load their meta.json
-      // indexList is now a list of {slug,...} or {slug,name,...}
-      let metas = [];
-      // If indexList came from index.json, load meta.json for each slug
-      if (indexJson && Array.isArray(indexList) && indexList.length && !(indexList[0] && indexList[0].square && indexList[0].story)) {
-        metas = await Promise.all(indexList.map(async (item) => {
-          const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-          const meta = await tryFetchJSON(`/assets/templates/${slug}/meta.json`);
-          if (!meta) return null;
-          const name = meta.name || item.name || slug;
-          const sq = meta.square || {}; const st = meta.story || {};
-          return {
-            name,
-            variants: {
-              square: { src: sq.image || `/assets/templates/${slug}/square.png`, box: sq.box || null },
-              story:  { src: st.image || `/assets/templates/${slug}/story.png`,  box: st.box || null }
-            }
-          };
-        }));
-      } else if (indexList.length && indexList[0] && (indexList[0].square || indexList[0].story)) {
-        // indexList may already be [{slug, ...meta}]
-        metas = indexList.map(item => {
-          const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-          const sq = item.square || {}; const st = item.story || {};
-          return {
-            name: item.name || slug,
-            variants: {
-              square: { src: sq.image || `/assets/templates/${slug}/square.png`, box: sq.box || null },
-              story:  { src: st.image || `/assets/templates/${slug}/story.png`,  box: st.box || null }
-            }
-          };
-        });
-      }
-      TEMPLATES = (metas||[]).filter(Boolean);
-      if(!TEMPLATES.length) {
-        setStatus('No templates found in /assets/templates/.');
-        return;
-      }
-      // 3) Populate dropdown and load first template previews
-      els.template.innerHTML = '';
-      TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
-      current = 0;
-      const s=getVariant('square'); const st=getVariant('story');
-      if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
-      setStatus('');
     })();
   </script>
 </body>
