@@ -8,50 +8,81 @@
     <meta http-equiv="Expires" content="0" />
     <title>CodeTag Admin</title>
     <style>
-      html,body { height: 100%; margin: 0; }
-      body {
-        background: #0b0c10;
-        color: #e9eef5;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      :root{
+        --bg:#0b0c10;           /* page background */
+        --panel:#11151b;        /* cards/panels */
+        --panel-2:#161b22;      /* alt panels */
+        --border:#262b35;       /* subtle borders */
+        --ink:#e9eef5;          /* primary text */
+        --muted:#9aa3ad;        /* secondary text */
+        --brand:#00d3a7;        /* accent brand tint */
+        --brand-ink:#0b0c10;    /* contrast on brand */
+        --shadow: 0 10px 30px rgba(0,0,0,.35);
+        --radius:14px;
       }
-      header {
-        padding: 18px 20px;
-        background: #0b0c10;
-        border-bottom: 1px solid #262b35;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+      html,body{height:100%;margin:0}
+      body{
+        background: radial-gradient(1200px 600px at 10% -10%, #12141a 0%, var(--bg) 60%),
+                    radial-gradient(900px 400px at 90% 10%, #0e1116 0%, transparent 60%),
+                    var(--bg);
+        color:var(--ink);
+        font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+        -webkit-font-smoothing:antialiased;moz-osx-font-smoothing:grayscale;
       }
-      header h1 {
-        margin: 0;
-        font-weight: 800;
-        font-size: 18px;
+      a{color:var(--brand);text-decoration:none}
+      a:hover{opacity:.9}
+
+      header{
+        position:sticky;top:0;z-index:10;
+        padding:18px 20px;
+        background: linear-gradient(180deg, rgba(11,12,16,.95), rgba(11,12,16,.85));
+        backdrop-filter:saturate(140%) blur(6px);
+        border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:12px
       }
-      header p {
-        margin: 6px 0 0;
-        color: #9aa3ad;
-        font-size: 13px;
+      header .brand{display:flex;align-items:center;gap:12px}
+      header img.logo{height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+      header h1{margin:0;font-weight:800;font-size:18px;letter-spacing:.2px}
+      header h1 .light{font-weight:400;opacity:.85}
+      header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+      .wrap{max-width:1200px;margin:0 auto;padding:22px}
+      .cms-root{
+        height: calc(100% - 0px);
+        background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)), var(--panel);
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        box-shadow:var(--shadow);
+        padding:18px;
       }
-      header img.logo { height:28px; }
-      .cms-root {
-        height: calc(100% - 70px);
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
+
+      /* Subtle scrollbar polish */
+      *{scrollbar-width:thin;scrollbar-color:#313848 transparent}
+      *::-webkit-scrollbar{height:10px;width:10px}
+      *::-webkit-scrollbar-thumb{background:#313848;border-radius:8px}
+
+      /* Decap top bar + buttons tinting (best-effort without relying on internal class names) */
+      #nc-root [class*="Toolbar"],
+      #nc-root header[role="toolbar"]{background:var(--panel-2)!important;border-bottom:1px solid var(--border)!important}
+      #nc-root button, #nc-root [role="button"]{
+        border-radius:10px!important;
       }
+      #nc-root .nc-app, #nc-root .nc-appMain{background:transparent!important}
     </style>
   </head>
   <body>
     <header>
       <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
       <div>
-        <h1>CodeTag Admin</h1>
+        <h1><span>CodeTag</span> <span class="light">Admin</span></h1>
         <p>Manage templates and upload promo images.</p>
       </div>
     </header>
 
-    <!-- Decap CMS mounts here -->
-    <div id="nc-root" class="cms-root"></div>
+    <div class="wrap">
+      <!-- Decap CMS mounts here -->
+      <div id="nc-root" class="cms-root"></div>
+    </div>
 
     <script>
       window.CMS_MANUAL_INIT = true;
