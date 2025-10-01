@@ -3,9 +3,23 @@
     {
       "slug": "flash-sale",
       "name": "Flash Sale",
-      "square": "assets/templates/flash-sale/flash-sale-square.png",
-      "story": "assets/templates/flash-sale/flash-sale-story.png",
+      "square": "assets/templates/flash-sale/square.png",
+      "story": "assets/templates/flash-sale/story.png",
       "meta": "assets/templates/flash-sale/meta.json"
+    },
+    {
+      "slug": "new",
+      "name": "New",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/new/meta.json"
+    },
+    {
+      "slug": "red",
+      "name": "Red",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/red/meta.json"
     }
   ]
 }
