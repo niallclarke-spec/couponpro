@@ -8,7 +8,7 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "image": "/assets/templates/test/33-min.png"
+    "maxFontPx": 94
   },
   "story": {
     "box": {
@@ -19,7 +19,7 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "image": "/assets/templates/test/34-3-min.png"
+    "maxFontPx": 94
   },
-  "name": "TEST"
+  "name": "TEstwwe"
 }
