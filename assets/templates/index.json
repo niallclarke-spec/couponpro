@@ -1,6 +1,11 @@
 {
   "templates": [
-    { "slug": "flash-sale",         "name": "Flash Sale" },
-    { "slug": "testwwe",            "name": "Testwwe" }
+    {
+      "slug": "flash-sale",
+      "name": "Flash Sale",
+      "square": "assets/templates/flash-sale/flash-sale-square.png",
+      "story": "assets/templates/flash-sale/flash-sale-story.png",
+      "meta": "assets/templates/flash-sale/meta.json"
+    }
   ]
 }

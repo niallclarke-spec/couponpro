@@ -1,25 +1,11 @@
 {
   "square": {
-    "box": {
-      "leftPct": 56.5,
-      "topPct": 62.7,
-      "widthPct": 30,
-      "heightPct": 5,
-      "hAlign": "center",
-      "vAlign": "bottom"
-    },
+    "box": { "leftPct": 56.5, "topPct": 62.7, "widthPct": 30, "heightPct": 5, "hAlign": "center", "vAlign": "bottom" },
     "maxFontPx": 94
   },
   "story": {
-    "box": {
-      "leftPct": 56.5,
-      "topPct": 62.7,
-      "widthPct": 30,
-      "heightPct": 5,
-      "hAlign": "center",
-      "vAlign": "bottom"
-    },
+    "box": { "leftPct": 56.5, "topPct": 62.7, "widthPct": 30, "heightPct": 5, "hAlign": "center", "vAlign": "bottom" },
     "maxFontPx": 94
   },
-  "name": "TEstwwe"
+  "name": "Flash Sale"
 }
