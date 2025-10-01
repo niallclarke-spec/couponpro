@@ -8,7 +8,7 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "image": "/assets/templates/29-1-.png"
+    "maxFontPx": 94
   },
   "story": {
     "box": {
@@ -19,7 +19,7 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "image": "/assets/templates/34.png"
+    "maxFontPx": 94
   },
   "name": "TEstwwe"
 }
