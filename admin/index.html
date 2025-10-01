@@ -38,22 +38,37 @@
         background: linear-gradient(180deg, rgba(11,12,16,.95), rgba(11,12,16,.85));
         backdrop-filter:saturate(140%) blur(6px);
         border-bottom:1px solid var(--border);
-        display:flex;align-items:center;justify-content:space-between;gap:12px
+        display:flex;
+        align-items:center;
+        gap:14px;
       }
-      header .title{display:flex;flex-direction:column}
       header img.logo{height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
-      header h1{margin:0;font-weight:800;font-size:18px;letter-spacing:.2px}
-      header h1 .light{font-weight:400;opacity:.85}
-      header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+      .brand-title h1 {
+        font-size:20px;
+        font-weight:700;
+        color: var(--ink);
+        margin: 0;
+      }
+      .brand-title h1 .highlight {
+        color: #ff3333;
+        font-weight:800;
+      }
+      .brand-sub {
+        font-weight:400;
+        opacity:.85;
+        font-size:16px;
+        color:var(--muted);
+        margin: 0;
+      }
 
       .wrap{max-width:1200px;margin:0 auto;padding:22px}
       .cms-root{
         height: calc(100% - 0px);
-        background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)), var(--panel);
-        border:1px solid var(--border);
+        background:#11151b;
         border-radius:var(--radius);
         box-shadow:var(--shadow);
         padding:18px;
+        color: var(--ink);
       }
 
       /* Subtle scrollbar polish */
@@ -76,10 +91,11 @@
       #nc-root [class*="Pane"],
       #nc-root [class*="Sidebar"],
       #nc-root [class*="Collections"]{
-        background:var(--panel)!important;
+        background:#11151b!important;
         color:var(--ink)!important;
         border:1px solid var(--border)!important;
         border-radius:var(--radius)!important;
+        box-shadow: var(--shadow) !important;
       }
       #nc-root .MuiDivider-root{border-color:var(--border)!important}
       #nc-root .MuiTable-root{background:transparent!important}
@@ -90,7 +106,7 @@
       #nc-root select,
       #nc-root .MuiInputBase-root,
       #nc-root .MuiOutlinedInput-root{
-        background:var(--panel-2)!important;
+        background:#161b22!important;
         color:var(--ink)!important;
         border-color:var(--border)!important;
       }
@@ -109,23 +125,24 @@
 
       /* Modals */
       #nc-root [role="dialog"],
-      #nc-root .MuiDialog-paper{background:var(--panel)!important;border:1px solid var(--border)!important}
+      #nc-root .MuiDialog-paper{background:#11151b!important;border:1px solid var(--border)!important}
 
       @media (max-width: 640px){
         header{padding:14px 16px}
         header img.logo{height:24px}
-        header h1{font-size:16px}
+        .brand-title h1{font-size:18px}
+        .brand-sub {font-size:14px;}
         .wrap{padding:14px}
       }
     </style>
   </head>
   <body>
     <header>
-      <div class="title">
-        <h1><span>CodeTag</span> <span class="light">Admin</span></h1>
-        <p>Manage templates and upload promo images.</p>
-      </div>
       <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
+      <div class="brand-title">
+        <h1>Funder<span class="highlight">Pro</span></h1>
+        <p class="brand-sub">CouponPro | Admin</p>
+      </div>
     </header>
 
     <div class="wrap">
