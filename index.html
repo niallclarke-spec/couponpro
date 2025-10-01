@@ -456,34 +456,36 @@
 
     (async function init(){
       try{
-        // 1) Try GitHub auto-discovery first
-        let discovered = await listTemplatesFromGitHub();
+        let discovered = [];
 
-        // 2) If nothing found, fall back to /assets/templates/index.json
-        if (!discovered.length){
-          try{
-            const r = await fetch('/assets/templates/index.json?ts='+Date.now(), { cache:'no-store' });
-            if (r.ok){
-              const idx = await r.json();
-              const list = Array.isArray(idx) ? idx : (idx.templates || []);
-              if (list.length){
-                discovered = await Promise.all(list.map(async (item)=>{
-                  const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-                  // try meta
-                  let meta=null; try{ meta = await (await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`, { cache:'no-store' })).json(); }catch(_){ }
-                  const name = meta?.name || item.name || slug;
-                  const squareSrc = (item.square && (item.square.image||item.square)) || `/assets/templates/${slug}/square.png`;
-                  const storySrc  = (item.story  && (item.story.image ||item.story )) || `/assets/templates/${slug}/story.png`;
-                  const squareBox = meta?.square?.box || meta?.box || null;
-                  const storyBox  = meta?.story ?.box || meta?.box || null;
-                  const squareMax = meta?.square?.maxFontPx || meta?.maxFontPx || null;
-                  const storyMax  = meta?.story ?.maxFontPx || meta?.maxFontPx || null;
-                  return { name, variants:{ square:{ src:squareSrc, box:squareBox, maxFontPx:squareMax }, story:{ src:storySrc, box:storyBox, maxFontPx:storyMax } } };
-                }));
-                discovered = discovered.filter(Boolean);
-              }
+        // 1) Try local /assets/templates/index.json FIRST (uploaded via admin CMS)
+        try{
+          const r = await fetch('/assets/templates/index.json?ts='+Date.now(), { cache:'no-store' });
+          if (r.ok){
+            const idx = await r.json();
+            const list = Array.isArray(idx) ? idx : (idx.templates || []);
+            if (list.length){
+              discovered = await Promise.all(list.map(async (item)=>{
+                const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+                // try meta
+                let meta=null; try{ meta = await (await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`, { cache:'no-store' })).json(); }catch(_){ }
+                const name = meta?.name || item.name || slug;
+                const squareSrc = (item.square && (item.square.image||item.square)) || `/assets/templates/${slug}/square.png`;
+                const storySrc  = (item.story  && (item.story.image ||item.story )) || `/assets/templates/${slug}/story.png`;
+                const squareBox = meta?.square?.box || meta?.box || null;
+                const storyBox  = meta?.story ?.box || meta?.box || null;
+                const squareMax = meta?.square?.maxFontPx || meta?.maxFontPx || null;
+                const storyMax  = meta?.story ?.maxFontPx || meta?.maxFontPx || null;
+                return { name, variants:{ square:{ src:squareSrc, box:squareBox, maxFontPx:squareMax }, story:{ src:storySrc, box:storyBox, maxFontPx:storyMax } } };
+              }));
+              discovered = discovered.filter(Boolean);
             }
-          }catch(_){ /* ignore */ }
+          }
+        }catch(_){ /* ignore */ }
+
+        // 2) If nothing found locally, try GitHub auto-discovery as fallback
+        if (!discovered.length){
+          discovered = await listTemplatesFromGitHub();
         }
 
         // 3) Legacy probe fallback (local PNGs next to index.html)
