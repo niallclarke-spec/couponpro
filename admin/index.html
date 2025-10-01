@@ -38,9 +38,9 @@
         background: linear-gradient(180deg, rgba(11,12,16,.95), rgba(11,12,16,.85));
         backdrop-filter:saturate(140%) blur(6px);
         border-bottom:1px solid var(--border);
-        display:flex;align-items:center;gap:12px
+        display:flex;align-items:center;justify-content:space-between;gap:12px
       }
-      header .brand{display:flex;align-items:center;gap:12px}
+      header .title{display:flex;flex-direction:column}
       header img.logo{height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
       header h1{margin:0;font-weight:800;font-size:18px;letter-spacing:.2px}
       header h1 .light{font-weight:400;opacity:.85}
@@ -68,15 +68,64 @@
         border-radius:10px!important;
       }
       #nc-root .nc-app, #nc-root .nc-appMain{background:transparent!important}
+
+      /* --- Decap deep theming (best-effort, class-agnostic) --- */
+      #nc-root .MuiPaper-root,
+      #nc-root .MuiCard-root,
+      #nc-root [class*="Card"],
+      #nc-root [class*="Pane"],
+      #nc-root [class*="Sidebar"],
+      #nc-root [class*="Collections"]{
+        background:var(--panel)!important;
+        color:var(--ink)!important;
+        border:1px solid var(--border)!important;
+        border-radius:var(--radius)!important;
+      }
+      #nc-root .MuiDivider-root{border-color:var(--border)!important}
+      #nc-root .MuiTable-root{background:transparent!important}
+
+      /* Inputs */
+      #nc-root input,
+      #nc-root textarea,
+      #nc-root select,
+      #nc-root .MuiInputBase-root,
+      #nc-root .MuiOutlinedInput-root{
+        background:var(--panel-2)!important;
+        color:var(--ink)!important;
+        border-color:var(--border)!important;
+      }
+      #nc-root input::placeholder, #nc-root textarea::placeholder{color:#6e7681!important}
+      #nc-root .MuiOutlinedInput-notchedOutline{border-color:var(--border)!important}
+      #nc-root .Mui-focused .MuiOutlinedInput-notchedOutline{border-color:var(--brand)!important}
+
+      /* Buttons */
+      #nc-root button,
+      #nc-root [role="button"]{
+        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))!important;
+        color:var(--ink)!important;
+        border:1px solid var(--border)!important;
+      }
+      #nc-root button:hover{filter:brightness(1.05)}
+
+      /* Modals */
+      #nc-root [role="dialog"],
+      #nc-root .MuiDialog-paper{background:var(--panel)!important;border:1px solid var(--border)!important}
+
+      @media (max-width: 640px){
+        header{padding:14px 16px}
+        header img.logo{height:24px}
+        header h1{font-size:16px}
+        .wrap{padding:14px}
+      }
     </style>
   </head>
   <body>
     <header>
-      <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
-      <div>
+      <div class="title">
         <h1><span>CodeTag</span> <span class="light">Admin</span></h1>
         <p>Manage templates and upload promo images.</p>
       </div>
+      <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
     </header>
 
     <div class="wrap">
