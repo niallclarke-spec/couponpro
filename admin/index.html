@@ -1,332 +1,178 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>CodeTag Admin</title>
-    <style>
-      :root{
-        --bg:#0b0c10;           /* page background */
-        --panel:#11151b;        /* cards/panels */
-        --panel-2:#161b22;      /* alt panels */
-        --border:#262b35;       /* subtle borders */
-        --ink:#e9eef5;          /* primary text */
-        --muted:#9aa3ad;        /* secondary text */
-        --brand:#00d3a7;        /* accent brand tint */
-        --brand-ink:#0b0c10;    /* contrast on brand */
-        --shadow: 0 10px 30px rgba(0,0,0,.35);
-        --radius:14px;
+<script>
+  (function () {
+    const GH_OWNER  = 'niallclarke-spec';
+    const GH_REPO   = 'couponpro';
+    const GH_BRANCH = 'main';
+
+    function debug(...a){ console.log('[Admin Index]', ...a); }
+
+    function sniffTokenFromStorage(){
+      const knownKeys = ['gh_token','decap-cms-user','netlify-cms-user'];
+      for (const k of knownKeys){
+        const raw = localStorage.getItem(k);
+        if (!raw) continue;
+        try{
+          if (k === 'gh_token' && raw) return raw;
+          const obj = JSON.parse(raw);
+          if (obj?.token) return obj.token;
+          if (obj?.value?.token) return obj.value.token;
+          if (obj?.data?.token) return obj.data.token;
+        }catch(_){}
       }
-      html,body{height:100%;margin:0}
-      body{
-        background: radial-gradient(1200px 600px at 10% -10%, #12141a 0%, var(--bg) 60%),
-                    radial-gradient(900px 400px at 90% 10%, #0e1116 0%, transparent 60%),
-                    var(--bg);
-        color:var(--ink);
-        font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-        -webkit-font-smoothing:antialiased;moz-osx-font-smoothing:grayscale;
+      // brute-force scan
+      for (let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        const v = localStorage.getItem(k);
+        try{
+          const obj = JSON.parse(v);
+          if (obj?.token) return obj.token;
+          if (obj?.value?.token) return obj.value.token;
+          if (obj?.data?.token) return obj.data.token;
+        }catch(_){}
       }
-      a{color:var(--brand);text-decoration:none}
-      a:hover{opacity:.9}
+      return null;
+    }
 
-      header{
-        position: static;
-        padding:18px 20px;
-        background: linear-gradient(180deg, rgba(11,12,16,.95), rgba(11,12,16,.85));
-        backdrop-filter:saturate(140%) blur(6px);
-        border-bottom:1px solid var(--border);
-        display:flex;
-        align-items:center;
-        gap:14px;
+    async function ghJson(url, token, opts={}){
+      const r = await fetch(url, {
+        ...opts,
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `token ${token}`,
+          ...(opts.headers||{})
+        }
+      });
+      if (!r.ok){
+        const text = await r.text();
+        throw new Error(`${r.status} ${r.statusText} – ${text}`);
       }
-      header img.logo{height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
-      .brand-title h1 {
-        font-size:20px;
-        font-weight:700;
-        color: var(--ink);
-        margin: 0;
-      }
-      .brand-title h1 .highlight {
-        color: #ff3333;
-        font-weight:800;
-      }
-      .brand-sub {
-        font-weight:400;
-        opacity:.85;
-        font-size:16px;
-        color:var(--muted);
-        margin: 0;
-      }
+      return r.json();
+    }
 
-      .wrap{max-width:1200px;margin:0 auto;padding:22px}
-      .cms-root{
-        height: calc(100% - 0px);
-        background:#11151b;
-        border-radius:var(--radius);
-        box-shadow:var(--shadow);
-        padding:18px;
-        color: var(--ink);
-      }
+    const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
 
-      /* Subtle scrollbar polish */
-      *{scrollbar-width:thin;scrollbar-color:#313848 transparent}
-      *::-webkit-scrollbar{height:10px;width:10px}
-      *::-webkit-scrollbar-thumb{background:#313848;border-radius:8px}
+    async function regenerateTemplateIndex(onButton){
+      try{
+        if (onButton){ onButton.disabled = true; onButton.textContent = 'Generating…'; }
 
-      /* Decap top bar + buttons tinting (best-effort without relying on internal class names) */
-      #nc-root [class*="Toolbar"],
-      #nc-root header[role="toolbar"]{background:var(--panel-2)!important;border-bottom:1px solid var(--border)!important}
-      #nc-root button, #nc-root [role="button"]{
-        border-radius:10px!important;
-      }
-      #nc-root .nc-app, #nc-root .nc-appMain{background:transparent!important}
+        const token = sniffTokenFromStorage();
+        if (!token){
+          alert('Missing GitHub OAuth token. Please log out/in, then try again.');
+          throw new Error('No OAuth token in localStorage');
+        }
 
-      /* --- Decap deep theming (best-effort, class-agnostic) --- */
-      #nc-root .MuiPaper-root,
-      #nc-root .MuiCard-root,
-      #nc-root [class*="Card"],
-      #nc-root [class*="Pane"],
-      #nc-root [class*="Sidebar"],
-      #nc-root [class*="Collections"]{
-        background:#11151b!important;
-        color:var(--ink)!important;
-        border:1px solid var(--border)!important;
-        border-radius:var(--radius)!important;
-        box-shadow: var(--shadow) !important;
-      }
-      #nc-root .MuiDivider-root{border-color:var(--border)!important}
-      #nc-root .MuiTable-root{background:transparent!important}
+        // List template directories
+        const listUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates?ref=${GH_BRANCH}`;
+        const entries = await ghJson(listUrl, token);
 
-      /* Inputs */
-      #nc-root input,
-      #nc-root textarea,
-      #nc-root select,
-      #nc-root .MuiInputBase-root,
-      #nc-root .MuiOutlinedInput-root{
-        background:#161b22!important;
-        color:var(--ink)!important;
-        border-color:var(--border)!important;
-      }
-      #nc-root input::placeholder, #nc-root textarea::placeholder{color:#6e7681!important}
-      #nc-root .MuiOutlinedInput-notchedOutline{border-color:var(--border)!important}
-      #nc-root .Mui-focused .MuiOutlinedInput-notchedOutline{border-color:var(--brand)!important}
+        const templates = [];
 
-      /* Buttons */
-      #nc-root button,
-      #nc-root [role="button"]{
-        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))!important;
-        color:var(--ink)!important;
-        border:1px solid var(--border)!important;
-      }
-      #nc-root button:hover{filter:brightness(1.05)}
+        for (const e of entries){
+          if (e.type !== 'dir') continue;
+          const slug = e.name;
 
-      /* Modals */
-      #nc-root [role="dialog"],
-      #nc-root .MuiDialog-paper{background:#11151b!important;border:1px solid var(--border)!important}
+          // Read folder items
+          const folderUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/${slug}?ref=${GH_BRANCH}`;
+          const items = await ghJson(folderUrl, token);
 
-      @media (max-width: 640px){
-        header{padding:14px 16px}
-        header img.logo{height:24px}
-        .brand-title h1{font-size:18px}
-        .brand-sub {font-size:14px;}
-        .wrap{padding:14px}
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <img src="../assets/fp-site-logo.png" alt="FunderPro Logo" class="logo" />
-      <div class="brand-title">
-        <h1>Funder<span class="highlight">Pro</span></h1>
-        <p class="brand-sub">CouponPro | Admin</p>
-      </div>
-    </header>
-
-    <div class="wrap">
-      <!-- Decap CMS mounts here -->
-      <div id="nc-root" class="cms-root"></div>
-    </div>
-
-    <script>
-      window.CMS_MANUAL_INIT = true;
-    </script>
-    <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
-
-    <script>
-      (function () {
-        const config = {
-          backend: {
-            name: "github",
-            repo: "niallclarke-spec/couponpro",
-            branch: "main",
-            base_url: "https://seal-app-b72hq.ondigitalocean.app",
-            auth_endpoint: "/auth"
-          },
-
-          media_folder: "assets/uploads",
-          public_folder: "/assets/uploads",
-
-          collections: [
-            {
-              name: "templates",
-              label: "Templates",
-              label_singular: "Template",
-              description: "Create a new template with two PNGs (Square and Story) and define coupon areas.",
-              folder: "assets/templates",
-              format: "json",
-              create: true,
-              slug: "{{slug}}",
-              path: "{{slug}}/meta",
-              identifier_field: "name",
-              fields: [
-                { label: "Template Name", name: "name", widget: "string", hint: "Shown in the front-end dropdown." },
-                { label: "Slug", name: "slug", widget: "slug", required: true, hint: "Folder name; auto-generated from Template Name." },
-                {
-                  label: "Square Image (PNG only)", name: "square", widget: "object",
-                  fields: [
-                    {
-                      label: "Square PNG", name: "image", widget: "image",
-                      media_folder: "assets/templates/{{slug}}",
-                      public_folder: "/assets/templates/{{slug}}",
-                      allow_multiple: false,
-                      required: true,
-                      pattern: [ "\\.png$", "File must be a .png" ],
-                      hint: "PNG only. Will be saved as /assets/templates/<slug>/square.png"
-                    },
-                    {
-                      label: "Box", name: "box", widget: "object",
-                      fields: [
-                        { label: "Left %",   name: "leftPct",   widget: "number", value_type: "float", min: 0, max: 100, default: 56.5 },
-                        { label: "Top %",    name: "topPct",    widget: "number", value_type: "float", min: 0, max: 100, default: 62.7 },
-                        { label: "Width %",  name: "widthPct",  widget: "number", value_type: "float", min: 0, max: 100, default: 30 },
-                        { label: "Height %", name: "heightPct", widget: "number", value_type: "float", min: 0, max: 100, default: 5 },
-                        { label: "H Align",  name: "hAlign",    widget: "select", options: ["left","center","right"], default: "center" },
-                        { label: "V Align",  name: "vAlign",    widget: "select", options: ["top","middle","bottom"], default: "bottom" }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  label: "Story Image (PNG only)", name: "story", widget: "object",
-                  fields: [
-                    {
-                      label: "Story PNG", name: "image", widget: "image",
-                      media_folder: "assets/templates/{{slug}}",
-                      public_folder: "/assets/templates/{{slug}}",
-                      allow_multiple: false,
-                      required: true,
-                      pattern: [ "\\.png$", "File must be a .png" ],
-                      hint: "PNG only. Will be saved as /assets/templates/<slug>/story.png"
-                    },
-                    {
-                      label: "Box", name: "box", widget: "object",
-                      fields: [
-                        { label: "Left %",   name: "leftPct",   widget: "number", value_type: "float", min: 0, max: 100, default: 56.5 },
-                        { label: "Top %",    name: "topPct",    widget: "number", value_type: "float", min: 0, max: 100, default: 62.7 },
-                        { label: "Width %",  name: "widthPct",  widget: "number", value_type: "float", min: 0, max: 100, default: 30 },
-                        { label: "Height %", name: "heightPct", widget: "number", value_type: "float", min: 0, max: 100, default: 5 },
-                        { label: "H Align",  name: "hAlign",    widget: "select", options: ["left","center","right"], default: "center" },
-                        { label: "V Align",  name: "vAlign",    widget: "select", options: ["top","middle","bottom"], default: "bottom" }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        };
-
-        function start() {
-          if (window.CMS && window.CMS.init) {
-            window.CMS.init({ config });
-          } else {
-            setTimeout(start, 50);
+          // meta.json
+          let name = slug;
+          const meta = items.find(x => x.type === 'file' && x.name.toLowerCase() === 'meta.json');
+          if (meta){
+            try{
+              const metaText = await (await fetch(meta.download_url)).text();
+              const metaJson = JSON.parse(metaText);
+              if (metaJson?.name) name = metaJson.name;
+            }catch(err){ debug('meta.json parse failed for', slug, err); }
           }
-        }
 
-        start();
-      })();
-    </script>
+          // collect pngs
+          const pngs = items
+            .filter(x => x.type === 'file' && /\.png$/i.test(x.name))
+            .map(x => `assets/templates/${slug}/${x.name}`);
 
-    <script>
-      (function () {
-        async function regenerateIndex(onButton){
-          try {
-            if (onButton) { onButton.disabled = true; onButton.textContent = 'Generating…'; }
+          const byName = (s) => pngs.find(p => p.toLowerCase().includes(s));
+          let square = byName('square') || byName('sq') || pngs[0] || '';
+          let story  = byName('story')  || byName('st') || pngs[1] || pngs[0] || '';
 
-            const backend = window.CMS.getBackend();
-            const list = await backend.listEntries({ collection: 'templates' });
-            const entries = list && list.get ? list.toJS() : list;
-
-            const items = (entries || []).map(e => {
-              const data = e && e.data ? e.data : e;
-              const name = data?.name || (data?.get && data.get('name'));
-              const slug = (data?.slug || (data?.get && data.get('slug'))) ||
-                           String(name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-              return { slug, name: name || slug };
-            }).sort((a,b)=> a.name.localeCompare(b.name));
-
-            const json = JSON.stringify({ templates: items }, null, 2);
-            const file = new File([json], 'index.json', { type: 'application/json' });
-
-            await backend.persistMedia({
-              file,
-              assets: [],
-              path: 'assets/templates/index.json',
-              isPrivate: false
-            });
-
-            if (onButton) {
-              onButton.textContent = 'Index updated ✓';
-              setTimeout(()=>{ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
-            }
-          } catch (err) {
-            console.error(err);
-            if (onButton) {
-              alert('Failed to regenerate index.json — see console for details.');
-              onButton.textContent = 'Regenerate Template Index';
-              onButton.disabled = false;
-            }
-          }
-        }
-
-        function ensureButton() {
-          const root = document.querySelector('#nc-root');
-          if (!root) return setTimeout(ensureButton, 300);
-
-          const bar = root.querySelector('header[role="toolbar"], [class*="Toolbar"]');
-          if (!bar || bar.dataset.ctIndexBtn) return setTimeout(ensureButton, 500);
-          bar.dataset.ctIndexBtn = '1';
-
-          const btn = document.createElement('button');
-          btn.style.marginLeft = 'auto';
-          btn.style.padding = '8px 12px';
-          btn.style.borderRadius = '10px';
-          btn.style.border = '1px solid #2b313b';
-          btn.style.background = 'linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))';
-          btn.style.color = '#e9eef5';
-          btn.textContent = 'Regenerate Template Index';
-
-          btn.onclick = () => regenerateIndex(btn);
-
-          bar.appendChild(btn);
-        }
-
-        if (window.CMS && window.CMS.registerEventListener) {
-          window.CMS.registerEventListener({
-            name: 'entryPublished',
-            handler: async () => {
-              try { await regenerateIndex(); }
-              catch (e) { console.error('Automatic index generation failed', e); }
-            }
+          templates.push({
+            slug, name, square, story,
+            meta: `assets/templates/${slug}/meta.json`
           });
         }
 
-        ensureButton();
-      })();
-    </script>
-  </body>
-</html>
+        const manifest = { templates };
+
+        // read existing sha (if present)
+        let sha;
+        try{
+          const head = await ghJson(
+            `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/index.json?ref=${GH_BRANCH}`,
+            token
+          );
+          sha = head?.sha;
+        }catch(_){ /* file may not exist – that's fine */ }
+
+        const putUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/index.json`;
+        const body = {
+            message: 'chore: regenerate templates index.json',
+            branch: GH_BRANCH,
+            content: b64e(JSON.stringify(manifest, null, 2)),
+            ...(sha ? { sha } : {})
+        };
+
+        const resp = await fetch(putUrl, {
+          method: 'PUT',
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!resp.ok){
+          const t = await resp.text();
+          throw new Error(`${resp.status} ${resp.statusText} – ${t}`);
+        }
+
+        if (onButton){
+          onButton.textContent = 'Index updated ✓';
+          setTimeout(()=>{ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
+        }
+      }catch(err){
+        console.error('[Regenerate index] failed:', err);
+        alert('Failed to regenerate index.json — open DevTools console and copy the error.');
+        if (onButton){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }
+      }
+    }
+
+    function mountToolbarButton(){
+      const root = document.querySelector('#nc-root');
+      if (!root) return setTimeout(mountToolbarButton, 300);
+      const bar = root.querySelector('header[role="toolbar"], [class*="Toolbar"]');
+      if (!bar || bar.dataset.ctIndexBtn) return setTimeout(mountToolbarButton, 500);
+      bar.dataset.ctIndexBtn = '1';
+
+      const btn = document.createElement('button');
+      btn.style.marginLeft = 'auto';
+      btn.style.padding = '8px 12px';
+      btn.style.borderRadius = '10px';
+      btn.style.border = '1px solid #2b313b';
+      btn.style.background = 'linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))';
+      btn.style.color = '#e9eef5';
+      btn.textContent = 'Regenerate Template Index';
+      btn.onclick = () => regenerateTemplateIndex(btn);
+      bar.appendChild(btn);
+    }
+
+    if (window.CMS && window.CMS.registerEventListener){
+      window.CMS.registerEventListener({
+        name: 'entryPublished',
+        handler: () => regenerateTemplateIndex().catch(e=>console.error(e))
+      });
+    }
+
+    mountToolbarButton();
+  })();
+</script>
