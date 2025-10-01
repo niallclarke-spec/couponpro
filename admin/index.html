@@ -1,37 +1,36 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>CodeTag Admin</title>
-    <style>
-      /* quick dark theme background so the load doesn’t flash white */
-      html,body { background:#0f1216; color:#e9eef5; height:100%; margin:0 }
-    </style>
-    <!-- Load Decap CMS -->
-    <script src="https://unpkg.com/decap-cms@^3.4.1/dist/decap-cms.js"></script>
-  </head>
-  <body>
-    <!-- Decap renders its UI into the body; we just add our helper script -->
-    <script>
-      (function () {
-        const GH_OWNER  = 'niallclarke-spec';
-        const GH_REPO   = 'couponpro';
-        const GH_BRANCH = 'main';
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CodeTag Admin</title>
+  <meta name="robots" content="noindex" />
+</head>
+<body>
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 
-        function debug(...a){ console.log('[Admin Index]', ...a); }
+  <script>
+    (function () {
+      if (location.search.includes('noext=1')) return;
 
-        function sniffTokenFromStorage(){
-          const knownKeys = ['gh_token','decap-cms-user','netlify-cms-user'];
-          for (const k of knownKeys){
+      const GH_OWNER  = 'niallclarke-spec';
+      const GH_REPO   = 'couponpro';
+      const GH_BRANCH = 'main';
+
+      function debug(){/* noop in prod */ }
+
+      function sniffTokenFromStorage(){
+        try{
+          const keys = ['gh_token','decap-cms-user','netlify-cms-user'];
+          for (const k of keys){
             const raw = localStorage.getItem(k);
             if (!raw) continue;
+            if (k === 'gh_token' && raw) return raw;
             try{
-              if (k === 'gh_token' && raw) return raw;
               const obj = JSON.parse(raw);
-              if (obj?.token) return obj.token;
-              if (obj?.value?.token) return obj.value.token;
-              if (obj?.data?.token) return obj.data.token;
+              if (obj && obj.token) return obj.token;
+              if (obj && obj.value && obj.value.token) return obj.value.token;
+              if (obj && obj.data && obj.data.token) return obj.data.token;
             }catch(_){}
           }
           for (let i=0;i<localStorage.length;i++){
@@ -39,131 +38,141 @@
             const v = localStorage.getItem(k);
             try{
               const obj = JSON.parse(v);
-              if (obj?.token) return obj.token;
-              if (obj?.value?.token) return obj.value.token;
-              if (obj?.data?.token) return obj.data.token;
+              if (obj && obj.token) return obj.token;
+              if (obj && obj.value && obj.value.token) return obj.value.token;
+              if (obj && obj.data && obj.data.token) return obj.data.token;
             }catch(_){}
           }
-          return null;
-        }
+        }catch(_){}
+        return null;
+      }
 
-        async function ghJson(url, token, opts={}){
-          const r = await fetch(url, {
-            ...opts,
+      async function ghJson(url, token, opts){
+        const r = await fetch(url, Object.assign({}, opts, {
+          headers: Object.assign({
+            'Accept': 'application/vnd.github+json',
+            'Authorization': 'token ' + token
+          }, (opts && opts.headers) || {})
+        }));
+        if (!r.ok){
+          const t = await r.text();
+          throw new Error(r.status + ' ' + r.statusText + ' – ' + t);
+        }
+        return r.json();
+      }
+
+      function b64e(s){
+        return btoa(unescape(encodeURIComponent(s)));
+      }
+
+      async function regenerateTemplateIndex(onButton){
+        try{
+          if (onButton){ onButton.disabled = true; onButton.textContent = 'Generating…'; }
+
+          const token = sniffTokenFromStorage();
+          if (!token){
+            alert('Missing GitHub OAuth token. Please log out/in, then try again.');
+            throw new Error('No OAuth token');
+          }
+
+          const listUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates?ref=' + GH_BRANCH;
+          const entries = await ghJson(listUrl, token);
+
+          const templates = [];
+          for (const e of entries){
+            if (e.type !== 'dir') continue;
+            const slug = e.name;
+
+            const folderUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/' + slug + '?ref=' + GH_BRANCH;
+            const items = await ghJson(folderUrl, token);
+
+            let name = slug;
+            const meta = items.find(function(x){ return x.type === 'file' && x.name.toLowerCase() === 'meta.json'; });
+            if (meta){
+              try{
+                const metaText = await (await fetch(meta.download_url)).text();
+                const metaJson = JSON.parse(metaText);
+                if (metaJson && metaJson.name) name = metaJson.name;
+              }catch(_){}
+            }
+
+            const pngs = items
+              .filter(function(x){ return x.type === 'file' && /\.png$/i.test(x.name); })
+              .map(function(x){ return 'assets/templates/' + slug + '/' + x.name; });
+
+            function byName(s){
+              for (var i=0;i<pngs.length;i++){ if (pngs[i].toLowerCase().indexOf(s) !== -1) return pngs[i]; }
+              return null;
+            }
+
+            var square = byName('square') || byName('sq') || (pngs[0] || '');
+            var story  = byName('story')  || byName('st') || (pngs[1] || pngs[0] || '');
+
+            templates.push({
+              slug: slug,
+              name: name,
+              square: square,
+              story: story,
+              meta: 'assets/templates/' + slug + '/meta.json'
+            });
+          }
+
+          const manifest = { templates: templates };
+
+          var sha;
+          try{
+            const head = await ghJson(
+              'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/index.json?ref=' + GH_BRANCH,
+              token
+            );
+            sha = head && head.sha;
+          }catch(_){}
+
+          const putUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/index.json';
+          const body = {
+            message: 'chore: regenerate templates index.json',
+            branch: GH_BRANCH,
+            content: b64e(JSON.stringify(manifest, null, 2))
+          };
+          if (sha) body.sha = sha;
+
+          const resp = await fetch(putUrl, {
+            method: 'PUT',
             headers: {
               'Accept': 'application/vnd.github+json',
-              'Authorization': `token ${token}`,
-              ...(opts.headers||{})
-            }
+              'Authorization': 'token ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
           });
-          if (!r.ok){
-            const text = await r.text();
-            throw new Error(`${r.status} ${r.statusText} – ${text}`);
+          if (!resp.ok){
+            const t = await resp.text();
+            throw new Error(resp.status + ' ' + resp.statusText + ' – ' + t);
           }
-          return r.json();
-        }
 
-        const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
-
-        async function regenerateTemplateIndex(onButton){
-          try{
-            if (onButton){ onButton.disabled = true; onButton.textContent = 'Generating…'; }
-
-            const token = sniffTokenFromStorage();
-            if (!token){
-              alert('Missing GitHub OAuth token. Please log out/in, then try again.');
-              throw new Error('No OAuth token in localStorage');
-            }
-
-            const listUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates?ref=${GH_BRANCH}`;
-            const entries = await ghJson(listUrl, token);
-
-            const templates = [];
-
-            for (const e of entries){
-              if (e.type !== 'dir') continue;
-              const slug = e.name;
-
-              const folderUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/${slug}?ref=${GH_BRANCH}`;
-              const items = await ghJson(folderUrl, token);
-
-              let name = slug;
-              const meta = items.find(x => x.type === 'file' && x.name.toLowerCase() === 'meta.json');
-              if (meta){
-                try{
-                  const metaText = await (await fetch(meta.download_url)).text();
-                  const metaJson = JSON.parse(metaText);
-                  if (metaJson?.name) name = metaJson.name;
-                }catch(err){ debug('meta.json parse failed for', slug, err); }
-              }
-
-              const pngs = items
-                .filter(x => x.type === 'file' && /\.png$/i.test(x.name))
-                .map(x => `assets/templates/${slug}/${x.name}`);
-
-              const byName = (s) => pngs.find(p => p.toLowerCase().includes(s));
-              let square = byName('square') || byName('sq') || pngs[0] || '';
-              let story  = byName('story')  || byName('st') || pngs[1] || pngs[0] || '';
-
-              templates.push({
-                slug, name, square, story,
-                meta: `assets/templates/${slug}/meta.json`
-              });
-            }
-
-            const manifest = { templates };
-
-            let sha;
-            try{
-              const head = await ghJson(
-                `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/index.json?ref=${GH_BRANCH}`,
-                token
-              );
-              sha = head?.sha;
-            }catch(_){}
-
-            const putUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/templates/index.json`;
-            const body = {
-              message: 'chore: regenerate templates index.json',
-              branch: GH_BRANCH,
-              content: b64e(JSON.stringify(manifest, null, 2)),
-              ...(sha ? { sha } : {})
-            };
-
-            const resp = await fetch(putUrl, {
-              method: 'PUT',
-              headers: {
-                'Accept': 'application/vnd.github+json',
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(body)
-            });
-
-            if (!resp.ok){
-              const t = await resp.text();
-              throw new Error(`${resp.status} ${resp.statusText} – ${t}`);
-            }
-
-            if (onButton){
-              onButton.textContent = 'Index updated ✓';
-              setTimeout(()=>{ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
-            }
-          }catch(err){
-            console.error('[Regenerate index] failed:', err);
-            alert('Failed to regenerate index.json — open DevTools console and copy the error.');
-            if (onButton){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }
+          if (onButton){
+            onButton.textContent = 'Index updated ✓';
+            setTimeout(function(){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
           }
+        }catch(err){
+          console.error('[Regenerate index] failed:', err);
+          alert('Failed to regenerate index.json — open DevTools and check the console.');
+          if (onButton){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }
         }
+      }
 
-        function mountToolbarButton(){
-          const root = document.querySelector('#nc-root');
-          if (!root) return setTimeout(mountToolbarButton, 300);
-          const bar = root.querySelector('header[role="toolbar"], [class*="Toolbar"]');
-          if (!bar || bar.dataset.ctIndexBtn) return setTimeout(mountToolbarButton, 500);
+      function mountToolbarButton(){
+        var tries = 0;
+        (function poll(){
+          tries++;
+          var root = document.querySelector('#nc-root');
+          if (!root){ if (tries < 60) return setTimeout(poll, 500); else return; }
+          var bar = root.querySelector('header[role="toolbar"], [class*="Toolbar"]');
+          if (!bar){ if (tries < 60) return setTimeout(poll, 500); else return; }
+          if (bar.dataset.ctIndexBtn) return;
           bar.dataset.ctIndexBtn = '1';
 
-          const btn = document.createElement('button');
+          var btn = document.createElement('button');
           btn.style.marginLeft = 'auto';
           btn.style.padding = '8px 12px';
           btn.style.borderRadius = '10px';
@@ -171,24 +180,31 @@
           btn.style.background = 'linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))';
           btn.style.color = '#e9eef5';
           btn.textContent = 'Regenerate Template Index';
-          btn.onclick = () => regenerateTemplateIndex(btn);
+          btn.onclick = function(){ regenerateTemplateIndex(btn); };
           bar.appendChild(btn);
-        }
+        })();
+      }
 
-        // Make sure Decap is loaded first
-        function whenCMSReady(fn){
-          if (window.CMS && window.CMS.registerEventListener) return fn();
-          setTimeout(()=>whenCMSReady(fn), 100);
-        }
+      function installOnceCMSReady(){
+        var tries = 0;
+        (function waitCMS(){
+          tries++;
+          if (window.CMS && typeof window.CMS.registerEventListener === 'function'){
+            try{
+              window.CMS.registerEventListener({
+                name: 'entryPublished',
+                handler: function(){ regenerateTemplateIndex().catch(function(e){ console.error(e); }); }
+              });
+            }catch(_){}
+            mountToolbarButton();
+          } else {
+            if (tries < 60) setTimeout(waitCMS, 500);
+          }
+        })();
+      }
 
-        whenCMSReady(() => {
-          window.CMS.registerEventListener({
-            name: 'entryPublished',
-            handler: () => regenerateTemplateIndex().catch(e=>console.error(e))
-          });
-          mountToolbarButton();
-        });
-      })();
-    </script>
-  </body>
+      installOnceCMSReady();
+    })();
+  </script>
+</body>
 </html>
