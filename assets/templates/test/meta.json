@@ -1,0 +1,25 @@
+{
+  "square": {
+    "box": {
+      "leftPct": 85,
+      "topPct": 62.7,
+      "widthPct": 30,
+      "heightPct": 5,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "image": "/assets/templates/33.png"
+  },
+  "story": {
+    "box": {
+      "leftPct": 56.5,
+      "topPct": 62.7,
+      "widthPct": 30,
+      "heightPct": 5,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "image": "/assets/templates/34-min.png"
+  },
+  "name": "Test"
+}
