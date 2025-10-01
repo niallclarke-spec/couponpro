@@ -27,6 +27,13 @@
       "square": "",
       "story": "",
       "meta": "assets/templates/red/meta.json"
+    },
+    {
+      "slug": "test-10",
+      "name": "Test 10",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/test-10/meta.json"
     }
   ]
 }
