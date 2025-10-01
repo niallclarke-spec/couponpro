@@ -36,6 +36,13 @@
       "meta": "assets/templates/test-10/meta.json"
     },
     {
+      "slug": "test1",
+      "name": "Test1",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/test1/meta.json"
+    },
+    {
       "slug": "vape",
       "name": "vape",
       "square": "",
