@@ -33,7 +33,7 @@
       a:hover{opacity:.9}
 
       header{
-        position:sticky;top:0;z-index:10;
+        position: static;
         padding:18px 20px;
         background: linear-gradient(180deg, rgba(11,12,16,.95), rgba(11,12,16,.85));
         backdrop-filter:saturate(140%) blur(6px);
@@ -253,6 +253,46 @@
 
     <script>
       (function () {
+        async function regenerateIndex(onButton){
+          try {
+            if (onButton) { onButton.disabled = true; onButton.textContent = 'Generating…'; }
+
+            const backend = window.CMS.getBackend();
+            const list = await backend.listEntries({ collection: 'templates' });
+            const entries = list && list.get ? list.toJS() : list;
+
+            const items = (entries || []).map(e => {
+              const data = e && e.data ? e.data : e;
+              const name = data?.name || (data?.get && data.get('name'));
+              const slug = (data?.slug || (data?.get && data.get('slug'))) ||
+                           String(name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+              return { slug, name: name || slug };
+            }).sort((a,b)=> a.name.localeCompare(b.name));
+
+            const json = JSON.stringify({ templates: items }, null, 2);
+            const file = new File([json], 'index.json', { type: 'application/json' });
+
+            await backend.persistMedia({
+              file,
+              assets: [],
+              path: 'assets/templates/index.json',
+              isPrivate: false
+            });
+
+            if (onButton) {
+              onButton.textContent = 'Index updated ✓';
+              setTimeout(()=>{ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
+            }
+          } catch (err) {
+            console.error(err);
+            if (onButton) {
+              alert('Failed to regenerate index.json — see console for details.');
+              onButton.textContent = 'Regenerate Template Index';
+              onButton.disabled = false;
+            }
+          }
+        }
+
         function ensureButton() {
           const root = document.querySelector('#nc-root');
           if (!root) return setTimeout(ensureButton, 300);
@@ -270,44 +310,19 @@
           btn.style.color = '#e9eef5';
           btn.textContent = 'Regenerate Template Index';
 
-          btn.onclick = async () => {
-            try {
-              btn.disabled = true;
-              btn.textContent = 'Generating…';
-
-              const backend = window.CMS.getBackend();
-              const list = await backend.listEntries({ collection: 'templates' });
-
-              const entries = list && list.get ? list.toJS() : list;
-              const items = (entries || []).map(e => {
-                const data = e && e.data ? e.data : e;
-                const name = data.name || (data.get && data.get('name'));
-                const slug = (data.slug || (data.get && data.get('slug'))) ||
-                             String(name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-                return { slug, name: name || slug };
-              }).sort((a,b)=> a.name.localeCompare(b.name));
-
-              const json = JSON.stringify({ templates: items }, null, 2);
-              const file = new File([json], 'index.json', { type: 'application/json' });
-
-              await backend.persistMedia({
-                file,
-                assets: [],
-                path: 'assets/templates/index.json',
-                isPrivate: false
-              });
-
-              btn.textContent = 'Index updated ✓';
-              setTimeout(()=>{ btn.textContent = 'Regenerate Template Index'; btn.disabled = false; }, 1500);
-            } catch (err) {
-              console.error(err);
-              alert('Failed to regenerate index.json — see console for details.');
-              btn.textContent = 'Regenerate Template Index';
-              btn.disabled = false;
-            }
-          };
+          btn.onclick = () => regenerateIndex(btn);
 
           bar.appendChild(btn);
+        }
+
+        if (window.CMS && window.CMS.registerEventListener) {
+          window.CMS.registerEventListener({
+            name: 'entryPublished',
+            handler: async () => {
+              try { await regenerateIndex(); }
+              catch (e) { console.error('Automatic index generation failed', e); }
+            }
+          });
         }
 
         ensureButton();
