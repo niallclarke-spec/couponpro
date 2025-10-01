@@ -402,16 +402,58 @@
     }
 
     (async function init(){
-      try {
-        // 1) Prefer the new manifest from the admin: /assets/templates/index.json
-        const idx = await fetchJSON('/assets/templates/index.json');
-        const list = Array.isArray(idx) ? idx : (idx.templates || []);
-        if (!list.length) throw new Error('empty index');
-
-        // 2) Load each template's meta.json and normalize into our in-memory structure
-        const metas = await Promise.all(list.map(async (item) => {
+      // Helper: try fetchJSON, return null on error
+      async function tryFetchJSON(path) {
+        try { return await fetchJSON(path); }
+        catch(e){ return null; }
+      }
+      // 1) Try to load /assets/templates/index.json as manifest of template slugs
+      let indexList = [];
+      let indexJson = await tryFetchJSON('/assets/templates/index.json');
+      if (indexJson) {
+        indexList = Array.isArray(indexJson) ? indexJson : (indexJson.templates || []);
+      }
+      // If index.json is missing or no templates, fallback to scanning
+      if (!indexList.length) {
+        // Fallback: try to probe a set of possible slugs (could be replaced with directory listing if available)
+        // Predefined slugs, expand as needed
+        const possibleSlugs = [
+          'default','classic','promo','dark','light','blue','red','gold','1','2','3','4','5','coupon','offer','main','template-1','template-2','template-3',
+        ];
+        // Probe for meta.json existence
+        indexList = [];
+        await Promise.all(possibleSlugs.map(async (slug) => {
+          const meta = await tryFetchJSON(`/assets/templates/${slug}/meta.json`);
+          if (meta) indexList.push({slug, ...meta});
+        }));
+        // If still nothing, fallback to legacy probe
+        if (!indexList.length) {
+          try {
+            const probes = await Promise.all(CANDIDATES.map(probe));
+            const hits = probes.filter(p=>p.ok).map(p=>p.src);
+            if (!hits.length){ setStatus('No templates detected.'); return; }
+            TEMPLATES = normalizeTemplates(hits);
+            els.template.innerHTML='';
+            TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
+            const s=getVariant('square'); const st=getVariant('story'); if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
+            setStatus('');
+            return;
+          } catch(e){
+            console.error('[init] failed to probe images', e);
+            setStatus('Failed to load templates.');
+            return;
+          }
+        }
+      }
+      // 2) For all detected template slugs, load their meta.json
+      // indexList is now a list of {slug,...} or {slug,name,...}
+      let metas = [];
+      // If indexList came from index.json, load meta.json for each slug
+      if (indexJson && Array.isArray(indexList) && indexList.length && !(indexList[0] && indexList[0].square && indexList[0].story)) {
+        metas = await Promise.all(indexList.map(async (item) => {
           const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-          const meta = await fetchJSON(`/assets/templates/${slug}/meta.json`);
+          const meta = await tryFetchJSON(`/assets/templates/${slug}/meta.json`);
+          if (!meta) return null;
           const name = meta.name || item.name || slug;
           const sq = meta.square || {}; const st = meta.story || {};
           return {
@@ -422,35 +464,32 @@
             }
           };
         }));
-
-        TEMPLATES = metas.filter(Boolean);
-        if(!TEMPLATES.length) throw new Error('no metas');
-
-        // 3) Populate dropdown and load first template previews
-        els.template.innerHTML = '';
-        TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
-        current = 0;
-        const s=getVariant('square'); const st=getVariant('story');
-        if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
-        setStatus('');
+      } else if (indexList.length && indexList[0] && (indexList[0].square || indexList[0].story)) {
+        // indexList may already be [{slug, ...meta}]
+        metas = indexList.map(item => {
+          const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+          const sq = item.square || {}; const st = item.story || {};
+          return {
+            name: item.name || slug,
+            variants: {
+              square: { src: sq.image || `/assets/templates/${slug}/square.png`, box: sq.box || null },
+              story:  { src: st.image || `/assets/templates/${slug}/story.png`,  box: st.box || null }
+            }
+          };
+        });
+      }
+      TEMPLATES = (metas||[]).filter(Boolean);
+      if(!TEMPLATES.length) {
+        setStatus('No templates found in /assets/templates/.');
         return;
-      } catch(err){
-        console.warn('[init] templates manifest not found/invalid, falling back to probe:', err.message);
       }
-
-      // --- Fallback to legacy image probing if manifest is missing ---
-      try {
-        const probes = await Promise.all(CANDIDATES.map(probe));
-        const hits = probes.filter(p=>p.ok).map(p=>p.src);
-        if (!hits.length){ setStatus('No templates detected.'); return; }
-        TEMPLATES = normalizeTemplates(hits);
-        els.template.innerHTML='';
-        TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
-        const s=getVariant('square'); const st=getVariant('story'); if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
-      } catch(e){
-        console.error('[init] failed to probe images', e);
-        setStatus('Failed to load templates.');
-      }
+      // 3) Populate dropdown and load first template previews
+      els.template.innerHTML = '';
+      TEMPLATES.forEach((t,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=t.name||`Template ${i+1}`; els.template.appendChild(o); });
+      current = 0;
+      const s=getVariant('square'); const st=getVariant('story');
+      if(s.src) loadVariant('square', s.src); if(st.src) loadVariant('story', st.src);
+      setStatus('');
     })();
   </script>
 </body>
