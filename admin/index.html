@@ -156,7 +156,6 @@
     <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
 
     <script>
-      // Inline Decap config so we don't rely on /admin/config.yml being served
       (function () {
         const config = {
           backend: {
@@ -166,21 +165,73 @@
             base_url: "https://seal-app-b72hq.ondigitalocean.app",
             auth_endpoint: "/auth"
           },
+
           media_folder: "assets/uploads",
           public_folder: "/assets/uploads",
+
           collections: [
             {
-              name: "uploads",
-              label: "Uploads",
-              label_singular: "Upload",
-              description: "Simple media uploads into assets/uploads",
-              files: [
+              name: "templates",
+              label: "Templates",
+              label_singular: "Template",
+              description: "Create a new template with two PNGs (Square and Story) and define coupon areas.",
+              folder: "assets/templates",
+              format: "json",
+              create: true,
+              slug: "{{slug}}",
+              path: "{{slug}}/meta",
+              identifier_field: "name",
+              fields: [
+                { label: "Template Name", name: "name", widget: "string", hint: "Shown in the front-end dropdown." },
+                { label: "Slug", name: "slug", widget: "slug", required: true, hint: "Folder name; generated from Template Name.", slugify: (values) => (values && values.name ? values.name : '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') },
                 {
-                  file: "assets/uploads/.keep",
-                  label: "Upload Media",
-                  name: "media",
+                  label: "Square Image (PNG only)", name: "square", widget: "object",
                   fields: [
-                    { label: "Upload files", name: "files", widget: "file", multiple: true, allow_multiple: true }
+                    {
+                      label: "Square PNG", name: "image", widget: "image",
+                      media_folder: "assets/templates/{{slug}}",
+                      public_folder: "/assets/templates/{{slug}}",
+                      allow_multiple: false,
+                      required: true,
+                      pattern: [ "\\.png$", "File must be a .png" ],
+                      hint: "PNG only. Will be saved as /assets/templates/<slug>/square.png"
+                    },
+                    {
+                      label: "Box", name: "box", widget: "object",
+                      fields: [
+                        { label: "Left %",   name: "leftPct",   widget: "number", value_type: "float", min: 0, max: 100, default: 56.5 },
+                        { label: "Top %",    name: "topPct",    widget: "number", value_type: "float", min: 0, max: 100, default: 62.7 },
+                        { label: "Width %",  name: "widthPct",  widget: "number", value_type: "float", min: 0, max: 100, default: 30 },
+                        { label: "Height %", name: "heightPct", widget: "number", value_type: "float", min: 0, max: 100, default: 5 },
+                        { label: "H Align",  name: "hAlign",    widget: "select", options: ["left","center","right"], default: "center" },
+                        { label: "V Align",  name: "vAlign",    widget: "select", options: ["top","middle","bottom"], default: "bottom" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  label: "Story Image (PNG only)", name: "story", widget: "object",
+                  fields: [
+                    {
+                      label: "Story PNG", name: "image", widget: "image",
+                      media_folder: "assets/templates/{{slug}}",
+                      public_folder: "/assets/templates/{{slug}}",
+                      allow_multiple: false,
+                      required: true,
+                      pattern: [ "\\.png$", "File must be a .png" ],
+                      hint: "PNG only. Will be saved as /assets/templates/<slug>/story.png"
+                    },
+                    {
+                      label: "Box", name: "box", widget: "object",
+                      fields: [
+                        { label: "Left %",   name: "leftPct",   widget: "number", value_type: "float", min: 0, max: 100, default: 56.5 },
+                        { label: "Top %",    name: "topPct",    widget: "number", value_type: "float", min: 0, max: 100, default: 62.7 },
+                        { label: "Width %",  name: "widthPct",  widget: "number", value_type: "float", min: 0, max: 100, default: 30 },
+                        { label: "Height %", name: "heightPct", widget: "number", value_type: "float", min: 0, max: 100, default: 5 },
+                        { label: "H Align",  name: "hAlign",    widget: "select", options: ["left","center","right"], default: "center" },
+                        { label: "V Align",  name: "vAlign",    widget: "select", options: ["top","middle","bottom"], default: "bottom" }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -197,6 +248,69 @@
         }
 
         start();
+      })();
+    </script>
+
+    <script>
+      (function () {
+        function ensureButton() {
+          const root = document.querySelector('#nc-root');
+          if (!root) return setTimeout(ensureButton, 300);
+
+          const bar = root.querySelector('header[role="toolbar"], [class*="Toolbar"]');
+          if (!bar || bar.dataset.ctIndexBtn) return setTimeout(ensureButton, 500);
+          bar.dataset.ctIndexBtn = '1';
+
+          const btn = document.createElement('button');
+          btn.style.marginLeft = 'auto';
+          btn.style.padding = '8px 12px';
+          btn.style.borderRadius = '10px';
+          btn.style.border = '1px solid #2b313b';
+          btn.style.background = 'linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))';
+          btn.style.color = '#e9eef5';
+          btn.textContent = 'Regenerate Template Index';
+
+          btn.onclick = async () => {
+            try {
+              btn.disabled = true;
+              btn.textContent = 'Generating…';
+
+              const backend = window.CMS.getBackend();
+              const list = await backend.listEntries({ collection: 'templates' });
+
+              const entries = list && list.get ? list.toJS() : list;
+              const items = (entries || []).map(e => {
+                const data = e && e.data ? e.data : e;
+                const name = data.name || (data.get && data.get('name'));
+                const slug = (data.slug || (data.get && data.get('slug'))) ||
+                             String(name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+                return { slug, name: name || slug };
+              }).sort((a,b)=> a.name.localeCompare(b.name));
+
+              const json = JSON.stringify({ templates: items }, null, 2);
+              const file = new File([json], 'index.json', { type: 'application/json' });
+
+              await backend.persistMedia({
+                file,
+                assets: [],
+                path: 'assets/templates/index.json',
+                isPrivate: false
+              });
+
+              btn.textContent = 'Index updated ✓';
+              setTimeout(()=>{ btn.textContent = 'Regenerate Template Index'; btn.disabled = false; }, 1500);
+            } catch (err) {
+              console.error(err);
+              alert('Failed to regenerate index.json — see console for details.');
+              btn.textContent = 'Regenerate Template Index';
+              btn.disabled = false;
+            }
+          };
+
+          bar.appendChild(btn);
+        }
+
+        ensureButton();
       })();
     </script>
   </body>
