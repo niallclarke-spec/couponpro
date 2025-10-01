@@ -8,6 +8,13 @@
       "meta": "assets/templates/flash-sale/meta.json"
     },
     {
+      "slug": "megan",
+      "name": "Megan",
+      "square": "",
+      "story": "",
+      "meta": "assets/templates/megan/meta.json"
+    },
+    {
       "slug": "new",
       "name": "New",
       "square": "",
