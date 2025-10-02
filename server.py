@@ -11,7 +11,7 @@ import mimetypes
 import cgi
 from http import cookies
 
-PORT = 5000
+PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TOKENS = set()
 
