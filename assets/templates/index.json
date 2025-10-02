@@ -8,25 +8,11 @@
       "story": "assets/templates/flash-sale/story.png"
     },
     {
-      "slug": "megan",
-      "name": "Megan",
-      "meta": "assets/templates/megan/meta.json",
-      "square": "assets/templates/megan/assets/templates/megan/test-square.png",
-      "story": "assets/templates/megan/assets/templates/megan/test-story.png"
-    },
-    {
-      "slug": "new",
-      "name": "New",
-      "meta": "assets/templates/new/meta.json",
-      "square": "assets/templates/new/assets/templates/new/33.png",
-      "story": "assets/templates/new/assets/templates/new/37-min.png"
-    },
-    {
-      "slug": "red",
-      "name": "Red",
-      "meta": "assets/templates/red/meta.json",
-      "square": "assets/templates/red/assets/templates/red/square-1-.png",
-      "story": "assets/templates/red/assets/templates/red/story-1-.png"
+      "slug": "newxxx",
+      "name": "Newxxx",
+      "meta": "assets/templates/newxxx/meta.json",
+      "square": "assets/templates/newxxx/square.png",
+      "story": "assets/templates/newxxx/story.png"
     },
     {
       "slug": "test-10",

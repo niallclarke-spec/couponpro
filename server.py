@@ -312,6 +312,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Server running at http://0.0.0.0:{PORT}/")
         print(f"Serving files from {os.path.abspath(DIRECTORY)}")
@@ -319,5 +320,6 @@ if __name__ == "__main__":
         print(f"  POST /api/login")
         print(f"  POST /api/logout")
         print(f"  POST /api/upload-template (requires auth)")
+        print(f"  POST /api/delete-template (requires auth)")
         print(f"  POST /api/regenerate-index")
         httpd.serve_forever()
