@@ -4,12 +4,17 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: Editable Template System & List View
+  - Current Assets tab now displays templates in clean list format
+  - Click any template to load it into edit mode with live preview
+  - Edit mode populates all placement settings and preview windows
+  - Allows tweaking coupon placement on existing templates without re-upload
+  - Dark background restored for admin and login pages
+  
 - **2025-10-02**: Admin Interface Simplification & Modern Tabs
-  - Changed background to white for cleaner, professional appearance
   - Removed horizontal/vertical alignment dropdowns (now defaults to center/bottom)
   - Hidden slug field from UI (auto-generated from template name)
   - Added modern tab navigation: "Upload Template" and "Current Assets"
-  - Current Assets tab displays grid of existing templates with preview images
   - Simplified controls now show only essential placement settings
 
 - **2025-10-02**: Admin Control Layout Optimization
