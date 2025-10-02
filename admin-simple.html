@@ -183,6 +183,54 @@
         .hidden {
             display: none;
         }
+
+        .preview-section {
+            border: 1px solid #262b35;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            background: #0f1014;
+        }
+
+        .preview-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1fr 1fr;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 760px) {
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .preview-item {
+            text-align: center;
+        }
+
+        .preview-frame {
+            position: relative;
+            background: #0a0b10;
+            border: 1px solid #262b35;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .preview-frame.square {
+            aspect-ratio: 1/1;
+        }
+
+        .preview-frame.story {
+            aspect-ratio: 9/16;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
@@ -321,6 +369,25 @@
                     </div>
                 </div>
 
+                <div class="preview-section">
+                    <div class="section-title">Live Preview</div>
+                    <div class="hint" style="margin-bottom: 8px;">See how "PREVIEW" will appear on your template</div>
+                    <div class="preview-grid">
+                        <div class="preview-item">
+                            <div class="hint">Square (1:1)</div>
+                            <div class="preview-frame square">
+                                <canvas id="previewSquare"></canvas>
+                            </div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="hint">Story (9:16)</div>
+                            <div class="preview-frame story">
+                                <canvas id="previewStory"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn" id="submitBtn">Upload Template</button>
             </form>
         </div>
@@ -425,6 +492,174 @@
                 .replace(/-+/g, '-');
             document.getElementById('slug').value = slug;
         });
+
+        // ==================== PREVIEW LOGIC ====================
+        const previewSquareCanvas = document.getElementById('previewSquare');
+        const previewStoryCanvas = document.getElementById('previewStory');
+        const ctxSquare = previewSquareCanvas.getContext('2d');
+        const ctxStory = previewStoryCanvas.getContext('2d');
+
+        const previewImages = {
+            square: null,
+            story: null
+        };
+
+        // Auto-fit text calculation (from main app)
+        function computeAutoFontPx(ctx, text, maxWidthPx, maxPx, minPx = 8) {
+            const min = Math.max(8, Number(minPx) || 8);
+            let lo = min, hi = Math.max(min, Number(maxPx) || min);
+            if (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0) return min;
+            while (hi - lo > 0.5) {
+                const mid = (hi + lo) / 2;
+                ctx.font = `700 ${mid}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+                const w = ctx.measureText(text).width;
+                if (w <= maxWidthPx) lo = mid; else hi = mid;
+            }
+            return Math.floor(lo);
+        }
+
+        function drawTextAutoFit(ctx, text, natW, natH, box, maxPx) {
+            const left = Math.round(natW * ((box?.leftPct ?? 5) / 100));
+            const top = Math.round(natH * ((box?.topPct ?? 80) / 100));
+            const width = Math.round(natW * ((box?.widthPct ?? 90) / 100));
+            const height = Math.round(natH * ((box?.heightPct ?? 12) / 100));
+
+            const cap = Math.min(maxPx, height);
+            const px = computeAutoFontPx(ctx, text, width, cap, 8);
+
+            const hAlign = (box?.hAlign || 'center');
+            let x = left;
+            let textAlign = 'left';
+            if (hAlign === 'center') {
+                x = left + Math.round(width / 2);
+                textAlign = 'center';
+            } else if (hAlign === 'right') {
+                x = left + width;
+                textAlign = 'right';
+            }
+
+            const vAlign = (box?.vAlign || 'bottom');
+            let y = top + px;
+            if (vAlign === 'middle') {
+                y = top + Math.round(height / 2) + Math.round(px * 0.35);
+            } else if (vAlign === 'bottom') {
+                y = top + height;
+            }
+
+            ctx.font = `700 ${px}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+            ctx.textAlign = textAlign;
+            ctx.textBaseline = 'alphabetic';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = Math.max(2, Math.floor(px * 0.08));
+            ctx.strokeStyle = 'rgba(0,0,0,.75)';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+        }
+
+        function renderPreview(variant) {
+            const canvas = variant === 'square' ? previewSquareCanvas : previewStoryCanvas;
+            const ctx = variant === 'square' ? ctxSquare : ctxStory;
+            const img = previewImages[variant];
+
+            const natW = img && img.naturalWidth ? img.naturalWidth : 1080;
+            const natH = img && img.naturalHeight ? img.naturalHeight : (variant === 'square' ? 1080 : 1920);
+
+            // Create offscreen canvas at full resolution
+            const off = document.createElement('canvas');
+            off.width = natW;
+            off.height = natH;
+            const og = off.getContext('2d');
+            og.imageSmoothingQuality = 'high';
+
+            // Draw background image or placeholder
+            if (img && img.naturalWidth) {
+                og.drawImage(img, 0, 0, natW, natH);
+            } else {
+                og.fillStyle = '#10131a';
+                og.fillRect(0, 0, natW, natH);
+            }
+
+            // Get current form values
+            const prefix = variant === 'square' ? 'square' : 'story';
+            const box = {
+                leftPct: parseFloat(document.getElementById(prefix + 'LeftPct').value) || 5,
+                topPct: parseFloat(document.getElementById(prefix + 'TopPct').value) || 78,
+                widthPct: parseFloat(document.getElementById(prefix + 'WidthPct').value) || 90,
+                heightPct: parseFloat(document.getElementById(prefix + 'HeightPct').value) || 12,
+                hAlign: document.getElementById(prefix + 'HAlign').value || 'center',
+                vAlign: document.getElementById(prefix + 'VAlign').value || 'bottom'
+            };
+            const maxFontPx = parseInt(document.getElementById(prefix + 'MaxFontPx').value) || 80;
+
+            // Draw preview text
+            drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx);
+
+            // Scale to canvas
+            const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));
+            const targetH = Math.max(1, Math.round(canvas.parentElement.clientHeight));
+            canvas.width = targetW;
+            canvas.height = targetH;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.clearRect(0, 0, targetW, targetH);
+            
+            const scale = Math.min(targetW / natW, targetH / natH);
+            const dw = Math.ceil(natW * scale);
+            const dh = Math.ceil(natH * scale);
+            const dx = Math.round((targetW - dw) / 2);
+            const dy = Math.round((targetH - dh) / 2);
+            
+            ctx.drawImage(off, 0, 0, natW, natH, dx, dy, dw, dh);
+        }
+
+        function updatePreviews() {
+            renderPreview('square');
+            renderPreview('story');
+        }
+
+        // Load image when file is selected
+        document.getElementById('squareImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = function() {
+                    previewImages.square = img;
+                    updatePreviews();
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        document.getElementById('storyImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = function() {
+                    previewImages.story = img;
+                    updatePreviews();
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        // Update preview on any coordinate change
+        const previewInputs = [
+            'squareLeftPct', 'squareTopPct', 'squareWidthPct', 'squareHeightPct', 
+            'squareHAlign', 'squareVAlign', 'squareMaxFontPx',
+            'storyLeftPct', 'storyTopPct', 'storyWidthPct', 'storyHeightPct',
+            'storyHAlign', 'storyVAlign', 'storyMaxFontPx'
+        ];
+
+        previewInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', updatePreviews);
+                input.addEventListener('change', updatePreviews);
+            }
+        });
+
+        // Initial render
+        updatePreviews();
     </script>
 </body>
 </html>
