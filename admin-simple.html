@@ -1020,11 +1020,16 @@
             // Draw preview text
             drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx);
 
-            // Scale to canvas
+            // Scale to canvas with high DPI
             const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));
             const targetH = Math.max(1, Math.round(canvas.parentElement.clientHeight));
-            canvas.width = targetW;
-            canvas.height = targetH;
+            const pixelRatio = window.devicePixelRatio || 2;
+            canvas.width = targetW * pixelRatio;
+            canvas.height = targetH * pixelRatio;
+            canvas.style.width = targetW + 'px';
+            canvas.style.height = targetH + 'px';
+            ctx.scale(pixelRatio, pixelRatio);
+            ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.clearRect(0, 0, targetW, targetH);
             
