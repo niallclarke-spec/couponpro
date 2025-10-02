@@ -50,6 +50,13 @@
       "story": "assets/templates/eqeqeqe/story.png"
     },
     {
+      "slug": "hagha",
+      "name": "hAGHA",
+      "meta": "assets/templates/hagha/meta.json",
+      "square": "assets/templates/hagha/square.png",
+      "story": "assets/templates/hagha/story.png"
+    },
+    {
       "slug": "jsjsjs",
       "name": "jsjsjs",
       "meta": "assets/templates/jsjsjs/meta.json",

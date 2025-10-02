@@ -1,0 +1,25 @@
+{
+  "name": "hAGHA",
+  "square": {
+    "box": {
+      "leftPct": 21.9,
+      "topPct": 64.2,
+      "widthPct": 40.0,
+      "heightPct": 7.1,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 80
+  },
+  "story": {
+    "box": {
+      "leftPct": 5.0,
+      "topPct": 78.0,
+      "widthPct": 90.0,
+      "heightPct": 12.0,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 80
+  }
+}
