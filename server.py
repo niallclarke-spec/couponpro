@@ -166,8 +166,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'vAlign': form.getvalue('storyVAlign')
                 }
                 
-                square_max_font = int(form.getvalue('squareMaxFontPx'))
-                story_max_font = int(form.getvalue('storyMaxFontPx'))
+                square_max_font = int(float(form.getvalue('squareMaxFontPx')))
+                story_max_font = int(float(form.getvalue('storyMaxFontPx')))
                 
                 template_dir = os.path.join('assets', 'templates', slug)
                 os.makedirs(template_dir, exist_ok=True)
