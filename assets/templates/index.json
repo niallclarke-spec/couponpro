@@ -43,6 +43,13 @@
       "story": "assets/templates/test1/assets/templates/test1/test-story.png"
     },
     {
+      "slug": "dddd",
+      "name": "dddd",
+      "meta": "assets/templates/dddd/meta.json",
+      "square": "assets/templates/dddd/square.png",
+      "story": "assets/templates/dddd/story.png"
+    },
+    {
       "slug": "eqeqeqe",
       "name": "eqeqeqe",
       "meta": "assets/templates/eqeqeqe/meta.json",

@@ -374,9 +374,32 @@
             color: #8a8f98;
         }
 
+        .asset-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .asset-edit-icon,
+        .asset-delete-icon {
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+
         .asset-edit-icon {
             color: #1d98ff;
-            font-size: 18px;
+        }
+
+        .asset-edit-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .asset-delete-icon {
+            color: #ef4444;
+        }
+
+        .asset-delete-icon:hover {
+            transform: scale(1.2);
         }
 
         .slider {
@@ -751,13 +774,15 @@
                 data.templates.forEach(template => {
                     const item = document.createElement('div');
                     item.className = 'asset-item';
-                    item.onclick = () => loadTemplateForEdit(template.slug);
                     item.innerHTML = `
                         <div class="asset-item-info">
                             <div class="asset-name">${template.name}</div>
                             <div class="asset-slug">${template.slug}</div>
                         </div>
-                        <div class="asset-edit-icon">✎</div>
+                        <div class="asset-actions">
+                            <div class="asset-edit-icon" onclick="loadTemplateForEdit('${template.slug}')">✎</div>
+                            <div class="asset-delete-icon" onclick="deleteTemplate('${template.slug}', '${template.name}')">🗑</div>
+                        </div>
                     `;
                     assetsList.appendChild(item);
                 });
@@ -820,6 +845,32 @@
             } catch (error) {
                 alert('Failed to load template: ' + error.message);
                 console.error('Failed to load template:', error);
+            }
+        }
+
+        // Delete template
+        async function deleteTemplate(slug, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis will permanently remove the template and both images.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-template', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    loadAssets();
+                } else {
+                    alert('Delete failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Delete failed: ' + error.message);
+                console.error('Failed to delete template:', error);
             }
         }
 
