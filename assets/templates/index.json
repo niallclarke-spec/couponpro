@@ -3,58 +3,58 @@
     {
       "slug": "flash-sale",
       "name": "Flash Sale",
+      "meta": "assets/templates/flash-sale/meta.json",
       "square": "assets/templates/flash-sale/square.png",
-      "story": "assets/templates/flash-sale/story.png",
-      "meta": "assets/templates/flash-sale/meta.json"
+      "story": "assets/templates/flash-sale/story.png"
     },
     {
       "slug": "megan",
       "name": "Megan",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/megan/meta.json"
+      "meta": "assets/templates/megan/meta.json",
+      "square": "assets/templates/megan/assets/templates/megan/test-square.png",
+      "story": "assets/templates/megan/assets/templates/megan/test-story.png"
     },
     {
       "slug": "new",
       "name": "New",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/new/meta.json"
-    },
-    {
-      "slug": "pink",
-      "name": "pink",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/pink/meta.json"
+      "meta": "assets/templates/new/meta.json",
+      "square": "assets/templates/new/assets/templates/new/33.png",
+      "story": "assets/templates/new/assets/templates/new/37-min.png"
     },
     {
       "slug": "red",
       "name": "Red",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/red/meta.json"
+      "meta": "assets/templates/red/meta.json",
+      "square": "assets/templates/red/assets/templates/red/square-1-.png",
+      "story": "assets/templates/red/assets/templates/red/story-1-.png"
     },
     {
       "slug": "test-10",
       "name": "Test 10",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/test-10/meta.json"
+      "meta": "assets/templates/test-10/meta.json",
+      "square": "assets/templates/test-10/assets/templates/test-10/square-1-.png",
+      "story": "assets/templates/test-10/assets/templates/test-10/story-1-.png"
     },
     {
       "slug": "test1",
       "name": "Test1",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/test1/meta.json"
+      "meta": "assets/templates/test1/meta.json",
+      "square": "assets/templates/test1/assets/templates/test1/test-square.png",
+      "story": "assets/templates/test1/assets/templates/test1/test-story.png"
+    },
+    {
+      "slug": "pink",
+      "name": "pink",
+      "meta": "assets/templates/pink/meta.json",
+      "square": "assets/templates/pink/assets/templates/pink/square-1-.png",
+      "story": "assets/templates/pink/assets/templates/pink/story-1-.png"
     },
     {
       "slug": "vape",
       "name": "vape",
-      "square": "",
-      "story": "",
-      "meta": "assets/templates/vape/meta.json"
+      "meta": "assets/templates/vape/meta.json",
+      "square": "assets/templates/vape/assets/templates/vape/test-square.png",
+      "story": "assets/templates/vape/assets/templates/vape/test-story.png"
     }
   ]
 }

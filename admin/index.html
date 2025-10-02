@@ -10,7 +10,7 @@
   <!-- Manual config loader (prevents 404 on config.yml) -->
   <script src="https://unpkg.com/js-yaml@4/dist/js-yaml.min.js"></script>
   <script>
-    window.CMS_MANUAL_INIT = true;
+    window.CMS_MANUAL_INIT = false;
     (function () {
       const CONFIG_CANDIDATES = [
         './config.yml',
@@ -61,7 +61,7 @@
           (function wait(){
             tries++;
             if (window.CMS && typeof window.CMS.init === 'function'){
-              try { window.CMS.init({ config: cfg }); log('CMS.init with inline config'); }
+              try { window.CMS.init({ config: cfg, load_config_file: false }); log('CMS.init with inline config'); }
               catch(e){ fatal(e.message); }
             } else if (tries < 200) {
               setTimeout(wait, 50);
@@ -139,94 +139,28 @@
         try{
           if (onButton){ onButton.disabled = true; onButton.textContent = 'Generating…'; }
 
-          const token = sniffTokenFromStorage();
-          if (!token){
-            alert('Missing GitHub OAuth token. Please log out/in, then try again.');
-            throw new Error('No OAuth token');
-          }
-
-          const listUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates?ref=' + GH_BRANCH;
-          const entries = await ghJson(listUrl, token);
-
-          const templates = [];
-          for (const e of entries){
-            if (e.type !== 'dir') continue;
-            const slug = e.name;
-
-            const folderUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/' + slug + '?ref=' + GH_BRANCH;
-            const items = await ghJson(folderUrl, token);
-
-            let name = slug;
-            const meta = items.find(function(x){ return x.type === 'file' && x.name.toLowerCase() === 'meta.json'; });
-            if (meta){
-              try{
-                const metaText = await (await fetch(meta.download_url)).text();
-                const metaJson = JSON.parse(metaText);
-                if (metaJson && metaJson.name) name = metaJson.name;
-              }catch(_){}
-            }
-
-            const pngs = items
-              .filter(function(x){ return x.type === 'file' && /\.png$/i.test(x.name); })
-              .map(function(x){ return 'assets/templates/' + slug + '/' + x.name; });
-
-            function byName(s){
-              for (var i=0;i<pngs.length;i++){ if (pngs[i].toLowerCase().indexOf(s) !== -1) return pngs[i]; }
-              return null;
-            }
-
-            var square = byName('square') || byName('sq') || (pngs[0] || '');
-            var story  = byName('story')  || byName('st') || (pngs[1] || pngs[0] || '');
-
-            templates.push({
-              slug: slug,
-              name: name,
-              square: square,
-              story: story,
-              meta: 'assets/templates/' + slug + '/meta.json'
-            });
-          }
-
-          const manifest = { templates: templates };
-
-          var sha;
-          try{
-            const head = await ghJson(
-              'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/index.json?ref=' + GH_BRANCH,
-              token
-            );
-            sha = head && head.sha;
-          }catch(_){}
-
-          const putUrl = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/assets/templates/index.json';
-          const body = {
-            message: 'chore: regenerate templates index.json',
-            branch: GH_BRANCH,
-            content: b64e(JSON.stringify(manifest, null, 2))
-          };
-          if (sha) body.sha = sha;
-
-          const resp = await fetch(putUrl, {
-            method: 'PUT',
+          const resp = await fetch('/api/regenerate-index', {
+            method: 'POST',
             headers: {
-              'Accept': 'application/vnd.github+json',
-              'Authorization': 'token ' + token,
               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
+            }
           });
-          if (!resp.ok){
-            const t = await resp.text();
-            throw new Error(resp.status + ' ' + resp.statusText + ' – ' + t);
+
+          const result = await resp.json();
+
+          if (!resp.ok || !result.success){
+            throw new Error(result.error || 'Failed to regenerate index');
           }
 
           if (onButton){
             onButton.textContent = 'Index updated ✓';
             setTimeout(function(){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }, 1500);
           }
+
+          console.log('[Regenerate index] Success:', result.message);
         }catch(err){
           console.error('[Regenerate index] failed:', err);
-          alert('Failed to regenerate index.json — open DevTools and check the console.');
+          alert('Failed to regenerate index.json: ' + err.message);
           if (onButton){ onButton.textContent = 'Regenerate Template Index'; onButton.disabled = false; }
         }
       }
