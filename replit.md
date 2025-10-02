@@ -4,6 +4,13 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: Admin Live Preview Feature
+  - Added real-time preview canvases showing square and story formats
+  - Preview displays "PREVIEW" text with current placement settings
+  - Live updates when adjusting coordinates, alignment, or font size
+  - Automatically loads uploaded template images into preview
+  - Users can now visually verify coupon placement before uploading
+
 - **2025-10-02**: Admin Interface UI/UX Improvements
   - Updated admin page with dark theme matching front page (black background, dark containers)
   - Added FunderPro logo to admin page header
