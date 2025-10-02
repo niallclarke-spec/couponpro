@@ -4,6 +4,18 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: Admin Control Layout Optimization
+  - Reorganized control inputs into compact 2-row layout for space efficiency
+  - Row 1: Left, Top, Height (placement coordinates)
+  - Row 2: Width, Font Size, Logo checkbox (all inline)
+  - HTML5 number inputs include built-in spinner controls for easy up/down adjustment
+  - Users can click arrows or type values manually for precise control
+
+- **2025-10-02**: Admin Login Page Styling
+  - Updated login heading to white text (previously blue)
+  - Reduced heading font size by 20% (from 28px to 22px)
+  - Improved visual hierarchy with centered logo positioning
+
 - **2025-10-02**: Admin Live Preview Feature
   - Added real-time preview canvases showing square and story formats
   - Each preview positioned directly within its controls section for easy adjustment
@@ -13,7 +25,6 @@ A static web application that generates promotional images for coupon codes. Use
   - Automatically loads uploaded template images into preview
   - Users can now visually verify coupon placement before uploading
   - Redesigned admin layout: two-column grid with controls on left, large preview on right
-  - Updated login page: centered logo positioned 30px above password container, blue title
 
 - **2025-10-02**: Admin Interface UI/UX Improvements
   - Updated admin page with dark theme matching front page (black background, dark containers)
