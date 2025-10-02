@@ -40,6 +40,14 @@
               const text = await res.text();
               cfg = jsyaml.load(text);
               usedUrl = url;
+              // Safety: Decap has no external media library named "git".
+              // If the config includes `media_library: git`, drop it so the default Git backend is used.
+              if (cfg && cfg.media_library) {
+                var libName = (typeof cfg.media_library === 'string' ? cfg.media_library : cfg.media_library.name);
+                if (libName && String(libName).toLowerCase() === 'git') {
+                  delete cfg.media_library;
+                }
+              }
               break;
             } catch (e) {
               lastErr = e;
