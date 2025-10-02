@@ -5,7 +5,10 @@ A static web application that generates promotional images for coupon codes. Use
 
 ## Recent Changes
 - **2025-10-02**: Enhanced Control System with Sliders
-  - Added smooth range sliders for all placement controls (Left, Top, Width, Height, Font Size)
+  - Added smooth range sliders for placement controls (Left-Right, Top-Bottom, Width, Font Size)
+  - Removed Height control (Font Size automatically handles vertical sizing)
+  - Clearer labels: "Left - Right" and "Top - Bottom" for intuitive understanding
+  - Width default changed to 25% for better initial positioning
   - Sliders bidirectionally sync with number inputs in real-time
   - Significantly reduces clicking needed to position coupon area
   - Blue slider thumbs with hover animations for better UX

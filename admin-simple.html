@@ -488,28 +488,23 @@
 
                             <div class="row">
                                 <div class="form-group">
-                                    <label for="squareLeftPct">Left</label>
+                                    <label for="squareLeftPct">Left - Right</label>
                                     <input type="range" id="squareLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
                                     <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="squareTopPct">Top</label>
+                                    <label for="squareTopPct">Top - Bottom</label>
                                     <input type="range" id="squareTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
                                     <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="squareHeightPct">Height</label>
-                                    <input type="range" id="squareHeightPctSlider" min="1" max="50" step="0.5" value="12" class="slider">
-                                    <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                    <label for="squareWidthPct">Width</label>
+                                    <input type="range" id="squareWidthPctSlider" min="10" max="100" step="0.5" value="25" class="slider">
+                                    <input type="number" id="squareWidthPct" value="25" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="form-group">
-                                    <label for="squareWidthPct">Width</label>
-                                    <input type="range" id="squareWidthPctSlider" min="10" max="100" step="0.5" value="90" class="slider">
-                                    <input type="number" id="squareWidthPct" value="90" min="0" max="100" step="0.1" required>
-                                </div>
                                 <div class="form-group">
                                     <label for="squareMaxFontPx">Font Size</label>
                                     <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
@@ -520,6 +515,9 @@
                                         <input id="squareShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
                                         <span>Show Logo</span>
                                     </label>
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
 
@@ -546,28 +544,23 @@
 
                             <div class="row">
                                 <div class="form-group">
-                                    <label for="storyLeftPct">Left</label>
+                                    <label for="storyLeftPct">Left - Right</label>
                                     <input type="range" id="storyLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
                                     <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="storyTopPct">Top</label>
+                                    <label for="storyTopPct">Top - Bottom</label>
                                     <input type="range" id="storyTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
                                     <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="storyHeightPct">Height</label>
-                                    <input type="range" id="storyHeightPctSlider" min="1" max="50" step="0.5" value="12" class="slider">
-                                    <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                    <label for="storyWidthPct">Width</label>
+                                    <input type="range" id="storyWidthPctSlider" min="10" max="100" step="0.5" value="25" class="slider">
+                                    <input type="number" id="storyWidthPct" value="25" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="form-group">
-                                    <label for="storyWidthPct">Width</label>
-                                    <input type="range" id="storyWidthPctSlider" min="10" max="100" step="0.5" value="90" class="slider">
-                                    <input type="number" id="storyWidthPct" value="90" min="0" max="100" step="0.1" required>
-                                </div>
                                 <div class="form-group">
                                     <label for="storyMaxFontPx">Font Size</label>
                                     <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
@@ -578,6 +571,9 @@
                                         <input id="storyShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
                                         <span>Show Logo</span>
                                     </label>
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
 
@@ -1007,13 +1003,11 @@
         setupSliderSync('squareLeftPctSlider', 'squareLeftPct');
         setupSliderSync('squareTopPctSlider', 'squareTopPct');
         setupSliderSync('squareWidthPctSlider', 'squareWidthPct');
-        setupSliderSync('squareHeightPctSlider', 'squareHeightPct');
         setupSliderSync('squareMaxFontPxSlider', 'squareMaxFontPx');
         
         setupSliderSync('storyLeftPctSlider', 'storyLeftPct');
         setupSliderSync('storyTopPctSlider', 'storyTopPct');
         setupSliderSync('storyWidthPctSlider', 'storyWidthPct');
-        setupSliderSync('storyHeightPctSlider', 'storyHeightPct');
         setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
 
         // Initial render
