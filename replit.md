@@ -4,6 +4,14 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: High-Quality Canvas Rendering
+  - Increased canvas resolution using devicePixelRatio for crisp, sharp images
+  - Applied high-DPI rendering to both frontend previews and admin panel
+  - Enabled image smoothing with 'high' quality setting
+  - Fixed pixelated text and template images
+  - Improved download and share image quality
+  - Added missing logo rendering to download/share functions
+
 - **2025-10-02**: Template Delete Feature & Login Page Enhancement
   - Added delete button (red trash icon) to each template in Current Assets list
   - Delete removes entire template folder and both images, then regenerates index
