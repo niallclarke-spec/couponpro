@@ -221,6 +221,59 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/delete-template':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                slug = data.get('slug', '')
+                
+                import re
+                if not slug or not re.match(r'^[a-z0-9-]+$', slug):
+                    raise ValueError('Invalid slug')
+                
+                if '..' in slug or '/' in slug or '\\' in slug:
+                    raise ValueError('Invalid slug: path traversal detected')
+                
+                template_dir = os.path.join('assets', 'templates', slug)
+                
+                if not os.path.exists(template_dir):
+                    raise ValueError(f'Template "{slug}" not found')
+                
+                import shutil
+                shutil.rmtree(template_dir)
+                
+                result = subprocess.run(
+                    ['python3', 'regenerate_index.py'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                
+                if result.returncode != 0:
+                    raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Template "{slug}" deleted successfully'
+                }).encode())
+                
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/regenerate-index':
             try:
                 result = subprocess.run(
