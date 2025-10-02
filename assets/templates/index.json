@@ -43,6 +43,13 @@
       "story": "assets/templates/test1/assets/templates/test1/test-story.png"
     },
     {
+      "slug": "eqeqeqe",
+      "name": "eqeqeqe",
+      "meta": "assets/templates/eqeqeqe/meta.json",
+      "square": "assets/templates/eqeqeqe/square.png",
+      "story": "assets/templates/eqeqeqe/story.png"
+    },
+    {
       "slug": "pink",
       "name": "pink",
       "meta": "assets/templates/pink/meta.json",

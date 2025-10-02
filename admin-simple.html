@@ -13,26 +13,40 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0b0c10;
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #e9eef5;
         }
         
         .container {
             max-width: 900px;
             margin: 0 auto;
         }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px;
+        }
+        
+        .brand img {
+            height: auto;
+            width: 140px;
+            display: block;
+        }
         
         .card {
-            background: white;
-            border-radius: 12px;
+            background: #121318;
+            border: 1px solid #262b35;
+            border-radius: 16px;
             padding: 32px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 28px rgba(0,0,0,.35);
         }
         
         h1 {
-            color: #667eea;
+            color: #1d98ff;
             margin-bottom: 24px;
             font-size: 28px;
         }
@@ -45,8 +59,10 @@
             display: block;
             margin-bottom: 6px;
             font-weight: 500;
-            color: #555;
+            color: #8a8f98;
             font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: .3px;
         }
         
         input[type="text"],
@@ -55,8 +71,10 @@
         select {
             width: 100%;
             padding: 10px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
+            background: #191b22;
+            color: #e9eef5;
+            border: 1px solid #262b35;
+            border-radius: 10px;
             font-size: 15px;
             transition: border-color 0.2s;
         }
@@ -66,84 +84,88 @@
         input[type="number"]:focus,
         select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #3a4250;
+            box-shadow: 0 0 0 3px rgba(29,152,255,.18);
         }
         
         input[type="file"] {
             width: 100%;
             padding: 8px;
-            border: 2px dashed #e0e0e0;
+            background: #191b22;
+            color: #e9eef5;
+            border: 2px dashed #262b35;
             border-radius: 6px;
             cursor: pointer;
         }
         
         .hint {
             font-size: 12px;
-            color: #999;
+            color: #8a8f98;
             margin-top: 4px;
         }
         
         .btn {
-            background: #667eea;
+            background: #1d98ff;
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 700;
             cursor: pointer;
             transition: background 0.2s;
         }
         
         .btn:hover {
-            background: #5568d3;
+            background: #1680e0;
         }
         
         .btn:disabled {
-            background: #ccc;
+            background: #3a4250;
             cursor: not-allowed;
         }
         
         .btn-logout {
-            background: #e74c3c;
+            background: #ff4a4a;
             float: right;
             padding: 8px 16px;
             font-size: 14px;
         }
         
         .btn-logout:hover {
-            background: #c0392b;
+            background: #e03939;
         }
         
         .alert {
             padding: 12px 16px;
-            border-radius: 6px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
         
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: rgba(29, 152, 255, 0.15);
+            color: #5eb8ff;
+            border: 1px solid rgba(29, 152, 255, 0.3);
         }
         
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: rgba(255, 74, 74, 0.15);
+            color: #ff9c9c;
+            border: 1px solid rgba(255, 74, 74, 0.3);
         }
         
         .section {
-            border: 2px solid #f0f0f0;
-            border-radius: 8px;
+            border: 1px solid #262b35;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 24px;
+            background: #0f1014;
         }
         
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            color: #667eea;
+            color: #1d98ff;
             margin-bottom: 16px;
         }
         
@@ -165,6 +187,7 @@
 </head>
 <body>
     <div class="container">
+        <div class="brand"><img src="/assets/fp-site-logo.png" alt="FunderPro" /></div>
         <div class="card" id="loginForm">
             <h1>🔐 Admin Login</h1>
             <div id="loginAlert"></div>

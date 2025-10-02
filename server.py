@@ -43,6 +43,29 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         return False
     
+    def do_GET(self):
+        parsed_path = urlparse(self.path)
+        
+        if parsed_path.path == '/admin/':
+            self.send_response(301)
+            self.send_header('Location', '/admin')
+            self.end_headers()
+        elif parsed_path.path == '/admin':
+            try:
+                with open('admin-simple.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_error(404, "Admin page not found")
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+        else:
+            super().do_GET()
+    
     def do_POST(self):
         parsed_path = urlparse(self.path)
         
