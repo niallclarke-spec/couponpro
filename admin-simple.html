@@ -316,6 +316,13 @@
                             <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" required>
                         </div>
                     </div>
+
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 8px;">Live Preview</label>
+                        <div class="preview-frame square">
+                            <canvas id="previewSquare"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -367,23 +374,11 @@
                             <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" required>
                         </div>
                     </div>
-                </div>
 
-                <div class="preview-section">
-                    <div class="section-title">Live Preview</div>
-                    <div class="hint" style="margin-bottom: 8px;">See how "PREVIEW" will appear on your template</div>
-                    <div class="preview-grid">
-                        <div class="preview-item">
-                            <div class="hint">Square (1:1)</div>
-                            <div class="preview-frame square">
-                                <canvas id="previewSquare"></canvas>
-                            </div>
-                        </div>
-                        <div class="preview-item">
-                            <div class="hint">Story (9:16)</div>
-                            <div class="preview-frame story">
-                                <canvas id="previewStory"></canvas>
-                            </div>
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 8px;">Live Preview</label>
+                        <div class="preview-frame story">
+                            <canvas id="previewStory"></canvas>
                         </div>
                     </div>
                 </div>
@@ -591,6 +586,21 @@
                 vAlign: document.getElementById(prefix + 'VAlign').value || 'bottom'
             };
             const maxFontPx = parseInt(document.getElementById(prefix + 'MaxFontPx').value) || 80;
+
+            // Draw bounding box overlay to show the coupon placement area
+            const boxLeft = Math.round(natW * (box.leftPct / 100));
+            const boxTop = Math.round(natH * (box.topPct / 100));
+            const boxWidth = Math.round(natW * (box.widthPct / 100));
+            const boxHeight = Math.round(natH * (box.heightPct / 100));
+            
+            // Semi-transparent box fill
+            og.fillStyle = 'rgba(29, 152, 255, 0.15)';
+            og.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
+            
+            // Box border
+            og.strokeStyle = 'rgba(29, 152, 255, 0.6)';
+            og.lineWidth = Math.max(2, Math.round(Math.min(natW, natH) * 0.003));
+            og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
 
             // Draw preview text
             drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx);
