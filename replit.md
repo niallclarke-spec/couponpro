@@ -4,10 +4,12 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
-- **2025-10-01**: Initial Replit setup
-  - Configured Python HTTP server to serve static files on port 5000
-  - Set up workflow for automatic server start
-  - Configured deployment for autoscale target
+- **2025-10-02**: GitHub import to Replit
+  - Installed Python 3.11
+  - Created server.py to serve static files on port 5000 with cache-control headers
+  - Configured workflow "Server" to auto-start the Python HTTP server
+  - Set up autoscale deployment configuration
+  - Verified frontend works correctly with live preview and template loading
 
 ## Project Architecture
 
@@ -20,6 +22,7 @@ A static web application that generates promotional images for coupon codes. Use
 ```
 /
 ├── index.html              # Main application page
+├── server.py               # Python HTTP server for static files
 ├── admin/
 │   ├── index.html          # Decap CMS admin interface
 │   └── config.yml          # CMS configuration
