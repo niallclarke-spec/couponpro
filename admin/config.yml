@@ -5,77 +5,136 @@ media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
 collections:
-  - name: templates
-    label: Templates
-    label_singular: Template
-    description: Upload templates with coupon placement configuration
+  - name: "templates"
+    label: "Templates"
+    label_singular: "Template"
+    description: "Upload templates with coupon placement configuration"
     folder: "assets/templates"
     create: true
     extension: "json"
     format: "json"
-    slug: "{{slug}}/meta"
-    identifier_field: name
+    slug: "{{fields.slug}}/meta"
+    identifier_field: "name"
     fields:
-      - name: name
-        label: Template Name
-        widget: string
-        hint: Visible name in the front-end dropdown.
+      - {label: "Template Name", name: "name", widget: "string", hint: "Visible name in the front-end dropdown"}
+      - {label: "Slug", name: "slug", widget: "string", pattern: ['^[a-z0-9-]+$', "Must be lowercase with hyphens only"], hint: "Folder name (e.g. 'flash-sale')"}
       
-      - name: slug
-        label: Slug
-        widget: slug
-        hint: Folder name. Auto-generated from Template Name.
+      - label: "Square Image"
+        name: "squareImage"
+        widget: "image"
+        allow_multiple: false
+        hint: "Upload the square (1:1) template image"
       
-      - label: Square Image & Placement
-        name: square
-        widget: object
-        collapsed: false
-        fields:
-          - label: Square PNG Image
-            name: squareImage
-            widget: image
-            allow_multiple: false
-            choose_url: false
-            media_folder: "/assets/templates/{{slug}}"
-            public_folder: "/assets/templates/{{slug}}"
-          
-          - label: Coupon Box Position
-            name: squareBox
-            widget: object
-            collapsed: false
-            fields:
-              - {label: "Left (%)", name: leftPct, widget: number, value_type: float, min: 0, max: 100, default: 5, hint: "Left edge of coupon box as % of image width"}
-              - {label: "Top (%)", name: topPct, widget: number, value_type: float, min: 0, max: 100, default: 78, hint: "Top edge of coupon box as % of image height"}
-              - {label: "Width (%)", name: widthPct, widget: number, value_type: float, min: 0, max: 100, default: 90, hint: "Width of coupon box as % of image width"}
-              - {label: "Height (%)", name: heightPct, widget: number, value_type: float, min: 0, max: 100, default: 12, hint: "Height of coupon box as % of image height"}
-              - {label: "Horizontal Align", name: hAlign, widget: select, options: ["left", "center", "right"], default: "center"}
-              - {label: "Vertical Align", name: vAlign, widget: select, options: ["top", "middle", "bottom"], default: "bottom"}
-          
-          - {label: "Max Font Size (px)", name: maxFontPx, widget: number, value_type: int, min: 8, max: 200, default: 80, hint: "Maximum font size for the coupon code"}
+      - label: "Square Box - Left (%)"
+        name: "squareLeftPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 5
+        hint: "Left edge of coupon box as % of image width"
       
-      - label: Story Image & Placement
-        name: story
-        widget: object
-        collapsed: false
-        fields:
-          - label: Story PNG Image
-            name: storyImage
-            widget: image
-            allow_multiple: false
-            choose_url: false
-            media_folder: "/assets/templates/{{slug}}"
-            public_folder: "/assets/templates/{{slug}}"
-          
-          - label: Coupon Box Position
-            name: storyBox
-            widget: object
-            collapsed: false
-            fields:
-              - {label: "Left (%)", name: leftPct, widget: number, value_type: float, min: 0, max: 100, default: 5, hint: "Left edge of coupon box as % of image width"}
-              - {label: "Top (%)", name: topPct, widget: number, value_type: float, min: 0, max: 100, default: 78, hint: "Top edge of coupon box as % of image height"}
-              - {label: "Width (%)", name: widthPct, widget: number, value_type: float, min: 0, max: 100, default: 90, hint: "Width of coupon box as % of image width"}
-              - {label: "Height (%)", name: heightPct, widget: number, value_type: float, min: 0, max: 100, default: 12, hint: "Height of coupon box as % of image height"}
-              - {label: "Horizontal Align", name: hAlign, widget: select, options: ["left", "center", "right"], default: "center"}
-              - {label: "Vertical Align", name: vAlign, widget: select, options: ["top", "middle", "bottom"], default: "bottom"}
-          
-          - {label: "Max Font Size (px)", name: maxFontPx, widget: number, value_type: int, min: 8, max: 200, default: 80, hint: "Maximum font size for the coupon code"}
+      - label: "Square Box - Top (%)"
+        name: "squareTopPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 78
+        hint: "Top edge of coupon box as % of image height"
+      
+      - label: "Square Box - Width (%)"
+        name: "squareWidthPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 90
+        hint: "Width of coupon box as % of image width"
+      
+      - label: "Square Box - Height (%)"
+        name: "squareHeightPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 12
+        hint: "Height of coupon box as % of image height"
+      
+      - label: "Square - Horizontal Align"
+        name: "squareHAlign"
+        widget: "select"
+        options: ["left", "center", "right"]
+        default: "center"
+      
+      - label: "Square - Vertical Align"
+        name: "squareVAlign"
+        widget: "select"
+        options: ["top", "middle", "bottom"]
+        default: "bottom"
+      
+      - label: "Square - Max Font Size (px)"
+        name: "squareMaxFontPx"
+        widget: "number"
+        value_type: "int"
+        min: 8
+        max: 200
+        default: 80
+      
+      - label: "Story Image"
+        name: "storyImage"
+        widget: "image"
+        allow_multiple: false
+        hint: "Upload the story (9:16) template image"
+      
+      - label: "Story Box - Left (%)"
+        name: "storyLeftPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 5
+      
+      - label: "Story Box - Top (%)"
+        name: "storyTopPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 78
+      
+      - label: "Story Box - Width (%)"
+        name: "storyWidthPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 90
+      
+      - label: "Story Box - Height (%)"
+        name: "storyHeightPct"
+        widget: "number"
+        value_type: "float"
+        min: 0
+        max: 100
+        default: 12
+      
+      - label: "Story - Horizontal Align"
+        name: "storyHAlign"
+        widget: "select"
+        options: ["left", "center", "right"]
+        default: "center"
+      
+      - label: "Story - Vertical Align"
+        name: "storyVAlign"
+        widget: "select"
+        options: ["top", "middle", "bottom"]
+        default: "bottom"
+      
+      - label: "Story - Max Font Size (px)"
+        name: "storyMaxFontPx"
+        widget: "number"
+        value_type: "int"
+        min: 8
+        max: 200
+        default: 80
