@@ -367,6 +367,67 @@
             color: #1d98ff;
             font-size: 18px;
         }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #262b35;
+            outline: none;
+            margin-bottom: 8px;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #1d98ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #5eb8ff;
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #1d98ff;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #5eb8ff;
+            transform: scale(1.2);
+        }
+
+        .row .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-hint {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(29, 152, 255, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -428,14 +489,17 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label for="squareLeftPct">Left</label>
+                                    <input type="range" id="squareLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
                                     <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="squareTopPct">Top</label>
+                                    <input type="range" id="squareTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
                                     <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="squareHeightPct">Height</label>
+                                    <input type="range" id="squareHeightPctSlider" min="1" max="50" step="0.5" value="12" class="slider">
                                     <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
@@ -443,10 +507,12 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label for="squareWidthPct">Width</label>
+                                    <input type="range" id="squareWidthPctSlider" min="10" max="100" step="0.5" value="90" class="slider">
                                     <input type="number" id="squareWidthPct" value="90" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="squareMaxFontPx">Font Size</label>
+                                    <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
                                     <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" step="1" required>
                                 </div>
                                 <div class="form-group" style="display:flex;align-items:end;">
@@ -481,14 +547,17 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label for="storyLeftPct">Left</label>
+                                    <input type="range" id="storyLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
                                     <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="storyTopPct">Top</label>
+                                    <input type="range" id="storyTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
                                     <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="storyHeightPct">Height</label>
+                                    <input type="range" id="storyHeightPctSlider" min="1" max="50" step="0.5" value="12" class="slider">
                                     <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
@@ -496,10 +565,12 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label for="storyWidthPct">Width</label>
+                                    <input type="range" id="storyWidthPctSlider" min="10" max="100" step="0.5" value="90" class="slider">
                                     <input type="number" id="storyWidthPct" value="90" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="storyMaxFontPx">Font Size</label>
+                                    <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
                                     <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" step="1" required>
                                 </div>
                                 <div class="form-group" style="display:flex;align-items:end;">
@@ -909,21 +980,41 @@
             }
         });
 
-        // Update preview on any coordinate change
-        const previewInputs = [
-            'squareLeftPct', 'squareTopPct', 'squareWidthPct', 'squareHeightPct', 
-            'squareHAlign', 'squareVAlign', 'squareMaxFontPx',
-            'storyLeftPct', 'storyTopPct', 'storyWidthPct', 'storyHeightPct',
-            'storyHAlign', 'storyVAlign', 'storyMaxFontPx'
-        ];
+        // Sync sliders with number inputs
+        function setupSliderSync(sliderId, inputId) {
+            const slider = document.getElementById(sliderId);
+            const input = document.getElementById(inputId);
+            
+            if (!slider || !input) return;
+            
+            // Slider changes number input
+            slider.addEventListener('input', function() {
+                input.value = parseFloat(this.value).toFixed(1);
+                updatePreviews();
+            });
+            
+            // Number input changes slider
+            input.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    slider.value = val;
+                }
+                updatePreviews();
+            });
+        }
 
-        previewInputs.forEach(id => {
-            const input = document.getElementById(id);
-            if (input) {
-                input.addEventListener('input', updatePreviews);
-                input.addEventListener('change', updatePreviews);
-            }
-        });
+        // Setup all slider-input pairs
+        setupSliderSync('squareLeftPctSlider', 'squareLeftPct');
+        setupSliderSync('squareTopPctSlider', 'squareTopPct');
+        setupSliderSync('squareWidthPctSlider', 'squareWidthPct');
+        setupSliderSync('squareHeightPctSlider', 'squareHeightPct');
+        setupSliderSync('squareMaxFontPxSlider', 'squareMaxFontPx');
+        
+        setupSliderSync('storyLeftPctSlider', 'storyLeftPct');
+        setupSliderSync('storyTopPctSlider', 'storyTopPct');
+        setupSliderSync('storyWidthPctSlider', 'storyWidthPct');
+        setupSliderSync('storyHeightPctSlider', 'storyHeightPct');
+        setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
 
         // Initial render
         updatePreviews();
