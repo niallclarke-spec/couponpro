@@ -46,9 +46,13 @@
         }
         
         h1 {
-            color: #1d98ff;
+            color: #e9eef5;
             margin-bottom: 24px;
             font-size: 28px;
+        }
+
+        h1.login-title {
+            color: #1d98ff;
         }
         
         .form-group {
@@ -168,6 +172,38 @@
             color: #1d98ff;
             margin-bottom: 16px;
         }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .preview-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-label {
+            font-size: 12px;
+            color: #8a8f98;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            margin-bottom: 8px;
+        }
         
         .row {
             display: grid;
@@ -177,7 +213,18 @@
         
         #loginForm {
             max-width: 400px;
-            margin: 100px auto;
+            margin: 0 auto;
+        }
+
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 100px;
+        }
+
+        .login-logo {
+            margin-bottom: 30px;
         }
         
         .hidden {
@@ -235,18 +282,24 @@
 </head>
 <body>
     <div class="container">
-        <div class="brand"><img src="/assets/fp-site-logo.png" alt="FunderPro" /></div>
-        <div class="card" id="loginForm">
-            <h1>🔐 Admin Login</h1>
-            <div id="loginAlert"></div>
-            <form onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn">Login</button>
-            </form>
+        <div class="login-container" id="loginWrapper">
+            <div class="login-logo">
+                <img src="/assets/fp-site-logo.png" alt="FunderPro" style="width: 140px;" />
+            </div>
+            <div class="card" id="loginForm">
+                <h1 class="login-title">🔐 Admin Login</h1>
+                <div id="loginAlert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+            </div>
         </div>
+
+        <div class="brand" id="adminBrand" style="display:none;"><img src="/assets/fp-site-logo.png" alt="FunderPro" /></div>
 
         <div class="card hidden" id="adminPanel">
             <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
@@ -270,57 +323,69 @@
                 <div class="section">
                     <div class="section-title">Square Image (1:1)</div>
                     
-                    <div class="form-group">
-                        <label for="squareImage">Square PNG Image *</label>
-                        <input type="file" id="squareImage" accept="image/png" required>
-                    </div>
+                    <div class="section-grid">
+                        <div class="controls-column">
+                            <div class="form-group">
+                                <label for="squareImage">Square PNG files only</label>
+                                <input type="file" id="squareImage" accept="image/png" required>
+                            </div>
 
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="squareLeftPct">Left (%)</label>
-                            <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="squareTopPct">Top (%)</label>
-                            <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="squareWidthPct">Width (%)</label>
-                            <input type="number" id="squareWidthPct" value="90" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="squareHeightPct">Height (%)</label>
-                            <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
-                        </div>
-                    </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="squareLeftPct">Left</label>
+                                    <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="squareTopPct">Top</label>
+                                    <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="squareHeightPct">Height</label>
+                                    <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                </div>
+                            </div>
 
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="squareHAlign">Horizontal Align</label>
-                            <select id="squareHAlign" required>
-                                <option value="left">Left</option>
-                                <option value="center" selected>Center</option>
-                                <option value="right">Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="squareVAlign">Vertical Align</label>
-                            <select id="squareVAlign" required>
-                                <option value="top">Top</option>
-                                <option value="middle">Middle</option>
-                                <option value="bottom" selected>Bottom</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="squareMaxFontPx">Max Font Size (px)</label>
-                            <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" required>
-                        </div>
-                    </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="squareWidthPct">Width</label>
+                                    <input type="number" id="squareWidthPct" value="90" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="squareMaxFontPx">Font Size</label>
+                                    <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" required>
+                                </div>
+                            </div>
 
-                    <div style="margin-top: 20px;">
-                        <label style="display: block; margin-bottom: 8px;">Live Preview</label>
-                        <div class="preview-frame square">
-                            <canvas id="previewSquare"></canvas>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="squareHAlign">Horizontal Align</label>
+                                    <select id="squareHAlign" required>
+                                        <option value="left">Left</option>
+                                        <option value="center" selected>Center</option>
+                                        <option value="right">Right</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="squareVAlign">Vertical Align</label>
+                                    <select id="squareVAlign" required>
+                                        <option value="top">Top</option>
+                                        <option value="middle">Middle</option>
+                                        <option value="bottom" selected>Bottom</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:#e9eef5;">
+                                <input id="squareShowLogo" type="checkbox" style="width:auto" checked />
+                                <span>Show Logo</span>
+                            </label>
+                        </div>
+
+                        <div class="preview-column">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-frame square">
+                                <canvas id="previewSquare"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -328,57 +393,69 @@
                 <div class="section">
                     <div class="section-title">Story Image (9:16)</div>
                     
-                    <div class="form-group">
-                        <label for="storyImage">Story PNG Image *</label>
-                        <input type="file" id="storyImage" accept="image/png" required>
-                    </div>
+                    <div class="section-grid">
+                        <div class="controls-column">
+                            <div class="form-group">
+                                <label for="storyImage">Story PNG files only</label>
+                                <input type="file" id="storyImage" accept="image/png" required>
+                            </div>
 
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="storyLeftPct">Left (%)</label>
-                            <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="storyTopPct">Top (%)</label>
-                            <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="storyWidthPct">Width (%)</label>
-                            <input type="number" id="storyWidthPct" value="90" min="0" max="100" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="storyHeightPct">Height (%)</label>
-                            <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
-                        </div>
-                    </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="storyLeftPct">Left</label>
+                                    <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="storyTopPct">Top</label>
+                                    <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="storyHeightPct">Height</label>
+                                    <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                </div>
+                            </div>
 
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="storyHAlign">Horizontal Align</label>
-                            <select id="storyHAlign" required>
-                                <option value="left">Left</option>
-                                <option value="center" selected>Center</option>
-                                <option value="right">Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="storyVAlign">Vertical Align</label>
-                            <select id="storyVAlign" required>
-                                <option value="top">Top</option>
-                                <option value="middle">Middle</option>
-                                <option value="bottom" selected>Bottom</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="storyMaxFontPx">Max Font Size (px)</label>
-                            <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" required>
-                        </div>
-                    </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="storyWidthPct">Width</label>
+                                    <input type="number" id="storyWidthPct" value="90" min="0" max="100" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="storyMaxFontPx">Font Size</label>
+                                    <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" required>
+                                </div>
+                            </div>
 
-                    <div style="margin-top: 20px;">
-                        <label style="display: block; margin-bottom: 8px;">Live Preview</label>
-                        <div class="preview-frame story">
-                            <canvas id="previewStory"></canvas>
+                            <div class="row">
+                                <div class="form-group">
+                                    <label for="storyHAlign">Horizontal Align</label>
+                                    <select id="storyHAlign" required>
+                                        <option value="left">Left</option>
+                                        <option value="center" selected>Center</option>
+                                        <option value="right">Right</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="storyVAlign">Vertical Align</label>
+                                    <select id="storyVAlign" required>
+                                        <option value="top">Top</option>
+                                        <option value="middle">Middle</option>
+                                        <option value="bottom" selected>Bottom</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:#e9eef5;">
+                                <input id="storyShowLogo" type="checkbox" style="width:auto" checked />
+                                <span>Show Logo</span>
+                            </label>
+                        </div>
+
+                        <div class="preview-column">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-frame story">
+                                <canvas id="previewStory"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -409,7 +486,8 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('loginWrapper').style.display = 'none';
+                    document.getElementById('adminBrand').style.display = 'block';
                     document.getElementById('adminPanel').classList.remove('hidden');
                 } else {
                     showAlert('loginAlert', data.error || 'Invalid password', true);
@@ -423,7 +501,8 @@
             try {
                 await fetch('/api/logout', { method: 'POST' });
                 document.getElementById('adminPanel').classList.add('hidden');
-                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('adminBrand').style.display = 'none';
+                document.getElementById('loginWrapper').style.display = 'flex';
                 document.getElementById('password').value = '';
             } catch (error) {
                 console.error('Logout failed:', error);

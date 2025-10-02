@@ -50,6 +50,13 @@
       "story": "assets/templates/eqeqeqe/story.png"
     },
     {
+      "slug": "jsjsjs",
+      "name": "jsjsjs",
+      "meta": "assets/templates/jsjsjs/meta.json",
+      "square": "assets/templates/jsjsjs/square.png",
+      "story": "assets/templates/jsjsjs/story.png"
+    },
+    {
       "slug": "pink",
       "name": "pink",
       "meta": "assets/templates/pink/meta.json",
