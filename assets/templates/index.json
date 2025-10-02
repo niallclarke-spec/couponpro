@@ -64,6 +64,13 @@
       "story": "assets/templates/pink/assets/templates/pink/story-1-.png"
     },
     {
+      "slug": "ssdsdsdsd",
+      "name": "ssdsdsdsd",
+      "meta": "assets/templates/ssdsdsdsd/meta.json",
+      "square": "assets/templates/ssdsdsdsd/square.png",
+      "story": "assets/templates/ssdsdsdsd/story.png"
+    },
+    {
       "slug": "testx",
       "name": "testx",
       "meta": "assets/templates/testx/meta.json",
