@@ -886,6 +886,7 @@
             try {
                 const response = await fetch('/api/delete-template', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ slug })
                 });
