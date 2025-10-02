@@ -134,6 +134,28 @@
             font-weight: 700;
             cursor: pointer;
             transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #1d98ff;
+            border: 2px solid #1d98ff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .btn-outline:hover {
+            background: rgba(29, 152, 255, 0.1);
         }
         
         .btn:hover {
@@ -480,6 +502,7 @@
                     </div>
                     <button type="submit" class="btn">Login</button>
                 </form>
+                <a href="/" class="btn-outline" style="margin-top: 12px;">Visit Frontend</a>
             </div>
         </div>
 
