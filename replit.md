@@ -6,6 +6,8 @@ A static web application that generates promotional images for coupon codes. Use
 ## Recent Changes
 - **2025-10-02**: Admin Live Preview Feature
   - Added real-time preview canvases showing square and story formats
+  - Each preview positioned directly within its controls section for easy adjustment
+  - Blue semi-transparent bounding box shows exact coupon placement area
   - Preview displays "PREVIEW" text with current placement settings
   - Live updates when adjusting coordinates, alignment, or font size
   - Automatically loads uploaded template images into preview
