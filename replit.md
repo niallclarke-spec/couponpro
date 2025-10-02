@@ -4,6 +4,14 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: Template Delete Feature & Login Page Enhancement
+  - Added delete button (red trash icon) to each template in Current Assets list
+  - Delete removes entire template folder and both images, then regenerates index
+  - Confirmation dialog prevents accidental deletion
+  - Added "Visit Frontend" button on login page with transparent fill and blue stroke
+  - Fixed button widths: login page buttons full width, admin panel buttons normal size
+  - Server now uses SO_REUSEADDR to prevent port binding issues on restart
+
 - **2025-10-02**: Enhanced Control System with Sliders
   - Added smooth range sliders for placement controls (Left-Right, Top-Bottom, Width, Font Size)
   - Removed Height control (Font Size automatically handles vertical sizing)
