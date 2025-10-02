@@ -13,7 +13,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #ffffff;
+            background: #0b0c10;
             min-height: 100vh;
             padding: 20px;
             color: #e9eef5;
@@ -321,50 +321,51 @@
             display: block;
         }
 
-        .assets-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+        .assets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 20px;
         }
 
-        .asset-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 16px;
+        .asset-item {
+            background: #191b22;
+            border: 1px solid #262b35;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
-        .asset-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .asset-item:hover {
+            background: #1f2128;
             border-color: #1d98ff;
+            transform: translateX(4px);
         }
 
-        .asset-preview {
-            width: 100%;
-            aspect-ratio: 1/1;
-            background: #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-
-        .asset-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .asset-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .asset-name {
             font-weight: 600;
-            color: #111827;
-            margin-bottom: 4px;
+            color: #e9eef5;
+            font-size: 16px;
         }
 
         .asset-slug {
             font-size: 13px;
-            color: #6b7280;
+            color: #8a8f98;
+        }
+
+        .asset-edit-icon {
+            color: #1d98ff;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -525,8 +526,8 @@
             </div>
 
             <div id="assetsTab" class="tab-content">
-                <div id="assetsGrid" class="assets-grid">
-                    <p style="color: #6b7280; text-align: center; grid-column: 1 / -1;">Loading templates...</p>
+                <div id="assetsList" class="assets-list">
+                    <p style="color: #8a8f98; text-align: center;">Loading templates...</p>
                 </div>
             </div>
         </div>
@@ -642,11 +643,13 @@
             tabs.forEach(tab => tab.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
             
-            event.target.classList.add('active');
-            
+            // Activate the correct tab button
+            const tabButtons = Array.from(tabs);
             if (tabName === 'upload') {
+                tabButtons[0]?.classList.add('active');
                 document.getElementById('uploadTab').classList.add('active');
             } else if (tabName === 'assets') {
+                tabButtons[1]?.classList.add('active');
                 document.getElementById('assetsTab').classList.add('active');
                 loadAssets();
             }
@@ -654,34 +657,91 @@
 
         // Load and display current assets
         async function loadAssets() {
-            const assetsGrid = document.getElementById('assetsGrid');
-            assetsGrid.innerHTML = '<p style="color: #6b7280; text-align: center; grid-column: 1 / -1;">Loading templates...</p>';
+            const assetsList = document.getElementById('assetsList');
+            assetsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading templates...</p>';
             
             try {
                 const response = await fetch('/assets/templates/index.json');
                 const data = await response.json();
                 
                 if (!data.templates || data.templates.length === 0) {
-                    assetsGrid.innerHTML = '<p style="color: #6b7280; text-align: center; grid-column: 1 / -1;">No templates found</p>';
+                    assetsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">No templates found</p>';
                     return;
                 }
                 
-                assetsGrid.innerHTML = '';
+                assetsList.innerHTML = '';
                 data.templates.forEach(template => {
-                    const card = document.createElement('div');
-                    card.className = 'asset-card';
-                    card.innerHTML = `
-                        <div class="asset-preview">
-                            <img src="/assets/templates/${template.slug}/square.png" alt="${template.name}" onerror="this.style.display='none'">
+                    const item = document.createElement('div');
+                    item.className = 'asset-item';
+                    item.onclick = () => loadTemplateForEdit(template.slug);
+                    item.innerHTML = `
+                        <div class="asset-item-info">
+                            <div class="asset-name">${template.name}</div>
+                            <div class="asset-slug">${template.slug}</div>
                         </div>
-                        <div class="asset-name">${template.name}</div>
-                        <div class="asset-slug">${template.slug}</div>
+                        <div class="asset-edit-icon">✎</div>
                     `;
-                    assetsGrid.appendChild(card);
+                    assetsList.appendChild(item);
                 });
             } catch (error) {
-                assetsGrid.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Error loading templates</p>';
+                assetsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading templates</p>';
                 console.error('Failed to load assets:', error);
+            }
+        }
+
+        // Load template data for editing
+        async function loadTemplateForEdit(slug) {
+            try {
+                const response = await fetch(`/assets/templates/${slug}/meta.json`);
+                const meta = await response.json();
+                
+                // Switch to upload tab
+                switchTab('upload');
+                
+                // Populate form fields
+                document.getElementById('name').value = meta.name || slug;
+                document.getElementById('slug').value = slug;
+                
+                // Square settings
+                document.getElementById('squareLeftPct').value = meta.square.leftPct || 5;
+                document.getElementById('squareTopPct').value = meta.square.topPct || 78;
+                document.getElementById('squareWidthPct').value = meta.square.widthPct || 90;
+                document.getElementById('squareHeightPct').value = meta.square.heightPct || 12;
+                document.getElementById('squareMaxFontPx').value = meta.square.maxFontPx || 80;
+                document.getElementById('squareShowLogo').checked = meta.square.showLogo !== false;
+                
+                // Story settings
+                document.getElementById('storyLeftPct').value = meta.story.leftPct || 5;
+                document.getElementById('storyTopPct').value = meta.story.topPct || 78;
+                document.getElementById('storyWidthPct').value = meta.story.widthPct || 90;
+                document.getElementById('storyHeightPct').value = meta.story.heightPct || 12;
+                document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
+                document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
+                
+                // Load images into preview
+                const squareImg = new Image();
+                squareImg.onload = function() {
+                    previewImages.square = squareImg;
+                    updatePreviews();
+                };
+                squareImg.src = `/assets/templates/${slug}/square.png`;
+                
+                const storyImg = new Image();
+                storyImg.onload = function() {
+                    previewImages.story = storyImg;
+                    updatePreviews();
+                };
+                storyImg.src = `/assets/templates/${slug}/story.png`;
+                
+                // Update submit button text
+                document.getElementById('submitBtn').textContent = 'Update Template';
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                alert('Failed to load template: ' + error.message);
+                console.error('Failed to load template:', error);
             }
         }
 

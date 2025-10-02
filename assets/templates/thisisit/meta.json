@@ -1,0 +1,25 @@
+{
+  "name": "thisisit",
+  "square": {
+    "box": {
+      "leftPct": 5.0,
+      "topPct": 78.0,
+      "widthPct": 28.8,
+      "heightPct": 6.7,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 80
+  },
+  "story": {
+    "box": {
+      "leftPct": 33.1,
+      "topPct": 78.0,
+      "widthPct": 34.4,
+      "heightPct": 7.2,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 99
+  }
+}

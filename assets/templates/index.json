@@ -78,6 +78,13 @@
       "story": "assets/templates/testx/story.png"
     },
     {
+      "slug": "thisisit",
+      "name": "thisisit",
+      "meta": "assets/templates/thisisit/meta.json",
+      "square": "assets/templates/thisisit/square.png",
+      "story": "assets/templates/thisisit/story.png"
+    },
+    {
       "slug": "vape",
       "name": "vape",
       "meta": "assets/templates/vape/meta.json",
