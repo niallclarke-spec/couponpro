@@ -390,8 +390,16 @@
 
       const targetW = Math.max(1, Math.round(c.parentElement.clientWidth));
       const targetH = Math.max(1, Math.round(c.parentElement.clientHeight));
-      c.width = targetW; c.height = targetH; g.imageSmoothingQuality='high'; g.clearRect(0,0,targetW,targetH);
-      const scale = Math.min(targetW/natW, targetH/natH); // use contain so nothing is cropped
+      const pixelRatio = window.devicePixelRatio || 2;
+      c.width = targetW * pixelRatio; 
+      c.height = targetH * pixelRatio;
+      c.style.width = targetW + 'px';
+      c.style.height = targetH + 'px';
+      g.scale(pixelRatio, pixelRatio);
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high'; 
+      g.clearRect(0, 0, targetW, targetH);
+      const scale = Math.min(targetW/natW, targetH/natH);
       const dw = Math.ceil(natW*scale), dh = Math.ceil(natH*scale);
       const dx = Math.round((targetW - dw)/2), dy = Math.round((targetH - dh)/2);
       g.drawImage(off, 0,0,natW,natH, dx,dy, dw,dh);
@@ -402,22 +410,88 @@
     function download(which){
       const img = base[which]; if (!img || !img.naturalWidth) return alert('Load a template first.');
       const natW = img.naturalWidth, natH = img.naturalHeight; const m = document.createElement('canvas'); m.width=natW; m.height=natH; const g=m.getContext('2d');
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
       const code = sanitize(els.coupon.value||'COUPON');
       const { box, maxFontPx } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
       drawTextAutoFit(g, code, natW, natH, box, effCap);
+      
+      // Add logo to download if enabled
+      if (els.logoToggle && els.logoToggle.checked) {
+        const natMin = Math.min(natW, natH);
+        const margin = Math.max(20, Math.round(natMin * 0.04));
+        const diameter = Math.max(32, Math.round(natMin * 0.12));
+        const radius = Math.floor(diameter / 2);
+        const x = margin, y = margin;
+        const iW = logoImage.naturalWidth, iH = logoImage.naturalHeight;
+        g.save();
+        g.beginPath();
+        g.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
+        g.closePath();
+        g.clip();
+        if (logoImage && logoImage.complete && iW && iH) {
+          const side = Math.min(iW, iH);
+          const sx = Math.floor((iW - side) / 2);
+          const sy = Math.floor((iH - side) / 2);
+          g.drawImage(logoImage, sx, sy, side, side, x, y, diameter, diameter);
+        } else {
+          g.fillStyle = '#1d98ff';
+          g.fillRect(x, y, diameter, diameter);
+          g.fillStyle = '#ffffff';
+          g.font = `700 ${Math.round(diameter * 0.5)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText('FP', x + radius, y + radius + 2);
+        }
+        g.restore();
+      }
+      
       m.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`${code}-${which}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1200); },'image/png');
     }
 
     async function share(which){
       const img = base[which]; if (!img || !img.naturalWidth) return alert('Load a template first.');
       const natW = img.naturalWidth, natH = img.naturalHeight; const m = document.createElement('canvas'); m.width=natW; m.height=natH; const g=m.getContext('2d');
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
       const code = sanitize(els.coupon.value||'COUPON');
       const { box, maxFontPx } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
       drawTextAutoFit(g, code, natW, natH, box, effCap);
+      
+      // Add logo to share if enabled
+      if (els.logoToggle && els.logoToggle.checked) {
+        const natMin = Math.min(natW, natH);
+        const margin = Math.max(20, Math.round(natMin * 0.04));
+        const diameter = Math.max(32, Math.round(natMin * 0.12));
+        const radius = Math.floor(diameter / 2);
+        const x = margin, y = margin;
+        const iW = logoImage.naturalWidth, iH = logoImage.naturalHeight;
+        g.save();
+        g.beginPath();
+        g.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
+        g.closePath();
+        g.clip();
+        if (logoImage && logoImage.complete && iW && iH) {
+          const side = Math.min(iW, iH);
+          const sx = Math.floor((iW - side) / 2);
+          const sy = Math.floor((iH - side) / 2);
+          g.drawImage(logoImage, sx, sy, side, side, x, y, diameter, diameter);
+        } else {
+          g.fillStyle = '#1d98ff';
+          g.fillRect(x, y, diameter, diameter);
+          g.fillStyle = '#ffffff';
+          g.font = `700 ${Math.round(diameter * 0.5)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText('FP', x + radius, y + radius + 2);
+        }
+        g.restore();
+      }
+      
       const blob = await new Promise(r=>m.toBlob(r,'image/png'));
       const file = new File([blob], `${code}-${which}.png`, { type:'image/png' });
       if(navigator.canShare && navigator.canShare({ files:[file] })){
