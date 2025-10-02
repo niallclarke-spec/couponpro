@@ -12,6 +12,8 @@ A static web application that generates promotional images for coupon codes. Use
   - Live updates when adjusting coordinates, alignment, or font size
   - Automatically loads uploaded template images into preview
   - Users can now visually verify coupon placement before uploading
+  - Redesigned admin layout: two-column grid with controls on left, large preview on right
+  - Updated login page: centered logo positioned 30px above password container, blue title
 
 - **2025-10-02**: Admin Interface UI/UX Improvements
   - Updated admin page with dark theme matching front page (black background, dark containers)
