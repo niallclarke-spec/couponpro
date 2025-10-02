@@ -4,11 +4,16 @@ import socketserver
 import os
 import json
 import subprocess
+import secrets
+import base64
 from urllib.parse import urlparse, parse_qs
 import mimetypes
+import cgi
+from http import cookies
 
 PORT = 5000
 DIRECTORY = "."
+SESSION_TOKENS = set()
 
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
@@ -24,10 +29,176 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Expires', '0')
         super().end_headers()
     
+    def check_auth(self):
+        cookie_header = self.headers.get('Cookie')
+        if not cookie_header:
+            return False
+        
+        c = cookies.SimpleCookie()
+        c.load(cookie_header)
+        
+        if 'admin_session' in c:
+            token = c['admin_session'].value
+            return token in SESSION_TOKENS
+        
+        return False
+    
     def do_POST(self):
         parsed_path = urlparse(self.path)
         
-        if parsed_path.path == '/api/regenerate-index':
+        if parsed_path.path == '/api/login':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                password = data.get('password', '')
+                admin_password = os.environ.get('ADMIN_PASSWORD', '')
+                
+                if password == admin_password and admin_password:
+                    session_token = secrets.token_urlsafe(32)
+                    SESSION_TOKENS.add(session_token)
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Set-Cookie', f'admin_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': True}).encode())
+                else:
+                    self.send_response(401)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Invalid password'}).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/logout':
+            cookie_header = self.headers.get('Cookie')
+            if cookie_header:
+                c = cookies.SimpleCookie()
+                c.load(cookie_header)
+                if 'admin_session' in c:
+                    token = c['admin_session'].value
+                    SESSION_TOKENS.discard(token)
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Set-Cookie', 'admin_session=; Path=/; HttpOnly; Max-Age=0')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True}).encode())
+        
+        elif parsed_path.path == '/api/upload-template':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_type = self.headers['Content-Type']
+                if not content_type.startswith('multipart/form-data'):
+                    raise ValueError('Expected multipart/form-data')
+                
+                form = cgi.FieldStorage(
+                    fp=self.rfile,
+                    headers=self.headers,
+                    environ={
+                        'REQUEST_METHOD': 'POST',
+                        'CONTENT_TYPE': self.headers['Content-Type'],
+                    }
+                )
+                
+                name = form.getvalue('name')
+                slug = form.getvalue('slug')
+                
+                import re
+                if not slug or not re.match(r'^[a-z0-9-]+$', slug):
+                    raise ValueError('Invalid slug: must contain only lowercase letters, numbers, and hyphens')
+                
+                if '..' in slug or '/' in slug or '\\' in slug:
+                    raise ValueError('Invalid slug: path traversal detected')
+                
+                square_image = form['squareImage']
+                story_image = form['storyImage']
+                
+                square_coords = {
+                    'leftPct': float(form.getvalue('squareLeftPct')),
+                    'topPct': float(form.getvalue('squareTopPct')),
+                    'widthPct': float(form.getvalue('squareWidthPct')),
+                    'heightPct': float(form.getvalue('squareHeightPct')),
+                    'hAlign': form.getvalue('squareHAlign'),
+                    'vAlign': form.getvalue('squareVAlign')
+                }
+                
+                story_coords = {
+                    'leftPct': float(form.getvalue('storyLeftPct')),
+                    'topPct': float(form.getvalue('storyTopPct')),
+                    'widthPct': float(form.getvalue('storyWidthPct')),
+                    'heightPct': float(form.getvalue('storyHeightPct')),
+                    'hAlign': form.getvalue('storyHAlign'),
+                    'vAlign': form.getvalue('storyVAlign')
+                }
+                
+                square_max_font = int(form.getvalue('squareMaxFontPx'))
+                story_max_font = int(form.getvalue('storyMaxFontPx'))
+                
+                template_dir = os.path.join('assets', 'templates', slug)
+                os.makedirs(template_dir, exist_ok=True)
+                
+                square_path = os.path.join(template_dir, 'square.png')
+                with open(square_path, 'wb') as f:
+                    f.write(square_image.file.read())
+                
+                story_path = os.path.join(template_dir, 'story.png')
+                with open(story_path, 'wb') as f:
+                    f.write(story_image.file.read())
+                
+                meta = {
+                    'name': name,
+                    'square': {
+                        'box': square_coords,
+                        'maxFontPx': square_max_font
+                    },
+                    'story': {
+                        'box': story_coords,
+                        'maxFontPx': story_max_font
+                    }
+                }
+                
+                meta_path = os.path.join(template_dir, 'meta.json')
+                with open(meta_path, 'w') as f:
+                    json.dump(meta, f, indent=2)
+                
+                result = subprocess.run(
+                    ['python3', 'regenerate_index.py'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                
+                if result.returncode != 0:
+                    raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Template "{name}" uploaded successfully',
+                    'slug': slug
+                }).encode())
+                
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/regenerate-index':
             try:
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],
@@ -68,5 +239,9 @@ if __name__ == "__main__":
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Server running at http://0.0.0.0:{PORT}/")
         print(f"Serving files from {os.path.abspath(DIRECTORY)}")
-        print(f"API endpoint: POST /api/regenerate-index")
+        print(f"API endpoints:")
+        print(f"  POST /api/login")
+        print(f"  POST /api/logout")
+        print(f"  POST /api/upload-template (requires auth)")
+        print(f"  POST /api/regenerate-index")
         httpd.serve_forever()

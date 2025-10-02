@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Admin - CouponPro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-logout {
+            background: #e74c3c;
+            float: right;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: #c0392b;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .section {
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        #loginForm {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" id="loginForm">
+            <h1>🔐 Admin Login</h1>
+            <div id="loginAlert"></div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+        </div>
+
+        <div class="card hidden" id="adminPanel">
+            <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+            <h1>📦 Upload New Template</h1>
+            
+            <div id="uploadAlert"></div>
+            
+            <form id="templateForm" onsubmit="handleUpload(event)">
+                <div class="form-group">
+                    <label for="name">Template Name *</label>
+                    <input type="text" id="name" required placeholder="e.g., Flash Sale">
+                    <div class="hint">This will appear in the dropdown</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="slug">Slug *</label>
+                    <input type="text" id="slug" required pattern="[a-z0-9-]+" placeholder="e.g., flash-sale">
+                    <div class="hint">Lowercase letters, numbers, and hyphens only</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Square Image (1:1)</div>
+                    
+                    <div class="form-group">
+                        <label for="squareImage">Square PNG Image *</label>
+                        <input type="file" id="squareImage" accept="image/png" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="squareLeftPct">Left (%)</label>
+                            <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="squareTopPct">Top (%)</label>
+                            <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="squareWidthPct">Width (%)</label>
+                            <input type="number" id="squareWidthPct" value="90" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="squareHeightPct">Height (%)</label>
+                            <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="squareHAlign">Horizontal Align</label>
+                            <select id="squareHAlign" required>
+                                <option value="left">Left</option>
+                                <option value="center" selected>Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="squareVAlign">Vertical Align</label>
+                            <select id="squareVAlign" required>
+                                <option value="top">Top</option>
+                                <option value="middle">Middle</option>
+                                <option value="bottom" selected>Bottom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="squareMaxFontPx">Max Font Size (px)</label>
+                            <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Story Image (9:16)</div>
+                    
+                    <div class="form-group">
+                        <label for="storyImage">Story PNG Image *</label>
+                        <input type="file" id="storyImage" accept="image/png" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="storyLeftPct">Left (%)</label>
+                            <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storyTopPct">Top (%)</label>
+                            <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storyWidthPct">Width (%)</label>
+                            <input type="number" id="storyWidthPct" value="90" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storyHeightPct">Height (%)</label>
+                            <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="storyHAlign">Horizontal Align</label>
+                            <select id="storyHAlign" required>
+                                <option value="left">Left</option>
+                                <option value="center" selected>Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="storyVAlign">Vertical Align</label>
+                            <select id="storyVAlign" required>
+                                <option value="top">Top</option>
+                                <option value="middle">Middle</option>
+                                <option value="bottom" selected>Bottom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="storyMaxFontPx">Max Font Size (px)</label>
+                            <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">Upload Template</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(elementId, message, isError = false) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
+            setTimeout(() => alertDiv.innerHTML = '', 5000);
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                } else {
+                    showAlert('loginAlert', data.error || 'Invalid password', true);
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'Login failed: ' + error.message, true);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                document.getElementById('adminPanel').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('password').value = '';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+
+        async function handleUpload(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('slug', document.getElementById('slug').value);
+            formData.append('squareImage', document.getElementById('squareImage').files[0]);
+            formData.append('storyImage', document.getElementById('storyImage').files[0]);
+            
+            formData.append('squareLeftPct', document.getElementById('squareLeftPct').value);
+            formData.append('squareTopPct', document.getElementById('squareTopPct').value);
+            formData.append('squareWidthPct', document.getElementById('squareWidthPct').value);
+            formData.append('squareHeightPct', document.getElementById('squareHeightPct').value);
+            formData.append('squareHAlign', document.getElementById('squareHAlign').value);
+            formData.append('squareVAlign', document.getElementById('squareVAlign').value);
+            formData.append('squareMaxFontPx', document.getElementById('squareMaxFontPx').value);
+            
+            formData.append('storyLeftPct', document.getElementById('storyLeftPct').value);
+            formData.append('storyTopPct', document.getElementById('storyTopPct').value);
+            formData.append('storyWidthPct', document.getElementById('storyWidthPct').value);
+            formData.append('storyHeightPct', document.getElementById('storyHeightPct').value);
+            formData.append('storyHAlign', document.getElementById('storyHAlign').value);
+            formData.append('storyVAlign', document.getElementById('storyVAlign').value);
+            formData.append('storyMaxFontPx', document.getElementById('storyMaxFontPx').value);
+
+            try {
+                const response = await fetch('/api/upload-template', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('uploadAlert', data.message + ' ✓');
+                    document.getElementById('templateForm').reset();
+                } else {
+                    showAlert('uploadAlert', data.error || 'Upload failed', true);
+                }
+            } catch (error) {
+                showAlert('uploadAlert', 'Upload failed: ' + error.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Upload Template';
+            }
+        }
+
+        document.getElementById('name').addEventListener('input', function(e) {
+            const slug = e.target.value.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+            document.getElementById('slug').value = slug;
+        });
+    </script>
+</body>
+</html>

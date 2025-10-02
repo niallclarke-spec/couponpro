@@ -4,6 +4,15 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-02**: Custom Admin Interface with Password Authentication
+  - Created admin-simple.html: Simple, user-friendly template upload interface
+  - Added password authentication using ADMIN_PASSWORD secret
+  - Implemented secure session-based login with HttpOnly cookies
+  - Added POST /api/login, /api/logout, and /api/upload-template endpoints
+  - Automatic slug validation and path traversal protection
+  - Auto-generates meta.json and regenerates index.json after upload
+  - Successfully pushed changes to GitHub main branch
+
 - **2025-10-02**: GitHub import to Replit
   - Installed Python 3.11
   - Created server.py to serve static files on port 5000 with cache-control headers
@@ -15,8 +24,8 @@ A static web application that generates promotional images for coupon codes. Use
 
 ### Technology Stack
 - **Frontend**: Pure HTML, CSS, and vanilla JavaScript
-- **CMS**: Decap CMS (formerly Netlify CMS) for template management
-- **Server**: Python HTTP server for serving static files
+- **Admin Interface**: Custom password-protected upload form (admin-simple.html)
+- **Server**: Python HTTP server with authentication and file upload endpoints
 
 ### Project Structure
 ```
@@ -57,7 +66,7 @@ A static web application that generates promotional images for coupon codes. Use
 ## Development
 - **Run**: The server starts automatically via the workflow
 - **Port**: 5000
-- **Access Admin**: Navigate to `/admin/` to manage templates
+- **Access Admin**: Navigate to `/admin-simple.html` to manage templates
 
 ## Deployment
 - **Production**: Currently deployed on Digital Ocean at https://couponpro-o4fjo.ondigitalocean.app
