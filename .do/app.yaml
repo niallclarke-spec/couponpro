@@ -1,0 +1,22 @@
+name: couponpro
+region: nyc
+
+services:
+  - name: web
+    environment_slug: python
+    github:
+      repo: niallclarke-spec/couponpro
+      branch: main
+      deploy_on_push: true
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    http_port: 8080
+    run_command: python3 server.py
+    routes:
+      - path: /
+    envs:
+      - key: PORT
+        value: "8080"
+      - key: ADMIN_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
