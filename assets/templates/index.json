@@ -13,13 +13,6 @@
       "meta": "assets/templates/flash-sale/meta.json",
       "square": "assets/templates/flash-sale/square.png",
       "story": "assets/templates/flash-sale/story.png"
-    },
-    {
-      "slug": "test600",
-      "name": "TEST600",
-      "meta": "assets/templates/test600/meta.json",
-      "square": "assets/templates/test600/square.png",
-      "story": "assets/templates/test600/story.png"
     }
   ]
 }
