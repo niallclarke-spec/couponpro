@@ -15,6 +15,13 @@
       "story": "assets/templates/flash-sale/story.png"
     },
     {
+      "slug": "test300",
+      "name": "TEST300",
+      "meta": "assets/templates/test300/meta.json",
+      "square": "assets/templates/test300/square.png",
+      "story": "assets/templates/test300/story.png"
+    },
+    {
       "slug": "uuuuews",
       "name": "uuuuews",
       "meta": "assets/templates/uuuuews/meta.json",
