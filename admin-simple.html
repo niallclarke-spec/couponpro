@@ -1119,20 +1119,32 @@
                 selectColor(squareFontColor, 'square');
                 selectColor(storyFontColor, 'story');
                 
-                // Load images into preview
+                // Load images into preview - use separate instances per variant
                 const squareImg = new Image();
-                squareImg.onload = function() {
-                    previewImages.square = squareImg;
-                    updatePreviewsImmediate();
+                squareImg.onload = async function() {
+                    try {
+                        await squareImg.decode();
+                        previewImages.square = squareImg;
+                        renderPreview('square');
+                    } catch(e) {
+                        console.error('Square image decode failed:', e);
+                    }
                 };
-                squareImg.src = `/assets/templates/${slug}/square.png`;
+                squareImg.onerror = () => console.error('Square image load failed');
+                squareImg.src = `/assets/templates/${slug}/square.png?t=${Date.now()}`;
                 
                 const storyImg = new Image();
-                storyImg.onload = function() {
-                    previewImages.story = storyImg;
-                    updatePreviewsImmediate();
+                storyImg.onload = async function() {
+                    try {
+                        await storyImg.decode();
+                        previewImages.story = storyImg;
+                        renderPreview('story');
+                    } catch(e) {
+                        console.error('Story image decode failed:', e);
+                    }
                 };
-                storyImg.src = `/assets/templates/${slug}/story.png`;
+                storyImg.onerror = () => console.error('Story image load failed');
+                storyImg.src = `/assets/templates/${slug}/story.png?t=${Date.now()}`;
                 
                 // Update submit button text
                 document.getElementById('submitBtn').textContent = 'Update Template';
@@ -1386,6 +1398,9 @@
             canvas.height = targetH * pixelRatio;
             canvas.style.width = targetW + 'px';
             canvas.style.height = targetH + 'px';
+            
+            // Reset transform to prevent accumulation
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(pixelRatio, pixelRatio);
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
@@ -1422,9 +1437,14 @@
             const file = e.target.files[0];
             if (file) {
                 const img = new Image();
-                img.onload = function() {
-                    previewImages.square = img;
-                    updatePreviewsImmediate();
+                img.onload = async function() {
+                    try {
+                        await img.decode();
+                        previewImages.square = img;
+                        renderPreview('square');
+                    } catch(e) {
+                        console.error('Square upload decode failed:', e);
+                    }
                 };
                 img.src = URL.createObjectURL(file);
             }
@@ -1434,9 +1454,14 @@
             const file = e.target.files[0];
             if (file) {
                 const img = new Image();
-                img.onload = function() {
-                    previewImages.story = img;
-                    updatePreviewsImmediate();
+                img.onload = async function() {
+                    try {
+                        await img.decode();
+                        previewImages.story = img;
+                        renderPreview('story');
+                    } catch(e) {
+                        console.error('Story upload decode failed:', e);
+                    }
                 };
                 img.src = URL.createObjectURL(file);
             }
