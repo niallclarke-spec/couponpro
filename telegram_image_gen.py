@@ -165,6 +165,7 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
     Draw text with auto-fit sizing and alignment based on box parameters.
     
     Port of drawTextAutoFit from index.html (lines 328-352).
+    Updated to use bbox-based vertical centering for accurate positioning.
     
     Args:
         draw (ImageDraw.Draw): Draw object
@@ -197,36 +198,38 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
     # Get font
     font = get_font(px, bold=True)
     
+    # Get actual text bounding box for precise positioning
+    stroke_width = max(2, int(px * 0.08))
+    bbox = draw.textbbox((0, 0), text, font=font, stroke_width=stroke_width)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    
     # Calculate horizontal alignment
     h_align = box.get('hAlign', 'center')
     if h_align == 'center':
-        x = left + round(width / 2)
-        anchor = 'ms'  # middle-baseline
+        x = left + round(width / 2) - round(text_width / 2)
     elif h_align == 'right':
-        x = left + width
-        anchor = 'rs'  # right-baseline
+        x = left + width - text_width
     else:  # left
         x = left
-        anchor = 'ls'  # left-baseline
     
-    # Calculate vertical alignment
+    # Calculate vertical alignment using bbox height
     v_align = box.get('vAlign', 'bottom')
     if v_align == 'middle':
-        y = top + round(height / 2) + round(px * 0.35)
-        anchor = anchor[0] + 'm'  # keep horizontal, set vertical to middle
+        # Center text vertically in the box
+        y = top + round(height / 2) - round(text_height / 2)
     elif v_align == 'bottom':
-        y = top + height
-        anchor = anchor[0] + 's'  # keep horizontal, set vertical to baseline
+        # Align text to bottom of box
+        y = top + height - text_height
     else:  # top
-        y = top + px
-        anchor = anchor[0] + 's'  # keep horizontal, set vertical to baseline
+        # Align text to top of box
+        y = top
     
-    # Adjust anchor for Pillow (use 'a' for alphabetic baseline)
-    if anchor.endswith('s'):
-        anchor = anchor[:-1] + 'a'
+    # Adjust for bbox offset (bbox top is negative for most fonts)
+    y = y - bbox[1]
     
     # Draw text with stroke (outline)
-    stroke_width = max(2, int(px * 0.08))
+    # Use 'la' anchor (left-alphabetic) since we've already calculated exact position
     fill_color = font_color or '#ffffff'
     
     draw.text(
@@ -234,7 +237,7 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
         text,
         font=font,
         fill=fill_color,
-        anchor=anchor,
+        anchor='la',
         stroke_width=stroke_width,
         stroke_fill=(0, 0, 0)  # Black outline
     )
