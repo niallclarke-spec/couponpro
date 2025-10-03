@@ -18,54 +18,69 @@ DIRECTORY = "."
 SESSIONS_FILE = 'sessions.json'
 SESSION_TTL = 86400  # 24 hours in seconds
 
-def load_sessions():
-    """Load sessions from file, removing expired ones"""
-    if not os.path.exists(SESSIONS_FILE):
-        return {}
+def _atomic_session_operation(operation, token=None):
+    """Atomic read-modify-write for session operations with exclusive lock"""
     try:
-        with open(SESSIONS_FILE, 'r') as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_SH)
-            sessions = json.load(f)
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        # Create file if it doesn't exist
+        if not os.path.exists(SESSIONS_FILE):
+            with open(SESSIONS_FILE, 'w') as f:
+                json.dump({}, f)
         
-        # Remove expired sessions
-        now = time.time()
-        valid_sessions = {token: exp for token, exp in sessions.items() if exp > now}
-        if len(valid_sessions) != len(sessions):
-            save_sessions(valid_sessions)
-        return valid_sessions
-    except:
-        return {}
-
-def save_sessions(sessions):
-    """Save sessions to file with file locking"""
-    try:
-        with open(SESSIONS_FILE, 'w') as f:
+        # Atomic read-modify-write with exclusive lock
+        with open(SESSIONS_FILE, 'r+') as f:
             fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                sessions = json.load(f)
+            except:
+                sessions = {}
+            
+            # Remove expired sessions
+            now = time.time()
+            sessions = {t: exp for t, exp in sessions.items() if exp > now}
+            
+            # Perform requested operation
+            result = False
+            if operation == 'add' and token:
+                sessions[token] = now + SESSION_TTL
+                result = True
+            elif operation == 'remove' and token:
+                if token in sessions:
+                    del sessions[token]
+                    result = True
+            elif operation == 'check' and token:
+                result = token in sessions and sessions[token] > now
+            
+            # Write back atomically
+            f.seek(0)
+            f.truncate()
             json.dump(sessions, f)
+            f.flush()
+            os.fsync(f.fileno())
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            
+            return (result, len(sessions))
     except Exception as e:
-        print(f"[SESSION] Error saving sessions: {e}")
+        print(f"[SESSION] Error in atomic operation '{operation}': {e}")
+        return (False, 0)
 
 def add_session(token):
-    """Add a new session token"""
-    sessions = load_sessions()
-    sessions[token] = time.time() + SESSION_TTL
-    save_sessions(sessions)
+    """Add a new session token atomically"""
+    _atomic_session_operation('add', token)
 
 def remove_session(token):
-    """Remove a session token"""
-    sessions = load_sessions()
-    if token in sessions:
-        del sessions[token]
-        save_sessions(sessions)
+    """Remove a session token atomically"""
+    _atomic_session_operation('remove', token)
 
 def is_valid_session(token):
-    """Check if a session token is valid"""
-    sessions = load_sessions()
-    if token in sessions:
-        return sessions[token] > time.time()
-    return False
+    """Check if a session token is valid atomically"""
+    result, _ = _atomic_session_operation('check', token)
+    return result
+
+def get_session_count():
+    """Get current session count"""
+    _, count = _atomic_session_operation('check', None)
+    return count
 
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
@@ -93,8 +108,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if 'admin_session' in c:
             token = c['admin_session'].value
             is_valid = is_valid_session(token)
-            sessions = load_sessions()
-            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {len(sessions)}")
+            count = get_session_count()
+            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {count}")
             return is_valid
         
         print(f"[AUTH] No admin_session cookie found in: {cookie_header}")

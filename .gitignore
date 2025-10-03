@@ -14,3 +14,4 @@ dist/
 build/
 .replit
 replit.nix
+sessions.json
