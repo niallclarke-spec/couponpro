@@ -367,6 +367,60 @@
             margin-top: 20px;
         }
 
+        .bulk-actions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #191b22;
+            border: 1px solid #262b35;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e9eef5;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .select-all-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1d98ff;
+        }
+
+        .delete-selected-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .delete-selected-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .template-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 16px;
+            accent-color: #1d98ff;
+            flex-shrink: 0;
+        }
+
         .asset-item {
             background: #191b22;
             border: 1px solid #262b35;
@@ -374,7 +428,7 @@
             padding: 16px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 0;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -656,6 +710,13 @@
             </div>
 
             <div id="assetsTab" class="tab-content">
+                <div class="bulk-actions-header">
+                    <label class="select-all-container">
+                        <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()">
+                        <span>Select All</span>
+                    </label>
+                    <button type="button" class="delete-selected-btn" onclick="deleteSelectedTemplates()">Delete Selected</button>
+                </div>
                 <div id="assetsList" class="assets-list">
                     <p style="color: #8a8f98; text-align: center;">Loading templates...</p>
                 </div>
@@ -804,6 +865,7 @@
                     const item = document.createElement('div');
                     item.className = 'asset-item';
                     item.innerHTML = `
+                        <input type="checkbox" class="template-checkbox" data-slug="${template.slug}" data-name="${template.name}" onchange="updateSelectAllState()">
                         <div class="asset-item-info">
                             <div class="asset-name">${template.name}</div>
                             <div class="asset-slug">${template.slug}</div>
@@ -815,6 +877,9 @@
                     `;
                     assetsList.appendChild(item);
                 });
+                
+                // Reset select all checkbox
+                document.getElementById('selectAllTemplates').checked = false;
             } catch (error) {
                 assetsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading templates</p>';
                 console.error('Failed to load assets:', error);
@@ -901,6 +966,91 @@
             } catch (error) {
                 alert('Delete failed: ' + error.message);
                 console.error('Failed to delete template:', error);
+            }
+        }
+
+        // Toggle select all checkboxes
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllTemplates');
+            const checkboxes = document.querySelectorAll('.template-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        // Update select all state based on individual checkboxes
+        function updateSelectAllState() {
+            const checkboxes = document.querySelectorAll('.template-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAllTemplates');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        }
+
+        // Delete selected templates
+        async function deleteSelectedTemplates() {
+            const checkboxes = document.querySelectorAll('.template-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one template to delete');
+                return;
+            }
+
+            const templates = Array.from(checkboxes).map(cb => ({
+                slug: cb.dataset.slug,
+                name: cb.dataset.name
+            }));
+
+            const confirmMsg = templates.length === 1 
+                ? `Are you sure you want to delete "${templates[0].name}"?`
+                : `Are you sure you want to delete ${templates.length} templates?\n\n${templates.map(t => '• ' + t.name).join('\n')}`;
+
+            if (!confirm(confirmMsg + '\n\nThis will permanently remove the templates and all images.')) {
+                return;
+            }
+
+            let successCount = 0;
+            let failCount = 0;
+            const errors = [];
+
+            for (const template of templates) {
+                try {
+                    const response = await fetch('/api/delete-template', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ slug: template.slug })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        errors.push(`${template.name}: ${data.error || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    failCount++;
+                    errors.push(`${template.name}: ${error.message}`);
+                }
+            }
+
+            // Reload the assets list
+            loadAssets();
+
+            // Show summary
+            let message = '';
+            if (successCount > 0) {
+                message += `Successfully deleted ${successCount} template${successCount > 1 ? 's' : ''}`;
+            }
+            if (failCount > 0) {
+                message += (message ? '\n\n' : '') + `Failed to delete ${failCount} template${failCount > 1 ? 's' : ''}:\n${errors.join('\n')}`;
+                alert(message);
+            } else if (successCount > 0) {
+                alert(message + ' ✓');
             }
         }
 
