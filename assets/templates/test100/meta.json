@@ -1,0 +1,27 @@
+{
+  "name": "TEST100",
+  "square": {
+    "box": {
+      "leftPct": 26.5,
+      "topPct": 74.1,
+      "widthPct": 44.8,
+      "heightPct": 10.5,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E"
+  },
+  "story": {
+    "box": {
+      "leftPct": 17.2,
+      "topPct": 67.6,
+      "widthPct": 62.8,
+      "heightPct": 7.6,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 110,
+    "fontColor": "#FF273E"
+  }
+}
