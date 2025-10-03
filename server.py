@@ -275,14 +275,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 template_dir = os.path.join('assets', 'templates', slug)
                 is_existing_template = os.path.exists(template_dir)
                 
-                # Check if images are provided (optional for updates, required for new templates)
+                # Check if images are provided (optional for updates, at least one required for new templates)
                 has_square_image = 'squareImage' in form and form['squareImage'].filename
                 has_story_image = 'storyImage' in form and form['storyImage'].filename
                 
-                # For new templates, both images are required
+                # For new templates, at least one image is required
                 if not is_existing_template:
-                    if not has_square_image or not has_story_image:
-                        raise ValueError('Both square and story images are required for new templates')
+                    if not has_square_image and not has_story_image:
+                        raise ValueError('At least one variant (square or portrait) image is required for new templates')
                 
                 square_coords = {
                     'leftPct': float(form.getvalue('squareLeftPct')),
@@ -347,26 +347,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Create directory for meta.json (keep this local for now)
                 os.makedirs(template_dir, exist_ok=True)
                 
-                # Determine imageUrl: use newly uploaded URL, or preserve existing, or fallback to local path
-                square_image_url = image_urls.get('square') or existing_square_url or f'assets/templates/{slug}/square.png'
-                story_image_url = image_urls.get('story') or existing_story_url or f'assets/templates/{slug}/story.png'
+                # Determine imageUrl: use newly uploaded URL, or preserve existing, or None if not provided
+                square_image_url = image_urls.get('square') or existing_square_url
+                story_image_url = image_urls.get('story') or existing_story_url
                 
-                # Build meta.json with object storage URLs for images
+                # Build meta.json with object storage URLs for images (only include variants that exist)
                 meta = {
-                    'name': name,
-                    'square': {
+                    'name': name
+                }
+                
+                # Only add variant if it exists
+                if square_image_url or has_square_image:
+                    meta['square'] = {
                         'box': square_coords,
                         'maxFontPx': square_max_font,
                         'fontColor': square_font_color,
-                        'imageUrl': square_image_url
-                    },
-                    'story': {
+                        'imageUrl': square_image_url or f'assets/templates/{slug}/square.png'
+                    }
+                
+                if story_image_url or has_story_image:
+                    meta['story'] = {
                         'box': story_coords,
                         'maxFontPx': story_max_font,
                         'fontColor': story_font_color,
-                        'imageUrl': story_image_url
+                        'imageUrl': story_image_url or f'assets/templates/{slug}/story.png'
                     }
-                }
+                
+                # Validation: ensure at least one variant exists in final meta
+                if 'square' not in meta and 'story' not in meta:
+                    raise ValueError('Template must have at least one variant (square or portrait)')
                 
                 # Save meta.json locally
                 meta_path = os.path.join(template_dir, 'meta.json')

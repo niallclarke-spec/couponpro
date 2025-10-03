@@ -170,8 +170,17 @@ def generate_and_send_image(chat_id, template_slug, coupon_code, bot_token, vari
         with open(meta_path, 'r') as f:
             metadata = json.load(f)
         
+        # Smart fallback: prefer square, then story, then fail
         if variant not in metadata:
-            variant = 'square'
+            if 'square' in metadata:
+                variant = 'square'
+            elif 'story' in metadata:
+                variant = 'story'
+            else:
+                return {
+                    'success': False,
+                    'message': 'Template has no available variants'
+                }
         
         variant_data = metadata.get(variant, {})
         
