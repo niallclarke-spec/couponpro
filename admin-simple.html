@@ -1095,19 +1095,19 @@
                 document.getElementById('name').value = meta.name || slug;
                 document.getElementById('slug').value = slug;
                 
-                // Square settings
-                document.getElementById('squareLeftPct').value = meta.square.leftPct || 5;
-                document.getElementById('squareTopPct').value = meta.square.topPct || 78;
-                document.getElementById('squareWidthPct').value = meta.square.widthPct || 90;
-                document.getElementById('squareHeightPct').value = meta.square.heightPct || 12;
+                // Square settings - read from nested box structure
+                document.getElementById('squareLeftPct').value = meta.square.box?.leftPct || meta.square.leftPct || 5;
+                document.getElementById('squareTopPct').value = meta.square.box?.topPct || meta.square.topPct || 78;
+                document.getElementById('squareWidthPct').value = meta.square.box?.widthPct || meta.square.widthPct || 90;
+                document.getElementById('squareHeightPct').value = meta.square.box?.heightPct || meta.square.heightPct || 12;
                 document.getElementById('squareMaxFontPx').value = meta.square.maxFontPx || 80;
                 document.getElementById('squareShowLogo').checked = meta.square.showLogo !== false;
                 
-                // Story settings
-                document.getElementById('storyLeftPct').value = meta.story.leftPct || 5;
-                document.getElementById('storyTopPct').value = meta.story.topPct || 78;
-                document.getElementById('storyWidthPct').value = meta.story.widthPct || 90;
-                document.getElementById('storyHeightPct').value = meta.story.heightPct || 12;
+                // Story settings - read from nested box structure
+                document.getElementById('storyLeftPct').value = meta.story.box?.leftPct || meta.story.leftPct || 5;
+                document.getElementById('storyTopPct').value = meta.story.box?.topPct || meta.story.topPct || 78;
+                document.getElementById('storyWidthPct').value = meta.story.box?.widthPct || meta.story.widthPct || 90;
+                document.getElementById('storyHeightPct').value = meta.story.box?.heightPct || meta.story.heightPct || 12;
                 document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
                 document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
                 
@@ -1123,14 +1123,14 @@
                 const squareImg = new Image();
                 squareImg.onload = function() {
                     previewImages.square = squareImg;
-                    updatePreviews();
+                    updatePreviewsImmediate();
                 };
                 squareImg.src = `/assets/templates/${slug}/square.png`;
                 
                 const storyImg = new Image();
                 storyImg.onload = function() {
                     previewImages.story = storyImg;
-                    updatePreviews();
+                    updatePreviewsImmediate();
                 };
                 storyImg.src = `/assets/templates/${slug}/story.png`;
                 
@@ -1400,7 +1400,19 @@
             ctx.drawImage(off, 0, 0, natW, natH, dx, dy, dw, dh);
         }
 
+        // Debounced update to improve performance
+        let updatePreviewsTimeout = null;
         function updatePreviews() {
+            if (updatePreviewsTimeout) {
+                clearTimeout(updatePreviewsTimeout);
+            }
+            updatePreviewsTimeout = setTimeout(() => {
+                renderPreview('square');
+                renderPreview('story');
+            }, 50);
+        }
+        
+        function updatePreviewsImmediate() {
             renderPreview('square');
             renderPreview('story');
         }
@@ -1412,7 +1424,7 @@
                 const img = new Image();
                 img.onload = function() {
                     previewImages.square = img;
-                    updatePreviews();
+                    updatePreviewsImmediate();
                 };
                 img.src = URL.createObjectURL(file);
             }
@@ -1424,7 +1436,7 @@
                 const img = new Image();
                 img.onload = function() {
                     previewImages.story = img;
-                    updatePreviews();
+                    updatePreviewsImmediate();
                 };
                 img.src = URL.createObjectURL(file);
             }
@@ -1572,7 +1584,7 @@
                 document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
                 document.getElementById(prefix + 'HeightPct').value = percentages.heightPct.toFixed(1);
 
-                updatePreviews();
+                updatePreviewsImmediate();
             });
 
             canvas.addEventListener('mouseleave', (e) => {
@@ -1619,7 +1631,7 @@
         }
 
         // Initial render
-        updatePreviews();
+        updatePreviewsImmediate();
     </script>
 </body>
 </html>

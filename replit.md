@@ -4,6 +4,13 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Critical Position & Performance Fixes
+  - Fixed admin interface not loading saved coordinates when editing templates
+  - Admin now correctly reads from nested `meta.square.box.*` structure in meta.json
+  - Added debouncing (50ms) to preview rendering to eliminate performance lag
+  - Separated immediate vs debounced preview updates for responsive UI
+  - Templates now display at exact saved positions when loaded in Current Assets
+
 - **2025-10-03**: Font Color Bug Fix
   - Fixed frontend not reading fontColor from meta.json templates
   - Color selection now properly applies to downloaded/shared images
