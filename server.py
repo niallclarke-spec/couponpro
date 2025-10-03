@@ -253,12 +253,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     square_path = os.path.join(template_dir, 'square.png')
                     with open(square_path, 'wb') as f:
                         f.write(square_image.file.read())
+                        f.flush()
+                        os.fsync(f.fileno())
                 
                 if has_story_image:
                     story_image = form['storyImage']
                     story_path = os.path.join(template_dir, 'story.png')
                     with open(story_path, 'wb') as f:
                         f.write(story_image.file.read())
+                        f.flush()
+                        os.fsync(f.fileno())
                 
                 meta = {
                     'name': name,
@@ -277,6 +281,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 meta_path = os.path.join(template_dir, 'meta.json')
                 with open(meta_path, 'w') as f:
                     json.dump(meta, f, indent=2)
+                    f.flush()
+                    os.fsync(f.fileno())
                 
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],

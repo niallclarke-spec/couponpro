@@ -1,0 +1,48 @@
+Oct 03 13:53:41  [AUTH] Session token found, valid: True
+Oct 03 13:53:41  10.244.6.88 - - [03/Oct/2025 13:53:41] "POST /api/upload-template HTTP/1.1" 200 -
+Oct 03 13:53:55  10.244.4.206 - - [03/Oct/2025 13:53:55] "GET /assets/templates/index.json HTTP/1.1" 200 -
+Oct 03 13:53:59  10.244.6.88 - - [03/Oct/2025 13:53:59] "GET /admin HTTP/1.1" 200 -
+Oct 03 13:53:59  10.244.5.15 - - [03/Oct/2025 13:53:59] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:54:01  10.244.7.226 - - [03/Oct/2025 13:54:01] "GET / HTTP/1.1" 200 -
+Oct 03 13:54:01  10.244.5.15 - - [03/Oct/2025 13:54:01] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:54:01  10.244.4.206 - - [03/Oct/2025 13:54:01] code 404, message File not found
+Oct 03 13:54:01  10.244.4.206 - - [03/Oct/2025 13:54:01] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 13:54:01  10.244.5.15 - - [03/Oct/2025 13:54:01] "GET /assets/templates/index.json?ts=1759499641852 HTTP/1.1" 200 -
+Oct 03 13:54:01  10.244.6.88 - - [03/Oct/2025 13:54:01] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 13:54:02  10.244.4.206 - - [03/Oct/2025 13:54:02] "GET /assets/templates/flash-sale/meta.json?ts=1759499641938 HTTP/1.1" 200 -
+Oct 03 13:54:02  10.244.4.206 - - [03/Oct/2025 13:54:02] "GET /assets/templates/15-off-2/meta.json?ts=1759499641938 HTTP/1.1" 200 -
+Oct 03 13:54:02  10.244.5.15 - - [03/Oct/2025 13:54:02] "GET /assets/templates/15-off-2/story.png?t=1759499642095 HTTP/1.1" 200 -
+Oct 03 13:54:02  10.244.7.226 - - [03/Oct/2025 13:54:02] "GET /assets/templates/15-off-2/square.png?t=1759499642095 HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.7.226 - - [03/Oct/2025 13:54:04] "GET / HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.5.15 - - [03/Oct/2025 13:54:04] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.4.206 - - [03/Oct/2025 13:54:04] code 404, message File not found
+Oct 03 13:54:04  10.244.4.206 - - [03/Oct/2025 13:54:04] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 13:54:04  10.244.4.206 - - [03/Oct/2025 13:54:04] "GET /assets/templates/index.json?ts=1759499644778 HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.6.88 - - [03/Oct/2025 13:54:04] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.7.226 - - [03/Oct/2025 13:54:04] "GET /assets/templates/15-off-2/meta.json?ts=1759499644858 HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.5.15 - - [03/Oct/2025 13:54:04] "GET /assets/templates/test1000/meta.json?ts=1759499644858 HTTP/1.1" 200 -
+Oct 03 13:54:04  10.244.6.88 - - [03/Oct/2025 13:54:04] code 404, message File not found
+Oct 03 13:54:04  10.244.6.88 - - [03/Oct/2025 13:54:04] "GET /assets/templates/test656/meta.json?ts=1759499644859 HTTP/1.1" 404 -
+Oct 03 13:54:04  10.244.4.206 - - [03/Oct/2025 13:54:04] "GET /assets/templates/flash-sale/meta.json?ts=1759499644858 HTTP/1.1" 200 -
+Oct 03 13:54:05  10.244.6.88 - - [03/Oct/2025 13:54:05] "GET /assets/templates/15-off-2/square.png?t=1759499645005 HTTP/1.1" 200 -
+Oct 03 13:54:05  10.244.7.226 - - [03/Oct/2025 13:54:05] "GET /assets/templates/15-off-2/story.png?t=1759499645005 HTTP/1.1" 200 -
+Oct 03 13:54:07  10.244.4.206 - - [03/Oct/2025 13:54:07] "GET /assets/templates/test1000/square.png?t=1759499647291 HTTP/1.1" 200 -
+Oct 03 13:54:07  10.244.6.88 - - [03/Oct/2025 13:54:07] code 404, message File not found
+Oct 03 13:54:07  10.244.6.88 - - [03/Oct/2025 13:54:07] "GET /assets/templates/test1000/story.png?t=1759499647291 HTTP/1.1" 404 -
+Oct 03 13:54:12  10.244.7.226 - - [03/Oct/2025 13:54:12] "GET / HTTP/1.1" 200 -
+Oct 03 13:54:12  10.244.5.15 - - [03/Oct/2025 13:54:12] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:54:12  10.244.4.206 - - [03/Oct/2025 13:54:12] code 404, message File not found
+Oct 03 13:54:12  10.244.4.206 - - [03/Oct/2025 13:54:12] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 13:54:12  10.244.5.15 - - [03/Oct/2025 13:54:12] "GET /assets/templates/index.json?ts=1759499652756 HTTP/1.1" 200 -
+Oct 03 13:54:12  10.244.6.88 - - [03/Oct/2025 13:54:12] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 13:54:12  10.244.4.206 - - [03/Oct/2025 13:54:12] "GET /assets/templates/flash-sale/meta.json?ts=1759499652836 HTTP/1.1" 200 -
+Oct 03 13:54:12  10.244.6.88 - - [03/Oct/2025 13:54:12] code 404, message File not found
+Oct 03 13:54:12  10.244.6.88 - - [03/Oct/2025 13:54:12] "GET /assets/templates/test1000/meta.json?ts=1759499652836 HTTP/1.1" 404 -
+Oct 03 13:54:12  10.244.4.206 - - [03/Oct/2025 13:54:12] code 404, message File not found
+Oct 03 13:54:12  10.244.4.206 - - [03/Oct/2025 13:54:12] "GET /assets/templates/test656/meta.json?ts=1759499652836 HTTP/1.1" 404 -
+Oct 03 13:54:12  10.244.5.15 - - [03/Oct/2025 13:54:12] "GET /assets/templates/15-off-2/meta.json?ts=1759499652836 HTTP/1.1" 200 -
+Oct 03 13:54:13  10.244.5.15 - - [03/Oct/2025 13:54:13] "GET /assets/templates/15-off-2/square.png?t=1759499652971 HTTP/1.1" 200 -
+Oct 03 13:54:13  10.244.4.206 - - [03/Oct/2025 13:54:13] "GET /assets/templates/15-off-2/story.png?t=1759499652971 HTTP/1.1" 200 -
+Oct 03 13:54:16  10.244.7.226 - - [03/Oct/2025 13:54:16] code 404, message File not found
+Oct 03 13:54:16  10.244.7.226 - - [03/Oct/2025 13:54:16] "GET /assets/templates/test1000/square.png?t=1759499656728 HTTP/1.1" 404 -
+Oct 03 13:54:16  10.244.5.15 - - [03/Oct/2025 13:54:16] "GET /assets/templates/test1000/story.png?t=1759499656728 HTTP/1.1" 200 -
