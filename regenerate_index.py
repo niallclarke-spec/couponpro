@@ -50,10 +50,14 @@ def regenerate_templates_index():
                                 check_path = square_val.lstrip('/')
                                 if os.path.exists(check_path):
                                     square_img = check_path
-                            elif isinstance(square_val, dict) and "image" in square_val:
-                                check_path = square_val["image"].lstrip('/')
-                                if os.path.exists(check_path):
-                                    square_img = check_path
+                            elif isinstance(square_val, dict):
+                                # Check for imageUrl first (object storage), then image (legacy)
+                                if "imageUrl" in square_val:
+                                    square_img = square_val["imageUrl"]
+                                elif "image" in square_val:
+                                    check_path = square_val["image"].lstrip('/')
+                                    if os.path.exists(check_path):
+                                        square_img = check_path
                         
                         if "story" in meta:
                             story_val = meta["story"]
@@ -61,10 +65,14 @@ def regenerate_templates_index():
                                 check_path = story_val.lstrip('/')
                                 if os.path.exists(check_path):
                                     story_img = check_path
-                            elif isinstance(story_val, dict) and "image" in story_val:
-                                check_path = story_val["image"].lstrip('/')
-                                if os.path.exists(check_path):
-                                    story_img = check_path
+                            elif isinstance(story_val, dict):
+                                # Check for imageUrl first (object storage), then image (legacy)
+                                if "imageUrl" in story_val:
+                                    story_img = story_val["imageUrl"]
+                                elif "image" in story_val:
+                                    check_path = story_val["image"].lstrip('/')
+                                    if os.path.exists(check_path):
+                                        story_img = check_path
                 except Exception as e:
                     print(f"Warning: Could not read meta.json for {slug}: {e}")
             

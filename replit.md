@@ -21,8 +21,9 @@ The application features a dark theme for both the frontend and admin interfaces
 - **Backend (Admin & API)**: A Python HTTP server (`server.py`) handles template uploads, authentication, and file serving.
 - **Image Generation**: Client-side canvas manipulation for rendering coupon codes onto templates, including auto-fitting text and optional logo overlays.
 - **Authentication**: HMAC-signed cookie authentication for stateless, secure session management, compatible with ephemeral environments.
-- **File Persistence**: Explicit `fsync()` calls ensure immediate disk persistence of uploaded template files and metadata, mitigating data loss on ephemeral filesystems.
-- **Template Management**: Templates are stored in a structured directory, with `meta.json` holding configuration for each template. An `index.json` acts as a manifest.
+- **Object Storage**: Replit Object Storage integration for persistent template image storage across deployments and restarts. Images are stored with Google Cloud Storage SDK using Replit sidecar authentication.
+- **File Persistence**: Template images stored in object storage with URLs tracked in `imageUrl` fields. Local `meta.json` files backed up to object storage for redundancy.
+- **Template Management**: Templates use `imageUrl` fields in `meta.json` for object storage URLs. The `regenerate_index.py` script prioritizes `imageUrl` over legacy local paths for backward compatibility.
 
 ### Feature Specifications
 - **Dynamic Template Loading**: Templates are automatically discovered and loaded from the `assets/templates/` directory.
@@ -35,12 +36,25 @@ The application features a dark theme for both the frontend and admin interfaces
 
 ### System Design Choices
 - **Stateless Sessions**: Transitioned from file-based sessions to HMAC-signed cookie authentication to support ephemeral environments and multi-instance deployments.
-- **Ephemeral Filesystem Handling**: Implemented explicit file persistence and stateless sessions to ensure reliability on platforms like Digital Ocean.
+- **Object Storage Integration**: All template images uploaded to Replit Object Storage (bucket: `couponpro-templates`) to persist across Digital Ocean restarts/redeploys. Edit operations preserve existing `imageUrl` values when images aren't re-uploaded.
+- **Hybrid Storage Model**: Local `meta.json` files for fast access, with copies in object storage for persistence. Images served from object storage URLs.
 - **Modular File Structure**: Organizes templates, assets, and server-side logic logically for maintainability.
-- **Environment Variable Configuration**: Utilizes `PORT` and `ADMIN_PASSWORD` environment variables for flexible deployment and secure credential management.
+- **Environment Variable Configuration**: Uses `.env` file (loaded via python-dotenv) for `OBJECT_STORAGE_BUCKET`, plus `PORT` and `ADMIN_PASSWORD` for flexible deployment and secure credential management.
 
 ## External Dependencies
+- **Replit Object Storage**: Persistent storage for template images and metadata across deployments (bucket: `couponpro-templates`).
 - **Digital Ocean**: Primary production deployment platform, utilizing its Web Service capabilities.
 - **Python 3.11**: Runtime environment for the backend server.
-- **requirements.txt**: Specifies Python dependencies for the server.
+- **requirements.txt**: Python dependencies include `google-cloud-storage`, `google-auth`, `python-dotenv`, and `requests`.
+- **.env**: Environment configuration file with `OBJECT_STORAGE_BUCKET` variable (loaded via python-dotenv).
 - **.do/app.yaml**: Digital Ocean specific application configuration for deployment.
+
+## Recent Changes (Oct 3, 2025)
+- **Object Storage Integration**: Implemented Replit Object Storage for template persistence
+  - Added `object_storage.py` module with Google Cloud Storage SDK integration
+  - Updated upload handler to store images in object storage with `imageUrl` tracking
+  - Modified `regenerate_index.py` to prioritize `imageUrl` over legacy local image paths
+  - Enhanced delete functionality to remove images and metadata from object storage
+  - Fixed critical bug where editing templates without re-uploading images would overwrite object storage URLs with local paths
+- **Environment Configuration**: Added python-dotenv to load `.env` file for `OBJECT_STORAGE_BUCKET` configuration
+- **Backward Compatibility**: System supports both object storage URLs (new templates) and local paths (legacy templates)

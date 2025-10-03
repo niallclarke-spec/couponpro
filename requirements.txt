@@ -1,3 +1,5 @@
 # Python dependencies for CouponPro server
-# No external packages needed - uses Python standard library only
 google-cloud-storage
+google-auth
+python-dotenv
+requests

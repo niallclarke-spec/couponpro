@@ -13,6 +13,11 @@ from http import cookies
 import time
 import hmac
 import hashlib
+from dotenv import load_dotenv
+from object_storage import ObjectStorageService
+
+# Load environment variables from .env file
+load_dotenv()
 
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
@@ -244,45 +249,71 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 square_font_color = form.getvalue('squareFontColor') or '#FF273E'
                 story_font_color = form.getvalue('storyFontColor') or '#FF273E'
                 
-                # Create directory if it doesn't exist
-                os.makedirs(template_dir, exist_ok=True)
+                # Initialize object storage service
+                storage_service = ObjectStorageService()
+                image_urls = {}
                 
-                # Only save images if they were provided
+                # Load existing meta.json to preserve imageUrl values if updating
+                existing_square_url = None
+                existing_story_url = None
+                if is_existing_template:
+                    meta_path = os.path.join(template_dir, 'meta.json')
+                    if os.path.exists(meta_path):
+                        try:
+                            with open(meta_path, 'r') as f:
+                                existing_meta = json.load(f)
+                                if 'square' in existing_meta and isinstance(existing_meta['square'], dict):
+                                    existing_square_url = existing_meta['square'].get('imageUrl')
+                                if 'story' in existing_meta and isinstance(existing_meta['story'], dict):
+                                    existing_story_url = existing_meta['story'].get('imageUrl')
+                        except Exception as e:
+                            print(f"Warning: Could not load existing meta.json: {e}")
+                
+                # Upload images to object storage if provided
                 if has_square_image:
                     square_image = form['squareImage']
-                    square_path = os.path.join(template_dir, 'square.png')
-                    with open(square_path, 'wb') as f:
-                        f.write(square_image.file.read())
-                        f.flush()
-                        os.fsync(f.fileno())
+                    square_data = square_image.file.read()
+                    image_urls['square'] = storage_service.upload_file(square_data, f"templates/{slug}/square.png")
                 
                 if has_story_image:
                     story_image = form['storyImage']
-                    story_path = os.path.join(template_dir, 'story.png')
-                    with open(story_path, 'wb') as f:
-                        f.write(story_image.file.read())
-                        f.flush()
-                        os.fsync(f.fileno())
+                    story_data = story_image.file.read()
+                    image_urls['story'] = storage_service.upload_file(story_data, f"templates/{slug}/story.png")
                 
+                # Create directory for meta.json (keep this local for now)
+                os.makedirs(template_dir, exist_ok=True)
+                
+                # Determine imageUrl: use newly uploaded URL, or preserve existing, or fallback to local path
+                square_image_url = image_urls.get('square') or existing_square_url or f'assets/templates/{slug}/square.png'
+                story_image_url = image_urls.get('story') or existing_story_url or f'assets/templates/{slug}/story.png'
+                
+                # Build meta.json with object storage URLs for images
                 meta = {
                     'name': name,
                     'square': {
                         'box': square_coords,
                         'maxFontPx': square_max_font,
-                        'fontColor': square_font_color
+                        'fontColor': square_font_color,
+                        'imageUrl': square_image_url
                     },
                     'story': {
                         'box': story_coords,
                         'maxFontPx': story_max_font,
-                        'fontColor': story_font_color
+                        'fontColor': story_font_color,
+                        'imageUrl': story_image_url
                     }
                 }
                 
+                # Save meta.json locally
                 meta_path = os.path.join(template_dir, 'meta.json')
                 with open(meta_path, 'w') as f:
                     json.dump(meta, f, indent=2)
                     f.flush()
                     os.fsync(f.fileno())
+                
+                # Also save meta.json to object storage for persistence
+                meta_json_str = json.dumps(meta, indent=2)
+                storage_service.upload_file(meta_json_str.encode(), f"templates/{slug}/meta.json")
                 
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],
@@ -339,6 +370,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not os.path.exists(template_dir):
                     raise ValueError(f'Template "{slug}" not found')
                 
+                # Delete from object storage first
+                storage_service = ObjectStorageService()
+                storage_service.delete_template(slug)
+                print(f"[DELETE] Template removed from object storage: {slug}")
+                
+                # Delete local directory
                 import shutil
                 shutil.rmtree(template_dir)
                 print(f"[DELETE] Template directory removed: {template_dir}")

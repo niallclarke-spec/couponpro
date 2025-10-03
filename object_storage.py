@@ -93,13 +93,18 @@ class ObjectStorageService:
     
     def delete_template(self, slug):
         """Delete all template files for a given slug"""
-        # Delete square and story images
+        # Delete square and story images and meta.json
         try:
             self.delete_file(f"templates/{slug}/square.png")
-        except:
-            pass
+        except Exception as e:
+            print(f"Warning: Could not delete square.png for {slug}: {e}")
         
         try:
             self.delete_file(f"templates/{slug}/story.png")
-        except:
-            pass
+        except Exception as e:
+            print(f"Warning: Could not delete story.png for {slug}: {e}")
+        
+        try:
+            self.delete_file(f"templates/{slug}/meta.json")
+        except Exception as e:
+            print(f"Warning: Could not delete meta.json for {slug}: {e}")
