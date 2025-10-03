@@ -30,3 +30,6 @@ services:
         value: "lon1"
       - key: SPACES_BUCKET
         value: "couponpro-templates"
+      - key: TELEGRAM_BOT_TOKEN
+        scope: RUN_TIME
+        type: SECRET
