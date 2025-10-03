@@ -9,7 +9,8 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "maxFontPx": 112
+    "maxFontPx": 112,
+    "fontColor": "#FF273E"
   },
   "story": {
     "box": {
@@ -20,6 +21,7 @@
       "hAlign": "center",
       "vAlign": "bottom"
     },
-    "maxFontPx": 112
+    "maxFontPx": 112,
+    "fontColor": "#FF273E"
   }
 }

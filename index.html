@@ -262,19 +262,22 @@
 
     function getVariant(which){
       const t = TEMPLATES[current];
-      if (!t) return { src: '', box: null, maxFontPx: null };
+      if (!t) return { src: '', box: null, maxFontPx: null, fontColor: null };
       const v = t.variants || {};
       const raw = v[which] || v.square || v.story || v.portrait;
       if (!raw){
         const cap = t.maxFontPx || (t.box && t.box.maxFontPx) || null;
-        return { src: '', box: t.box || null, maxFontPx: cap };
+        const color = t.fontColor || null;
+        return { src: '', box: t.box || null, maxFontPx: cap, fontColor: color };
       }
       if (typeof raw === 'string'){
         const cap = t.maxFontPx || (t.box && t.box.maxFontPx) || null;
-        return { src: raw, box: t.box || null, maxFontPx: cap };
+        const color = t.fontColor || null;
+        return { src: raw, box: t.box || null, maxFontPx: cap, fontColor: color };
       }
       const cap = raw.maxFontPx || (raw.box && raw.box.maxFontPx) || t.maxFontPx || (t.box && t.box.maxFontPx) || null;
-      return { src: raw.src || '', box: raw.box || t.box || null, maxFontPx: cap };
+      const color = raw.fontColor || t.fontColor || null;
+      return { src: raw.src || '', box: raw.box || t.box || null, maxFontPx: cap, fontColor: color };
     }
 
     function loadVariant(which, src){
@@ -308,7 +311,7 @@
       return Math.floor(lo);
     }
 
-    function drawTextAutoFit(ctx, text, natW, natH, box, maxPx){
+    function drawTextAutoFit(ctx, text, natW, natH, box, maxPx, fontColor){
       const left   = Math.round(natW * ((box?.leftPct   ?? 5) / 100));
       const top    = Math.round(natH * ((box?.topPct    ?? 80) / 100));
       const width  = Math.round(natW * ((box?.widthPct  ?? 90) / 100));
@@ -330,7 +333,7 @@
       ctx.font = `700 ${px}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
       ctx.textAlign = textAlign; ctx.textBaseline = 'alphabetic';
       ctx.lineJoin='round'; ctx.lineWidth=Math.max(2, Math.floor(px*0.08));
-      ctx.strokeStyle='rgba(0,0,0,.75)'; ctx.fillStyle='#ffffff';
+      ctx.strokeStyle='rgba(0,0,0,.75)'; ctx.fillStyle=fontColor||'#ffffff';
       ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
     }
 
@@ -353,9 +356,9 @@
       if (ok) og.drawImage(img, 0, 0, natW, natH); else { og.fillStyle = '#10131a'; og.fillRect(0,0,natW,natH); }
 
       const code = sanitize(els.coupon.value || 'WELCOME-30');
-      const { box, maxFontPx } = getVariant(which);
+      const { box, maxFontPx, fontColor } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
-      drawTextAutoFit(og, code, natW, natH, box, effCap);
+      drawTextAutoFit(og, code, natW, natH, box, effCap, fontColor);
 
       // Optional logo in top-left
       if (els.logoToggle && els.logoToggle.checked) {
@@ -414,9 +417,9 @@
       g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
       const code = sanitize(els.coupon.value||'COUPON');
-      const { box, maxFontPx } = getVariant(which);
+      const { box, maxFontPx, fontColor } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
-      drawTextAutoFit(g, code, natW, natH, box, effCap);
+      drawTextAutoFit(g, code, natW, natH, box, effCap, fontColor);
       
       // Add logo to download if enabled
       if (els.logoToggle && els.logoToggle.checked) {
@@ -458,9 +461,9 @@
       g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
       const code = sanitize(els.coupon.value||'COUPON');
-      const { box, maxFontPx } = getVariant(which);
+      const { box, maxFontPx, fontColor } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
-      drawTextAutoFit(g, code, natW, natH, box, effCap);
+      drawTextAutoFit(g, code, natW, natH, box, effCap, fontColor);
       
       // Add logo to share if enabled
       if (els.logoToggle && els.logoToggle.checked) {

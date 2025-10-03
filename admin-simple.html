@@ -545,6 +545,53 @@
             pointer-events: none;
             z-index: 10;
         }
+
+        .color-picker-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 12px;
+        }
+
+        .color-swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,.3);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,.4);
+        }
+
+        .color-swatch.selected {
+            border-color: #1d98ff;
+            box-shadow: 0 0 0 2px rgba(29, 152, 255, 0.3), 0 4px 12px rgba(0,0,0,.4);
+        }
+
+        .color-swatch.red {
+            background: #FF273E;
+        }
+
+        .color-swatch.white {
+            background: #FFFFFF;
+        }
+
+        .color-swatch-label {
+            font-size: 11px;
+            color: #8a8f98;
+            text-align: center;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -710,6 +757,26 @@
                     </div>
                 </div>
 
+                <div class="section">
+                    <div class="section-title">Text Color</div>
+                    <div class="color-picker-group">
+                        <label>Coupon Code Color</label>
+                        <div class="color-swatches">
+                            <div>
+                                <div class="color-swatch red selected" data-color="#FF273E" onclick="selectColor('#FF273E')"></div>
+                                <div class="color-swatch-label">Red</div>
+                            </div>
+                            <div>
+                                <div class="color-swatch white" data-color="#FFFFFF" onclick="selectColor('#FFFFFF')"></div>
+                                <div class="color-swatch-label">White</div>
+                            </div>
+                        </div>
+                        <div class="hint">Choose the color for the coupon code text (applies to both square and story)</div>
+                    </div>
+                    <input type="hidden" id="squareFontColor" value="#FF273E">
+                    <input type="hidden" id="storyFontColor" value="#FF273E">
+                </div>
+
                 <button type="submit" class="btn" id="submitBtn">Upload Template</button>
             </form>
             </div>
@@ -730,6 +797,18 @@
     </div>
 
     <script>
+        function selectColor(color) {
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('selected');
+                if (swatch.dataset.color === color) {
+                    swatch.classList.add('selected');
+                }
+            });
+            document.getElementById('squareFontColor').value = color;
+            document.getElementById('storyFontColor').value = color;
+            updatePreviews();
+        }
+
         function showAlert(elementId, message, isError = false) {
             const alertDiv = document.getElementById(elementId);
             alertDiv.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
@@ -808,6 +887,9 @@
             formData.append('storyHAlign', 'center');
             formData.append('storyVAlign', 'bottom');
             formData.append('storyMaxFontPx', document.getElementById('storyMaxFontPx').value);
+            
+            formData.append('squareFontColor', document.getElementById('squareFontColor').value);
+            formData.append('storyFontColor', document.getElementById('storyFontColor').value);
 
             try {
                 const response = await fetch('/api/upload-template', {
@@ -927,6 +1009,12 @@
                 document.getElementById('storyHeightPct').value = meta.story.heightPct || 12;
                 document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
                 document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
+                
+                // Font color settings (use square color or default to red)
+                const fontColor = meta.square.fontColor || meta.story.fontColor || '#FF273E';
+                document.getElementById('squareFontColor').value = fontColor;
+                document.getElementById('storyFontColor').value = fontColor;
+                selectColor(fontColor);
                 
                 // Load images into preview
                 const squareImg = new Image();
@@ -1092,7 +1180,7 @@
             return Math.floor(lo);
         }
 
-        function drawTextAutoFit(ctx, text, natW, natH, box, maxPx) {
+        function drawTextAutoFit(ctx, text, natW, natH, box, maxPx, fontColor) {
             const left = Math.round(natW * ((box?.leftPct ?? 5) / 100));
             const top = Math.round(natH * ((box?.topPct ?? 80) / 100));
             const width = Math.round(natW * ((box?.widthPct ?? 90) / 100));
@@ -1126,7 +1214,7 @@
             ctx.lineJoin = 'round';
             ctx.lineWidth = Math.max(2, Math.floor(px * 0.08));
             ctx.strokeStyle = 'rgba(0,0,0,.75)';
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = fontColor || '#ffffff';
             ctx.strokeText(text, x, y);
             ctx.fillText(text, x, y);
         }
@@ -1181,8 +1269,9 @@
             og.lineWidth = Math.max(2, Math.round(Math.min(natW, natH) * 0.003));
             og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
 
-            // Draw preview text
-            drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx);
+            // Draw preview text with selected color
+            const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
+            drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx, fontColor);
 
             // Scale to canvas with high DPI
             const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));

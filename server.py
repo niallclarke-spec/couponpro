@@ -187,6 +187,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 square_max_font = int(float(form.getvalue('squareMaxFontPx')))
                 story_max_font = int(float(form.getvalue('storyMaxFontPx')))
                 
+                # Get font colors with defaults
+                square_font_color = form.getvalue('squareFontColor') or '#FF273E'
+                story_font_color = form.getvalue('storyFontColor') or '#FF273E'
+                
                 # Create directory if it doesn't exist
                 os.makedirs(template_dir, exist_ok=True)
                 
@@ -207,11 +211,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'name': name,
                     'square': {
                         'box': square_coords,
-                        'maxFontPx': square_max_font
+                        'maxFontPx': square_max_font,
+                        'fontColor': square_font_color
                     },
                     'story': {
                         'box': story_coords,
-                        'maxFontPx': story_max_font
+                        'maxFontPx': story_max_font,
+                        'fontColor': story_font_color
                     }
                 }
                 
