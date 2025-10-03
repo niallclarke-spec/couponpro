@@ -4,6 +4,12 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Session Cookie Fix for HTTPS
+  - Added Secure flag to session cookies for HTTPS environments (Digital Ocean)
+  - Fixed login persistence issues where users were logged out on page refresh
+  - Cookies now properly persist across page reloads on both Replit (HTTP) and Digital Ocean (HTTPS)
+  - Resolved "Unauthorized" errors during template deletion on production
+
 - **2025-10-03**: Bulk Template Delete Feature
   - Added checkboxes to each template in Current Assets list
   - Added "Select All" checkbox to select/deselect all templates at once
