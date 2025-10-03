@@ -1,0 +1,38 @@
+Oct 03 14:23:17  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Oct 03 14:23:17    import cgi
+Oct 03 14:23:18  Server running at http://0.0.0.0:8080/
+Oct 03 14:23:18  Serving files from /workspace
+Oct 03 14:23:18  API endpoints:
+Oct 03 14:23:18    POST /api/login
+Oct 03 14:23:18    POST /api/logout
+Oct 03 14:23:18    POST /api/upload-template (requires auth)
+Oct 03 14:23:18    POST /api/delete-template (requires auth)
+Oct 03 14:23:18    POST /api/regenerate-index
+Oct 03 14:24:05  10.244.6.88 - - [03/Oct/2025 14:24:05] "GET / HTTP/1.1" 200 -
+Oct 03 14:24:05  10.244.4.206 - - [03/Oct/2025 14:24:05] code 404, message File not found
+Oct 03 14:24:05  10.244.4.206 - - [03/Oct/2025 14:24:05] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 14:24:05  10.244.4.206 - - [03/Oct/2025 14:24:05] "GET /assets/templates/15-off-2/meta.json?ts=1759501445877 HTTP/1.1" 200 -
+Oct 03 14:24:06  10.244.4.206 - - [03/Oct/2025 14:24:06] "GET /assets/templates/15-off-2/story.png?t=1759501445964 HTTP/1.1" 200 -
+Oct 03 14:24:09  10.244.5.15 - - [03/Oct/2025 14:24:09] "GET /assets/templates/flash-sale/square.png?t=1759501449140 HTTP/1.1" 200 -
+Oct 03 14:24:13  10.244.7.226 - - [03/Oct/2025 14:24:13] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 14:25:07  [AUTH] Session token found, valid: True
+Oct 03 14:25:07  10.244.5.15 - - [03/Oct/2025 14:25:07] "POST /api/upload-template HTTP/1.1" 500 -
+Oct 03 14:22:57  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Oct 03 14:22:57    import cgi
+Oct 03 14:22:59  Server running at http://0.0.0.0:8080/
+Oct 03 14:22:59  Serving files from /workspace
+Oct 03 14:22:59  API endpoints:
+Oct 03 14:22:59    POST /api/login
+Oct 03 14:22:59    POST /api/logout
+Oct 03 14:22:59    POST /api/upload-template (requires auth)
+Oct 03 14:22:59    POST /api/delete-template (requires auth)
+Oct 03 14:22:59    POST /api/regenerate-index
+Oct 03 14:24:05  10.244.7.226 - - [03/Oct/2025 14:24:05] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 14:24:05  10.244.4.206 - - [03/Oct/2025 14:24:05] "GET /assets/templates/index.json?ts=1759501445782 HTTP/1.1" 200 -
+Oct 03 14:24:05  10.244.5.15 - - [03/Oct/2025 14:24:05] "GET /assets/templates/flash-sale/meta.json?ts=1759501445877 HTTP/1.1" 200 -
+Oct 03 14:24:06  10.244.5.15 - - [03/Oct/2025 14:24:06] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 14:24:06  10.244.4.206 - - [03/Oct/2025 14:24:06] "GET /assets/templates/15-off-2/square.png?t=1759501445964 HTTP/1.1" 200 -
+Oct 03 14:24:09  10.244.6.88 - - [03/Oct/2025 14:24:09] "GET /assets/templates/flash-sale/story.png?t=1759501449140 HTTP/1.1" 200 -
+Oct 03 14:24:13  10.244.7.226 - - [03/Oct/2025 14:24:13] "GET /admin HTTP/1.1" 200 -
+Oct 03 14:24:18  10.244.5.15 - - [03/Oct/2025 14:24:18] "POST /api/login HTTP/1.1" 200 -
+Oct 03 14:24:22  10.244.5.15 - - [03/Oct/2025 14:24:22] "GET /assets/templates/index.json HTTP/1.1" 200 -
