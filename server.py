@@ -557,11 +557,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
-                print(f"[TELEGRAM] Received webhook: {json.dumps(webhook_data, indent=2)}")
                 
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
-                print(f"[TELEGRAM] Handler result: {result}")
                 
                 # Telegram expects 200 OK even if we couldn't process the command
                 self.send_response(200)
@@ -571,8 +569,6 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"[TELEGRAM] Webhook error: {str(e)}")
-                import traceback
-                traceback.print_exc()
                 # Still send 200 to Telegram so it doesn't retry
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
