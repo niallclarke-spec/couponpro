@@ -653,14 +653,10 @@
                             </div>
 
                             <div class="row">
-                                <div class="form-group">
-                                    <label for="squareLeftPct">Left - Right</label>
-                                    <input type="range" id="squareLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="squareTopPct">Top - Bottom</label>
-                                    <input type="range" id="squareTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
@@ -695,6 +691,19 @@
                                 <div class="preview-hint">Click and drag to set text area</div>
                                 <canvas id="previewSquare"></canvas>
                             </div>
+                            <div class="color-picker-group" style="margin-top: 16px;">
+                                <label>Text Color</label>
+                                <div class="color-swatches">
+                                    <div>
+                                        <div class="color-swatch red selected" data-color="#FF273E" data-variant="square" onclick="selectColor('#FF273E', 'square')"></div>
+                                        <div class="color-swatch-label">Red</div>
+                                    </div>
+                                    <div>
+                                        <div class="color-swatch white" data-color="#FFFFFF" data-variant="square" onclick="selectColor('#FFFFFF', 'square')"></div>
+                                        <div class="color-swatch-label">White</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -711,14 +720,10 @@
                             </div>
 
                             <div class="row">
-                                <div class="form-group">
-                                    <label for="storyLeftPct">Left - Right</label>
-                                    <input type="range" id="storyLeftPctSlider" min="0" max="100" step="0.5" value="5" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="storyTopPct">Top - Bottom</label>
-                                    <input type="range" id="storyTopPctSlider" min="0" max="100" step="0.5" value="78" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
                                 <div class="form-group">
@@ -753,29 +758,25 @@
                                 <div class="preview-hint">Click and drag to set text area</div>
                                 <canvas id="previewStory"></canvas>
                             </div>
+                            <div class="color-picker-group" style="margin-top: 16px;">
+                                <label>Text Color</label>
+                                <div class="color-swatches">
+                                    <div>
+                                        <div class="color-swatch red selected" data-color="#FF273E" data-variant="story" onclick="selectColor('#FF273E', 'story')"></div>
+                                        <div class="color-swatch-label">Red</div>
+                                    </div>
+                                    <div>
+                                        <div class="color-swatch white" data-color="#FFFFFF" data-variant="story" onclick="selectColor('#FFFFFF', 'story')"></div>
+                                        <div class="color-swatch-label">White</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="section">
-                    <div class="section-title">Text Color</div>
-                    <div class="color-picker-group">
-                        <label>Coupon Code Color</label>
-                        <div class="color-swatches">
-                            <div>
-                                <div class="color-swatch red selected" data-color="#FF273E" onclick="selectColor('#FF273E')"></div>
-                                <div class="color-swatch-label">Red</div>
-                            </div>
-                            <div>
-                                <div class="color-swatch white" data-color="#FFFFFF" onclick="selectColor('#FFFFFF')"></div>
-                                <div class="color-swatch-label">White</div>
-                            </div>
-                        </div>
-                        <div class="hint">Choose the color for the coupon code text (applies to both square and story)</div>
-                    </div>
-                    <input type="hidden" id="squareFontColor" value="#FF273E">
-                    <input type="hidden" id="storyFontColor" value="#FF273E">
-                </div>
+                <input type="hidden" id="squareFontColor" value="#FF273E">
+                <input type="hidden" id="storyFontColor" value="#FF273E">
 
                 <button type="submit" class="btn" id="submitBtn">Upload Template</button>
             </form>
@@ -797,15 +798,14 @@
     </div>
 
     <script>
-        function selectColor(color) {
-            document.querySelectorAll('.color-swatch').forEach(swatch => {
+        function selectColor(color, variant) {
+            document.querySelectorAll(`.color-swatch[data-variant="${variant}"]`).forEach(swatch => {
                 swatch.classList.remove('selected');
                 if (swatch.dataset.color === color) {
                     swatch.classList.add('selected');
                 }
             });
-            document.getElementById('squareFontColor').value = color;
-            document.getElementById('storyFontColor').value = color;
+            document.getElementById(variant + 'FontColor').value = color;
             updatePreviews();
         }
 
@@ -1010,11 +1010,13 @@
                 document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
                 document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
                 
-                // Font color settings (use square color or default to red)
-                const fontColor = meta.square.fontColor || meta.story.fontColor || '#FF273E';
-                document.getElementById('squareFontColor').value = fontColor;
-                document.getElementById('storyFontColor').value = fontColor;
-                selectColor(fontColor);
+                // Font color settings
+                const squareFontColor = meta.square.fontColor || '#FF273E';
+                const storyFontColor = meta.story.fontColor || '#FF273E';
+                document.getElementById('squareFontColor').value = squareFontColor;
+                document.getElementById('storyFontColor').value = storyFontColor;
+                selectColor(squareFontColor, 'square');
+                selectColor(storyFontColor, 'story');
                 
                 // Load images into preview
                 const squareImg = new Image();
