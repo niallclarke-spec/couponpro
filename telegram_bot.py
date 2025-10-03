@@ -32,7 +32,8 @@ def process_telegram_update(update_data):
         if not isinstance(update_data, dict):
             return None
         
-        message = update_data.get('message')
+        # Channels send 'channel_post' instead of 'message'
+        message = update_data.get('message') or update_data.get('channel_post')
         if not message:
             return None
         
