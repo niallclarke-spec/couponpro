@@ -10,7 +10,8 @@
       "vAlign": "bottom"
     },
     "maxFontPx": 94,
-    "fontColor": "#FFFFFF"
+    "fontColor": "#FFFFFF",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/square.png"
   },
   "story": {
     "box": {
@@ -22,6 +23,7 @@
       "vAlign": "bottom"
     },
     "maxFontPx": 94,
-    "fontColor": "#FFFFFF"
+    "fontColor": "#FFFFFF",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/story.png"
   }
 }

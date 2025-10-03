@@ -4,15 +4,15 @@
       "slug": "15-off-2",
       "name": "15% OFF 2",
       "meta": "assets/templates/15-off-2/meta.json",
-      "square": "assets/templates/15-off-2/square.png",
-      "story": "assets/templates/15-off-2/story.png"
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off-2/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off-2/story.png"
     },
     {
       "slug": "flash-sale",
       "name": "Flash Sale",
       "meta": "assets/templates/flash-sale/meta.json",
-      "square": "assets/templates/flash-sale/square.png",
-      "story": "assets/templates/flash-sale/story.png"
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/story.png"
     }
   ]
 }
