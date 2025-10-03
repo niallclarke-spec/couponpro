@@ -57,6 +57,10 @@ The application features a dark theme for both the frontend and admin interfaces
 - **Routing**: Server checks Host header and routes requests to appropriate pages. Accessing `/admin` from non-admin domains redirects to admin.promostack.io for security
 
 ## Recent Changes (Oct 3, 2025)
+- **Download Button CORS Fix**: Fixed download buttons not working due to cross-origin security error
+  - Added `crossOrigin = "anonymous"` to all image loading in `index.html` (logo, templates, variants)
+  - Configured Digital Ocean Spaces CORS settings to allow GET/HEAD requests from all origins
+  - Canvas can now export "tainted" images loaded from CDN as downloadable PNGs
 - **PromoStack Rebranding**: Rebranded from CouponPro to PromoStack
   - New yellow/white PromoStack logo (assets/promostack-logo.png)
   - Updated all branding references across frontend and admin pages
