@@ -57,4 +57,8 @@ The application features a dark theme for both the frontend and admin interfaces
   - Enhanced delete functionality to remove images and metadata from object storage
   - Fixed critical bug where editing templates without re-uploading images would overwrite object storage URLs with local paths
 - **Environment Configuration**: Added python-dotenv to load `.env` file for `OBJECT_STORAGE_BUCKET` configuration
+- **Deployment Strategy**: 
+  - **Replit**: Primary admin environment with object storage for uploading templates
+  - **Digital Ocean**: Public-facing app that serves templates from Replit object storage URLs
+  - Object storage gracefully disabled on Digital Ocean (sidecar not available)
 - **Backward Compatibility**: System supports both object storage URLs (new templates) and local paths (legacy templates)

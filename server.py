@@ -14,10 +14,17 @@ import time
 import hmac
 import hashlib
 from dotenv import load_dotenv
-from object_storage import ObjectStorageService
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Try to import object storage (only available on Replit)
+try:
+    from object_storage import ObjectStorageService
+    OBJECT_STORAGE_AVAILABLE = True
+except Exception as e:
+    print(f"[INFO] Object storage not available (running outside Replit): {e}")
+    OBJECT_STORAGE_AVAILABLE = False
 
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
@@ -249,8 +256,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 square_font_color = form.getvalue('squareFontColor') or '#FF273E'
                 story_font_color = form.getvalue('storyFontColor') or '#FF273E'
                 
-                # Initialize object storage service
-                storage_service = ObjectStorageService()
+                # Check if object storage is available (only on Replit)
+                if not OBJECT_STORAGE_AVAILABLE and (has_square_image or has_story_image):
+                    raise ValueError('Template uploads are only available on Replit. Please use the Replit admin panel to upload templates.')
+                
+                # Initialize object storage service (only if available)
+                storage_service = ObjectStorageService() if OBJECT_STORAGE_AVAILABLE else None
                 image_urls = {}
                 
                 # Load existing meta.json to preserve imageUrl values if updating
@@ -269,13 +280,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         except Exception as e:
                             print(f"Warning: Could not load existing meta.json: {e}")
                 
-                # Upload images to object storage if provided
-                if has_square_image:
+                # Upload images to object storage if provided and available
+                if has_square_image and storage_service:
                     square_image = form['squareImage']
                     square_data = square_image.file.read()
                     image_urls['square'] = storage_service.upload_file(square_data, f"templates/{slug}/square.png")
                 
-                if has_story_image:
+                if has_story_image and storage_service:
                     story_image = form['storyImage']
                     story_data = story_image.file.read()
                     image_urls['story'] = storage_service.upload_file(story_data, f"templates/{slug}/story.png")
@@ -311,9 +322,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     f.flush()
                     os.fsync(f.fileno())
                 
-                # Also save meta.json to object storage for persistence
-                meta_json_str = json.dumps(meta, indent=2)
-                storage_service.upload_file(meta_json_str.encode(), f"templates/{slug}/meta.json")
+                # Also save meta.json to object storage for persistence (if available)
+                if storage_service:
+                    meta_json_str = json.dumps(meta, indent=2)
+                    storage_service.upload_file(meta_json_str.encode(), f"templates/{slug}/meta.json")
                 
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],
@@ -370,10 +382,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not os.path.exists(template_dir):
                     raise ValueError(f'Template "{slug}" not found')
                 
-                # Delete from object storage first
-                storage_service = ObjectStorageService()
-                storage_service.delete_template(slug)
-                print(f"[DELETE] Template removed from object storage: {slug}")
+                # Delete from object storage first (if available)
+                if OBJECT_STORAGE_AVAILABLE:
+                    storage_service = ObjectStorageService()
+                    storage_service.delete_template(slug)
+                    print(f"[DELETE] Template removed from object storage: {slug}")
                 
                 # Delete local directory
                 import shutil
