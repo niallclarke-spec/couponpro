@@ -10,10 +10,62 @@ from urllib.parse import urlparse, parse_qs
 import mimetypes
 import cgi
 from http import cookies
+import time
+import fcntl
 
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
-SESSION_TOKENS = set()
+SESSIONS_FILE = 'sessions.json'
+SESSION_TTL = 86400  # 24 hours in seconds
+
+def load_sessions():
+    """Load sessions from file, removing expired ones"""
+    if not os.path.exists(SESSIONS_FILE):
+        return {}
+    try:
+        with open(SESSIONS_FILE, 'r') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+            sessions = json.load(f)
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        
+        # Remove expired sessions
+        now = time.time()
+        valid_sessions = {token: exp for token, exp in sessions.items() if exp > now}
+        if len(valid_sessions) != len(sessions):
+            save_sessions(valid_sessions)
+        return valid_sessions
+    except:
+        return {}
+
+def save_sessions(sessions):
+    """Save sessions to file with file locking"""
+    try:
+        with open(SESSIONS_FILE, 'w') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            json.dump(sessions, f)
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    except Exception as e:
+        print(f"[SESSION] Error saving sessions: {e}")
+
+def add_session(token):
+    """Add a new session token"""
+    sessions = load_sessions()
+    sessions[token] = time.time() + SESSION_TTL
+    save_sessions(sessions)
+
+def remove_session(token):
+    """Remove a session token"""
+    sessions = load_sessions()
+    if token in sessions:
+        del sessions[token]
+        save_sessions(sessions)
+
+def is_valid_session(token):
+    """Check if a session token is valid"""
+    sessions = load_sessions()
+    if token in sessions:
+        return sessions[token] > time.time()
+    return False
 
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
@@ -40,8 +92,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         if 'admin_session' in c:
             token = c['admin_session'].value
-            is_valid = token in SESSION_TOKENS
-            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {len(SESSION_TOKENS)}")
+            is_valid = is_valid_session(token)
+            sessions = load_sessions()
+            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {len(sessions)}")
             return is_valid
         
         print(f"[AUTH] No admin_session cookie found in: {cookie_header}")
@@ -84,7 +137,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 if password == admin_password and admin_password:
                     session_token = secrets.token_urlsafe(32)
-                    SESSION_TOKENS.add(session_token)
+                    add_session(session_token)
                     
                     # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
                     is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
@@ -113,7 +166,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 c.load(cookie_header)
                 if 'admin_session' in c:
                     token = c['admin_session'].value
-                    SESSION_TOKENS.discard(token)
+                    remove_session(token)
             
             # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
             is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
