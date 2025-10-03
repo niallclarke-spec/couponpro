@@ -153,12 +153,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(500, f"Server error: {str(e)}")
                 return
         
-        # Legacy /admin path support
+        # Legacy /admin path support - redirect to admin.promostack.io
         if parsed_path.path == '/admin/':
             self.send_response(301)
             self.send_header('Location', '/admin')
             self.end_headers()
         elif parsed_path.path == '/admin':
+            # Only allow admin access via admin.promostack.io domain
+            # Redirect other domains to the proper admin domain
+            if 'admin.promostack.io' not in host:
+                self.send_response(301)
+                self.send_header('Location', 'https://admin.promostack.io')
+                self.end_headers()
+                return
+            
             try:
                 with open('admin-simple.html', 'r') as f:
                     content = f.read()

@@ -54,7 +54,7 @@ The application features a dark theme for both the frontend and admin interfaces
 - **dash.promostack.io**: Public frontend for generating coupon images (CNAME → Digital Ocean App)
 - **promostack.io**: Reserved for future landing page
 - **Domain Registrar**: Hostinger (DNS managed via Hostinger hPanel)
-- **Routing**: Server checks Host header and routes requests to appropriate pages (`server.py` lines 125-157)
+- **Routing**: Server checks Host header and routes requests to appropriate pages. Accessing `/admin` from non-admin domains redirects to admin.promostack.io for security
 
 ## Recent Changes (Oct 3, 2025)
 - **PromoStack Rebranding**: Rebranded from CouponPro to PromoStack
