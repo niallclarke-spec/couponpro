@@ -4,6 +4,19 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Drag-to-Draw Interface & Font Color Picker
+  - Replaced manual slider adjustments with intuitive drag-to-draw interface
+  - Click and drag directly on preview canvases to define coupon text area
+  - Real-time visual feedback with dotted selection rectangle while dragging
+  - Automatic coordinate conversion from pixels to percentages
+  - Added font color picker with two visual swatches: Red (#FF273E) and White (#FFFFFF)
+  - Selected color shows visual indicator (border + glow effect)
+  - Color stored in meta.json and applied across admin, frontend, downloads, and shares
+  - Crosshair cursor and helpful hints guide user interaction
+  - Minimum drag threshold prevents accidental tiny boxes
+  - Dual input method: drag for speed, sliders for precision fine-tuning
+  - Backwards compatible - existing templates without fontColor still work
+
 - **2025-10-03**: Template Edit Without Re-upload
   - Made image uploads optional when editing existing templates
   - Users can now update coupon placement without re-uploading images
