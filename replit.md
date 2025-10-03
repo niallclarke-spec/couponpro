@@ -4,6 +4,16 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Admin UI Layout Refinement
+  - Centered all control elements for better visual hierarchy
+  - Font Size slider now centered above other controls
+  - Show Logo checkbox moved to its own row below Font Size
+  - Fine-Tune Position label centered above nudge buttons
+  - Color selectors moved below nudge controls and centered
+  - Added red glow stroke to file upload boxes (matching front page style)
+  - Preview placeholder text changed from "PREVIEW" to "COUPON-AREA"
+  - All controls now vertically stacked and centered for intuitive workflow
+
 - **2025-10-03**: Drag-to-Draw Interface & Font Color Picker
   - Replaced manual slider adjustments with intuitive drag-to-draw interface
   - Click and drag directly on preview canvases to define coupon text area
@@ -13,7 +23,6 @@ A static web application that generates promotional images for coupon codes. Use
   - Added nudge buttons (↑ ↓ ← →) for precise fine-tuning after drawing (0.5% increments)
   - Blue bounding box only shows during active dragging - clean preview after placement
   - Added font color picker with two visual swatches: Red (#FF273E) and White (#FFFFFF)
-  - Color pickers positioned directly beside each preview (square and story)
   - Independent color selection per format
   - Selected color shows visual indicator (border + glow effect)
   - Color stored in meta.json and applied across admin, frontend, downloads, and shares

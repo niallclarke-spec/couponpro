@@ -113,9 +113,14 @@
             padding: 8px;
             background: #191b22;
             color: #e9eef5;
-            border: 2px dashed #262b35;
+            border: 2px dashed #FF273E;
             border-radius: 6px;
             cursor: pointer;
+            box-shadow: 0 0 12px rgba(255, 39, 62, 0.4);
+        }
+
+        input[type="file"]:focus {
+            box-shadow: 0 0 16px rgba(255, 39, 62, 0.6);
         }
         
         .hint {
@@ -550,6 +555,11 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            align-items: center;
+        }
+
+        .color-picker-group label {
+            text-align: center;
         }
 
         .color-swatches {
@@ -598,6 +608,7 @@
             flex-direction: column;
             gap: 8px;
             margin-top: 16px;
+            align-items: center;
         }
 
         .nudge-controls-label {
@@ -605,6 +616,7 @@
             color: #8a8f98;
             text-transform: uppercase;
             letter-spacing: .3px;
+            text-align: center;
         }
 
         .nudge-buttons {
@@ -734,21 +746,21 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="form-group">
-                                    <label for="squareMaxFontPx">Font Size</label>
-                                    <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
-                                    <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" step="1" required>
-                                </div>
-                                <div class="form-group" style="display:flex;align-items:end;">
-                                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
-                                        <input id="squareShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
-                                        <span>Show Logo</span>
-                                    </label>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
-                                </div>
+                            <div class="form-group" style="display: none;">
+                                <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
+                            </div>
+
+                            <div class="form-group" style="text-align: center;">
+                                <label for="squareMaxFontPx" style="text-align: center;">Font Size</label>
+                                <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
+                                <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
+                            </div>
+
+                            <div class="form-group" style="text-align: center;">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
+                                    <input id="squareShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
+                                    <span>Show Logo</span>
+                                </label>
                             </div>
 
                             <div class="nudge-controls">
@@ -761,14 +773,6 @@
                                 </div>
                             </div>
 
-                        </div>
-
-                        <div class="preview-column">
-                            <div class="preview-label">Preview</div>
-                            <div class="preview-frame square">
-                                <div class="preview-hint">Click and drag to set text area</div>
-                                <canvas id="previewSquare"></canvas>
-                            </div>
                             <div class="color-picker-group" style="margin-top: 16px;">
                                 <label>Text Color</label>
                                 <div class="color-swatches">
@@ -781,6 +785,15 @@
                                         <div class="color-swatch-label">White</div>
                                     </div>
                                 </div>
+                            </div>
+
+                        </div>
+
+                        <div class="preview-column">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-frame square">
+                                <div class="preview-hint">Click and drag to set text area</div>
+                                <canvas id="previewSquare"></canvas>
                             </div>
                         </div>
                     </div>
@@ -809,21 +822,21 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="form-group">
-                                    <label for="storyMaxFontPx">Font Size</label>
-                                    <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
-                                    <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" step="1" required>
-                                </div>
-                                <div class="form-group" style="display:flex;align-items:end;">
-                                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
-                                        <input id="storyShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
-                                        <span>Show Logo</span>
-                                    </label>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
-                                </div>
+                            <div class="form-group" style="display: none;">
+                                <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
+                            </div>
+
+                            <div class="form-group" style="text-align: center;">
+                                <label for="storyMaxFontPx" style="text-align: center;">Font Size</label>
+                                <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
+                                <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
+                            </div>
+
+                            <div class="form-group" style="text-align: center;">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
+                                    <input id="storyShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
+                                    <span>Show Logo</span>
+                                </label>
                             </div>
 
                             <div class="nudge-controls">
@@ -836,14 +849,6 @@
                                 </div>
                             </div>
 
-                        </div>
-
-                        <div class="preview-column">
-                            <div class="preview-label">Preview</div>
-                            <div class="preview-frame story">
-                                <div class="preview-hint">Click and drag to set text area</div>
-                                <canvas id="previewStory"></canvas>
-                            </div>
                             <div class="color-picker-group" style="margin-top: 16px;">
                                 <label>Text Color</label>
                                 <div class="color-swatches">
@@ -856,6 +861,15 @@
                                         <div class="color-swatch-label">White</div>
                                     </div>
                                 </div>
+                            </div>
+
+                        </div>
+
+                        <div class="preview-column">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-frame story">
+                                <div class="preview-hint">Click and drag to set text area</div>
+                                <canvas id="previewStory"></canvas>
                             </div>
                         </div>
                     </div>
@@ -1361,7 +1375,7 @@
 
             // Draw preview text with selected color
             const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
-            drawTextAutoFit(og, 'PREVIEW', natW, natH, box, maxFontPx, fontColor);
+            drawTextAutoFit(og, 'COUPON-AREA', natW, natH, box, maxFontPx, fontColor);
 
             // Scale to canvas with high DPI
             const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));
