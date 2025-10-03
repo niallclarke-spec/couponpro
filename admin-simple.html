@@ -676,9 +676,123 @@
             grid-column: 2;
             grid-row: 3;
         }
+
+        /* Custom Delete Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-box {
+            background: #191b22;
+            border: 1px solid #262b35;
+            border-radius: 12px;
+            padding: 28px 32px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e9eef5;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-message {
+            font-size: 15px;
+            color: #a0a5ad;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            white-space: pre-line;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-cancel {
+            background: #262b35;
+            color: #e9eef5;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #313640;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-confirm {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
     </style>
 </head>
 <body>
+    <!-- Custom Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">🗑️</div>
+            <div class="modal-title" id="modalTitle">Delete Template?</div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="login-container" id="loginWrapper">
             <div class="login-logo">
@@ -1171,31 +1285,49 @@
             }
         }
 
+        // Show custom delete confirmation modal
+        function showDeleteModal(message, onConfirm) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('deleteModal').classList.add('active');
+            
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            confirmBtn.onclick = () => {
+                closeDeleteModal();
+                onConfirm();
+            };
+        }
+
+        // Close delete confirmation modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
         // Delete template
         async function deleteTemplate(slug, name) {
-            if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis will permanently remove the template and both images.`)) {
-                return;
-            }
+            showDeleteModal(
+                `Are you sure you want to delete "${name}"?\n\nThis will permanently remove the template and both images.`,
+                async () => {
+                    try {
+                        const response = await fetch('/api/delete-template', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slug })
+                        });
 
-            try {
-                const response = await fetch('/api/delete-template', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug })
-                });
+                        const data = await response.json();
 
-                const data = await response.json();
-
-                if (data.success) {
-                    loadAssets();
-                } else {
-                    alert('Delete failed: ' + (data.error || 'Unknown error'));
+                        if (data.success) {
+                            loadAssets();
+                        } else {
+                            alert('Delete failed: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        alert('Delete failed: ' + error.message);
+                        console.error('Failed to delete template:', error);
+                    }
                 }
-            } catch (error) {
-                alert('Delete failed: ' + error.message);
-                console.error('Failed to delete template:', error);
-            }
+            );
         }
 
         // Toggle select all checkboxes
@@ -1233,54 +1365,52 @@
             }));
 
             const confirmMsg = templates.length === 1 
-                ? `Are you sure you want to delete "${templates[0].name}"?`
-                : `Are you sure you want to delete ${templates.length} templates?\n\n${templates.map(t => '• ' + t.name).join('\n')}`;
+                ? `Are you sure you want to delete "${templates[0].name}"?\n\nThis will permanently remove the template and all images.`
+                : `Are you sure you want to delete ${templates.length} templates?\n\n${templates.map(t => '• ' + t.name).join('\n')}\n\nThis will permanently remove all templates and images.`;
 
-            if (!confirm(confirmMsg + '\n\nThis will permanently remove the templates and all images.')) {
-                return;
-            }
+            showDeleteModal(confirmMsg, async () => {
+                let successCount = 0;
+                let failCount = 0;
+                const errors = [];
 
-            let successCount = 0;
-            let failCount = 0;
-            const errors = [];
+                for (const template of templates) {
+                    try {
+                        const response = await fetch('/api/delete-template', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slug: template.slug })
+                        });
 
-            for (const template of templates) {
-                try {
-                    const response = await fetch('/api/delete-template', {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ slug: template.slug })
-                    });
+                        const data = await response.json();
 
-                    const data = await response.json();
-
-                    if (data.success) {
-                        successCount++;
-                    } else {
+                        if (data.success) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                            errors.push(`${template.name}: ${data.error || 'Unknown error'}`);
+                        }
+                    } catch (error) {
                         failCount++;
-                        errors.push(`${template.name}: ${data.error || 'Unknown error'}`);
+                        errors.push(`${template.name}: ${error.message}`);
                     }
-                } catch (error) {
-                    failCount++;
-                    errors.push(`${template.name}: ${error.message}`);
                 }
-            }
 
-            // Reload the assets list
-            loadAssets();
+                // Reload the assets list
+                loadAssets();
 
-            // Show summary
-            let message = '';
-            if (successCount > 0) {
-                message += `Successfully deleted ${successCount} template${successCount > 1 ? 's' : ''}`;
-            }
-            if (failCount > 0) {
-                message += (message ? '\n\n' : '') + `Failed to delete ${failCount} template${failCount > 1 ? 's' : ''}:\n${errors.join('\n')}`;
-                alert(message);
-            } else if (successCount > 0) {
-                alert(message + ' ✓');
-            }
+                // Show summary
+                let message = '';
+                if (successCount > 0) {
+                    message += `Successfully deleted ${successCount} template${successCount > 1 ? 's' : ''}`;
+                }
+                if (failCount > 0) {
+                    message += (message ? '\n\n' : '') + `Failed to delete ${failCount} template${failCount > 1 ? 's' : ''}:\n${errors.join('\n')}`;
+                    alert(message);
+                } else if (successCount > 0) {
+                    alert(message + ' ✓');
+                }
+            });
         }
 
         // ==================== PREVIEW LOGIC ====================
