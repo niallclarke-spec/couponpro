@@ -236,7 +236,7 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
         fill=fill_color,
         anchor=anchor,
         stroke_width=stroke_width,
-        stroke_fill=(0, 0, 0, 191)  # 75% opacity black
+        stroke_fill=(0, 0, 0)  # Black outline
     )
 
 
