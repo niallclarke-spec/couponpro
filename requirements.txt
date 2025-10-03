@@ -1,5 +1,5 @@
 # Python dependencies for CouponPro server
-google-cloud-storage
-google-auth
 python-dotenv
-requests
+boto3
+boto3
+sift-stack-py

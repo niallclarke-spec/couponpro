@@ -1,81 +1,81 @@
 #!/usr/bin/env python3
 """
-Object Storage utility for Replit App Storage
-Adapted from blueprint:javascript_object_storage for Python
+Object Storage utility for Digital Ocean Spaces
+S3-compatible object storage that works anywhere
 """
 
 import os
-import json
-import requests
-from google.cloud import storage
-from google.auth import credentials
-from google.auth.transport import requests as google_requests
-from uuid import uuid4
-
-REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106"
-
-class ReplitObjectStorageCredentials(credentials.Credentials):
-    """Custom credentials class for Replit object storage"""
-    
-    def __init__(self):
-        super().__init__()
-        self.token = None
-        self.expiry = None
-    
-    def refresh(self, request):
-        """Fetch access token from Replit sidecar"""
-        response = requests.get(f"{REPLIT_SIDECAR_ENDPOINT}/credential")
-        response.raise_for_status()
-        data = response.json()
-        self.token = data.get('access_token')
-    
-    @property
-    def valid(self):
-        return self.token is not None
-    
-    @property
-    def expired(self):
-        return False
+import boto3
+from botocore.client import Config
 
 class ObjectStorageService:
-    """Service for interacting with Replit Object Storage"""
+    """Service for interacting with Digital Ocean Spaces (S3-compatible)"""
     
     def __init__(self):
-        # Initialize Google Cloud Storage client with Replit credentials
-        creds = ReplitObjectStorageCredentials()
-        creds.refresh(None)
-        self.client = storage.Client(
-            credentials=creds,
-            project=""
-        )
+        # Get configuration from environment variables
+        self.access_key = os.environ.get('SPACES_ACCESS_KEY')
+        self.secret_key = os.environ.get('SPACES_SECRET_KEY')
+        self.region = os.environ.get('SPACES_REGION', 'sfo3')
+        self.bucket_name = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
         
-        # Get bucket name from environment
-        self.bucket_name = os.environ.get('OBJECT_STORAGE_BUCKET')
-        if not self.bucket_name:
+        if not self.access_key or not self.secret_key:
             raise ValueError(
-                "OBJECT_STORAGE_BUCKET not set. Create a bucket in Object Storage "
-                "and set the OBJECT_STORAGE_BUCKET environment variable."
+                "SPACES_ACCESS_KEY and SPACES_SECRET_KEY must be set. "
+                "Create a Spaces access key in Digital Ocean and add them to environment variables."
             )
         
-        self.bucket = self.client.bucket(self.bucket_name)
+        # Construct the endpoint URL for Digital Ocean Spaces
+        self.endpoint_url = f'https://{self.region}.digitaloceanspaces.com'
+        
+        # Initialize boto3 S3 client for Digital Ocean Spaces
+        self.client = boto3.client(
+            's3',
+            region_name=self.region,
+            endpoint_url=self.endpoint_url,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key,
+            config=Config(signature_version='s3v4')
+        )
+        
+        # Public URL base (with CDN if enabled)
+        self.public_url_base = f'https://{self.bucket_name}.{self.region}.cdn.digitaloceanspaces.com'
     
     def upload_file(self, file_data, object_name):
-        """Upload file to object storage"""
-        blob = self.bucket.blob(object_name)
-        blob.upload_from_string(file_data)
-        # Make the blob publicly accessible
-        blob.make_public()
-        return blob.public_url
+        """Upload file to Digital Ocean Spaces"""
+        # Determine content type
+        content_type = 'application/octet-stream'
+        if object_name.endswith('.png'):
+            content_type = 'image/png'
+        elif object_name.endswith('.jpg') or object_name.endswith('.jpeg'):
+            content_type = 'image/jpeg'
+        elif object_name.endswith('.json'):
+            content_type = 'application/json'
+        
+        # Upload to Spaces
+        if isinstance(file_data, str):
+            file_data = file_data.encode('utf-8')
+        
+        self.client.put_object(
+            Bucket=self.bucket_name,
+            Key=object_name,
+            Body=file_data,
+            ACL='public-read',  # Make publicly accessible
+            ContentType=content_type
+        )
+        
+        # Return public URL
+        return f'{self.public_url_base}/{object_name}'
     
     def delete_file(self, object_name):
-        """Delete file from object storage"""
-        blob = self.bucket.blob(object_name)
-        blob.delete()
+        """Delete file from Digital Ocean Spaces"""
+        self.client.delete_object(
+            Bucket=self.bucket_name,
+            Key=object_name
+        )
     
     def get_public_url(self, object_name):
         """Get public URL for an object"""
-        blob = self.bucket.blob(object_name)
-        return blob.public_url
+        return f'{self.public_url_base}/{object_name}'
     
     def upload_template_images(self, slug, square_data=None, story_data=None):
         """Upload template images and return their public URLs"""
