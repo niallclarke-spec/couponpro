@@ -424,20 +424,27 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError('Invalid slug: path traversal detected')
                 
                 template_dir = os.path.join('assets', 'templates', slug)
+                deleted_something = False
                 
-                if not os.path.exists(template_dir):
-                    raise ValueError(f'Template "{slug}" not found')
-                
-                # Delete from object storage first (if available)
+                # Delete from object storage first (if available) - this is the primary source
                 if OBJECT_STORAGE_AVAILABLE:
                     storage_service = ObjectStorageService()
                     storage_service.delete_template(slug)
                     print(f"[DELETE] Template removed from object storage: {slug}")
+                    deleted_something = True
                 
-                # Delete local directory
+                # Delete local directory if it exists (optional - may not exist in production)
                 import shutil
-                shutil.rmtree(template_dir)
-                print(f"[DELETE] Template directory removed: {template_dir}")
+                if os.path.exists(template_dir):
+                    shutil.rmtree(template_dir)
+                    print(f"[DELETE] Template directory removed: {template_dir}")
+                    deleted_something = True
+                else:
+                    print(f"[DELETE] No local directory found (normal in production): {template_dir}")
+                
+                # Make sure we deleted something
+                if not deleted_something:
+                    raise ValueError(f'Template "{slug}" not found in storage or locally')
                 
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],

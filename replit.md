@@ -57,6 +57,17 @@ The application features a dark theme for both the frontend and admin interfaces
 - **Routing**: Server checks Host header and routes requests to appropriate pages (`server.py` lines 125-157)
 
 ## Recent Changes (Oct 3, 2025)
+- **PromoStack Rebranding**: Rebranded from CouponPro to PromoStack
+  - New yellow/white PromoStack logo (assets/promostack-logo.png)
+  - Updated all branding references across frontend and admin pages
+  - Changed "Story" label to "Portrait" throughout UI
+  - Removed main heading on dash page for cleaner design
+  - Increased logo sizes: frontend 220px, admin panel 220px, login 280px
+- **Template Deletion Fix**: Fixed critical bug preventing template deletion in production
+  - Delete handler now prioritizes object storage deletion over local file deletion
+  - Works correctly on Digital Ocean where templates only exist in Spaces (no local directories)
+  - Template deletion now succeeds if either object storage or local deletion succeeds
+  - Added better logging for deletion debugging
 - **Digital Ocean Spaces Migration**: Migrated from Replit Object Storage to Digital Ocean Spaces for universal compatibility
   - Rewrote `object_storage.py` module to use boto3 S3-compatible client instead of Google Cloud Storage
   - Configured Digital Ocean Spaces: bucket `couponpro-templates`, region LON1, CDN enabled
