@@ -317,9 +317,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 storage_service = ObjectStorageService() if OBJECT_STORAGE_AVAILABLE else None
                 image_urls = {}
                 
-                # Load existing meta.json to preserve imageUrl values if updating
+                # Load existing meta.json to preserve all variant data if updating
+                # Support both 'imageUrl' (new) and 'image' (legacy) fields
                 existing_square_url = None
                 existing_story_url = None
+                existing_square_data = None
+                existing_story_data = None
                 if is_existing_template:
                     meta_path = os.path.join(template_dir, 'meta.json')
                     if os.path.exists(meta_path):
@@ -327,9 +330,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             with open(meta_path, 'r') as f:
                                 existing_meta = json.load(f)
                                 if 'square' in existing_meta and isinstance(existing_meta['square'], dict):
-                                    existing_square_url = existing_meta['square'].get('imageUrl')
+                                    existing_square_data = existing_meta['square']
+                                    # Check both new (imageUrl) and legacy (image) fields
+                                    existing_square_url = existing_square_data.get('imageUrl') or existing_square_data.get('image')
                                 if 'story' in existing_meta and isinstance(existing_meta['story'], dict):
-                                    existing_story_url = existing_meta['story'].get('imageUrl')
+                                    existing_story_data = existing_meta['story']
+                                    # Check both new (imageUrl) and legacy (image) fields  
+                                    existing_story_url = existing_story_data.get('imageUrl') or existing_story_data.get('image')
                         except Exception as e:
                             print(f"Warning: Could not load existing meta.json: {e}")
                 
@@ -356,22 +363,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'name': name
                 }
                 
-                # Only add variant if it exists
-                if square_image_url or has_square_image:
-                    meta['square'] = {
+                # Add square variant if: newly uploaded, existing URL found, or existing variant data exists
+                if square_image_url or has_square_image or existing_square_data:
+                    # Start with existing data if available, then update with new values
+                    square_variant = existing_square_data.copy() if existing_square_data else {}
+                    # Update/override with new form data
+                    square_variant.update({
                         'box': square_coords,
                         'maxFontPx': square_max_font,
                         'fontColor': square_font_color,
-                        'imageUrl': square_image_url or f'assets/templates/{slug}/square.png'
-                    }
+                        'imageUrl': square_image_url or existing_square_url or f'assets/templates/{slug}/square.png'
+                    })
+                    # Remove legacy 'image' field if present (replaced by 'imageUrl')
+                    square_variant.pop('image', None)
+                    meta['square'] = square_variant
                 
-                if story_image_url or has_story_image:
-                    meta['story'] = {
+                # Add story variant if: newly uploaded, existing URL found, or existing variant data exists
+                if story_image_url or has_story_image or existing_story_data:
+                    # Start with existing data if available, then update with new values
+                    story_variant = existing_story_data.copy() if existing_story_data else {}
+                    # Update/override with new form data
+                    story_variant.update({
                         'box': story_coords,
                         'maxFontPx': story_max_font,
                         'fontColor': story_font_color,
-                        'imageUrl': story_image_url or f'assets/templates/{slug}/story.png'
-                    }
+                        'imageUrl': story_image_url or existing_story_url or f'assets/templates/{slug}/story.png'
+                    })
+                    # Remove legacy 'image' field if present (replaced by 'imageUrl')
+                    story_variant.pop('image', None)
+                    meta['story'] = story_variant
                 
                 # Validation: ensure at least one variant exists in final meta
                 if 'square' not in meta and 'story' not in meta:
