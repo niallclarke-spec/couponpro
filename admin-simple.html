@@ -113,14 +113,14 @@
             padding: 8px;
             background: #191b22;
             color: #e9eef5;
-            border: 2px dashed #FF273E;
+            border: 2px solid #FF273E;
             border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 0 12px rgba(255, 39, 62, 0.4);
+            box-shadow: 0 0 12px rgba(255, 39, 62, 0.5);
         }
 
         input[type="file"]:focus {
-            box-shadow: 0 0 16px rgba(255, 39, 62, 0.6);
+            box-shadow: 0 0 18px rgba(255, 39, 62, 0.7);
         }
         
         .hint {
@@ -492,6 +492,7 @@
 
         .slider {
             width: 100%;
+            max-width: 200px;
             height: 6px;
             border-radius: 3px;
             background: #262b35;
@@ -621,8 +622,8 @@
 
         .nudge-buttons {
             display: grid;
-            grid-template-columns: repeat(3, 36px);
-            grid-template-rows: repeat(3, 36px);
+            grid-template-columns: repeat(3, 32px);
+            grid-template-rows: repeat(3, 32px);
             gap: 4px;
             justify-content: center;
         }
@@ -632,7 +633,7 @@
             color: #1d98ff;
             border: 1px solid #262b35;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -640,8 +641,8 @@
             align-items: center;
             justify-content: center;
             padding: 0;
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
         }
 
         .nudge-btn:hover {

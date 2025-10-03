@@ -6,11 +6,12 @@ A static web application that generates promotional images for coupon codes. Use
 ## Recent Changes
 - **2025-10-03**: Admin UI Layout Refinement
   - Centered all control elements for better visual hierarchy
-  - Font Size slider now centered above other controls
+  - Font Size slider now centered above other controls with reduced width (200px max)
   - Show Logo checkbox moved to its own row below Font Size
   - Fine-Tune Position label centered above nudge buttons
+  - Nudge buttons reduced to 32px (from 36px) for more compact appearance
   - Color selectors moved below nudge controls and centered
-  - Added red glow stroke to file upload boxes (matching front page style)
+  - File upload boxes now have solid red border with enhanced glow effect (no dashes)
   - Preview placeholder text changed from "PREVIEW" to "COUPON-AREA"
   - All controls now vertically stacked and centered for intuitive workflow
 
