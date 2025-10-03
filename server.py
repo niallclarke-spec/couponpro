@@ -116,7 +116,44 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_GET(self):
         parsed_path = urlparse(self.path)
+        host = self.headers.get('Host', '').lower()
         
+        # Domain-based routing for custom domains
+        if 'admin.promostack.io' in host and parsed_path.path == '/':
+            try:
+                with open('admin-simple.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+                return
+            except FileNotFoundError:
+                self.send_error(404, "Admin page not found")
+                return
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+                return
+        
+        elif 'dash.promostack.io' in host and parsed_path.path == '/':
+            try:
+                with open('index.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+                return
+            except FileNotFoundError:
+                self.send_error(404, "Frontend page not found")
+                return
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+                return
+        
+        # Legacy /admin path support
         if parsed_path.path == '/admin/':
             self.send_response(301)
             self.send_header('Location', '/admin')

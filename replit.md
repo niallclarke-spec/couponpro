@@ -49,6 +49,13 @@ The application features a dark theme for both the frontend and admin interfaces
 - **Environment Secrets**: Secure credentials stored as Replit secrets - `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`.
 - **.do/app.yaml**: Digital Ocean specific application configuration for deployment.
 
+## Custom Domains (promostack.io)
+- **admin.promostack.io**: Admin panel for uploading and managing templates (CNAME → Digital Ocean App)
+- **dash.promostack.io**: Public frontend for generating coupon images (CNAME → Digital Ocean App)
+- **promostack.io**: Reserved for future landing page
+- **Domain Registrar**: Hostinger (DNS managed via Hostinger hPanel)
+- **Routing**: Server checks Host header and routes requests to appropriate pages (`server.py` lines 125-157)
+
 ## Recent Changes (Oct 3, 2025)
 - **Digital Ocean Spaces Migration**: Migrated from Replit Object Storage to Digital Ocean Spaces for universal compatibility
   - Rewrote `object_storage.py` module to use boto3 S3-compatible client instead of Google Cloud Storage
