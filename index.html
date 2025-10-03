@@ -283,9 +283,19 @@
     function loadVariant(which, src){
       ready[which] = false;
       const img = new Image();
-      img.onload = ()=>{ base[which] = img; ready[which] = true; render(); };
-      img.onerror = ()=>{ console.warn('Failed to load', which, src); render(); };
-      img.src = src;
+      img.onload = async ()=>{ 
+        try {
+          await img.decode();
+          base[which] = img; 
+          ready[which] = true; 
+          renderVariant(which);
+        } catch(e) {
+          console.error(`${which} image decode failed:`, e);
+          ready[which] = false;
+        }
+      };
+      img.onerror = ()=>{ console.warn('Failed to load', which, src); ready[which] = false; };
+      img.src = src + (src.includes('?') ? '' : '?t=' + Date.now());
     }
 
     function populateSelect(){
@@ -398,6 +408,9 @@
       c.height = targetH * pixelRatio;
       c.style.width = targetW + 'px';
       c.style.height = targetH + 'px';
+      
+      // Reset transform to prevent accumulation
+      g.setTransform(1, 0, 0, 1, 0, 0);
       g.scale(pixelRatio, pixelRatio);
       g.imageSmoothingEnabled = true;
       g.imageSmoothingQuality = 'high'; 
