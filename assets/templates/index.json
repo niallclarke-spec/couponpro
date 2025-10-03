@@ -34,6 +34,13 @@
       "meta": "assets/templates/test100/meta.json",
       "square": "assets/templates/test100/square.png",
       "story": "assets/templates/test100/story.png"
+    },
+    {
+      "slug": "uuuuews",
+      "name": "uuuuews",
+      "meta": "assets/templates/uuuuews/meta.json",
+      "square": "assets/templates/uuuuews/square.png",
+      "story": "assets/templates/uuuuews/story.png"
     }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "name": "uuuuews",
+  "square": {
+    "box": {
+      "leftPct": 26.1,
+      "topPct": 74.7,
+      "widthPct": 47.8,
+      "heightPct": 9.6,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E"
+  },
+  "story": {
+    "box": {
+      "leftPct": 27.0,
+      "topPct": 67.9,
+      "widthPct": 47.5,
+      "heightPct": 6.9,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E"
+  }
+}
