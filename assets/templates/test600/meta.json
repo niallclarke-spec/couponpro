@@ -1,11 +1,11 @@
 {
-  "name": "TEST400",
+  "name": "TEST600",
   "square": {
     "box": {
-      "leftPct": 29.2,
-      "topPct": 75.2,
-      "widthPct": 42.8,
-      "heightPct": 9.9,
+      "leftPct": 27.2,
+      "topPct": 75.5,
+      "widthPct": 45.3,
+      "heightPct": 10.1,
       "hAlign": "center",
       "vAlign": "middle"
     },
@@ -14,10 +14,10 @@
   },
   "story": {
     "box": {
-      "leftPct": 23.9,
-      "topPct": 67.7,
-      "widthPct": 52.0,
-      "heightPct": 7.4,
+      "leftPct": 22.8,
+      "topPct": 69.5,
+      "widthPct": 53.1,
+      "heightPct": 5.5,
       "hAlign": "center",
       "vAlign": "middle"
     },
