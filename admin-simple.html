@@ -908,7 +908,7 @@
                         <div class="preview-column">
                             <div class="preview-label">Preview</div>
                             <div class="preview-frame square">
-                                <div class="preview-hint">Click and drag to set text area</div>
+                                <div class="preview-hint">Click and draw coupon area in your template</div>
                                 <canvas id="previewSquare"></canvas>
                             </div>
                         </div>
@@ -984,7 +984,7 @@
                         <div class="preview-column">
                             <div class="preview-label">Preview</div>
                             <div class="preview-frame story">
-                                <div class="preview-hint">Click and drag to set text area</div>
+                                <div class="preview-hint">Click and draw coupon area in your template</div>
                                 <canvas id="previewStory"></canvas>
                             </div>
                         </div>
@@ -1245,6 +1245,10 @@
                 document.getElementById('storyFontColor').value = storyFontColor;
                 selectColor(squareFontColor, 'square');
                 selectColor(storyFontColor, 'story');
+                
+                // Mark that boxes have been drawn (since we're loading an existing template)
+                drawingState.square.hasDrawnBox = true;
+                drawingState.story.hasDrawnBox = true;
                 
                 // Load images into preview - use separate instances per variant
                 const squareImg = new Image();
@@ -1529,9 +1533,12 @@
                 og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
             }
 
-            // Draw preview text with selected color
-            const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
-            drawTextAutoFit(og, 'COUPON-AREA', natW, natH, box, maxFontPx, fontColor);
+            // Draw preview text with selected color (only if box has been drawn)
+            const state = drawingState[variant];
+            if (state.hasDrawnBox) {
+                const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
+                drawTextAutoFit(og, 'COUPON-AREA', natW, natH, box, maxFontPx, fontColor);
+            }
 
             // Scale to canvas with high DPI
             const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));
@@ -1579,6 +1586,9 @@
         document.getElementById('squareImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                // Reset the drawn box flag for new uploads
+                drawingState.square.hasDrawnBox = false;
+                
                 const img = new Image();
                 img.onload = async function() {
                     try {
@@ -1596,6 +1606,9 @@
         document.getElementById('storyImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                // Reset the drawn box flag for new uploads
+                drawingState.story.hasDrawnBox = false;
+                
                 const img = new Image();
                 img.onload = async function() {
                     try {
@@ -1639,8 +1652,8 @@
 
         // ==================== DRAG-TO-DRAW LOGIC ====================
         const drawingState = {
-            square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0 },
-            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }
+            square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false },
+            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false }
         };
 
         function setupDragToDraw(canvasId, variant) {
@@ -1751,6 +1764,9 @@
                 document.getElementById(prefix + 'TopPct').value = percentages.topPct.toFixed(1);
                 document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
                 document.getElementById(prefix + 'HeightPct').value = percentages.heightPct.toFixed(1);
+
+                // Mark that a box has been drawn
+                state.hasDrawnBox = true;
 
                 updatePreviewsImmediate();
             });
