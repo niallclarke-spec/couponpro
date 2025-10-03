@@ -82,9 +82,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     session_token = secrets.token_urlsafe(32)
                     SESSION_TOKENS.add(session_token)
                     
+                    # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
+                    is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
+                    secure_flag = '; Secure' if is_production else ''
+                    
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
-                    self.send_header('Set-Cookie', f'admin_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400')
+                    self.send_header('Set-Cookie', f'admin_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400{secure_flag}')
                     self.end_headers()
                     self.wfile.write(json.dumps({'success': True}).encode())
                 else:
@@ -107,9 +111,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     token = c['admin_session'].value
                     SESSION_TOKENS.discard(token)
             
+            # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
+            is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
+            secure_flag = '; Secure' if is_production else ''
+            
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Set-Cookie', 'admin_session=; Path=/; HttpOnly; Max-Age=0')
+            self.send_header('Set-Cookie', f'admin_session=; Path=/; HttpOnly; Max-Age=0{secure_flag}')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True}).encode())
         
