@@ -10,6 +10,8 @@ A static web application that generates promotional images for coupon codes. Use
   - Real-time visual feedback with dotted selection rectangle while dragging
   - Automatic coordinate conversion from pixels to percentages
   - Removed all positioning sliders (Left-Right, Top-Bottom, Width) - drag-to-draw is now the exclusive method
+  - Added nudge buttons (↑ ↓ ← →) for precise fine-tuning after drawing (0.5% increments)
+  - Blue bounding box only shows during active dragging - clean preview after placement
   - Added font color picker with two visual swatches: Red (#FF273E) and White (#FFFFFF)
   - Color pickers positioned directly beside each preview (square and story)
   - Independent color selection per format
@@ -18,6 +20,7 @@ A static web application that generates promotional images for coupon codes. Use
   - Crosshair cursor and helpful hints guide user interaction
   - Minimum drag threshold prevents accidental tiny boxes
   - Auto-fit logic maximizes text to fill the drawn box area
+  - Preview text centered vertically in middle of box (not bottom)
   - Backwards compatible - existing templates without fontColor still work
 
 - **2025-10-03**: Template Edit Without Re-upload
