@@ -321,6 +321,7 @@
             display: block;
             width: 100%;
             height: 100%;
+            cursor: crosshair;
         }
 
         .tabs {
@@ -644,6 +645,7 @@
                         <div class="preview-column">
                             <div class="preview-label">Preview</div>
                             <div class="preview-frame square">
+                                <div class="preview-hint">Click and drag to set text area</div>
                                 <canvas id="previewSquare"></canvas>
                             </div>
                         </div>
@@ -701,6 +703,7 @@
                         <div class="preview-column">
                             <div class="preview-label">Preview</div>
                             <div class="preview-frame story">
+                                <div class="preview-hint">Click and drag to set text area</div>
                                 <canvas id="previewStory"></canvas>
                             </div>
                         </div>
@@ -1266,6 +1269,138 @@
         setupSliderSync('storyTopPctSlider', 'storyTopPct');
         setupSliderSync('storyWidthPctSlider', 'storyWidthPct');
         setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
+
+        // ==================== DRAG-TO-DRAW LOGIC ====================
+        const drawingState = {
+            square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0 },
+            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }
+        };
+
+        function setupDragToDraw(canvasId, variant) {
+            const canvas = document.getElementById(canvasId);
+            const state = drawingState[variant];
+
+            function getCanvasCoordinates(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                return { x, y };
+            }
+
+            function convertToImagePercentages(startX, startY, endX, endY) {
+                const rect = canvas.getBoundingClientRect();
+                const canvasDisplayWidth = rect.width;
+                const canvasDisplayHeight = rect.height;
+
+                const img = previewImages[variant];
+                const natW = img && img.naturalWidth ? img.naturalWidth : (variant === 'square' ? 1080 : 1080);
+                const natH = img && img.naturalHeight ? img.naturalHeight : (variant === 'square' ? 1080 : 1920);
+
+                const scale = Math.min(canvasDisplayWidth / natW, canvasDisplayHeight / natH);
+                const scaledImageWidth = natW * scale;
+                const scaledImageHeight = natH * scale;
+
+                const offsetX = (canvasDisplayWidth - scaledImageWidth) / 2;
+                const offsetY = (canvasDisplayHeight - scaledImageHeight) / 2;
+
+                const imgX1 = (Math.min(startX, endX) - offsetX) / scaledImageWidth;
+                const imgY1 = (Math.min(startY, endY) - offsetY) / scaledImageHeight;
+                const imgX2 = (Math.max(startX, endX) - offsetX) / scaledImageWidth;
+                const imgY2 = (Math.max(startY, endY) - offsetY) / scaledImageHeight;
+
+                const leftPct = Math.max(0, Math.min(100, imgX1 * 100));
+                const topPct = Math.max(0, Math.min(100, imgY1 * 100));
+                const widthPct = Math.max(1, Math.min(100 - leftPct, (imgX2 - imgX1) * 100));
+                const heightPct = Math.max(1, Math.min(100 - topPct, (imgY2 - imgY1) * 100));
+
+                return { leftPct, topPct, widthPct, heightPct };
+            }
+
+            function drawDragRectangle() {
+                if (!state.isDrawing) return;
+
+                const ctx = variant === 'square' ? ctxSquare : ctxStory;
+                
+                renderPreview(variant);
+
+                const rect = canvas.getBoundingClientRect();
+                const x1 = Math.min(state.startX, state.currentX);
+                const y1 = Math.min(state.startY, state.currentY);
+                const width = Math.abs(state.currentX - state.startX);
+                const height = Math.abs(state.currentY - state.startY);
+
+                const pixelRatio = window.devicePixelRatio || 1;
+
+                ctx.save();
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(29, 152, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x1, y1, width, height);
+
+                ctx.fillStyle = 'rgba(29, 152, 255, 0.1)';
+                ctx.fillRect(x1, y1, width, height);
+                ctx.restore();
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                const coords = getCanvasCoordinates(e);
+                state.isDrawing = true;
+                state.startX = coords.x;
+                state.startY = coords.y;
+                state.currentX = coords.x;
+                state.currentY = coords.y;
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!state.isDrawing) return;
+                const coords = getCanvasCoordinates(e);
+                state.currentX = coords.x;
+                state.currentY = coords.y;
+                drawDragRectangle();
+            });
+
+            canvas.addEventListener('mouseup', (e) => {
+                if (!state.isDrawing) return;
+                const coords = getCanvasCoordinates(e);
+                state.currentX = coords.x;
+                state.currentY = coords.y;
+                state.isDrawing = false;
+
+                const minDragDistance = 10;
+                if (Math.abs(state.currentX - state.startX) < minDragDistance || 
+                    Math.abs(state.currentY - state.startY) < minDragDistance) {
+                    renderPreview(variant);
+                    return;
+                }
+
+                const percentages = convertToImagePercentages(
+                    state.startX, state.startY, 
+                    state.currentX, state.currentY
+                );
+
+                const prefix = variant === 'square' ? 'square' : 'story';
+                document.getElementById(prefix + 'LeftPct').value = percentages.leftPct.toFixed(1);
+                document.getElementById(prefix + 'TopPct').value = percentages.topPct.toFixed(1);
+                document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
+                document.getElementById(prefix + 'HeightPct').value = percentages.heightPct.toFixed(1);
+
+                document.getElementById(prefix + 'LeftPctSlider').value = percentages.leftPct.toFixed(1);
+                document.getElementById(prefix + 'TopPctSlider').value = percentages.topPct.toFixed(1);
+                document.getElementById(prefix + 'WidthPctSlider').value = percentages.widthPct.toFixed(1);
+
+                updatePreviews();
+            });
+
+            canvas.addEventListener('mouseleave', (e) => {
+                if (state.isDrawing) {
+                    state.isDrawing = false;
+                    renderPreview(variant);
+                }
+            });
+        }
+
+        setupDragToDraw('previewSquare', 'square');
+        setupDragToDraw('previewStory', 'story');
 
         // Initial render
         updatePreviews();
