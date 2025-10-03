@@ -228,7 +228,7 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
     # Adjust for bbox offset (bbox top is negative for most fonts)
     y = y - bbox[1]
     
-    # Draw text with stroke (outline)
+    # Draw text without stroke (matches web app appearance)
     # Use 'la' anchor (left-alphabetic) since we've already calculated exact position
     fill_color = font_color or '#ffffff'
     
@@ -237,9 +237,7 @@ def draw_text_auto_fit(draw, text, nat_w, nat_h, box, max_font_px, font_color=No
         text,
         font=font,
         fill=fill_color,
-        anchor='la',
-        stroke_width=stroke_width,
-        stroke_fill=(0, 0, 0)  # Black outline
+        anchor='la'
     )
 
 
