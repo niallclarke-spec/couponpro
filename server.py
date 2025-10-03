@@ -26,6 +26,14 @@ except Exception as e:
     print(f"[INFO] Object storage not available (running outside Replit): {e}")
     OBJECT_STORAGE_AVAILABLE = False
 
+# Import Telegram bot handler
+try:
+    import telegram_bot
+    TELEGRAM_BOT_AVAILABLE = True
+except Exception as e:
+    print(f"[INFO] Telegram bot not available: {e}")
+    TELEGRAM_BOT_AVAILABLE = False
+
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
@@ -526,6 +534,47 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 response = {'success': False, 'error': str(e)}
                 self.wfile.write(json.dumps(response).encode())
+        
+        elif parsed_path.path == '/api/telegram-webhook':
+            if not TELEGRAM_BOT_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Telegram bot not available'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+                
+                if not bot_token:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Bot token not configured'}).encode())
+                    return
+                
+                # Parse JSON from webhook
+                webhook_data = json.loads(post_data.decode('utf-8'))
+                
+                # Handle the webhook
+                result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
+                
+                # Telegram expects 200 OK even if we couldn't process the command
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                
+            except Exception as e:
+                print(f"[TELEGRAM] Webhook error: {str(e)}")
+                # Still send 200 to Telegram so it doesn't retry
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         else:
             self.send_error(404, "Not Found")
 
@@ -540,4 +589,5 @@ if __name__ == "__main__":
         print(f"  POST /api/upload-template (requires auth)")
         print(f"  POST /api/delete-template (requires auth)")
         print(f"  POST /api/regenerate-index")
+        print(f"  POST /api/telegram-webhook")
         httpd.serve_forever()

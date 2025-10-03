@@ -5,3 +5,4 @@ sift-stack-py
 botocore
 python-telegram-bot
 Pillow
+requests
