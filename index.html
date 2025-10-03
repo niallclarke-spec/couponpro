@@ -204,7 +204,7 @@
       const list = (cands || []).slice();
       if(!list.length){ console.warn('No logo found'); return; }
       const next = list.shift();
-      logoImage.onload = ()=>{ console.log('[logo] loaded', next); render(); };
+      logoImage.onload = ()=>{ console.log('[logo] loaded', next); renderVariant('square'); renderVariant('story'); };
       logoImage.onerror = ()=>{ console.warn('[logo] failed', next); loadLogo(list); };
       logoImage.src = next;
     }
