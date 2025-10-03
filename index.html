@@ -548,17 +548,24 @@
       try{
         let discovered = [];
 
-        // 1) Try local /assets/templates/index.json FIRST (uploaded via admin CMS)
+        // 1) Try Digital Ocean Spaces CDN FIRST (persists across deployments)
         try{
-          const r = await fetch('/assets/templates/index.json?ts='+Date.now(), { cache:'no-store' });
+          const spacesURL = 'https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/index.json?ts='+Date.now();
+          const r = await fetch(spacesURL, { cache:'no-store' });
           if (r.ok){
             const idx = await r.json();
             const list = Array.isArray(idx) ? idx : (idx.templates || []);
             if (list.length){
               discovered = await Promise.all(list.map(async (item)=>{
                 const slug = item.slug || (item.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-                // try meta
-                let meta=null; try{ meta = await (await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`, { cache:'no-store' })).json(); }catch(_){ }
+                // try meta from Spaces CDN first, fallback to local
+                let meta=null; 
+                try{ 
+                  const spacesMetaURL = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/meta.json?ts=${Date.now()}`;
+                  meta = await (await fetch(spacesMetaURL, { cache:'no-store' })).json(); 
+                }catch(_){ 
+                  try{ meta = await (await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`, { cache:'no-store' })).json(); }catch(__){ }
+                }
                 const name = meta?.name || item.name || slug;
                 const squareSrc = (item.square && (item.square.image||item.square)) || `/assets/templates/${slug}/square.png`;
                 const storySrc  = (item.story  && (item.story.image ||item.story )) || `/assets/templates/${slug}/story.png`;

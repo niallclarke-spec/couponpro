@@ -337,6 +337,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if result.returncode != 0:
                     raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
                 
+                # CRITICAL: Upload index.json to Spaces so it persists across deployments
+                if storage_service:
+                    index_path = os.path.join('assets', 'templates', 'index.json')
+                    if os.path.exists(index_path):
+                        with open(index_path, 'r') as f:
+                            index_content = f.read()
+                        storage_service.upload_file(index_content.encode(), 'templates/index.json')
+                        print(f"[UPLOAD] index.json uploaded to Spaces for persistence")
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -404,6 +413,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
                 
                 print(f"[DELETE] Index regenerated successfully")
+                
+                # CRITICAL: Upload index.json to Spaces so deletion persists across deployments
+                if OBJECT_STORAGE_AVAILABLE:
+                    index_path = os.path.join('assets', 'templates', 'index.json')
+                    if os.path.exists(index_path):
+                        with open(index_path, 'r') as f:
+                            index_content = f.read()
+                        storage_service.upload_file(index_content.encode(), 'templates/index.json')
+                        print(f"[DELETE] index.json uploaded to Spaces after deletion")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

@@ -1048,7 +1048,13 @@
             assetsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading templates...</p>';
             
             try {
-                const response = await fetch('/assets/templates/index.json');
+                // Try Spaces CDN first, fallback to local
+                let response;
+                try {
+                    response = await fetch('https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/index.json?ts=' + Date.now());
+                } catch (_) {
+                    response = await fetch('/assets/templates/index.json?ts=' + Date.now());
+                }
                 const data = await response.json();
                 
                 if (!data.templates || data.templates.length === 0) {
@@ -1085,7 +1091,13 @@
         // Load template data for editing
         async function loadTemplateForEdit(slug) {
             try {
-                const response = await fetch(`/assets/templates/${slug}/meta.json`);
+                // Try Spaces CDN first, fallback to local
+                let response;
+                try {
+                    response = await fetch(`https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/meta.json?ts=${Date.now()}`);
+                } catch (_) {
+                    response = await fetch(`/assets/templates/${slug}/meta.json?ts=${Date.now()}`);
+                }
                 const meta = await response.json();
                 
                 // Switch to upload tab
