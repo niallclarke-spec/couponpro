@@ -553,7 +553,9 @@
                 const storyBox  = meta?.story ?.box || meta?.box || null;
                 const squareMax = meta?.square?.maxFontPx || meta?.maxFontPx || null;
                 const storyMax  = meta?.story ?.maxFontPx || meta?.maxFontPx || null;
-                return { name, variants:{ square:{ src:squareSrc, box:squareBox, maxFontPx:squareMax }, story:{ src:storySrc, box:storyBox, maxFontPx:storyMax } } };
+                const squareColor = meta?.square?.fontColor || meta?.fontColor || null;
+                const storyColor  = meta?.story ?.fontColor || meta?.fontColor || null;
+                return { name, variants:{ square:{ src:squareSrc, box:squareBox, maxFontPx:squareMax, fontColor:squareColor }, story:{ src:storySrc, box:storyBox, maxFontPx:storyMax, fontColor:storyColor } } };
               }));
               discovered = discovered.filter(Boolean);
             }
