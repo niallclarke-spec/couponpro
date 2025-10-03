@@ -32,6 +32,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def check_auth(self):
         cookie_header = self.headers.get('Cookie')
         if not cookie_header:
+            print(f"[AUTH] No cookie header found")
             return False
         
         c = cookies.SimpleCookie()
@@ -39,8 +40,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         if 'admin_session' in c:
             token = c['admin_session'].value
-            return token in SESSION_TOKENS
+            is_valid = token in SESSION_TOKENS
+            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {len(SESSION_TOKENS)}")
+            return is_valid
         
+        print(f"[AUTH] No admin_session cookie found in: {cookie_header}")
         return False
     
     def do_GET(self):
@@ -117,7 +121,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Set-Cookie', f'admin_session=; Path=/; HttpOnly; Max-Age=0{secure_flag}')
+            self.send_header('Set-Cookie', f'admin_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True}).encode())
         
