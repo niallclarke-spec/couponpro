@@ -527,8 +527,25 @@
       if(act==='download') download(v); else if(act==='share') share(v);
     });
 
-    els.dlSquare.addEventListener('click', ()=>download('square'));
-    els.dlStory.addEventListener('click',  ()=>download('story'));
+    console.log('[DEBUG] dlSquare:', els.dlSquare, 'dlStory:', els.dlStory);
+    if (els.dlSquare) {
+      console.log('[DEBUG] Attaching click listener to dlSquare');
+      els.dlSquare.addEventListener('click', ()=>{
+        console.log('[DEBUG] dlSquare clicked!');
+        download('square');
+      });
+    } else {
+      console.error('[ERROR] dlSquare button not found!');
+    }
+    if (els.dlStory) {
+      console.log('[DEBUG] Attaching click listener to dlStory');
+      els.dlStory.addEventListener('click',  ()=>{
+        console.log('[DEBUG] dlStory clicked!');
+        download('story');
+      });
+    } else {
+      console.error('[ERROR] dlStory button not found!');
+    }
 
     els.template.addEventListener('change', ()=>{
       const idx=parseInt(els.template.value,10); if(!Number.isNaN(idx)) current=idx;
