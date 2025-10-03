@@ -8,32 +8,11 @@
       "story": "assets/templates/15-off-2/story.png"
     },
     {
-      "slug": "15-off-all-challenges",
-      "name": "15% OFF All Challenges",
-      "meta": "assets/templates/15-off-all-challenges/meta.json",
-      "square": "assets/templates/15-off-all-challenges/square.png",
-      "story": "assets/templates/15-off-all-challenges/story.png"
-    },
-    {
       "slug": "flash-sale",
       "name": "Flash Sale",
       "meta": "assets/templates/flash-sale/meta.json",
       "square": "assets/templates/flash-sale/square.png",
       "story": "assets/templates/flash-sale/story.png"
-    },
-    {
-      "slug": "haisa",
-      "name": "Haisa",
-      "meta": "assets/templates/haisa/meta.json",
-      "square": "assets/templates/haisa/square.png",
-      "story": "assets/templates/haisa/story.png"
-    },
-    {
-      "slug": "test100",
-      "name": "TEST100",
-      "meta": "assets/templates/test100/meta.json",
-      "square": "assets/templates/test100/square.png",
-      "story": "assets/templates/test100/story.png"
     },
     {
       "slug": "uuuuews",
