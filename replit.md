@@ -4,6 +4,13 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Delete Debugging & Logging Enhancement
+  - Added comprehensive logging to delete endpoint for troubleshooting
+  - Enhanced error messages: "Unauthorized - please login again" for failed auth
+  - Logs now track: delete requests, authentication status, template removal, index regeneration
+  - Confirmed cache-control headers already properly configured (no-cache, no-store)
+  - Index regeneration happens synchronously before delete response
+
 - **2025-10-03**: Critical Position & Performance Fixes
   - Fixed admin interface not loading saved coordinates when editing templates
   - Admin now correctly reads from nested `meta.square.box.*` structure in meta.json
