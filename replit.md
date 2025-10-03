@@ -4,6 +4,15 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Bulk Template Delete Feature
+  - Added checkboxes to each template in Current Assets list
+  - Added "Select All" checkbox to select/deselect all templates at once
+  - Added "Delete Selected" button for bulk deletion
+  - Bulk delete shows confirmation with list of templates to be deleted
+  - Shows summary of successful/failed deletions after bulk operation
+  - Fixed "Unauthorized" error by adding credentials to delete API requests
+  - Indeterminate checkbox state when some (not all) templates selected
+
 - **2025-10-02**: High-Quality Canvas Rendering
   - Increased canvas resolution using devicePixelRatio for crisp, sharp images
   - Applied high-DPI rendering to both frontend previews and admin panel
