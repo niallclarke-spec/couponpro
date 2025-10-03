@@ -1,0 +1,25 @@
+{
+  "name": "15% OFF All Challenges",
+  "square": {
+    "box": {
+      "leftPct": 33.0,
+      "topPct": 73.0,
+      "widthPct": 34.5,
+      "heightPct": 12.0,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 112
+  },
+  "story": {
+    "box": {
+      "leftPct": 30.8,
+      "topPct": 63.0,
+      "widthPct": 37.5,
+      "heightPct": 12.0,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 112
+  }
+}

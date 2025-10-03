@@ -600,7 +600,8 @@
                         <div class="controls-column">
                             <div class="form-group">
                                 <label for="squareImage">Square PNG files only</label>
-                                <input type="file" id="squareImage" accept="image/png" required>
+                                <input type="file" id="squareImage" accept="image/png">
+                                <div class="hint">Leave empty to keep existing image</div>
                             </div>
 
                             <div class="row">
@@ -656,7 +657,8 @@
                         <div class="controls-column">
                             <div class="form-group">
                                 <label for="storyImage">Story PNG files only</label>
-                                <input type="file" id="storyImage" accept="image/png" required>
+                                <input type="file" id="storyImage" accept="image/png">
+                                <div class="hint">Leave empty to keep existing image</div>
                             </div>
 
                             <div class="row">
@@ -777,8 +779,16 @@
             const formData = new FormData();
             formData.append('name', document.getElementById('name').value);
             formData.append('slug', document.getElementById('slug').value);
-            formData.append('squareImage', document.getElementById('squareImage').files[0]);
-            formData.append('storyImage', document.getElementById('storyImage').files[0]);
+            
+            // Only append images if they were selected (optional for updates)
+            const squareFile = document.getElementById('squareImage').files[0];
+            const storyFile = document.getElementById('storyImage').files[0];
+            if (squareFile) {
+                formData.append('squareImage', squareFile);
+            }
+            if (storyFile) {
+                formData.append('storyImage', storyFile);
+            }
             
             formData.append('squareLeftPct', document.getElementById('squareLeftPct').value);
             formData.append('squareTopPct', document.getElementById('squareTopPct').value);

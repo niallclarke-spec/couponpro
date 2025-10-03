@@ -153,8 +153,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if '..' in slug or '/' in slug or '\\' in slug:
                     raise ValueError('Invalid slug: path traversal detected')
                 
-                square_image = form['squareImage']
-                story_image = form['storyImage']
+                # Check if images are provided (optional for updates)
+                has_square_image = 'squareImage' in form and form['squareImage'].filename
+                has_story_image = 'storyImage' in form and form['storyImage'].filename
                 
                 square_coords = {
                     'leftPct': float(form.getvalue('squareLeftPct')),
@@ -180,13 +181,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 template_dir = os.path.join('assets', 'templates', slug)
                 os.makedirs(template_dir, exist_ok=True)
                 
-                square_path = os.path.join(template_dir, 'square.png')
-                with open(square_path, 'wb') as f:
-                    f.write(square_image.file.read())
+                # Only save images if they were provided
+                if has_square_image:
+                    square_image = form['squareImage']
+                    square_path = os.path.join(template_dir, 'square.png')
+                    with open(square_path, 'wb') as f:
+                        f.write(square_image.file.read())
                 
-                story_path = os.path.join(template_dir, 'story.png')
-                with open(story_path, 'wb') as f:
-                    f.write(story_image.file.read())
+                if has_story_image:
+                    story_image = form['storyImage']
+                    story_path = os.path.join(template_dir, 'story.png')
+                    with open(story_path, 'wb') as f:
+                        f.write(story_image.file.read())
                 
                 meta = {
                     'name': name,

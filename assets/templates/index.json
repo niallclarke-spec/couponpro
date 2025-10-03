@@ -1,6 +1,13 @@
 {
   "templates": [
     {
+      "slug": "15-off-all-challenges",
+      "name": "15% OFF All Challenges",
+      "meta": "assets/templates/15-off-all-challenges/meta.json",
+      "square": "assets/templates/15-off-all-challenges/square.png",
+      "story": "assets/templates/15-off-all-challenges/story.png"
+    },
+    {
       "slug": "flash-sale",
       "name": "Flash Sale",
       "meta": "assets/templates/flash-sale/meta.json",
