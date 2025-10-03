@@ -255,11 +255,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/delete-template':
+            print(f"[DELETE] Delete request received")
             if not self.check_auth():
+                print(f"[DELETE] Authentication failed - returning 401")
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized - please login again'}).encode())
                 return
             
             try:
@@ -267,6 +269,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 post_data = self.rfile.read(content_length)
                 data = json.loads(post_data.decode('utf-8'))
                 slug = data.get('slug', '')
+                
+                print(f"[DELETE] Authenticated - attempting to delete template: {slug}")
                 
                 import re
                 if not slug or not re.match(r'^[a-z0-9-]+$', slug):
@@ -282,6 +286,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 import shutil
                 shutil.rmtree(template_dir)
+                print(f"[DELETE] Template directory removed: {template_dir}")
                 
                 result = subprocess.run(
                     ['python3', 'regenerate_index.py'],
@@ -293,6 +298,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if result.returncode != 0:
                     raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
                 
+                print(f"[DELETE] Index regenerated successfully")
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -301,7 +308,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'message': f'Template "{slug}" deleted successfully'
                 }).encode())
                 
+                print(f"[DELETE] Success response sent for: {slug}")
+                
             except Exception as e:
+                print(f"[DELETE] Error during deletion: {str(e)}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
