@@ -659,9 +659,7 @@
                                 <div class="form-group" style="display: none;">
                                     <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="squareWidthPct">Width</label>
-                                    <input type="range" id="squareWidthPctSlider" min="10" max="100" step="0.5" value="25" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="squareWidthPct" value="25" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
@@ -726,9 +724,7 @@
                                 <div class="form-group" style="display: none;">
                                     <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="storyWidthPct">Width</label>
-                                    <input type="range" id="storyWidthPctSlider" min="10" max="100" step="0.5" value="25" class="slider">
+                                <div class="form-group" style="display: none;">
                                     <input type="number" id="storyWidthPct" value="25" min="0" max="100" step="0.1" required>
                                 </div>
                             </div>
@@ -1350,15 +1346,8 @@
             });
         }
 
-        // Setup all slider-input pairs
-        setupSliderSync('squareLeftPctSlider', 'squareLeftPct');
-        setupSliderSync('squareTopPctSlider', 'squareTopPct');
-        setupSliderSync('squareWidthPctSlider', 'squareWidthPct');
+        // Setup all slider-input pairs (only for Font Size sliders)
         setupSliderSync('squareMaxFontPxSlider', 'squareMaxFontPx');
-        
-        setupSliderSync('storyLeftPctSlider', 'storyLeftPct');
-        setupSliderSync('storyTopPctSlider', 'storyTopPct');
-        setupSliderSync('storyWidthPctSlider', 'storyWidthPct');
         setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
 
         // ==================== DRAG-TO-DRAW LOGIC ====================
@@ -1474,10 +1463,6 @@
                 document.getElementById(prefix + 'TopPct').value = percentages.topPct.toFixed(1);
                 document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
                 document.getElementById(prefix + 'HeightPct').value = percentages.heightPct.toFixed(1);
-
-                document.getElementById(prefix + 'LeftPctSlider').value = percentages.leftPct.toFixed(1);
-                document.getElementById(prefix + 'TopPctSlider').value = percentages.topPct.toFixed(1);
-                document.getElementById(prefix + 'WidthPctSlider').value = percentages.widthPct.toFixed(1);
 
                 updatePreviews();
             });
