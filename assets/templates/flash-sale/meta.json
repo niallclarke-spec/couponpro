@@ -1,11 +1,25 @@
 {
+  "name": "Flash Sale",
   "square": {
-    "box": { "leftPct": 56.5, "topPct": 62.7, "widthPct": 30, "heightPct": 5, "hAlign": "center", "vAlign": "bottom" },
+    "box": {
+      "leftPct": 59.4,
+      "topPct": 56.5,
+      "widthPct": 24.0,
+      "heightPct": 12.0,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
     "maxFontPx": 94
   },
   "story": {
-    "box": { "leftPct": 56.5, "topPct": 62.7, "widthPct": 30, "heightPct": 5, "hAlign": "center", "vAlign": "bottom" },
+    "box": {
+      "leftPct": 58.5,
+      "topPct": 51.4,
+      "widthPct": 27.0,
+      "heightPct": 12.0,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
     "maxFontPx": 94
-  },
-  "name": "Flash Sale"
+  }
 }

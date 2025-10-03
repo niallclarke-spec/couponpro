@@ -153,9 +153,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if '..' in slug or '/' in slug or '\\' in slug:
                     raise ValueError('Invalid slug: path traversal detected')
                 
-                # Check if images are provided (optional for updates)
+                # Check if template already exists (editing vs creating)
+                template_dir = os.path.join('assets', 'templates', slug)
+                is_existing_template = os.path.exists(template_dir)
+                
+                # Check if images are provided (optional for updates, required for new templates)
                 has_square_image = 'squareImage' in form and form['squareImage'].filename
                 has_story_image = 'storyImage' in form and form['storyImage'].filename
+                
+                # For new templates, both images are required
+                if not is_existing_template:
+                    if not has_square_image or not has_story_image:
+                        raise ValueError('Both square and story images are required for new templates')
                 
                 square_coords = {
                     'leftPct': float(form.getvalue('squareLeftPct')),
@@ -178,7 +187,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 square_max_font = int(float(form.getvalue('squareMaxFontPx')))
                 story_max_font = int(float(form.getvalue('storyMaxFontPx')))
                 
-                template_dir = os.path.join('assets', 'templates', slug)
+                # Create directory if it doesn't exist
                 os.makedirs(template_dir, exist_ok=True)
                 
                 # Only save images if they were provided

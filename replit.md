@@ -4,6 +4,13 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
+- **2025-10-03**: Template Edit Without Re-upload
+  - Made image uploads optional when editing existing templates
+  - Users can now update coupon placement without re-uploading images
+  - Added helpful hint text: "Leave empty to keep existing image"
+  - Server now only updates images if new files are provided
+  - Enables quick adjustments to placement settings on existing templates
+
 - **2025-10-03**: Session Cookie Fix for HTTPS
   - Added Secure flag to session cookies for HTTPS environments (Digital Ocean)
   - Fixed login persistence issues where users were logged out on page refresh
