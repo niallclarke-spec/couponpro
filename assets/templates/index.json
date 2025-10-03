@@ -22,6 +22,13 @@
       "story": "assets/templates/test300/story.png"
     },
     {
+      "slug": "test400",
+      "name": "TEST400",
+      "meta": "assets/templates/test400/meta.json",
+      "square": "assets/templates/test400/square.png",
+      "story": "assets/templates/test400/story.png"
+    },
+    {
       "slug": "uuuuews",
       "name": "uuuuews",
       "meta": "assets/templates/uuuuews/meta.json",
