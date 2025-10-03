@@ -1,6 +1,13 @@
 {
   "templates": [
     {
+      "slug": "15-off-2",
+      "name": "15% OFF 2",
+      "meta": "assets/templates/15-off-2/meta.json",
+      "square": "assets/templates/15-off-2/square.png",
+      "story": "assets/templates/15-off-2/story.png"
+    },
+    {
       "slug": "15-off-all-challenges",
       "name": "15% OFF All Challenges",
       "meta": "assets/templates/15-off-all-challenges/meta.json",

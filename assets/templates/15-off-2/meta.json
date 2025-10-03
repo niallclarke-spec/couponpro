@@ -1,0 +1,27 @@
+{
+  "name": "15% OFF 2",
+  "square": {
+    "box": {
+      "leftPct": 28.4,
+      "topPct": 76.7,
+      "widthPct": 43.0,
+      "heightPct": 10.1,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 81,
+    "fontColor": "#FFFFFF"
+  },
+  "story": {
+    "box": {
+      "leftPct": 22.3,
+      "topPct": 70.8,
+      "widthPct": 52.7,
+      "heightPct": 6.8,
+      "hAlign": "center",
+      "vAlign": "bottom"
+    },
+    "maxFontPx": 90,
+    "fontColor": "#FFFFFF"
+  }
+}

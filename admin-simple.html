@@ -592,6 +592,76 @@
             text-align: center;
             margin-top: 4px;
         }
+
+        .nudge-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .nudge-controls-label {
+            font-size: 12px;
+            color: #8a8f98;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .nudge-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 36px);
+            grid-template-rows: repeat(3, 36px);
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .nudge-btn {
+            background: #191b22;
+            color: #1d98ff;
+            border: 1px solid #262b35;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+        }
+
+        .nudge-btn:hover {
+            background: #1d98ff;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(29, 152, 255, 0.3);
+        }
+
+        .nudge-btn:active {
+            transform: scale(0.95);
+        }
+
+        .nudge-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .nudge-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .nudge-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .nudge-down {
+            grid-column: 2;
+            grid-row: 3;
+        }
     </style>
 </head>
 <body>
@@ -702,6 +772,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="nudge-controls">
+                                <label class="nudge-controls-label">Fine-Tune Position</label>
+                                <div class="nudge-buttons">
+                                    <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('square', 'up')" title="Nudge Up">↑</button>
+                                    <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('square', 'left')" title="Nudge Left">←</button>
+                                    <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('square', 'right')" title="Nudge Right">→</button>
+                                    <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('square', 'down')" title="Nudge Down">↓</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -765,6 +844,15 @@
                                         <div class="color-swatch white" data-color="#FFFFFF" data-variant="story" onclick="selectColor('#FFFFFF', 'story')"></div>
                                         <div class="color-swatch-label">White</div>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="nudge-controls">
+                                <label class="nudge-controls-label">Fine-Tune Position</label>
+                                <div class="nudge-buttons">
+                                    <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('story', 'up')" title="Nudge Up">↑</button>
+                                    <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('story', 'left')" title="Nudge Left">←</button>
+                                    <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('story', 'right')" title="Nudge Right">→</button>
+                                    <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('story', 'down')" title="Nudge Down">↓</button>
                                 </div>
                             </div>
                         </div>
@@ -1217,7 +1305,7 @@
             ctx.fillText(text, x, y);
         }
 
-        function renderPreview(variant) {
+        function renderPreview(variant, showBoundingBox = false) {
             const canvas = variant === 'square' ? previewSquareCanvas : previewStoryCanvas;
             const ctx = variant === 'square' ? ctxSquare : ctxStory;
             const img = previewImages[variant];
@@ -1252,20 +1340,22 @@
             };
             const maxFontPx = parseInt(document.getElementById(prefix + 'MaxFontPx').value) || 80;
 
-            // Draw bounding box overlay to show the coupon placement area
-            const boxLeft = Math.round(natW * (box.leftPct / 100));
-            const boxTop = Math.round(natH * (box.topPct / 100));
-            const boxWidth = Math.round(natW * (box.widthPct / 100));
-            const boxHeight = Math.round(natH * (box.heightPct / 100));
-            
-            // Semi-transparent box fill
-            og.fillStyle = 'rgba(29, 152, 255, 0.15)';
-            og.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
-            
-            // Box border
-            og.strokeStyle = 'rgba(29, 152, 255, 0.6)';
-            og.lineWidth = Math.max(2, Math.round(Math.min(natW, natH) * 0.003));
-            og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
+            // Draw bounding box overlay ONLY if actively drawing
+            if (showBoundingBox) {
+                const boxLeft = Math.round(natW * (box.leftPct / 100));
+                const boxTop = Math.round(natH * (box.topPct / 100));
+                const boxWidth = Math.round(natW * (box.widthPct / 100));
+                const boxHeight = Math.round(natH * (box.heightPct / 100));
+                
+                // Semi-transparent box fill
+                og.fillStyle = 'rgba(29, 152, 255, 0.15)';
+                og.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
+                
+                // Box border
+                og.strokeStyle = 'rgba(29, 152, 255, 0.6)';
+                og.lineWidth = Math.max(2, Math.round(Math.min(natW, natH) * 0.003));
+                og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
+            }
 
             // Draw preview text with selected color
             const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
@@ -1401,7 +1491,7 @@
 
                 const ctx = variant === 'square' ? ctxSquare : ctxStory;
                 
-                renderPreview(variant);
+                renderPreview(variant, true);
 
                 const rect = canvas.getBoundingClientRect();
                 const x1 = Math.min(state.startX, state.currentX);
@@ -1429,6 +1519,7 @@
                 state.startY = coords.y;
                 state.currentX = coords.x;
                 state.currentY = coords.y;
+                renderPreview(variant, true);
             });
 
             canvas.addEventListener('mousemove', (e) => {
@@ -1477,6 +1568,38 @@
 
         setupDragToDraw('previewSquare', 'square');
         setupDragToDraw('previewStory', 'story');
+
+        // Nudge position controls
+        function nudgePosition(variant, direction) {
+            const prefix = variant === 'square' ? 'square' : 'story';
+            const leftInput = document.getElementById(prefix + 'LeftPct');
+            const topInput = document.getElementById(prefix + 'TopPct');
+            
+            const step = 0.5;
+            let currentLeft = parseFloat(leftInput.value) || 5;
+            let currentTop = parseFloat(topInput.value) || 78;
+            
+            switch(direction) {
+                case 'up':
+                    currentTop = Math.max(0, currentTop - step);
+                    topInput.value = currentTop.toFixed(1);
+                    break;
+                case 'down':
+                    currentTop = Math.min(100, currentTop + step);
+                    topInput.value = currentTop.toFixed(1);
+                    break;
+                case 'left':
+                    currentLeft = Math.max(0, currentLeft - step);
+                    leftInput.value = currentLeft.toFixed(1);
+                    break;
+                case 'right':
+                    currentLeft = Math.min(100, currentLeft + step);
+                    leftInput.value = currentLeft.toFixed(1);
+                    break;
+            }
+            
+            updatePreviews();
+        }
 
         // Initial render
         updatePreviews();
