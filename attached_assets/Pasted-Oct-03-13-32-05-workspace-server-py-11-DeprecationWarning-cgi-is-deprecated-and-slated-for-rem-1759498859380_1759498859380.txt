@@ -1,0 +1,47 @@
+Oct 03 13:32:05  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Oct 03 13:32:05    import cgi
+Oct 03 13:32:06  Server running at http://0.0.0.0:8080/
+Oct 03 13:32:06  Serving files from /workspace
+Oct 03 13:32:06  API endpoints:
+Oct 03 13:32:06    POST /api/login
+Oct 03 13:32:06    POST /api/logout
+Oct 03 13:32:06    POST /api/upload-template (requires auth)
+Oct 03 13:32:06    POST /api/delete-template (requires auth)
+Oct 03 13:32:06    POST /api/regenerate-index
+Oct 03 13:34:54  10.244.7.226 - - [03/Oct/2025 13:34:54] "GET / HTTP/1.1" 200 -
+Oct 03 13:34:54  10.244.5.15 - - [03/Oct/2025 13:34:54] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:34:54  10.244.4.206 - - [03/Oct/2025 13:34:54] code 404, message File not found
+Oct 03 13:34:54  10.244.4.206 - - [03/Oct/2025 13:34:54] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 13:34:54  10.244.7.226 - - [03/Oct/2025 13:34:54] "GET /assets/templates/index.json?ts=1759498494840 HTTP/1.1" 200 -
+Oct 03 13:34:55  10.244.7.226 - - [03/Oct/2025 13:34:55] "GET /assets/templates/15-off-2/square.png?t=1759498495116 HTTP/1.1" 200 -
+Oct 03 13:34:55  10.244.4.206 - - [03/Oct/2025 13:34:55] "GET /assets/templates/15-off-2/story.png?t=1759498495116 HTTP/1.1" 200 -
+Oct 03 13:34:57  10.244.6.88 - - [03/Oct/2025 13:34:57] "GET /assets/templates/flash-sale/square.png?t=1759498497052 HTTP/1.1" 200 -
+Oct 03 13:35:01  10.244.6.88 - - [03/Oct/2025 13:35:01] "GET /admin HTTP/1.1" 200 -
+Oct 03 13:35:01  10.244.5.15 - - [03/Oct/2025 13:35:01] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:35:09  10.244.6.88 - - [03/Oct/2025 13:35:09] "POST /api/login HTTP/1.1" 200 -
+Oct 03 13:31:47  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Oct 03 13:31:47    import cgi
+Oct 03 13:31:47  Server running at http://0.0.0.0:8080/
+Oct 03 13:31:47  Serving files from /workspace
+Oct 03 13:31:47  API endpoints:
+Oct 03 13:31:47    POST /api/login
+Oct 03 13:31:47    POST /api/logout
+Oct 03 13:31:47    POST /api/upload-template (requires auth)
+Oct 03 13:31:47    POST /api/delete-template (requires auth)
+Oct 03 13:31:47    POST /api/regenerate-index
+Oct 03 13:34:54  10.244.6.88 - - [03/Oct/2025 13:34:54] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 13:34:55  10.244.4.206 - - [03/Oct/2025 13:34:55] "GET /assets/templates/flash-sale/meta.json?ts=1759498494924 HTTP/1.1" 200 -
+Oct 03 13:34:55  10.244.5.15 - - [03/Oct/2025 13:34:55] "GET /assets/templates/15-off-2/meta.json?ts=1759498494923 HTTP/1.1" 200 -
+Oct 03 13:34:57  10.244.6.88 - - [03/Oct/2025 13:34:57] "GET /assets/templates/flash-sale/story.png?t=1759498497052 HTTP/1.1" 200 -
+Oct 03 13:35:55  [AUTH] Session token found, valid: False, active sessions: 0
+Oct 03 13:35:55  10.244.5.15 - - [03/Oct/2025 13:35:55] "POST /api/upload-template HTTP/1.1" 401 -
+Oct 03 13:40:26  10.244.7.226 - - [03/Oct/2025 13:40:26] "GET / HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.5.15 - - [03/Oct/2025 13:40:26] "GET /assets/fp-site-logo.png HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.4.206 - - [03/Oct/2025 13:40:26] code 404, message File not found
+Oct 03 13:40:26  10.244.4.206 - - [03/Oct/2025 13:40:26] "GET /fp-affiliate-logo.svg HTTP/1.1" 404 -
+Oct 03 13:40:26  10.244.7.226 - - [03/Oct/2025 13:40:26] "GET /assets/templates/index.json?ts=1759498826222 HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.6.88 - - [03/Oct/2025 13:40:26] "GET /assets/fp-affiliate-logo.svg HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.6.88 - - [03/Oct/2025 13:40:26] "GET /assets/templates/15-off-2/meta.json?ts=1759498826543 HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.6.88 - - [03/Oct/2025 13:40:26] "GET /assets/templates/flash-sale/meta.json?ts=1759498826544 HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.4.206 - - [03/Oct/2025 13:40:26] "GET /assets/templates/15-off-2/story.png?t=1759498826659 HTTP/1.1" 200 -
+Oct 03 13:40:26  10.244.7.226 - - [03/Oct/2025 13:40:26] "GET /assets/templates/15-off-2/square.png?t=1759498826659 HTTP/1.1" 200 -

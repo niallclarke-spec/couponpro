@@ -11,76 +11,64 @@ import mimetypes
 import cgi
 from http import cookies
 import time
-import fcntl
+import hmac
+import hashlib
 
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
-SESSIONS_FILE = 'sessions.json'
 SESSION_TTL = 86400  # 24 hours in seconds
 
-def _atomic_session_operation(operation, token=None):
-    """Atomic read-modify-write for session operations with exclusive lock"""
+def create_signed_session():
+    """Create a cryptographically signed session token that doesn't need server storage"""
+    expiry = int(time.time()) + SESSION_TTL
+    secret = os.environ.get('ADMIN_PASSWORD', 'fallback-secret')
+    
+    # Create payload: expiry timestamp
+    payload = str(expiry)
+    
+    # Create HMAC signature
+    signature = hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Combine payload and signature
+    token = f"{payload}.{signature}"
+    return token
+
+def verify_signed_session(token):
+    """Verify a signed session token without server-side storage"""
     try:
-        # Create file if it doesn't exist
-        if not os.path.exists(SESSIONS_FILE):
-            with open(SESSIONS_FILE, 'w') as f:
-                json.dump({}, f)
+        if not token or '.' not in token:
+            return False
         
-        # Atomic read-modify-write with exclusive lock
-        with open(SESSIONS_FILE, 'r+') as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-            try:
-                f.seek(0)
-                sessions = json.load(f)
-            except:
-                sessions = {}
-            
-            # Remove expired sessions
-            now = time.time()
-            sessions = {t: exp for t, exp in sessions.items() if exp > now}
-            
-            # Perform requested operation
-            result = False
-            if operation == 'add' and token:
-                sessions[token] = now + SESSION_TTL
-                result = True
-            elif operation == 'remove' and token:
-                if token in sessions:
-                    del sessions[token]
-                    result = True
-            elif operation == 'check' and token:
-                result = token in sessions and sessions[token] > now
-            
-            # Write back atomically
-            f.seek(0)
-            f.truncate()
-            json.dump(sessions, f)
-            f.flush()
-            os.fsync(f.fileno())
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-            
-            return (result, len(sessions))
+        payload, signature = token.rsplit('.', 1)
+        expiry = int(payload)
+        
+        # Check if expired
+        if time.time() > expiry:
+            print(f"[AUTH] Token expired: {expiry} < {time.time()}")
+            return False
+        
+        # Verify signature
+        secret = os.environ.get('ADMIN_PASSWORD', 'fallback-secret')
+        expected_signature = hmac.new(
+            secret.encode('utf-8'),
+            payload.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Constant-time comparison to prevent timing attacks
+        is_valid = hmac.compare_digest(signature, expected_signature)
+        
+        if not is_valid:
+            print(f"[AUTH] Invalid signature")
+        
+        return is_valid
     except Exception as e:
-        print(f"[SESSION] Error in atomic operation '{operation}': {e}")
-        return (False, 0)
-
-def add_session(token):
-    """Add a new session token atomically"""
-    _atomic_session_operation('add', token)
-
-def remove_session(token):
-    """Remove a session token atomically"""
-    _atomic_session_operation('remove', token)
-
-def is_valid_session(token):
-    """Check if a session token is valid atomically"""
-    result, _ = _atomic_session_operation('check', token)
-    return result
-
-def get_session_count():
-    """Get current session count"""
-    _, count = _atomic_session_operation('check', None)
-    return count
+        print(f"[AUTH] Token verification error: {e}")
+        return False
 
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
@@ -107,9 +95,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         if 'admin_session' in c:
             token = c['admin_session'].value
-            is_valid = is_valid_session(token)
-            count = get_session_count()
-            print(f"[AUTH] Session token found, valid: {is_valid}, active sessions: {count}")
+            is_valid = verify_signed_session(token)
+            print(f"[AUTH] Session token found, valid: {is_valid}")
             return is_valid
         
         print(f"[AUTH] No admin_session cookie found in: {cookie_header}")
@@ -151,8 +138,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 admin_password = os.environ.get('ADMIN_PASSWORD', '')
                 
                 if password == admin_password and admin_password:
-                    session_token = secrets.token_urlsafe(32)
-                    add_session(session_token)
+                    session_token = create_signed_session()
                     
                     # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
                     is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
@@ -175,13 +161,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/logout':
-            cookie_header = self.headers.get('Cookie')
-            if cookie_header:
-                c = cookies.SimpleCookie()
-                c.load(cookie_header)
-                if 'admin_session' in c:
-                    token = c['admin_session'].value
-                    remove_session(token)
+            # No server-side cleanup needed with signed cookies
+            # Just clear the cookie on the client side
             
             # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
             is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')

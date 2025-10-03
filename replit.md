@@ -4,14 +4,14 @@
 A static web application that generates promotional images for coupon codes. Users can input their coupon code, select from various templates, and download square or story-sized PNG images with their code automatically placed on the template.
 
 ## Recent Changes
-- **2025-10-03**: Persistent Session Storage Fix
-  - Fixed critical session loss issue causing logout on page refresh
-  - Replaced in-memory SESSION_TOKENS with file-based persistent storage (sessions.json)
-  - Implemented atomic read-modify-write with exclusive file locking to prevent race conditions
-  - Added automatic session expiry cleanup (24 hour TTL)
-  - Sessions now persist across server restarts and redeployments
-  - Fixed delete buttons not working due to authentication loss
-  - Thread-safe implementation handles concurrent login/logout operations correctly
+- **2025-10-03**: Digital Ocean Session Fix - Signed Cookie Authentication
+  - Switched from file-based sessions to HMAC-signed cookie authentication
+  - Fixes 401 Unauthorized errors on Digital Ocean's ephemeral filesystem
+  - Sessions now work across server restarts without persistent storage
+  - Uses ADMIN_PASSWORD as cryptographic signing secret (HMAC-SHA256)
+  - Constant-time signature verification prevents timing attacks
+  - No server-side session storage needed - fully stateless authentication
+  - Compatible with multi-instance deployments and ephemeral containers
 
 - **2025-10-03**: Image Rendering Race Condition Fix
   - Fixed critical rendering bug where square/story images would randomly fail to load
