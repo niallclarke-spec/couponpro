@@ -1074,6 +1074,19 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="campaignOverlay">Campaign Overlay Image (Optional)</label>
+                            <input type="file" id="campaignOverlay" accept="image/png,image/jpeg" onchange="handleOverlayPreview(event)">
+                            <small style="color: #8a8f98; display: block; margin-top: 4px;">
+                                PNG or JPEG. Will be overlaid on user-uploaded images during participation.
+                            </small>
+                            <div id="overlayPreview" style="margin-top: 12px; display: none;">
+                                <img id="overlayPreviewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #3a4250;">
+                                <button type="button" onclick="clearOverlay()" style="display: block; margin-top: 8px; padding: 4px 12px; background: #3a4250; color: #e9eef5; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Remove</button>
+                            </div>
+                            <input type="hidden" id="existingOverlayUrl" value="">
+                        </div>
+
                         <div style="display: flex; gap: 12px;">
                             <button type="submit" class="btn" id="campaignSubmitBtn">Create Campaign</button>
                             <button type="button" class="btn" onclick="cancelCampaignEdit()" id="campaignCancelBtn" style="display:none;background:#3a4250;">Cancel</button>
@@ -1627,6 +1640,33 @@
             }
 
             try {
+                // Upload overlay if a new file is selected
+                const overlayFileInput = document.getElementById('campaignOverlay');
+                const existingOverlayUrl = document.getElementById('existingOverlayUrl').value;
+                
+                if (overlayFileInput.files && overlayFileInput.files[0]) {
+                    submitBtn.textContent = 'Uploading overlay...';
+                    
+                    const uploadFormData = new FormData();
+                    uploadFormData.append('overlayImage', overlayFileInput.files[0]);
+                    
+                    const uploadResponse = await fetch('/api/upload-overlay', {
+                        method: 'POST',
+                        body: uploadFormData
+                    });
+                    
+                    const uploadData = await uploadResponse.json();
+                    
+                    if (uploadData.success) {
+                        formData.overlay_url = uploadData.overlay_url;
+                    } else {
+                        throw new Error('Overlay upload failed: ' + (uploadData.error || 'Unknown error'));
+                    }
+                } else if (existingOverlayUrl) {
+                    formData.overlay_url = existingOverlayUrl;
+                }
+
+                submitBtn.textContent = 'Saving campaign...';
                 let response;
                 if (campaignId) {
                     response = await fetch(`/api/campaigns/${campaignId}`, {
@@ -1648,6 +1688,8 @@
                     showAlert('campaignAlert', campaignId ? 'Campaign updated successfully ✓' : 'Campaign created successfully ✓');
                     document.getElementById('campaignForm').reset();
                     document.getElementById('editCampaignId').value = '';
+                    document.getElementById('existingOverlayUrl').value = '';
+                    document.getElementById('overlayPreview').style.display = 'none';
                     document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
                     document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
                     document.getElementById('campaignCancelBtn').style.display = 'none';
@@ -1682,6 +1724,16 @@
                     document.getElementById('platformTwitter').checked = campaign.platforms?.twitter || false;
                     document.getElementById('platformFacebook').checked = campaign.platforms?.facebook || false;
                     
+                    // Show existing overlay if present
+                    if (campaign.overlay_url) {
+                        document.getElementById('existingOverlayUrl').value = campaign.overlay_url;
+                        document.getElementById('overlayPreviewImg').src = campaign.overlay_url;
+                        document.getElementById('overlayPreview').style.display = 'block';
+                    } else {
+                        document.getElementById('existingOverlayUrl').value = '';
+                        document.getElementById('overlayPreview').style.display = 'none';
+                    }
+                    
                     document.getElementById('campaignFormTitle').textContent = 'Edit Campaign';
                     document.getElementById('campaignSubmitBtn').textContent = 'Update Campaign';
                     document.getElementById('campaignCancelBtn').style.display = 'block';
@@ -1700,9 +1752,32 @@
         function cancelCampaignEdit() {
             document.getElementById('campaignForm').reset();
             document.getElementById('editCampaignId').value = '';
+            document.getElementById('existingOverlayUrl').value = '';
+            document.getElementById('overlayPreview').style.display = 'none';
             document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
             document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
             document.getElementById('campaignCancelBtn').style.display = 'none';
+        }
+
+        // Handle overlay preview
+        function handleOverlayPreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('overlayPreviewImg').src = e.target.result;
+                    document.getElementById('overlayPreview').style.display = 'block';
+                    document.getElementById('existingOverlayUrl').value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Clear overlay
+        function clearOverlay() {
+            document.getElementById('campaignOverlay').value = '';
+            document.getElementById('overlayPreview').style.display = 'none';
+            document.getElementById('existingOverlayUrl').value = '';
         }
 
         // Delete campaign

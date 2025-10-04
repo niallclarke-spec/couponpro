@@ -308,6 +308,72 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'success': True}).encode())
         
+        elif parsed_path.path == '/api/upload-overlay':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            if not OBJECT_STORAGE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Object storage not available'}).encode())
+                return
+            
+            try:
+                content_type = self.headers['Content-Type']
+                if not content_type.startswith('multipart/form-data'):
+                    raise ValueError('Expected multipart/form-data')
+                
+                form = cgi.FieldStorage(
+                    fp=self.rfile,
+                    headers=self.headers,
+                    environ={
+                        'REQUEST_METHOD': 'POST',
+                        'CONTENT_TYPE': self.headers['Content-Type'],
+                    }
+                )
+                
+                if 'overlayImage' not in form or not form['overlayImage'].filename:
+                    raise ValueError('No overlay image provided')
+                
+                overlay_file = form['overlayImage']
+                filename = overlay_file.filename
+                
+                # Generate unique filename with timestamp
+                import time
+                timestamp = int(time.time())
+                ext = filename.split('.')[-1] if '.' in filename else 'png'
+                overlay_filename = f"overlay_{timestamp}.{ext}"
+                
+                # Read image data
+                image_data = overlay_file.file.read()
+                
+                # Upload to Spaces
+                storage_service = ObjectStorageService()
+                overlay_url = storage_service.upload_file(
+                    image_data,
+                    f'campaigns/overlays/{overlay_filename}'
+                )
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'overlay_url': overlay_url
+                }).encode())
+                
+            except Exception as e:
+                print(f"[OVERLAY] Upload error: {str(e)}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/upload-template':
             if not self.check_auth():
                 self.send_response(401)
@@ -689,7 +755,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     start_date=data['start_date'],
                     end_date=data['end_date'],
                     prize=data.get('prize', ''),
-                    platforms=json.dumps(data.get('platforms', []))
+                    platforms=json.dumps(data.get('platforms', [])),
+                    overlay_url=data.get('overlay_url')
                 )
                 
                 self.send_response(201)
@@ -770,7 +837,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     start_date=data['start_date'],
                     end_date=data['end_date'],
                     prize=data.get('prize', ''),
-                    platforms=json.dumps(data.get('platforms', []))
+                    platforms=json.dumps(data.get('platforms', [])),
+                    overlay_url=data.get('overlay_url')
                 )
                 
                 self.send_response(200)
