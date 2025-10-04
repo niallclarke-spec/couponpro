@@ -40,7 +40,7 @@
     }
     /* Brand strip above the title */
     .brand{display:flex;align-items:center;gap:10px;margin:0 0 10px}
-    .brand img{height:auto;width:220px;display:block}
+    .brand img{height:auto;width:165px;display:block}
 
     .preview-card h3{margin:0 0 8px}
     .preview-grid{display:grid;gap:14px;grid-template-columns:1fr 1fr}
@@ -90,10 +90,10 @@
     .success-msg{color:#4ade80;text-align:center;padding:12px;margin-top:12px;display:none}
     .success-msg.show{display:block}
 
-    .nav-tabs{display:flex;gap:8px;margin:0 0 24px;border-bottom:1px solid var(--border)}
-    .nav-tab{background:transparent;border:none;color:var(--muted);padding:12px 20px;cursor:pointer;font-size:15px;font-weight:600;border-bottom:2px solid transparent;transition:all .2s}
-    .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.03)}
-    .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .nav-tabs{display:flex;gap:2px;margin:0 0 24px;border-bottom:1px solid var(--border)}
+    .nav-tab{background:transparent;border:none;color:var(--muted);padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:0.2px}
+    .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.02)}
+    .nav-tab.active{color:var(--text);border-bottom-color:var(--accent)}
     .view{display:none}
     .view.active{display:block}
   </style>
@@ -682,14 +682,12 @@
       const active = campaigns.filter(c => c.status === 'ongoing' || c.status === 'scheduled');
       
       const grid = document.getElementById('campaignsGrid');
-      const section = document.getElementById('promotionsSection');
       
       if(!active.length){
-        section.style.display = 'none';
+        grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px">No active campaigns at the moment. Check back soon!</p>';
         return;
       }
       
-      section.style.display = 'block';
       grid.innerHTML = active.map(c => {
         const statusClass = c.status === 'ongoing' ? 'status-ongoing' : 'status-upcoming';
         const statusText = c.status === 'ongoing' ? 'Ongoing' : 'Upcoming';
