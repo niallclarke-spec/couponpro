@@ -75,10 +75,24 @@ class DatabasePool:
                         end_date TIMESTAMP NOT NULL,
                         prize TEXT,
                         platforms JSONB DEFAULT '[]',
+                        overlay_url TEXT,
                         status VARCHAR(50) DEFAULT 'scheduled',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
+                """)
+                
+                # Add overlay_url column if it doesn't exist (migration for existing tables)
+                cursor.execute("""
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name='campaigns' AND column_name='overlay_url'
+                        ) THEN
+                            ALTER TABLE campaigns ADD COLUMN overlay_url TEXT;
+                        END IF;
+                    END $$;
                 """)
                 
                 # Create submissions table
@@ -111,17 +125,17 @@ class DatabasePool:
 db_pool = DatabasePool()
 
 # Campaign CRUD operations
-def create_campaign(title, description, start_date, end_date, prize, platforms):
+def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None):
     """Create a new campaign"""
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO campaigns 
-                (title, description, start_date, end_date, prize, platforms, status)
-                VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s)
+                (title, description, start_date, end_date, prize, platforms, overlay_url, status)
+                VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s)
                 RETURNING id
-            """, (title, description, start_date, end_date, prize, platforms, 'scheduled'))
+            """, (title, description, start_date, end_date, prize, platforms, overlay_url, 'scheduled'))
             campaign_id = cursor.fetchone()[0]
             conn.commit()
             return campaign_id
@@ -135,7 +149,7 @@ def get_all_campaigns():
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, title, description, start_date, end_date, prize, platforms, status, created_at
+                SELECT id, title, description, start_date, end_date, prize, platforms, overlay_url, status, created_at
                 FROM campaigns
                 ORDER BY start_date DESC
             """)
@@ -149,8 +163,9 @@ def get_all_campaigns():
                     'end_date': row[4].isoformat() if row[4] else None,
                     'prize': row[5],
                     'platforms': row[6],
-                    'status': row[7],
-                    'created_at': row[8].isoformat() if row[8] else None
+                    'overlay_url': row[7],
+                    'status': row[8],
+                    'created_at': row[9].isoformat() if row[9] else None
                 })
             return campaigns
     except Exception as e:
@@ -163,7 +178,7 @@ def get_campaign_by_id(campaign_id):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, title, description, start_date, end_date, prize, platforms, status, created_at
+                SELECT id, title, description, start_date, end_date, prize, platforms, overlay_url, status, created_at
                 FROM campaigns
                 WHERE id = %s
             """, (campaign_id,))
@@ -177,15 +192,16 @@ def get_campaign_by_id(campaign_id):
                     'end_date': row[4].isoformat() if row[4] else None,
                     'prize': row[5],
                     'platforms': row[6],
-                    'status': row[7],
-                    'created_at': row[8].isoformat() if row[8] else None
+                    'overlay_url': row[7],
+                    'status': row[8],
+                    'created_at': row[9].isoformat() if row[9] else None
                 }
             return None
     except Exception as e:
         print(f"Error getting campaign: {e}")
         return None
 
-def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms):
+def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None):
     """Update an existing campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -193,9 +209,9 @@ def update_campaign(campaign_id, title, description, start_date, end_date, prize
             cursor.execute("""
                 UPDATE campaigns
                 SET title = %s, description = %s, start_date = %s, end_date = %s,
-                    prize = %s, platforms = %s::jsonb, updated_at = CURRENT_TIMESTAMP
+                    prize = %s, platforms = %s::jsonb, overlay_url = %s, updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-            """, (title, description, start_date, end_date, prize, platforms, campaign_id))
+            """, (title, description, start_date, end_date, prize, platforms, overlay_url, campaign_id))
             conn.commit()
             return True
     except Exception as e:
