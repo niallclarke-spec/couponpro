@@ -37,8 +37,10 @@ except Exception as e:
 # Import database module for campaigns
 try:
     import db
-    DATABASE_AVAILABLE = True
-    db.db_pool.initialize_schema()
+    schema_initialized = db.db_pool.initialize_schema()
+    DATABASE_AVAILABLE = schema_initialized
+    if not DATABASE_AVAILABLE:
+        print(f"[INFO] Database not available - campaigns feature disabled")
 except Exception as e:
     print(f"[INFO] Database not available: {e}")
     DATABASE_AVAILABLE = False
@@ -50,7 +52,9 @@ SESSION_TTL = 86400  # 24 hours in seconds
 def create_signed_session():
     """Create a cryptographically signed session token that doesn't need server storage"""
     expiry = int(time.time()) + SESSION_TTL
-    secret = os.environ.get('ADMIN_PASSWORD', 'fallback-secret')
+    secret = os.environ.get('ADMIN_PASSWORD')
+    if not secret:
+        raise ValueError("ADMIN_PASSWORD environment variable must be set")
     
     # Create payload: expiry timestamp
     payload = str(expiry)
@@ -81,7 +85,11 @@ def verify_signed_session(token):
             return False
         
         # Verify signature
-        secret = os.environ.get('ADMIN_PASSWORD', 'fallback-secret')
+        secret = os.environ.get('ADMIN_PASSWORD')
+        if not secret:
+            print(f"[AUTH] ADMIN_PASSWORD not configured")
+            return False
+        
         expected_signature = hmac.new(
             secret.encode('utf-8'),
             payload.encode('utf-8'),

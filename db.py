@@ -15,15 +15,22 @@ class DatabasePool:
     def _initialize_pool(self):
         """Initialize PostgreSQL connection pool"""
         try:
+            # Check if database credentials are configured
+            db_host = os.environ.get('DB_HOST')
+            if not db_host:
+                print("ℹ️  Database not configured (missing DB_HOST), campaigns feature disabled")
+                self.connection_pool = None
+                return
+            
             self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                 1,
                 20,
-                host=os.environ.get('DB_HOST'),
+                host=db_host,
                 port=os.environ.get('DB_PORT'),
                 database=os.environ.get('DB_NAME'),
                 user=os.environ.get('DB_USER'),
                 password=os.environ.get('DB_PASSWORD'),
-                sslmode='require'
+                sslmode='prefer'
             )
             print("✅ Database connection pool initialized")
         except Exception as e:
@@ -33,11 +40,13 @@ class DatabasePool:
     @contextmanager
     def get_connection(self):
         """Context manager for database connections"""
+        if not self.connection_pool:
+            raise Exception("Database connection pool not initialized")
+        
         conn = None
         try:
-            if self.connection_pool:
-                conn = self.connection_pool.getconn()
-                yield conn
+            conn = self.connection_pool.getconn()
+            yield conn
         except Exception as e:
             print(f"Database connection error: {e}")
             if conn:
@@ -48,7 +57,10 @@ class DatabasePool:
                 self.connection_pool.putconn(conn)
     
     def initialize_schema(self):
-        """Create campaigns and submissions tables if they don't exist"""
+        """Create campaigns and submissions tables if they don't exist. Returns True on success."""
+        if not self.connection_pool:
+            return False
+        
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
@@ -90,8 +102,10 @@ class DatabasePool:
                 
                 conn.commit()
                 print("✅ Database schema initialized")
+                return True
         except Exception as e:
             print(f"❌ Failed to initialize schema: {e}")
+            return False
 
 # Global database pool instance
 db_pool = DatabasePool()
