@@ -34,6 +34,15 @@ except Exception as e:
     print(f"[INFO] Telegram bot not available: {e}")
     TELEGRAM_BOT_AVAILABLE = False
 
+# Import database module for campaigns
+try:
+    import db
+    DATABASE_AVAILABLE = True
+    db.db_pool.initialize_schema()
+except Exception as e:
+    print(f"[INFO] Database not available: {e}")
+    DATABASE_AVAILABLE = False
+
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
@@ -187,6 +196,58 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(404, "Admin page not found")
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
+        
+        elif parsed_path.path == '/api/campaigns':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            try:
+                db.update_campaign_statuses()
+                campaigns = db.get_all_campaigns()
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(campaigns).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error getting campaigns: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path.startswith('/api/campaigns/') and '/submissions' in parsed_path.path:
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                campaign_id = int(parsed_path.path.split('/')[3])
+                submissions = db.get_campaign_submissions(campaign_id)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(submissions).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error getting submissions: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         else:
             super().do_GET()
     
@@ -594,6 +655,161 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/campaigns':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                campaign_id = db.create_campaign(
+                    title=data['title'],
+                    description=data.get('description', ''),
+                    start_date=data['start_date'],
+                    end_date=data['end_date'],
+                    prize=data.get('prize', ''),
+                    platforms=json.dumps(data.get('platforms', []))
+                )
+                
+                self.send_response(201)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'id': campaign_id}).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error creating campaign: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path.startswith('/api/campaigns/') and '/submit' in parsed_path.path:
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            try:
+                campaign_id = int(parsed_path.path.split('/')[3])
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                submission_id = db.create_submission(
+                    campaign_id=campaign_id,
+                    email=data['email'],
+                    instagram_url=data.get('instagram_url', ''),
+                    twitter_url=data.get('twitter_url', ''),
+                    facebook_url=data.get('facebook_url', '')
+                )
+                
+                self.send_response(201)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'id': submission_id}).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error creating submission: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        else:
+            self.send_error(404, "Not Found")
+    
+    def do_PUT(self):
+        parsed_path = urlparse(self.path)
+        
+        if parsed_path.path.startswith('/api/campaigns/'):
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                campaign_id = int(parsed_path.path.split('/')[3])
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                db.update_campaign(
+                    campaign_id=campaign_id,
+                    title=data['title'],
+                    description=data.get('description', ''),
+                    start_date=data['start_date'],
+                    end_date=data['end_date'],
+                    prize=data.get('prize', ''),
+                    platforms=json.dumps(data.get('platforms', []))
+                )
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True}).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error updating campaign: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        else:
+            self.send_error(404, "Not Found")
+    
+    def do_DELETE(self):
+        parsed_path = urlparse(self.path)
+        
+        if parsed_path.path.startswith('/api/campaigns/'):
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                campaign_id = int(parsed_path.path.split('/')[3])
+                db.delete_campaign(campaign_id)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True}).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error deleting campaign: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
         else:
             self.send_error(404, "Not Found")
 
