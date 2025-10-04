@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Campaign Participation | Promo Stack</title>
+  <style>
+    :root { --bg:#0b0c10; --card:#121318; --muted:#8a8f98; --text:#e9eef5; --border:#262b35; --accent:#1d98ff; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+
+    .wrap{max-width:900px;margin:36px auto;padding:0 20px}
+    .brand{display:flex;align-items:center;gap:10px;margin:0 0 24px}
+    .brand img{height:auto;width:165px;display:block}
+    h1{margin:0 0 8px;font-size:28px;font-weight:700}
+    .sub{margin:0 0 24px;color:#9aa3ad;line-height:1.5}
+    
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 10px 28px rgba(0,0,0,.35);margin-bottom:24px}
+    
+    .campaign-header{margin-bottom:24px}
+    .campaign-meta{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0;font-size:13px;color:var(--muted)}
+    .campaign-prize{color:var(--accent);font-weight:600}
+    
+    .section-title{font-size:18px;font-weight:700;margin:0 0 16px}
+    
+    .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s}
+    .upload-zone:hover{border-color:#3a4250;background:rgba(255,255,255,.02)}
+    .upload-zone.has-image{border-style:solid;border-color:var(--accent);background:rgba(29,152,255,.05)}
+    #imageInput{display:none}
+    
+    .preview-container{margin:20px 0}
+    .preview-frame{position:relative;background:#0a0b10;border:1px solid var(--border);border-radius:14px;overflow:hidden;max-width:600px;margin:0 auto}
+    .preview-frame.square{aspect-ratio:1/1}
+    canvas{display:block;width:100%;height:100%}
+    
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+    button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+    button:hover{background:#1888ee;transform:translateY(-1px)}
+    button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn-secondary{background:#2a2f3a}
+    .btn-secondary:hover{background:#323842}
+    
+    .form-section{margin-top:32px}
+    label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 6px}
+    label:first-of-type{margin-top:0}
+    input[type="text"],input[type="email"]{width:100%;background:#191b22;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;outline:none}
+    input:focus{border-color:#3a4250;box-shadow:0 0 0 3px rgba(29,152,255,.18)}
+    
+    .alert{padding:12px 16px;border-radius:10px;margin:16px 0;font-size:14px}
+    .alert-success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80}
+    .alert-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
+    .alert-info{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:#60a5fa}
+    .hidden{display:none}
+    
+    .loading{text-align:center;padding:40px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><img src="assets/promostack-logo.png" alt="PromoStack" /></div>
+    
+    <div id="loadingState" class="loading">Loading campaign...</div>
+    
+    <div id="campaignContent" class="hidden">
+      <div class="card">
+        <div class="campaign-header">
+          <h1 id="campaignTitle"></h1>
+          <p id="campaignDescription" class="sub"></p>
+          <div class="campaign-meta">
+            <span id="campaignDates"></span>
+            <span id="campaignPrize" class="campaign-prize"></span>
+          </div>
+        </div>
+        
+        <div class="section-title">Step 1: Upload Your Image</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+          <div id="uploadPrompt">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 12px;display:block;opacity:.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            <p style="margin:0;color:var(--text);font-weight:600">Click to upload your image</p>
+            <p style="margin:8px 0 0;color:var(--muted);font-size:13px">PNG or JPEG • Max 10MB</p>
+          </div>
+          <div id="uploadSuccess" class="hidden">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" style="margin:0 auto 12px;display:block">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <p style="margin:0;color:#4ade80;font-weight:600">Image uploaded ✓</p>
+            <p style="margin:8px 0 0;color:var(--muted);font-size:13px">Preview below • Click to change</p>
+          </div>
+        </div>
+        <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg" />
+        
+        <div id="previewSection" class="preview-container hidden">
+          <div class="section-title" style="text-align:center">Preview with Overlay</div>
+          <div class="preview-frame square">
+            <canvas id="compositeCanvas"></canvas>
+          </div>
+          <div class="actions">
+            <button id="downloadBtn" onclick="downloadImage()">Download Image</button>
+            <button class="btn-secondary" onclick="document.getElementById('imageInput').click()">Change Image</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="section-title">Step 2: Submit Your Entry</div>
+        <p class="sub" style="margin-bottom:16px">Download the image above, post it on your social media, then submit the URLs below to enter the campaign.</p>
+        
+        <div id="submissionAlert"></div>
+        
+        <form id="submissionForm" onsubmit="handleSubmit(event)">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" required placeholder="your@email.com" />
+          
+          <label for="instagramUrl">Instagram Post URL</label>
+          <input type="text" id="instagramUrl" placeholder="https://instagram.com/p/..." />
+          
+          <label for="twitterUrl">Twitter Post URL</label>
+          <input type="text" id="twitterUrl" placeholder="https://twitter.com/..." />
+          
+          <label for="facebookUrl">Facebook Post URL</label>
+          <input type="text" id="facebookUrl" placeholder="https://facebook.com/..." />
+          
+          <div class="actions" style="justify-content:flex-start;margin-top:20px">
+            <button type="submit" id="submitBtn">Submit Entry</button>
+            <button type="button" class="btn-secondary" onclick="window.location.href='/'">Back to Home</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="errorState" class="hidden">
+      <div class="card">
+        <h1>Campaign Not Found</h1>
+        <p class="sub">This campaign doesn't exist or is no longer available.</p>
+        <button onclick="window.location.href='/'">Back to Home</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let campaignData = null;
+    let userImage = null;
+    let overlayImage = null;
+    
+    async function loadCampaign() {
+      const campaignId = getCampaignIdFromUrl();
+      if (!campaignId) {
+        showError();
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/campaigns/${campaignId}`);
+        const data = await response.json();
+        
+        if (data.success && data.campaign) {
+          campaignData = data.campaign;
+          displayCampaign(data.campaign);
+          
+          if (data.campaign.overlay_url) {
+            await loadOverlayImage(data.campaign.overlay_url);
+          }
+        } else {
+          showError();
+        }
+      } catch (error) {
+        console.error('Failed to load campaign:', error);
+        showError();
+      }
+    }
+    
+    function getCampaignIdFromUrl() {
+      const pathParts = window.location.pathname.split('/');
+      const campaignIndex = pathParts.indexOf('campaign');
+      if (campaignIndex !== -1 && pathParts[campaignIndex + 1]) {
+        return pathParts[campaignIndex + 1];
+      }
+      return null;
+    }
+    
+    function displayCampaign(campaign) {
+      document.getElementById('campaignTitle').textContent = campaign.title;
+      document.getElementById('campaignDescription').textContent = campaign.description;
+      document.getElementById('campaignDates').textContent = formatDateRange(campaign.start_date, campaign.end_date);
+      document.getElementById('campaignPrize').textContent = `Prize: ${campaign.prize}`;
+      
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('campaignContent').classList.remove('hidden');
+    }
+    
+    function showError() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('errorState').classList.remove('hidden');
+    }
+    
+    function formatDateRange(startDate, endDate) {
+      const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const end = new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `${start} - ${end}`;
+    }
+    
+    async function loadOverlayImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          overlayImage = img;
+          resolve();
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+    
+    document.getElementById('imageInput').addEventListener('change', async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (file.size > 10 * 1024 * 1024) {
+        showAlert('File too large. Max size is 10MB.', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const img = new Image();
+        img.onload = async function() {
+          userImage = img;
+          document.getElementById('uploadZone').classList.add('has-image');
+          document.getElementById('uploadPrompt').classList.add('hidden');
+          document.getElementById('uploadSuccess').classList.remove('hidden');
+          document.getElementById('previewSection').classList.remove('hidden');
+          
+          await renderComposite();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    async function renderComposite() {
+      if (!userImage) return;
+      
+      const canvas = document.getElementById('compositeCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      const size = 2000;
+      canvas.width = size;
+      canvas.height = size;
+      
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, size, size);
+      
+      const scale = Math.max(size / userImage.width, size / userImage.height);
+      const scaledWidth = userImage.width * scale;
+      const scaledHeight = userImage.height * scale;
+      const x = (size - scaledWidth) / 2;
+      const y = (size - scaledHeight) / 2;
+      
+      ctx.drawImage(userImage, x, y, scaledWidth, scaledHeight);
+      
+      if (overlayImage) {
+        ctx.drawImage(overlayImage, 0, 0, size, size);
+      } else {
+        ctx.fillStyle = 'rgba(255, 39, 62, 0.15)';
+        ctx.fillRect(0, 0, size, size);
+      }
+    }
+    
+    function downloadImage() {
+      const canvas = document.getElementById('compositeCanvas');
+      const link = document.createElement('a');
+      link.download = `${campaignData.title.replace(/\s+/g, '_')}_entry.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      const email = document.getElementById('email').value;
+      const instagramUrl = document.getElementById('instagramUrl').value;
+      const twitterUrl = document.getElementById('twitterUrl').value;
+      const facebookUrl = document.getElementById('facebookUrl').value;
+      
+      if (!instagramUrl && !twitterUrl && !facebookUrl) {
+        showAlert('Please provide at least one social media URL', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/campaigns/${campaignData.id}/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            instagram_url: instagramUrl,
+            twitter_url: twitterUrl,
+            facebook_url: facebookUrl
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showAlert('Entry submitted successfully! Good luck!', 'success');
+          document.getElementById('submissionForm').reset();
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        } else {
+          showAlert(data.error || 'Submission failed. Please try again.', 'error');
+        }
+      } catch (error) {
+        showAlert('Submission failed: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+    
+    function showAlert(message, type = 'info') {
+      const alertDiv = document.getElementById('submissionAlert');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.textContent = message;
+      alertDiv.classList.remove('hidden');
+      setTimeout(() => {
+        alertDiv.classList.add('hidden');
+      }, 5000);
+    }
+    
+    loadCampaign();
+  </script>
+</body>
+</html>
