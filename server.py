@@ -365,33 +365,23 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Add square variant if: newly uploaded, existing URL found, or existing variant data exists
                 if square_image_url or has_square_image or existing_square_data:
-                    # Start with existing data if available, then update with new values
-                    square_variant = existing_square_data.copy() if existing_square_data else {}
-                    # Update/override with new form data
-                    square_variant.update({
+                    # Build fresh variant dict - never mutate existing_square_data
+                    meta['square'] = {
                         'box': square_coords,
                         'maxFontPx': square_max_font,
                         'fontColor': square_font_color,
                         'imageUrl': square_image_url or existing_square_url or f'assets/templates/{slug}/square.png'
-                    })
-                    # Remove legacy 'image' field if present (replaced by 'imageUrl')
-                    square_variant.pop('image', None)
-                    meta['square'] = square_variant
+                    }
                 
                 # Add story variant if: newly uploaded, existing URL found, or existing variant data exists
                 if story_image_url or has_story_image or existing_story_data:
-                    # Start with existing data if available, then update with new values
-                    story_variant = existing_story_data.copy() if existing_story_data else {}
-                    # Update/override with new form data
-                    story_variant.update({
+                    # Build fresh variant dict - never mutate existing_story_data
+                    meta['story'] = {
                         'box': story_coords,
                         'maxFontPx': story_max_font,
                         'fontColor': story_font_color,
                         'imageUrl': story_image_url or existing_story_url or f'assets/templates/{slug}/story.png'
-                    })
-                    # Remove legacy 'image' field if present (replaced by 'imageUrl')
-                    story_variant.pop('image', None)
-                    meta['story'] = story_variant
+                    }
                 
                 # Validation: ensure at least one variant exists in final meta
                 if 'square' not in meta and 'story' not in meta:

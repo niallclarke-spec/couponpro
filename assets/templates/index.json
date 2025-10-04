@@ -1,18 +1,38 @@
 {
   "templates": [
     {
-      "slug": "15-off-2",
-      "name": "15% OFF 2",
-      "meta": "assets/templates/15-off-2/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off-2/square.png",
-      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off-2/story.png"
+      "slug": "15-off",
+      "name": "15% OFF",
+      "meta": "assets/templates/15-off/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off/square.png"
     },
     {
-      "slug": "flash-sale",
-      "name": "Flash Sale",
-      "meta": "assets/templates/flash-sale/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/square.png",
-      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/flash-sale/story.png"
+      "slug": "new-flash-sale",
+      "name": "New Flash Sale",
+      "meta": "assets/templates/new-flash-sale/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/new-flash-sale/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/new-flash-sale/story.png"
+    },
+    {
+      "slug": "test2",
+      "name": "TEST2",
+      "meta": "assets/templates/test2/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test2/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test2/story.png"
+    },
+    {
+      "slug": "test4322",
+      "name": "TEST4322",
+      "meta": "assets/templates/test4322/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test4322/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test4322/story.png"
+    },
+    {
+      "slug": "testsasa",
+      "name": "TESTSASA",
+      "meta": "assets/templates/testsasa/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/testsasa/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/testsasa/story.png"
     }
   ]
 }

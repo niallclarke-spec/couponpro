@@ -1,0 +1,29 @@
+{
+  "name": "TESTSASA",
+  "square": {
+    "box": {
+      "leftPct": 30.0,
+      "topPct": 75.8,
+      "widthPct": 41.7,
+      "heightPct": 11.9,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/testsasa/square.png"
+  },
+  "story": {
+    "box": {
+      "leftPct": 23.3,
+      "topPct": 69.0,
+      "widthPct": 55.4,
+      "heightPct": 7.7,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/testsasa/story.png"
+  }
+}

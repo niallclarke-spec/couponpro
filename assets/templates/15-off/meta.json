@@ -1,0 +1,16 @@
+{
+  "name": "15% OFF",
+  "square": {
+    "box": {
+      "leftPct": 28.4,
+      "topPct": 74.7,
+      "widthPct": 43.0,
+      "heightPct": 10.1,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 81,
+    "fontColor": "#FFFFFF",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/15-off/square.png"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "TEST4322",
+  "square": {
+    "box": {
+      "leftPct": 32.7,
+      "topPct": 77.6,
+      "widthPct": 33.0,
+      "heightPct": 10.8,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test4322/square.png"
+  },
+  "story": {
+    "box": {
+      "leftPct": 20.2,
+      "topPct": 68.5,
+      "widthPct": 60.8,
+      "heightPct": 9.1,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FF273E",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test4322/story.png"
+  }
+}
