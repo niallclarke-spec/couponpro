@@ -205,6 +205,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
+        elif parsed_path.path.startswith('/campaign/'):
+            try:
+                with open('campaign.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_error(404, "Campaign page not found")
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+        
         elif parsed_path.path == '/api/campaigns':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)

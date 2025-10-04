@@ -707,7 +707,7 @@
               ${dateRange ? `<div class="campaign-dates">${dateRange}</div>` : ''}
               ${c.prize ? `<div class="campaign-prize">Prize: ${c.prize}</div>` : ''}
             </div>
-            <button onclick="showParticipateModal(${c.id})">Participate</button>
+            <button onclick="window.location.href='/campaign/${c.id}'">Participate</button>
           </div>
         `;
       }).join('');
