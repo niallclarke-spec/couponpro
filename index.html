@@ -62,6 +62,33 @@
     /* Share icon only (no blue circle) */
     .fab.share{ background: transparent; border: none; box-shadow: none; width:52px; height:52px }
     .fab.share svg{ width:32px; height:32px; stroke:#ffffff; stroke-width:2.6 }
+
+    .promotions{margin-top:48px}
+    .promotions h2{margin:0 0 20px;font-size:26px;font-weight:700}
+    .campaigns-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+    .campaign-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .campaign-card h3{margin:0 0 8px;font-size:18px;font-weight:700}
+    .campaign-card p{margin:0 0 8px;color:var(--muted);font-size:14px;line-height:1.5}
+    .campaign-meta{display:flex;gap:12px;margin:12px 0;font-size:13px}
+    .campaign-dates{color:#9aa3ad}
+    .campaign-prize{color:var(--accent);font-weight:600}
+    .campaign-status{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px}
+    .status-dot{width:8px;height:8px;border-radius:50%}
+    .status-ongoing .status-dot{background:#4ade80}
+    .status-upcoming .status-dot{background:#fb923c}
+    .campaign-card button{margin-top:8px}
+
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+    .modal.show{display:flex}
+    .modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .modal-content h3{margin:0 0 16px;font-size:20px}
+    .modal-content label{margin-top:12px}
+    .modal-content label:first-of-type{margin-top:0}
+    .modal-actions{display:flex;gap:10px;margin-top:18px}
+    .modal-actions button{flex:1}
+    .btn-secondary{background:#2a2f3a}
+    .success-msg{color:#4ade80;text-align:center;padding:12px;margin-top:12px;display:none}
+    .success-msg.show{display:block}
   </style>
 </head>
 <body>
@@ -116,6 +143,36 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="promotions" id="promotionsSection" style="display:none">
+      <h2>🎁 Active Promotions</h2>
+      <div class="campaigns-grid" id="campaignsGrid"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="participateModal">
+    <div class="modal-content">
+      <h3>Participate in Campaign</h3>
+      <form id="participateForm">
+        <label for="partEmail">Email *</label>
+        <input type="email" id="partEmail" required placeholder="your@email.com" />
+        
+        <label for="partInstagram">Instagram URL</label>
+        <input type="url" id="partInstagram" placeholder="https://instagram.com/yourprofile" />
+        
+        <label for="partTwitter">Twitter URL</label>
+        <input type="url" id="partTwitter" placeholder="https://twitter.com/yourprofile" />
+        
+        <label for="partFacebook">Facebook URL</label>
+        <input type="url" id="partFacebook" placeholder="https://facebook.com/yourprofile" />
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="modalClose">Cancel</button>
+          <button type="submit">Submit</button>
+        </div>
+        <div class="success-msg" id="successMsg">✓ Participation submitted successfully!</div>
+      </form>
     </div>
   </div>
 
@@ -548,7 +605,117 @@
       return await r.json();
     }
 
+    // --- Promotions/Campaigns ---
+    let currentCampaignId = null;
+
+    function formatCampaignDate(dateStr){
+      if(!dateStr) return '';
+      const d = new Date(dateStr);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${months[d.getMonth()]} ${d.getDate()}`;
+    }
+
+    async function loadActiveCampaigns(){
+      try{
+        const r = await fetch('/api/campaigns', { cache:'no-store' });
+        if(!r.ok) throw new Error('Failed to load campaigns');
+        const campaigns = await r.json();
+        const active = campaigns.filter(c => c.status === 'ongoing' || c.status === 'scheduled');
+        
+        const grid = document.getElementById('campaignsGrid');
+        const section = document.getElementById('promotionsSection');
+        
+        if(!active.length){
+          section.style.display = 'none';
+          return;
+        }
+        
+        section.style.display = 'block';
+        grid.innerHTML = active.map(c => {
+          const statusClass = c.status === 'ongoing' ? 'status-ongoing' : 'status-upcoming';
+          const statusText = c.status === 'ongoing' ? 'Ongoing' : 'Upcoming';
+          const dateRange = c.start_date && c.end_date 
+            ? `${formatCampaignDate(c.start_date)} - ${formatCampaignDate(c.end_date)}`
+            : '';
+          
+          return `
+            <div class="campaign-card">
+              <div class="campaign-status ${statusClass}">
+                <span class="status-dot"></span>
+                <span>${statusText}</span>
+              </div>
+              <h3>${c.title || 'Campaign'}</h3>
+              <p>${c.description || ''}</p>
+              <div class="campaign-meta">
+                ${dateRange ? `<div class="campaign-dates">${dateRange}</div>` : ''}
+                ${c.prize ? `<div class="campaign-prize">Prize: ${c.prize}</div>` : ''}
+              </div>
+              <button onclick="showParticipateModal(${c.id})">Participate</button>
+            </div>
+          `;
+        }).join('');
+      }catch(err){
+        console.warn('[campaigns] load failed:', err.message);
+      }
+    }
+
+    function showParticipateModal(campaignId){
+      currentCampaignId = campaignId;
+      const modal = document.getElementById('participateModal');
+      const form = document.getElementById('participateForm');
+      const successMsg = document.getElementById('successMsg');
+      
+      form.reset();
+      successMsg.classList.remove('show');
+      modal.classList.add('show');
+    }
+
+    async function submitParticipation(campaignId, formData){
+      try{
+        const r = await fetch(`/api/campaigns/${campaignId}/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        if(!r.ok) throw new Error('Submission failed');
+        
+        const successMsg = document.getElementById('successMsg');
+        successMsg.classList.add('show');
+        
+        setTimeout(() => {
+          document.getElementById('participateModal').classList.remove('show');
+        }, 2000);
+      }catch(err){
+        alert('Failed to submit participation. Please try again.');
+        console.error('[participation] submit failed:', err);
+      }
+    }
+
+    document.getElementById('modalClose')?.addEventListener('click', () => {
+      document.getElementById('participateModal').classList.remove('show');
+    });
+
+    document.getElementById('participateForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = {
+        email: document.getElementById('partEmail').value,
+        instagram_url: document.getElementById('partInstagram').value || null,
+        twitter_url: document.getElementById('partTwitter').value || null,
+        facebook_url: document.getElementById('partFacebook').value || null
+      };
+      submitParticipation(currentCampaignId, formData);
+    });
+
+    document.getElementById('participateModal')?.addEventListener('click', (e) => {
+      if(e.target.id === 'participateModal'){
+        e.target.classList.remove('show');
+      }
+    });
+
     (async function init(){
+      loadActiveCampaigns();
+      
       try{
         let discovered = [];
 
