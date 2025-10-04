@@ -89,14 +89,28 @@
     .btn-secondary{background:#2a2f3a}
     .success-msg{color:#4ade80;text-align:center;padding:12px;margin-top:12px;display:none}
     .success-msg.show{display:block}
+
+    .nav-tabs{display:flex;gap:8px;margin:0 0 24px;border-bottom:1px solid var(--border)}
+    .nav-tab{background:transparent;border:none;color:var(--muted);padding:12px 20px;cursor:pointer;font-size:15px;font-weight:600;border-bottom:2px solid transparent;transition:all .2s}
+    .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.03)}
+    .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .view{display:none}
+    .view.active{display:block}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="brand"><img src="assets/promostack-logo.png" alt="PromoStack" /></div>
-    <p class="sub">Simply type your coupon code below, select the promo template and hit download.</p>
+    
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchView('home')">Home</button>
+      <button class="nav-tab" onclick="switchView('campaigns')">Campaigns</button>
+    </div>
 
-    <div class="grid">
+    <div class="view active" id="homeView">
+      <p class="sub">Simply type your coupon code below, select the promo template and hit download.</p>
+      
+      <div class="grid">
       <!-- Controls -->
       <div class="card">
         <label for="coupon">Coupon Code</label>
@@ -143,10 +157,12 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
 
-    <div class="promotions" id="promotionsSection" style="display:none">
-      <h2>🎁 Active Promotions</h2>
+    <div class="view" id="campaignsView">
+      <h2 style="margin:0 0 20px;font-size:28px;font-weight:700">🎁 Active Promotions</h2>
+      <p class="sub" style="margin-bottom:24px">Participate in our promotional campaigns and win amazing prizes!</p>
       <div class="campaigns-grid" id="campaignsGrid"></div>
     </div>
   </div>
@@ -603,6 +619,15 @@
       const r = await fetch(path + (path.includes('?') ? '' : ('?ts=' + Date.now())), { cache:'no-store' });
       if(!r.ok) throw new Error('HTTP ' + r.status + ' on ' + path);
       return await r.json();
+    }
+
+    // --- View Switching ---
+    function switchView(viewName){
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      
+      document.getElementById(viewName + 'View').classList.add('active');
+      event.target.classList.add('active');
     }
 
     // --- Promotions/Campaigns ---
