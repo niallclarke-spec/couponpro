@@ -79,6 +79,7 @@
         input[type="text"],
         input[type="password"],
         input[type="number"],
+        input[type="date"],
         select {
             width: 100%;
             padding: 10px 12px;
@@ -89,10 +90,16 @@
             font-size: 15px;
             transition: border-color 0.2s;
         }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
         
         input[type="text"]:focus,
         input[type="password"]:focus,
         input[type="number"]:focus,
+        input[type="date"]:focus,
         select:focus {
             outline: none;
             border-color: #3a4250;
@@ -825,6 +832,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('upload')">Upload Template</button>
                 <button class="tab" onclick="switchTab('assets')">Current Assets</button>
+                <button class="tab" onclick="switchTab('campaigns')">Campaigns</button>
             </div>
 
             <div id="uploadTab" class="tab-content active">
@@ -1014,6 +1022,84 @@
                     <p style="color: #8a8f98; text-align: center;">Loading templates...</p>
                 </div>
             </div>
+
+            <div id="campaignsTab" class="tab-content">
+                <div id="campaignAlert"></div>
+                
+                <div class="section">
+                    <div class="section-title" id="campaignFormTitle">Create Campaign</div>
+                    <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
+                        <input type="hidden" id="editCampaignId" value="">
+                        
+                        <div class="form-group">
+                            <label for="campaignTitle">Campaign Title *</label>
+                            <input type="text" id="campaignTitle" required placeholder="e.g., Summer Giveaway 2025">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="campaignDescription">Description *</label>
+                            <input type="text" id="campaignDescription" required placeholder="Brief description of the campaign">
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label for="campaignStartDate">Start Date *</label>
+                                <input type="date" id="campaignStartDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="campaignEndDate">End Date *</label>
+                                <input type="date" id="campaignEndDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="campaignPrize">Prize *</label>
+                                <input type="text" id="campaignPrize" required placeholder="e.g., $500 Gift Card">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Platforms *</label>
+                            <div style="display: flex; gap: 16px; margin-top: 8px;">
+                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
+                                    <input type="checkbox" id="platformInstagram" style="width:auto;margin:0;" />
+                                    <span>Instagram</span>
+                                </label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
+                                    <input type="checkbox" id="platformTwitter" style="width:auto;margin:0;" />
+                                    <span>Twitter</span>
+                                </label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
+                                    <input type="checkbox" id="platformFacebook" style="width:auto;margin:0;" />
+                                    <span>Facebook</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="submit" class="btn" id="campaignSubmitBtn">Create Campaign</button>
+                            <button type="button" class="btn" onclick="cancelCampaignEdit()" id="campaignCancelBtn" style="display:none;background:#3a4250;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">All Campaigns</div>
+                    <div id="campaignsList" class="assets-list">
+                        <p style="color: #8a8f98; text-align: center;">Loading campaigns...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="submissionsModal">
+        <div class="modal-box" style="max-width: 800px;">
+            <div class="modal-title" id="submissionsModalTitle">Campaign Submissions</div>
+            <div id="submissionsContent" style="margin: 20px 0; max-height: 400px; overflow-y: auto;">
+                <p style="color: #8a8f98; text-align: center;">Loading submissions...</p>
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn modal-btn-cancel" onclick="closeSubmissionsModal()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -1158,6 +1244,10 @@
                 tabButtons[1]?.classList.add('active');
                 document.getElementById('assetsTab').classList.add('active');
                 loadAssets();
+            } else if (tabName === 'campaigns') {
+                tabButtons[2]?.classList.add('active');
+                document.getElementById('campaignsTab').classList.add('active');
+                loadCampaigns();
             }
         }
 
@@ -1419,6 +1509,298 @@
                     alert(message + ' ✓');
                 }
             });
+        }
+
+        // ==================== CAMPAIGN MANAGEMENT ====================
+        
+        // Load and display campaigns
+        async function loadCampaigns() {
+            const campaignsList = document.getElementById('campaignsList');
+            campaignsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading campaigns...</p>';
+            
+            try {
+                const response = await fetch('/api/campaigns');
+                const data = await response.json();
+                
+                if (!data.campaigns || data.campaigns.length === 0) {
+                    campaignsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">No campaigns found</p>';
+                    return;
+                }
+                
+                campaignsList.innerHTML = '';
+                data.campaigns.forEach(campaign => {
+                    const statusInfo = getCampaignStatus(campaign.startDate, campaign.endDate);
+                    const item = document.createElement('div');
+                    item.className = 'asset-item';
+                    item.style.display = 'grid';
+                    item.style.gridTemplateColumns = '1fr auto';
+                    item.style.gap = '16px';
+                    item.style.alignItems = 'start';
+                    
+                    const platforms = [];
+                    if (campaign.platforms?.instagram) platforms.push('Instagram');
+                    if (campaign.platforms?.twitter) platforms.push('Twitter');
+                    if (campaign.platforms?.facebook) platforms.push('Facebook');
+                    
+                    item.innerHTML = `
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <span style="font-size:20px;">${statusInfo.icon}</span>
+                                <div>
+                                    <div class="asset-name">${campaign.title}</div>
+                                    <div class="asset-slug">${campaign.description}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:16px;font-size:13px;color:#8a8f98;margin-left:32px;">
+                                <span>📅 ${formatDateRange(campaign.startDate, campaign.endDate)}</span>
+                                <span>🎁 ${campaign.prize}</span>
+                                <span>📊 ${campaign.submissionCount || 0} submissions</span>
+                            </div>
+                            <div style="display:flex;gap:8px;font-size:12px;margin-left:32px;">
+                                ${platforms.map(p => `<span style="background:#262b35;padding:4px 8px;border-radius:4px;">${p}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="asset-actions" style="display:flex;gap:12px;align-items:center;">
+                            <button onclick="loadSubmissions('${campaign.id}')" class="btn" style="padding:8px 16px;font-size:13px;">View Submissions</button>
+                            <div class="asset-edit-icon" onclick="editCampaign('${campaign.id}')" title="Edit">✎</div>
+                            <div class="asset-delete-icon" onclick="deleteCampaign('${campaign.id}', '${campaign.title.replace(/'/g, "\\'")}')">🗑</div>
+                        </div>
+                    `;
+                    campaignsList.appendChild(item);
+                });
+            } catch (error) {
+                campaignsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading campaigns</p>';
+                console.error('Failed to load campaigns:', error);
+            }
+        }
+
+        // Get campaign status based on dates
+        function getCampaignStatus(startDate, endDate) {
+            const now = new Date();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (now < start) {
+                return { icon: '🟠', status: 'scheduled' };
+            } else if (now > end) {
+                return { icon: '🔴', status: 'expired' };
+            } else {
+                return { icon: '🟢', status: 'ongoing' };
+            }
+        }
+
+        // Format date range
+        function formatDateRange(startDate, endDate) {
+            const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const end = new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `${start} - ${end}`;
+        }
+
+        // Handle campaign form submission
+        async function handleCampaignSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('campaignSubmitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const campaignId = document.getElementById('editCampaignId').value;
+            const formData = {
+                title: document.getElementById('campaignTitle').value,
+                description: document.getElementById('campaignDescription').value,
+                startDate: document.getElementById('campaignStartDate').value,
+                endDate: document.getElementById('campaignEndDate').value,
+                prize: document.getElementById('campaignPrize').value,
+                platforms: {
+                    instagram: document.getElementById('platformInstagram').checked,
+                    twitter: document.getElementById('platformTwitter').checked,
+                    facebook: document.getElementById('platformFacebook').checked
+                }
+            };
+
+            const atLeastOnePlatform = formData.platforms.instagram || formData.platforms.twitter || formData.platforms.facebook;
+            if (!atLeastOnePlatform) {
+                showAlert('campaignAlert', 'Please select at least one platform', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+
+            try {
+                let response;
+                if (campaignId) {
+                    response = await fetch(`/api/campaigns/${campaignId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('/api/campaigns', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('campaignAlert', campaignId ? 'Campaign updated successfully ✓' : 'Campaign created successfully ✓');
+                    document.getElementById('campaignForm').reset();
+                    document.getElementById('editCampaignId').value = '';
+                    document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
+                    document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
+                    document.getElementById('campaignCancelBtn').style.display = 'none';
+                    loadCampaigns();
+                } else {
+                    showAlert('campaignAlert', data.error || 'Operation failed', true);
+                }
+            } catch (error) {
+                showAlert('campaignAlert', 'Operation failed: ' + error.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        // Edit campaign
+        async function editCampaign(campaignId) {
+            try {
+                const response = await fetch(`/api/campaigns/${campaignId}`);
+                const data = await response.json();
+                
+                if (data.success && data.campaign) {
+                    const campaign = data.campaign;
+                    
+                    document.getElementById('editCampaignId').value = campaignId;
+                    document.getElementById('campaignTitle').value = campaign.title;
+                    document.getElementById('campaignDescription').value = campaign.description;
+                    document.getElementById('campaignStartDate').value = campaign.startDate;
+                    document.getElementById('campaignEndDate').value = campaign.endDate;
+                    document.getElementById('campaignPrize').value = campaign.prize;
+                    document.getElementById('platformInstagram').checked = campaign.platforms?.instagram || false;
+                    document.getElementById('platformTwitter').checked = campaign.platforms?.twitter || false;
+                    document.getElementById('platformFacebook').checked = campaign.platforms?.facebook || false;
+                    
+                    document.getElementById('campaignFormTitle').textContent = 'Edit Campaign';
+                    document.getElementById('campaignSubmitBtn').textContent = 'Update Campaign';
+                    document.getElementById('campaignCancelBtn').style.display = 'block';
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    alert('Failed to load campaign data');
+                }
+            } catch (error) {
+                alert('Failed to load campaign: ' + error.message);
+                console.error('Failed to load campaign:', error);
+            }
+        }
+
+        // Cancel campaign edit
+        function cancelCampaignEdit() {
+            document.getElementById('campaignForm').reset();
+            document.getElementById('editCampaignId').value = '';
+            document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
+            document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
+            document.getElementById('campaignCancelBtn').style.display = 'none';
+        }
+
+        // Delete campaign
+        async function deleteCampaign(campaignId, title) {
+            showDeleteModal(
+                `Are you sure you want to delete "${title}"?\n\nThis will permanently remove the campaign and all its submissions.`,
+                async () => {
+                    try {
+                        const response = await fetch(`/api/campaigns/${campaignId}`, {
+                            method: 'DELETE'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showAlert('campaignAlert', 'Campaign deleted successfully ✓');
+                            loadCampaigns();
+                        } else {
+                            alert('Delete failed: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        alert('Delete failed: ' + error.message);
+                        console.error('Failed to delete campaign:', error);
+                    }
+                }
+            );
+        }
+
+        // Load and display submissions
+        async function loadSubmissions(campaignId) {
+            const modal = document.getElementById('submissionsModal');
+            const content = document.getElementById('submissionsContent');
+            const title = document.getElementById('submissionsModalTitle');
+            
+            modal.classList.add('active');
+            content.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading submissions...</p>';
+            
+            try {
+                const response = await fetch(`/api/campaigns/${campaignId}/submissions`);
+                const data = await response.json();
+                
+                title.textContent = `Campaign Submissions (${data.submissions?.length || 0})`;
+                
+                if (!data.submissions || data.submissions.length === 0) {
+                    content.innerHTML = '<p style="color: #8a8f98; text-align: center;">No submissions yet</p>';
+                    return;
+                }
+                
+                let tableHTML = `
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                        <thead>
+                            <tr style="border-bottom:2px solid #262b35;text-align:left;">
+                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Email</th>
+                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Instagram</th>
+                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Twitter</th>
+                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Facebook</th>
+                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.submissions.forEach(sub => {
+                    const date = new Date(sub.submittedAt).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    tableHTML += `
+                        <tr style="border-bottom:1px solid #262b35;">
+                            <td style="padding:12px;color:#e9eef5;">${sub.email || '-'}</td>
+                            <td style="padding:12px;">
+                                ${sub.instagramUrl ? `<a href="${sub.instagramUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
+                            </td>
+                            <td style="padding:12px;">
+                                ${sub.twitterUrl ? `<a href="${sub.twitterUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
+                            </td>
+                            <td style="padding:12px;">
+                                ${sub.facebookUrl ? `<a href="${sub.facebookUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
+                            </td>
+                            <td style="padding:12px;color:#8a8f98;">${date}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                content.innerHTML = tableHTML;
+            } catch (error) {
+                content.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading submissions</p>';
+                console.error('Failed to load submissions:', error);
+            }
+        }
+
+        // Close submissions modal
+        function closeSubmissionsModal() {
+            document.getElementById('submissionsModal').classList.remove('active');
         }
 
         // ==================== PREVIEW LOGIC ====================
