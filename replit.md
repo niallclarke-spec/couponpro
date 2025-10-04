@@ -79,6 +79,24 @@ The application features a dark theme for both the frontend and admin interfaces
   - Instant posting of promo images to channels
   - Support for all uploaded templates
 
+## Version History
+
+### V2.5 - Telegram Integration Stable Release (Oct 4, 2025) ✅ MILESTONE
+**This version includes full Telegram bot integration with stable template management**
+
+**Key Features:**
+- ✅ Telegram bot (@promostack_bot) fully operational for channel posting
+- ✅ Fixed critical metadata corruption bugs in template upload/delete system
+- ✅ Spaces-based index regeneration (source of truth)
+- ✅ Reliable template deletion and management
+- ✅ Web app and Telegram bot both production-ready
+
+**Critical Fixes:**
+- Fixed metadata corruption caused by in-place dictionary mutation
+- Rewrote `regenerate_index.py` to use Digital Ocean Spaces as source of truth
+- Eliminated "ghost template" resurrection after deletion
+- Fixed Spaces image permissions (403 errors resolved)
+
 ## Recent Changes (Oct 3-4, 2025)
 - **V2 Telegram Bot Integration** (Oct 4, 2025):
   - Created @promostack_bot for automated promo image generation in Telegram channels
