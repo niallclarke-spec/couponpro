@@ -245,6 +245,45 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
         elif parsed_path.path.startswith('/api/campaigns/') and '/submissions' in parsed_path.path:
+            # Get campaign submissions - handled below
+            pass
+        
+        elif parsed_path.path.startswith('/api/campaigns/'):
+            # Get single campaign by ID
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            try:
+                campaign_id = int(parsed_path.path.split('/')[3])
+                campaign = db.get_campaign_by_id(campaign_id)
+                
+                if campaign:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': True, 'campaign': campaign}).encode())
+                else:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Campaign not found'}).encode())
+            except (IndexError, ValueError):
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Invalid campaign ID'}).encode())
+            except Exception as e:
+                print(f"[CAMPAIGNS] Error getting campaign: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path.startswith('/api/campaigns/') and '/submissions' in parsed_path.path:
             if not DATABASE_AVAILABLE:
                 self.send_response(503)
                 self.send_header('Content-type', 'application/json')
