@@ -206,7 +206,6 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(500, f"Server error: {str(e)}")
         
         elif parsed_path.path.startswith('/campaign/'):
-            print(f"[CAMPAIGN] Serving campaign page for path: {parsed_path.path}")
             try:
                 with open('campaign.html', 'r') as f:
                     content = f.read()
@@ -216,10 +215,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(content.encode('utf-8'))
             except FileNotFoundError:
-                print(f"[CAMPAIGN] campaign.html not found")
                 self.send_error(404, "Campaign page not found")
             except Exception as e:
-                print(f"[CAMPAIGN] Error serving campaign page: {e}")
                 self.send_error(500, f"Server error: {str(e)}")
         
         elif parsed_path.path == '/api/campaigns':
