@@ -60,7 +60,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="brand"><img src="assets/promostack-logo.png" alt="PromoStack" /></div>
+    <div class="brand"><img src="/assets/promostack-logo.png" alt="PromoStack" /></div>
     
     <div id="loadingState" class="loading">Loading campaign...</div>
     
@@ -89,8 +89,7 @@
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
-            <p style="margin:0;color:#4ade80;font-weight:600">Image uploaded ✓</p>
-            <p style="margin:8px 0 0;color:var(--muted);font-size:13px">Preview below • Click to change</p>
+            <p id="uploadSuccessMessage" style="margin:0;color:#4ade80;font-weight:600;line-height:1.6"></p>
           </div>
         </div>
         <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg" />
@@ -205,6 +204,22 @@
       return `${start} - ${end}`;
     }
     
+    function formatPlatforms(platforms) {
+      const enabled = [];
+      if (platforms?.instagram) enabled.push('Instagram');
+      if (platforms?.twitter) enabled.push('Twitter');
+      if (platforms?.facebook) enabled.push('Facebook');
+      
+      if (enabled.length === 0) return 'social media';
+      if (enabled.length === 1) return enabled[0];
+      if (enabled.length === 2) return `${enabled[0]} and ${enabled[1]}`;
+      return `${enabled[0]}, ${enabled[1]}, and ${enabled[2]}`;
+    }
+    
+    function formatEndDate(endDate) {
+      return new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
     async function loadOverlayImage(url) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -236,6 +251,13 @@
           document.getElementById('uploadPrompt').classList.add('hidden');
           document.getElementById('uploadSuccess').classList.remove('hidden');
           document.getElementById('previewSection').classList.remove('hidden');
+          
+          const platforms = formatPlatforms(campaignData.platforms);
+          const endDate = formatEndDate(campaignData.end_date);
+          const prize = campaignData.prize;
+          
+          const message = `Now share this to ${platforms}, come back here and submit the post URL before ${endDate} and you will be eligible to win ${prize}`;
+          document.getElementById('uploadSuccessMessage').textContent = message;
           
           await renderComposite();
         };
