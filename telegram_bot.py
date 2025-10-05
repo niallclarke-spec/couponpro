@@ -169,10 +169,17 @@ def generate_and_send_image(chat_id, template_slug, coupon_code, bot_token, vari
         meta_path = f'assets/templates/{template_slug}/meta.json'
         
         if not os.path.exists(meta_path):
-            return {
-                'success': False,
-                'message': 'Template metadata not found'
-            }
+            from object_storage import download_from_spaces
+            meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
+            if meta_content:
+                os.makedirs(os.path.dirname(meta_path), exist_ok=True)
+                with open(meta_path, 'wb') as f:
+                    f.write(meta_content)
+            else:
+                return {
+                    'success': False,
+                    'message': 'Template metadata not found'
+                }
         
         with open(meta_path, 'r') as f:
             metadata = json.load(f)
