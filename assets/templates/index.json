@@ -6,6 +6,13 @@
       "meta": "assets/templates/black-friday/meta.json",
       "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/black-friday/square.png",
       "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/black-friday/story.png"
+    },
+    {
+      "slug": "friday-sale",
+      "name": "Friday Sale",
+      "meta": "assets/templates/friday-sale/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/friday-sale/square.png",
+      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/friday-sale/story.png"
     }
   ]
 }
