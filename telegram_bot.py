@@ -94,7 +94,7 @@ def normalize_slug(slug):
 
 def find_template_by_command(command_name):
     """
-    Find template matching command name by scanning assets/templates/ directory.
+    Find template matching command name by fetching index directly from Spaces.
     
     Matches command_name to directory slug, handling variations:
     - "blackfriday" matches "black-friday"
@@ -113,21 +113,13 @@ def find_template_by_command(command_name):
         None: If template not found
     """
     try:
-        index_path = 'assets/templates/index.json'
+        from object_storage import download_from_spaces
         
-        if not os.path.exists(index_path):
-            from object_storage import download_from_spaces
-            index_content = download_from_spaces('templates/index.json')
-            if index_content:
-                os.makedirs(os.path.dirname(index_path), exist_ok=True)
-                with open(index_path, 'wb') as f:
-                    f.write(index_content)
-            else:
-                return None
+        index_content = download_from_spaces('templates/index.json')
+        if not index_content:
+            return None
         
-        with open(index_path, 'r') as f:
-            data = json.load(f)
-        
+        data = json.loads(index_content.decode('utf-8'))
         normalized_command = normalize_slug(command_name)
         
         for template in data.get('templates', []):
@@ -166,23 +158,16 @@ def generate_and_send_image(chat_id, template_slug, coupon_code, bot_token, vari
             - message (str): Status message
     """
     try:
-        meta_path = f'assets/templates/{template_slug}/meta.json'
+        from object_storage import download_from_spaces
         
-        if not os.path.exists(meta_path):
-            from object_storage import download_from_spaces
-            meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
-            if meta_content:
-                os.makedirs(os.path.dirname(meta_path), exist_ok=True)
-                with open(meta_path, 'wb') as f:
-                    f.write(meta_content)
-            else:
-                return {
-                    'success': False,
-                    'message': 'Template metadata not found'
-                }
+        meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
+        if not meta_content:
+            return {
+                'success': False,
+                'message': 'Template metadata not found'
+            }
         
-        with open(meta_path, 'r') as f:
-            metadata = json.load(f)
+        metadata = json.loads(meta_content.decode('utf-8'))
         
         # Smart fallback: prefer square, then story, then fail
         if variant not in metadata:
