@@ -91,6 +91,18 @@ class ObjectStorageService:
         
         return urls
     
+    def download_file(self, object_name):
+        """Download file from Digital Ocean Spaces"""
+        try:
+            response = self.client.get_object(
+                Bucket=self.bucket_name,
+                Key=object_name
+            )
+            return response['Body'].read()
+        except Exception as e:
+            print(f"Error downloading {object_name}: {e}")
+            return None
+    
     def delete_template(self, slug):
         """Delete all template files for a given slug"""
         # Delete square and story images and meta.json
@@ -108,3 +120,17 @@ class ObjectStorageService:
             self.delete_file(f"templates/{slug}/meta.json")
         except Exception as e:
             print(f"Warning: Could not delete meta.json for {slug}: {e}")
+
+
+# Helper function for standalone use
+def download_from_spaces(object_name):
+    """
+    Download file from Spaces without needing to instantiate the service class.
+    Used by telegram_bot.py and other modules.
+    """
+    try:
+        service = ObjectStorageService()
+        return service.download_file(object_name)
+    except Exception as e:
+        print(f"Error in download_from_spaces: {e}")
+        return None
