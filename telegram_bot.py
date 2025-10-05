@@ -116,7 +116,14 @@ def find_template_by_command(command_name):
         index_path = 'assets/templates/index.json'
         
         if not os.path.exists(index_path):
-            return None
+            from object_storage import download_from_spaces
+            index_content = download_from_spaces('templates/index.json')
+            if index_content:
+                os.makedirs(os.path.dirname(index_path), exist_ok=True)
+                with open(index_path, 'wb') as f:
+                    f.write(index_content)
+            else:
+                return None
         
         with open(index_path, 'r') as f:
             data = json.load(f)
