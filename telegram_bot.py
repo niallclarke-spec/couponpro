@@ -10,7 +10,6 @@ import json
 import io
 import re
 import requests
-from telegram import Update
 from telegram_image_gen import generate_promo_image
 
 
