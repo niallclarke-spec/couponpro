@@ -499,14 +499,45 @@
     }
     function render(){ renderVariant('square'); renderVariant('story'); }
 
+    // ---------- Coupon Validation ----------
+    async function validateCoupon(code) {
+      try {
+        const response = await fetch('/api/validate-coupon', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ coupon_code: code })
+        });
+        
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('[VALIDATION] Error validating coupon:', error);
+        return {
+          valid: false,
+          message: 'Unable to validate coupon. Please try again.'
+        };
+      }
+    }
+
     // ---------- Download/Share ----------
-    function download(which){
+    async function download(which){
       const img = base[which]; if (!img || !img.naturalWidth) return alert('Load a template first.');
+      
+      // Validate coupon before downloading
+      const code = sanitize(els.coupon.value||'COUPON');
+      const validation = await validateCoupon(code);
+      
+      if (!validation.valid) {
+        alert(`Invalid coupon code: ${validation.message || 'This coupon is not active or does not exist.'}`);
+        return;
+      }
+      
       const natW = img.naturalWidth, natH = img.naturalHeight; const m = document.createElement('canvas'); m.width=natW; m.height=natH; const g=m.getContext('2d');
       g.imageSmoothingEnabled = true;
       g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
-      const code = sanitize(els.coupon.value||'COUPON');
       const { box, maxFontPx, fontColor } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
       drawTextAutoFit(g, code, natW, natH, box, effCap, fontColor);
@@ -546,11 +577,20 @@
 
     async function share(which){
       const img = base[which]; if (!img || !img.naturalWidth) return alert('Load a template first.');
+      
+      // Validate coupon before sharing
+      const code = sanitize(els.coupon.value||'COUPON');
+      const validation = await validateCoupon(code);
+      
+      if (!validation.valid) {
+        alert(`Invalid coupon code: ${validation.message || 'This coupon is not active or does not exist.'}`);
+        return;
+      }
+      
       const natW = img.naturalWidth, natH = img.naturalHeight; const m = document.createElement('canvas'); m.width=natW; m.height=natH; const g=m.getContext('2d');
       g.imageSmoothingEnabled = true;
       g.imageSmoothingQuality = 'high';
       g.drawImage(img,0,0,natW,natH);
-      const code = sanitize(els.coupon.value||'COUPON');
       const { box, maxFontPx, fontColor } = getVariant(which);
       const effCap = Math.max(8, Number(maxFontPx)||Infinity);
       drawTextAutoFit(g, code, natW, natH, box, effCap, fontColor);

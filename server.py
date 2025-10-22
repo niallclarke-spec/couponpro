@@ -45,6 +45,14 @@ except Exception as e:
     print(f"[INFO] Database not available: {e}")
     DATABASE_AVAILABLE = False
 
+# Import coupon validator for FunderPro integration
+try:
+    import coupon_validator
+    COUPON_VALIDATOR_AVAILABLE = True
+except Exception as e:
+    print(f"[INFO] Coupon validator not available: {e}")
+    COUPON_VALIDATOR_AVAILABLE = False
+
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
@@ -315,7 +323,61 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         parsed_path = urlparse(self.path)
         
-        if parsed_path.path == '/api/login':
+        if parsed_path.path == '/api/validate-coupon':
+            if not COUPON_VALIDATOR_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'valid': False,
+                    'message': 'Coupon validation service unavailable'
+                }).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                coupon_code = data.get('coupon_code', '').strip()
+                
+                if not coupon_code:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'valid': False,
+                        'message': 'Coupon code is required'
+                    }).encode())
+                    return
+                
+                # Validate coupon with FunderPro API
+                result = coupon_validator.validate_coupon(coupon_code)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'valid': False,
+                    'message': 'Invalid request format'
+                }).encode())
+            except Exception as e:
+                print(f"[COUPON] Validation error: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'valid': False,
+                    'message': 'Server error during validation'
+                }).encode())
+        
+        elif parsed_path.path == '/api/login':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             
@@ -948,6 +1010,7 @@ if __name__ == "__main__":
         print(f"Server running at http://0.0.0.0:{PORT}/")
         print(f"Serving files from {os.path.abspath(DIRECTORY)}")
         print(f"API endpoints:")
+        print(f"  POST /api/validate-coupon")
         print(f"  POST /api/login")
         print(f"  POST /api/logout")
         print(f"  POST /api/upload-template (requires auth)")
