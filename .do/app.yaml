@@ -33,3 +33,6 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         scope: RUN_TIME
         type: SECRET
+      - key: FUNDERPRO_PRODUCT_ID
+        scope: RUN_TIME
+        type: SECRET
