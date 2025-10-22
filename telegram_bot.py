@@ -14,6 +14,31 @@ from telegram import Update
 from telegram_image_gen import generate_promo_image
 
 
+def send_telegram_message(chat_id, text, bot_token):
+    """
+    Send a text message to a Telegram chat.
+    
+    Args:
+        chat_id (int): Telegram chat ID
+        text (str): Message text to send
+        bot_token (str): Telegram bot token
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+        data = {
+            'chat_id': chat_id,
+            'text': text
+        }
+        response = requests.post(url, json=data)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"Error sending Telegram message: {e}")
+        return False
+
+
 def process_telegram_update(update_data):
     """
     Parse incoming webhook JSON from Telegram and extract command details.
@@ -158,6 +183,34 @@ def generate_and_send_image(chat_id, template_slug, coupon_code, bot_token, vari
             - message (str): Status message
     """
     try:
+        # Validate coupon code before generating image
+        try:
+            import coupon_validator
+            validation = coupon_validator.validate_coupon(coupon_code)
+            
+            if not validation['valid']:
+                # Send error message to Telegram chat
+                send_telegram_message(
+                    chat_id, 
+                    f"❌ Invalid coupon code '{coupon_code}'\n\n{validation['message']}", 
+                    bot_token
+                )
+                return {
+                    'success': False,
+                    'message': f'Invalid coupon: {validation["message"]}'
+                }
+        except Exception as val_error:
+            print(f"[TELEGRAM] Coupon validation error: {val_error}")
+            send_telegram_message(
+                chat_id,
+                f"⚠️ Unable to validate coupon '{coupon_code}'. Please try again later.",
+                bot_token
+            )
+            return {
+                'success': False,
+                'message': f'Validation error: {str(val_error)}'
+            }
+        
         from object_storage import download_from_spaces
         
         meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
