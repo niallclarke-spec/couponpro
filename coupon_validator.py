@@ -68,17 +68,10 @@ def validate_coupon(coupon_code, timeout=5):
             }
         
         # Any non-200 status means coupon is invalid or not active
-        elif response.status_code == 404:
-            return {
-                'valid': False,
-                'message': 'This coupon code is not active. Please contact FunderPro support.',
-                'status_code': 404
-            }
-        
         else:
             return {
                 'valid': False,
-                'message': f'Unable to validate coupon (status: {response.status_code})',
+                'message': 'This is not a valid FunderPro coupon code - to request a coupon code, please reach out to affiliates@funderpro.com',
                 'status_code': response.status_code
             }
     
