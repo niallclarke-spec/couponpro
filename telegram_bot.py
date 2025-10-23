@@ -9,8 +9,15 @@ import os
 import json
 import io
 import re
+import time
 import requests
 from telegram_image_gen import generate_promo_image
+
+INDEX_CACHE = {
+    'data': None,
+    'expires_at': 0
+}
+CACHE_TTL = 300
 
 
 def send_telegram_message(chat_id, text, bot_token):
@@ -119,6 +126,7 @@ def normalize_slug(slug):
 def find_template_by_command(command_name):
     """
     Find template matching command name by fetching index directly from Spaces.
+    Uses in-memory cache with 5-minute TTL to reduce API calls and improve reliability.
     
     Matches command_name to directory slug, handling variations:
     - "blackfriday" matches "black-friday"
@@ -135,15 +143,25 @@ def find_template_by_command(command_name):
             - square (str): Square variant image URL
             - story (str): Story variant image URL
         None: If template not found
+        str: Error message starting with "ERROR:" if network issue
     """
     try:
         from object_storage import download_from_spaces
         
-        index_content = download_from_spaces('templates/index.json')
-        if not index_content:
-            return None
+        current_time = time.time()
+        if INDEX_CACHE['data'] is None or current_time > INDEX_CACHE['expires_at']:
+            print(f"[TELEGRAM] Cache miss, downloading index.json")
+            index_content = download_from_spaces('templates/index.json')
+            if not index_content:
+                return "ERROR:NETWORK"
+            
+            INDEX_CACHE['data'] = json.loads(index_content.decode('utf-8'))
+            INDEX_CACHE['expires_at'] = current_time + CACHE_TTL
+            print(f"[TELEGRAM] Index cached for {CACHE_TTL}s")
+        else:
+            print(f"[TELEGRAM] Cache hit, using cached index")
         
-        data = json.loads(index_content.decode('utf-8'))
+        data = INDEX_CACHE['data']
         normalized_command = normalize_slug(command_name)
         
         for template in data.get('templates', []):
@@ -161,8 +179,8 @@ def find_template_by_command(command_name):
         return None
         
     except Exception as e:
-        print(f"Error finding template: {e}")
-        return None
+        print(f"[TELEGRAM] Error finding template: {e}")
+        return "ERROR:EXCEPTION"
 
 
 def generate_and_send_image(chat_id, template_slug, coupon_code, bot_token, variant='square'):
@@ -315,11 +333,24 @@ def handle_telegram_webhook(request_body, bot_token):
         
         template = find_template_by_command(command)
         
+        if isinstance(template, str) and template.startswith('ERROR:'):
+            error_message = '⚠️ Connection issue. Please try again in a moment.'
+            url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+            data = {
+                'chat_id': chat_id,
+                'text': error_message
+            }
+            requests.post(url, json=data)
+            return {
+                'success': False,
+                'message': f'Network error: {template}'
+            }
+        
         if not template:
             url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
             data = {
                 'chat_id': chat_id,
-                'text': 'Template not found'
+                'text': f'❌ Template "{command}" not found. Check available templates in the channel.'
             }
             requests.post(url, json=data)
             return {

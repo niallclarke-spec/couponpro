@@ -5,6 +5,7 @@ S3-compatible object storage that works anywhere
 """
 
 import os
+import time
 import boto3
 from botocore.client import Config
 
@@ -91,17 +92,24 @@ class ObjectStorageService:
         
         return urls
     
-    def download_file(self, object_name):
-        """Download file from Digital Ocean Spaces"""
-        try:
-            response = self.client.get_object(
-                Bucket=self.bucket_name,
-                Key=object_name
-            )
-            return response['Body'].read()
-        except Exception as e:
-            print(f"Error downloading {object_name}: {e}")
-            return None
+    def download_file(self, object_name, max_retries=3):
+        """Download file from Digital Ocean Spaces with retry logic"""
+        for attempt in range(max_retries):
+            try:
+                response = self.client.get_object(
+                    Bucket=self.bucket_name,
+                    Key=object_name
+                )
+                return response['Body'].read()
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) * 0.5
+                    print(f"[SPACES] Download attempt {attempt + 1} failed for {object_name}, retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                else:
+                    print(f"[SPACES] Error downloading {object_name} after {max_retries} attempts: {e}")
+                    return None
+        return None
     
     def delete_template(self, slug):
         """Delete all template files for a given slug"""
