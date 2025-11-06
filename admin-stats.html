@@ -215,7 +215,14 @@
                 
                 if (!response.ok) {
                     if (response.status === 401) {
-                        window.location.href = '/admin.html';
+                        document.getElementById('stats-content').innerHTML = `
+                            <div class="error">
+                                <h2>🔒 Authentication Required</h2>
+                                <p>Please log in to view bot statistics.</p>
+                                <br>
+                                <a href="/admin.html" class="back-link" style="font-size: 1.2rem;">→ Go to Admin Login</a>
+                            </div>
+                        `;
                         return;
                     }
                     throw new Error('Failed to load stats');
