@@ -154,7 +154,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Domain-based routing for custom domains
         if 'admin.promostack.io' in host and parsed_path.path == '/':
             try:
-                with open('admin-simple.html', 'r') as f:
+                with open('admin.html', 'r') as f:
                     content = f.read()
                 
                 self.send_response(200)
@@ -201,7 +201,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                with open('admin-simple.html', 'r') as f:
+                with open('admin.html', 'r') as f:
                     content = f.read()
                 
                 self.send_response(200)
