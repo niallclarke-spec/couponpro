@@ -114,6 +114,31 @@ class DatabasePool:
                     ON submissions(campaign_id)
                 """)
                 
+                # Create bot_usage table for tracking Telegram bot activity
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS bot_usage (
+                        id SERIAL PRIMARY KEY,
+                        chat_id BIGINT NOT NULL,
+                        template_slug VARCHAR(255),
+                        coupon_code VARCHAR(255),
+                        success BOOLEAN NOT NULL,
+                        error_type VARCHAR(100),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create index on created_at for faster date-based queries
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_bot_usage_created_at 
+                    ON bot_usage(created_at)
+                """)
+                
+                # Create index on chat_id for user-based queries
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_bot_usage_chat_id 
+                    ON bot_usage(chat_id)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 return True
@@ -313,3 +338,133 @@ def get_submission_count(campaign_id):
     except Exception as e:
         print(f"Error getting submission count: {e}")
         return 0
+
+# Bot usage tracking
+def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None):
+    """
+    Log Telegram bot usage. Silently fails to avoid disrupting bot operation.
+    
+    Args:
+        chat_id (int): Telegram chat ID
+        template_slug (str): Template slug used (or None if template not found)
+        coupon_code (str): Coupon code used
+        success (bool): Whether the operation succeeded
+        error_type (str): Type of error if failed (e.g., 'network', 'invalid_coupon', 'template_not_found')
+    """
+    try:
+        if not db_pool.connection_pool:
+            return
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO bot_usage 
+                (chat_id, template_slug, coupon_code, success, error_type)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (chat_id, template_slug, coupon_code, success, error_type))
+            conn.commit()
+    except Exception as e:
+        print(f"[BOT_USAGE] Failed to log usage (non-critical): {e}")
+
+def get_bot_stats(days=30):
+    """
+    Get bot usage statistics for the last N days.
+    
+    Args:
+        days (int): Number of days to include in stats (default: 30)
+    
+    Returns:
+        dict: Statistics including total uses, success rate, popular templates/coupons
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            interval = f"{days} days"
+            
+            # Total usage count
+            cursor.execute("""
+                SELECT COUNT(*) FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+            """, (interval,))
+            total_uses = cursor.fetchone()[0]
+            
+            # Success count
+            cursor.execute("""
+                SELECT COUNT(*) FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                AND success = true
+            """, (interval,))
+            successful_uses = cursor.fetchone()[0]
+            
+            # Popular templates
+            cursor.execute("""
+                SELECT template_slug, COUNT(*) as count
+                FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                AND template_slug IS NOT NULL
+                GROUP BY template_slug
+                ORDER BY count DESC
+                LIMIT 10
+            """, (interval,))
+            popular_templates = [{'template': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            
+            # Popular coupon codes
+            cursor.execute("""
+                SELECT coupon_code, COUNT(*) as count
+                FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                AND coupon_code IS NOT NULL
+                AND success = true
+                GROUP BY coupon_code
+                ORDER BY count DESC
+                LIMIT 10
+            """, (interval,))
+            popular_coupons = [{'coupon': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            
+            # Error breakdown
+            cursor.execute("""
+                SELECT error_type, COUNT(*) as count
+                FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                AND success = false
+                AND error_type IS NOT NULL
+                GROUP BY error_type
+                ORDER BY count DESC
+            """, (interval,))
+            errors = [{'type': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            
+            # Unique users
+            cursor.execute("""
+                SELECT COUNT(DISTINCT chat_id) FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+            """, (interval,))
+            unique_users = cursor.fetchone()[0]
+            
+            # Daily usage for chart
+            cursor.execute("""
+                SELECT DATE(created_at) as date, COUNT(*) as count
+                FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                GROUP BY DATE(created_at)
+                ORDER BY date DESC
+            """, (interval,))
+            daily_usage = [{'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
+            
+            success_rate = (successful_uses / total_uses * 100) if total_uses > 0 else 0
+            
+            return {
+                'total_uses': total_uses,
+                'successful_uses': successful_uses,
+                'success_rate': round(success_rate, 1),
+                'unique_users': unique_users,
+                'popular_templates': popular_templates,
+                'popular_coupons': popular_coupons,
+                'errors': errors,
+                'daily_usage': daily_usage
+            }
+    except Exception as e:
+        print(f"Error getting bot stats: {e}")
+        return None

@@ -317,6 +317,53 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/bot-stats':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                query_params = parse_qs(parsed_path.query)
+                days = int(query_params.get('days', [30])[0])
+                
+                stats = db.get_bot_stats(days)
+                
+                if stats:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(stats).encode())
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'total_uses': 0,
+                        'successful_uses': 0,
+                        'success_rate': 0,
+                        'unique_users': 0,
+                        'popular_templates': [],
+                        'popular_coupons': [],
+                        'errors': [],
+                        'daily_usage': []
+                    }).encode())
+            except Exception as e:
+                print(f"[BOT_STATS] Error getting bot stats: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         else:
             super().do_GET()
     

@@ -307,7 +307,7 @@ def handle_telegram_webhook(request_body, bot_token):
     """
     Main handler for Telegram webhook requests.
     
-    Orchestrates the flow: parse → find template → generate → send
+    Orchestrates the flow: parse → find template → generate → send → log
     
     Args:
         request_body (dict): Webhook request body from Telegram
@@ -318,6 +318,12 @@ def handle_telegram_webhook(request_body, bot_token):
             - success (bool): True if successful
             - message (str): Status or error message
     """
+    chat_id = None
+    template_slug = None
+    coupon_code = None
+    success = False
+    error_type = None
+    
     try:
         parsed = process_telegram_update(request_body)
         
@@ -334,6 +340,7 @@ def handle_telegram_webhook(request_body, bot_token):
         template = find_template_by_command(command)
         
         if isinstance(template, str) and template.startswith('ERROR:'):
+            error_type = 'network'
             error_message = '⚠️ Connection issue. Please try again in a moment.'
             url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
             data = {
@@ -341,32 +348,46 @@ def handle_telegram_webhook(request_body, bot_token):
                 'text': error_message
             }
             requests.post(url, json=data)
+            _log_usage(chat_id, template_slug, coupon_code, success, error_type)
             return {
                 'success': False,
                 'message': f'Network error: {template}'
             }
         
         if not template:
+            error_type = 'template_not_found'
             url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
             data = {
                 'chat_id': chat_id,
                 'text': f'❌ Template "{command}" not found. Check available templates in the channel.'
             }
             requests.post(url, json=data)
+            _log_usage(chat_id, template_slug, coupon_code, success, error_type)
             return {
                 'success': False,
                 'message': 'Template not found'
             }
         
+        template_slug = template['slug']
+        
         result = generate_and_send_image(
             chat_id=chat_id,
-            template_slug=template['slug'],
+            template_slug=template_slug,
             coupon_code=coupon_code,
             bot_token=bot_token,
             variant='square'
         )
         
-        if not result['success']:
+        success = result['success']
+        
+        if not success:
+            if 'Invalid coupon' in result.get('message', ''):
+                error_type = 'invalid_coupon'
+            elif 'Validation error' in result.get('message', ''):
+                error_type = 'validation_error'
+            else:
+                error_type = 'generation_failed'
+            
             url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
             data = {
                 'chat_id': chat_id,
@@ -374,14 +395,29 @@ def handle_telegram_webhook(request_body, bot_token):
             }
             requests.post(url, json=data)
         
+        _log_usage(chat_id, template_slug, coupon_code, success, error_type)
         return result
         
     except Exception as e:
+        error_type = 'exception'
         print(f"Error handling webhook: {e}")
+        _log_usage(chat_id, template_slug, coupon_code, success, error_type)
         return {
             'success': False,
             'message': f'Error: {str(e)}'
         }
+
+
+def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
+    """
+    Internal helper to log bot usage. Silently fails to avoid disrupting bot.
+    """
+    try:
+        import db
+        if chat_id:
+            db.log_bot_usage(chat_id, template_slug, coupon_code, success, error_type)
+    except Exception as e:
+        print(f"[BOT_USAGE] Logging failed (non-critical): {e}")
 
 
 if __name__ == '__main__':
