@@ -15,24 +15,34 @@ class DatabasePool:
     def _initialize_pool(self):
         """Initialize PostgreSQL connection pool"""
         try:
-            # Check if database credentials are configured
+            database_url = os.environ.get('DATABASE_URL')
             db_host = os.environ.get('DB_HOST')
-            if not db_host:
-                print("ℹ️  Database not configured (missing DB_HOST), campaigns feature disabled")
+            
+            if database_url:
+                self.connection_pool = psycopg2.pool.SimpleConnectionPool(
+                    1,
+                    20,
+                    database_url,
+                    sslmode='prefer'
+                )
+                print("✅ Database connection pool initialized (using DATABASE_URL)")
+            elif db_host:
+                self.connection_pool = psycopg2.pool.SimpleConnectionPool(
+                    1,
+                    20,
+                    host=db_host,
+                    port=os.environ.get('DB_PORT'),
+                    database=os.environ.get('DB_NAME'),
+                    user=os.environ.get('DB_USER'),
+                    password=os.environ.get('DB_PASSWORD'),
+                    sslmode='prefer'
+                )
+                print("✅ Database connection pool initialized (using DB_HOST)")
+            else:
+                print("ℹ️  Database not configured (missing DATABASE_URL or DB_HOST), campaigns feature disabled")
                 self.connection_pool = None
                 return
-            
-            self.connection_pool = psycopg2.pool.SimpleConnectionPool(
-                1,
-                20,
-                host=db_host,
-                port=os.environ.get('DB_PORT'),
-                database=os.environ.get('DB_NAME'),
-                user=os.environ.get('DB_USER'),
-                password=os.environ.get('DB_PASSWORD'),
-                sslmode='prefer'
-            )
-            print("✅ Database connection pool initialized")
+                
         except Exception as e:
             print(f"❌ Failed to initialize database pool: {e}")
             self.connection_pool = None
