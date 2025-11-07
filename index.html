@@ -371,33 +371,75 @@
       display: block;
     }
 
-    .nav-tabs {
+    /* Dashboard Layout */
+    .dashboard {
       display: flex;
-      gap: 8px;
-      margin: 0 0 32px;
-      border-bottom: 2px solid #e2e8f0;
+      min-height: 100vh;
     }
 
-    .nav-tab {
-      background: transparent;
-      border: none;
-      color: #718096;
+    .sidebar {
+      width: 260px;
+      background: #1a1d29;
+      color: #a0aec0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-logo img {
+      width: 180px;
+      height: auto;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       padding: 12px 20px;
-      cursor: pointer;
+      color: #a0aec0;
       font-size: 15px;
-      font-weight: 600;
-      border-bottom: 3px solid transparent;
+      font-weight: 500;
+      cursor: pointer;
       transition: all 0.2s;
-      margin-bottom: -2px;
+      text-decoration: none;
+      border-left: 3px solid transparent;
     }
 
-    .nav-tab:hover {
-      color: #667eea;
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
     }
 
-    .nav-tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
+    .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: white;
+      border-left-color: #667eea;
+    }
+
+    .nav-item-icon {
+      font-size: 18px;
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      background: #f5f7fa;
+      min-height: 100vh;
     }
 
     .view {
@@ -407,19 +449,45 @@
     .view.active {
       display: block;
     }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .main-content {
+        margin-left: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="brand"><img src="assets/promostack-logo.png" alt="PromoStack" /></div>
-    
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('home')">Home</button>
-      <button class="nav-tab" onclick="switchView('campaigns')">Campaigns</button>
-    </div>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <img src="assets/promostack-logo.png" alt="PromoStack" />
+        </div>
+      </div>
 
-    <div class="view active" id="homeView">
-      <p class="sub">Simply type your coupon code below, select the promo template and hit download.</p>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="switchView('home')">
+          <span class="nav-item-icon">🏠</span>
+          <span>Home</span>
+        </a>
+        <a class="nav-item" onclick="switchView('campaigns')">
+          <span class="nav-item-icon">🎯</span>
+          <span>Campaigns</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="wrap">
+        <div class="view active" id="homeView">
+          <p class="sub">Simply type your coupon code below, select the promo template and hit download.</p>
       
       <div class="grid">
       <!-- Controls -->
@@ -471,11 +539,13 @@
       </div>
     </div>
 
-    <div class="view" id="campaignsView">
-      <h2 style="margin:0 0 20px;font-size:28px;font-weight:700">🎁 Active Promotions</h2>
-      <p class="sub" style="margin-bottom:24px">Participate in our promotional campaigns and win amazing prizes!</p>
-      <div class="campaigns-grid" id="campaignsGrid"></div>
-    </div>
+        <div class="view" id="campaignsView">
+          <h2 style="margin:0 0 20px;font-size:28px;font-weight:700">🎁 Active Promotions</h2>
+          <p class="sub" style="margin-bottom:24px">Participate in our promotional campaigns and win amazing prizes!</p>
+          <div class="campaigns-grid" id="campaignsGrid"></div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <div class="modal" id="participateModal">
@@ -975,10 +1045,12 @@
     // --- View Switching ---
     function switchView(viewName){
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
       
       document.getElementById(viewName + 'View').classList.add('active');
-      event.target.classList.add('active');
+      if (event && event.target) {
+        event.target.closest('.nav-item').classList.add('active');
+      }
     }
 
     // --- Promotions/Campaigns ---
