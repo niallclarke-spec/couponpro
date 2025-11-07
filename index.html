@@ -8,94 +8,405 @@
   <meta http-equiv="Expires" content="0" />
   <title>Dashboard | Promo Stack</title>
   <style>
-    :root { --bg:#0b0c10; --card:#121318; --muted:#8a8f98; --text:#e9eef5; --border:#262b35; --accent:#1d98ff; }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-
-    .wrap{max-width:1280px;margin:36px auto;padding:0 20px}
-    h1{margin:0 0 6px;font-size:32px}
-    h1 .brand-strong{font-weight:800}
-    h1 .brand-light{font-weight:300; opacity:.95}
-    h1 .pipe{font-weight:400;color:#cfd6df;margin:0 .35ch}
-    .sub{margin:0 0 18px;color:#9aa3ad}
-
-    .grid{display:grid;gap:22px;grid-template-columns:420px 1fr;align-items:start}
-    @media (max-width:1100px){ .grid{grid-template-columns:1fr} }
-
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
-    label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin:8px 0 6px}
-    input,select,button{width:100%;background:#191b22;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;outline:none}
-    input:focus,select:focus{border-color:#3a4250;box-shadow:0 0 0 3px rgba(29,152,255,.18)}
-    button{cursor:pointer;border:0;background:var(--accent);color:#fff;font-weight:700}
-    .hint{color:var(--muted);font-size:12px}
-    /* Glowing red emphasis for the coupon input */
-    #coupon{
-      border-color:#ff4a4a;
-      background:#19181b;
-      box-shadow:0 0 0 4px rgba(255,74,74,.22), 0 0 18px rgba(255,74,74,.18);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      color: #2d3748;
+      min-height: 100vh;
+      line-height: 1.6;
     }
-    #coupon:focus{
-      border-color:#ff5d5d;
-      box-shadow:0 0 0 5px rgba(255,74,74,.28), 0 0 24px rgba(255,74,74,.25);
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
     }
-    /* Brand strip above the title */
-    .brand{display:flex;align-items:center;gap:10px;margin:0 0 10px}
-    .brand img{height:auto;width:165px;display:block}
 
-    .preview-card h3{margin:0 0 8px}
-    .preview-grid{display:grid;gap:14px;grid-template-columns:1fr 1fr}
-    @media (max-width: 760px){
-      .preview-grid{grid-template-columns:1fr}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
     }
-    .preview-frame{position:relative;background:#0a0b10;border:1px solid var(--border);border-radius:14px;overflow:hidden}
-    .preview-frame.square{aspect-ratio:1/1}
-    .preview-frame.story{aspect-ratio:9/16}
-    canvas{display:block;width:100%;height:100%}
+    
+    .brand img {
+      height: auto;
+      width: 200px;
+      display: block;
+    }
 
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .status{margin-top:6px;color:#ff9c9c;font-size:12px;display:none}
+    .sub {
+      color: #718096;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
 
-    .fabs{position:absolute;top:10px;right:10px;left:auto;bottom:auto;display:block;pointer-events:none}
-    .fab{pointer-events:auto;width:42px;height:42px;border-radius:999px;border:1px solid rgba(29,152,255,.45);background:linear-gradient(180deg, rgba(29,152,255,.22), rgba(29,152,255,.14));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
-    .fab svg{width:22px;height:22px;stroke:#eaf4ff;stroke-width:2.2;fill:none}
+    .grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 420px 1fr;
+      align-items: start;
+    }
+    
+    @media (max-width:1100px) {
+      .grid { grid-template-columns: 1fr; }
+    }
 
-    /* Share icon only (no blue circle) */
-    .fab.share{ background: transparent; border: none; box-shadow: none; width:52px; height:52px }
-    .fab.share svg{ width:32px; height:32px; stroke:#ffffff; stroke-width:2.6 }
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-    .promotions{margin-top:48px}
-    .promotions h2{margin:0 0 20px;font-size:26px;font-weight:700}
-    .campaigns-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-    .campaign-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-    .campaign-card h3{margin:0 0 8px;font-size:18px;font-weight:700}
-    .campaign-card p{margin:0 0 8px;color:var(--muted);font-size:14px;line-height:1.5}
-    .campaign-meta{display:flex;gap:12px;margin:12px 0;font-size:13px}
-    .campaign-dates{color:#9aa3ad}
-    .campaign-prize{color:var(--accent);font-weight:600}
-    .campaign-status{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px}
-    .status-dot{width:8px;height:8px;border-radius:50%}
-    .status-ongoing .status-dot{background:#4ade80}
-    .status-upcoming .status-dot{background:#fb923c}
-    .campaign-card button{margin-top:8px}
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      margin: 16px 0 8px;
+    }
 
-    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
-    .modal.show{display:flex}
-    .modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-    .modal-content h3{margin:0 0 16px;font-size:20px}
-    .modal-content label{margin-top:12px}
-    .modal-content label:first-of-type{margin-top:0}
-    .modal-actions{display:flex;gap:10px;margin-top:18px}
-    .modal-actions button{flex:1}
-    .btn-secondary{background:#2a2f3a}
-    .success-msg{color:#4ade80;text-align:center;padding:12px;margin-top:12px;display:none}
-    .success-msg.show{display:block}
+    label:first-of-type {
+      margin-top: 0;
+    }
 
-    .nav-tabs{display:flex;gap:2px;margin:0 0 24px;border-bottom:1px solid var(--border)}
-    .nav-tab{background:transparent;border:none;color:var(--muted);padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:0.2px}
-    .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.02)}
-    .nav-tab.active{color:var(--text);border-bottom-color:var(--accent)}
-    .view{display:none}
-    .view.active{display:block}
+    input, select {
+      width: 100%;
+      background: white;
+      color: #2d3748;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    button {
+      width: 100%;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .hint {
+      color: #718096;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    #coupon {
+      border-color: #667eea;
+      background: #f7fafc;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    #coupon:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    }
+
+    .preview-card h3 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .preview-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 760px) {
+      .preview-grid { grid-template-columns: 1fr; }
+    }
+
+    .preview-frame {
+      position: relative;
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .preview-frame.square { aspect-ratio: 1/1; }
+    .preview-frame.story { aspect-ratio: 9/16; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .status {
+      margin-top: 8px;
+      color: #e53e3e;
+      font-size: 13px;
+      display: none;
+    }
+
+    .fabs {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: block;
+      pointer-events: none;
+    }
+
+    .fab {
+      pointer-events: auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .fab svg {
+      width: 20px;
+      height: 20px;
+      stroke: white;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    .fab.share {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .promotions {
+      margin-top: 48px;
+    }
+
+    .promotions h2 {
+      margin: 0 0 24px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+
+    .campaign-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+
+    .campaign-card:hover {
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .campaign-card h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .campaign-card p {
+      margin: 0 0 10px;
+      color: #718096;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .campaign-meta {
+      display: flex;
+      gap: 14px;
+      margin: 14px 0;
+      font-size: 13px;
+    }
+
+    .campaign-dates {
+      color: #718096;
+    }
+
+    .campaign-prize {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    .campaign-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-ongoing .status-dot {
+      background: #48bb78;
+    }
+
+    .status-upcoming .status-dot {
+      background: #ed8936;
+    }
+
+    .campaign-card button {
+      margin-top: 12px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h3 {
+      margin: 0 0 20px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .modal-content label {
+      margin-top: 16px;
+    }
+
+    .modal-content label:first-of-type {
+      margin-top: 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .success-msg {
+      color: #48bb78;
+      text-align: center;
+      padding: 12px;
+      margin-top: 12px;
+      display: none;
+      font-weight: 600;
+    }
+
+    .success-msg.show {
+      display: block;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 32px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: #718096;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      margin-bottom: -2px;
+    }
+
+    .nav-tab:hover {
+      color: #667eea;
+    }
+
+    .nav-tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
