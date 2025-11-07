@@ -192,9 +192,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Location', '/admin')
             self.end_headers()
         elif parsed_path.path == '/admin':
-            # Only allow admin access via admin.promostack.io domain
-            # Redirect other domains to the proper admin domain
-            if 'admin.promostack.io' not in host:
+            # Dev mode: serve admin panel directly on localhost/replit
+            # Production: redirect to admin.promostack.io
+            is_dev = 'localhost' in host or '127.0.0.1' in host or 'replit' in host or ':' in host
+            
+            if not is_dev and 'admin.promostack.io' not in host:
                 self.send_response(301)
                 self.send_header('Location', 'https://admin.promostack.io')
                 self.end_headers()
