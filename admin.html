@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login | Promo Stack</title>
+    <title>Admin Dashboard | PromoStack</title>
     <style>
         * {
             margin: 0;
@@ -13,256 +13,496 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0b0c10;
+            background: #f5f7fa;
+            color: #2d3748;
             min-height: 100vh;
-            padding: 20px;
-            color: #e9eef5;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
         }
 
-        .brand {
+        /* Login Page Styles */
+        .login-page {
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 0 0 20px;
-        }
-        
-        .brand img {
-            height: auto;
-            width: 220px;
-            display: block;
-        }
-        
-        .card {
-            background: #121318;
-            border: 1px solid #262b35;
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 10px 28px rgba(0,0,0,.35);
-        }
-        
-        h1 {
-            color: #e9eef5;
-            margin-bottom: 24px;
-            font-size: 24px;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
         }
 
-        h1.login-title {
-            color: #ffffff;
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo img {
+            width: 240px;
+            height: auto;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 32px;
+            color: #1a202c;
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #1a1d29;
+            color: #a0aec0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-logo img {
+            width: 180px;
+            height: auto;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #718096;
+            padding: 0 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #a0aec0;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            color: #fff;
+            border-left-color: #667eea;
+        }
+
+        .nav-item-icon {
             font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
             text-align: center;
         }
-        
+
+        .nav-item-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content-header {
+            background: white;
+            padding: 32px 40px;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .content-header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .content-body {
+            padding: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
 
-        .row .form-group {
-            margin-bottom: 0;
-        }
-        
         label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #8a8f98;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            white-space: nowrap;
+            color: #4a5568;
+            font-size: 13px;
         }
-        
+
         input[type="text"],
         input[type="password"],
         input[type="number"],
         input[type="date"],
         select {
             width: 100%;
-            padding: 10px 12px;
-            background: #191b22;
-            color: #e9eef5;
-            border: 1px solid #262b35;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: border-color 0.2s;
+            padding: 10px 14px;
+            background: #f7fafc;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-        
         input[type="text"]:focus,
         input[type="password"]:focus,
         input[type="number"]:focus,
         input[type="date"]:focus,
         select:focus {
             outline: none;
-            border-color: #3a4250;
-            box-shadow: 0 0 0 3px rgba(29,152,255,.18);
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        #name {
-            border-color: #1d98ff;
-            box-shadow: 0 0 12px rgba(29, 152, 255, 0.4);
-        }
-
-        #name:focus {
-            border-color: #1d98ff;
-            box-shadow: 0 0 16px rgba(29, 152, 255, 0.6);
-        }
-        
         input[type="file"] {
             width: 100%;
-            padding: 8px;
-            background: #191b22;
-            color: #e9eef5;
-            border: 2px solid #FF273E;
-            border-radius: 6px;
+            padding: 10px 14px;
+            background: #f7fafc;
+            color: #2d3748;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 12px rgba(255, 39, 62, 0.5);
+            font-size: 14px;
+            transition: all 0.2s;
         }
 
-        input[type="file"]:focus {
-            box-shadow: 0 0 18px rgba(255, 39, 62, 0.7);
+        input[type="file"]:hover {
+            border-color: #667eea;
+            background: #edf2f7;
         }
-        
+
         .hint {
             font-size: 12px;
-            color: #8a8f98;
-            margin-top: 4px;
+            color: #718096;
+            margin-top: 6px;
         }
-        
+
         .btn {
-            background: #1d98ff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        #loginForm .btn {
-            width: 100%;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: #1d98ff;
-            border: 2px solid #1d98ff;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        #loginForm .btn-outline {
-            width: 100%;
-        }
-
-        .btn-outline:hover {
-            background: rgba(29, 152, 255, 0.1);
-        }
-        
         .btn:hover {
-            background: #1680e0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
-        
+
         .btn:disabled {
-            background: #3a4250;
+            background: #cbd5e0;
             cursor: not-allowed;
+            transform: none;
         }
-        
-        .btn-logout {
-            background: #ff4a4a;
-            float: right;
-            padding: 8px 16px;
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #718096;
             font-size: 14px;
-        }
-        
-        .btn-logout:hover {
-            background: #e03939;
-        }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #262b35;
-        }
-        
-        .admin-nav {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-        
-        .admin-nav a {
-            color: #8a8f98;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
             transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
         }
-        
-        .admin-nav a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #e9eef5;
-        }
-        
-        .admin-nav a.active {
-            background: rgba(102, 126, 234, 0.15);
+
+        .tab:hover {
             color: #667eea;
         }
-        
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Alerts */
         .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
+            padding: 14px 18px;
+            border-radius: 8px;
             margin-bottom: 20px;
+            font-size: 14px;
         }
-        
+
         .alert-success {
-            background: rgba(29, 152, 255, 0.15);
-            color: #5eb8ff;
-            border: 1px solid rgba(29, 152, 255, 0.3);
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
-        
+
         .alert-error {
-            background: rgba(255, 74, 74, 0.15);
-            color: #ff9c9c;
-            border: 1px solid rgba(255, 74, 74, 0.3);
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
-        
-        .section {
-            border: 1px solid #262b35;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            background: #0f1014;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1d98ff;
+
+        /* Assets/Templates List */
+        .assets-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             margin-bottom: 16px;
+        }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2d3748;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .select-all-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .delete-selected-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .delete-selected-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .assets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .asset-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+
+        .asset-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            transform: translateX(4px);
+        }
+
+        .template-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+            flex-shrink: 0;
+        }
+
+        .asset-item-info {
+            flex: 1;
+        }
+
+        .asset-name {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .asset-slug {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .asset-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .asset-edit-icon,
+        .asset-delete-icon {
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+
+        .asset-edit-icon {
+            color: #667eea;
+        }
+
+        .asset-edit-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .asset-delete-icon {
+            color: #ef4444;
+        }
+
+        .asset-delete-icon:hover {
+            transform: scale(1.2);
+        }
+
+        /* Template Section */
+        .template-section {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            background: #fafbfc;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
         }
 
         .section-grid {
@@ -291,70 +531,19 @@
 
         .preview-label {
             font-size: 12px;
-            color: #8a8f98;
+            color: #718096;
             text-transform: uppercase;
-            letter-spacing: .3px;
+            letter-spacing: 0.5px;
             margin-bottom: 8px;
-        }
-        
-        .row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-        
-        #loginForm {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 100px;
-        }
-
-        .login-logo {
-            margin-bottom: 30px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-
-        .preview-section {
-            border: 1px solid #262b35;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            background: #0f1014;
-        }
-
-        .preview-grid {
-            display: grid;
-            gap: 16px;
-            grid-template-columns: 1fr 1fr;
-            margin-top: 12px;
-        }
-
-        @media (max-width: 760px) {
-            .preview-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .preview-item {
-            text-align: center;
+            font-weight: 600;
         }
 
         .preview-frame {
             position: relative;
             background: #0a0b10;
-            border: 1px solid #262b35;
-            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             overflow: hidden;
-            margin-top: 6px;
         }
 
         .preview-frame.square {
@@ -372,173 +561,35 @@
             cursor: crosshair;
         }
 
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            background: none;
-            border: none;
-            color: #6b7280;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-        }
-
-        .tab:hover {
-            color: #1d98ff;
-        }
-
-        .tab.active {
-            color: #1d98ff;
-            border-bottom-color: #1d98ff;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .assets-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .bulk-actions-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: #191b22;
-            border: 1px solid #262b35;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-
-        .select-all-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #e9eef5;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .select-all-container input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #1d98ff;
-        }
-
-        .delete-selected-btn {
-            background: #ef4444;
+        .preview-hint {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(102, 126, 234, 0.95);
             color: white;
-            border: none;
-            padding: 10px 20px;
+            padding: 8px 14px;
             border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .delete-selected-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        /* Row Layout */
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
         }
 
-        .template-checkbox {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            margin-right: 16px;
-            accent-color: #1d98ff;
-            flex-shrink: 0;
-        }
-
-        .asset-item {
-            background: #191b22;
-            border: 1px solid #262b35;
-            border-radius: 8px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 0;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .asset-item:hover {
-            background: #1f2128;
-            border-color: #1d98ff;
-            transform: translateX(4px);
-        }
-
-        .asset-item-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .asset-name {
-            font-weight: 600;
-            color: #e9eef5;
-            font-size: 16px;
-        }
-
-        .asset-slug {
-            font-size: 13px;
-            color: #8a8f98;
-        }
-
-        .asset-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .asset-edit-icon,
-        .asset-delete-icon {
-            cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.2s;
-        }
-
-        .asset-edit-icon {
-            color: #1d98ff;
-        }
-
-        .asset-edit-icon:hover {
-            transform: scale(1.2);
-        }
-
-        .asset-delete-icon {
-            color: #ef4444;
-        }
-
-        .asset-delete-icon:hover {
-            transform: scale(1.2);
-        }
-
+        /* Slider */
         .slider {
             width: 100%;
             max-width: 200px;
             height: 6px;
             border-radius: 3px;
-            background: #262b35;
+            background: #e2e8f0;
             outline: none;
             margin-bottom: 8px;
             -webkit-appearance: none;
@@ -550,13 +601,13 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #1d98ff;
+            background: #667eea;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .slider::-webkit-slider-thumb:hover {
-            background: #5eb8ff;
+            background: #764ba2;
             transform: scale(1.2);
         }
 
@@ -564,50 +615,23 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #1d98ff;
+            background: #667eea;
             cursor: pointer;
             border: none;
             transition: all 0.2s;
         }
 
         .slider::-moz-range-thumb:hover {
-            background: #5eb8ff;
+            background: #764ba2;
             transform: scale(1.2);
         }
 
-        .row .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .preview-hint {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(29, 152, 255, 0.9);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            pointer-events: none;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-align: center;
-        }
-
+        /* Color Picker */
         .color-picker-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
             align-items: center;
-        }
-
-        .color-picker-group label {
-            text-align: center;
         }
 
         .color-swatches {
@@ -622,18 +646,17 @@
             cursor: pointer;
             border: 3px solid transparent;
             transition: all 0.2s;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0,0,0,.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
         }
 
         .color-swatch:hover {
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0,0,0,.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,.25);
         }
 
         .color-swatch.selected {
-            border-color: #1d98ff;
-            box-shadow: 0 0 0 2px rgba(29, 152, 255, 0.3), 0 4px 12px rgba(0,0,0,.4);
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3), 0 4px 12px rgba(0,0,0,.25);
         }
 
         .color-swatch.red {
@@ -642,15 +665,17 @@
 
         .color-swatch.white {
             background: #FFFFFF;
+            border: 1px solid #e2e8f0;
         }
 
         .color-swatch-label {
             font-size: 11px;
-            color: #8a8f98;
+            color: #718096;
             text-align: center;
             margin-top: 4px;
         }
 
+        /* Nudge Controls */
         .nudge-controls {
             display: flex;
             flex-direction: column;
@@ -661,69 +686,46 @@
 
         .nudge-controls-label {
             font-size: 12px;
-            color: #8a8f98;
+            color: #718096;
             text-transform: uppercase;
-            letter-spacing: .3px;
-            text-align: center;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
         .nudge-buttons {
             display: grid;
-            grid-template-columns: repeat(3, 32px);
-            grid-template-rows: repeat(3, 32px);
-            gap: 4px;
-            justify-content: center;
+            grid-template-columns: repeat(3, 36px);
+            grid-template-rows: repeat(3, 36px);
+            gap: 6px;
         }
 
         .nudge-btn {
-            background: #191b22;
-            color: #1d98ff;
-            border: 1px solid #262b35;
+            background: white;
+            color: #667eea;
+            border: 1px solid #e2e8f0;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
-            width: 32px;
-            height: 32px;
         }
 
         .nudge-btn:hover {
-            background: #1d98ff;
+            background: #667eea;
             color: white;
             transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(29, 152, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
-        .nudge-btn:active {
-            transform: scale(0.95);
-        }
+        .nudge-up { grid-column: 2; grid-row: 1; }
+        .nudge-left { grid-column: 1; grid-row: 2; }
+        .nudge-right { grid-column: 3; grid-row: 2; }
+        .nudge-down { grid-column: 2; grid-row: 3; }
 
-        .nudge-up {
-            grid-column: 2;
-            grid-row: 1;
-        }
-
-        .nudge-left {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .nudge-right {
-            grid-column: 3;
-            grid-row: 2;
-        }
-
-        .nudge-down {
-            grid-column: 2;
-            grid-row: 3;
-        }
-
-        /* Custom Delete Confirmation Modal */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -731,7 +733,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             z-index: 9999;
             animation: fadeIn 0.2s ease;
@@ -749,18 +751,17 @@
         }
 
         @keyframes slideIn {
-            from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+            from { transform: scale(0.95) translateY(-20px); opacity: 0; }
             to { transform: scale(1) translateY(0); opacity: 1; }
         }
 
         .modal-box {
-            background: #191b22;
-            border: 1px solid #262b35;
+            background: white;
             border-radius: 12px;
-            padding: 28px 32px;
+            padding: 32px;
             max-width: 480px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.3s ease;
         }
 
@@ -773,18 +774,17 @@
         .modal-title {
             font-size: 22px;
             font-weight: 700;
-            color: #e9eef5;
+            color: #1a202c;
             text-align: center;
             margin-bottom: 12px;
         }
 
         .modal-message {
             font-size: 15px;
-            color: #a0a5ad;
+            color: #718096;
             text-align: center;
             line-height: 1.6;
             margin-bottom: 24px;
-            white-space: pre-line;
         }
 
         .modal-buttons {
@@ -797,19 +797,19 @@
             padding: 12px 28px;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .modal-btn-cancel {
-            background: #262b35;
-            color: #e9eef5;
+            background: #edf2f7;
+            color: #4a5568;
         }
 
         .modal-btn-cancel:hover {
-            background: #313640;
+            background: #e2e8f0;
             transform: translateY(-2px);
         }
 
@@ -823,10 +823,434 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-header {
+                padding: 24px 20px;
+            }
+
+            .content-body {
+                padding: 20px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-    <!-- Custom Delete Confirmation Modal -->
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="/assets/promostack-logo.png" alt="PromoStack" />
+            </div>
+            <h1 class="login-title">🔐 Admin Login</h1>
+            <div id="loginAlert"></div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-bottom: 12px;">Login</button>
+                <a href="https://dash.promostack.io" class="btn btn-secondary" style="width: 100%; display: block; text-align: center; text-decoration: none;">Visit Frontend</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard hidden" id="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="/assets/promostack-logo.png" alt="PromoStack" />
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a class="nav-item active" onclick="showView('templates')">
+                        <span class="nav-item-icon">📦</span>
+                        <span class="nav-item-text">Template Manager</span>
+                    </a>
+                    <a class="nav-item" href="https://dash.promostack.io/admin-stats.html" target="_blank">
+                        <span class="nav-item-icon">📊</span>
+                        <span class="nav-item-text">Bot Analytics</span>
+                    </a>
+                    <a class="nav-item" onclick="showView('campaigns')">
+                        <span class="nav-item-icon">🎯</span>
+                        <span class="nav-item-text">Campaigns</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a class="nav-item" onclick="showView('configuration')">
+                        <span class="nav-item-icon">⚙️</span>
+                        <span class="nav-item-text">Configuration</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="handleLogout()">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Templates View -->
+            <div id="templatesView" class="view-container">
+                <div class="content-header">
+                    <h1>Template Manager</h1>
+                    <p>Upload and manage your promotional templates with drag-to-draw coupon positioning</p>
+                </div>
+
+                <div class="content-body">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('upload')">Upload Template</button>
+                        <button class="tab" onclick="switchTab('assets')">Current Assets</button>
+                        <button class="tab" onclick="switchTab('campaigns-tab')">Campaigns</button>
+                    </div>
+
+                    <!-- Upload Tab -->
+                    <div id="uploadTab" class="tab-content active">
+                        <div id="uploadAlert"></div>
+
+                        <form id="templateForm" onsubmit="handleUpload(event)">
+                            <div class="card">
+                                <div class="form-group">
+                                    <label for="name">Template Name *</label>
+                                    <input type="text" id="name" required placeholder="e.g., Flash Sale">
+                                    <div class="hint">This will appear in the dropdown</div>
+                                </div>
+
+                                <div class="form-group" style="display: none;">
+                                    <label for="slug">Slug *</label>
+                                    <input type="text" id="slug" required pattern="[a-z0-9-]+" placeholder="e.g., flash-sale">
+                                </div>
+                            </div>
+
+                            <div class="template-section">
+                                <div class="section-title">Square Image (1:1)</div>
+                                
+                                <div class="section-grid">
+                                    <div class="controls-column">
+                                        <div class="form-group">
+                                            <label for="squareImage">Square PNG (optional)</label>
+                                            <input type="file" id="squareImage" accept="image/png">
+                                            <div class="hint">Upload at least one variant</div>
+                                        </div>
+
+                                        <div class="row" style="display: none;">
+                                            <div class="form-group">
+                                                <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="squareWidthPct" value="25" min="0" max="100" step="0.1" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" style="display: none;">
+                                            <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label for="squareMaxFontPx">Font Size</label>
+                                            <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
+                                            <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#2d3748;margin:0;padding:10px 0;">
+                                                <input id="squareShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
+                                                <span>Show Logo</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="nudge-controls">
+                                            <label class="nudge-controls-label">Fine-Tune Position</label>
+                                            <div class="nudge-buttons">
+                                                <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('square', 'up')">↑</button>
+                                                <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('square', 'left')">←</button>
+                                                <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('square', 'right')">→</button>
+                                                <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('square', 'down')">↓</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="color-picker-group" style="margin-top: 16px;">
+                                            <label>Text Color</label>
+                                            <div class="color-swatches">
+                                                <div>
+                                                    <div class="color-swatch red selected" data-color="#FF273E" data-variant="square" onclick="selectColor('#FF273E', 'square')"></div>
+                                                    <div class="color-swatch-label">Red</div>
+                                                </div>
+                                                <div>
+                                                    <div class="color-swatch white" data-color="#FFFFFF" data-variant="square" onclick="selectColor('#FFFFFF', 'square')"></div>
+                                                    <div class="color-swatch-label">White</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-column">
+                                        <div class="preview-label">Preview</div>
+                                        <div class="preview-frame square">
+                                            <div class="preview-hint">ℹ️ Click and draw coupon area</div>
+                                            <canvas id="previewSquare"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="template-section">
+                                <div class="section-title">Story Image (9:16)</div>
+                                
+                                <div class="section-grid">
+                                    <div class="controls-column">
+                                        <div class="form-group">
+                                            <label for="storyImage">Portrait PNG (optional)</label>
+                                            <input type="file" id="storyImage" accept="image/png">
+                                            <div class="hint">Upload at least one variant</div>
+                                        </div>
+
+                                        <div class="row" style="display: none;">
+                                            <div class="form-group">
+                                                <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="storyWidthPct" value="25" min="0" max="100" step="0.1" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" style="display: none;">
+                                            <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label for="storyMaxFontPx">Font Size</label>
+                                            <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
+                                            <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#2d3748;margin:0;padding:10px 0;">
+                                                <input id="storyShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
+                                                <span>Show Logo</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="nudge-controls">
+                                            <label class="nudge-controls-label">Fine-Tune Position</label>
+                                            <div class="nudge-buttons">
+                                                <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('story', 'up')">↑</button>
+                                                <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('story', 'left')">←</button>
+                                                <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('story', 'right')">→</button>
+                                                <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('story', 'down')">↓</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="color-picker-group" style="margin-top: 16px;">
+                                            <label>Text Color</label>
+                                            <div class="color-swatches">
+                                                <div>
+                                                    <div class="color-swatch red selected" data-color="#FF273E" data-variant="story" onclick="selectColor('#FF273E', 'story')"></div>
+                                                    <div class="color-swatch-label">Red</div>
+                                                </div>
+                                                <div>
+                                                    <div class="color-swatch white" data-color="#FFFFFF" data-variant="story" onclick="selectColor('#FFFFFF', 'story')"></div>
+                                                    <div class="color-swatch-label">White</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-column">
+                                        <div class="preview-label">Preview</div>
+                                        <div class="preview-frame story">
+                                            <div class="preview-hint">ℹ️ Click and draw coupon area</div>
+                                            <canvas id="previewStory"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="squareFontColor" value="#FF273E">
+                            <input type="hidden" id="storyFontColor" value="#FF273E">
+
+                            <button type="submit" class="btn" id="submitBtn">Upload Template</button>
+                        </form>
+                    </div>
+
+                    <!-- Assets Tab -->
+                    <div id="assetsTab" class="tab-content">
+                        <div class="assets-header">
+                            <label class="select-all-container">
+                                <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()">
+                                <span>Select All</span>
+                            </label>
+                            <button type="button" class="delete-selected-btn" onclick="deleteSelectedTemplates()">Delete Selected</button>
+                        </div>
+                        <div id="assetsList" class="assets-list">
+                            <p style="color: #718096; text-align: center;">Loading templates...</p>
+                        </div>
+                    </div>
+
+                    <!-- Campaigns Tab -->
+                    <div id="campaignsTabContent" class="tab-content">
+                        <div id="campaignAlert"></div>
+                        
+                        <div class="card">
+                            <div class="card-title" id="campaignFormTitle">Create Campaign</div>
+                            <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
+                                <input type="hidden" id="editCampaignId" value="">
+                                
+                                <div class="form-group">
+                                    <label for="campaignTitle">Campaign Title *</label>
+                                    <input type="text" id="campaignTitle" required placeholder="e.g., Summer Giveaway 2025">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="campaignDescription">Description *</label>
+                                    <input type="text" id="campaignDescription" required placeholder="Brief description of the campaign">
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group">
+                                        <label for="campaignStartDate">Start Date *</label>
+                                        <input type="date" id="campaignStartDate" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="campaignEndDate">End Date *</label>
+                                        <input type="date" id="campaignEndDate" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="campaignPrize">Prize *</label>
+                                        <input type="text" id="campaignPrize" required placeholder="e.g., $500 Gift Card">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Platforms *</label>
+                                    <div style="display: flex; gap: 16px; margin-top: 8px;">
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
+                                            <input type="checkbox" id="platformInstagram" style="width:auto;margin:0;" />
+                                            <span>Instagram</span>
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
+                                            <input type="checkbox" id="platformTwitter" style="width:auto;margin:0;" />
+                                            <span>Twitter</span>
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
+                                            <input type="checkbox" id="platformFacebook" style="width:auto;margin:0;" />
+                                            <span>Facebook</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="campaignOverlay">Campaign Overlay Image (Optional)</label>
+                                    <input type="file" id="campaignOverlay" accept="image/png,image/jpeg" onchange="handleOverlayPreview(event)">
+                                    <small style="color: #718096; display: block; margin-top: 4px;">
+                                        PNG or JPEG. Will be overlaid on user-uploaded images during participation.
+                                    </small>
+                                    <div id="overlayPreview" style="margin-top: 12px; display: none;">
+                                        <img id="overlayPreviewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e2e8f0;">
+                                        <button type="button" onclick="clearOverlay()" class="btn btn-secondary" style="margin-top: 8px; padding: 8px 16px; font-size: 12px;">Remove</button>
+                                    </div>
+                                    <input type="hidden" id="existingOverlayUrl" value="">
+                                </div>
+
+                                <div style="display: flex; gap: 12px;">
+                                    <button type="submit" class="btn" id="campaignSubmitBtn">Create Campaign</button>
+                                    <button type="button" class="btn btn-secondary" onclick="cancelCampaignEdit()" id="campaignCancelBtn" style="display:none;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">All Campaigns</div>
+                            <div id="campaignsList" class="assets-list">
+                                <p style="color: #718096; text-align: center;">Loading campaigns...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaigns View -->
+            <div id="campaignsView" class="view-container hidden">
+                <div class="content-header">
+                    <h1>Campaigns</h1>
+                    <p>Manage your promotional campaigns and giveaways</p>
+                </div>
+
+                <div class="content-body">
+                    <div id="campaignsViewAlert"></div>
+                    
+                    <div class="card">
+                        <div class="card-title">Create Campaign</div>
+                        <p style="color: #718096; font-size: 14px; margin-bottom: 20px;">
+                            Use the Campaigns tab in Template Manager to create and manage campaigns.
+                        </p>
+                        <button class="btn" onclick="showView('templates'); switchTab('campaigns-tab')">Go to Campaigns</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration View -->
+            <div id="configurationView" class="view-container hidden">
+                <div class="content-header">
+                    <h1>Configuration</h1>
+                    <p>System settings and configuration options</p>
+                </div>
+
+                <div class="content-body">
+                    <div class="card">
+                        <div class="card-title">Settings</div>
+                        <p style="color: #718096; font-size: 14px;">
+                            Configuration options coming soon...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
     <div class="modal-overlay" id="deleteModal">
         <div class="modal-box">
             <div class="modal-icon">🗑️</div>
@@ -839,316 +1263,12 @@
         </div>
     </div>
 
-    <div class="container">
-        <div class="login-container" id="loginWrapper">
-            <div class="login-logo">
-                <img src="/assets/promostack-logo.png" alt="PromoStack" style="width: 280px;" />
-            </div>
-            <div class="card" id="loginForm">
-                <h1 class="login-title">🔐 Admin Login</h1>
-                <div id="loginAlert"></div>
-                <form onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn">Login</button>
-                </form>
-                <a href="https://dash.promostack.io" class="btn-outline" style="margin-top: 12px;">Visit Frontend</a>
-            </div>
-        </div>
-
-        <div class="brand" id="adminBrand" style="display:none;"><img src="/assets/promostack-logo.png" alt="PromoStack" /></div>
-
-        <div class="card hidden" id="adminPanel">
-            <div class="admin-header">
-                <nav class="admin-nav">
-                    <a href="#" class="active">📦 Template Manager</a>
-                    <a href="https://dash.promostack.io/admin-stats.html">📊 Bot Stats</a>
-                </nav>
-                <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
-            </div>
-            
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('upload')">Upload Template</button>
-                <button class="tab" onclick="switchTab('assets')">Current Assets</button>
-                <button class="tab" onclick="switchTab('campaigns')">Campaigns</button>
-            </div>
-
-            <div id="uploadTab" class="tab-content active">
-                <div id="uploadAlert"></div>
-            
-            <form id="templateForm" onsubmit="handleUpload(event)">
-                <div class="form-group">
-                    <label for="name">Template Name *</label>
-                    <input type="text" id="name" required placeholder="e.g., Flash Sale">
-                    <div class="hint">This will appear in the dropdown</div>
-                </div>
-
-                <div class="form-group" style="display: none;">
-                    <label for="slug">Slug *</label>
-                    <input type="text" id="slug" required pattern="[a-z0-9-]+" placeholder="e.g., flash-sale">
-                    <div class="hint">Lowercase letters, numbers, and hyphens only</div>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">Square Image (1:1)</div>
-                    
-                    <div class="section-grid">
-                        <div class="controls-column">
-                            <div class="form-group">
-                                <label for="squareImage">Square PNG (optional)</label>
-                                <input type="file" id="squareImage" accept="image/png">
-                                <div class="hint">Upload at least one variant (square or portrait)</div>
-                            </div>
-
-                            <div class="row">
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="squareLeftPct" value="5" min="0" max="100" step="0.1" required>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="squareTopPct" value="78" min="0" max="100" step="0.1" required>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="squareWidthPct" value="25" min="0" max="100" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group" style="display: none;">
-                                <input type="number" id="squareHeightPct" value="12" min="0" max="100" step="0.1" required>
-                            </div>
-
-                            <div class="form-group" style="text-align: center;">
-                                <label for="squareMaxFontPx" style="text-align: center;">Font Size</label>
-                                <input type="range" id="squareMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
-                                <input type="number" id="squareMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
-                            </div>
-
-                            <div class="form-group" style="text-align: center;">
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
-                                    <input id="squareShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
-                                    <span>Show Logo</span>
-                                </label>
-                            </div>
-
-                            <div class="nudge-controls">
-                                <label class="nudge-controls-label">Fine-Tune Position</label>
-                                <div class="nudge-buttons">
-                                    <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('square', 'up')" title="Nudge Up">↑</button>
-                                    <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('square', 'left')" title="Nudge Left">←</button>
-                                    <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('square', 'right')" title="Nudge Right">→</button>
-                                    <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('square', 'down')" title="Nudge Down">↓</button>
-                                </div>
-                            </div>
-
-                            <div class="color-picker-group" style="margin-top: 16px;">
-                                <label>Text Color</label>
-                                <div class="color-swatches">
-                                    <div>
-                                        <div class="color-swatch red selected" data-color="#FF273E" data-variant="square" onclick="selectColor('#FF273E', 'square')"></div>
-                                        <div class="color-swatch-label">Red</div>
-                                    </div>
-                                    <div>
-                                        <div class="color-swatch white" data-color="#FFFFFF" data-variant="square" onclick="selectColor('#FFFFFF', 'square')"></div>
-                                        <div class="color-swatch-label">White</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="preview-column">
-                            <div class="preview-label">Preview</div>
-                            <div class="preview-frame square">
-                                <div class="preview-hint">ℹ️ Click and draw coupon area in your template</div>
-                                <canvas id="previewSquare"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">Story Image (9:16)</div>
-                    
-                    <div class="section-grid">
-                        <div class="controls-column">
-                            <div class="form-group">
-                                <label for="storyImage">Portrait PNG (optional)</label>
-                                <input type="file" id="storyImage" accept="image/png">
-                                <div class="hint">Upload at least one variant (square or portrait)</div>
-                            </div>
-
-                            <div class="row">
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="storyLeftPct" value="5" min="0" max="100" step="0.1" required>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="storyTopPct" value="78" min="0" max="100" step="0.1" required>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <input type="number" id="storyWidthPct" value="25" min="0" max="100" step="0.1" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group" style="display: none;">
-                                <input type="number" id="storyHeightPct" value="12" min="0" max="100" step="0.1" required>
-                            </div>
-
-                            <div class="form-group" style="text-align: center;">
-                                <label for="storyMaxFontPx" style="text-align: center;">Font Size</label>
-                                <input type="range" id="storyMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
-                                <input type="number" id="storyMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
-                            </div>
-
-                            <div class="form-group" style="text-align: center;">
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#e9eef5;margin:0;padding:10px 0;">
-                                    <input id="storyShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
-                                    <span>Show Logo</span>
-                                </label>
-                            </div>
-
-                            <div class="nudge-controls">
-                                <label class="nudge-controls-label">Fine-Tune Position</label>
-                                <div class="nudge-buttons">
-                                    <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('story', 'up')" title="Nudge Up">↑</button>
-                                    <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('story', 'left')" title="Nudge Left">←</button>
-                                    <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('story', 'right')" title="Nudge Right">→</button>
-                                    <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('story', 'down')" title="Nudge Down">↓</button>
-                                </div>
-                            </div>
-
-                            <div class="color-picker-group" style="margin-top: 16px;">
-                                <label>Text Color</label>
-                                <div class="color-swatches">
-                                    <div>
-                                        <div class="color-swatch red selected" data-color="#FF273E" data-variant="story" onclick="selectColor('#FF273E', 'story')"></div>
-                                        <div class="color-swatch-label">Red</div>
-                                    </div>
-                                    <div>
-                                        <div class="color-swatch white" data-color="#FFFFFF" data-variant="story" onclick="selectColor('#FFFFFF', 'story')"></div>
-                                        <div class="color-swatch-label">White</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="preview-column">
-                            <div class="preview-label">Preview</div>
-                            <div class="preview-frame story">
-                                <div class="preview-hint">ℹ️ Click and draw coupon area in your template</div>
-                                <canvas id="previewStory"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <input type="hidden" id="squareFontColor" value="#FF273E">
-                <input type="hidden" id="storyFontColor" value="#FF273E">
-
-                <button type="submit" class="btn" id="submitBtn">Upload Template</button>
-            </form>
-            </div>
-
-            <div id="assetsTab" class="tab-content">
-                <div class="bulk-actions-header">
-                    <label class="select-all-container">
-                        <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()">
-                        <span>Select All</span>
-                    </label>
-                    <button type="button" class="delete-selected-btn" onclick="deleteSelectedTemplates()">Delete Selected</button>
-                </div>
-                <div id="assetsList" class="assets-list">
-                    <p style="color: #8a8f98; text-align: center;">Loading templates...</p>
-                </div>
-            </div>
-
-            <div id="campaignsTab" class="tab-content">
-                <div id="campaignAlert"></div>
-                
-                <div class="section">
-                    <div class="section-title" id="campaignFormTitle">Create Campaign</div>
-                    <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
-                        <input type="hidden" id="editCampaignId" value="">
-                        
-                        <div class="form-group">
-                            <label for="campaignTitle">Campaign Title *</label>
-                            <input type="text" id="campaignTitle" required placeholder="e.g., Summer Giveaway 2025">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="campaignDescription">Description *</label>
-                            <input type="text" id="campaignDescription" required placeholder="Brief description of the campaign">
-                        </div>
-
-                        <div class="row">
-                            <div class="form-group">
-                                <label for="campaignStartDate">Start Date *</label>
-                                <input type="date" id="campaignStartDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="campaignEndDate">End Date *</label>
-                                <input type="date" id="campaignEndDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="campaignPrize">Prize *</label>
-                                <input type="text" id="campaignPrize" required placeholder="e.g., $500 Gift Card">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Platforms *</label>
-                            <div style="display: flex; gap: 16px; margin-top: 8px;">
-                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
-                                    <input type="checkbox" id="platformInstagram" style="width:auto;margin:0;" />
-                                    <span>Instagram</span>
-                                </label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
-                                    <input type="checkbox" id="platformTwitter" style="width:auto;margin:0;" />
-                                    <span>Twitter</span>
-                                </label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e9eef5;text-transform:none;">
-                                    <input type="checkbox" id="platformFacebook" style="width:auto;margin:0;" />
-                                    <span>Facebook</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="campaignOverlay">Campaign Overlay Image (Optional)</label>
-                            <input type="file" id="campaignOverlay" accept="image/png,image/jpeg" onchange="handleOverlayPreview(event)">
-                            <small style="color: #8a8f98; display: block; margin-top: 4px;">
-                                PNG or JPEG. Will be overlaid on user-uploaded images during participation.
-                            </small>
-                            <div id="overlayPreview" style="margin-top: 12px; display: none;">
-                                <img id="overlayPreviewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #3a4250;">
-                                <button type="button" onclick="clearOverlay()" style="display: block; margin-top: 8px; padding: 4px 12px; background: #3a4250; color: #e9eef5; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Remove</button>
-                            </div>
-                            <input type="hidden" id="existingOverlayUrl" value="">
-                        </div>
-
-                        <div style="display: flex; gap: 12px;">
-                            <button type="submit" class="btn" id="campaignSubmitBtn">Create Campaign</button>
-                            <button type="button" class="btn" onclick="cancelCampaignEdit()" id="campaignCancelBtn" style="display:none;background:#3a4250;">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="section">
-                    <div class="section-title">All Campaigns</div>
-                    <div id="campaignsList" class="assets-list">
-                        <p style="color: #8a8f98; text-align: center;">Loading campaigns...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Campaign Submissions Modal -->
     <div class="modal-overlay" id="submissionsModal">
         <div class="modal-box" style="max-width: 800px;">
             <div class="modal-title" id="submissionsModalTitle">Campaign Submissions</div>
             <div id="submissionsContent" style="margin: 20px 0; max-height: 400px; overflow-y: auto;">
-                <p style="color: #8a8f98; text-align: center;">Loading submissions...</p>
+                <p style="color: #718096; text-align: center;">Loading submissions...</p>
             </div>
             <div style="text-align: center;">
                 <button class="modal-btn modal-btn-cancel" onclick="closeSubmissionsModal()">Close</button>
@@ -1157,23 +1277,30 @@
     </div>
 
     <script>
-        function selectColor(color, variant) {
-            document.querySelectorAll(`.color-swatch[data-variant="${variant}"]`).forEach(swatch => {
-                swatch.classList.remove('selected');
-                if (swatch.dataset.color === color) {
-                    swatch.classList.add('selected');
-                }
+        // View Management
+        function showView(viewName) {
+            document.querySelectorAll('.view-container').forEach(view => {
+                view.classList.add('hidden');
             });
-            document.getElementById(variant + 'FontColor').value = color;
-            updatePreviews();
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if (viewName === 'templates') {
+                document.getElementById('templatesView').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+            } else if (viewName === 'campaigns') {
+                document.getElementById('templatesView').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+                switchTab('campaigns-tab');
+            } else if (viewName === 'configuration') {
+                document.getElementById('configurationView').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
+            }
         }
 
-        function showAlert(elementId, message, isError = false) {
-            const alertDiv = document.getElementById(elementId);
-            alertDiv.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
-            setTimeout(() => alertDiv.innerHTML = '', 5000);
-        }
-
+        // Login/Logout
         async function handleLogin(event) {
             event.preventDefault();
             const password = document.getElementById('password').value;
@@ -1188,9 +1315,9 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    document.getElementById('loginWrapper').style.display = 'none';
-                    document.getElementById('adminBrand').style.display = 'block';
-                    document.getElementById('adminPanel').classList.remove('hidden');
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    loadAssets();
                 } else {
                     showAlert('loginAlert', data.error || 'Invalid password', true);
                 }
@@ -1202,15 +1329,45 @@
         async function handleLogout() {
             try {
                 await fetch('/api/logout', { method: 'POST' });
-                document.getElementById('adminPanel').classList.add('hidden');
-                document.getElementById('adminBrand').style.display = 'none';
-                document.getElementById('loginWrapper').style.display = 'flex';
+                document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('loginPage').classList.remove('hidden');
                 document.getElementById('password').value = '';
             } catch (error) {
                 console.error('Logout failed:', error);
             }
         }
 
+        // Tab Switching
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            const tabButtons = Array.from(tabs);
+            if (tabName === 'upload') {
+                tabButtons[0]?.classList.add('active');
+                document.getElementById('uploadTab').classList.add('active');
+            } else if (tabName === 'assets') {
+                tabButtons[1]?.classList.add('active');
+                document.getElementById('assetsTab').classList.add('active');
+                loadAssets();
+            } else if (tabName === 'campaigns-tab') {
+                tabButtons[2]?.classList.add('active');
+                document.getElementById('campaignsTabContent').classList.add('active');
+                loadCampaigns();
+            }
+        }
+
+        // Alert Helper
+        function showAlert(elementId, message, isError = false) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert ${isError ? 'alert-error' : 'alert-success'}">${message}</div>`;
+            setTimeout(() => alertDiv.innerHTML = '', 5000);
+        }
+
+        // Template Upload
         async function handleUpload(event) {
             event.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -1221,15 +1378,10 @@
             formData.append('name', document.getElementById('name').value);
             formData.append('slug', document.getElementById('slug').value);
             
-            // Only append images if they were selected (optional for updates)
             const squareFile = document.getElementById('squareImage').files[0];
             const storyFile = document.getElementById('storyImage').files[0];
-            if (squareFile) {
-                formData.append('squareImage', squareFile);
-            }
-            if (storyFile) {
-                formData.append('storyImage', storyFile);
-            }
+            if (squareFile) formData.append('squareImage', squareFile);
+            if (storyFile) formData.append('storyImage', storyFile);
             
             formData.append('squareLeftPct', document.getElementById('squareLeftPct').value);
             formData.append('squareTopPct', document.getElementById('squareTopPct').value);
@@ -1238,6 +1390,7 @@
             formData.append('squareHAlign', 'center');
             formData.append('squareVAlign', 'middle');
             formData.append('squareMaxFontPx', document.getElementById('squareMaxFontPx').value);
+            formData.append('squareShowLogo', document.getElementById('squareShowLogo').checked);
             
             formData.append('storyLeftPct', document.getElementById('storyLeftPct').value);
             formData.append('storyTopPct', document.getElementById('storyTopPct').value);
@@ -1246,6 +1399,7 @@
             formData.append('storyHAlign', 'center');
             formData.append('storyVAlign', 'middle');
             formData.append('storyMaxFontPx', document.getElementById('storyMaxFontPx').value);
+            formData.append('storyShowLogo', document.getElementById('storyShowLogo').checked);
             
             formData.append('squareFontColor', document.getElementById('squareFontColor').value);
             formData.append('storyFontColor', document.getElementById('storyFontColor').value);
@@ -1261,6 +1415,9 @@
                 if (data.success) {
                     showAlert('uploadAlert', data.message + ' ✓');
                     document.getElementById('templateForm').reset();
+                    drawingState.square.hasDrawnBox = false;
+                    drawingState.story.hasDrawnBox = false;
+                    updatePreviewsImmediate();
                 } else {
                     showAlert('uploadAlert', data.error || 'Upload failed', true);
                 }
@@ -1272,6 +1429,7 @@
             }
         }
 
+        // Auto-generate slug from name
         document.getElementById('name').addEventListener('input', function(e) {
             const slug = e.target.value.toLowerCase()
                 .replace(/[^a-z0-9\s-]/g, '')
@@ -1280,37 +1438,12 @@
             document.getElementById('slug').value = slug;
         });
 
-        // Tab switching
-        function switchTab(tabName) {
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach(tab => tab.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Activate the correct tab button
-            const tabButtons = Array.from(tabs);
-            if (tabName === 'upload') {
-                tabButtons[0]?.classList.add('active');
-                document.getElementById('uploadTab').classList.add('active');
-            } else if (tabName === 'assets') {
-                tabButtons[1]?.classList.add('active');
-                document.getElementById('assetsTab').classList.add('active');
-                loadAssets();
-            } else if (tabName === 'campaigns') {
-                tabButtons[2]?.classList.add('active');
-                document.getElementById('campaignsTab').classList.add('active');
-                loadCampaigns();
-            }
-        }
-
-        // Load and display current assets
+        // Load Assets
         async function loadAssets() {
             const assetsList = document.getElementById('assetsList');
-            assetsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading templates...</p>';
+            assetsList.innerHTML = '<p style="color: #718096; text-align: center;">Loading templates...</p>';
             
             try {
-                // Try Spaces CDN first, fallback to local
                 let response;
                 try {
                     response = await fetch('https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/index.json?ts=' + Date.now());
@@ -1320,7 +1453,7 @@
                 const data = await response.json();
                 
                 if (!data.templates || data.templates.length === 0) {
-                    assetsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">No templates found</p>';
+                    assetsList.innerHTML = '<p style="color: #718096; text-align: center;">No templates found</p>';
                     return;
                 }
                 
@@ -1342,7 +1475,6 @@
                     assetsList.appendChild(item);
                 });
                 
-                // Reset select all checkbox
                 document.getElementById('selectAllTemplates').checked = false;
             } catch (error) {
                 assetsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading templates</p>';
@@ -1350,10 +1482,9 @@
             }
         }
 
-        // Load template data for editing
+        // Load template for editing
         async function loadTemplateForEdit(slug) {
             try {
-                // Try Spaces CDN first, fallback to local
                 let response;
                 try {
                     response = await fetch(`https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/meta.json?ts=${Date.now()}`);
@@ -1362,14 +1493,11 @@
                 }
                 const meta = await response.json();
                 
-                // Switch to upload tab
                 switchTab('upload');
                 
-                // Populate form fields
                 document.getElementById('name').value = meta.name || slug;
                 document.getElementById('slug').value = slug;
                 
-                // Square settings - read from nested box structure
                 document.getElementById('squareLeftPct').value = meta.square.box?.leftPct || meta.square.leftPct || 5;
                 document.getElementById('squareTopPct').value = meta.square.box?.topPct || meta.square.topPct || 78;
                 document.getElementById('squareWidthPct').value = meta.square.box?.widthPct || meta.square.widthPct || 90;
@@ -1377,7 +1505,6 @@
                 document.getElementById('squareMaxFontPx').value = meta.square.maxFontPx || 80;
                 document.getElementById('squareShowLogo').checked = meta.square.showLogo !== false;
                 
-                // Story settings - read from nested box structure
                 document.getElementById('storyLeftPct').value = meta.story.box?.leftPct || meta.story.leftPct || 5;
                 document.getElementById('storyTopPct').value = meta.story.box?.topPct || meta.story.topPct || 78;
                 document.getElementById('storyWidthPct').value = meta.story.box?.widthPct || meta.story.widthPct || 90;
@@ -1385,7 +1512,6 @@
                 document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
                 document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
                 
-                // Font color settings
                 const squareFontColor = meta.square.fontColor || '#FF273E';
                 const storyFontColor = meta.story.fontColor || '#FF273E';
                 document.getElementById('squareFontColor').value = squareFontColor;
@@ -1393,11 +1519,9 @@
                 selectColor(squareFontColor, 'square');
                 selectColor(storyFontColor, 'story');
                 
-                // Mark that boxes have been drawn (since we're loading an existing template)
                 drawingState.square.hasDrawnBox = true;
                 drawingState.story.hasDrawnBox = true;
                 
-                // Load images into preview - use separate instances per variant
                 const squareImg = new Image();
                 squareImg.onload = async function() {
                     try {
@@ -1408,8 +1532,6 @@
                         console.error('Square image decode failed:', e);
                     }
                 };
-                squareImg.onerror = () => console.error('Square image load failed');
-                squareImg.src = `/assets/templates/${slug}/square.png?t=${Date.now()}`;
                 
                 const storyImg = new Image();
                 storyImg.onload = async function() {
@@ -1421,504 +1543,144 @@
                         console.error('Story image decode failed:', e);
                     }
                 };
-                storyImg.onerror = () => console.error('Story image load failed');
-                storyImg.src = `/assets/templates/${slug}/story.png?t=${Date.now()}`;
                 
-                // Update submit button text
+                try {
+                    squareImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/square.png?ts=${Date.now()}`;
+                } catch (_) {
+                    squareImg.src = `/assets/templates/${slug}/square.png?ts=${Date.now()}`;
+                }
+                
+                try {
+                    storyImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/story.png?ts=${Date.now()}`;
+                } catch (_) {
+                    storyImg.src = `/assets/templates/${slug}/story.png?ts=${Date.now()}`;
+                }
+                
                 document.getElementById('submitBtn').textContent = 'Update Template';
                 
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
             } catch (error) {
-                alert('Failed to load template: ' + error.message);
-                console.error('Failed to load template:', error);
+                showAlert('uploadAlert', 'Failed to load template: ' + error.message, true);
             }
-        }
-
-        // Show custom delete confirmation modal
-        function showDeleteModal(message, onConfirm) {
-            document.getElementById('modalMessage').textContent = message;
-            document.getElementById('deleteModal').classList.add('active');
-            
-            const confirmBtn = document.getElementById('modalConfirmBtn');
-            confirmBtn.onclick = () => {
-                closeDeleteModal();
-                onConfirm();
-            };
-        }
-
-        // Close delete confirmation modal
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('active');
         }
 
         // Delete template
-        async function deleteTemplate(slug, name) {
-            showDeleteModal(
-                `Are you sure you want to delete "${name}"?\n\nThis will permanently remove the template and both images.`,
-                async () => {
-                    try {
-                        const response = await fetch('/api/delete-template', {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ slug })
-                        });
+        let deleteConfirmCallback = null;
 
-                        const data = await response.json();
-
-                        if (data.success) {
-                            loadAssets();
-                        } else {
-                            alert('Delete failed: ' + (data.error || 'Unknown error'));
-                        }
-                    } catch (error) {
-                        alert('Delete failed: ' + error.message);
-                        console.error('Failed to delete template:', error);
+        function deleteTemplate(slug, name) {
+            document.getElementById('modalTitle').textContent = 'Delete Template?';
+            document.getElementById('modalMessage').textContent = `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('active');
+            
+            deleteConfirmCallback = async () => {
+                closeDeleteModal();
+                try {
+                    const response = await fetch('/api/delete-template', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ slug })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showAlert('uploadAlert', `Template "${name}" deleted successfully ✓`);
+                        loadAssets();
+                    } else {
+                        showAlert('uploadAlert', data.error || 'Delete failed', true);
                     }
+                } catch (error) {
+                    showAlert('uploadAlert', 'Delete failed: ' + error.message, true);
                 }
-            );
+            };
+            
+            document.getElementById('modalConfirmBtn').onclick = deleteConfirmCallback;
         }
 
-        // Toggle select all checkboxes
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            deleteConfirmCallback = null;
+        }
+
+        // Bulk delete
         function toggleSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAllTemplates');
-            const checkboxes = document.querySelectorAll('.template-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
+            const selectAll = document.getElementById('selectAllTemplates').checked;
+            document.querySelectorAll('.template-checkbox').forEach(checkbox => {
+                checkbox.checked = selectAll;
             });
         }
 
-        // Update select all state based on individual checkboxes
         function updateSelectAllState() {
             const checkboxes = document.querySelectorAll('.template-checkbox');
-            const selectAllCheckbox = document.getElementById('selectAllTemplates');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-            
-            selectAllCheckbox.checked = allChecked;
-            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            const checkedBoxes = document.querySelectorAll('.template-checkbox:checked');
+            document.getElementById('selectAllTemplates').checked = checkboxes.length > 0 && checkboxes.length === checkedBoxes.length;
         }
 
-        // Delete selected templates
-        async function deleteSelectedTemplates() {
-            const checkboxes = document.querySelectorAll('.template-checkbox:checked');
-            
-            if (checkboxes.length === 0) {
-                alert('Please select at least one template to delete');
-                return;
-            }
-
-            const templates = Array.from(checkboxes).map(cb => ({
+        function deleteSelectedTemplates() {
+            const selected = Array.from(document.querySelectorAll('.template-checkbox:checked')).map(cb => ({
                 slug: cb.dataset.slug,
                 name: cb.dataset.name
             }));
-
-            const confirmMsg = templates.length === 1 
-                ? `Are you sure you want to delete "${templates[0].name}"?\n\nThis will permanently remove the template and all images.`
-                : `Are you sure you want to delete ${templates.length} templates?\n\n${templates.map(t => '• ' + t.name).join('\n')}\n\nThis will permanently remove all templates and images.`;
-
-            showDeleteModal(confirmMsg, async () => {
+            
+            if (selected.length === 0) {
+                showAlert('uploadAlert', 'No templates selected', true);
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = 'Delete Multiple Templates?';
+            document.getElementById('modalMessage').textContent = `Are you sure you want to delete ${selected.length} template(s)? This action cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('active');
+            
+            deleteConfirmCallback = async () => {
+                closeDeleteModal();
+                
                 let successCount = 0;
                 let failCount = 0;
-                const errors = [];
-
-                for (const template of templates) {
+                
+                for (const template of selected) {
                     try {
                         const response = await fetch('/api/delete-template', {
                             method: 'POST',
-                            credentials: 'same-origin',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ slug: template.slug })
                         });
-
+                        
                         const data = await response.json();
-
                         if (data.success) {
                             successCount++;
                         } else {
                             failCount++;
-                            errors.push(`${template.name}: ${data.error || 'Unknown error'}`);
                         }
                     } catch (error) {
                         failCount++;
-                        errors.push(`${template.name}: ${error.message}`);
                     }
                 }
-
-                // Reload the assets list
-                loadAssets();
-
-                // Show summary
-                let message = '';
+                
                 if (successCount > 0) {
-                    message += `Successfully deleted ${successCount} template${successCount > 1 ? 's' : ''}`;
+                    showAlert('uploadAlert', `Successfully deleted ${successCount} template(s) ✓`);
                 }
                 if (failCount > 0) {
-                    message += (message ? '\n\n' : '') + `Failed to delete ${failCount} template${failCount > 1 ? 's' : ''}:\n${errors.join('\n')}`;
-                    alert(message);
-                } else if (successCount > 0) {
-                    alert(message + ' ✓');
+                    showAlert('uploadAlert', `Failed to delete ${failCount} template(s)`, true);
+                }
+                
+                loadAssets();
+            };
+            
+            document.getElementById('modalConfirmBtn').onclick = deleteConfirmCallback;
+        }
+
+        // Color selection
+        function selectColor(color, variant) {
+            document.querySelectorAll(`.color-swatch[data-variant="${variant}"]`).forEach(swatch => {
+                swatch.classList.remove('selected');
+                if (swatch.dataset.color === color) {
+                    swatch.classList.add('selected');
                 }
             });
+            document.getElementById(variant + 'FontColor').value = color;
+            updatePreviews();
         }
 
-        // ==================== CAMPAIGN MANAGEMENT ====================
-        
-        // Load and display campaigns
-        async function loadCampaigns() {
-            const campaignsList = document.getElementById('campaignsList');
-            campaignsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading campaigns...</p>';
-            
-            try {
-                const response = await fetch('/api/campaigns');
-                const data = await response.json();
-                
-                if (!data.campaigns || data.campaigns.length === 0) {
-                    campaignsList.innerHTML = '<p style="color: #8a8f98; text-align: center;">No campaigns found</p>';
-                    return;
-                }
-                
-                campaignsList.innerHTML = '';
-                data.campaigns.forEach(campaign => {
-                    const statusInfo = getCampaignStatus(campaign.startDate, campaign.endDate);
-                    const item = document.createElement('div');
-                    item.className = 'asset-item';
-                    item.style.display = 'grid';
-                    item.style.gridTemplateColumns = '1fr auto';
-                    item.style.gap = '16px';
-                    item.style.alignItems = 'start';
-                    
-                    const platforms = [];
-                    if (campaign.platforms?.instagram) platforms.push('Instagram');
-                    if (campaign.platforms?.twitter) platforms.push('Twitter');
-                    if (campaign.platforms?.facebook) platforms.push('Facebook');
-                    
-                    item.innerHTML = `
-                        <div style="display:flex;flex-direction:column;gap:8px;">
-                            <div style="display:flex;align-items:center;gap:12px;">
-                                <span style="font-size:20px;">${statusInfo.icon}</span>
-                                <div>
-                                    <div class="asset-name">${campaign.title}</div>
-                                    <div class="asset-slug">${campaign.description}</div>
-                                </div>
-                            </div>
-                            <div style="display:flex;gap:16px;font-size:13px;color:#8a8f98;margin-left:32px;">
-                                <span>📅 ${formatDateRange(campaign.startDate, campaign.endDate)}</span>
-                                <span>🎁 ${campaign.prize}</span>
-                                <span>📊 ${campaign.submissionCount || 0} submissions</span>
-                            </div>
-                            <div style="display:flex;gap:8px;font-size:12px;margin-left:32px;">
-                                ${platforms.map(p => `<span style="background:#262b35;padding:4px 8px;border-radius:4px;">${p}</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="asset-actions" style="display:flex;gap:12px;align-items:center;">
-                            <button onclick="loadSubmissions('${campaign.id}')" class="btn" style="padding:8px 16px;font-size:13px;">View Submissions</button>
-                            <div class="asset-edit-icon" onclick="editCampaign('${campaign.id}')" title="Edit">✎</div>
-                            <div class="asset-delete-icon" onclick="deleteCampaign('${campaign.id}', '${campaign.title.replace(/'/g, "\\'")}')">🗑</div>
-                        </div>
-                    `;
-                    campaignsList.appendChild(item);
-                });
-            } catch (error) {
-                campaignsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading campaigns</p>';
-                console.error('Failed to load campaigns:', error);
-            }
-        }
-
-        // Get campaign status based on dates
-        function getCampaignStatus(startDate, endDate) {
-            const now = new Date();
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            
-            if (now < start) {
-                return { icon: '🟠', status: 'scheduled' };
-            } else if (now > end) {
-                return { icon: '🔴', status: 'expired' };
-            } else {
-                return { icon: '🟢', status: 'ongoing' };
-            }
-        }
-
-        // Format date range
-        function formatDateRange(startDate, endDate) {
-            const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const end = new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            return `${start} - ${end}`;
-        }
-
-        // Handle campaign form submission
-        async function handleCampaignSubmit(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById('campaignSubmitBtn');
-            const originalText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
-
-            const campaignId = document.getElementById('editCampaignId').value;
-            const formData = {
-                title: document.getElementById('campaignTitle').value,
-                description: document.getElementById('campaignDescription').value,
-                start_date: document.getElementById('campaignStartDate').value,
-                end_date: document.getElementById('campaignEndDate').value,
-                prize: document.getElementById('campaignPrize').value,
-                platforms: {
-                    instagram: document.getElementById('platformInstagram').checked,
-                    twitter: document.getElementById('platformTwitter').checked,
-                    facebook: document.getElementById('platformFacebook').checked
-                }
-            };
-
-            const atLeastOnePlatform = formData.platforms.instagram || formData.platforms.twitter || formData.platforms.facebook;
-            if (!atLeastOnePlatform) {
-                showAlert('campaignAlert', 'Please select at least one platform', true);
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-
-            try {
-                // Upload overlay if a new file is selected
-                const overlayFileInput = document.getElementById('campaignOverlay');
-                const existingOverlayUrl = document.getElementById('existingOverlayUrl').value;
-                
-                if (overlayFileInput.files && overlayFileInput.files[0]) {
-                    submitBtn.textContent = 'Uploading overlay...';
-                    
-                    const uploadFormData = new FormData();
-                    uploadFormData.append('overlayImage', overlayFileInput.files[0]);
-                    
-                    const uploadResponse = await fetch('/api/upload-overlay', {
-                        method: 'POST',
-                        body: uploadFormData
-                    });
-                    
-                    const uploadData = await uploadResponse.json();
-                    
-                    if (uploadData.success) {
-                        formData.overlay_url = uploadData.overlay_url;
-                    } else {
-                        throw new Error('Overlay upload failed: ' + (uploadData.error || 'Unknown error'));
-                    }
-                } else if (existingOverlayUrl) {
-                    formData.overlay_url = existingOverlayUrl;
-                }
-
-                submitBtn.textContent = 'Saving campaign...';
-                let response;
-                if (campaignId) {
-                    response = await fetch(`/api/campaigns/${campaignId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
-                    });
-                } else {
-                    response = await fetch('/api/campaigns', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
-                    });
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showAlert('campaignAlert', campaignId ? 'Campaign updated successfully ✓' : 'Campaign created successfully ✓');
-                    document.getElementById('campaignForm').reset();
-                    document.getElementById('editCampaignId').value = '';
-                    document.getElementById('existingOverlayUrl').value = '';
-                    document.getElementById('overlayPreview').style.display = 'none';
-                    document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
-                    document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
-                    document.getElementById('campaignCancelBtn').style.display = 'none';
-                    loadCampaigns();
-                } else {
-                    showAlert('campaignAlert', data.error || 'Operation failed', true);
-                }
-            } catch (error) {
-                showAlert('campaignAlert', 'Operation failed: ' + error.message, true);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        }
-
-        // Edit campaign
-        async function editCampaign(campaignId) {
-            try {
-                const response = await fetch(`/api/campaigns/${campaignId}`);
-                const data = await response.json();
-                
-                if (data.success && data.campaign) {
-                    const campaign = data.campaign;
-                    
-                    document.getElementById('editCampaignId').value = campaignId;
-                    document.getElementById('campaignTitle').value = campaign.title;
-                    document.getElementById('campaignDescription').value = campaign.description;
-                    document.getElementById('campaignStartDate').value = campaign.startDate;
-                    document.getElementById('campaignEndDate').value = campaign.endDate;
-                    document.getElementById('campaignPrize').value = campaign.prize;
-                    document.getElementById('platformInstagram').checked = campaign.platforms?.instagram || false;
-                    document.getElementById('platformTwitter').checked = campaign.platforms?.twitter || false;
-                    document.getElementById('platformFacebook').checked = campaign.platforms?.facebook || false;
-                    
-                    // Show existing overlay if present
-                    if (campaign.overlay_url) {
-                        document.getElementById('existingOverlayUrl').value = campaign.overlay_url;
-                        document.getElementById('overlayPreviewImg').src = campaign.overlay_url;
-                        document.getElementById('overlayPreview').style.display = 'block';
-                    } else {
-                        document.getElementById('existingOverlayUrl').value = '';
-                        document.getElementById('overlayPreview').style.display = 'none';
-                    }
-                    
-                    document.getElementById('campaignFormTitle').textContent = 'Edit Campaign';
-                    document.getElementById('campaignSubmitBtn').textContent = 'Update Campaign';
-                    document.getElementById('campaignCancelBtn').style.display = 'block';
-                    
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    alert('Failed to load campaign data');
-                }
-            } catch (error) {
-                alert('Failed to load campaign: ' + error.message);
-                console.error('Failed to load campaign:', error);
-            }
-        }
-
-        // Cancel campaign edit
-        function cancelCampaignEdit() {
-            document.getElementById('campaignForm').reset();
-            document.getElementById('editCampaignId').value = '';
-            document.getElementById('existingOverlayUrl').value = '';
-            document.getElementById('overlayPreview').style.display = 'none';
-            document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
-            document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
-            document.getElementById('campaignCancelBtn').style.display = 'none';
-        }
-
-        // Handle overlay preview
-        function handleOverlayPreview(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('overlayPreviewImg').src = e.target.result;
-                    document.getElementById('overlayPreview').style.display = 'block';
-                    document.getElementById('existingOverlayUrl').value = '';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Clear overlay
-        function clearOverlay() {
-            document.getElementById('campaignOverlay').value = '';
-            document.getElementById('overlayPreview').style.display = 'none';
-            document.getElementById('existingOverlayUrl').value = '';
-        }
-
-        // Delete campaign
-        async function deleteCampaign(campaignId, title) {
-            showDeleteModal(
-                `Are you sure you want to delete "${title}"?\n\nThis will permanently remove the campaign and all its submissions.`,
-                async () => {
-                    try {
-                        const response = await fetch(`/api/campaigns/${campaignId}`, {
-                            method: 'DELETE'
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            showAlert('campaignAlert', 'Campaign deleted successfully ✓');
-                            loadCampaigns();
-                        } else {
-                            alert('Delete failed: ' + (data.error || 'Unknown error'));
-                        }
-                    } catch (error) {
-                        alert('Delete failed: ' + error.message);
-                        console.error('Failed to delete campaign:', error);
-                    }
-                }
-            );
-        }
-
-        // Load and display submissions
-        async function loadSubmissions(campaignId) {
-            const modal = document.getElementById('submissionsModal');
-            const content = document.getElementById('submissionsContent');
-            const title = document.getElementById('submissionsModalTitle');
-            
-            modal.classList.add('active');
-            content.innerHTML = '<p style="color: #8a8f98; text-align: center;">Loading submissions...</p>';
-            
-            try {
-                const response = await fetch(`/api/campaigns/${campaignId}/submissions`);
-                const data = await response.json();
-                
-                title.textContent = `Campaign Submissions (${data.submissions?.length || 0})`;
-                
-                if (!data.submissions || data.submissions.length === 0) {
-                    content.innerHTML = '<p style="color: #8a8f98; text-align: center;">No submissions yet</p>';
-                    return;
-                }
-                
-                let tableHTML = `
-                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                        <thead>
-                            <tr style="border-bottom:2px solid #262b35;text-align:left;">
-                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Email</th>
-                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Instagram</th>
-                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Twitter</th>
-                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Facebook</th>
-                                <th style="padding:12px;color:#8a8f98;font-weight:600;">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                data.submissions.forEach(sub => {
-                    const date = new Date(sub.submittedAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    });
-                    
-                    tableHTML += `
-                        <tr style="border-bottom:1px solid #262b35;">
-                            <td style="padding:12px;color:#e9eef5;">${sub.email || '-'}</td>
-                            <td style="padding:12px;">
-                                ${sub.instagramUrl ? `<a href="${sub.instagramUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
-                            </td>
-                            <td style="padding:12px;">
-                                ${sub.twitterUrl ? `<a href="${sub.twitterUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
-                            </td>
-                            <td style="padding:12px;">
-                                ${sub.facebookUrl ? `<a href="${sub.facebookUrl}" target="_blank" style="color:#1d98ff;text-decoration:none;">View</a>` : '-'}
-                            </td>
-                            <td style="padding:12px;color:#8a8f98;">${date}</td>
-                        </tr>
-                    `;
-                });
-                
-                tableHTML += '</tbody></table>';
-                content.innerHTML = tableHTML;
-            } catch (error) {
-                content.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading submissions</p>';
-                console.error('Failed to load submissions:', error);
-            }
-        }
-
-        // Close submissions modal
-        function closeSubmissionsModal() {
-            document.getElementById('submissionsModal').classList.remove('active');
-        }
-
-        // ==================== PREVIEW LOGIC ====================
+        // Canvas preview setup
         const previewSquareCanvas = document.getElementById('previewSquare');
         const previewStoryCanvas = document.getElementById('previewStory');
         const ctxSquare = previewSquareCanvas.getContext('2d');
@@ -1929,25 +1691,31 @@
             story: null
         };
 
-        // Auto-fit text calculation (from main app)
-        function computeAutoFontPx(ctx, text, maxWidthPx, maxPx, minPx = 8) {
-            const min = Math.max(8, Number(minPx) || 8);
-            let lo = min, hi = Math.max(min, Number(maxPx) || min);
-            if (!Number.isFinite(maxWidthPx) || maxWidthPx <= 0) return min;
-            while (hi - lo > 0.5) {
-                const mid = (hi + lo) / 2;
+        const drawingState = {
+            square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false },
+            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false }
+        };
+
+        function computeAutoFontPx(ctx, text, maxWidth, maxHeight, minPx) {
+            let lo = minPx, hi = maxHeight;
+            while (hi - lo > 1) {
+                const mid = Math.floor((lo + hi) / 2);
                 ctx.font = `700 ${mid}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
-                const w = ctx.measureText(text).width;
-                if (w <= maxWidthPx) lo = mid; else hi = mid;
+                const metrics = ctx.measureText(text);
+                if (metrics.width <= maxWidth) {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
             }
-            return Math.floor(lo);
+            return lo;
         }
 
         function drawTextAutoFit(ctx, text, natW, natH, box, maxPx, fontColor) {
-            const left = Math.round(natW * ((box?.leftPct ?? 5) / 100));
-            const top = Math.round(natH * ((box?.topPct ?? 80) / 100));
-            const width = Math.round(natW * ((box?.widthPct ?? 90) / 100));
-            const height = Math.round(natH * ((box?.heightPct ?? 12) / 100));
+            const left = Math.round(natW * (box.leftPct / 100));
+            const top = Math.round(natH * (box.topPct / 100));
+            const width = Math.round(natW * (box.widthPct / 100));
+            const height = Math.round(natH * (box.heightPct / 100));
 
             const cap = Math.min(maxPx, height);
             const px = computeAutoFontPx(ctx, text, width, cap, 8);
@@ -1990,14 +1758,12 @@
             const natW = img && img.naturalWidth ? img.naturalWidth : 1080;
             const natH = img && img.naturalHeight ? img.naturalHeight : (variant === 'square' ? 1080 : 1920);
 
-            // Create offscreen canvas at full resolution
             const off = document.createElement('canvas');
             off.width = natW;
             off.height = natH;
             const og = off.getContext('2d');
             og.imageSmoothingQuality = 'high';
 
-            // Draw background image or placeholder
             if (img && img.naturalWidth) {
                 og.drawImage(img, 0, 0, natW, natH);
             } else {
@@ -2005,7 +1771,6 @@
                 og.fillRect(0, 0, natW, natH);
             }
 
-            // Get current form values
             const prefix = variant === 'square' ? 'square' : 'story';
             const box = {
                 leftPct: parseFloat(document.getElementById(prefix + 'LeftPct').value) || 5,
@@ -2017,31 +1782,26 @@
             };
             const maxFontPx = parseInt(document.getElementById(prefix + 'MaxFontPx').value) || 80;
 
-            // Draw bounding box overlay ONLY if actively drawing
             if (showBoundingBox) {
                 const boxLeft = Math.round(natW * (box.leftPct / 100));
                 const boxTop = Math.round(natH * (box.topPct / 100));
                 const boxWidth = Math.round(natW * (box.widthPct / 100));
                 const boxHeight = Math.round(natH * (box.heightPct / 100));
                 
-                // Semi-transparent box fill
-                og.fillStyle = 'rgba(29, 152, 255, 0.15)';
+                og.fillStyle = 'rgba(102, 126, 234, 0.15)';
                 og.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
                 
-                // Box border
-                og.strokeStyle = 'rgba(29, 152, 255, 0.6)';
+                og.strokeStyle = 'rgba(102, 126, 234, 0.6)';
                 og.lineWidth = Math.max(2, Math.round(Math.min(natW, natH) * 0.003));
                 og.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
             }
 
-            // Draw preview text with selected color (only if box has been drawn)
             const state = drawingState[variant];
             if (state.hasDrawnBox) {
                 const fontColor = document.getElementById(variant + 'FontColor').value || '#FF273E';
                 drawTextAutoFit(og, 'COUPON-AREA', natW, natH, box, maxFontPx, fontColor);
             }
 
-            // Scale to canvas with high DPI
             const targetW = Math.max(1, Math.round(canvas.parentElement.clientWidth));
             const targetH = Math.max(1, Math.round(canvas.parentElement.clientHeight));
             const pixelRatio = window.devicePixelRatio || 2;
@@ -2050,7 +1810,6 @@
             canvas.style.width = targetW + 'px';
             canvas.style.height = targetH + 'px';
             
-            // Reset transform to prevent accumulation
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(pixelRatio, pixelRatio);
             ctx.imageSmoothingEnabled = true;
@@ -2066,7 +1825,6 @@
             ctx.drawImage(off, 0, 0, natW, natH, dx, dy, dw, dh);
         }
 
-        // Debounced update to improve performance
         let updatePreviewsTimeout = null;
         function updatePreviews() {
             if (updatePreviewsTimeout) {
@@ -2083,11 +1841,10 @@
             renderPreview('story');
         }
 
-        // Load image when file is selected
+        // Image upload handlers
         document.getElementById('squareImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Reset the drawn box flag for new uploads
                 drawingState.square.hasDrawnBox = false;
                 
                 const img = new Image();
@@ -2107,7 +1864,6 @@
         document.getElementById('storyImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Reset the drawn box flag for new uploads
                 drawingState.story.hasDrawnBox = false;
                 
                 const img = new Image();
@@ -2124,20 +1880,18 @@
             }
         });
 
-        // Sync sliders with number inputs
+        // Slider sync
         function setupSliderSync(sliderId, inputId) {
             const slider = document.getElementById(sliderId);
             const input = document.getElementById(inputId);
             
             if (!slider || !input) return;
             
-            // Slider changes number input
             slider.addEventListener('input', function() {
                 input.value = parseFloat(this.value).toFixed(1);
                 updatePreviews();
             });
             
-            // Number input changes slider
             input.addEventListener('input', function() {
                 const val = parseFloat(this.value);
                 if (!isNaN(val)) {
@@ -2147,16 +1901,10 @@
             });
         }
 
-        // Setup all slider-input pairs (only for Font Size sliders)
         setupSliderSync('squareMaxFontPxSlider', 'squareMaxFontPx');
         setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
 
-        // ==================== DRAG-TO-DRAW LOGIC ====================
-        const drawingState = {
-            square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false },
-            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false }
-        };
-
+        // Drag-to-draw
         function setupDragToDraw(canvasId, variant) {
             const canvas = document.getElementById(canvasId);
             const state = drawingState[variant];
@@ -2204,21 +1952,18 @@
                 
                 renderPreview(variant, true);
 
-                const rect = canvas.getBoundingClientRect();
                 const x1 = Math.min(state.startX, state.currentX);
                 const y1 = Math.min(state.startY, state.currentY);
                 const width = Math.abs(state.currentX - state.startX);
                 const height = Math.abs(state.currentY - state.startY);
 
-                const pixelRatio = window.devicePixelRatio || 1;
-
                 ctx.save();
                 ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = 'rgba(29, 152, 255, 0.9)';
+                ctx.strokeStyle = 'rgba(102, 126, 234, 0.9)';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(x1, y1, width, height);
 
-                ctx.fillStyle = 'rgba(29, 152, 255, 0.1)';
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.1)';
                 ctx.fillRect(x1, y1, width, height);
                 ctx.restore();
             }
@@ -2266,7 +2011,6 @@
                 document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
                 document.getElementById(prefix + 'HeightPct').value = percentages.heightPct.toFixed(1);
 
-                // Mark that a box has been drawn
                 state.hasDrawnBox = true;
 
                 updatePreviewsImmediate();
@@ -2283,7 +2027,7 @@
         setupDragToDraw('previewSquare', 'square');
         setupDragToDraw('previewStory', 'story');
 
-        // Nudge position controls
+        // Nudge controls
         function nudgePosition(variant, direction) {
             const prefix = variant === 'square' ? 'square' : 'story';
             const leftInput = document.getElementById(prefix + 'LeftPct');
@@ -2313,6 +2057,226 @@
             }
             
             updatePreviews();
+        }
+
+        // Campaign Management
+        async function loadCampaigns() {
+            const campaignsList = document.getElementById('campaignsList');
+            campaignsList.innerHTML = '<p style="color: #718096; text-align: center;">Loading campaigns...</p>';
+            
+            try {
+                const response = await fetch('/api/campaigns');
+                const data = await response.json();
+                
+                if (!data.campaigns || data.campaigns.length === 0) {
+                    campaignsList.innerHTML = '<p style="color: #718096; text-align: center;">No campaigns found</p>';
+                    return;
+                }
+                
+                campaignsList.innerHTML = '';
+                data.campaigns.forEach(campaign => {
+                    const item = document.createElement('div');
+                    item.className = 'asset-item';
+                    item.innerHTML = `
+                        <div class="asset-item-info" style="flex: 1;">
+                            <div class="asset-name">${campaign.title}</div>
+                            <div class="asset-slug">${campaign.description} | ${campaign.start_date} to ${campaign.end_date}</div>
+                        </div>
+                        <div class="asset-actions">
+                            <div class="asset-edit-icon" onclick="editCampaign(${campaign.id})">✎</div>
+                            <div class="asset-delete-icon" onclick="deleteCampaign(${campaign.id}, '${campaign.title}')">🗑</div>
+                            <button onclick="viewSubmissions(${campaign.id}, '${campaign.title}')" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">View Submissions</button>
+                        </div>
+                    `;
+                    campaignsList.appendChild(item);
+                });
+            } catch (error) {
+                campaignsList.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading campaigns</p>';
+                console.error('Failed to load campaigns:', error);
+            }
+        }
+
+        async function handleCampaignSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('campaignSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const formData = new FormData();
+            const editId = document.getElementById('editCampaignId').value;
+            if (editId) formData.append('id', editId);
+            
+            formData.append('title', document.getElementById('campaignTitle').value);
+            formData.append('description', document.getElementById('campaignDescription').value);
+            formData.append('start_date', document.getElementById('campaignStartDate').value);
+            formData.append('end_date', document.getElementById('campaignEndDate').value);
+            formData.append('prize', document.getElementById('campaignPrize').value);
+            
+            const platforms = [];
+            if (document.getElementById('platformInstagram').checked) platforms.push('Instagram');
+            if (document.getElementById('platformTwitter').checked) platforms.push('Twitter');
+            if (document.getElementById('platformFacebook').checked) platforms.push('Facebook');
+            formData.append('platforms', platforms.join(','));
+            
+            const overlayFile = document.getElementById('campaignOverlay').files[0];
+            if (overlayFile) {
+                formData.append('overlay', overlayFile);
+            } else if (editId) {
+                const existingUrl = document.getElementById('existingOverlayUrl').value;
+                if (existingUrl) formData.append('existingOverlay', existingUrl);
+            }
+
+            try {
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('campaignAlert', data.message + ' ✓');
+                    document.getElementById('campaignForm').reset();
+                    document.getElementById('editCampaignId').value = '';
+                    document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
+                    document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
+                    document.getElementById('campaignCancelBtn').style.display = 'none';
+                    document.getElementById('overlayPreview').style.display = 'none';
+                    loadCampaigns();
+                } else {
+                    showAlert('campaignAlert', data.error || 'Failed to save campaign', true);
+                }
+            } catch (error) {
+                showAlert('campaignAlert', 'Failed to save campaign: ' + error.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = editId ? 'Update Campaign' : 'Create Campaign';
+            }
+        }
+
+        async function editCampaign(id) {
+            try {
+                const response = await fetch(`/api/campaigns/${id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const campaign = data.campaign;
+                    document.getElementById('editCampaignId').value = campaign.id;
+                    document.getElementById('campaignTitle').value = campaign.title;
+                    document.getElementById('campaignDescription').value = campaign.description;
+                    document.getElementById('campaignStartDate').value = campaign.start_date;
+                    document.getElementById('campaignEndDate').value = campaign.end_date;
+                    document.getElementById('campaignPrize').value = campaign.prize;
+                    
+                    const platforms = campaign.platforms.split(',');
+                    document.getElementById('platformInstagram').checked = platforms.includes('Instagram');
+                    document.getElementById('platformTwitter').checked = platforms.includes('Twitter');
+                    document.getElementById('platformFacebook').checked = platforms.includes('Facebook');
+                    
+                    if (campaign.overlay_url) {
+                        document.getElementById('existingOverlayUrl').value = campaign.overlay_url;
+                        document.getElementById('overlayPreviewImg').src = campaign.overlay_url;
+                        document.getElementById('overlayPreview').style.display = 'block';
+                    }
+                    
+                    document.getElementById('campaignFormTitle').textContent = 'Edit Campaign';
+                    document.getElementById('campaignSubmitBtn').textContent = 'Update Campaign';
+                    document.getElementById('campaignCancelBtn').style.display = 'inline-block';
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (error) {
+                showAlert('campaignAlert', 'Failed to load campaign: ' + error.message, true);
+            }
+        }
+
+        function cancelCampaignEdit() {
+            document.getElementById('campaignForm').reset();
+            document.getElementById('editCampaignId').value = '';
+            document.getElementById('campaignFormTitle').textContent = 'Create Campaign';
+            document.getElementById('campaignSubmitBtn').textContent = 'Create Campaign';
+            document.getElementById('campaignCancelBtn').style.display = 'none';
+            document.getElementById('overlayPreview').style.display = 'none';
+        }
+
+        async function deleteCampaign(id, title) {
+            document.getElementById('modalTitle').textContent = 'Delete Campaign?';
+            document.getElementById('modalMessage').textContent = `Are you sure you want to delete "${title}"? This action cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('active');
+            
+            deleteConfirmCallback = async () => {
+                closeDeleteModal();
+                try {
+                    const response = await fetch(`/api/campaigns/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showAlert('campaignAlert', `Campaign "${title}" deleted successfully ✓`);
+                        loadCampaigns();
+                    } else {
+                        showAlert('campaignAlert', data.error || 'Delete failed', true);
+                    }
+                } catch (error) {
+                    showAlert('campaignAlert', 'Delete failed: ' + error.message, true);
+                }
+            };
+            
+            document.getElementById('modalConfirmBtn').onclick = deleteConfirmCallback;
+        }
+
+        async function viewSubmissions(campaignId, campaignTitle) {
+            document.getElementById('submissionsModalTitle').textContent = `Submissions: ${campaignTitle}`;
+            document.getElementById('submissionsContent').innerHTML = '<p style="color: #718096; text-align: center;">Loading submissions...</p>';
+            document.getElementById('submissionsModal').classList.add('active');
+            
+            try {
+                const response = await fetch(`/api/campaigns/${campaignId}/submissions`);
+                const data = await response.json();
+                
+                if (data.success && data.submissions.length > 0) {
+                    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">';
+                    data.submissions.forEach(sub => {
+                        html += `
+                            <div style="text-align: center; padding: 12px; background: #f7fafc; border-radius: 8px;">
+                                <img src="${sub.image_url}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;">
+                                <div style="font-size: 12px; color: #4a5568; font-weight: 600;">${sub.user_id}</div>
+                                <div style="font-size: 11px; color: #718096;">${new Date(sub.submitted_at).toLocaleDateString()}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    document.getElementById('submissionsContent').innerHTML = html;
+                } else {
+                    document.getElementById('submissionsContent').innerHTML = '<p style="color: #718096; text-align: center;">No submissions yet</p>';
+                }
+            } catch (error) {
+                document.getElementById('submissionsContent').innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading submissions</p>';
+            }
+        }
+
+        function closeSubmissionsModal() {
+            document.getElementById('submissionsModal').classList.remove('active');
+        }
+
+        function handleOverlayPreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('overlayPreviewImg').src = e.target.result;
+                    document.getElementById('overlayPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearOverlay() {
+            document.getElementById('campaignOverlay').value = '';
+            document.getElementById('overlayPreview').style.display = 'none';
+            document.getElementById('existingOverlayUrl').value = '';
         }
 
         // Initial render
