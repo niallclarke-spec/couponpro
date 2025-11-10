@@ -36,3 +36,16 @@ services:
       - key: FUNDERPRO_PRODUCT_ID
         scope: RUN_TIME
         type: SECRET
+      - key: DB_HOST
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_PORT
+        value: "25060"
+      - key: DB_NAME
+        value: "promostack-db"
+      - key: DB_USER
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
