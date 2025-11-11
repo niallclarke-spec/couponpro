@@ -76,13 +76,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     """
     welcome_message = (
         "👋 Welcome to FunderPro Affiliate Hub!\n\n"
-        "Here you can find all the latest promos available. Generate professional promotional images "
-        "with your unique coupon code in seconds - perfect for sharing on social media, messaging apps, "
-        "and marketing campaigns.\n\n"
-        "🎨 Choose from multiple templates\n"
-        "📱 Get high-quality images instantly\n"
-        "🚀 Share anywhere to promote your offers\n\n"
-        "Please enter your FunderPro coupon code to get started:"
+        "Here you can find all the latest promos available. Generate promo images "
+        "with your unique coupon code in seconds.\n\n"
+        "👉 Please enter your FunderPro coupon code to get started:"
     )
     await update.message.reply_text(welcome_message)
     return WAITING_FOR_COUPON
