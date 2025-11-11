@@ -149,6 +149,22 @@ class DatabasePool:
                     ON bot_usage(chat_id)
                 """)
                 
+                # Create bot_users table for tracking active users
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS bot_users (
+                        chat_id BIGINT PRIMARY KEY,
+                        last_coupon_code VARCHAR(255),
+                        first_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create index on last_used for active user queries
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_bot_users_last_used 
+                    ON bot_users(last_used)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 return True
@@ -478,3 +494,94 @@ def get_bot_stats(days=30):
     except Exception as e:
         print(f"Error getting bot stats: {e}")
         return None
+
+# Bot user tracking for broadcasts
+def track_bot_user(chat_id, coupon_code):
+    """
+    Track or update a bot user. Creates new user or updates last_used timestamp.
+    
+    Args:
+        chat_id (int): Telegram chat ID
+        coupon_code (str): Coupon code the user is using
+    """
+    try:
+        if not db_pool.connection_pool:
+            return
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO bot_users (chat_id, last_coupon_code, first_used, last_used)
+                VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (chat_id) 
+                DO UPDATE SET 
+                    last_coupon_code = EXCLUDED.last_coupon_code,
+                    last_used = CURRENT_TIMESTAMP
+            """, (chat_id, coupon_code))
+            conn.commit()
+    except Exception as e:
+        print(f"[BOT_USER] Failed to track user (non-critical): {e}")
+
+def get_active_bot_users(days=30):
+    """
+    Get all active bot users within the last N days for broadcasting.
+    
+    Args:
+        days (int): Number of days to consider "active" (default: 30)
+    
+    Returns:
+        list: List of dicts with chat_id and last_coupon_code
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            interval = f"{days} days"
+            
+            cursor.execute("""
+                SELECT chat_id, last_coupon_code, last_used
+                FROM bot_users
+                WHERE last_used >= CURRENT_TIMESTAMP - %s::interval
+                ORDER BY last_used DESC
+            """, (interval,))
+            
+            users = []
+            for row in cursor.fetchall():
+                users.append({
+                    'chat_id': row[0],
+                    'last_coupon_code': row[1],
+                    'last_used': row[2].isoformat() if row[2] else None
+                })
+            return users
+    except Exception as e:
+        print(f"Error getting active bot users: {e}")
+        return []
+
+def get_bot_user_count(days=30):
+    """
+    Get count of active bot users within the last N days.
+    
+    Args:
+        days (int): Number of days to consider "active" (default: 30)
+    
+    Returns:
+        int: Number of active users
+    """
+    try:
+        if not db_pool.connection_pool:
+            return 0
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            interval = f"{days} days"
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM bot_users
+                WHERE last_used >= CURRENT_TIMESTAMP - %s::interval
+            """, (interval,))
+            return cursor.fetchone()[0]
+    except Exception as e:
+        print(f"Error getting bot user count: {e}")
+        return 0

@@ -111,8 +111,15 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         _log_usage(chat_id, None, coupon_code, False, 'validation_error')
         return WAITING_FOR_COUPON
     
-    # Coupon is valid - store in context and show template selection
+    # Coupon is valid - store in context and track user
     context.user_data['coupon_code'] = coupon_code
+    
+    # Track user for broadcast capability
+    try:
+        import db
+        db.track_bot_user(chat_id, coupon_code)
+    except Exception as track_error:
+        print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
     
     # Get templates
     templates = get_templates()
