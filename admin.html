@@ -985,6 +985,10 @@
                         <span class="nav-item-icon">🎯</span>
                         <span class="nav-item-text">Campaigns</span>
                     </a>
+                    <a class="nav-item" onclick="showView('broadcast')">
+                        <span class="nav-item-icon">📢</span>
+                        <span class="nav-item-text">Broadcast</span>
+                    </a>
                 </div>
 
                 <div class="nav-section">
@@ -1335,6 +1339,65 @@
                 </div>
             </div>
 
+            <!-- Broadcast View -->
+            <div id="broadcastView" class="view-container hidden">
+                <div class="content-header">
+                    <h1>📢 Broadcast Messages</h1>
+                    <p>Send announcements to all active Telegram bot users</p>
+                </div>
+
+                <div class="content-body">
+                    <!-- Active Users Card -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-title">Active Users</div>
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 48px; font-weight: bold; color: #667eea;" id="activeUsersCount">
+                                <div class="spinner"></div>
+                            </div>
+                            <div style="color: #718096; margin-top: 8px;">users active in the last 30 days</div>
+                        </div>
+                    </div>
+
+                    <!-- Broadcast Form -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-title">Send Broadcast</div>
+                        <div id="broadcastAlert"></div>
+                        
+                        <form id="broadcastForm" onsubmit="sendBroadcast(event)">
+                            <div class="form-group">
+                                <label for="broadcastMessage">Message</label>
+                                <textarea 
+                                    id="broadcastMessage" 
+                                    rows="6" 
+                                    required 
+                                    placeholder="🎉 New templates available! Use /generate to create promotional images with your saved coupon code."
+                                    style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"
+                                ></textarea>
+                                <div class="hint">Supports Markdown formatting (*bold*, _italic_, `code`)</div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                <button type="button" class="btn-secondary" onclick="previewBroadcast()">Preview</button>
+                                <button type="submit" class="btn">
+                                    <span id="broadcastBtnText">Send Broadcast</span>
+                                    <span id="broadcastBtnSpinner" class="spinner" style="display: none;"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Broadcast History -->
+                    <div class="card">
+                        <div class="card-title">Broadcast History</div>
+                        <div id="broadcastHistory">
+                            <div style="text-align: center; padding: 40px; color: #718096;">
+                                Loading broadcast history...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Configuration View -->
             <div id="configurationView" class="view-container hidden">
                 <div class="content-header">
@@ -1402,9 +1465,13 @@
                 document.getElementById('templatesView').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[2].classList.add('active');
                 switchTab('campaigns-tab');
+            } else if (viewName === 'broadcast') {
+                document.getElementById('broadcastView').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
+                loadBroadcastData();
             } else if (viewName === 'configuration') {
                 document.getElementById('configurationView').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[3].classList.add('active');
+                document.querySelectorAll('.nav-item')[4].classList.add('active');
             }
         }
 
@@ -2593,6 +2660,192 @@
             document.getElementById('campaignOverlay').value = '';
             document.getElementById('overlayPreview').style.display = 'none';
             document.getElementById('existingOverlayUrl').value = '';
+        }
+
+        // Broadcast Functions
+        async function loadBroadcastData() {
+            await Promise.all([
+                loadActiveUsersCount(),
+                loadBroadcastHistory()
+            ]);
+        }
+
+        async function loadActiveUsersCount() {
+            try {
+                const response = await fetch('/api/broadcast-jobs');
+                const data = await response.json();
+                
+                document.getElementById('activeUsersCount').textContent = data.active_users || 0;
+            } catch (error) {
+                console.error('Error loading active users:', error);
+                document.getElementById('activeUsersCount').textContent = '?';
+            }
+        }
+
+        async function loadBroadcastHistory() {
+            try {
+                const response = await fetch('/api/broadcast-jobs');
+                const data = await response.json();
+                
+                if (!data.jobs || data.jobs.length === 0) {
+                    document.getElementById('broadcastHistory').innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #718096;">
+                            No broadcasts sent yet
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0;">
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096; font-weight: 600;">Message</th>
+                                <th style="padding: 12px; text-align: center; font-size: 13px; color: #718096; font-weight: 600;">Status</th>
+                                <th style="padding: 12px; text-align: center; font-size: 13px; color: #718096; font-weight: 600;">Recipients</th>
+                                <th style="padding: 12px; text-align: center; font-size: 13px; color: #718096; font-weight: 600;">Sent</th>
+                                <th style="padding: 12px; text-align: center; font-size: 13px; color: #718096; font-weight: 600;">Failed</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096; font-weight: 600;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.jobs.forEach(job => {
+                    const statusColor = {
+                        'completed': '#10b981',
+                        'processing': '#3b82f6',
+                        'failed': '#ef4444',
+                        'pending': '#f59e0b'
+                    }[job.status] || '#718096';
+
+                    const messagePreview = job.message.length > 50 
+                        ? job.message.substring(0, 50) + '...' 
+                        : job.message;
+
+                    html += `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px; font-size: 14px; color: #1a202c;">${messagePreview}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: ${statusColor}20; color: ${statusColor};">
+                                    ${job.status}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center; font-size: 14px; color: #4a5568;">${job.total_users}</td>
+                            <td style="padding: 12px; text-align: center; font-size: 14px; color: #10b981; font-weight: 600;">${job.sent_count}</td>
+                            <td style="padding: 12px; text-align: center; font-size: 14px; color: #ef4444; font-weight: 600;">${job.failed_count}</td>
+                            <td style="padding: 12px; font-size: 13px; color: #718096;">${new Date(job.created_at).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                document.getElementById('broadcastHistory').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading broadcast history:', error);
+                document.getElementById('broadcastHistory').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        Error loading broadcast history
+                    </div>
+                `;
+            }
+        }
+
+        async function sendBroadcast(event) {
+            event.preventDefault();
+
+            const message = document.getElementById('broadcastMessage').value.trim();
+            if (!message) {
+                showAlert('broadcastAlert', 'Please enter a message', true);
+                return;
+            }
+
+            // Confirm before sending
+            if (!confirm(`Send this broadcast to all active users?`)) {
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('broadcastBtnText').style.display = 'none';
+            document.getElementById('broadcastBtnSpinner').style.display = 'inline-block';
+            document.getElementById('broadcastForm').querySelector('button[type="submit"]').disabled = true;
+
+            try {
+                const response = await fetch('/api/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, days: 30 })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('broadcastAlert', `✅ Broadcast started! Sending to ${data.total_users} users. Job ID: ${data.job_id}`);
+                    document.getElementById('broadcastForm').reset();
+                    
+                    // Reload history after a delay
+                    setTimeout(() => loadBroadcastHistory(), 2000);
+                } else {
+                    showAlert('broadcastAlert', data.error || 'Failed to send broadcast', true);
+                }
+            } catch (error) {
+                showAlert('broadcastAlert', 'Error: ' + error.message, true);
+            } finally {
+                // Reset loading state
+                document.getElementById('broadcastBtnText').style.display = 'inline';
+                document.getElementById('broadcastBtnSpinner').style.display = 'none';
+                document.getElementById('broadcastForm').querySelector('button[type="submit"]').disabled = false;
+            }
+        }
+
+        function previewBroadcast() {
+            const message = document.getElementById('broadcastMessage').value.trim();
+            if (!message) {
+                alert('Please enter a message first');
+                return;
+            }
+
+            // Convert basic Markdown to HTML for preview
+            const htmlMessage = message
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<strong>$1</strong>')
+                .replace(/_(.+?)_/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">$1</code>')
+                .replace(/\n/g, '<br>');
+
+            const previewWindow = window.open('', 'Broadcast Preview', 'width=400,height=600');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Broadcast Preview</title>
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                            padding: 20px;
+                            background: #0d1117;
+                            color: #fff;
+                        }
+                        .message {
+                            background: #1c2128;
+                            padding: 16px;
+                            border-radius: 12px;
+                            line-height: 1.6;
+                            white-space: pre-wrap;
+                        }
+                        .label {
+                            color: #8b949e;
+                            font-size: 12px;
+                            margin-bottom: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label">📱 Telegram Message Preview</div>
+                    <div class="message">${htmlMessage}</div>
+                </body>
+                </html>
+            `);
         }
 
         // Initial render
