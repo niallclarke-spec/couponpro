@@ -141,10 +141,8 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
             template_name = template.get('name', template.get('slug', 'Template'))
-            # Get square variant URL or fallback to story
-            square_url = template.get('square', {}).get('url')
-            story_url = template.get('story', {}).get('url')
-            preview_url = square_url or story_url
+            # Get square or story URL (they are direct strings, not nested objects)
+            preview_url = template.get('square') or template.get('story')
             
             if preview_url:
                 media_group.append(InputMediaPhoto(
@@ -345,10 +343,8 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
             template_name = template.get('name', template.get('slug', 'Template'))
-            # Get square variant URL or fallback to story
-            square_url = template.get('square', {}).get('url')
-            story_url = template.get('story', {}).get('url')
-            preview_url = square_url or story_url
+            # Get square or story URL (they are direct strings, not nested objects)
+            preview_url = template.get('square') or template.get('story')
             
             if preview_url:
                 media_group.append(InputMediaPhoto(
