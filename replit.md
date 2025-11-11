@@ -29,5 +29,8 @@ The system uses stateless HMAC-signed cookie authentication to support ephemeral
 - **Digital Ocean**: Primary production deployment platform.
 - **Python 3.11**: Backend runtime environment.
 - **`requirements.txt`**: Key Python packages include `boto3` (for S3 interaction), `psycopg2-binary` (PostgreSQL driver), `Pillow` (image processing), `python-dotenv`, and `requests` (for Telegram API).
-- **Environment Secrets**: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`, `TELEGRAM_BOT_TOKEN`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID` (10k Challenge product ID for coupon validation), `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
+- **Environment Secrets**: 
+  - **Development (Replit)**: `TELEGRAM_BOT_TOKEN_TEST` (for @promostack_test_bot - safe testing environment), `DATABASE_URL` (dev database), `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID`
+  - **Production (Digital Ocean)**: `TELEGRAM_BOT_TOKEN` (for @promostack_bot - live production bot), `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (production database), `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID`
+  - **Important**: Development uses `TELEGRAM_BOT_TOKEN_TEST` to safely test bot changes without affecting the live production bot. Only push to GitHub when changes are fully tested and ready for production deployment.
 - **.do/app.yaml**: Digital Ocean specific application configuration.
