@@ -520,8 +520,8 @@ def send_broadcast(users, message):
     """
     import db
     
-    # Get bot token (use production token for broadcasts)
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
+    # Get bot token (prioritize test token in dev environment)
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN_TEST') or os.getenv('TELEGRAM_BOT_TOKEN')
     if not bot_token:
         raise ValueError("No bot token available for broadcasting")
     
