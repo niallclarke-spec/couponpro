@@ -9,7 +9,7 @@ import os
 import json
 import io
 import time
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -71,7 +71,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     Returns:
         int: Next conversation state (WAITING_FOR_COUPON)
     """
-    await update.message.reply_text("Please enter your FunderPro coupon code")
+    welcome_message = (
+        "👋 Welcome to PromoStack!\n\n"
+        "I'll help you create professional promotional images with your FunderPro coupon codes.\n\n"
+        "Please enter your FunderPro coupon code to get started:"
+    )
+    await update.message.reply_text(welcome_message)
     return WAITING_FOR_COUPON
 
 
@@ -173,7 +178,14 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
             template_slug = template.get('slug')
             await _generate_and_send(query.message, chat_id, template_slug, coupon_code)
         
-        await query.message.reply_text("✅ All templates generated!")
+        await query.message.reply_text(
+            "✅ All templates generated!\n\n"
+            "💡 *What's next?*\n"
+            "• /generate - Generate templates again\n"
+            "• /start - Use a different coupon code\n"
+            "• /help - View all commands",
+            parse_mode='Markdown'
+        )
         return
     
     # Handle single template selection
@@ -239,10 +251,74 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
         await message.reply_photo(photo=bio, filename=f'{template_slug}-{coupon_code}.png')
         _log_usage(chat_id, template_slug, coupon_code, True, None)
         
+        # Show helpful next steps
+        await message.reply_text(
+            "✅ Image generated!\n\n"
+            "💡 *What's next?*\n"
+            "• /generate - Create more images with the same coupon\n"
+            "• /start - Use a different coupon code\n"
+            "• /help - View all commands",
+            parse_mode='Markdown'
+        )
+        
     except Exception as e:
         print(f"[TELEGRAM] Error generating image: {e}")
         await message.reply_text(f"❌ Failed to generate image. Please try again.")
         _log_usage(chat_id, template_slug, coupon_code, False, 'generation_failed')
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /help command - show instructions."""
+    help_text = (
+        "📖 *How to Use PromoStack Bot*\n\n"
+        "*Available Commands:*\n"
+        "/start - Enter a new coupon code and generate images\n"
+        "/generate - Generate templates with your current coupon\n"
+        "/help - Show this help message\n\n"
+        "*How It Works:*\n"
+        "1️⃣ Send /start and enter your FunderPro coupon code\n"
+        "2️⃣ Choose a template from the menu\n"
+        "3️⃣ Receive your promotional image!\n\n"
+        "💡 *Tip:* Use /start anytime to enter a different coupon code"
+    )
+    await update.message.reply_text(help_text, parse_mode='Markdown')
+
+
+async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /generate command - regenerate templates with stored coupon."""
+    coupon_code = context.user_data.get('coupon_code')
+    
+    if not coupon_code:
+        await update.message.reply_text(
+            "⚠️ No coupon code found. Please use /start to enter your coupon code first."
+        )
+        return
+    
+    # Get templates and show selection
+    templates = get_templates()
+    if not templates:
+        await update.message.reply_text("⚠️ Unable to load templates. Please try again later.")
+        return
+    
+    # Build inline keyboard with template buttons
+    keyboard = []
+    for template in templates:
+        button = InlineKeyboardButton(
+            template.get('name', template.get('slug', 'Template')),
+            callback_data=f"template:{template.get('slug')}"
+        )
+        keyboard.append([button])
+    
+    # Add "Generate All" button
+    keyboard.append([InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")])
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        f"Select a template to generate with coupon *{coupon_code}*:",
+        reply_markup=reply_markup,
+        parse_mode='Markdown'
+    )
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -263,6 +339,19 @@ def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
         print(f"[BOT_USAGE] Logging failed (non-critical): {e}")
 
 
+async def post_init(application: Application):
+    """
+    Set up bot commands menu after initialization.
+    """
+    commands = [
+        BotCommand("start", "Enter a new coupon code and generate images"),
+        BotCommand("generate", "Generate templates with your current coupon"),
+        BotCommand("help", "Show help and instructions")
+    ]
+    await application.bot.set_my_commands(commands)
+    print("[TELEGRAM] Bot commands menu configured")
+
+
 def create_bot_application(bot_token):
     """
     Create and configure the Telegram bot application.
@@ -274,7 +363,7 @@ def create_bot_application(bot_token):
         Application: Configured bot application
     """
     # Create application
-    application = Application.builder().token(bot_token).build()
+    application = Application.builder().token(bot_token).post_init(post_init).build()
     
     # Define conversation handler
     conv_handler = ConversationHandler(
@@ -283,10 +372,13 @@ def create_bot_application(bot_token):
             WAITING_FOR_COUPON: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coupon_input)]
         },
         fallbacks=[CommandHandler('cancel', cancel_command)],
+        allow_reentry=True
     )
     
     # Add handlers
     application.add_handler(conv_handler)
+    application.add_handler(CommandHandler('help', help_command))
+    application.add_handler(CommandHandler('generate', generate_command))
     application.add_handler(CallbackQueryHandler(handle_template_selection))
     
     return application
