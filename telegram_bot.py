@@ -9,6 +9,8 @@ import os
 import json
 import io
 import time
+import asyncio
+import threading
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import (
     Application,
@@ -19,6 +21,7 @@ from telegram.ext import (
     filters,
     ContextTypes
 )
+from telegram.error import Forbidden, RetryAfter, TelegramError
 from telegram_image_gen import generate_promo_image
 import coupon_validator
 
@@ -389,6 +392,158 @@ def create_bot_application(bot_token):
     application.add_handler(CallbackQueryHandler(handle_template_selection))
     
     return application
+
+
+async def _send_broadcast_messages(job_id, users, message, bot_token):
+    """
+    Async function to send broadcast messages with rate limiting.
+    
+    Args:
+        job_id (int): Broadcast job ID
+        users (list): List of user dicts with chat_id
+        message (str): Message to send
+        bot_token (str): Bot token to use for sending
+    """
+    import db
+    
+    # Create a temporary bot application for sending
+    from telegram import Bot
+    bot = Bot(token=bot_token)
+    
+    sent_count = 0
+    failed_count = 0
+    
+    # Update job status to processing
+    db.update_broadcast_job(job_id, status='processing')
+    
+    # Rate limiting: 20 messages per second (safe buffer below Telegram's 30/s limit)
+    rate_limit_delay = 0.05  # 50ms between messages = 20 messages/second
+    
+    for user in users:
+        chat_id = user['chat_id']
+        
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode='Markdown'
+            )
+            sent_count += 1
+            print(f"[BROADCAST] Sent to {chat_id} ({sent_count}/{len(users)})")
+            
+            # Update progress every 10 messages
+            if sent_count % 10 == 0:
+                db.update_broadcast_job(job_id, sent_count=sent_count, failed_count=failed_count)
+            
+            # Rate limit
+            await asyncio.sleep(rate_limit_delay)
+            
+        except Forbidden:
+            # User blocked the bot - remove them
+            print(f"[BROADCAST] User {chat_id} blocked bot, removing")
+            db.remove_bot_user(chat_id)
+            failed_count += 1
+            
+        except RetryAfter as e:
+            # Rate limit hit, wait and retry
+            print(f"[BROADCAST] Rate limit hit, waiting {e.retry_after}s")
+            await asyncio.sleep(e.retry_after)
+            try:
+                await bot.send_message(chat_id=chat_id, text=message, parse_mode='Markdown')
+                sent_count += 1
+            except Exception as retry_error:
+                print(f"[BROADCAST] Retry failed for {chat_id}: {retry_error}")
+                failed_count += 1
+                
+        except TelegramError as e:
+            # Other Telegram errors
+            print(f"[BROADCAST] Error sending to {chat_id}: {e}")
+            failed_count += 1
+            
+        except Exception as e:
+            # Unexpected errors
+            print(f"[BROADCAST] Unexpected error sending to {chat_id}: {e}")
+            failed_count += 1
+    
+    # Final update
+    db.update_broadcast_job(
+        job_id,
+        status='completed',
+        sent_count=sent_count,
+        failed_count=failed_count,
+        completed=True
+    )
+    
+    print(f"[BROADCAST] Job {job_id} completed: {sent_count} sent, {failed_count} failed")
+
+
+def _broadcast_worker(job_id, users, message, bot_token):
+    """
+    Worker function to run broadcast in background thread.
+    
+    Args:
+        job_id (int): Broadcast job ID
+        users (list): List of users to broadcast to
+        message (str): Message to send
+        bot_token (str): Bot token
+    """
+    # Create new event loop for this thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    try:
+        loop.run_until_complete(_send_broadcast_messages(job_id, users, message, bot_token))
+    except Exception as e:
+        print(f"[BROADCAST] Worker error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Mark job as failed
+        import db
+        db.update_broadcast_job(job_id, status='failed', completed=True)
+    finally:
+        loop.close()
+
+
+def send_broadcast(users, message):
+    """
+    Send broadcast message to users asynchronously.
+    Creates a job and returns immediately while processing in background.
+    
+    Args:
+        users (list): List of user dicts with chat_id
+        message (str): Message to broadcast
+    
+    Returns:
+        dict: Job info with job_id and total_users
+    """
+    import db
+    
+    # Get bot token (use production token for broadcasts)
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
+    if not bot_token:
+        raise ValueError("No bot token available for broadcasting")
+    
+    # Create broadcast job
+    job_id = db.create_broadcast_job(message, 30, len(users))
+    
+    if not job_id:
+        raise Exception("Failed to create broadcast job")
+    
+    # Start background worker
+    worker_thread = threading.Thread(
+        target=_broadcast_worker,
+        args=(job_id, users, message, bot_token),
+        daemon=True
+    )
+    worker_thread.start()
+    
+    return {
+        'success': True,
+        'job_id': job_id,
+        'total_users': len(users),
+        'status': 'processing'
+    }
 
 
 def run_bot(bot_token):

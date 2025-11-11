@@ -366,6 +366,75 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path.startswith('/api/broadcast-status/'):
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                job_id = int(parsed_path.path.split('/')[-1])
+                job = db.get_broadcast_job(job_id)
+                
+                if job:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(job).encode())
+                else:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Job not found'}).encode())
+            except Exception as e:
+                print(f"[BROADCAST] Error getting job status: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/broadcast-jobs':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                jobs = db.get_recent_broadcast_jobs(limit=20)
+                user_count = db.get_bot_user_count(days=30)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'jobs': jobs,
+                    'active_users': user_count
+                }).encode())
+            except Exception as e:
+                print(f"[BROADCAST] Error getting broadcast jobs: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         else:
             super().do_GET()
     
@@ -424,6 +493,96 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({
                     'valid': False,
                     'message': 'Server error during validation'
+                }).encode())
+        
+        elif parsed_path.path == '/api/broadcast':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Database not available'
+                }).encode())
+                return
+            
+            if not TELEGRAM_BOT_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Telegram bot not available'
+                }).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                message = data.get('message', '').strip()
+                days = int(data.get('days', 30))
+                
+                if not message:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': False,
+                        'error': 'Message is required'
+                    }).encode())
+                    return
+                
+                # Get active users
+                users = db.get_active_bot_users(days)
+                
+                if not users:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'sent': 0,
+                        'failed': 0,
+                        'total': 0,
+                        'message': 'No active users found'
+                    }).encode())
+                    return
+                
+                # Send broadcast using telegram_bot
+                result = telegram_bot.send_broadcast(users, message)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Invalid request format'
+                }).encode())
+            except Exception as e:
+                print(f"[BROADCAST] Error: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': str(e)
                 }).encode())
         
         elif parsed_path.path == '/api/login':

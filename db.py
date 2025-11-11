@@ -165,6 +165,27 @@ class DatabasePool:
                     ON bot_users(last_used)
                 """)
                 
+                # Create broadcast_jobs table for tracking broadcasts
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS broadcast_jobs (
+                        id SERIAL PRIMARY KEY,
+                        message TEXT NOT NULL,
+                        target_days INTEGER NOT NULL,
+                        status VARCHAR(50) DEFAULT 'pending',
+                        total_users INTEGER DEFAULT 0,
+                        sent_count INTEGER DEFAULT 0,
+                        failed_count INTEGER DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        completed_at TIMESTAMP
+                    )
+                """)
+                
+                # Create index on status for job queries
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_broadcast_jobs_status 
+                    ON broadcast_jobs(status)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 return True
@@ -585,3 +606,179 @@ def get_bot_user_count(days=30):
     except Exception as e:
         print(f"Error getting bot user count: {e}")
         return 0
+
+def remove_bot_user(chat_id):
+    """
+    Remove a bot user (e.g., when they block the bot).
+    
+    Args:
+        chat_id (int): Telegram chat ID to remove
+    """
+    try:
+        if not db_pool.connection_pool:
+            return
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM bot_users WHERE chat_id = %s", (chat_id,))
+            conn.commit()
+    except Exception as e:
+        print(f"[BOT_USER] Failed to remove user {chat_id}: {e}")
+
+# Broadcast job management
+def create_broadcast_job(message, target_days, total_users):
+    """
+    Create a new broadcast job.
+    
+    Args:
+        message (str): Message to broadcast
+        target_days (int): Days of activity to target
+        total_users (int): Total number of users to broadcast to
+    
+    Returns:
+        int: Job ID
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO broadcast_jobs (message, target_days, status, total_users)
+                VALUES (%s, %s, 'pending', %s)
+                RETURNING id
+            """, (message, target_days, total_users))
+            job_id = cursor.fetchone()[0]
+            conn.commit()
+            return job_id
+    except Exception as e:
+        print(f"Error creating broadcast job: {e}")
+        return None
+
+def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False):
+    """
+    Update broadcast job progress.
+    
+    Args:
+        job_id (int): Job ID
+        status (str): Job status ('pending', 'processing', 'completed', 'failed')
+        sent_count (int): Number of successfully sent messages
+        failed_count (int): Number of failed messages
+        completed (bool): Whether job is completed
+    """
+    try:
+        if not db_pool.connection_pool:
+            return
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            updates = []
+            params = []
+            
+            if status is not None:
+                updates.append("status = %s")
+                params.append(status)
+            
+            if sent_count is not None:
+                updates.append("sent_count = %s")
+                params.append(sent_count)
+            
+            if failed_count is not None:
+                updates.append("failed_count = %s")
+                params.append(failed_count)
+            
+            if completed:
+                updates.append("completed_at = CURRENT_TIMESTAMP")
+            
+            if updates:
+                params.append(job_id)
+                query = f"UPDATE broadcast_jobs SET {', '.join(updates)} WHERE id = %s"
+                cursor.execute(query, params)
+                conn.commit()
+    except Exception as e:
+        print(f"Error updating broadcast job {job_id}: {e}")
+
+def get_broadcast_job(job_id):
+    """
+    Get broadcast job details.
+    
+    Args:
+        job_id (int): Job ID
+    
+    Returns:
+        dict: Job details or None if not found
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, message, target_days, status, total_users, 
+                       sent_count, failed_count, created_at, completed_at
+                FROM broadcast_jobs
+                WHERE id = %s
+            """, (job_id,))
+            row = cursor.fetchone()
+            
+            if row:
+                return {
+                    'id': row[0],
+                    'message': row[1],
+                    'target_days': row[2],
+                    'status': row[3],
+                    'total_users': row[4],
+                    'sent_count': row[5],
+                    'failed_count': row[6],
+                    'created_at': row[7].isoformat() if row[7] else None,
+                    'completed_at': row[8].isoformat() if row[8] else None
+                }
+            return None
+    except Exception as e:
+        print(f"Error getting broadcast job {job_id}: {e}")
+        return None
+
+def get_recent_broadcast_jobs(limit=10):
+    """
+    Get recent broadcast jobs.
+    
+    Args:
+        limit (int): Number of jobs to return
+    
+    Returns:
+        list: List of job dicts
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, message, target_days, status, total_users, 
+                       sent_count, failed_count, created_at, completed_at
+                FROM broadcast_jobs
+                ORDER BY created_at DESC
+                LIMIT %s
+            """, (limit,))
+            
+            jobs = []
+            for row in cursor.fetchall():
+                jobs.append({
+                    'id': row[0],
+                    'message': row[1],
+                    'target_days': row[2],
+                    'status': row[3],
+                    'total_users': row[4],
+                    'sent_count': row[5],
+                    'failed_count': row[6],
+                    'created_at': row[7].isoformat() if row[7] else None,
+                    'completed_at': row[8].isoformat() if row[8] else None
+                })
+            return jobs
+    except Exception as e:
+        print(f"Error getting recent broadcast jobs: {e}")
+        return []
