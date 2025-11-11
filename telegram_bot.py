@@ -134,6 +134,29 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         _log_usage(chat_id, None, coupon_code, False, 'templates_error')
         return ConversationHandler.END
     
+    # Send template preview images
+    try:
+        from telegram import InputMediaPhoto
+        media_group = []
+        
+        for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
+            template_name = template.get('name', template.get('slug', 'Template'))
+            # Get square variant URL or fallback to story
+            square_url = template.get('square', {}).get('url')
+            story_url = template.get('story', {}).get('url')
+            preview_url = square_url or story_url
+            
+            if preview_url:
+                media_group.append(InputMediaPhoto(
+                    media=preview_url,
+                    caption=f"📸 {template_name}"
+                ))
+        
+        if media_group:
+            await update.message.reply_media_group(media=media_group)
+    except Exception as preview_error:
+        print(f"[TELEGRAM] Preview images failed (non-critical): {preview_error}")
+    
     # Build inline keyboard with template buttons
     keyboard = []
     for template in templates:
@@ -268,7 +291,11 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
             f"✅ *Image generated!*\n\n"
             f"🔗 *Your Personal Referral Link:*\n"
             f"{challenge_url}\n\n"
-            f"⚡ Give your audience one-click access to your offer with this instant checkout link.",
+            f"⚡ Give your audience one-click access to your offer with this instant checkout link.\n\n"
+            f"*What's next?*\n"
+            f"• /generate - Create more images with the same coupon\n"
+            f"• /start - Use a different coupon code\n"
+            f"• /help - View all commands",
             parse_mode='Markdown'
         )
         
@@ -310,6 +337,29 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not templates:
         await update.message.reply_text("⚠️ Unable to load templates. Please try again later.")
         return
+    
+    # Send template preview images
+    try:
+        from telegram import InputMediaPhoto
+        media_group = []
+        
+        for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
+            template_name = template.get('name', template.get('slug', 'Template'))
+            # Get square variant URL or fallback to story
+            square_url = template.get('square', {}).get('url')
+            story_url = template.get('story', {}).get('url')
+            preview_url = square_url or story_url
+            
+            if preview_url:
+                media_group.append(InputMediaPhoto(
+                    media=preview_url,
+                    caption=f"📸 {template_name}"
+                ))
+        
+        if media_group:
+            await update.message.reply_media_group(media=media_group)
+    except Exception as preview_error:
+        print(f"[TELEGRAM] Preview images failed (non-critical): {preview_error}")
     
     # Build inline keyboard with template buttons
     keyboard = []
