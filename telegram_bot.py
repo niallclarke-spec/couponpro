@@ -134,44 +134,38 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         _log_usage(chat_id, None, coupon_code, False, 'templates_error')
         return ConversationHandler.END
     
-    # Send template preview images
-    try:
-        from telegram import InputMediaPhoto
-        media_group = []
-        
-        for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
-            template_name = template.get('name', template.get('slug', 'Template'))
-            # Get square or story URL (they are direct strings, not nested objects)
-            preview_url = template.get('square') or template.get('story')
-            
-            if preview_url:
-                media_group.append(InputMediaPhoto(
-                    media=preview_url,
-                    caption=f"📸 {template_name}"
-                ))
-        
-        if media_group:
-            await update.message.reply_media_group(media=media_group)
-    except Exception as preview_error:
-        print(f"[TELEGRAM] Preview images failed (non-critical): {preview_error}")
-    
-    # Build inline keyboard with template buttons
-    keyboard = []
+    # Send each template with preview image and button
     for template in templates:
-        button = InlineKeyboardButton(
-            template.get('name', template.get('slug', 'Template')),
-            callback_data=f"template:{template.get('slug')}"
-        )
-        keyboard.append([button])
+        template_name = template.get('name', template.get('slug', 'Template'))
+        template_slug = template.get('slug')
+        preview_url = template.get('square') or template.get('story')
+        
+        if preview_url:
+            # Create button for this template
+            keyboard = [[InlineKeyboardButton(
+                f"✨ Generate {template_name}",
+                callback_data=f"template:{template_slug}"
+            )]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            try:
+                await update.message.reply_photo(
+                    photo=preview_url,
+                    caption=f"📸 *{template_name}*",
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+            except Exception as e:
+                print(f"[TELEGRAM] Failed to send preview for {template_slug}: {e}")
     
-    # Add "Generate All" button
-    keyboard.append([InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")])
-    
+    # Add "Generate All" button in separate message
+    keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        f"✅ Coupon {coupon_code} is valid!\n\nSelect a template to generate:",
-        reply_markup=reply_markup
+        f"✅ Coupon *{coupon_code}* is valid!\n\nOr generate all at once:",
+        reply_markup=reply_markup,
+        parse_mode='Markdown'
     )
     
     return ConversationHandler.END
@@ -336,43 +330,36 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Unable to load templates. Please try again later.")
         return
     
-    # Send template preview images
-    try:
-        from telegram import InputMediaPhoto
-        media_group = []
-        
-        for template in templates[:10]:  # Limit to 10 (Telegram media group limit)
-            template_name = template.get('name', template.get('slug', 'Template'))
-            # Get square or story URL (they are direct strings, not nested objects)
-            preview_url = template.get('square') or template.get('story')
-            
-            if preview_url:
-                media_group.append(InputMediaPhoto(
-                    media=preview_url,
-                    caption=f"📸 {template_name}"
-                ))
-        
-        if media_group:
-            await update.message.reply_media_group(media=media_group)
-    except Exception as preview_error:
-        print(f"[TELEGRAM] Preview images failed (non-critical): {preview_error}")
-    
-    # Build inline keyboard with template buttons
-    keyboard = []
+    # Send each template with preview image and button
     for template in templates:
-        button = InlineKeyboardButton(
-            template.get('name', template.get('slug', 'Template')),
-            callback_data=f"template:{template.get('slug')}"
-        )
-        keyboard.append([button])
+        template_name = template.get('name', template.get('slug', 'Template'))
+        template_slug = template.get('slug')
+        preview_url = template.get('square') or template.get('story')
+        
+        if preview_url:
+            # Create button for this template
+            keyboard = [[InlineKeyboardButton(
+                f"✨ Generate {template_name}",
+                callback_data=f"template:{template_slug}"
+            )]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            try:
+                await update.message.reply_photo(
+                    photo=preview_url,
+                    caption=f"📸 *{template_name}*",
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+            except Exception as e:
+                print(f"[TELEGRAM] Failed to send preview for {template_slug}: {e}")
     
-    # Add "Generate All" button
-    keyboard.append([InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")])
-    
+    # Add "Generate All" button in separate message
+    keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        f"Select a template to generate with coupon *{coupon_code}*:",
+        f"Generate all templates with coupon *{coupon_code}*:",
         reply_markup=reply_markup,
         parse_mode='Markdown'
     )
