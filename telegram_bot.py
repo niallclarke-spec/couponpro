@@ -94,9 +94,11 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     coupon_code = update.message.text.strip().upper()
     chat_id = update.effective_chat.id
     
-    # Validate coupon
+    # Validate coupon (run in thread to avoid blocking event loop)
+    import asyncio
+    
     try:
-        validation = coupon_validator.validate_coupon(coupon_code)
+        validation = await asyncio.to_thread(coupon_validator.validate_coupon, coupon_code)
         
         if not validation['valid']:
             # Invalid coupon - ask to try again
@@ -125,8 +127,13 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     except Exception as track_error:
         print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
     
-    # Get templates
-    templates = get_templates()
+    # Get templates (run in thread to avoid blocking event loop)
+    try:
+        templates = await asyncio.to_thread(get_templates)
+    except Exception as template_error:
+        print(f"[TELEGRAM] Template loading error: {template_error}")
+        templates = None
+    
     if not templates:
         await update.message.reply_text(
             "⚠️ Unable to load templates. Please try again later."
@@ -140,14 +147,15 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         template_slug = template.get('slug')
         preview_url = template.get('square') or template.get('story')
         
+        # Create button for this template
+        keyboard = [[InlineKeyboardButton(
+            f"✨ Generate {template_name}",
+            callback_data=f"template:{template_slug}"
+        )]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         if preview_url:
-            # Create button for this template
-            keyboard = [[InlineKeyboardButton(
-                f"✨ Generate {template_name}",
-                callback_data=f"template:{template_slug}"
-            )]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
+            # Send with preview image
             try:
                 await update.message.reply_photo(
                     photo=preview_url,
@@ -157,6 +165,19 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
             except Exception as e:
                 print(f"[TELEGRAM] Failed to send preview for {template_slug}: {e}")
+                # Fallback to text-only if preview fails
+                await update.message.reply_text(
+                    f"📸 *{template_name}*",
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+        else:
+            # No preview available - send text-only button
+            await update.message.reply_text(
+                f"📸 *{template_name}*",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
     
     # Add "Generate All" button in separate message
     keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
@@ -193,7 +214,12 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Handle "Generate All"
     if template_selection == 'all':
-        templates = get_templates()
+        import asyncio
+        try:
+            templates = await asyncio.to_thread(get_templates)
+        except Exception:
+            templates = None
+        
         if not templates:
             await query.message.reply_text("⚠️ Unable to load templates.")
             return
@@ -220,19 +246,18 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     await _generate_and_send(query.message, chat_id, template_slug, coupon_code)
 
 
-async def _generate_and_send(message, chat_id, template_slug, coupon_code):
+def _generate_image_sync(template_slug, coupon_code):
     """
-    Internal helper to generate and send a template image.
+    Synchronous helper to perform blocking image generation.
+    Returns: (image_bio, error_message) tuple
     """
+    from object_storage import download_from_spaces
+    
     try:
-        from object_storage import download_from_spaces
-        
         # Download template metadata
         meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
         if not meta_content:
-            await message.reply_text(f"❌ Template {template_slug} not found.")
-            _log_usage(chat_id, template_slug, coupon_code, False, 'template_not_found')
-            return
+            return None, 'template_not_found'
         
         metadata = json.loads(meta_content.decode('utf-8'))
         
@@ -242,9 +267,7 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
             if 'story' in metadata:
                 variant = 'story'
             else:
-                await message.reply_text(f"❌ Template {template_slug} has no available variants.")
-                _log_usage(chat_id, template_slug, coupon_code, False, 'no_variants')
-                return
+                return None, 'no_variants'
         
         variant_data = metadata.get(variant, {})
         
@@ -254,11 +277,9 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
         font_color = variant_data.get('fontColor')
         
         if not image_url:
-            await message.reply_text(f"❌ Template image URL not found.")
-            _log_usage(chat_id, template_slug, coupon_code, False, 'image_url_missing')
-            return
+            return None, 'image_url_missing'
         
-        # Generate image
+        # Generate image (blocking operation)
         image = generate_promo_image(
             template_image_url=image_url,
             coupon_code=coupon_code,
@@ -269,12 +290,42 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
             variant=variant
         )
         
-        # Send to Telegram
+        # Convert to BytesIO
         bio = io.BytesIO()
         image.save(bio, format='PNG')
         bio.seek(0)
         
-        await message.reply_photo(photo=bio, filename=f'{template_slug}-{coupon_code}.png')
+        return bio, None
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Image generation error: {e}")
+        return None, 'generation_failed'
+
+
+async def _generate_and_send(message, chat_id, template_slug, coupon_code):
+    """
+    Internal helper to generate and send a template image.
+    Runs blocking I/O in thread to keep event loop responsive.
+    """
+    import asyncio
+    
+    try:
+        # Run blocking image generation in thread
+        image_bio, error = await asyncio.to_thread(_generate_image_sync, template_slug, coupon_code)
+        
+        if error:
+            error_messages = {
+                'template_not_found': f"❌ Template {template_slug} not found.",
+                'no_variants': f"❌ Template {template_slug} has no available variants.",
+                'image_url_missing': f"❌ Template image URL not found.",
+                'generation_failed': f"❌ Failed to generate image. Please try again."
+            }
+            await message.reply_text(error_messages.get(error, "❌ An error occurred."))
+            _log_usage(chat_id, template_slug, coupon_code, False, error)
+            return
+        
+        # Send to Telegram
+        await message.reply_photo(photo=image_bio, filename=f'{template_slug}-{coupon_code}.png')
         _log_usage(chat_id, template_slug, coupon_code, True, None)
         
         # Send personalized FunderPro challenge link
@@ -292,7 +343,7 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
         )
         
     except Exception as e:
-        print(f"[TELEGRAM] Error generating image: {e}")
+        print(f"[TELEGRAM] Error in _generate_and_send: {e}")
         await message.reply_text(f"❌ Failed to generate image. Please try again.")
         _log_usage(chat_id, template_slug, coupon_code, False, 'generation_failed')
 
@@ -324,8 +375,13 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # Get templates and show selection
-    templates = get_templates()
+    # Get templates and show selection (run in thread to avoid blocking)
+    import asyncio
+    try:
+        templates = await asyncio.to_thread(get_templates)
+    except Exception:
+        templates = None
+    
     if not templates:
         await update.message.reply_text("⚠️ Unable to load templates. Please try again later.")
         return
@@ -336,14 +392,15 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         template_slug = template.get('slug')
         preview_url = template.get('square') or template.get('story')
         
+        # Create button for this template
+        keyboard = [[InlineKeyboardButton(
+            f"✨ Generate {template_name}",
+            callback_data=f"template:{template_slug}"
+        )]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         if preview_url:
-            # Create button for this template
-            keyboard = [[InlineKeyboardButton(
-                f"✨ Generate {template_name}",
-                callback_data=f"template:{template_slug}"
-            )]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
+            # Send with preview image
             try:
                 await update.message.reply_photo(
                     photo=preview_url,
@@ -353,6 +410,19 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             except Exception as e:
                 print(f"[TELEGRAM] Failed to send preview for {template_slug}: {e}")
+                # Fallback to text-only if preview fails
+                await update.message.reply_text(
+                    f"📸 *{template_name}*",
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+        else:
+            # No preview available - send text-only button
+            await update.message.reply_text(
+                f"📸 *{template_name}*",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
     
     # Add "Generate All" button in separate message
     keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
