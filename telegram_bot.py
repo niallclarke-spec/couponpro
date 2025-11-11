@@ -266,13 +266,9 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
         challenge_url = f"https://prop.funderpro.com/buy-challenge/?promo={coupon_code}"
         await message.reply_text(
             f"✅ *Image generated!*\n\n"
-            f"🔗 *Your Personal Challenge Link:*\n"
+            f"🔗 *Your Personal Referral Link:*\n"
             f"{challenge_url}\n\n"
-            f"💡 Share this link with your audience to promote your offer!\n\n"
-            f"*What's next?*\n"
-            f"• /generate - Create more images with the same coupon\n"
-            f"• /start - Use a different coupon code\n"
-            f"• /help - View all commands",
+            f"⚡ Give your audience one-click access to your offer with this instant checkout link.",
             parse_mode='Markdown'
         )
         
