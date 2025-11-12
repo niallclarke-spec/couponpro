@@ -133,6 +133,11 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['coupon_code'] = coupon_code
     coupon_cache[chat_id] = coupon_code  # Store for synchronous webhook tracking
     
+    print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' for chat_id {chat_id}", flush=True)
+    print(f"[COUPON-HANDLER] context.user_data={context.user_data}", flush=True)
+    print(f"[COUPON-HANDLER] coupon_cache={dict(coupon_cache)}", flush=True)
+    sys.stdout.flush()
+    
     # Track user for broadcast capability (non-blocking)
     try:
         import db
@@ -218,6 +223,13 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Try context.user_data first (polling mode), fall back to cache (webhook mode)
     coupon_code = context.user_data.get('coupon_code') or coupon_cache.get(chat_id)
+    
+    print(f"[HANDLER] chat_id={chat_id}", flush=True)
+    print(f"[HANDLER] context.user_data={context.user_data}", flush=True)
+    print(f"[HANDLER] coupon_cache keys={list(coupon_cache.keys())}", flush=True)
+    print(f"[HANDLER] Retrieved coupon_code={coupon_code}", flush=True)
+    sys.stdout.flush()
+    
     if not coupon_code:
         err_msg = f"[HANDLER] ERROR: No coupon code found in user_data or cache"
         print(err_msg, flush=True)
