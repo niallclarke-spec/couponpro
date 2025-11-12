@@ -284,8 +284,11 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
     Runs blocking I/O in thread to keep event loop responsive.
     """
     import asyncio
+    import sys
     
-    print(f"[TELEGRAM] _generate_and_send called: template={template_slug}, coupon={coupon_code}")
+    msg = f"[TELEGRAM] _generate_and_send called: template={template_slug}, coupon={coupon_code}, chat_id={chat_id}"
+    print(msg, flush=True)
+    sys.stdout.flush()
     
     try:
         # Run blocking image generation in thread
@@ -301,12 +304,20 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
                 'generation_failed': f"❌ Failed to generate image. Please try again."
             }
             await message.reply_text(error_messages.get(error, "❌ An error occurred."))
+            print(f"[TELEGRAM] About to log FAILED usage: chat_id={chat_id}, error={error}", flush=True)
+            sys.stdout.flush()
             await _log_usage(chat_id, template_slug, coupon_code, False, error)
+            print(f"[TELEGRAM] Finished logging FAILED usage", flush=True)
+            sys.stdout.flush()
             return
         
         # Send to Telegram
         await message.reply_photo(photo=image_bio, filename=f'{template_slug}-{coupon_code}.png')
+        print(f"[TELEGRAM] About to log SUCCESS usage: chat_id={chat_id}", flush=True)
+        sys.stdout.flush()
         await _log_usage(chat_id, template_slug, coupon_code, True, None)
+        print(f"[TELEGRAM] Finished logging SUCCESS usage", flush=True)
+        sys.stdout.flush()
         
         # Send personalized FunderPro challenge link
         challenge_url = f"https://prop.funderpro.com/buy-challenge/?promo={coupon_code}"
