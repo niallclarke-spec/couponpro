@@ -199,10 +199,15 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     query = update.callback_query
     await query.answer()
     
+    print(f"[TELEGRAM] Template button clicked: {query.data}")
+    
     coupon_code = context.user_data.get('coupon_code')
     if not coupon_code:
+        print(f"[TELEGRAM] No coupon code found in user_data")
         await query.message.reply_text("Please start over with /start")
         return
+    
+    print(f"[TELEGRAM] Coupon code: {coupon_code}")
     
     # Parse callback data
     callback_data = query.data
@@ -242,8 +247,10 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Handle single template selection
     template_slug = template_selection
+    print(f"[TELEGRAM] Generating single template: {template_slug}")
     await query.message.reply_text(f"🎨 Generating {template_slug} with coupon {coupon_code}...")
     await _generate_and_send(query.message, chat_id, template_slug, coupon_code)
+    print(f"[TELEGRAM] Generation complete for {template_slug}")
 
 
 def _generate_image_sync(template_slug, coupon_code):
@@ -309,9 +316,13 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
     """
     import asyncio
     
+    print(f"[TELEGRAM] _generate_and_send called: template={template_slug}, coupon={coupon_code}")
+    
     try:
         # Run blocking image generation in thread
+        print(f"[TELEGRAM] Starting image generation...")
         image_bio, error = await asyncio.to_thread(_generate_image_sync, template_slug, coupon_code)
+        print(f"[TELEGRAM] Image generation finished: error={error}")
         
         if error:
             error_messages = {
