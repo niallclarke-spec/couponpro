@@ -815,7 +815,12 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
             return {'status': 'error', 'message': 'Bot not initialized'}
         
         # Convert webhook data to Update object
-        update = Update.de_json(webhook_data, _bot_application.bot)
+        try:
+            update = Update.de_json(webhook_data, _bot_application.bot)
+        except Exception as de_json_error:
+            print(f"[WEBHOOK] ❌ Failed to deserialize update: {de_json_error}", flush=True)
+            # Telegram expects 200 OK even on errors
+            return {'status': 'error', 'message': str(de_json_error)}
         
         if update:
             msg_text = update.message.text if update.message else (update.callback_query.data if update.callback_query else 'unknown')
