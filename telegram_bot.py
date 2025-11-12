@@ -214,9 +214,12 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     print(handler_msg, flush=True)
     sys.stdout.flush()
     
-    coupon_code = context.user_data.get('coupon_code')
+    chat_id = update.effective_chat.id
+    
+    # Try context.user_data first (polling mode), fall back to cache (webhook mode)
+    coupon_code = context.user_data.get('coupon_code') or coupon_cache.get(chat_id)
     if not coupon_code:
-        err_msg = f"[HANDLER] ERROR: No coupon code found in user_data"
+        err_msg = f"[HANDLER] ERROR: No coupon code found in user_data or cache"
         print(err_msg, flush=True)
         sys.stdout.flush()
         await query.message.reply_text("Please start over with /start")
@@ -232,7 +235,6 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
         return
     
     template_selection = callback_data.replace('template:', '')
-    chat_id = update.effective_chat.id
     
     # Handle single template selection
     template_slug = template_selection
