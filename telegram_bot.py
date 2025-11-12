@@ -221,13 +221,10 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     chat_id = update.effective_chat.id
     
-    # Try context.user_data first (polling mode), fall back to cache (webhook mode)
-    coupon_code = context.user_data.get('coupon_code') or coupon_cache.get(chat_id)
+    # In webhook mode, coupon_cache is the source of truth (context.user_data clears after ConversationHandler.END)
+    coupon_code = coupon_cache.get(chat_id) or context.user_data.get('coupon_code')
     
-    print(f"[HANDLER] chat_id={chat_id}", flush=True)
-    print(f"[HANDLER] context.user_data={context.user_data}", flush=True)
-    print(f"[HANDLER] coupon_cache keys={list(coupon_cache.keys())}", flush=True)
-    print(f"[HANDLER] Retrieved coupon_code={coupon_code}", flush=True)
+    print(f"[HANDLER] chat_id={chat_id}, coupon_code={coupon_code}", flush=True)
     sys.stdout.flush()
     
     if not coupon_code:
