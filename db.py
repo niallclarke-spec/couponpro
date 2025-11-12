@@ -591,6 +591,40 @@ def track_bot_user(chat_id, coupon_code):
     except Exception as e:
         print(f"[BOT_USER] Failed to track user (non-critical): {e}")
 
+def get_bot_user(chat_id):
+    """
+    Get bot user data including last coupon used.
+    
+    Args:
+        chat_id (int): Telegram chat ID
+    
+    Returns:
+        dict: User data with chat_id, last_coupon_code, last_used
+        None: If user not found or error
+    """
+    if not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT chat_id, last_coupon_code, last_used 
+                FROM bot_users 
+                WHERE chat_id = %s
+            """, (chat_id,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'chat_id': row[0],
+                    'last_coupon_code': row[1],
+                    'last_used': row[2]
+                }
+            return None
+    except Exception as e:
+        print(f"[DB] Error getting bot user: {e}")
+        return None
+
 def get_active_bot_users(days=30):
     """
     Get all active bot users within the last N days for broadcasting.

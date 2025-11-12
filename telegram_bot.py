@@ -136,12 +136,15 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' in cache for chat_id {chat_id}", flush=True)
     sys.stdout.flush()
     
-    # Track user for broadcast capability (non-blocking)
-    try:
-        import db
-        await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
-    except Exception as track_error:
-        print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
+    # Track user for broadcast capability (fire-and-forget)
+    async def _track_user():
+        try:
+            import db
+            await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
+        except Exception as track_error:
+            print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
+    
+    asyncio.create_task(_track_user())
     
     # Get templates (run in thread to avoid blocking event loop)
     try:
@@ -223,11 +226,29 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     with coupon_cache_lock:
         coupon_code = coupon_cache.get(chat_id)
     
+    # If cache miss, try DB fallback
+    if not coupon_code:
+        print(f"[HANDLER] Cache miss for chat_id={chat_id}, trying DB fallback", flush=True)
+        sys.stdout.flush()
+        try:
+            import db
+            bot_user = await asyncio.to_thread(db.get_bot_user, chat_id)
+            if bot_user and bot_user.get('last_coupon_code'):
+                coupon_code = bot_user['last_coupon_code']
+                # Repopulate cache
+                with coupon_cache_lock:
+                    coupon_cache[chat_id] = coupon_code
+                print(f"[HANDLER] ✅ Restored coupon from DB: {coupon_code}", flush=True)
+                sys.stdout.flush()
+        except Exception as e:
+            print(f"[HANDLER] DB fallback failed: {e}", flush=True)
+            sys.stdout.flush()
+    
     print(f"[HANDLER] chat_id={chat_id}, coupon_code={coupon_code}", flush=True)
     sys.stdout.flush()
     
     if not coupon_code:
-        err_msg = f"[HANDLER] ERROR: No coupon code found in user_data or cache"
+        err_msg = f"[HANDLER] ERROR: No coupon code found in cache or DB"
         print(err_msg, flush=True)
         sys.stdout.flush()
         await query.message.reply_text("Please start over with /start")
@@ -388,7 +409,25 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /generate command - regenerate templates with stored coupon."""
-    coupon_code = context.user_data.get('coupon_code')
+    chat_id = update.effective_chat.id
+    
+    # Try cache first
+    with coupon_cache_lock:
+        coupon_code = coupon_cache.get(chat_id)
+    
+    # If cache miss, try DB fallback
+    if not coupon_code:
+        try:
+            import db
+            bot_user = await asyncio.to_thread(db.get_bot_user, chat_id)
+            if bot_user and bot_user.get('last_coupon_code'):
+                coupon_code = bot_user['last_coupon_code']
+                # Repopulate cache
+                with coupon_cache_lock:
+                    coupon_cache[chat_id] = coupon_code
+                print(f"[GENERATE] ✅ Restored coupon from DB: {coupon_code}")
+        except Exception as e:
+            print(f"[GENERATE] DB fallback failed: {e}")
     
     if not coupon_code:
         await update.message.reply_text(
