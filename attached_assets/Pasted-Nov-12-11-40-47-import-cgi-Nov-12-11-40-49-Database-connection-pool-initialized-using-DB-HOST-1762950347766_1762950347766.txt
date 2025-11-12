@@ -1,0 +1,87 @@
+Nov 12 11:40:47    import cgi
+Nov 12 11:40:49  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 11:40:49  ✅ Database schema initialized
+Nov 12 11:40:49  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 11:40:50  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 11:40:50  Server running at http://0.0.0.0:8080/
+Nov 12 11:40:50  Serving files from /workspace
+Nov 12 11:40:50  API endpoints:
+Nov 12 11:40:50    POST /api/validate-coupon
+Nov 12 11:40:50    POST /api/login
+Nov 12 11:40:50    POST /api/logout
+Nov 12 11:40:50    POST /api/upload-template (requires auth)
+Nov 12 11:40:50    POST /api/delete-template (requires auth)
+Nov 12 11:40:50    POST /api/regenerate-index
+Nov 12 11:40:50    POST /api/telegram-webhook
+Nov 12 12:04:06  10.244.5.15 - - [12/Nov/2025 12:04:06] "POST /api/login HTTP/1.1" 401 -
+Nov 12 12:04:13  [AUTH] Session token found, valid: True
+Nov 12 12:04:13  10.244.5.15 - - [12/Nov/2025 12:04:13] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:07:41  10.244.7.226 - - [12/Nov/2025 12:07:41] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:09:23  10.244.6.88 - - [12/Nov/2025 12:09:23] "GET / HTTP/1.1" 200 -
+Nov 12 12:09:28  10.244.4.206 - - [12/Nov/2025 12:09:28] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:09:29  [AUTH] Session token found, valid: True
+Nov 12 12:09:29  10.244.5.15 - - [12/Nov/2025 12:09:29] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:11:02  10.244.7.226 - - [12/Nov/2025 12:11:02] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:11:07  10.244.7.226 - - [12/Nov/2025 12:11:07] "GET /api/campaigns HTTP/1.1" 200 -
+Nov 12 12:13:46  10.244.7.226 - - [12/Nov/2025 12:13:46] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:14:21  10.244.5.15 - - [12/Nov/2025 12:14:21] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:14:22  [AUTH] Session token found, valid: True
+Nov 12 12:14:22  10.244.5.15 - - [12/Nov/2025 12:14:22] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:15:43  [AUTH] Session token found, valid: True
+Nov 12 12:15:43  10.244.4.206 - - [12/Nov/2025 12:15:43] "GET /api/bot-stats?days=90 HTTP/1.1" 200 -
+Nov 12 12:15:44  [AUTH] Session token found, valid: True
+Nov 12 12:15:44  10.244.5.15 - - [12/Nov/2025 12:15:44] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:19:45  10.244.6.88 - - [12/Nov/2025 12:19:45] "GET / HTTP/1.1" 200 -
+Nov 12 11:41:21  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Nov 12 11:41:21    import cgi
+Nov 12 11:41:24  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 11:41:24  ✅ Database schema initialized
+Nov 12 11:41:24  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 11:41:25  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 11:41:25  Server running at http://0.0.0.0:8080/
+Nov 12 11:41:25  Serving files from /workspace
+Nov 12 11:41:25  API endpoints:
+Nov 12 11:41:25    POST /api/validate-coupon
+Nov 12 11:41:25    POST /api/login
+Nov 12 11:41:25    POST /api/logout
+Nov 12 11:41:25    POST /api/upload-template (requires auth)
+Nov 12 12:19:50  10.244.4.206 - - [12/Nov/2025 12:19:50] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:20:01  10.244.4.206 - - [12/Nov/2025 12:20:01] "POST /api/login HTTP/1.1" 200 -
+Nov 12 11:41:25    POST /api/delete-template (requires auth)
+Nov 12 11:41:25    POST /api/regenerate-index
+Nov 12 11:41:25    POST /api/telegram-webhook
+Nov 12 12:04:01  10.244.6.88 - - [12/Nov/2025 12:04:01] "GET / HTTP/1.1" 200 -
+Nov 12 12:04:01  10.244.7.226 - - [12/Nov/2025 12:04:01] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:04:11  10.244.5.15 - - [12/Nov/2025 12:04:11] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:06:36  10.244.4.206 - - [12/Nov/2025 12:06:36] code 404, message File not found
+Nov 12 12:06:36  10.244.4.206 - - [12/Nov/2025 12:06:36] "GET /.config/ HTTP/1.1" 404 -
+Nov 12 12:06:51  10.244.4.206 - - [12/Nov/2025 12:06:51] code 404, message File not found
+Nov 12 12:06:51  10.244.4.206 - - [12/Nov/2025 12:06:51] "GET /.config/ HTTP/1.1" 404 -
+Nov 12 12:07:41  10.244.6.88 - - [12/Nov/2025 12:07:41] "GET / HTTP/1.1" 200 -
+Nov 12 12:07:45  10.244.7.226 - - [12/Nov/2025 12:07:45] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:07:47  [AUTH] Session token found, valid: True
+Nov 12 12:07:47  10.244.5.15 - - [12/Nov/2025 12:07:47] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:09:23  10.244.7.226 - - [12/Nov/2025 12:09:23] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:11:02  10.244.6.88 - - [12/Nov/2025 12:11:02] "GET / HTTP/1.1" 200 -
+Nov 12 12:11:06  10.244.5.15 - - [12/Nov/2025 12:11:06] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:11:08  [AUTH] Session token found, valid: True
+Nov 12 12:11:08  10.244.5.15 - - [12/Nov/2025 12:11:08] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:13:46  10.244.6.88 - - [12/Nov/2025 12:13:46] "GET / HTTP/1.1" 200 -
+Nov 12 12:14:17  10.244.6.88 - - [12/Nov/2025 12:14:17] "GET / HTTP/1.1" 200 -
+Nov 12 12:14:17  10.244.7.226 - - [12/Nov/2025 12:14:17] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:14:17  10.244.7.226 - - [12/Nov/2025 12:14:17] code 404, message File not found
+Nov 12 12:14:17  10.244.7.226 - - [12/Nov/2025 12:14:17] "GET /favicon.ico HTTP/1.1" 404 -
+Nov 12 12:15:44  [AUTH] Session token found, valid: True
+Nov 12 12:15:44  10.244.6.88 - - [12/Nov/2025 12:15:44] "GET /api/bot-stats?days=30 HTTP/1.1" 200 -
+Nov 12 12:19:45  10.244.7.226 - - [12/Nov/2025 12:19:45] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:19:51  [AUTH] Session token found, valid: True
+Nov 12 12:19:51  10.244.5.15 - - [12/Nov/2025 12:19:51] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:19:58  10.244.6.88 - - [12/Nov/2025 12:19:58] "GET / HTTP/1.1" 200 -
+Nov 12 12:19:58  10.244.7.226 - - [12/Nov/2025 12:19:58] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:20:03  [AUTH] Session token found, valid: True
+Nov 12 12:20:03  10.244.5.15 - - [12/Nov/2025 12:20:03] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 12:20:23  10.244.6.88 - - [12/Nov/2025 12:20:23] "GET / HTTP/1.1" 200 -
+Nov 12 12:20:23  10.244.7.226 - - [12/Nov/2025 12:20:23] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 12:20:27  10.244.4.206 - - [12/Nov/2025 12:20:27] "POST /api/login HTTP/1.1" 200 -
+Nov 12 12:20:29  [AUTH] Session token found, valid: True
+Nov 12 12:20:29  10.244.5.15 - - [12/Nov/2025 12:20:29] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
