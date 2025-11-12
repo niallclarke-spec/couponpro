@@ -715,6 +715,15 @@ def start_webhook_bot(bot_token):
         _bot_application = create_bot_application(bot_token)
         await _bot_application.initialize()
         await _bot_application.start()
+        
+        # Configure webhook URL with Telegram
+        webhook_url = os.getenv('WEBHOOK_URL', 'https://dash.promostack.io/api/telegram-webhook')
+        try:
+            await _bot_application.bot.set_webhook(webhook_url)
+            print(f"[TELEGRAM] ✅ Webhook configured: {webhook_url}")
+        except Exception as e:
+            print(f"[TELEGRAM] ⚠️ Failed to set webhook: {e}")
+        
         print("[TELEGRAM] Webhook bot initialized and ready")
     
     asyncio.run_coroutine_threadsafe(init_app(), _bot_loop).result()
