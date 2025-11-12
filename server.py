@@ -1019,8 +1019,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(response).encode())
         
         elif parsed_path.path == '/api/telegram-webhook':
-            print(f"[WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!", flush=True)
             import sys
+            import time
+            start_time = time.time()
+            print(f"[WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!", flush=True)
             sys.stdout.flush()
             
             if not TELEGRAM_BOT_AVAILABLE:
@@ -1038,6 +1040,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
                 
                 if not bot_token:
+                    print(f"[WEBHOOK-ENDPOINT] ❌ Bot token not configured", flush=True)
                     self.send_response(500)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
@@ -1046,9 +1049,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
+                update_id = webhook_data.get('update_id', 'unknown')
+                print(f"[WEBHOOK-ENDPOINT] Processing update_id: {update_id}", flush=True)
                 
                 # Handle the webhook (tracking happens inside bot handlers)
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
+                
+                elapsed = time.time() - start_time
+                print(f"[WEBHOOK-ENDPOINT] ✅ Completed update_id {update_id} in {elapsed:.2f}s, result: {result}", flush=True)
+                sys.stdout.flush()
                 
                 # Telegram expects 200 OK even if we couldn't process the command
                 self.send_response(200)
@@ -1057,7 +1066,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(result).encode())
                 
             except Exception as e:
-                print(f"[TELEGRAM] Webhook error: {str(e)}")
+                elapsed = time.time() - start_time
+                print(f"[WEBHOOK-ENDPOINT] ❌ Webhook error after {elapsed:.2f}s: {str(e)}", flush=True)
+                import traceback
+                traceback.print_exc()
+                sys.stdout.flush()
                 # Still send 200 to Telegram so it doesn't retry
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

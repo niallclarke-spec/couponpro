@@ -23,9 +23,11 @@ class DatabasePool:
                     1,
                     20,
                     database_url,
-                    sslmode='prefer'
+                    sslmode='prefer',
+                    connect_timeout=10,
+                    options='-c statement_timeout=30000'
                 )
-                print("✅ Database connection pool initialized (using DATABASE_URL)")
+                print("✅ Database connection pool initialized (using DATABASE_URL, timeout=10s)")
             elif db_host:
                 self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                     1,
@@ -35,9 +37,11 @@ class DatabasePool:
                     database=os.environ.get('DB_NAME'),
                     user=os.environ.get('DB_USER'),
                     password=os.environ.get('DB_PASSWORD'),
-                    sslmode='prefer'
+                    sslmode='prefer',
+                    connect_timeout=10,
+                    options='-c statement_timeout=30000'
                 )
-                print("✅ Database connection pool initialized (using DB_HOST)")
+                print("✅ Database connection pool initialized (using DB_HOST, timeout=10s)")
             else:
                 print("ℹ️  Database not configured (missing DATABASE_URL or DB_HOST), campaigns feature disabled")
                 self.connection_pool = None

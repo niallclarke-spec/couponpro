@@ -136,15 +136,18 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' in cache for chat_id {chat_id}", flush=True)
     sys.stdout.flush()
     
-    # Track user for broadcast capability (fire-and-forget)
-    async def _track_user():
-        try:
-            import db
-            await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
-        except Exception as track_error:
-            print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
-    
-    asyncio.create_task(_track_user())
+    # Track user for broadcast capability (CRITICAL: must complete for DB fallback to work)
+    try:
+        import db
+        await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
+        print(f"[TELEGRAM] ✅ User {chat_id} tracked successfully in database", flush=True)
+        sys.stdout.flush()
+    except Exception as track_error:
+        print(f"[TELEGRAM] ⚠️ WARNING: Failed to track user {chat_id}: {track_error}", flush=True)
+        import traceback
+        traceback.print_exc()
+        sys.stdout.flush()
+        # Continue anyway - user can still use bot with in-memory cache
     
     # Get templates (run in thread to avoid blocking event loop)
     try:
