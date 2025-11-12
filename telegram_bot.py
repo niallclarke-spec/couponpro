@@ -423,19 +423,12 @@ async def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
     Runs in background thread to avoid blocking event loop.
     """
     import asyncio
-    print(f"[BOT_USAGE] _log_usage called: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}")
     try:
         import db
         if chat_id:
-            print(f"[BOT_USAGE] Calling db.log_bot_usage...")
             await asyncio.to_thread(db.log_bot_usage, chat_id, template_slug, coupon_code, success, error_type)
-            print(f"[BOT_USAGE] Successfully logged usage")
-        else:
-            print(f"[BOT_USAGE] Skipping (no chat_id)")
     except Exception as e:
         print(f"[BOT_USAGE] Logging failed (non-critical): {e}")
-        import traceback
-        traceback.print_exc()
 
 
 async def post_init(application: Application):
