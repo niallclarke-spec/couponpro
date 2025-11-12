@@ -1041,30 +1041,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
                 
-                # TRACK BOT USAGE SYNCHRONOUSLY (bot runs in webhook mode, not polling)
-                if DATABASE_AVAILABLE:
-                    try:
-                        callback = webhook_data.get('callback_query', {})
-                        message = webhook_data.get('message', {})
-                        
-                        # Track template button clicks
-                        if callback and callback.get('data', '').startswith('template:'):
-                            chat_id = callback.get('from', {}).get('id')
-                            template_slug = callback['data'].replace('template:', '')
-                            
-                            # Get coupon from cache (set by telegram_bot.handle_coupon_input)
-                            coupon_code = telegram_bot.coupon_cache.get(chat_id, 'UNKNOWN')
-                            
-                            if chat_id and template_slug:
-                                print(f"[WEBHOOK-TRACK] Logging: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}", flush=True)
-                                db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
-                                print(f"[WEBHOOK-TRACK] ✅ Logged successfully", flush=True)
-                    except Exception as e:
-                        print(f"[WEBHOOK-TRACK] ❌ ERROR: {e}", flush=True)
-                        import traceback
-                        traceback.print_exc()
-                
-                # Handle the webhook
+                # Handle the webhook (tracking happens inside bot handlers)
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
                 
                 # Telegram expects 200 OK even if we couldn't process the command
