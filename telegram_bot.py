@@ -129,13 +129,9 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         await _log_usage(chat_id, None, coupon_code, False, 'validation_error')
         return WAITING_FOR_COUPON
     
-    # Coupon is valid - store in context and cache (for server.py tracking)
-    context.user_data['coupon_code'] = coupon_code
-    coupon_cache[chat_id] = coupon_code  # Store for synchronous webhook tracking
-    
-    print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' for chat_id {chat_id}", flush=True)
-    print(f"[COUPON-HANDLER] context.user_data={context.user_data}", flush=True)
-    print(f"[COUPON-HANDLER] coupon_cache={dict(coupon_cache)}", flush=True)
+    # Coupon is valid - store in cache (survives after ConversationHandler.END)
+    coupon_cache[chat_id] = coupon_code
+    print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' in cache for chat_id {chat_id}", flush=True)
     sys.stdout.flush()
     
     # Track user for broadcast capability (non-blocking)
@@ -221,8 +217,8 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     chat_id = update.effective_chat.id
     
-    # In webhook mode, coupon_cache is the source of truth (context.user_data clears after ConversationHandler.END)
-    coupon_code = coupon_cache.get(chat_id) or context.user_data.get('coupon_code')
+    # Get coupon from cache (source of truth in webhook mode)
+    coupon_code = coupon_cache.get(chat_id)
     
     print(f"[HANDLER] chat_id={chat_id}, coupon_code={coupon_code}", flush=True)
     sys.stdout.flush()
@@ -507,11 +503,6 @@ def create_bot_application(bot_token):
     Returns:
         Application: Configured bot application
     """
-    from telegram.ext import PicklePersistence
-    
-    # Add persistence for webhook mode
-    persistence = PicklePersistence(filepath='/tmp/bot_persistence')
-    
     # Create application with rate limiting and automatic retries
     rate_limiter = AIORateLimiter(
         overall_max_rate=25,  # 25 msg/sec (safe buffer below Telegram's 30/s limit)
@@ -521,21 +512,19 @@ def create_bot_application(bot_token):
     application = (
         Application.builder()
         .token(bot_token)
-        .persistence(persistence)
+        .concurrent_updates(False)  # Required for ConversationHandler
         .rate_limiter(rate_limiter)
         .post_init(post_init)
         .build()
     )
     
-    # Define conversation handler WITH NAME for persistence
+    # Define conversation handler (no persistence needed - using coupon_cache)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start_command)],
         states={
             WAITING_FOR_COUPON: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coupon_input)]
         },
         fallbacks=[CommandHandler('cancel', cancel_command)],
-        name="coupon_conversation",  # Required for persistence
-        persistent=True,  # Enable persistence
         allow_reentry=True
     )
     
