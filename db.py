@@ -138,17 +138,19 @@ class DatabasePool:
                 """)
                 
                 # Add error_type column if it doesn't exist (migration for existing tables)
+                print("[MIGRATION] Checking if bot_usage.error_type column exists...")
                 cursor.execute("""
-                    DO $$ 
-                    BEGIN
-                        IF NOT EXISTS (
-                            SELECT 1 FROM information_schema.columns 
-                            WHERE table_name='bot_usage' AND column_name='error_type'
-                        ) THEN
-                            ALTER TABLE bot_usage ADD COLUMN error_type VARCHAR(100);
-                        END IF;
-                    END $$;
+                    SELECT COUNT(*) FROM information_schema.columns 
+                    WHERE table_name='bot_usage' AND column_name='error_type'
                 """)
+                column_exists = cursor.fetchone()[0] > 0
+                
+                if not column_exists:
+                    print("[MIGRATION] Adding error_type column to bot_usage table...")
+                    cursor.execute("ALTER TABLE bot_usage ADD COLUMN error_type VARCHAR(100)")
+                    print("[MIGRATION] ✅ error_type column added successfully")
+                else:
+                    print("[MIGRATION] error_type column already exists, skipping")
                 
                 # Create index on created_at for faster date-based queries
                 cursor.execute("""
