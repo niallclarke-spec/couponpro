@@ -455,6 +455,16 @@ def get_bot_stats(days=30):
         if not db_pool.connection_pool:
             return None
         
+        # Input validation to prevent SQL injection and ensure correct types
+        if isinstance(days, str):
+            if days not in ['today', 'yesterday']:
+                raise ValueError(f"Invalid days parameter: '{days}'. Must be 'today', 'yesterday', or a positive integer.")
+        elif isinstance(days, int):
+            if days < 0:
+                raise ValueError(f"Invalid days parameter: {days}. Must be a positive integer.")
+        else:
+            raise TypeError(f"Invalid days type: {type(days).__name__}. Must be int or str ('today'/'yesterday').")
+        
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             

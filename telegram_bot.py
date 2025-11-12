@@ -25,6 +25,7 @@ from telegram.ext import (
 from telegram.error import Forbidden, RetryAfter, TelegramError
 from telegram_image_gen import generate_promo_image
 import coupon_validator
+from coupon_validator import coupon_cache_lock
 
 # Conversation states
 WAITING_FOR_COUPON = 1
@@ -130,7 +131,8 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         return WAITING_FOR_COUPON
     
     # Coupon is valid - store in cache (survives after ConversationHandler.END)
-    coupon_cache[chat_id] = coupon_code
+    with coupon_cache_lock:
+        coupon_cache[chat_id] = coupon_code
     print(f"[COUPON-HANDLER] ✅ Stored coupon '{coupon_code}' in cache for chat_id {chat_id}", flush=True)
     sys.stdout.flush()
     
@@ -218,7 +220,8 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     chat_id = update.effective_chat.id
     
     # Get coupon from cache (source of truth in webhook mode)
-    coupon_code = coupon_cache.get(chat_id)
+    with coupon_cache_lock:
+        coupon_code = coupon_cache.get(chat_id)
     
     print(f"[HANDLER] chat_id={chat_id}, coupon_code={coupon_code}", flush=True)
     sys.stdout.flush()

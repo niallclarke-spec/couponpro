@@ -26,6 +26,9 @@ _coupon_cache = {}
 _cache_lock = threading.Lock()
 CACHE_TTL_SECONDS = 300
 
+# Shared lock for telegram_bot.py's coupon_cache (exported for thread-safe access)
+coupon_cache_lock = threading.Lock()
+
 
 def _get_cached_result(coupon_code):
     """Check if we have a recent valid result for this coupon (thread-safe)."""
