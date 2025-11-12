@@ -623,8 +623,8 @@ def send_broadcast(users, message):
     """
     import db
     
-    # Get bot token (prioritize test token in dev environment)
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN_TEST') or os.getenv('TELEGRAM_BOT_TOKEN')
+    # Get bot token (prioritize production token)
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
     if not bot_token:
         raise ValueError("No bot token available for broadcasting")
     
@@ -757,11 +757,11 @@ def run_bot(bot_token):
 
 
 if __name__ == '__main__':
-    # Use test bot token for development
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN_TEST') or os.getenv('TELEGRAM_BOT_TOKEN')
+    # Use production token first, fall back to test token
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
     
     if not bot_token:
-        print("ERROR: No bot token found. Set TELEGRAM_BOT_TOKEN_TEST or TELEGRAM_BOT_TOKEN")
+        print("ERROR: No bot token found. Set TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN_TEST")
     else:
         print("=" * 60)
         print("PromoStack Conversational Telegram Bot")
