@@ -653,6 +653,7 @@ def send_broadcast(users, message):
 def handle_telegram_webhook(webhook_data, bot_token):
     """
     Handle incoming webhook from Telegram (for production).
+    Processes update synchronously and returns only when complete.
     
     Args:
         webhook_data (dict): Webhook payload from Telegram
@@ -661,49 +662,46 @@ def handle_telegram_webhook(webhook_data, bot_token):
     Returns:
         dict: Response status
     """
+    import asyncio
+    
+    print(f"[TELEGRAM] Webhook received: {webhook_data.get('update_id', 'unknown')}")
+    
     try:
-        import asyncio
-        import nest_asyncio
-        
-        # Allow nested event loops (needed for webhook handler)
-        nest_asyncio.apply()
-        
         # Create bot application
         application = create_bot_application(bot_token)
         
-        # Initialize the application
+        # Process the update synchronously
         async def process_update():
             try:
+                print("[TELEGRAM] Initializing application...")
                 await application.initialize()
                 await application.start()
                 
                 # Convert webhook data to Update object
                 update = Update.de_json(webhook_data, application.bot)
+                print(f"[TELEGRAM] Processing update type: {update.message.text if update.message else update.callback_query.data if update.callback_query else 'unknown'}")
                 
                 if update:
-                    # Process the update
+                    # Process the update and WAIT for completion
                     await application.process_update(update)
+                    print("[TELEGRAM] Update processed successfully")
                 
             except Exception as e:
                 print(f"[TELEGRAM] Error processing update: {e}")
                 import traceback
                 traceback.print_exc()
+                raise
             finally:
                 try:
                     await application.stop()
                     await application.shutdown()
-                except:
-                    pass
+                except Exception as cleanup_error:
+                    print(f"[TELEGRAM] Cleanup error: {cleanup_error}")
         
-        # Get or create event loop
-        try:
-            loop = asyncio.get_running_loop()
-            # If we're already in an event loop, create a task
-            asyncio.create_task(process_update())
-        except RuntimeError:
-            # No event loop running, create one
-            asyncio.run(process_update())
+        # Run the async function and WAIT for it to complete
+        asyncio.run(process_update())
         
+        print("[TELEGRAM] Webhook processing complete")
         return {'status': 'ok'}
         
     except Exception as e:
