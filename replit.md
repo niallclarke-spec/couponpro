@@ -24,12 +24,14 @@ The frontend uses pure HTML, CSS, and vanilla JavaScript for a lightweight exper
 ### System Design Choices
 The system uses stateless HMAC-signed cookie authentication to support ephemeral environments. All template images are stored in Digital Ocean Spaces for persistence across deployments, serving as the universal source of truth. A hybrid storage model utilizes local `meta.json` files for quick access while backing them up to object storage. The architecture is modular, using environment variables for configuration (`SPACES_ACCESS_KEY`, `TELEGRAM_BOT_TOKEN`, `DB_HOST`, `FUNDERPRO_PRODUCT_ID`, etc.). Telegram image generation uses Pillow for accurate, stroke-artifact-free rendering, matching web app quality. Coupon validation is enforced at the API level before image generation to prevent unauthorized use of inactive promotional codes.
 
+**Production Robustness (Nov 2025)**: The Telegram bot is production-hardened for concurrent users with: (1) All database calls wrapped in `asyncio.to_thread()` to prevent event loop blocking, (2) AIORateLimiter configured with automatic retries (max_retries=3) to handle Telegram's rate limits gracefully, (3) Polling mode deployment via dedicated worker service in `.do/app.yaml` for reliability. Token priority ensures `TELEGRAM_BOT_TOKEN` (production) takes precedence over `TELEGRAM_BOT_TOKEN_TEST` (development).
+
 ## External Dependencies
 - **Digital Ocean Spaces**: S3-compatible object storage for persistent template images (bucket: `couponpro-templates`, region: LON1) with CDN.
 - **Digital Ocean PostgreSQL**: Managed database for campaigns and submissions (database: `promostack-db`, region: LON1).
 - **Digital Ocean**: Primary production deployment platform.
 - **Python 3.11**: Backend runtime environment.
-- **`requirements.txt`**: Key Python packages include `boto3` (for S3 interaction), `psycopg2-binary` (PostgreSQL driver), `Pillow` (image processing), `python-dotenv`, and `requests` (for Telegram API).
+- **`requirements.txt`**: Key Python packages include `boto3` (for S3 interaction), `psycopg2-binary` (PostgreSQL driver), `Pillow` (image processing), `python-dotenv`, `python-telegram-bot[rate-limiter]` (Telegram API with rate limiting), and `aiolimiter` (async rate limiting).
 - **Environment Secrets**: 
   - **Development (Replit)**: `TELEGRAM_BOT_TOKEN_TEST` (for @promostack_test_bot - safe testing environment), `DATABASE_URL` (dev database), `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID`
   - **Production (Digital Ocean)**: `TELEGRAM_BOT_TOKEN` (for @promostack_bot - live production bot), `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (production database), `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`, `SPACES_REGION`, `SPACES_BUCKET`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID`
