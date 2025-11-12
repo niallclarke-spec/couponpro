@@ -1052,11 +1052,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             chat_id = callback.get('from', {}).get('id')
                             template_slug = callback['data'].replace('template:', '')
                             
-                            # Get coupon from user's session (stored in context by bot)
-                            coupon_code = 'WEBHOOK'  # Placeholder - will be replaced with actual coupon tracking
+                            # Get coupon from cache (set by telegram_bot.handle_coupon_input)
+                            coupon_code = telegram_bot.coupon_cache.get(chat_id, 'UNKNOWN')
                             
                             if chat_id and template_slug:
-                                print(f"[WEBHOOK-TRACK] Logging: chat_id={chat_id}, template={template_slug}", flush=True)
+                                print(f"[WEBHOOK-TRACK] Logging: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}", flush=True)
                                 db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
                                 print(f"[WEBHOOK-TRACK] ✅ Logged successfully", flush=True)
                     except Exception as e:
