@@ -3,7 +3,8 @@ python-dotenv
 boto3
 sift-stack-py
 botocore
-python-telegram-bot
+python-telegram-bot[rate-limiter]
 Pillow
 requests
 psycopg2-binary
+aiolimiter

@@ -19,7 +19,8 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
     filters,
-    ContextTypes
+    ContextTypes,
+    AIORateLimiter
 )
 from telegram.error import Forbidden, RetryAfter, TelegramError
 from telegram_image_gen import generate_promo_image
@@ -106,7 +107,7 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
                 f"❌ Sorry, {coupon_code} doesn't appear to be a valid FunderPro coupon. Please check and try again."
             )
             # Log failed validation
-            _log_usage(chat_id, None, coupon_code, False, 'invalid_coupon')
+            await _log_usage(chat_id, None, coupon_code, False, 'invalid_coupon')
             return WAITING_FOR_COUPON
         
     except Exception as val_error:
@@ -114,16 +115,16 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text(
             f"⚠️ Unable to validate coupon. Please try again later."
         )
-        _log_usage(chat_id, None, coupon_code, False, 'validation_error')
+        await _log_usage(chat_id, None, coupon_code, False, 'validation_error')
         return WAITING_FOR_COUPON
     
     # Coupon is valid - store in context and track user
     context.user_data['coupon_code'] = coupon_code
     
-    # Track user for broadcast capability
+    # Track user for broadcast capability (non-blocking)
     try:
         import db
-        db.track_bot_user(chat_id, coupon_code)
+        await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
     except Exception as track_error:
         print(f"[TELEGRAM] Failed to track user (non-critical): {track_error}")
     
@@ -138,7 +139,7 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text(
             "⚠️ Unable to load templates. Please try again later."
         )
-        _log_usage(chat_id, None, coupon_code, False, 'templates_error')
+        await _log_usage(chat_id, None, coupon_code, False, 'templates_error')
         return ConversationHandler.END
     
     # Send each template with preview image and button
@@ -179,13 +180,9 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
                 parse_mode='Markdown'
             )
     
-    # Add "Generate All" button in separate message
-    keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
+    # Send final confirmation message
     await update.message.reply_text(
-        f"✅ Coupon *{coupon_code}* is valid!\n\nOr generate all at once:",
-        reply_markup=reply_markup,
+        f"✅ Coupon *{coupon_code}* is valid!\n\nClick any template above to generate your promo image.",
         parse_mode='Markdown'
     )
     
@@ -216,34 +213,6 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     template_selection = callback_data.replace('template:', '')
     chat_id = update.effective_chat.id
-    
-    # Handle "Generate All"
-    if template_selection == 'all':
-        import asyncio
-        try:
-            templates = await asyncio.to_thread(get_templates)
-        except Exception:
-            templates = None
-        
-        if not templates:
-            await query.message.reply_text("⚠️ Unable to load templates.")
-            return
-        
-        await query.message.reply_text(f"🎨 Generating all templates with coupon {coupon_code}...")
-        
-        for template in templates:
-            template_slug = template.get('slug')
-            await _generate_and_send(query.message, chat_id, template_slug, coupon_code)
-        
-        await query.message.reply_text(
-            "✅ All templates generated!\n\n"
-            "💡 *What's next?*\n"
-            "• /generate - Generate templates again\n"
-            "• /start - Use a different coupon code\n"
-            "• /help - View all commands",
-            parse_mode='Markdown'
-        )
-        return
     
     # Handle single template selection
     template_slug = template_selection
@@ -332,12 +301,12 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
                 'generation_failed': f"❌ Failed to generate image. Please try again."
             }
             await message.reply_text(error_messages.get(error, "❌ An error occurred."))
-            _log_usage(chat_id, template_slug, coupon_code, False, error)
+            await _log_usage(chat_id, template_slug, coupon_code, False, error)
             return
         
         # Send to Telegram
         await message.reply_photo(photo=image_bio, filename=f'{template_slug}-{coupon_code}.png')
-        _log_usage(chat_id, template_slug, coupon_code, True, None)
+        await _log_usage(chat_id, template_slug, coupon_code, True, None)
         
         # Send personalized FunderPro challenge link
         challenge_url = f"https://prop.funderpro.com/buy-challenge/?promo={coupon_code}"
@@ -356,7 +325,7 @@ async def _generate_and_send(message, chat_id, template_slug, coupon_code):
     except Exception as e:
         print(f"[TELEGRAM] Error in _generate_and_send: {e}")
         await message.reply_text(f"❌ Failed to generate image. Please try again.")
-        _log_usage(chat_id, template_slug, coupon_code, False, 'generation_failed')
+        await _log_usage(chat_id, template_slug, coupon_code, False, 'generation_failed')
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -435,13 +404,9 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode='Markdown'
             )
     
-    # Add "Generate All" button in separate message
-    keyboard = [[InlineKeyboardButton("🎨 Generate All Templates", callback_data="template:all")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
+    # Send confirmation message
     await update.message.reply_text(
-        f"Generate all templates with coupon *{coupon_code}*:",
-        reply_markup=reply_markup,
+        f"✅ Select a template above to generate with coupon *{coupon_code}*",
         parse_mode='Markdown'
     )
 
@@ -452,14 +417,16 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     return ConversationHandler.END
 
 
-def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
+async def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
     """
     Internal helper to log bot usage. Silently fails to avoid disrupting bot.
+    Runs in background thread to avoid blocking event loop.
     """
+    import asyncio
     try:
         import db
         if chat_id:
-            db.log_bot_usage(chat_id, template_slug, coupon_code, success, error_type)
+            await asyncio.to_thread(db.log_bot_usage, chat_id, template_slug, coupon_code, success, error_type)
     except Exception as e:
         print(f"[BOT_USAGE] Logging failed (non-critical): {e}")
 
@@ -487,8 +454,19 @@ def create_bot_application(bot_token):
     Returns:
         Application: Configured bot application
     """
-    # Create application
-    application = Application.builder().token(bot_token).post_init(post_init).build()
+    # Create application with rate limiting and automatic retries
+    rate_limiter = AIORateLimiter(
+        overall_max_rate=25,  # 25 msg/sec (safe buffer below Telegram's 30/s limit)
+        max_retries=3  # Automatically retry failed requests up to 3 times
+    )
+    
+    application = (
+        Application.builder()
+        .token(bot_token)
+        .rate_limiter(rate_limiter)
+        .post_init(post_init)
+        .build()
+    )
     
     # Define conversation handler
     conv_handler = ConversationHandler(
@@ -528,8 +506,8 @@ async def _send_broadcast_messages(job_id, users, message, bot_token):
     sent_count = 0
     failed_count = 0
     
-    # Update job status to processing
-    db.update_broadcast_job(job_id, status='processing')
+    # Update job status to processing (non-blocking)
+    await asyncio.to_thread(db.update_broadcast_job, job_id, status='processing')
     
     # Rate limiting: 20 messages per second (safe buffer below Telegram's 30/s limit)
     rate_limit_delay = 0.05  # 50ms between messages = 20 messages/second
@@ -546,17 +524,17 @@ async def _send_broadcast_messages(job_id, users, message, bot_token):
             sent_count += 1
             print(f"[BROADCAST] Sent to {chat_id} ({sent_count}/{len(users)})")
             
-            # Update progress every 10 messages
+            # Update progress every 10 messages (non-blocking)
             if sent_count % 10 == 0:
-                db.update_broadcast_job(job_id, sent_count=sent_count, failed_count=failed_count)
+                await asyncio.to_thread(db.update_broadcast_job, job_id, sent_count=sent_count, failed_count=failed_count)
             
             # Rate limit
             await asyncio.sleep(rate_limit_delay)
             
         except Forbidden:
-            # User blocked the bot - remove them
+            # User blocked the bot - remove them (non-blocking)
             print(f"[BROADCAST] User {chat_id} blocked bot, removing")
-            db.remove_bot_user(chat_id)
+            await asyncio.to_thread(db.remove_bot_user, chat_id)
             failed_count += 1
             
         except RetryAfter as e:
@@ -580,8 +558,9 @@ async def _send_broadcast_messages(job_id, users, message, bot_token):
             print(f"[BROADCAST] Unexpected error sending to {chat_id}: {e}")
             failed_count += 1
     
-    # Final update
-    db.update_broadcast_job(
+    # Final update (non-blocking)
+    await asyncio.to_thread(
+        db.update_broadcast_job,
         job_id,
         status='completed',
         sent_count=sent_count,
