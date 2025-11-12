@@ -1013,7 +1013,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(response).encode())
         
         elif parsed_path.path == '/api/telegram-webhook':
+            print(f"[WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!", flush=True)
+            import sys
+            sys.stdout.flush()
+            
             if not TELEGRAM_BOT_AVAILABLE:
+                print(f"[WEBHOOK-ENDPOINT] ❌ Bot not available", flush=True)
                 self.send_response(503)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -1023,6 +1028,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 content_length = int(self.headers.get('Content-Length', 0))
                 post_data = self.rfile.read(content_length)
+                print(f"[WEBHOOK-ENDPOINT] Received {content_length} bytes", flush=True)
                 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
                 
                 if not bot_token:
