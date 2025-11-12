@@ -1,0 +1,30 @@
+Nov 12 14:10:23  ✅ Database schema initialized
+Nov 12 14:10:23  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 14:10:24  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 14:10:24  Server running at http://0.0.0.0:8080/
+Nov 12 14:10:24  Serving files from /workspace
+Nov 12 14:10:24  API endpoints:
+Nov 12 14:10:24    POST /api/validate-coupon
+Nov 12 14:10:24    POST /api/login
+Nov 12 14:10:24    POST /api/logout
+Nov 12 14:10:24    POST /api/upload-template (requires auth)
+Nov 12 14:10:24    POST /api/delete-template (requires auth)
+Nov 12 14:10:24    POST /api/regenerate-index
+Nov 12 14:10:24    POST /api/telegram-webhook
+Nov 12 14:12:36  10.244.4.206 - - [12/Nov/2025 14:12:36] "GET / HTTP/1.1" 200 -
+Nov 12 14:12:36  10.244.4.206 - - [12/Nov/2025 14:12:36] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 14:12:39  10.244.7.226 - - [12/Nov/2025 14:12:39] "POST /api/login HTTP/1.1" 401 -
+Nov 12 14:12:44  10.244.7.226 - - [12/Nov/2025 14:12:44] "POST /api/login HTTP/1.1" 200 -
+Nov 12 14:12:46  [AUTH] Session token found, valid: True
+Nov 12 14:12:46  10.244.5.15 - - [12/Nov/2025 14:12:46] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 14:12:52  [AUTH] Session token found, valid: True
+Nov 12 14:12:52  10.244.5.15 - - [12/Nov/2025 14:12:52] "GET /api/bot-stats?days=30 HTTP/1.1" 200 -
+Nov 12 14:12:53  [AUTH] Session token found, valid: True
+Nov 12 14:12:53  10.244.4.206 - - [12/Nov/2025 14:12:53] "GET /api/bot-stats?days=90 HTTP/1.1" 200 -
+Nov 12 14:12:54  [AUTH] Session token found, valid: True
+Nov 12 14:12:54  10.244.5.15 - - [12/Nov/2025 14:12:54] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
+Nov 12 14:13:21  10.244.4.206 - - [12/Nov/2025 14:13:21] "GET / HTTP/1.1" 200 -
+Nov 12 14:13:21  10.244.4.206 - - [12/Nov/2025 14:13:21] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Nov 12 14:13:24  10.244.7.226 - - [12/Nov/2025 14:13:24] "POST /api/login HTTP/1.1" 200 -
+Nov 12 14:13:26  [AUTH] Session token found, valid: True
+Nov 12 14:13:26  10.244.5.15 - - [12/Nov/2025 14:13:26] "GET /api/bot-stats?days=7 HTTP/1.1" 200 -
