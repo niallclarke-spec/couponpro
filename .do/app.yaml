@@ -49,7 +49,8 @@ services:
       - key: DB_PASSWORD
         scope: RUN_TIME
         type: SECRET
-  
+
+workers:
   - name: telegram-bot
     environment_slug: python
     github:
