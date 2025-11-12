@@ -1048,11 +1048,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         # Get coupon from cache (set by telegram_bot.handle_coupon_input)
                         coupon_code = telegram_bot.coupon_cache.get(chat_id, 'UNKNOWN')
                         
+                        print(f"[WEBHOOK-TRACK] Chat: {chat_id}, Template: {template_slug}, Coupon: {coupon_code}", flush=True)
+                        
                         if chat_id and template_slug:
                             # Log usage synchronously from main thread
                             db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
+                            print(f"[WEBHOOK-TRACK] ✅ Successfully logged usage", flush=True)
+                        else:
+                            print(f"[WEBHOOK-TRACK] ⚠️ Missing data - skipped logging", flush=True)
                 except Exception as e:
-                    pass  # Silent fail to not disrupt webhook
+                    print(f"[WEBHOOK-TRACK] ❌ ERROR: {e}", flush=True)
+                    import traceback
+                    traceback.print_exc()  # Print full stack trace
                 
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
