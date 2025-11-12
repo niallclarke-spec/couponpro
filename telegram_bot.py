@@ -96,8 +96,15 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     Returns:
         int: Next state (WAITING_FOR_COUPON if invalid, ConversationHandler.END if valid)
     """
+    import sys
+    print(f"[COUPON-HANDLER] ⚡ handle_coupon_input called!", flush=True)
+    sys.stdout.flush()
+    
     coupon_code = update.message.text.strip().upper()
     chat_id = update.effective_chat.id
+    
+    print(f"[COUPON-HANDLER] Processing coupon: {coupon_code}, chat_id: {chat_id}", flush=True)
+    sys.stdout.flush()
     
     # Validate coupon (run in thread to avoid blocking event loop)
     import asyncio

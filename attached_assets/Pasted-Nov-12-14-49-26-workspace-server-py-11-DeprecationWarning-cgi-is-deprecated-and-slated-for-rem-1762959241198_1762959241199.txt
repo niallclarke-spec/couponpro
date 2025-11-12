@@ -1,0 +1,68 @@
+Nov 12 14:49:26  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Nov 12 14:49:26    import cgi
+Nov 12 14:49:28  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 14:49:28  [MIGRATION] Checking if bot_usage.error_type column exists...
+Nov 12 14:49:28  [MIGRATION] error_type column already exists, skipping
+Nov 12 14:49:28  ✅ Database schema initialized
+Nov 12 14:49:28  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 14:49:29  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Nov 12 14:49:29  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 14:49:29  Server running at http://0.0.0.0:8080/
+Nov 12 14:49:29  Serving files from /workspace
+Nov 12 14:49:29  API endpoints:
+Nov 12 14:49:29    POST /api/validate-coupon
+Nov 12 14:49:29    POST /api/login
+Nov 12 14:49:29    POST /api/logout
+Nov 12 14:49:29    POST /api/upload-template (requires auth)
+Nov 12 14:49:29    POST /api/delete-template (requires auth)
+Nov 12 14:49:29    POST /api/regenerate-index
+Nov 12 14:49:29    POST /api/telegram-webhook
+Nov 12 14:49:58  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Nov 12 14:49:58    import cgi
+Nov 12 14:50:00  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 14:50:00  [MIGRATION] Checking if bot_usage.error_type column exists...
+Nov 12 14:50:00  [MIGRATION] error_type column already exists, skipping
+Nov 12 14:50:00  ✅ Database schema initialized
+Nov 12 14:50:00  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 14:50:01  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Nov 12 14:50:01  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 14:50:01  Server running at http://0.0.0.0:8080/
+Nov 12 14:50:01  Serving files from /workspace
+Nov 12 14:50:01  API endpoints:
+Nov 12 14:50:01    POST /api/validate-coupon
+Nov 12 14:50:01    POST /api/login
+Nov 12 14:50:01    POST /api/logout
+Nov 12 14:50:01    POST /api/upload-template (requires auth)
+Nov 12 14:50:01    POST /api/delete-template (requires auth)
+Nov 12 14:50:01    POST /api/regenerate-index
+Nov 12 14:50:01    POST /api/telegram-webhook
+Nov 12 14:50:41  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:50:41  [WEBHOOK-ENDPOINT] Received 376 bytes
+Nov 12 14:50:41  [WEBHOOK] Received update_id: 325862498
+Nov 12 14:50:41  [WEBHOOK] Processing: type=Message, text=/start
+Nov 12 14:50:41  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:50:41  10.244.6.88 - - [12/Nov/2025 14:50:41] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:50:44  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:50:44  [WEBHOOK-ENDPOINT] Received 317 bytes
+Nov 12 14:50:44  [WEBHOOK] Received update_id: 325862499
+Nov 12 14:50:44  [WEBHOOK] Processing: type=Message, text=alpha
+Nov 12 14:50:44  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:50:44  10.244.6.88 - - [12/Nov/2025 14:50:44] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:51:09  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:51:09  [WEBHOOK-ENDPOINT] Received 317 bytes
+Nov 12 14:51:09  [WEBHOOK] Received update_id: 325862500
+Nov 12 14:51:09  [WEBHOOK] Processing: type=Message, text=alpha
+Nov 12 14:51:09  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:51:09  10.244.6.88 - - [12/Nov/2025 14:51:09] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:51:16  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:51:16  [WEBHOOK-ENDPOINT] Received 376 bytes
+Nov 12 14:51:16  [WEBHOOK] Received update_id: 325862501
+Nov 12 14:51:16  [WEBHOOK] Processing: type=Message, text=/start
+Nov 12 14:51:16  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:51:16  10.244.6.88 - - [12/Nov/2025 14:51:16] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:51:19  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:51:19  [WEBHOOK-ENDPOINT] Received 317 bytes
+Nov 12 14:51:19  [WEBHOOK] Received update_id: 325862502
+Nov 12 14:51:19  [WEBHOOK] Processing: type=Message, text=alpha
+Nov 12 14:51:19  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:51:19  10.244.6.88 - - [12/Nov/2025 14:51:19] "POST /api/telegram-webhook HTTP/1.1" 200 -
