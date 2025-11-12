@@ -7,3 +7,4 @@ python-telegram-bot
 Pillow
 requests
 psycopg2-binary
+nest-asyncio
