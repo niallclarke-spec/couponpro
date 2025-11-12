@@ -579,6 +579,9 @@ def create_bot_application(bot_token):
     application.add_handler(CommandHandler('generate', generate_command))
     application.add_handler(CallbackQueryHandler(handle_template_selection))
     
+    # Fallback handler: treat any plain text as coupon input (outside conversation)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coupon_input))
+    
     return application
 
 
