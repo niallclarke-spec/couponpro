@@ -498,11 +498,6 @@ def create_bot_application(bot_token):
     Returns:
         Application: Configured bot application
     """
-    from telegram.ext import PicklePersistence
-    
-    # Configure persistence for conversation state in webhook mode
-    persistence = PicklePersistence(filepath='/tmp/bot_persistence')
-    
     # Create application with rate limiting and automatic retries
     rate_limiter = AIORateLimiter(
         overall_max_rate=25,  # 25 msg/sec (safe buffer below Telegram's 30/s limit)
@@ -512,7 +507,6 @@ def create_bot_application(bot_token):
     application = (
         Application.builder()
         .token(bot_token)
-        .persistence(persistence)
         .rate_limiter(rate_limiter)
         .post_init(post_init)
         .build()
