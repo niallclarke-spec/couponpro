@@ -650,58 +650,91 @@ def send_broadcast(users, message):
     }
 
 
-def handle_telegram_webhook(webhook_data, bot_token):
+# Global persistent bot application and event loop for webhook mode
+_bot_application = None
+_bot_loop = None
+_bot_thread = None
+
+
+def start_webhook_bot(bot_token):
+    """
+    Start the Telegram bot in webhook mode with persistent event loop.
+    This keeps the bot application alive to maintain conversation state.
+    
+    Args:
+        bot_token (str): Telegram bot token
+    """
+    global _bot_application, _bot_loop, _bot_thread
+    
+    import asyncio
+    import threading
+    
+    def run_event_loop():
+        global _bot_loop
+        _bot_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(_bot_loop)
+        _bot_loop.run_forever()
+    
+    # Start background event loop thread
+    _bot_thread = threading.Thread(target=run_event_loop, daemon=True)
+    _bot_thread.start()
+    
+    # Wait for loop to be ready
+    import time
+    while _bot_loop is None:
+        time.sleep(0.01)
+    
+    # Initialize bot application on the loop
+    async def init_app():
+        global _bot_application
+        _bot_application = create_bot_application(bot_token)
+        await _bot_application.initialize()
+        await _bot_application.start()
+        print("[TELEGRAM] Webhook bot initialized and ready")
+    
+    asyncio.run_coroutine_threadsafe(init_app(), _bot_loop).result()
+
+
+def handle_telegram_webhook(webhook_data, bot_token=None):
     """
     Handle incoming webhook from Telegram (for production).
-    Processes update synchronously and returns only when complete.
+    Forwards update to persistent bot application.
     
     Args:
         webhook_data (dict): Webhook payload from Telegram
-        bot_token (str): Telegram bot token
+        bot_token (str): Telegram bot token (optional, for compatibility)
         
     Returns:
         dict: Response status
     """
     import asyncio
     
+    global _bot_application, _bot_loop
+    
     print(f"[TELEGRAM] Webhook received: {webhook_data.get('update_id', 'unknown')}")
     
     try:
-        # Create bot application
-        application = create_bot_application(bot_token)
+        if _bot_application is None or _bot_loop is None:
+            print("[TELEGRAM] ERROR: Bot application not initialized")
+            return {'status': 'error', 'message': 'Bot not initialized'}
         
-        # Process the update synchronously
-        async def process_update():
-            try:
-                print("[TELEGRAM] Initializing application...")
-                await application.initialize()
-                await application.start()
-                
-                # Convert webhook data to Update object
-                update = Update.de_json(webhook_data, application.bot)
-                print(f"[TELEGRAM] Processing update type: {update.message.text if update.message else update.callback_query.data if update.callback_query else 'unknown'}")
-                
-                if update:
-                    # Process the update and WAIT for completion
-                    await application.process_update(update)
-                    print("[TELEGRAM] Update processed successfully")
-                
-            except Exception as e:
-                print(f"[TELEGRAM] Error processing update: {e}")
-                import traceback
-                traceback.print_exc()
-                raise
-            finally:
-                try:
-                    await application.stop()
-                    await application.shutdown()
-                except Exception as cleanup_error:
-                    print(f"[TELEGRAM] Cleanup error: {cleanup_error}")
+        # Convert webhook data to Update object
+        update = Update.de_json(webhook_data, _bot_application.bot)
         
-        # Run the async function and WAIT for it to complete
-        asyncio.run(process_update())
+        if update:
+            msg_text = update.message.text if update.message else (update.callback_query.data if update.callback_query else 'unknown')
+            print(f"[TELEGRAM] Processing update: {msg_text}")
+            
+            # Forward update to persistent bot application
+            future = asyncio.run_coroutine_threadsafe(
+                _bot_application.process_update(update),
+                _bot_loop
+            )
+            
+            # Wait for processing to complete (with timeout)
+            future.result(timeout=30)
+            print("[TELEGRAM] Update processed successfully")
         
-        print("[TELEGRAM] Webhook processing complete")
         return {'status': 'ok'}
         
     except Exception as e:

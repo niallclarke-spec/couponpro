@@ -1213,6 +1213,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
+    # Initialize Telegram bot in webhook mode if token is available
+    if TELEGRAM_BOT_AVAILABLE:
+        try:
+            bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
+            if bot_token:
+                print("[TELEGRAM] Initializing bot for webhook mode...")
+                telegram_bot.start_webhook_bot(bot_token)
+        except Exception as e:
+            print(f"[TELEGRAM] Failed to start bot: {e}")
+            import traceback
+            traceback.print_exc()
+    
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Server running at http://0.0.0.0:{PORT}/")
