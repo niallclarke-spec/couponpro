@@ -1,0 +1,66 @@
+Nov 12 14:56:56  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Nov 12 14:56:56    import cgi
+Nov 12 14:56:59  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 14:56:59  [MIGRATION] Checking if bot_usage.error_type column exists...
+Nov 12 14:56:59  [MIGRATION] error_type column already exists, skipping
+Nov 12 14:56:59  ✅ Database schema initialized
+Nov 12 14:56:59  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 14:56:59  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Nov 12 14:56:59  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 14:56:59  Server running at http://0.0.0.0:8080/
+Nov 12 14:56:59  Serving files from /workspace
+Nov 12 14:56:59  API endpoints:
+Nov 12 14:56:26  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Nov 12 14:56:26    import cgi
+Nov 12 14:56:28  ✅ Database connection pool initialized (using DB_HOST)
+Nov 12 14:56:28  [MIGRATION] Checking if bot_usage.error_type column exists...
+Nov 12 14:56:28  [MIGRATION] error_type column already exists, skipping
+Nov 12 14:56:28  ✅ Database schema initialized
+Nov 12 14:56:28  [TELEGRAM] Initializing bot for webhook mode...
+Nov 12 14:56:29  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Nov 12 14:56:29  [TELEGRAM] Webhook bot initialized and ready
+Nov 12 14:56:29  Server running at http://0.0.0.0:8080/
+Nov 12 14:56:29  Serving files from /workspace
+Nov 12 14:56:29  API endpoints:
+Nov 12 14:56:29    POST /api/validate-coupon
+Nov 12 14:56:29    POST /api/login
+Nov 12 14:56:29    POST /api/logout
+Nov 12 14:56:29    POST /api/upload-template (requires auth)
+Nov 12 14:56:29    POST /api/delete-template (requires auth)
+Nov 12 14:56:29    POST /api/regenerate-index
+Nov 12 14:56:29    POST /api/telegram-webhook
+Nov 12 14:56:59    POST /api/validate-coupon
+Nov 12 14:56:59    POST /api/login
+Nov 12 14:56:59    POST /api/logout
+Nov 12 14:56:59    POST /api/upload-template (requires auth)
+Nov 12 14:56:59    POST /api/delete-template (requires auth)
+Nov 12 14:56:59    POST /api/regenerate-index
+Nov 12 14:56:59    POST /api/telegram-webhook
+Nov 12 14:57:28  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:57:28  [WEBHOOK-ENDPOINT] Received 376 bytes
+Nov 12 14:57:28  [WEBHOOK] Received update_id: 325862503
+Nov 12 14:57:28  [WEBHOOK] Processing: type=Message, text=/start
+Nov 12 14:57:28  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:57:28  10.244.4.206 - - [12/Nov/2025 14:57:28] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:57:36  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:57:36  [WEBHOOK-ENDPOINT] Received 317 bytes
+Nov 12 14:57:36  [WEBHOOK] Received update_id: 325862504
+Nov 12 14:57:36  [WEBHOOK] Processing: type=Message, text=alpha
+Nov 12 14:57:36  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Nov 12 14:57:36  [COUPON-HANDLER] Processing coupon: ALPHA, chat_id: 5262022632
+Nov 12 14:57:37  [TELEGRAM] Cache miss, downloading index.json
+Nov 12 14:57:37  [TELEGRAM] Index cached for 300s
+Nov 12 14:57:37  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:57:37  10.244.4.206 - - [12/Nov/2025 14:57:37] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Nov 12 14:57:42  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Nov 12 14:57:42  [WEBHOOK-ENDPOINT] Received 1434 bytes
+Nov 12 14:57:42  [WEBHOOK-TRACK] Logging: chat_id=5262022632, template=promo-3
+Nov 12 14:57:42  [BOT_USAGE] Attempting to log: chat_id=5262022632, template=promo-3, coupon=WEBHOOK, success=True, error=None
+Nov 12 14:57:42  [BOT_USAGE] ✅ Successfully logged usage
+Nov 12 14:57:42  [WEBHOOK-TRACK] ✅ Logged successfully
+Nov 12 14:57:42  [WEBHOOK] Received update_id: 325862505
+Nov 12 14:57:42  [WEBHOOK] Processing: type=CallbackQuery, text=template:promo-3
+Nov 12 14:57:42  [HANDLER] handle_template_selection called! data=template:promo-3
+Nov 12 14:57:42  [HANDLER] ERROR: No coupon code found in user_data
+Nov 12 14:57:42  [WEBHOOK] ✅ Update processed successfully
+Nov 12 14:57:42  10.244.4.206 - - [12/Nov/2025 14:57:42] "POST /api/telegram-webhook HTTP/1.1" 200 -
