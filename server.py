@@ -336,7 +336,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 query_params = parse_qs(parsed_path.query)
-                days = int(query_params.get('days', [30])[0])
+                days_param = query_params.get('days', ['30'])[0]
+                
+                # Support 'today', 'yesterday', or numeric days
+                if days_param in ['today', 'yesterday']:
+                    days = days_param
+                else:
+                    days = int(days_param)
                 
                 stats = db.get_bot_stats(days)
                 

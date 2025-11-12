@@ -443,10 +443,10 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
 
 def get_bot_stats(days=30):
     """
-    Get bot usage statistics for the last N days.
+    Get bot usage statistics for the last N days, or 'today'/'yesterday' for exact day filtering.
     
     Args:
-        days (int): Number of days to include in stats (default: 30)
+        days (int|str): Number of days, or 'today'/'yesterday' for exact date filtering (default: 30)
     
     Returns:
         dict: Statistics including total uses, success rate, popular templates/coupons
@@ -457,75 +457,85 @@ def get_bot_stats(days=30):
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
-            interval = f"{days} days"
+            
+            # Build WHERE clause based on filter type
+            if days == 'today':
+                where_clause = "created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'"
+                where_params = ()
+            elif days == 'yesterday':
+                where_clause = "created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
+                where_params = ()
+            else:
+                where_clause = "created_at >= CURRENT_TIMESTAMP - %s::interval"
+                where_params = (f"{days} days",)
             
             # Total usage count
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT COUNT(*) FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
-            """, (interval,))
+                WHERE {where_clause}
+            """, where_params)
             total_uses = cursor.fetchone()[0]
             
             # Success count
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT COUNT(*) FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE {where_clause}
                 AND success = true
-            """, (interval,))
+            """, where_params)
             successful_uses = cursor.fetchone()[0]
             
             # Popular templates
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT template_slug, COUNT(*) as count
                 FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE {where_clause}
                 AND template_slug IS NOT NULL
                 GROUP BY template_slug
                 ORDER BY count DESC
                 LIMIT 10
-            """, (interval,))
+            """, where_params)
             popular_templates = [{'template': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
             # Popular coupon codes
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT coupon_code, COUNT(*) as count
                 FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE {where_clause}
                 AND coupon_code IS NOT NULL
                 AND success = true
                 GROUP BY coupon_code
                 ORDER BY count DESC
                 LIMIT 10
-            """, (interval,))
+            """, where_params)
             popular_coupons = [{'coupon': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
             # Error breakdown
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT error_type, COUNT(*) as count
                 FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE {where_clause}
                 AND success = false
                 AND error_type IS NOT NULL
                 GROUP BY error_type
                 ORDER BY count DESC
-            """, (interval,))
+            """, where_params)
             errors = [{'type': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
             # Unique users
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT COUNT(DISTINCT chat_id) FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
-            """, (interval,))
+                WHERE {where_clause}
+            """, where_params)
             unique_users = cursor.fetchone()[0]
             
             # Daily usage for chart
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT DATE(created_at) as date, COUNT(*) as count
                 FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE {where_clause}
                 GROUP BY DATE(created_at)
                 ORDER BY date DESC
-            """, (interval,))
+            """, where_params)
             daily_usage = [{'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
             
             success_rate = (successful_uses / total_uses * 100) if total_uses > 0 else 0
