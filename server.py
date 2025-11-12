@@ -1035,6 +1035,29 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
                 
+                # CRITICAL: Log webhook reception in server.py
+                import sys
+                log_msg = f"[SERVER_WEBHOOK] Received webhook - update_id: {webhook_data.get('update_id')}"
+                print(log_msg, flush=True)
+                sys.stdout.flush()
+                
+                # CRITICAL: Try direct DB write from server
+                try:
+                    import db
+                    msg = webhook_data.get('message', {})
+                    callback = webhook_data.get('callback_query', {})
+                    chat_id = (msg.get('chat', {}).get('id') or 
+                              callback.get('message', {}).get('chat', {}).get('id'))
+                    if chat_id:
+                        print(f"[SERVER_WEBHOOK] Found chat_id={chat_id}, writing test to DB...", flush=True)
+                        sys.stdout.flush()
+                        db.log_bot_usage(chat_id, 'SERVER_TEST', 'SERVER_TEST', True, None)
+                        print(f"[SERVER_WEBHOOK] ✅ Direct DB write successful!", flush=True)
+                        sys.stdout.flush()
+                except Exception as db_err:
+                    print(f"[SERVER_WEBHOOK] ❌ Direct DB write failed: {db_err}", flush=True)
+                    sys.stdout.flush()
+                
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
                 
