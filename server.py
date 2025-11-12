@@ -1035,32 +1035,6 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
                 
-                # TRACK BOT USAGE FROM WEBHOOK (synchronous - bypasses async issues)
-                try:
-                    import db
-                    callback = webhook_data.get('callback_query', {})
-                    
-                    # If this is a template selection, track it NOW from main thread
-                    if callback and callback.get('data', '').startswith('template:'):
-                        chat_id = callback.get('message', {}).get('chat', {}).get('id')
-                        template_slug = callback['data'].replace('template:', '')
-                        
-                        # Get coupon from cache (set by telegram_bot.handle_coupon_input)
-                        coupon_code = telegram_bot.coupon_cache.get(chat_id, 'UNKNOWN')
-                        
-                        print(f"[WEBHOOK-TRACK] Chat: {chat_id}, Template: {template_slug}, Coupon: {coupon_code}", flush=True)
-                        
-                        if chat_id and template_slug:
-                            # Log usage synchronously from main thread
-                            db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
-                            print(f"[WEBHOOK-TRACK] ✅ Successfully logged usage", flush=True)
-                        else:
-                            print(f"[WEBHOOK-TRACK] ⚠️ Missing data - skipped logging", flush=True)
-                except Exception as e:
-                    print(f"[WEBHOOK-TRACK] ❌ ERROR: {e}", flush=True)
-                    import traceback
-                    traceback.print_exc()  # Print full stack trace
-                
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
                 
