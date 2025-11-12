@@ -775,17 +775,24 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
             print(processing, flush=True)
             sys.stdout.flush()
             
-            # Forward update to persistent bot application
-            future = asyncio.run_coroutine_threadsafe(
-                _bot_application.process_update(update),
-                _bot_loop
-            )
-            
-            # Wait for processing to complete (with timeout)
-            future.result(timeout=30)
-            success = "[WEBHOOK] ✅ Update processed successfully"
-            print(success, flush=True)
-            sys.stdout.flush()
+            try:
+                # Forward update to persistent bot application
+                future = asyncio.run_coroutine_threadsafe(
+                    _bot_application.process_update(update),
+                    _bot_loop
+                )
+                
+                # Wait for processing to complete (with timeout)
+                future.result(timeout=30)
+                success = "[WEBHOOK] ✅ Update processed successfully"
+                print(success, flush=True)
+                sys.stdout.flush()
+            except Exception as proc_error:
+                error_msg = f"[WEBHOOK] ❌ Error processing update: {proc_error}"
+                print(error_msg, flush=True)
+                import traceback
+                traceback.print_exc()
+                sys.stdout.flush()
         
         return {'status': 'ok'}
         
