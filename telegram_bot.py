@@ -650,6 +650,50 @@ def send_broadcast(users, message):
     }
 
 
+def handle_telegram_webhook(webhook_data, bot_token):
+    """
+    Handle incoming webhook from Telegram (for production).
+    
+    Args:
+        webhook_data (dict): Webhook payload from Telegram
+        bot_token (str): Telegram bot token
+        
+    Returns:
+        dict: Response status
+    """
+    try:
+        import asyncio
+        
+        # Create bot application
+        application = create_bot_application(bot_token)
+        
+        # Initialize the application
+        async def process_update():
+            await application.initialize()
+            await application.start()
+            
+            # Convert webhook data to Update object
+            update = Update.de_json(webhook_data, application.bot)
+            
+            if update:
+                # Process the update
+                await application.process_update(update)
+            
+            await application.stop()
+            await application.shutdown()
+        
+        # Run the async function
+        asyncio.run(process_update())
+        
+        return {'status': 'ok'}
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Webhook processing error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'status': 'error', 'message': str(e)}
+
+
 def run_bot(bot_token):
     """
     Start the Telegram bot with polling.
