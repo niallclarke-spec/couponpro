@@ -137,6 +137,19 @@ class DatabasePool:
                     )
                 """)
                 
+                # Add error_type column if it doesn't exist (migration for existing tables)
+                cursor.execute("""
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name='bot_usage' AND column_name='error_type'
+                        ) THEN
+                            ALTER TABLE bot_usage ADD COLUMN error_type VARCHAR(100);
+                        END IF;
+                    END $$;
+                """)
+                
                 # Create index on created_at for faster date-based queries
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_bot_usage_created_at 
