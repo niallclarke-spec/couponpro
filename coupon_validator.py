@@ -9,6 +9,7 @@ import time
 import requests
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
+import threading
 
 # FunderPro API configuration
 FUNDERPRO_API_BASE = "https://api-ftp.funderpro.com/discount"
@@ -20,31 +21,34 @@ if not FUNDERPRO_PRODUCT_ID:
         "Please add it to your .env file."
     )
 
-# Simple in-memory cache for validated coupons (TTL: 5 minutes)
+# Thread-safe in-memory cache for validated coupons (TTL: 5 minutes)
 _coupon_cache = {}
+_cache_lock = threading.Lock()
 CACHE_TTL_SECONDS = 300
 
 
 def _get_cached_result(coupon_code):
-    """Check if we have a recent valid result for this coupon."""
+    """Check if we have a recent valid result for this coupon (thread-safe)."""
     key = coupon_code.upper()
-    if key in _coupon_cache:
-        result, timestamp = _coupon_cache[key]
-        age = (datetime.now() - timestamp).total_seconds()
-        if age < CACHE_TTL_SECONDS:
-            print(f"[COUPON] ✅ Cache hit for '{coupon_code}' (age: {age:.1f}s)")
-            return result
-        else:
-            # Expired, remove from cache
-            del _coupon_cache[key]
+    with _cache_lock:
+        if key in _coupon_cache:
+            result, timestamp = _coupon_cache[key]
+            age = (datetime.now() - timestamp).total_seconds()
+            if age < CACHE_TTL_SECONDS:
+                print(f"[COUPON] ✅ Cache hit for '{coupon_code}' (age: {age:.1f}s)")
+                return result
+            else:
+                # Expired, remove from cache
+                del _coupon_cache[key]
     return None
 
 
 def _cache_result(coupon_code, result):
-    """Cache a successful validation result."""
+    """Cache a successful validation result (thread-safe)."""
     if result['valid']:
         key = coupon_code.upper()
-        _coupon_cache[key] = (result, datetime.now())
+        with _cache_lock:
+            _coupon_cache[key] = (result, datetime.now())
         print(f"[COUPON] 💾 Cached validation for '{coupon_code}'")
 
 
