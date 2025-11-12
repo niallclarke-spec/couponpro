@@ -498,6 +498,11 @@ def create_bot_application(bot_token):
     Returns:
         Application: Configured bot application
     """
+    from telegram.ext import PicklePersistence
+    
+    # Add persistence for webhook mode
+    persistence = PicklePersistence(filepath='/tmp/bot_persistence')
+    
     # Create application with rate limiting and automatic retries
     rate_limiter = AIORateLimiter(
         overall_max_rate=25,  # 25 msg/sec (safe buffer below Telegram's 30/s limit)
@@ -507,18 +512,21 @@ def create_bot_application(bot_token):
     application = (
         Application.builder()
         .token(bot_token)
+        .persistence(persistence)
         .rate_limiter(rate_limiter)
         .post_init(post_init)
         .build()
     )
     
-    # Define conversation handler
+    # Define conversation handler WITH NAME for persistence
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start_command)],
         states={
             WAITING_FOR_COUPON: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coupon_input)]
         },
         fallbacks=[CommandHandler('cancel', cancel_command)],
+        name="coupon_conversation",  # Required for persistence
+        persistent=True,  # Enable persistence
         allow_reentry=True
     )
     
