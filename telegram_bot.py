@@ -193,18 +193,26 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     """
     Handle template button click - generate and send image.
     """
+    import sys
+    
     query = update.callback_query
     await query.answer()
     
-    print(f"[TELEGRAM] Template button clicked: {query.data}")
+    handler_msg = f"[HANDLER] handle_template_selection called! data={query.data}"
+    print(handler_msg, flush=True)
+    sys.stdout.flush()
     
     coupon_code = context.user_data.get('coupon_code')
     if not coupon_code:
-        print(f"[TELEGRAM] No coupon code found in user_data")
+        err_msg = f"[HANDLER] ERROR: No coupon code found in user_data"
+        print(err_msg, flush=True)
+        sys.stdout.flush()
         await query.message.reply_text("Please start over with /start")
         return
     
-    print(f"[TELEGRAM] Coupon code: {coupon_code}")
+    code_msg = f"[HANDLER] Coupon code: {coupon_code}"
+    print(code_msg, flush=True)
+    sys.stdout.flush()
     
     # Parse callback data
     callback_data = query.data
@@ -709,14 +717,19 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
         dict: Response status
     """
     import asyncio
+    import sys
     
     global _bot_application, _bot_loop
     
-    print(f"[TELEGRAM] Webhook received: {webhook_data.get('update_id', 'unknown')}")
+    msg = f"[WEBHOOK] Received update_id: {webhook_data.get('update_id', 'unknown')}"
+    print(msg, flush=True)
+    sys.stdout.flush()
     
     try:
         if _bot_application is None or _bot_loop is None:
-            print("[TELEGRAM] ERROR: Bot application not initialized")
+            err = "[WEBHOOK] ERROR: Bot application not initialized"
+            print(err, flush=True)
+            sys.stdout.flush()
             return {'status': 'error', 'message': 'Bot not initialized'}
         
         # Convert webhook data to Update object
@@ -724,7 +737,9 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
         
         if update:
             msg_text = update.message.text if update.message else (update.callback_query.data if update.callback_query else 'unknown')
-            print(f"[TELEGRAM] Processing update: {msg_text}")
+            processing = f"[WEBHOOK] Processing: type={type(update.message or update.callback_query).__name__}, text={msg_text}"
+            print(processing, flush=True)
+            sys.stdout.flush()
             
             # Forward update to persistent bot application
             future = asyncio.run_coroutine_threadsafe(
@@ -734,7 +749,9 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
             
             # Wait for processing to complete (with timeout)
             future.result(timeout=30)
-            print("[TELEGRAM] Update processed successfully")
+            success = "[WEBHOOK] ✅ Update processed successfully"
+            print(success, flush=True)
+            sys.stdout.flush()
         
         return {'status': 'ok'}
         
