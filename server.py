@@ -1035,6 +1035,29 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
                 
+                # TRACK BOT USAGE SYNCHRONOUSLY (bot runs in webhook mode, not polling)
+                if DATABASE_AVAILABLE:
+                    try:
+                        callback = webhook_data.get('callback_query', {})
+                        message = webhook_data.get('message', {})
+                        
+                        # Track template button clicks
+                        if callback and callback.get('data', '').startswith('template:'):
+                            chat_id = callback.get('from', {}).get('id')
+                            template_slug = callback['data'].replace('template:', '')
+                            
+                            # Get coupon from user's session (stored in context by bot)
+                            coupon_code = 'WEBHOOK'  # Placeholder - will be replaced with actual coupon tracking
+                            
+                            if chat_id and template_slug:
+                                print(f"[WEBHOOK-TRACK] Logging: chat_id={chat_id}, template={template_slug}", flush=True)
+                                db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
+                                print(f"[WEBHOOK-TRACK] ✅ Logged successfully", flush=True)
+                    except Exception as e:
+                        print(f"[WEBHOOK-TRACK] ❌ ERROR: {e}", flush=True)
+                        import traceback
+                        traceback.print_exc()
+                
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
                 
