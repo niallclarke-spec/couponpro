@@ -29,6 +29,10 @@ import coupon_validator
 # Conversation states
 WAITING_FOR_COUPON = 1
 
+# Coupon cache: maps chat_id -> coupon_code
+# This allows server.py to track usage synchronously from webhook
+coupon_cache = {}
+
 # Index cache for template data
 INDEX_CACHE = {
     'data': None,
@@ -118,8 +122,9 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         await _log_usage(chat_id, None, coupon_code, False, 'validation_error')
         return WAITING_FOR_COUPON
     
-    # Coupon is valid - store in context and track user
+    # Coupon is valid - store in context and cache (for server.py tracking)
     context.user_data['coupon_code'] = coupon_code
+    coupon_cache[chat_id] = coupon_code  # Store for synchronous webhook tracking
     
     # Track user for broadcast capability (non-blocking)
     try:

@@ -1035,28 +1035,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Parse JSON from webhook
                 webhook_data = json.loads(post_data.decode('utf-8'))
                 
-                # CRITICAL: Log webhook reception in server.py
-                import sys
-                log_msg = f"[SERVER_WEBHOOK] Received webhook - update_id: {webhook_data.get('update_id')}"
-                print(log_msg, flush=True)
-                sys.stdout.flush()
-                
-                # CRITICAL: Try direct DB write from server
+                # TRACK BOT USAGE FROM WEBHOOK (synchronous - bypasses async issues)
                 try:
                     import db
-                    msg = webhook_data.get('message', {})
                     callback = webhook_data.get('callback_query', {})
-                    chat_id = (msg.get('chat', {}).get('id') or 
-                              callback.get('message', {}).get('chat', {}).get('id'))
-                    if chat_id:
-                        print(f"[SERVER_WEBHOOK] Found chat_id={chat_id}, writing test to DB...", flush=True)
-                        sys.stdout.flush()
-                        db.log_bot_usage(chat_id, 'SERVER_TEST', 'SERVER_TEST', True, None)
-                        print(f"[SERVER_WEBHOOK] ✅ Direct DB write successful!", flush=True)
-                        sys.stdout.flush()
-                except Exception as db_err:
-                    print(f"[SERVER_WEBHOOK] ❌ Direct DB write failed: {db_err}", flush=True)
-                    sys.stdout.flush()
+                    
+                    # If this is a template selection, track it NOW from main thread
+                    if callback and callback.get('data', '').startswith('template:'):
+                        chat_id = callback.get('message', {}).get('chat', {}).get('id')
+                        template_slug = callback['data'].replace('template:', '')
+                        
+                        # Get coupon from cache (set by telegram_bot.handle_coupon_input)
+                        coupon_code = telegram_bot.coupon_cache.get(chat_id, 'UNKNOWN')
+                        
+                        if chat_id and template_slug:
+                            # Log usage synchronously from main thread
+                            db.log_bot_usage(chat_id, template_slug, coupon_code, True, None)
+                except Exception as e:
+                    pass  # Silent fail to not disrupt webhook
                 
                 # Handle the webhook
                 result = telegram_bot.handle_telegram_webhook(webhook_data, bot_token)
