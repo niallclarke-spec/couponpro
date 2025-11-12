@@ -413,8 +413,10 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
         success (bool): Whether the operation succeeded
         error_type (str): Type of error if failed (e.g., 'network', 'invalid_coupon', 'template_not_found')
     """
+    print(f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}")
     try:
         if not db_pool.connection_pool:
+            print(f"[BOT_USAGE] ERROR: No database connection pool available")
             return
         
         with db_pool.get_connection() as conn:
@@ -425,8 +427,9 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
                 VALUES (%s, %s, %s, %s, %s)
             """, (chat_id, template_slug, coupon_code, success, error_type))
             conn.commit()
+            print(f"[BOT_USAGE] ✅ Successfully logged usage")
     except Exception as e:
-        print(f"[BOT_USAGE] Failed to log usage (non-critical): {e}")
+        print(f"[BOT_USAGE] ❌ Failed to log usage: {e}")
 
 def get_bot_stats(days=30):
     """
