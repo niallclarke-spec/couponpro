@@ -1761,8 +1761,19 @@
             submitBtn.textContent = 'Uploading...';
 
             const formData = new FormData();
-            formData.append('name', document.getElementById('name').value);
-            formData.append('slug', document.getElementById('slug').value);
+            const nameValue = document.getElementById('name').value;
+            const slugInput = document.getElementById('slug');
+            
+            // CRITICAL: When editing, use the preserved slug. Don't regenerate.
+            const slugValue = slugInput.value;
+            
+            // DEBUG: Log what we're submitting
+            console.log('[UPLOAD DEBUG] isEditingTemplate:', isEditingTemplate);
+            console.log('[UPLOAD DEBUG] slug being submitted:', slugValue);
+            console.log('[UPLOAD DEBUG] name being submitted:', nameValue);
+            
+            formData.append('name', nameValue);
+            formData.append('slug', slugValue);
             
             const squareFile = document.getElementById('squareImage').files[0];
             const storyFile = document.getElementById('storyImage').files[0];

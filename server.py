@@ -727,6 +727,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 name = form.getvalue('name')
                 slug = form.getvalue('slug')
+                name = form.getvalue('name')
+                
+                # DEBUG LOGGING
+                print(f"[UPLOAD DEBUG] Received slug from client: '{slug}'")
+                print(f"[UPLOAD DEBUG] Received name from client: '{name}'")
                 
                 import re
                 if not slug or not re.match(r'^[a-z0-9-]+$', slug):
