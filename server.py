@@ -739,23 +739,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 template_dir = os.path.join('assets', 'templates', slug)
                 is_existing_template = os.path.exists(template_dir)
                 
-                # Also check if template exists in Spaces (for ephemeral environments)
+                # Also check if template exists in Spaces via HTTP (for ephemeral environments)
                 if not is_existing_template and OBJECT_STORAGE_AVAILABLE:
                     try:
-                        import boto3
-                        from botocore.exceptions import ClientError
-                        s3 = boto3.client('s3',
-                            endpoint_url=f"https://{SPACES_BUCKET}.{SPACES_REGION}.digitaloceanspaces.com",
-                            aws_access_key_id=SPACES_ACCESS_KEY,
-                            aws_secret_access_key=SPACES_SECRET_KEY,
-                            region_name=SPACES_REGION
-                        )
-                        s3.head_object(Bucket=SPACES_BUCKET, Key=f'templates/{slug}/meta.json')
+                        import urllib.request
+                        cdn_url = f"https://{SPACES_BUCKET}.{SPACES_REGION}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
+                        req = urllib.request.Request(cdn_url, method='HEAD')
+                        urllib.request.urlopen(req, timeout=5)
                         is_existing_template = True
                         print(f"[UPLOAD] Template '{slug}' exists in Spaces - allowing edit without images")
-                    except ClientError as e:
-                        if e.response['Error']['Code'] != '404':
-                            print(f"[UPLOAD] Warning: Spaces check failed for '{slug}': {e}")
+                    except urllib.error.HTTPError as e:
+                        if e.code != 404:
+                            print(f"[UPLOAD] Warning: Spaces check failed for '{slug}': HTTP {e.code}")
                     except Exception as e:
                         print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e}")
                 
