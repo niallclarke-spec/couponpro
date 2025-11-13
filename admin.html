@@ -1905,7 +1905,9 @@
                 selectColor(storyFontColor, 'story');
                 
                 drawingState.square.hasDrawnBox = true;
-                drawingState.story.hasDrawnBox = true;
+                if (meta.story) {
+                    drawingState.story.hasDrawnBox = true;
+                }
                 
                 const squareImg = new Image();
                 squareImg.onload = async function() {
@@ -1918,27 +1920,29 @@
                     }
                 };
                 
-                const storyImg = new Image();
-                storyImg.onload = async function() {
-                    try {
-                        await storyImg.decode();
-                        previewImages.story = storyImg;
-                        renderPreview('story');
-                    } catch(e) {
-                        console.error('Story image decode failed:', e);
-                    }
-                };
-                
                 try {
                     squareImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/square.png?ts=${Date.now()}`;
                 } catch (_) {
                     squareImg.src = `/assets/templates/${slug}/square.png?ts=${Date.now()}`;
                 }
                 
-                try {
-                    storyImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/story.png?ts=${Date.now()}`;
-                } catch (_) {
-                    storyImg.src = `/assets/templates/${slug}/story.png?ts=${Date.now()}`;
+                if (meta.story) {
+                    const storyImg = new Image();
+                    storyImg.onload = async function() {
+                        try {
+                            await storyImg.decode();
+                            previewImages.story = storyImg;
+                            renderPreview('story');
+                        } catch(e) {
+                            console.error('Story image decode failed:', e);
+                        }
+                    };
+                    
+                    try {
+                        storyImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/story.png?ts=${Date.now()}`;
+                    } catch (_) {
+                        storyImg.src = `/assets/templates/${slug}/story.png?ts=${Date.now()}`;
+                    }
                 }
                 
                 document.getElementById('submitBtn').textContent = 'Update Template';
