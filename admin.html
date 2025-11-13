@@ -541,6 +541,42 @@
             color: #718096;
         }
 
+        .telegram-toggle-container {
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+        }
+
+        .telegram-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .telegram-toggle-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .telegram-toggle-text {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .telegram-toggle-checkbox:checked + .telegram-toggle-slider + .telegram-toggle-text {
+            color: #10b981;
+        }
+
+        .telegram-toggle-checkbox:not(:checked) + .telegram-toggle-slider + .telegram-toggle-text {
+            color: #94a3b8;
+        }
+
         .asset-actions {
             display: flex;
             gap: 12px;
@@ -1865,11 +1901,19 @@
                 data.templates.forEach(template => {
                     const item = document.createElement('div');
                     item.className = 'asset-item';
+                    const telegramEnabled = template.telegramEnabled !== false; // Default to true for backward compatibility
                     item.innerHTML = `
                         <input type="checkbox" class="template-checkbox" data-slug="${template.slug}" data-name="${template.name}" onchange="updateSelectAllState()">
                         <div class="asset-item-info">
                             <div class="asset-name">${template.name}</div>
                             <div class="asset-slug">${template.slug}</div>
+                        </div>
+                        <div class="telegram-toggle-container" title="${telegramEnabled ? 'Visible in Telegram bot' : 'Hidden from Telegram bot'}">
+                            <label class="telegram-toggle-label">
+                                <input type="checkbox" class="telegram-toggle-checkbox" data-slug="${template.slug}" ${telegramEnabled ? 'checked' : ''} onchange="toggleTelegramVisibility(event, '${template.slug}', this.checked)">
+                                <span class="telegram-toggle-slider"></span>
+                                <span class="telegram-toggle-text">${telegramEnabled ? '✓ Telegram' : '✗ Telegram'}</span>
+                            </label>
                         </div>
                         <div class="asset-actions">
                             <div class="asset-edit-icon" onclick="loadTemplateForEdit('${template.slug}')">✎</div>
@@ -2012,6 +2056,45 @@
         function closeDeleteModal() {
             document.getElementById('deleteModal').classList.remove('active');
             deleteConfirmCallback = null;
+        }
+
+        // Toggle Telegram visibility
+        async function toggleTelegramVisibility(event, slug, enabled) {
+            const checkbox = event.target;
+            const label = checkbox.closest('.telegram-toggle-label');
+            const toggleText = label.querySelector('.telegram-toggle-text');
+            const container = checkbox.closest('.telegram-toggle-container');
+            
+            try {
+                const response = await fetch('/api/toggle-telegram-template', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug, enabled })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the toggle text
+                    toggleText.textContent = enabled ? '✓ Telegram' : '✗ Telegram';
+                    
+                    // Update tooltip
+                    container.title = enabled ? 'Visible in Telegram bot' : 'Hidden from Telegram bot';
+                    
+                    // Show brief success feedback
+                    const statusMsg = enabled ? 'enabled' : 'disabled';
+                    showAlert('uploadAlert', `Template "${slug}" ${statusMsg} for Telegram ✓`);
+                } else {
+                    // Revert checkbox on error
+                    checkbox.checked = !enabled;
+                    showAlert('uploadAlert', 'Failed to update: ' + data.error, true);
+                }
+            } catch (error) {
+                // Revert checkbox on error
+                checkbox.checked = !enabled;
+                showAlert('uploadAlert', 'Failed to update Telegram visibility: ' + error.message, true);
+                console.error('Toggle error:', error);
+            }
         }
 
         // Bulk delete

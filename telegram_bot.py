@@ -44,10 +44,10 @@ CACHE_TTL = 300
 
 def get_templates():
     """
-    Fetch templates from index.json (cached).
+    Fetch templates from index.json (cached) and filter for Telegram-enabled only.
     
     Returns:
-        list: List of template dicts with keys: slug, name, square, story
+        list: List of template dicts with keys: slug, name, square, story (only telegramEnabled=true)
         None: If error fetching templates
     """
     try:
@@ -66,7 +66,13 @@ def get_templates():
         else:
             print(f"[TELEGRAM] Cache hit, using cached index")
         
-        return INDEX_CACHE['data'].get('templates', [])
+        all_templates = INDEX_CACHE['data'].get('templates', [])
+        
+        # Filter for Telegram-enabled templates (default to true for backward compatibility)
+        telegram_templates = [t for t in all_templates if t.get('telegramEnabled', True) is not False]
+        
+        print(f"[TELEGRAM] Returning {len(telegram_templates)}/{len(all_templates)} telegram-enabled templates")
+        return telegram_templates
         
     except Exception as e:
         print(f"[TELEGRAM] Error fetching templates: {e}")

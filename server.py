@@ -869,8 +869,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 story_image_url = image_urls.get('story') or existing_story_url
                 
                 # Build meta.json with object storage URLs for images (only include variants that exist)
+                # Preserve telegramEnabled from existing template, default to true for new templates
+                existing_telegram_enabled = existing_meta.get('telegramEnabled', True) if existing_meta else True
+                
                 meta = {
-                    'name': name
+                    'name': name,
+                    'telegramEnabled': existing_telegram_enabled
                 }
                 
                 # Add square variant if: newly uploaded, existing URL found, or existing variant data exists
@@ -1024,6 +1028,97 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"[DELETE] Error during deletion: {str(e)}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/toggle-telegram-template':
+            # Verify admin authentication
+            session_token = self.get_session_token()
+            if not session_token or not self.verify_session_token(session_token):
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                slug = data.get('slug')
+                enabled = data.get('enabled', True)
+                
+                if not slug:
+                    raise ValueError('Template slug is required')
+                
+                print(f"[TELEGRAM_TOGGLE] Toggling template '{slug}' to {'enabled' if enabled else 'disabled'}")
+                
+                # Download existing meta.json from Spaces
+                import urllib.request
+                spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
+                spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                meta_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
+                
+                try:
+                    response = urllib.request.urlopen(meta_url, timeout=5)
+                    meta = json.loads(response.read().decode('utf-8'))
+                except Exception as e:
+                    raise ValueError(f'Could not load template metadata: {e}')
+                
+                # Update telegramEnabled flag
+                meta['telegramEnabled'] = enabled
+                
+                # Save back to Spaces
+                if OBJECT_STORAGE_AVAILABLE:
+                    storage_service = ObjectStorageService()
+                    meta_json_str = json.dumps(meta, indent=2)
+                    storage_service.upload_file(meta_json_str.encode(), f"templates/{slug}/meta.json")
+                    print(f"[TELEGRAM_TOGGLE] Updated meta.json for '{slug}' in Spaces")
+                
+                # Also save locally if directory exists
+                template_dir = os.path.join('assets', 'templates', slug)
+                if os.path.exists(template_dir):
+                    meta_path = os.path.join(template_dir, 'meta.json')
+                    with open(meta_path, 'w') as f:
+                        json.dump(meta, f, indent=2)
+                
+                # Regenerate index.json to reflect changes in Telegram bot
+                try:
+                    result = subprocess.run(
+                        ['python3', 'regenerate_index.py'],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    if result.returncode != 0:
+                        print(f"[TELEGRAM_TOGGLE] Warning: Index regeneration failed: {result.stderr}")
+                    else:
+                        print(f"[TELEGRAM_TOGGLE] Index regenerated successfully")
+                        
+                        # Upload updated index.json to Spaces
+                        if storage_service:
+                            index_path = os.path.join('assets', 'templates', 'index.json')
+                            if os.path.exists(index_path):
+                                with open(index_path, 'r') as f:
+                                    index_content = f.read()
+                                storage_service.upload_file(index_content.encode(), 'templates/index.json')
+                                print(f"[TELEGRAM_TOGGLE] Index.json uploaded to Spaces")
+                except Exception as e:
+                    print(f"[TELEGRAM_TOGGLE] Warning: Index update failed: {e}")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f"Template '{slug}' {'enabled' if enabled else 'disabled'} for Telegram"
+                }).encode())
+                
+            except Exception as e:
+                print(f"[TELEGRAM_TOGGLE] Error: {str(e)}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
