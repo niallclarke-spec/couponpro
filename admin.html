@@ -1802,7 +1802,10 @@
                     showAlert('uploadAlert', data.message + ' ✓');
                     document.getElementById('templateForm').reset();
                     isEditingTemplate = false;
-                    document.getElementById('slug').readOnly = false;
+                    const slugInput = document.getElementById('slug');
+                    slugInput.readOnly = false;
+                    slugInput.style.backgroundColor = '';
+                    slugInput.style.cursor = '';
                     drawingState.square.hasDrawnBox = false;
                     drawingState.story.hasDrawnBox = false;
                     updatePreviewsImmediate();
@@ -1887,8 +1890,11 @@
                 
                 isEditingTemplate = true;
                 document.getElementById('name').value = meta.name || slug;
-                document.getElementById('slug').value = slug;
-                document.getElementById('slug').readOnly = true;
+                const slugInput = document.getElementById('slug');
+                slugInput.value = slug;
+                slugInput.readOnly = true;
+                slugInput.style.backgroundColor = '#f3f4f6';
+                slugInput.style.cursor = 'not-allowed';
                 
                 document.getElementById('squareLeftPct').value = meta.square?.box?.leftPct || meta.square?.leftPct || 5;
                 document.getElementById('squareTopPct').value = meta.square?.box?.topPct || meta.square?.topPct || 78;
