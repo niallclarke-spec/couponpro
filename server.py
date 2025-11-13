@@ -748,7 +748,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not is_existing_template and OBJECT_STORAGE_AVAILABLE:
                     try:
                         import urllib.request
-                        cdn_url = f"https://{SPACES_BUCKET}.{SPACES_REGION}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
+                        spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
+                        spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                        cdn_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
                         req = urllib.request.Request(cdn_url, method='HEAD')
                         urllib.request.urlopen(req, timeout=5)
                         is_existing_template = True
