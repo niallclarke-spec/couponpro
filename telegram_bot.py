@@ -177,7 +177,7 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         # Create button for this template
         keyboard = [[InlineKeyboardButton(
-            f"✨ Generate {template_name}",
+            "GENERATE 👈",
             callback_data=f"template:{template_slug}"
         )]]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -463,7 +463,7 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Create button for this template
         keyboard = [[InlineKeyboardButton(
-            f"✨ Generate {template_name}",
+            "GENERATE 👈",
             callback_data=f"template:{template_slug}"
         )]]
         reply_markup = InlineKeyboardMarkup(keyboard)
