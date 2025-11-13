@@ -1883,22 +1883,22 @@
                 document.getElementById('name').value = meta.name || slug;
                 document.getElementById('slug').value = slug;
                 
-                document.getElementById('squareLeftPct').value = meta.square.box?.leftPct || meta.square.leftPct || 5;
-                document.getElementById('squareTopPct').value = meta.square.box?.topPct || meta.square.topPct || 78;
-                document.getElementById('squareWidthPct').value = meta.square.box?.widthPct || meta.square.widthPct || 90;
-                document.getElementById('squareHeightPct').value = meta.square.box?.heightPct || meta.square.heightPct || 12;
-                document.getElementById('squareMaxFontPx').value = meta.square.maxFontPx || 80;
-                document.getElementById('squareShowLogo').checked = meta.square.showLogo !== false;
+                document.getElementById('squareLeftPct').value = meta.square?.box?.leftPct || meta.square?.leftPct || 5;
+                document.getElementById('squareTopPct').value = meta.square?.box?.topPct || meta.square?.topPct || 78;
+                document.getElementById('squareWidthPct').value = meta.square?.box?.widthPct || meta.square?.widthPct || 90;
+                document.getElementById('squareHeightPct').value = meta.square?.box?.heightPct || meta.square?.heightPct || 12;
+                document.getElementById('squareMaxFontPx').value = meta.square?.maxFontPx || 80;
+                document.getElementById('squareShowLogo').checked = meta.square?.showLogo !== false;
                 
-                document.getElementById('storyLeftPct').value = meta.story.box?.leftPct || meta.story.leftPct || 5;
-                document.getElementById('storyTopPct').value = meta.story.box?.topPct || meta.story.topPct || 78;
-                document.getElementById('storyWidthPct').value = meta.story.box?.widthPct || meta.story.widthPct || 90;
-                document.getElementById('storyHeightPct').value = meta.story.box?.heightPct || meta.story.heightPct || 12;
-                document.getElementById('storyMaxFontPx').value = meta.story.maxFontPx || 80;
-                document.getElementById('storyShowLogo').checked = meta.story.showLogo !== false;
+                document.getElementById('storyLeftPct').value = meta.story?.box?.leftPct || meta.story?.leftPct || 5;
+                document.getElementById('storyTopPct').value = meta.story?.box?.topPct || meta.story?.topPct || 78;
+                document.getElementById('storyWidthPct').value = meta.story?.box?.widthPct || meta.story?.widthPct || 90;
+                document.getElementById('storyHeightPct').value = meta.story?.box?.heightPct || meta.story?.heightPct || 12;
+                document.getElementById('storyMaxFontPx').value = meta.story?.maxFontPx || 80;
+                document.getElementById('storyShowLogo').checked = meta.story?.showLogo !== false;
                 
-                const squareFontColor = meta.square.fontColor || '#FF273E';
-                const storyFontColor = meta.story.fontColor || '#FF273E';
+                const squareFontColor = meta.square?.fontColor || '#FF273E';
+                const storyFontColor = meta.story?.fontColor || '#FF273E';
                 document.getElementById('squareFontColor').value = squareFontColor;
                 document.getElementById('storyFontColor').value = storyFontColor;
                 selectColor(squareFontColor, 'square');
