@@ -739,6 +739,21 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 template_dir = os.path.join('assets', 'templates', slug)
                 is_existing_template = os.path.exists(template_dir)
                 
+                # Also check if template exists in Spaces (for ephemeral environments)
+                if not is_existing_template and OBJECT_STORAGE_AVAILABLE:
+                    try:
+                        import boto3
+                        s3 = boto3.client('s3',
+                            endpoint_url=f"https://{SPACES_REGION}.digitaloceanspaces.com",
+                            aws_access_key_id=SPACES_ACCESS_KEY,
+                            aws_secret_access_key=SPACES_SECRET_KEY,
+                            region_name=SPACES_REGION
+                        )
+                        s3.head_object(Bucket=SPACES_BUCKET, Key=f'templates/{slug}/meta.json')
+                        is_existing_template = True
+                    except:
+                        pass
+                
                 # Check if images are provided (optional for updates, at least one required for new templates)
                 has_square_image = 'squareImage' in form and form['squareImage'].filename
                 has_story_image = 'storyImage' in form and form['storyImage'].filename
