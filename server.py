@@ -816,20 +816,39 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 existing_story_data = None
                 if is_existing_template:
                     meta_path = os.path.join(template_dir, 'meta.json')
+                    existing_meta = None
+                    
+                    # Try loading from local filesystem first
                     if os.path.exists(meta_path):
                         try:
                             with open(meta_path, 'r') as f:
                                 existing_meta = json.load(f)
-                                if 'square' in existing_meta and isinstance(existing_meta['square'], dict):
-                                    existing_square_data = existing_meta['square']
-                                    # Check both new (imageUrl) and legacy (image) fields
-                                    existing_square_url = existing_square_data.get('imageUrl') or existing_square_data.get('image')
-                                if 'story' in existing_meta and isinstance(existing_meta['story'], dict):
-                                    existing_story_data = existing_meta['story']
-                                    # Check both new (imageUrl) and legacy (image) fields  
-                                    existing_story_url = existing_story_data.get('imageUrl') or existing_story_data.get('image')
                         except Exception as e:
-                            print(f"Warning: Could not load existing meta.json: {e}")
+                            print(f"Warning: Could not load local meta.json: {e}")
+                    
+                    # If not found locally, try downloading from Spaces
+                    if not existing_meta and OBJECT_STORAGE_AVAILABLE:
+                        try:
+                            import urllib.request
+                            spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
+                            spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                            meta_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
+                            response = urllib.request.urlopen(meta_url, timeout=5)
+                            existing_meta = json.loads(response.read().decode('utf-8'))
+                            print(f"[UPLOAD] Loaded existing meta.json from Spaces for '{slug}'")
+                        except Exception as e:
+                            print(f"Warning: Could not load meta.json from Spaces: {e}")
+                    
+                    # Parse existing metadata if found
+                    if existing_meta:
+                        if 'square' in existing_meta and isinstance(existing_meta['square'], dict):
+                            existing_square_data = existing_meta['square']
+                            # Check both new (imageUrl) and legacy (image) fields
+                            existing_square_url = existing_square_data.get('imageUrl') or existing_square_data.get('image')
+                        if 'story' in existing_meta and isinstance(existing_meta['story'], dict):
+                            existing_story_data = existing_meta['story']
+                            # Check both new (imageUrl) and legacy (image) fields  
+                            existing_story_url = existing_story_data.get('imageUrl') or existing_story_data.get('image')
                 
                 # Upload images to object storage if provided and available
                 if has_square_image and storage_service:
