@@ -749,8 +749,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         is_existing_template = True
                         print(f"[UPLOAD] Template '{slug}' exists in Spaces - allowing edit without images")
                     except urllib.error.HTTPError as e:
-                        if e.code != 404:
-                            print(f"[UPLOAD] Warning: Spaces check failed for '{slug}': HTTP {e.code}")
+                        # Only 404 means "doesn't exist". Other errors (403, 500) mean "can't check"
+                        if e.code == 404:
+                            print(f"[UPLOAD] Template '{slug}' confirmed not in Spaces (404)")
+                        else:
+                            # For 403, 500, etc - assume template might exist, don't require images
+                            is_existing_template = True
+                            print(f"[UPLOAD] Template '{slug}' - assuming exists due to HTTP {e.code} (not 404)")
                     except Exception as e:
                         print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e}")
                 
