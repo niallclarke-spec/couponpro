@@ -510,7 +510,7 @@ def get_bot_stats(days=30):
             """, where_params)
             popular_templates = [{'template': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
-            # Popular coupon codes
+            # Popular coupon codes (fetch all for pagination and CSV export)
             cursor.execute(f"""
                 SELECT coupon_code, COUNT(*) as count
                 FROM bot_usage
@@ -519,7 +519,6 @@ def get_bot_stats(days=30):
                 AND success = true
                 GROUP BY coupon_code
                 ORDER BY count DESC
-                LIMIT 10
             """, where_params)
             popular_coupons = [{'coupon': row[0], 'count': row[1]} for row in cursor.fetchall()]
             

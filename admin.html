@@ -1647,6 +1647,14 @@
             `;
 
             renderDailyChart(stats.daily_usage);
+            
+            // Initialize coupon pagination after DOM is ready (only if we have coupons and the container exists)
+            setTimeout(() => {
+                const container = document.getElementById('couponsTableContainer');
+                if (container && allCoupons.length > 0) {
+                    renderCouponPage();
+                }
+            }, 0);
         }
 
         function renderTemplatesTable(templates) {
@@ -1674,12 +1682,38 @@
             `;
         }
 
+        let allCoupons = [];
+        let currentCouponPage = 1;
+        const couponsPerPage = 50;
+
         function renderCouponsTable(coupons) {
-            if (coupons.length === 0) {
+            // Always reset state, even for empty datasets
+            allCoupons = coupons || [];
+            currentCouponPage = 1;
+            
+            if (allCoupons.length === 0) {
                 return '<p style="color: #718096; text-align: center; padding: 20px;">No coupon usage data</p>';
             }
-
+            
             return `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-secondary" onclick="exportCouponsCSV()" style="padding: 8px 16px;">
+                        📥 Export CSV
+                    </button>
+                    <div id="couponPagination" style="display: flex; gap: 12px; align-items: center;">
+                    </div>
+                </div>
+                <div id="couponsTableContainer"></div>
+            `;
+        }
+
+        function renderCouponPage() {
+            const totalPages = Math.ceil(allCoupons.length / couponsPerPage);
+            const startIdx = (currentCouponPage - 1) * couponsPerPage;
+            const endIdx = Math.min(startIdx + couponsPerPage, allCoupons.length);
+            const pageCoupons = allCoupons.slice(startIdx, endIdx);
+
+            const tableHtml = `
                 <table class="analytics-table">
                     <thead>
                         <tr>
@@ -1688,7 +1722,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${coupons.map(c => `
+                        ${pageCoupons.map(c => `
                             <tr>
                                 <td>${c.coupon}</td>
                                 <td>${c.count.toLocaleString()}</td>
@@ -1697,6 +1731,53 @@
                     </tbody>
                 </table>
             `;
+
+            const paginationHtml = totalPages > 1 ? `
+                <button class="btn btn-secondary" onclick="changeCouponPage(-1)" 
+                    ${currentCouponPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                    ← Previous
+                </button>
+                <span style="color: #4a5568; font-weight: 500;">
+                    Page ${currentCouponPage} of ${totalPages} (${allCoupons.length} total)
+                </span>
+                <button class="btn btn-secondary" onclick="changeCouponPage(1)" 
+                    ${currentCouponPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                    Next →
+                </button>
+            ` : `<span style="color: #4a5568;">Showing all ${allCoupons.length} coupons</span>`;
+
+            document.getElementById('couponsTableContainer').innerHTML = tableHtml;
+            document.getElementById('couponPagination').innerHTML = paginationHtml;
+        }
+
+        function changeCouponPage(direction) {
+            const totalPages = Math.ceil(allCoupons.length / couponsPerPage);
+            currentCouponPage = Math.max(1, Math.min(totalPages, currentCouponPage + direction));
+            renderCouponPage();
+        }
+
+        function exportCouponsCSV() {
+            if (allCoupons.length === 0) {
+                alert('No coupon data to export');
+                return;
+            }
+
+            const csvContent = [
+                ['Coupon Code', 'Uses'],
+                ...allCoupons.map(c => [c.coupon, c.count])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `promostack-coupons-${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function renderErrorsTable(errors) {
