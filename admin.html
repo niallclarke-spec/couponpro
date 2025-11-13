@@ -1517,6 +1517,7 @@
         // Bot Analytics
         let currentAnalyticsDays = 7;
         let dailyChart = null;
+        let isEditingTemplate = false;
 
         async function loadAnalytics() {
             try {
@@ -1800,6 +1801,8 @@
                 if (data.success) {
                     showAlert('uploadAlert', data.message + ' ✓');
                     document.getElementById('templateForm').reset();
+                    isEditingTemplate = false;
+                    document.getElementById('slug').readOnly = false;
                     drawingState.square.hasDrawnBox = false;
                     drawingState.story.hasDrawnBox = false;
                     updatePreviewsImmediate();
@@ -1814,13 +1817,15 @@
             }
         }
 
-        // Auto-generate slug from name
+        // Auto-generate slug from name (only when creating new templates, not editing)
         document.getElementById('name').addEventListener('input', function(e) {
-            const slug = e.target.value.toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-');
-            document.getElementById('slug').value = slug;
+            if (!isEditingTemplate) {
+                const slug = e.target.value.toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+                document.getElementById('slug').value = slug;
+            }
         });
 
         // Load Assets
@@ -1880,8 +1885,10 @@
                 
                 switchTab('upload');
                 
+                isEditingTemplate = true;
                 document.getElementById('name').value = meta.name || slug;
                 document.getElementById('slug').value = slug;
+                document.getElementById('slug').readOnly = true;
                 
                 document.getElementById('squareLeftPct').value = meta.square?.box?.leftPct || meta.square?.leftPct || 5;
                 document.getElementById('squareTopPct').value = meta.square?.box?.topPct || meta.square?.topPct || 78;
