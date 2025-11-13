@@ -1035,8 +1035,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         elif parsed_path.path == '/api/toggle-telegram-template':
             # Verify admin authentication
-            session_token = self.get_session_token()
-            if not session_token or not self.verify_session_token(session_token):
+            if not self.check_auth():
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
