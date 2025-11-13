@@ -1,18 +1,16 @@
 {
   "templates": [
     {
-      "slug": "black-friday",
-      "name": "Black Friday",
-      "meta": "assets/templates/black-friday/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/black-friday/square.png",
-      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/black-friday/story.png"
+      "slug": "10k-giveaway-",
+      "name": "10k Giveaway ",
+      "meta": "assets/templates/10k-giveaway-/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/10k-giveaway-/square.png"
     },
     {
-      "slug": "friday-sale",
-      "name": "Friday Sale",
-      "meta": "assets/templates/friday-sale/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/friday-sale/square.png",
-      "story": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/friday-sale/story.png"
+      "slug": "promo-3",
+      "name": "Daily Rewards",
+      "meta": "assets/templates/promo-3/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/promo-3/square.png"
     }
   ]
 }

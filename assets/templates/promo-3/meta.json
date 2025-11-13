@@ -1,0 +1,16 @@
+{
+  "name": "Daily Rewards",
+  "square": {
+    "box": {
+      "leftPct": 50.4,
+      "topPct": 84.0,
+      "widthPct": 38.8,
+      "heightPct": 4.3,
+      "hAlign": "center",
+      "vAlign": "middle"
+    },
+    "maxFontPx": 80,
+    "fontColor": "#FFFFFF",
+    "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/promo-3/square.png"
+  }
+}
