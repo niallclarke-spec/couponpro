@@ -1,14 +1,20 @@
 {
   "templates": [
     {
+      "slug": "10k-giveaway-1",
+      "name": "10k Giveaway (1)",
+      "meta": "assets/templates/10k-giveaway-1/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/10k-giveaway-1/square.png"
+    },
+    {
       "slug": "10k-giveaway-",
-      "name": "10k Giveaway ",
+      "name": "10k Giveaway (2)",
       "meta": "assets/templates/10k-giveaway-/meta.json",
       "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/10k-giveaway-/square.png"
     },
     {
       "slug": "promo-3",
-      "name": "Daily Rewards",
+      "name": "Promo 3",
       "meta": "assets/templates/promo-3/meta.json",
       "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/promo-3/square.png"
     }

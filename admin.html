@@ -2060,13 +2060,10 @@
 
         // Toggle Telegram visibility
         async function toggleTelegramVisibility(event, slug, enabled) {
-            console.log('[TOGGLE] Called with:', {slug, enabled});
             const checkbox = event.target;
             const label = checkbox.closest('.telegram-toggle-label');
             const toggleText = label.querySelector('.telegram-toggle-text');
             const container = checkbox.closest('.telegram-toggle-container');
-            
-            console.log('[TOGGLE] DOM elements:', {checkbox, label, toggleText, container});
             
             try {
                 const response = await fetch('/api/toggle-telegram-template', {

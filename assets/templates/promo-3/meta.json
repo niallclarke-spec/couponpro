@@ -1,5 +1,5 @@
 {
-  "name": "Daily Rewards",
+  "name": "Promo 3",
   "square": {
     "box": {
       "leftPct": 50.4,
@@ -12,5 +12,6 @@
     "maxFontPx": 80,
     "fontColor": "#FFFFFF",
     "imageUrl": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/promo-3/square.png"
-  }
+  },
+  "telegramEnabled": true
 }
