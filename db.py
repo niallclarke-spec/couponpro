@@ -541,15 +541,56 @@ def get_bot_stats(days=30):
             """, where_params)
             unique_users = cursor.fetchone()[0]
             
-            # Daily usage for chart
-            cursor.execute(f"""
-                SELECT DATE(created_at) as date, COUNT(*) as count
-                FROM bot_usage
-                WHERE {where_clause}
-                GROUP BY DATE(created_at)
-                ORDER BY date DESC
-            """, where_params)
-            daily_usage = [{'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
+            # Usage chart - hourly for today/yesterday, daily for longer periods
+            if days in ['today', 'yesterday']:
+                # Hourly aggregation for single-day views
+                cursor.execute(f"""
+                    SELECT 
+                        EXTRACT(HOUR FROM created_at)::INTEGER as hour, 
+                        DATE(created_at) as date,
+                        COUNT(*) as count
+                    FROM bot_usage
+                    WHERE {where_clause}
+                    GROUP BY EXTRACT(HOUR FROM created_at), DATE(created_at)
+                    ORDER BY date DESC, hour ASC
+                """, where_params)
+                
+                # Build hourly data map and get the date
+                hourly_data = {}
+                target_date = None
+                for row in cursor.fetchall():
+                    hour, date_val, count = row
+                    hourly_data[hour] = count
+                    if target_date is None:
+                        target_date = date_val.isoformat()
+                
+                # If no data, use current date based on filter
+                if target_date is None:
+                    from datetime import date as dt_date, timedelta
+                    if days == 'today':
+                        target_date = dt_date.today().isoformat()
+                    else:  # yesterday
+                        target_date = (dt_date.today() - timedelta(days=1)).isoformat()
+                
+                # Fill in missing hours (0-23) with zero counts, include date for backward compatibility
+                usage_data = [{
+                    'label': f'{h:02d}:00', 
+                    'date': f'{target_date}T{h:02d}:00:00',  # Backward compatibility
+                    'count': hourly_data.get(h, 0)
+                } for h in range(24)]
+                granularity = 'hourly'
+            else:
+                # Daily aggregation for multi-day views
+                cursor.execute(f"""
+                    SELECT DATE(created_at) as date, COUNT(*) as count
+                    FROM bot_usage
+                    WHERE {where_clause}
+                    GROUP BY DATE(created_at)
+                    ORDER BY date DESC
+                """, where_params)
+                # Include both 'label' and 'date' for backward compatibility
+                usage_data = [{'label': row[0].isoformat(), 'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
+                granularity = 'daily'
             
             success_rate = (successful_uses / total_uses * 100) if total_uses > 0 else 0
             
@@ -561,7 +602,9 @@ def get_bot_stats(days=30):
                 'popular_templates': popular_templates,
                 'popular_coupons': popular_coupons,
                 'errors': errors,
-                'daily_usage': daily_usage
+                'usage_data': usage_data,
+                'granularity': granularity,
+                'daily_usage': usage_data  # Backward compatibility
             }
     except Exception as e:
         print(f"Error getting bot stats: {e}")
