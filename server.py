@@ -441,6 +441,114 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/bot-users':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                query_params = parse_qs(parsed_path.query)
+                limit = int(query_params.get('limit', ['100'])[0])
+                offset = int(query_params.get('offset', ['0'])[0])
+                
+                result = db.get_all_bot_users(limit=limit, offset=offset)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+            except Exception as e:
+                print(f"[API] Error getting bot users: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path.startswith('/api/user-activity/'):
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                # Extract chat_id from path
+                chat_id = int(parsed_path.path.split('/')[-1])
+                
+                # Get user info and activity history
+                user = db.get_bot_user(chat_id)
+                history = db.get_user_activity_history(chat_id, limit=100)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'user': user,
+                    'history': history
+                }).encode())
+            except Exception as e:
+                print(f"[API] Error getting user activity: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/invalid-coupons':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                query_params = parse_qs(parsed_path.query)
+                limit = int(query_params.get('limit', ['100'])[0])
+                offset = int(query_params.get('offset', ['0'])[0])
+                template_filter = query_params.get('template', [None])[0]
+                
+                result = db.get_invalid_coupon_attempts(
+                    limit=limit, 
+                    offset=offset, 
+                    template_filter=template_filter
+                )
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+            except Exception as e:
+                print(f"[API] Error getting invalid coupons: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         else:
             super().do_GET()
     

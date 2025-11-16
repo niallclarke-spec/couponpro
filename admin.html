@@ -976,6 +976,68 @@
         .hidden {
             display: none !important;
         }
+
+        /* Telegram Links */
+        .telegram-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .telegram-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* Load More Button */
+        .load-more-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .load-more-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .load-more-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
     </style>
 </head>
 <body>
@@ -1483,6 +1545,19 @@
         </div>
     </div>
 
+    <!-- User Details Modal -->
+    <div class="modal-overlay" id="userDetailsModal">
+        <div class="modal-box" style="max-width: 900px;">
+            <div class="modal-title">User Details</div>
+            <div id="userDetailsContent" style="margin: 20px 0; max-height: 500px; overflow-y: auto;">
+                <p style="color: #718096; text-align: center;">Loading user details...</p>
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn modal-btn-cancel" onclick="closeUserDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // View Management
         function showView(viewName) {
@@ -1638,6 +1713,20 @@
                     ${renderCouponsTable(stats.popular_coupons)}
                 </div>
 
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-title">Invalid Coupon Attempts</div>
+                    <div id="invalidCouponsContainer">
+                        <p style="color: #718096; text-align: center; padding: 20px;">Loading invalid coupon attempts...</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-title">User Analytics</div>
+                    <div id="userAnalyticsContainer">
+                        <p style="color: #718096; text-align: center; padding: 20px;">Loading user analytics...</p>
+                    </div>
+                </div>
+
                 ${stats.errors.length > 0 ? `
                     <div class="card">
                         <div class="card-title">Error Breakdown</div>
@@ -1654,6 +1743,10 @@
                 if (container && allCoupons.length > 0) {
                     renderCouponPage();
                 }
+                
+                // Load invalid coupons and user analytics
+                loadInvalidCoupons();
+                loadUserAnalytics();
             }, 0);
         }
 
@@ -1719,6 +1812,7 @@
                         <tr>
                             <th>Coupon Code</th>
                             <th>Uses</th>
+                            <th>Unique Users</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1726,6 +1820,7 @@
                             <tr>
                                 <td>${c.coupon}</td>
                                 <td>${c.count.toLocaleString()}</td>
+                                <td>${(c.unique_users || 0).toLocaleString()}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1763,8 +1858,8 @@
             }
 
             const csvContent = [
-                ['Coupon Code', 'Uses'],
-                ...allCoupons.map(c => [c.coupon, c.count])
+                ['Coupon Code', 'Uses', 'Unique Users'],
+                ...allCoupons.map(c => [c.coupon, c.count, c.unique_users || 0])
             ].map(row => row.join(',')).join('\n');
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1799,6 +1894,309 @@
                     </tbody>
                 </table>
             `;
+        }
+
+        // Invalid Coupon Attempts
+        let allInvalidCoupons = [];
+        let invalidCouponsOffset = 0;
+        const invalidCouponsLimit = 50;
+
+        async function loadInvalidCoupons() {
+            try {
+                invalidCouponsOffset = 0;
+                allInvalidCoupons = [];
+                const response = await fetch(`/api/invalid-coupons?limit=${invalidCouponsLimit}&offset=${invalidCouponsOffset}`);
+                const data = await response.json();
+                
+                allInvalidCoupons = data.attempts || [];
+                renderInvalidCoupons(data.attempts || [], data.total || 0);
+            } catch (error) {
+                console.error('Error loading invalid coupons:', error);
+                document.getElementById('invalidCouponsContainer').innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 20px;">Failed to load invalid coupon attempts</p>
+                `;
+            }
+        }
+
+        function renderInvalidCoupons(attempts, total) {
+            const container = document.getElementById('invalidCouponsContainer');
+            
+            if (attempts.length === 0) {
+                container.innerHTML = '<p style="color: #718096; text-align: center; padding: 20px;">No invalid coupon attempts</p>';
+                return;
+            }
+
+            const hasMore = allInvalidCoupons.length < total;
+
+            container.innerHTML = `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-secondary" onclick="exportInvalidCouponsCSV()" style="padding: 8px 16px;">
+                        📥 Export CSV
+                    </button>
+                    <span style="color: #4a5568;">Showing ${allInvalidCoupons.length} of ${total} total</span>
+                </div>
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Coupon Code</th>
+                            <th>Template</th>
+                            <th>User</th>
+                            <th>Timestamp</th>
+                            <th>Attempts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allInvalidCoupons.map(a => {
+                            const userLink = a.username 
+                                ? `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>`
+                                : (a.first_name || 'Unknown User');
+                            
+                            return `
+                                <tr>
+                                    <td><code>${a.coupon_code}</code></td>
+                                    <td>${a.template || 'N/A'}</td>
+                                    <td>${userLink}</td>
+                                    <td>${new Date(a.timestamp).toLocaleString()}</td>
+                                    <td>${a.attempt_count || 1}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                ${hasMore ? `
+                    <button class="load-more-btn" onclick="loadMoreInvalidCoupons()">
+                        Load More
+                    </button>
+                ` : ''}
+            `;
+        }
+
+        async function loadMoreInvalidCoupons() {
+            try {
+                invalidCouponsOffset += invalidCouponsLimit;
+                const response = await fetch(`/api/invalid-coupons?limit=${invalidCouponsLimit}&offset=${invalidCouponsOffset}`);
+                const data = await response.json();
+                
+                if (data.attempts && data.attempts.length > 0) {
+                    allInvalidCoupons = allInvalidCoupons.concat(data.attempts);
+                    renderInvalidCoupons(data.attempts, data.total || 0);
+                }
+            } catch (error) {
+                console.error('Error loading more invalid coupons:', error);
+            }
+        }
+
+        function exportInvalidCouponsCSV() {
+            if (allInvalidCoupons.length === 0) {
+                alert('No invalid coupon data to export');
+                return;
+            }
+
+            const csvContent = [
+                ['Coupon Code', 'Template', 'Username', 'First Name', 'Timestamp', 'Attempts'],
+                ...allInvalidCoupons.map(a => [
+                    a.coupon_code,
+                    a.template || 'N/A',
+                    a.username || '',
+                    a.first_name || '',
+                    new Date(a.timestamp).toISOString(),
+                    a.attempt_count || 1
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `invalid-coupons-${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // User Analytics
+        let allUsers = [];
+        let usersOffset = 0;
+        const usersLimit = 50;
+
+        async function loadUserAnalytics() {
+            try {
+                usersOffset = 0;
+                allUsers = [];
+                const response = await fetch(`/api/bot-users?limit=${usersLimit}&offset=${usersOffset}`);
+                const data = await response.json();
+                
+                allUsers = data.users || [];
+                renderUserAnalytics(data.users || [], data.total || 0);
+            } catch (error) {
+                console.error('Error loading user analytics:', error);
+                document.getElementById('userAnalyticsContainer').innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 20px;">Failed to load user analytics</p>
+                `;
+            }
+        }
+
+        function renderUserAnalytics(users, total) {
+            const container = document.getElementById('userAnalyticsContainer');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p style="color: #718096; text-align: center; padding: 20px;">No user data available</p>';
+                return;
+            }
+
+            const hasMore = allUsers.length < total;
+
+            container.innerHTML = `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #4a5568;">Showing ${allUsers.length} of ${total} users</span>
+                </div>
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Total Gens</th>
+                            <th>Unique Coupons</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allUsers.map(u => {
+                            const userLink = u.username 
+                                ? `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>`
+                                : (u.first_name || 'Unknown User');
+                            
+                            return `
+                                <tr>
+                                    <td>${userLink}</td>
+                                    <td>${u.total_generations || 0}</td>
+                                    <td>${u.unique_coupons || 0}</td>
+                                    <td>${u.first_seen ? new Date(u.first_seen).toLocaleDateString() : 'N/A'}</td>
+                                    <td>${u.last_seen ? new Date(u.last_seen).toLocaleDateString() : 'N/A'}</td>
+                                    <td>
+                                        <button class="btn btn-secondary" onclick="showUserDetails(${u.chat_id})" style="padding: 6px 12px; font-size: 12px;">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                ${hasMore ? `
+                    <button class="load-more-btn" onclick="loadMoreUsers()">
+                        Load More
+                    </button>
+                ` : ''}
+            `;
+        }
+
+        async function loadMoreUsers() {
+            try {
+                usersOffset += usersLimit;
+                const response = await fetch(`/api/bot-users?limit=${usersLimit}&offset=${usersOffset}`);
+                const data = await response.json();
+                
+                if (data.users && data.users.length > 0) {
+                    allUsers = allUsers.concat(data.users);
+                    renderUserAnalytics(data.users, data.total || 0);
+                }
+            } catch (error) {
+                console.error('Error loading more users:', error);
+            }
+        }
+
+        // User Details Modal
+        async function showUserDetails(chatId) {
+            const modal = document.getElementById('userDetailsModal');
+            const content = document.getElementById('userDetailsContent');
+            
+            modal.classList.add('active');
+            content.innerHTML = '<p style="color: #718096; text-align: center; padding: 40px;">Loading user details...</p>';
+            
+            try {
+                const response = await fetch(`/api/user-activity/${chatId}`);
+                const data = await response.json();
+                
+                const user = data.user || {};
+                const history = data.history || [];
+                
+                const userDisplay = user.username 
+                    ? `<a href="https://t.me/${user.username}" target="_blank" class="telegram-link">@${user.username}</a>`
+                    : (user.first_name || 'Unknown User');
+                
+                content.innerHTML = `
+                    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 12px; color: #1a202c;">User Profile</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div>
+                                <strong style="color: #4a5568;">User:</strong> ${userDisplay}
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Chat ID:</strong> <code>${user.chat_id}</code>
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Total Generations:</strong> ${user.total_generations || 0}
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Unique Coupons:</strong> ${user.unique_coupons || 0}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 12px; color: #1a202c;">Activity History</h3>
+                    ${history.length === 0 ? `
+                        <p style="color: #718096; text-align: center; padding: 20px;">No activity history</p>
+                    ` : `
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Template</th>
+                                        <th>Coupon</th>
+                                        <th>Status</th>
+                                        <th>Error Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${history.map(h => {
+                                        const isSuccess = h.success || h.status === 'success';
+                                        const statusBadge = isSuccess 
+                                            ? '<span class="status-badge status-success">Success</span>'
+                                            : '<span class="status-badge status-error">Failed</span>';
+                                        
+                                        return `
+                                            <tr>
+                                                <td>${new Date(h.timestamp).toLocaleString()}</td>
+                                                <td>${h.template || 'N/A'}</td>
+                                                <td><code>${h.coupon_code || 'N/A'}</code></td>
+                                                <td>${statusBadge}</td>
+                                                <td>${h.error_type || '-'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                `;
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                content.innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 40px;">
+                        Failed to load user details. Please try again.
+                    </p>
+                `;
+            }
+        }
+
+        function closeUserDetailsModal() {
+            document.getElementById('userDetailsModal').classList.remove('active');
         }
 
         function renderDailyChart(usageData, granularity) {

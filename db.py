@@ -539,17 +539,20 @@ def get_bot_stats(days=30):
             """, where_params)
             popular_templates = [{'template': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
-            # Popular coupon codes (fetch all for pagination and CSV export)
+            # Popular coupon codes with unique user counts (fetch all for pagination and CSV export)
             cursor.execute(f"""
-                SELECT coupon_code, COUNT(*) as count
+                SELECT 
+                    coupon_code, 
+                    COUNT(*) as total_uses,
+                    COUNT(DISTINCT chat_id) as unique_users
                 FROM bot_usage
                 WHERE {where_clause}
                 AND coupon_code IS NOT NULL
                 AND success = true
                 GROUP BY coupon_code
-                ORDER BY count DESC
+                ORDER BY total_uses DESC
             """, where_params)
-            popular_coupons = [{'coupon': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            popular_coupons = [{'coupon': row[0], 'count': row[1], 'unique_users': row[2]} for row in cursor.fetchall()]
             
             # Error breakdown
             cursor.execute(f"""
@@ -772,6 +775,185 @@ def get_bot_user_count(days=30):
     except Exception as e:
         print(f"Error getting bot user count: {e}")
         return 0
+
+def get_all_bot_users(limit=100, offset=0):
+    """
+    Get all bot users with their activity stats.
+    
+    Args:
+        limit (int): Number of users to return
+        offset (int): Offset for pagination
+    
+    Returns:
+        dict: {
+            'users': list of user dicts with stats,
+            'total': total count of users
+        }
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'users': [], 'total': 0}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Get total count
+            cursor.execute("SELECT COUNT(*) FROM bot_users")
+            total = cursor.fetchone()[0]
+            
+            # Get users with stats (count only successful generations)
+            cursor.execute("""
+                SELECT 
+                    u.chat_id,
+                    u.username,
+                    u.first_name,
+                    u.last_name,
+                    u.first_used,
+                    u.last_used,
+                    COUNT(b.id) FILTER (WHERE b.success = true) as total_generations,
+                    COUNT(DISTINCT b.coupon_code) FILTER (WHERE b.success = true) as unique_coupons
+                FROM bot_users u
+                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id
+                GROUP BY u.chat_id, u.username, u.first_name, u.last_name, u.first_used, u.last_used
+                ORDER BY u.last_used DESC
+                LIMIT %s OFFSET %s
+            """, (limit, offset))
+            
+            users = []
+            for row in cursor.fetchall():
+                users.append({
+                    'chat_id': row[0],
+                    'username': row[1],
+                    'first_name': row[2],
+                    'last_name': row[3],
+                    'first_used': row[4].isoformat() if row[4] else None,
+                    'last_used': row[5].isoformat() if row[5] else None,
+                    'total_generations': row[6],
+                    'unique_coupons': row[7]
+                })
+            
+            return {'users': users, 'total': total}
+    except Exception as e:
+        print(f"Error getting all bot users: {e}")
+        return {'users': [], 'total': 0}
+
+def get_user_activity_history(chat_id, limit=100):
+    """
+    Get complete activity history for a specific user.
+    
+    Args:
+        chat_id (int): Telegram chat ID
+        limit (int): Max number of records to return
+    
+    Returns:
+        list: List of activity records for the user
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 
+                    created_at,
+                    template_name,
+                    coupon_code,
+                    success,
+                    error_type
+                FROM bot_usage
+                WHERE chat_id = %s
+                ORDER BY created_at DESC
+                LIMIT %s
+            """, (chat_id, limit))
+            
+            history = []
+            for row in cursor.fetchall():
+                history.append({
+                    'timestamp': row[0].isoformat() if row[0] else None,
+                    'template': row[1],
+                    'coupon_code': row[2],
+                    'success': row[3],
+                    'error_type': row[4]
+                })
+            
+            return history
+    except Exception as e:
+        print(f"Error getting user activity history: {e}")
+        return []
+
+def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
+    """
+    Get all invalid coupon validation attempts.
+    
+    Args:
+        limit (int): Number of records to return
+        offset (int): Offset for pagination
+        template_filter (str, optional): Filter by template name
+    
+    Returns:
+        dict: {
+            'attempts': list of invalid coupon attempts,
+            'total': total count
+        }
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'attempts': [], 'total': 0}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Build query with optional template filter
+            where_clause = "WHERE success = FALSE"
+            params = []
+            
+            if template_filter:
+                where_clause += " AND template_name = %s"
+                params.append(template_filter)
+            
+            # Get total count
+            cursor.execute(f"SELECT COUNT(*) FROM bot_usage {where_clause}", params)
+            total = cursor.fetchone()[0]
+            
+            # Get attempts with user info
+            query_params = params + [limit, offset]
+            cursor.execute(f"""
+                SELECT 
+                    b.coupon_code,
+                    b.template_name,
+                    b.created_at,
+                    b.error_type,
+                    b.chat_id,
+                    u.username,
+                    u.first_name,
+                    u.last_name,
+                    COUNT(*) OVER (PARTITION BY b.coupon_code) as attempt_count
+                FROM bot_usage b
+                LEFT JOIN bot_users u ON b.chat_id = u.chat_id
+                {where_clause}
+                ORDER BY b.created_at DESC
+                LIMIT %s OFFSET %s
+            """, query_params)
+            
+            attempts = []
+            for row in cursor.fetchall():
+                attempts.append({
+                    'coupon_code': row[0],
+                    'template_name': row[1],
+                    'timestamp': row[2].isoformat() if row[2] else None,
+                    'error_type': row[3],
+                    'chat_id': row[4],
+                    'username': row[5],
+                    'first_name': row[6],
+                    'last_name': row[7],
+                    'attempt_count': row[8]
+                })
+            
+            return {'attempts': attempts, 'total': total}
+    except Exception as e:
+        print(f"Error getting invalid coupon attempts: {e}")
+        return {'attempts': [], 'total': 0}
 
 def remove_bot_user(chat_id):
     """
