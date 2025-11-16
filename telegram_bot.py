@@ -145,8 +145,14 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Track user for broadcast capability (CRITICAL: must complete for DB fallback to work)
     try:
         import db
-        await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code)
-        print(f"[TELEGRAM] ✅ User {chat_id} tracked successfully in database", flush=True)
+        # Extract user profile data from Telegram
+        user = update.effective_user
+        username = user.username if user else None
+        first_name = user.first_name if user else None
+        last_name = user.last_name if user else None
+        
+        await asyncio.to_thread(db.track_bot_user, chat_id, coupon_code, username, first_name, last_name)
+        print(f"[TELEGRAM] ✅ User {chat_id} tracked successfully in database (username={username}, name={first_name} {last_name})", flush=True)
         sys.stdout.flush()
     except Exception as track_error:
         print(f"[TELEGRAM] ⚠️ WARNING: Failed to track user {chat_id}: {track_error}", flush=True)

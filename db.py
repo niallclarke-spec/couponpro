@@ -184,6 +184,35 @@ class DatabasePool:
                     ON bot_users(last_used)
                 """)
                 
+                # Migration: Add user profile columns to bot_users table
+                print("[MIGRATION] Checking if bot_users user profile columns exist...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='bot_users' AND column_name IN ('username', 'first_name', 'last_name')
+                """)
+                existing_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'username' not in existing_columns:
+                    print("[MIGRATION] Adding username column to bot_users table...")
+                    cursor.execute("ALTER TABLE bot_users ADD COLUMN username VARCHAR(255)")
+                    print("[MIGRATION] ✅ username column added successfully")
+                else:
+                    print("[MIGRATION] username column already exists, skipping")
+                
+                if 'first_name' not in existing_columns:
+                    print("[MIGRATION] Adding first_name column to bot_users table...")
+                    cursor.execute("ALTER TABLE bot_users ADD COLUMN first_name VARCHAR(255)")
+                    print("[MIGRATION] ✅ first_name column added successfully")
+                else:
+                    print("[MIGRATION] first_name column already exists, skipping")
+                
+                if 'last_name' not in existing_columns:
+                    print("[MIGRATION] Adding last_name column to bot_users table...")
+                    cursor.execute("ALTER TABLE bot_users ADD COLUMN last_name VARCHAR(255)")
+                    print("[MIGRATION] ✅ last_name column added successfully")
+                else:
+                    print("[MIGRATION] last_name column already exists, skipping")
+                
                 # Create broadcast_jobs table for tracking broadcasts
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS broadcast_jobs (
@@ -611,13 +640,16 @@ def get_bot_stats(days=30):
         return None
 
 # Bot user tracking for broadcasts
-def track_bot_user(chat_id, coupon_code):
+def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_name=None):
     """
     Track or update a bot user. Creates new user or updates last_used timestamp.
     
     Args:
         chat_id (int): Telegram chat ID
         coupon_code (str): Coupon code the user is using
+        username (str, optional): Telegram username (without @)
+        first_name (str, optional): User's first name
+        last_name (str, optional): User's last name
     """
     try:
         if not db_pool.connection_pool:
@@ -626,26 +658,29 @@ def track_bot_user(chat_id, coupon_code):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO bot_users (chat_id, last_coupon_code, first_used, last_used)
-                VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                INSERT INTO bot_users (chat_id, last_coupon_code, username, first_name, last_name, first_used, last_used)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT (chat_id) 
                 DO UPDATE SET 
                     last_coupon_code = EXCLUDED.last_coupon_code,
+                    username = COALESCE(EXCLUDED.username, bot_users.username),
+                    first_name = COALESCE(EXCLUDED.first_name, bot_users.first_name),
+                    last_name = COALESCE(EXCLUDED.last_name, bot_users.last_name),
                     last_used = CURRENT_TIMESTAMP
-            """, (chat_id, coupon_code))
+            """, (chat_id, coupon_code, username, first_name, last_name))
             conn.commit()
     except Exception as e:
         print(f"[BOT_USER] Failed to track user (non-critical): {e}")
 
 def get_bot_user(chat_id):
     """
-    Get bot user data including last coupon used.
+    Get bot user data including last coupon used and profile information.
     
     Args:
         chat_id (int): Telegram chat ID
     
     Returns:
-        dict: User data with chat_id, last_coupon_code, last_used
+        dict: User data with chat_id, last_coupon_code, last_used, username, first_name, last_name
         None: If user not found or error
     """
     if not db_pool.connection_pool:
@@ -655,7 +690,7 @@ def get_bot_user(chat_id):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT chat_id, last_coupon_code, last_used 
+                SELECT chat_id, last_coupon_code, last_used, username, first_name, last_name 
                 FROM bot_users 
                 WHERE chat_id = %s
             """, (chat_id,))
@@ -664,7 +699,10 @@ def get_bot_user(chat_id):
                 return {
                     'chat_id': row[0],
                     'last_coupon_code': row[1],
-                    'last_used': row[2]
+                    'last_used': row[2],
+                    'username': row[3],
+                    'first_name': row[4],
+                    'last_name': row[5]
                 }
             return None
     except Exception as e:
