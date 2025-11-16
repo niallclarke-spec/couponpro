@@ -702,7 +702,7 @@ def get_bot_user(chat_id):
                 return {
                     'chat_id': row[0],
                     'last_coupon_code': row[1],
-                    'last_used': row[2],
+                    'last_used': row[2].isoformat() if row[2] else None,
                     'username': row[3],
                     'first_name': row[4],
                     'last_name': row[5]

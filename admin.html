@@ -2075,8 +2075,8 @@
                                     <td>${userLink}</td>
                                     <td>${u.total_generations || 0}</td>
                                     <td>${u.unique_coupons || 0}</td>
-                                    <td>${u.first_seen ? new Date(u.first_seen).toLocaleDateString() : 'N/A'}</td>
-                                    <td>${u.last_seen ? new Date(u.last_seen).toLocaleDateString() : 'N/A'}</td>
+                                    <td>${u.first_used ? new Date(u.first_used).toLocaleDateString() : 'N/A'}</td>
+                                    <td>${u.last_used ? new Date(u.last_used).toLocaleDateString() : 'N/A'}</td>
                                     <td>
                                         <button class="btn btn-secondary" onclick="showUserDetails(${u.chat_id})" style="padding: 6px 12px; font-size: 12px;">
                                             View Details
