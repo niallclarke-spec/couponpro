@@ -1634,14 +1634,14 @@
         
         // Coupon filter state
         let couponFilterDays = 30;
-        let couponFilterTemplate = null;
+        let couponFilterTemplate = 'all';
         let availableTemplates = [];
 
         async function loadAnalytics() {
             try {
                 let url = `/api/bot-stats?days=${currentAnalyticsDays}`;
                 
-                if (couponFilterTemplate) {
+                if (couponFilterTemplate && couponFilterTemplate !== 'all' && couponFilterTemplate !== 'null') {
                     url += `&template=${encodeURIComponent(couponFilterTemplate)}`;
                 }
                 
@@ -1796,7 +1796,7 @@
             allCoupons = coupons || [];
             currentCouponPage = 1;
             
-            const hasActiveFilters = couponFilterDays !== 30 || couponFilterTemplate !== null;
+            const hasActiveFilters = couponFilterDays !== 30 || (couponFilterTemplate && couponFilterTemplate !== 'all' && couponFilterTemplate !== 'null');
             
             const filterControlsHtml = `
                 <div style="margin-bottom: 20px; padding: 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -1836,7 +1836,7 @@
                         <div style="margin-top: 12px; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px; color: #4a5568;">
                             <strong>Filtered by:</strong> 
                             Last ${couponFilterDays} days
-                            ${couponFilterTemplate ? `, Template: <span style="color: #667eea; font-weight: 600;">${couponFilterTemplate}</span>` : ''}
+                            ${(couponFilterTemplate && couponFilterTemplate !== 'all' && couponFilterTemplate !== 'null') ? `, Template: <span style="color: #667eea; font-weight: 600;">${couponFilterTemplate}</span>` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -1914,7 +1914,7 @@
             const templateSelect = document.getElementById('couponFilterTemplateSelect');
             
             couponFilterDays = parseInt(daysSelect.value);
-            couponFilterTemplate = templateSelect.value || null;
+            couponFilterTemplate = templateSelect.value || 'all';
             
             currentAnalyticsDays = couponFilterDays;
             
@@ -1923,7 +1923,7 @@
         
         function clearCouponFilters() {
             couponFilterDays = 30;
-            couponFilterTemplate = null;
+            couponFilterTemplate = 'all';
             currentAnalyticsDays = 7;
             
             loadAnalytics();
@@ -1951,7 +1951,7 @@
                 filename += `-last-${couponFilterDays}-days`;
             }
             
-            if (couponFilterTemplate) {
+            if (couponFilterTemplate && couponFilterTemplate !== 'all' && couponFilterTemplate !== 'null') {
                 filename += `-${couponFilterTemplate.replace(/[^a-z0-9-]/gi, '-')}`;
             }
             

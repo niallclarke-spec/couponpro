@@ -339,6 +339,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 days_param = query_params.get('days', ['30'])[0]
                 template = query_params.get('template', [None])[0]
                 
+                # Sanitize template parameter - convert "null", "", "all" to None
+                if template in [None, '', 'null', 'all']:
+                    template = None
+                
                 # Support 'today', 'yesterday', or numeric days
                 if days_param in ['today', 'yesterday']:
                     days = days_param
