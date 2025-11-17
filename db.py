@@ -857,7 +857,7 @@ def get_user_activity_history(chat_id, limit=100):
             cursor.execute("""
                 SELECT 
                     created_at,
-                    template_name,
+                    template_slug,
                     coupon_code,
                     success,
                     error_type
@@ -909,7 +909,7 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
             params = []
             
             if template_filter:
-                where_clause += " AND template_name = %s"
+                where_clause += " AND template_slug = %s"
                 params.append(template_filter)
             
             # Get total count
@@ -921,7 +921,7 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
             cursor.execute(f"""
                 SELECT 
                     b.coupon_code,
-                    b.template_name,
+                    b.template_slug,
                     b.created_at,
                     b.error_type,
                     b.chat_id,
