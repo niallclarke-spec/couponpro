@@ -474,12 +474,13 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
         print(error_msg, flush=True)
         sys.stdout.flush()
 
-def get_bot_stats(days=30):
+def get_bot_stats(days=30, template_filter=None):
     """
     Get bot usage statistics for the last N days, or 'today'/'yesterday' for exact day filtering.
     
     Args:
         days (int|str): Number of days, or 'today'/'yesterday' for exact date filtering (default: 30)
+        template_filter (str, optional): Filter popular coupons by specific template slug
     
     Returns:
         dict: Statistics including total uses, success rate, popular templates/coupons
@@ -540,6 +541,13 @@ def get_bot_stats(days=30):
             popular_templates = [{'template': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
             # Popular coupon codes with unique user counts (fetch all for pagination and CSV export)
+            # Add template filter if provided
+            template_where = ""
+            template_params = list(where_params)
+            if template_filter:
+                template_where = " AND template_slug = %s"
+                template_params.append(template_filter)
+            
             cursor.execute(f"""
                 SELECT 
                     coupon_code, 
@@ -549,9 +557,10 @@ def get_bot_stats(days=30):
                 WHERE {where_clause}
                 AND coupon_code IS NOT NULL
                 AND success = true
+                {template_where}
                 GROUP BY coupon_code
                 ORDER BY total_uses DESC
-            """, where_params)
+            """, tuple(template_params))
             popular_coupons = [{'coupon': row[0], 'count': row[1], 'unique_users': row[2]} for row in cursor.fetchall()]
             
             # Error breakdown
