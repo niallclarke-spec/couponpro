@@ -156,6 +156,25 @@ class DatabasePool:
                 else:
                     print("[MIGRATION] error_type column already exists, skipping")
                 
+                # Add device_type column if it doesn't exist (migration for existing tables)
+                print("[MIGRATION] Checking if bot_usage.device_type column exists...")
+                cursor.execute("""
+                    SELECT COUNT(*) FROM information_schema.columns 
+                    WHERE table_name='bot_usage' AND column_name='device_type'
+                """)
+                device_type_exists = cursor.fetchone()[0] > 0
+                
+                if not device_type_exists:
+                    print("[MIGRATION] Adding device_type column to bot_usage table...")
+                    cursor.execute("""
+                        ALTER TABLE bot_usage 
+                        ADD COLUMN device_type VARCHAR(20) DEFAULT 'unknown' 
+                        CHECK (device_type IN ('mobile', 'desktop', 'tablet', 'unknown'))
+                    """)
+                    print("[MIGRATION] ✅ device_type column added successfully")
+                else:
+                    print("[MIGRATION] device_type column already exists, skipping")
+                
                 # Create index on created_at for faster date-based queries
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_bot_usage_created_at 
@@ -435,7 +454,7 @@ def get_submission_count(campaign_id):
         return 0
 
 # Bot usage tracking
-def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None):
+def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown'):
     """
     Log Telegram bot usage. Silently fails to avoid disrupting bot operation.
     
@@ -445,9 +464,10 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
         coupon_code (str): Coupon code used
         success (bool): Whether the operation succeeded
         error_type (str): Type of error if failed (e.g., 'network', 'invalid_coupon', 'template_not_found')
+        device_type (str): Device type ('mobile', 'desktop', 'tablet', 'unknown')
     """
     import sys
-    msg = f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}"
+    msg = f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}, device={device_type}"
     print(msg, flush=True)
     sys.stdout.flush()
     
@@ -462,9 +482,9 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None)
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO bot_usage 
-                (chat_id, template_slug, coupon_code, success, error_type)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (chat_id, template_slug, coupon_code, success, error_type))
+                (chat_id, template_slug, coupon_code, success, error_type, device_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (chat_id, template_slug, coupon_code, success, error_type, device_type))
             conn.commit()
             success_msg = f"[BOT_USAGE] ✅ Successfully logged usage"
             print(success_msg, flush=True)
@@ -650,6 +670,49 @@ def get_bot_stats(days=30, template_filter=None):
     except Exception as e:
         print(f"Error getting bot stats: {e}")
         return None
+
+def get_device_stats(days=30):
+    """
+    Get device usage statistics.
+    
+    Args:
+        days (int): Number of days to analyze
+    
+    Returns:
+        list: Device breakdown with counts and percentages
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            interval = f"{days} days"
+            
+            cursor.execute("""
+                SELECT 
+                    device_type,
+                    COUNT(*) as count,
+                    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+                FROM bot_usage
+                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                AND success = true
+                GROUP BY device_type
+                ORDER BY count DESC
+            """, (interval,))
+            
+            devices = []
+            for row in cursor.fetchall():
+                devices.append({
+                    'device_type': row[0],
+                    'count': row[1],
+                    'percentage': float(row[2])
+                })
+            
+            return devices
+    except Exception as e:
+        print(f"Error getting device stats: {e}")
+        return []
 
 # Bot user tracking for broadcasts
 def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_name=None):

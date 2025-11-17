@@ -512,20 +512,23 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     return ConversationHandler.END
 
 
-async def _log_usage(chat_id, template_slug, coupon_code, success, error_type):
+async def _log_usage(chat_id, template_slug, coupon_code, success, error_type, device_type='unknown'):
     """
     Internal helper to log bot usage. Silently fails to avoid disrupting bot.
     Runs in background thread to avoid blocking event loop.
+    
+    Args:
+        device_type (str): Device type - Telegram bot API doesn't provide reliable device info, so defaults to 'unknown'
     """
     import asyncio
     import sys
     import traceback
     try:
-        print(f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}", flush=True)
+        print(f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, device={device_type}", flush=True)
         sys.stdout.flush()
         import db
         if chat_id:
-            await asyncio.to_thread(db.log_bot_usage, chat_id, template_slug, coupon_code, success, error_type)
+            await asyncio.to_thread(db.log_bot_usage, chat_id, template_slug, coupon_code, success, error_type, device_type)
             print(f"[BOT_USAGE] ✅ Successfully logged usage to database", flush=True)
             sys.stdout.flush()
         else:
