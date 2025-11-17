@@ -1631,16 +1631,28 @@
         let currentAnalyticsDays = 7;
         let dailyChart = null;
         let isEditingTemplate = false;
+        
+        // Coupon filter state
+        let couponFilterDays = 30;
+        let couponFilterTemplate = null;
+        let availableTemplates = [];
 
         async function loadAnalytics() {
             try {
-                const response = await fetch(`/api/bot-stats?days=${currentAnalyticsDays}`);
+                let url = `/api/bot-stats?days=${currentAnalyticsDays}`;
+                
+                if (couponFilterTemplate) {
+                    url += `&template=${encodeURIComponent(couponFilterTemplate)}`;
+                }
+                
+                const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load stats');
                 }
 
                 const stats = await response.json();
+                availableTemplates = stats.popular_templates || [];
                 renderAnalytics(stats);
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -1784,11 +1796,57 @@
             allCoupons = coupons || [];
             currentCouponPage = 1;
             
+            const hasActiveFilters = couponFilterDays !== 30 || couponFilterTemplate !== null;
+            
+            const filterControlsHtml = `
+                <div style="margin-bottom: 20px; padding: 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; color: #4a5568; font-weight: 600;">Date Range</label>
+                            <select id="couponFilterDaysSelect" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px;">
+                                <option value="3" ${couponFilterDays === 3 ? 'selected' : ''}>Last 3 days</option>
+                                <option value="7" ${couponFilterDays === 7 ? 'selected' : ''}>Last 7 days</option>
+                                <option value="30" ${couponFilterDays === 30 ? 'selected' : ''}>Last 30 days</option>
+                                <option value="90" ${couponFilterDays === 90 ? 'selected' : ''}>Last 90 days</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 12px; color: #4a5568; font-weight: 600;">Template</label>
+                            <select id="couponFilterTemplateSelect" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px;">
+                                <option value="">All Templates</option>
+                                ${availableTemplates.map(t => `
+                                    <option value="${t.template}" ${couponFilterTemplate === t.template ? 'selected' : ''}>
+                                        ${t.template} (${t.count} uses)
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn" onclick="applyCouponFilters()" style="padding: 8px 20px; white-space: nowrap;">
+                                Apply Filters
+                            </button>
+                            ${hasActiveFilters ? `
+                                <button class="btn btn-secondary" onclick="clearCouponFilters()" style="padding: 8px 16px; white-space: nowrap;">
+                                    Clear Filters
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ${hasActiveFilters ? `
+                        <div style="margin-top: 12px; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px; color: #4a5568;">
+                            <strong>Filtered by:</strong> 
+                            Last ${couponFilterDays} days
+                            ${couponFilterTemplate ? `, Template: <span style="color: #667eea; font-weight: 600;">${couponFilterTemplate}</span>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
             if (allCoupons.length === 0) {
-                return '<p style="color: #718096; text-align: center; padding: 20px;">No coupon usage data</p>';
+                return filterControlsHtml + '<p style="color: #718096; text-align: center; padding: 20px;">No coupon usage data</p>';
             }
             
-            return `
+            return filterControlsHtml + `
                 <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                     <button class="btn btn-secondary" onclick="exportCouponsCSV()" style="padding: 8px 16px;">
                         📥 Export CSV
@@ -1851,6 +1909,26 @@
             renderCouponPage();
         }
 
+        function applyCouponFilters() {
+            const daysSelect = document.getElementById('couponFilterDaysSelect');
+            const templateSelect = document.getElementById('couponFilterTemplateSelect');
+            
+            couponFilterDays = parseInt(daysSelect.value);
+            couponFilterTemplate = templateSelect.value || null;
+            
+            currentAnalyticsDays = couponFilterDays;
+            
+            loadAnalytics();
+        }
+        
+        function clearCouponFilters() {
+            couponFilterDays = 30;
+            couponFilterTemplate = null;
+            currentAnalyticsDays = 7;
+            
+            loadAnalytics();
+        }
+
         function exportCouponsCSV() {
             if (allCoupons.length === 0) {
                 alert('No coupon data to export');
@@ -1867,8 +1945,20 @@
             const url = URL.createObjectURL(blob);
             const timestamp = new Date().toISOString().split('T')[0];
             
+            let filename = 'popular-coupons';
+            
+            if (couponFilterDays !== 30) {
+                filename += `-last-${couponFilterDays}-days`;
+            }
+            
+            if (couponFilterTemplate) {
+                filename += `-${couponFilterTemplate.replace(/[^a-z0-9-]/gi, '-')}`;
+            }
+            
+            filename += `-${timestamp}.csv`;
+            
             link.setAttribute('href', url);
-            link.setAttribute('download', `promostack-coupons-${timestamp}.csv`);
+            link.setAttribute('download', filename);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();

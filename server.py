@@ -337,6 +337,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 query_params = parse_qs(parsed_path.query)
                 days_param = query_params.get('days', ['30'])[0]
+                template = query_params.get('template', [None])[0]
                 
                 # Support 'today', 'yesterday', or numeric days
                 if days_param in ['today', 'yesterday']:
@@ -344,7 +345,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     days = int(days_param)
                 
-                stats = db.get_bot_stats(days)
+                stats = db.get_bot_stats(days, template_filter=template)
                 
                 if stats:
                     self.send_response(200)
