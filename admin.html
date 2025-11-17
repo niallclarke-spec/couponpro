@@ -1947,15 +1947,25 @@
                     </thead>
                     <tbody>
                         ${allInvalidCoupons.map(a => {
-                            const userLink = a.username 
-                                ? `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>`
-                                : (a.first_name || 'Unknown User');
+                            // Build user display name
+                            let userDisplay;
+                            if (a.username) {
+                                // Has username - show as Telegram link
+                                userDisplay = `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>`;
+                            } else if (a.first_name || a.last_name) {
+                                // No username but has name - show first + last
+                                const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
+                                userDisplay = fullName;
+                            } else {
+                                // No data at all
+                                userDisplay = 'Unknown User';
+                            }
                             
                             return `
                                 <tr>
                                     <td><code>${a.coupon_code}</code></td>
-                                    <td>${a.template || 'N/A'}</td>
-                                    <td>${userLink}</td>
+                                    <td>${a.template_name || 'N/A'}</td>
+                                    <td>${userDisplay}</td>
                                     <td>${new Date(a.timestamp).toLocaleString()}</td>
                                     <td>${a.attempt_count || 1}</td>
                                 </tr>
@@ -1993,12 +2003,13 @@
             }
 
             const csvContent = [
-                ['Coupon Code', 'Template', 'Username', 'First Name', 'Timestamp', 'Attempts'],
+                ['Coupon Code', 'Template', 'Username', 'First Name', 'Last Name', 'Timestamp', 'Attempts'],
                 ...allInvalidCoupons.map(a => [
                     a.coupon_code,
-                    a.template || 'N/A',
+                    a.template_name || 'N/A',
                     a.username || '',
                     a.first_name || '',
+                    a.last_name || '',
                     new Date(a.timestamp).toISOString(),
                     a.attempt_count || 1
                 ])
@@ -2066,13 +2077,23 @@
                     </thead>
                     <tbody>
                         ${allUsers.map(u => {
-                            const userLink = u.username 
-                                ? `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>`
-                                : (u.first_name || 'Unknown User');
+                            // Build user display name
+                            let userDisplay;
+                            if (u.username) {
+                                // Has username - show as Telegram link
+                                userDisplay = `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>`;
+                            } else if (u.first_name || u.last_name) {
+                                // No username but has name - show first + last
+                                const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ');
+                                userDisplay = fullName;
+                            } else {
+                                // No data at all
+                                userDisplay = 'Unknown User';
+                            }
                             
                             return `
                                 <tr>
-                                    <td>${userLink}</td>
+                                    <td>${userDisplay}</td>
                                     <td>${u.total_generations || 0}</td>
                                     <td>${u.unique_coupons || 0}</td>
                                     <td>${u.first_used ? new Date(u.first_used).toLocaleDateString() : 'N/A'}</td>
@@ -2125,9 +2146,16 @@
                 const user = data.user || {};
                 const history = data.history || [];
                 
-                const userDisplay = user.username 
-                    ? `<a href="https://t.me/${user.username}" target="_blank" class="telegram-link">@${user.username}</a>`
-                    : (user.first_name || 'Unknown User');
+                // Build user display name
+                let userDisplay;
+                if (user.username) {
+                    userDisplay = `<a href="https://t.me/${user.username}" target="_blank" class="telegram-link">@${user.username}</a>`;
+                } else if (user.first_name || user.last_name) {
+                    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+                    userDisplay = fullName;
+                } else {
+                    userDisplay = 'Unknown User';
+                }
                 
                 content.innerHTML = `
                     <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
