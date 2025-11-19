@@ -2540,7 +2540,7 @@
         // Most Active Users Leaderboard
         async function loadMostActiveUsers() {
             try {
-                const response = await fetch('/api/bot-users?limit=10&offset=0');
+                const response = await fetch('/api/bot-users?limit=1000&offset=0');
                 const data = await response.json();
                 
                 renderMostActiveUsers(data.users || []);
