@@ -905,15 +905,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         is_existing_template = True
                         print(f"[UPLOAD] Template '{slug}' exists in Spaces - allowing edit without images")
                     except urllib.error.HTTPError as e:
-                        # Only 404 means "doesn't exist". Other errors (403, 500) mean "can't check"
+                        # 404 = doesn't exist (allow upload). Other errors = uncertain, allow upload to proceed
                         if e.code == 404:
-                            print(f"[UPLOAD] Template '{slug}' confirmed not in Spaces (404)")
+                            print(f"[UPLOAD] Template '{slug}' confirmed not in Spaces (404) - allowing upload")
                         else:
-                            # For 403, 500, etc - assume template might exist, don't require images
-                            is_existing_template = True
-                            print(f"[UPLOAD] Template '{slug}' - assuming exists due to HTTP {e.code} (not 404)")
+                            # For 403, 500, etc - we can't confirm, but don't block legitimate uploads
+                            print(f"[UPLOAD] Template '{slug}' - Spaces check got HTTP {e.code}, allowing upload to proceed")
                     except Exception as e:
-                        print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e}")
+                        print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e} - allowing upload to proceed")
                 
                 # SLUG CONFLICT VALIDATION: Prevent accidental overwrites
                 if not is_editing and is_existing_template:
