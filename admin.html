@@ -1850,15 +1850,20 @@
                     url += `&template=${encodeURIComponent(couponFilterTemplate)}`;
                 }
                 
-                const response = await fetch(url);
+                const [statsResponse, retentionResponse] = await Promise.all([
+                    fetch(url),
+                    fetch('/api/retention-rates')
+                ]);
                 
-                if (!response.ok) {
+                if (!statsResponse.ok) {
                     throw new Error('Failed to load stats');
                 }
 
-                const stats = await response.json();
+                const stats = await statsResponse.json();
+                const retention = retentionResponse.ok ? await retentionResponse.json() : { day1: 0, day7: 0, day30: 0 };
+                
                 availableTemplates = stats.popular_templates || [];
-                renderAnalytics(stats);
+                renderAnalytics(stats, retention);
             } catch (error) {
                 console.error('Error loading stats:', error);
                 document.getElementById('analytics-content').innerHTML = `
@@ -1880,7 +1885,7 @@
             loadAnalytics();
         }
 
-        function renderAnalytics(stats) {
+        function renderAnalytics(stats, retention = { day1: 0, day7: 0, day30: 0 }) {
             const content = document.getElementById('analytics-content');
             
             if (stats.total_uses === 0) {
@@ -1912,6 +1917,21 @@
                     <div class="analytics-stat-card">
                         <div class="analytics-stat-label">Successful Uses</div>
                         <div class="analytics-stat-value">${stats.successful_uses.toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                <div class="analytics-stats-grid" style="margin-top: 16px;">
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 1 Retention</div>
+                        <div class="analytics-stat-value" style="color: white;">${retention.day1}%</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 7 Retention</div>
+                        <div class="analytics-stat-value" style="color: white;">${retention.day7}%</div>
+                    </div>
+                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 30 Retention</div>
+                        <div class="analytics-stat-value" style="color: white;">${retention.day30}%</div>
                     </div>
                 </div>
 
@@ -1993,10 +2013,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${templates.map(t => `
+                            ${templates.map((t, idx) => `
                                 <tr>
-                                    <td>${t.template}</td>
-                                    <td>${t.count.toLocaleString()}</td>
+                                    <td>${idx === 0 ? '🏆 ' : ''}${t.template}</td>
+                                    <td><strong>${t.count.toLocaleString()}</strong></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -2697,15 +2717,30 @@
             const ctx = document.getElementById('dailyChart');
             if (!ctx) return;
             
-            // Update title based on granularity
-            const titleElement = document.getElementById('usageChartTitle');
-            if (titleElement) {
-                titleElement.textContent = granularity === 'hourly' ? 'Hourly Usage' : 'Daily Usage';
-            }
-            
             // Handle both new format (label/count) and old format (date/count)
             const labels = usageData.map(d => d.label || d.date);
             const counts = usageData.map(d => d.count);
+            
+            // Find peak value and index
+            const maxCount = Math.max(...counts);
+            const peakIndex = counts.indexOf(maxCount);
+            const peakLabel = labels[peakIndex];
+            
+            // Create colors array - highlight peak with gold/yellow
+            const pointColors = counts.map((count, idx) => 
+                count === maxCount ? '#fbbf24' : '#667eea'
+            );
+            const pointRadii = counts.map((count, idx) => 
+                count === maxCount ? 8 : 4
+            );
+            
+            // Update title based on granularity with peak info
+            const titleElement = document.getElementById('usageChartTitle');
+            if (titleElement) {
+                const baseTitle = granularity === 'hourly' ? 'Hourly Usage' : 'Daily Usage';
+                const peakInfo = maxCount > 0 ? ` <span style="color: #fbbf24; font-size: 14px;">⭐ Peak: ${maxCount} at ${peakLabel}</span>` : '';
+                titleElement.innerHTML = baseTitle + peakInfo;
+            }
 
             dailyChart = new Chart(ctx, {
                 type: 'line',
@@ -2717,7 +2752,11 @@
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: pointColors,
+                        pointRadius: pointRadii,
+                        pointHoverRadius: pointRadii.map(r => r + 2)
                     }]
                 },
                 options: {
@@ -2726,6 +2765,15 @@
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    const isPeak = value === maxCount && maxCount > 0;
+                                    return `${context.dataset.label}: ${value}${isPeak ? ' ⭐ PEAK' : ''}`;
+                                }
+                            }
                         }
                     },
                     scales: {

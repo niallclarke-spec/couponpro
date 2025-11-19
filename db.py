@@ -889,6 +889,114 @@ def get_bot_user_count(days=30):
         print(f"Error getting bot user count: {e}")
         return 0
 
+def get_retention_rates():
+    """
+    Calculate Day 1, Day 7, and Day 30 retention rates.
+    
+    Retention is calculated as the percentage of users who returned to use the bot
+    after their first usage.
+    
+    Returns:
+        dict: {
+            'day1': float (0-100),
+            'day7': float (0-100),
+            'day30': float (0-100)
+        }
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'day1': 0, 'day7': 0, 'day30': 0}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Day 1 retention: Users who joined 2+ days ago and came back within 24-48 hours
+            cursor.execute("""
+                WITH cohort AS (
+                    SELECT chat_id, first_used
+                    FROM bot_users
+                    WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '2 days'
+                ),
+                returned AS (
+                    SELECT DISTINCT c.chat_id
+                    FROM cohort c
+                    INNER JOIN bot_usage b ON c.chat_id = b.chat_id
+                    WHERE b.created_at >= c.first_used + INTERVAL '1 day'
+                    AND b.created_at < c.first_used + INTERVAL '2 days'
+                    AND b.success = true
+                )
+                SELECT 
+                    COUNT(DISTINCT c.chat_id) as cohort_size,
+                    COUNT(DISTINCT r.chat_id) as returned_count
+                FROM cohort c
+                LEFT JOIN returned r ON c.chat_id = r.chat_id
+            """)
+            row = cursor.fetchone()
+            day1_cohort = row[0] or 0
+            day1_returned = row[1] or 0
+            day1_retention = round((day1_returned / day1_cohort * 100), 1) if day1_cohort > 0 else 0
+            
+            # Day 7 retention: Users who joined 14+ days ago and came back within days 7-14
+            cursor.execute("""
+                WITH cohort AS (
+                    SELECT chat_id, first_used
+                    FROM bot_users
+                    WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '14 days'
+                ),
+                returned AS (
+                    SELECT DISTINCT c.chat_id
+                    FROM cohort c
+                    INNER JOIN bot_usage b ON c.chat_id = b.chat_id
+                    WHERE b.created_at >= c.first_used + INTERVAL '7 days'
+                    AND b.created_at < c.first_used + INTERVAL '14 days'
+                    AND b.success = true
+                )
+                SELECT 
+                    COUNT(DISTINCT c.chat_id) as cohort_size,
+                    COUNT(DISTINCT r.chat_id) as returned_count
+                FROM cohort c
+                LEFT JOIN returned r ON c.chat_id = r.chat_id
+            """)
+            row = cursor.fetchone()
+            day7_cohort = row[0] or 0
+            day7_returned = row[1] or 0
+            day7_retention = round((day7_returned / day7_cohort * 100), 1) if day7_cohort > 0 else 0
+            
+            # Day 30 retention: Users who joined 60+ days ago and came back within days 30-60
+            cursor.execute("""
+                WITH cohort AS (
+                    SELECT chat_id, first_used
+                    FROM bot_users
+                    WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '60 days'
+                ),
+                returned AS (
+                    SELECT DISTINCT c.chat_id
+                    FROM cohort c
+                    INNER JOIN bot_usage b ON c.chat_id = b.chat_id
+                    WHERE b.created_at >= c.first_used + INTERVAL '30 days'
+                    AND b.created_at < c.first_used + INTERVAL '60 days'
+                    AND b.success = true
+                )
+                SELECT 
+                    COUNT(DISTINCT c.chat_id) as cohort_size,
+                    COUNT(DISTINCT r.chat_id) as returned_count
+                FROM cohort c
+                LEFT JOIN returned r ON c.chat_id = r.chat_id
+            """)
+            row = cursor.fetchone()
+            day30_cohort = row[0] or 0
+            day30_returned = row[1] or 0
+            day30_retention = round((day30_returned / day30_cohort * 100), 1) if day30_cohort > 0 else 0
+            
+            return {
+                'day1': day1_retention,
+                'day7': day7_retention,
+                'day30': day30_retention
+            }
+    except Exception as e:
+        print(f"Error calculating retention rates: {e}")
+        return {'day1': 0, 'day7': 0, 'day30': 0}
+
 def get_all_bot_users(limit=100, offset=0):
     """
     Get all bot users with their activity stats.
