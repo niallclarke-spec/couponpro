@@ -257,6 +257,52 @@
             border: 2px solid #fee2e2;
         }
 
+        .retention-card-day1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .retention-card-day7 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .retention-card-day30 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .retention-card-day1 .analytics-stat-label,
+        .retention-card-day7 .analytics-stat-label,
+        .retention-card-day30 .analytics-stat-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .retention-card-day1 .analytics-stat-value,
+        .retention-card-day7 .analytics-stat-value,
+        .retention-card-day30 .analytics-stat-value {
+            color: white;
+        }
+
+        .analytics-stat-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .loading-text {
+            color: #718096;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .empty-state h2 {
+            margin-bottom: 12px;
+        }
+
         .card:hover {
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
             transform: translateY(-2px);
@@ -2078,8 +2124,8 @@
             if (stats.total_uses === 0) {
                 content.innerHTML = `
                     <div class="card">
-                        <div style="text-align: center; padding: 40px; color: #718096;">
-                            <h2 style="margin-bottom: 12px;">No bot usage data yet</h2>
+                        <div class="empty-state">
+                            <h2>No bot usage data yet</h2>
                             <p>Start using the Telegram bot to see statistics here.</p>
                         </div>
                     </div>
@@ -2116,27 +2162,27 @@
                 </div>
                 
                 <div class="analytics-stats-grid retention-grid">
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 1 Retention</div>
-                        <div class="analytics-stat-value" style="color: white;">${retention.day1}%</div>
-                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 11px; margin-top: 4px;">Users who return within 24-48h</div>
+                    <div class="analytics-stat-card retention-card-day1">
+                        <div class="analytics-stat-label">Day 1 Retention</div>
+                        <div class="analytics-stat-value">${retention.day1}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 24-48h</div>
                     </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 7 Retention</div>
-                        <div class="analytics-stat-value" style="color: white;">${retention.day7}%</div>
-                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 11px; margin-top: 4px;">Users who return within 7-14 days</div>
+                    <div class="analytics-stat-card retention-card-day7">
+                        <div class="analytics-stat-label">Day 7 Retention</div>
+                        <div class="analytics-stat-value">${retention.day7}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 7-14 days</div>
                     </div>
-                    <div class="analytics-stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 30 Retention</div>
-                        <div class="analytics-stat-value" style="color: white;">${retention.day30}%</div>
-                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 11px; margin-top: 4px;">Users who return within 30-60 days</div>
+                    <div class="analytics-stat-card retention-card-day30">
+                        <div class="analytics-stat-label">Day 30 Retention</div>
+                        <div class="analytics-stat-value">${retention.day30}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 30-60 days</div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-title">🏆 Most Active Users</div>
                     <div id="mostActiveUsersContainer">
-                        <p style="color: #718096; text-align: center; padding: 20px;">Loading most active users...</p>
+                        <p class="loading-text">Loading most active users...</p>
                     </div>
                 </div>
 
@@ -2163,7 +2209,7 @@
                 <div class="card error-card">
                     <div class="card-title">⚠️ Invalid Coupon Attempts</div>
                     <div id="invalidCouponsContainer">
-                        <p style="color: #718096; text-align: center; padding: 20px;">Loading invalid coupon attempts...</p>
+                        <p class="loading-text">Loading invalid coupon attempts...</p>
                     </div>
                 </div>
 
