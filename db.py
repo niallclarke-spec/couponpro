@@ -790,13 +790,13 @@ def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_na
 
 def get_bot_user(chat_id):
     """
-    Get bot user data including last coupon used and profile information.
+    Get bot user data including last coupon used, profile information, and activity stats.
     
     Args:
         chat_id (int): Telegram chat ID
     
     Returns:
-        dict: User data with chat_id, last_coupon_code, last_used, username, first_name, last_name
+        dict: User data with chat_id, last_coupon_code, last_used, username, first_name, last_name, total_generations, unique_coupons
         None: If user not found or error
     """
     if not db_pool.connection_pool:
@@ -806,9 +806,19 @@ def get_bot_user(chat_id):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT chat_id, last_coupon_code, last_used, username, first_name, last_name 
-                FROM bot_users 
-                WHERE chat_id = %s
+                SELECT 
+                    u.chat_id, 
+                    u.last_coupon_code, 
+                    u.last_used, 
+                    u.username, 
+                    u.first_name, 
+                    u.last_name,
+                    COUNT(b.id) FILTER (WHERE b.success = true) as total_generations,
+                    COUNT(DISTINCT b.coupon_code) FILTER (WHERE b.success = true) as unique_coupons
+                FROM bot_users u
+                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id
+                WHERE u.chat_id = %s
+                GROUP BY u.chat_id, u.last_coupon_code, u.last_used, u.username, u.first_name, u.last_name
             """, (chat_id,))
             row = cursor.fetchone()
             if row:
@@ -818,7 +828,9 @@ def get_bot_user(chat_id):
                     'last_used': row[2].isoformat() if row[2] else None,
                     'username': row[3],
                     'first_name': row[4],
-                    'last_name': row[5]
+                    'last_name': row[5],
+                    'total_generations': row[6] or 0,
+                    'unique_coupons': row[7] or 0
                 }
             return None
     except Exception as e:
