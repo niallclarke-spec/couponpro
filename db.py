@@ -887,7 +887,7 @@ def get_all_bot_users(limit=100, offset=0):
                 FROM bot_users u
                 LEFT JOIN bot_usage b ON u.chat_id = b.chat_id
                 GROUP BY u.chat_id, u.username, u.first_name, u.last_name, u.first_used, u.last_used
-                ORDER BY u.last_used DESC
+                ORDER BY COALESCE(COUNT(b.id) FILTER (WHERE b.success = true), 0) DESC, u.last_used DESC NULLS LAST
                 LIMIT %s OFFSET %s
             """, (limit, offset))
             
@@ -954,7 +954,7 @@ def get_user_activity_history(chat_id, limit=100):
         print(f"Error getting user activity history: {e}")
         return []
 
-def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
+def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None):
     """
     Get all invalid coupon validation attempts.
     
@@ -962,6 +962,7 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
         limit (int): Number of records to return
         offset (int): Offset for pagination
         template_filter (str, optional): Filter by template name
+        days (int, optional): Filter by number of days (e.g., 7 for last 7 days)
     
     Returns:
         dict: {
@@ -976,9 +977,13 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Build query with optional template filter
+            # Build query with optional template filter and date range
             where_clause = "WHERE success = FALSE"
             params = []
+            
+            if days is not None:
+                where_clause += " AND created_at >= NOW() - INTERVAL '%s days'"
+                params.append(days)
             
             if template_filter:
                 where_clause += " AND template_slug = %s"

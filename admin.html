@@ -434,6 +434,49 @@
             border-bottom: none;
         }
 
+        /* Scrollable Table Container */
+        .table-scroll {
+            max-height: 360px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Side-by-side layout for Device Analytics and Popular Templates */
+        .analytics-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .analytics-row .card {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-row {
+                flex-direction: column;
+            }
+        }
+
         /* Tabs */
         .tabs {
             display: flex;
@@ -1876,21 +1919,23 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-title">📱 Device Analytics</div>
-                    <div id="deviceAnalyticsContainer" style="position: relative; height: 300px;">
-                        <canvas id="deviceChart"></canvas>
+                <div class="analytics-row">
+                    <div class="card">
+                        <div class="card-title">📱 Device Analytics</div>
+                        <div id="deviceAnalyticsContainer" style="position: relative; height: 300px;">
+                            <canvas id="deviceChart"></canvas>
+                        </div>
+                        <div id="deviceStatsText" style="margin-top: 20px; text-align: center; color: #4a5568;"></div>
                     </div>
-                    <div id="deviceStatsText" style="margin-top: 20px; text-align: center; color: #4a5568;"></div>
+
+                    <div class="card">
+                        <div class="card-title">📊 Most Popular Templates</div>
+                        ${renderTemplatesTable(stats.popular_templates)}
+                    </div>
                 </div>
 
                 <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-title">Popular Templates</div>
-                    ${renderTemplatesTable(stats.popular_templates)}
-                </div>
-
-                <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-title">Popular Coupon Codes</div>
+                    <div class="card-title">🎟️ Popular Coupon Codes</div>
                     ${renderCouponsTable(stats.popular_coupons)}
                 </div>
 
@@ -1898,13 +1943,6 @@
                     <div class="card-title">⚠️ Invalid Coupon Attempts</div>
                     <div id="invalidCouponsContainer">
                         <p style="color: #718096; text-align: center; padding: 20px;">Loading invalid coupon attempts...</p>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-title">User Analytics</div>
-                    <div id="userAnalyticsContainer">
-                        <p style="color: #718096; text-align: center; padding: 20px;">Loading user analytics...</p>
                     </div>
                 </div>
 
@@ -1925,11 +1963,10 @@
                     renderCouponPage();
                 }
                 
-                // Load invalid coupons, most active users, device analytics, and user analytics
+                // Load invalid coupons, most active users, and device analytics
                 loadInvalidCoupons();
                 loadMostActiveUsers();
                 loadDeviceAnalytics();
-                loadUserAnalytics();
             }, 0);
         }
 
@@ -1939,22 +1976,24 @@
             }
 
             return `
-                <table class="analytics-table">
-                    <thead>
-                        <tr>
-                            <th>Template</th>
-                            <th>Uses</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${templates.map(t => `
+                <div class="table-scroll">
+                    <table class="analytics-table">
+                        <thead>
                             <tr>
-                                <td>${t.template}</td>
-                                <td>${t.count.toLocaleString()}</td>
+                                <th>Template</th>
+                                <th>Uses</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${templates.map(t => `
+                                <tr>
+                                    <td>${t.template}</td>
+                                    <td>${t.count.toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
@@ -2166,7 +2205,7 @@
             try {
                 invalidCouponsOffset = 0;
                 allInvalidCoupons = [];
-                const response = await fetch(`/api/invalid-coupons?limit=${invalidCouponsLimit}&offset=${invalidCouponsOffset}`);
+                const response = await fetch(`/api/invalid-coupons?limit=${invalidCouponsLimit}&offset=${invalidCouponsOffset}&days=${currentAnalyticsDays}`);
                 const data = await response.json();
                 
                 allInvalidCoupons = data.attempts || [];
@@ -2196,49 +2235,51 @@
                     </button>
                     <span style="color: #4a5568;">Showing ${allInvalidCoupons.length} of ${total} total</span>
                 </div>
-                <table class="analytics-table">
-                    <thead style="background: #fecaca;">
-                        <tr>
-                            <th>Invalid Code</th>
-                            <th>Template Used</th>
-                            <th>User</th>
-                            <th>Timestamp</th>
-                            <th>Attempts</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${allInvalidCoupons.map(a => {
-                            // Build user display name with both name and username when available
-                            let userDisplay;
-                            const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
-                            const usernameLink = a.username ? `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>` : '';
-                            
-                            if (fullName && a.username) {
-                                // Both name and username - show "First Last (@username)"
-                                userDisplay = `${fullName} (${usernameLink})`;
-                            } else if (a.username) {
-                                // Only username
-                                userDisplay = usernameLink;
-                            } else if (fullName) {
-                                // Only name
-                                userDisplay = fullName;
-                            } else {
-                                // No data at all
-                                userDisplay = 'Unknown User';
-                            }
-                            
-                            return `
-                                <tr>
-                                    <td><code>${a.coupon_code}</code></td>
-                                    <td>${a.template_name || 'N/A'}</td>
-                                    <td>${userDisplay}</td>
-                                    <td>${new Date(a.timestamp).toLocaleString()}</td>
-                                    <td>${a.attempt_count || 1}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
+                <div class="table-scroll">
+                    <table class="analytics-table">
+                        <thead style="background: #fecaca;">
+                            <tr>
+                                <th>Invalid Code</th>
+                                <th>Template Used</th>
+                                <th>User</th>
+                                <th>Timestamp</th>
+                                <th>Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allInvalidCoupons.map(a => {
+                                // Build user display name with both name and username when available
+                                let userDisplay;
+                                const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
+                                const usernameLink = a.username ? `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>` : '';
+                                
+                                if (fullName && a.username) {
+                                    // Both name and username - show "First Last (@username)"
+                                    userDisplay = `${fullName} (${usernameLink})`;
+                                } else if (a.username) {
+                                    // Only username
+                                    userDisplay = usernameLink;
+                                } else if (fullName) {
+                                    // Only name
+                                    userDisplay = fullName;
+                                } else {
+                                    // No data at all
+                                    userDisplay = 'Unknown User';
+                                }
+                                
+                                return `
+                                    <tr>
+                                        <td><code>${a.coupon_code}</code></td>
+                                        <td>${a.template_name || 'N/A'}</td>
+                                        <td>${userDisplay}</td>
+                                        <td>${new Date(a.timestamp).toLocaleString()}</td>
+                                        <td>${a.attempt_count || 1}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
                 ${hasMore ? `
                     <button class="load-more-btn" onclick="loadMoreInvalidCoupons()">
                         Load More
@@ -2533,61 +2574,58 @@
             const rankClasses = ['leaderboard-rank-1', 'leaderboard-rank-2', 'leaderboard-rank-3'];
 
             container.innerHTML = `
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>User</th>
-                            <th>Total Gens</th>
-                            <th>Unique Coupons</th>
-                            <th>Last Active</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map((u, index) => {
-                            const rank = index + 1;
-                            const badge = rank <= 3 ? badges[index] : '';
-                            const rankClass = rank <= 3 ? rankClasses[index] : '';
-                            
-                            // Build user display name with both name and username when available
-                            let userDisplay;
-                            const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ');
-                            const usernameLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>` : '';
-                            
-                            if (fullName && u.username) {
-                                userDisplay = `${fullName} (${usernameLink})`;
-                            } else if (u.username) {
-                                userDisplay = usernameLink;
-                            } else if (fullName) {
-                                userDisplay = fullName;
-                            } else {
-                                userDisplay = 'Unknown User';
-                            }
-                            
-                            return `
-                                <tr class="${rankClass}">
-                                    <td><span class="leaderboard-rank">${badge} #${rank}</span></td>
-                                    <td>${userDisplay}</td>
-                                    <td>${u.total_generations || 0}</td>
-                                    <td>${u.unique_coupons || 0}</td>
-                                    <td>${u.last_used ? new Date(u.last_used).toLocaleDateString() : 'N/A'}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-                <button class="view-all-users-btn" onclick="scrollToUserAnalytics()">
-                    View All Users
-                </button>
+                <div class="table-scroll">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User</th>
+                                <th>Total Gens</th>
+                                <th>Unique Coupons</th>
+                                <th>First Seen</th>
+                                <th>Last Seen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map((u, index) => {
+                                const rank = index + 1;
+                                const badge = rank <= 3 ? badges[index] : '';
+                                const rankClass = rank <= 3 ? rankClasses[index] : '';
+                                
+                                // Build user display name with both name and username when available
+                                let userDisplay;
+                                const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ');
+                                const usernameLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>` : '';
+                                
+                                if (fullName && u.username) {
+                                    userDisplay = `${fullName} (${usernameLink})`;
+                                } else if (u.username) {
+                                    userDisplay = usernameLink;
+                                } else if (fullName) {
+                                    userDisplay = fullName;
+                                } else {
+                                    userDisplay = 'Unknown User';
+                                }
+                                
+                                return `
+                                    <tr class="${rankClass}">
+                                        <td><span class="leaderboard-rank">${badge} #${rank}</span></td>
+                                        <td>${userDisplay}</td>
+                                        <td>${u.total_generations || 0}</td>
+                                        <td>${u.unique_coupons || 0}</td>
+                                        <td>${u.first_used ? new Date(u.first_used).toLocaleDateString() : 'N/A'}</td>
+                                        <td>${u.last_used ? new Date(u.last_used).toLocaleDateString() : 'N/A'}</td>
+                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openUserDetails(${u.chat_id})">View Details</button></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
-        function scrollToUserAnalytics() {
-            const userAnalyticsCard = document.getElementById('userAnalyticsContainer').closest('.card');
-            if (userAnalyticsCard) {
-                userAnalyticsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
 
         // Utility function to capitalize first letter
         function capitalizeFirst(str) {

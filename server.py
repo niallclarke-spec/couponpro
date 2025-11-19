@@ -568,11 +568,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 limit = int(query_params.get('limit', ['100'])[0])
                 offset = int(query_params.get('offset', ['0'])[0])
                 template_filter = query_params.get('template', [None])[0]
+                days_param = query_params.get('days', [None])[0]
+                
+                # Validate and sanitize days parameter
+                days = None
+                if days_param:
+                    try:
+                        days = int(days_param)
+                        # Enforce reasonable bounds (1-365 days)
+                        if days < 1 or days > 365:
+                            days = 30  # Default to 30 days if out of bounds
+                    except (ValueError, TypeError):
+                        days = 30  # Default to 30 days on invalid input
                 
                 result = db.get_invalid_coupon_attempts(
                     limit=limit, 
                     offset=offset, 
-                    template_filter=template_filter
+                    template_filter=template_filter,
+                    days=days
                 )
                 
                 self.send_response(200)
