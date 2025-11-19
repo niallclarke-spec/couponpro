@@ -968,9 +968,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 existing_story_url = None
                 existing_square_data = None
                 existing_story_data = None
+                existing_meta = None  # Initialize for both new and existing templates
                 if is_existing_template:
                     meta_path = os.path.join(template_dir, 'meta.json')
-                    existing_meta = None
                     
                     # Try loading from local filesystem first
                     if os.path.exists(meta_path):
