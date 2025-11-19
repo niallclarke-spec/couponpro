@@ -1952,7 +1952,7 @@
 
                 <div class="analytics-row">
                     <div class="card">
-                        <div class="card-title">📅 Most Popular Days</div>
+                        <div id="dayOfWeekCardTitle" class="card-title">📅 Most Popular Days</div>
                         <div style="position: relative; height: 300px;">
                             <canvas id="dayOfWeekChart"></canvas>
                         </div>
@@ -2016,12 +2016,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${templates.map((t, idx) => `
-                                <tr>
-                                    <td>${idx === 0 ? '🏆 ' : ''}${t.template}</td>
-                                    <td><strong>${t.count.toLocaleString()}</strong></td>
-                                </tr>
-                            `).join('')}
+                            ${templates.map((t, idx) => {
+                                let trophy = '';
+                                if (idx === 0) trophy = '🏆 ';
+                                else if (idx === 1) trophy = '🥈 ';
+                                else if (idx === 2) trophy = '🥉 ';
+                                return `
+                                    <tr>
+                                        <td>${trophy}${t.template}</td>
+                                        <td><strong>${t.count.toLocaleString()}</strong></td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -2186,36 +2192,42 @@
         }
 
         function renderErrorsTable(errors) {
+            // Filter to only show important bot errors (exclude invalid_coupon as it's shown in its own table)
+            const importantErrors = errors.filter(e => e.type !== 'invalid_coupon');
+            
+            if (importantErrors.length === 0) {
+                return '<p style="color: #10b981; text-align: center; padding: 20px;">✅ No bot errors - everything is running smoothly!</p>';
+            }
+            
             return `
-                <table class="analytics-table">
-                    <thead>
-                        <tr>
-                            <th>Error Type</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${errors.map(e => `
+                <div class="table-scroll">
+                    <table class="analytics-table">
+                        <thead>
                             <tr>
-                                <td>${e.type.replace(/_/g, ' ').toUpperCase()}</td>
-                                <td>${e.count.toLocaleString()}</td>
+                                <th>Error Type</th>
+                                <th>Count</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${importantErrors.map(e => `
+                                <tr>
+                                    <td>${e.type.replace(/_/g, ' ').toUpperCase()}</td>
+                                    <td>${e.count.toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
         // Invalid Coupon Attempts
         let allInvalidCoupons = [];
-        let invalidCouponsOffset = 0;
-        const invalidCouponsLimit = 10;
 
         async function loadInvalidCoupons() {
             try {
-                invalidCouponsOffset = 0;
-                allInvalidCoupons = [];
-                const response = await fetch(`/api/invalid-coupons?limit=${invalidCouponsLimit}&offset=${invalidCouponsOffset}&days=${currentAnalyticsDays}`);
+                // Load all invalid coupons (1000 limit for scrolling)
+                const response = await fetch(`/api/invalid-coupons?limit=1000&offset=0&days=${currentAnalyticsDays}`);
                 const data = await response.json();
                 
                 allInvalidCoupons = data.attempts || [];
@@ -2241,7 +2253,7 @@
                     <button class="btn btn-secondary" onclick="exportInvalidCouponsCSV()" style="padding: 8px 16px;">
                         📥 Export CSV
                     </button>
-                    <span style="color: #4a5568;">Showing ${allInvalidCoupons.length} of ${total} total</span>
+                    <span style="color: #4a5568;"><strong>${total.toLocaleString()}</strong> total invalid attempts</span>
                 </div>
                 <div class="table-scroll">
                     <table class="analytics-table">
@@ -2626,14 +2638,22 @@
         async function loadDayOfWeekStats() {
             try {
                 const response = await fetch(`/api/day-of-week-stats?days=${currentAnalyticsDays}`);
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (data.days && data.days.length > 0) {
-                    renderDayOfWeekChart(data.days);
+                // Update title based on data type
+                const titleElement = document.getElementById('dayOfWeekCardTitle');
+                if (result.type === 'hourly') {
+                    titleElement.textContent = '⏰ Most Popular Hours';
+                } else {
+                    titleElement.textContent = '📅 Most Popular Days';
+                }
+                
+                if (result.data && result.data.length > 0) {
+                    renderDayOfWeekChart(result.data, result.type);
                 } else {
                     const chartContainer = document.querySelector('#dayOfWeekChart').parentElement;
                     chartContainer.innerHTML = `
-                        <p style="color: #718096; text-align: center; padding: 40px;">No day-of-week data available yet</p>
+                        <p style="color: #718096; text-align: center; padding: 40px;">No data available yet</p>
                     `;
                     document.getElementById('dayOfWeekStatsText').innerHTML = '';
                 }
@@ -2642,7 +2662,7 @@
                 const chartContainer = document.querySelector('#dayOfWeekChart')?.parentElement;
                 if (chartContainer) {
                     chartContainer.innerHTML = `
-                        <p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load day-of-week analytics</p>
+                        <p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load analytics</p>
                     `;
                 }
                 document.getElementById('dayOfWeekStatsText').innerHTML = '';
@@ -2651,7 +2671,7 @@
 
         let dayOfWeekChart = null;
 
-        function renderDayOfWeekChart(days) {
+        function renderDayOfWeekChart(data, type) {
             // Destroy existing chart if it exists
             if (dayOfWeekChart) {
                 dayOfWeekChart.destroy();
@@ -2660,8 +2680,8 @@
             const ctx = document.getElementById('dayOfWeekChart');
             if (!ctx) return;
 
-            const labels = days.map(d => d.day);
-            const counts = days.map(d => d.count);
+            const labels = data.map(d => d.label);
+            const counts = data.map(d => d.count);
             
             // Find max value for highlighting
             const maxCount = Math.max(...counts);
@@ -2671,7 +2691,7 @@
 
             // Calculate total
             const totalGenerations = counts.reduce((sum, count) => sum + count, 0);
-            const mostPopularDay = maxCount > 0 ? labels[counts.indexOf(maxCount)] : null;
+            const mostPopularLabel = maxCount > 0 ? labels[counts.indexOf(maxCount)] : null;
 
             dayOfWeekChart = new Chart(ctx, {
                 type: 'bar',
@@ -2697,7 +2717,7 @@
                                 label: function(context) {
                                     const value = context.parsed.y;
                                     const isPeak = value === maxCount && maxCount > 0;
-                                    return `Uses: ${value}${isPeak ? ' 🏆 Most Popular!' : ''}`;
+                                    return `Uses: ${value}${isPeak ? ' 🏆 Peak!' : ''}`;
                                 }
                             }
                         }
@@ -2719,10 +2739,11 @@
             });
 
             // Display summary
-            if (mostPopularDay) {
+            const labelType = type === 'hourly' ? 'Hour' : 'Day';
+            if (mostPopularLabel) {
                 document.getElementById('dayOfWeekStatsText').innerHTML = `
                     <strong>Total: ${totalGenerations.toLocaleString()} generations</strong> | 
-                    🏆 Most Popular: <strong>${mostPopularDay}</strong> (${maxCount} uses)
+                    🏆 Most Popular ${labelType}: <strong>${mostPopularLabel}</strong> (${maxCount} uses)
                 `;
             } else {
                 document.getElementById('dayOfWeekStatsText').innerHTML = `

@@ -690,60 +690,100 @@ def get_bot_stats(days=30, template_filter=None):
 
 def get_day_of_week_stats(days=30):
     """
-    Get day-of-week usage statistics.
+    Get day-of-week or hour-of-day usage statistics.
     
     Args:
-        days (int): Number of days to analyze
+        days (int or str): Number of days to analyze, or 'today'/'yesterday' for hourly stats
     
     Returns:
-        list: Day-of-week breakdown with counts (ordered Monday-Sunday)
+        dict: {
+            'type': 'hourly' or 'daily',
+            'data': list of {label, count}
+        }
     """
     try:
         if not db_pool.connection_pool:
-            return []
+            return {'type': 'daily', 'data': []}
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
-            interval = f"{days} days"
             
-            cursor.execute("""
-                SELECT 
-                    TO_CHAR(created_at, 'Day') as day_name,
-                    EXTRACT(DOW FROM created_at) as day_num,
-                    COUNT(*) as count
-                FROM bot_usage
-                WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
-                AND success = true
-                GROUP BY day_name, day_num
-                ORDER BY day_num
-            """, (interval,))
+            # For today/yesterday, show hourly breakdown (0-23)
+            if days in ['today', 'yesterday']:
+                if days == 'today':
+                    where_clause = "created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'"
+                else:  # yesterday
+                    where_clause = "created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
+                
+                cursor.execute(f"""
+                    SELECT 
+                        EXTRACT(HOUR FROM created_at) as hour_num,
+                        COUNT(*) as count
+                    FROM bot_usage
+                    WHERE {where_clause}
+                    AND success = true
+                    GROUP BY hour_num
+                    ORDER BY hour_num
+                """)
+                
+                # Ensure all 24 hours are present (0-23)
+                hour_data = {i: 0 for i in range(24)}
+                for row in cursor.fetchall():
+                    hour_num = int(row[0])
+                    count = row[1]
+                    hour_data[hour_num] = count
+                
+                # Format as list
+                hourly_stats = []
+                for hour in range(24):
+                    hourly_stats.append({
+                        'label': f"{hour:02d}:00",
+                        'count': hour_data[hour]
+                    })
+                
+                return {'type': 'hourly', 'data': hourly_stats}
             
-            # Map to ensure all days are present
-            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            day_data = {i: 0 for i in range(7)}  # 0=Sunday, 1=Monday, etc.
-            
-            for row in cursor.fetchall():
-                day_num = int(row[1])
-                count = row[2]
-                day_data[day_num] = count
-            
-            # Reorder to start with Monday (PostgreSQL: 0=Sunday, 1=Monday, ... 6=Saturday)
-            # We want: Monday (1), Tuesday (2), ... Sunday (0)
-            ordered_days = []
-            for i in range(1, 7):  # Monday to Saturday
-                ordered_days.append({
-                    'day': day_names[i - 1],
-                    'count': day_data[i]
+            # For 7/30/90 days, show day-of-week breakdown
+            else:
+                interval = f"{days} days"
+                
+                cursor.execute("""
+                    SELECT 
+                        TO_CHAR(created_at, 'Day') as day_name,
+                        EXTRACT(DOW FROM created_at) as day_num,
+                        COUNT(*) as count
+                    FROM bot_usage
+                    WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
+                    AND success = true
+                    GROUP BY day_name, day_num
+                    ORDER BY day_num
+                """, (interval,))
+                
+                # Map to ensure all days are present
+                day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                day_data = {i: 0 for i in range(7)}  # 0=Sunday, 1=Monday, etc.
+                
+                for row in cursor.fetchall():
+                    day_num = int(row[1])
+                    count = row[2]
+                    day_data[day_num] = count
+                
+                # Reorder to start with Monday (PostgreSQL: 0=Sunday, 1=Monday, ... 6=Saturday)
+                ordered_days = []
+                for i in range(1, 7):  # Monday to Saturday
+                    ordered_days.append({
+                        'label': day_names[i - 1],
+                        'count': day_data[i]
+                    })
+                ordered_days.append({  # Sunday
+                    'label': day_names[6],
+                    'count': day_data[0]
                 })
-            ordered_days.append({  # Sunday
-                'day': day_names[6],
-                'count': day_data[0]
-            })
-            
-            return ordered_days
+                
+                return {'type': 'daily', 'data': ordered_days}
     except Exception as e:
         print(f"Error getting day-of-week stats: {e}")
-        return []
+        return {'type': 'daily', 'data': []}
 
 # Bot user tracking for broadcasts
 def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_name=None):

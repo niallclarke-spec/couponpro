@@ -394,14 +394,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 query_params = parse_qs(parsed_path.query)
-                days = int(query_params.get('days', [30])[0])
+                days_param = query_params.get('days', [30])[0]
                 
-                day_stats = db.get_day_of_week_stats(days)
+                # Handle both string ('today', 'yesterday') and integer (7, 30, 90) values
+                if days_param in ['today', 'yesterday']:
+                    days = days_param
+                else:
+                    days = int(days_param)
+                
+                result = db.get_day_of_week_stats(days)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'days': day_stats}).encode())
+                self.wfile.write(json.dumps(result).encode())
             except Exception as e:
                 print(f"[API] Error getting day-of-week stats: {e}")
                 self.send_response(500)
