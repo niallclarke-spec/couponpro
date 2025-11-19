@@ -1242,7 +1242,7 @@
 </head>
 <body>
     <!-- Login Page -->
-    <div class="login-page" id="loginPage">
+    <div class="login-page hidden" id="loginPage">
         <div class="login-logo">
             <img src="/assets/promostack-logo.png" alt="PromoStack" />
         </div>
@@ -4100,22 +4100,39 @@
         async function checkAuthOnLoad() {
             try {
                 // Try to make an authenticated API call to check if we're logged in
-                const response = await fetch('/api/bot-stats?days=7');
+                const response = await fetch('/api/bot-stats?days=7', {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 
                 if (response.ok) {
-                    // User is authenticated, show dashboard
+                    // User is authenticated, show dashboard and load fresh data
                     document.getElementById('loginPage').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
-                    loadAssets();
+                    
+                    // Load all fresh data
+                    await loadAssets();
+                    
+                    // If we're on the analytics tab, load analytics too
+                    const analyticsView = document.getElementById('analyticsView');
+                    if (analyticsView && !analyticsView.classList.contains('hidden')) {
+                        await loadAnalytics();
+                    }
                 } else if (response.status === 401) {
-                    // Not authenticated, show login page (already visible by default)
+                    // Not authenticated, show login page
+                    document.getElementById('loginPage').classList.remove('hidden');
                     console.log('[AUTH] Not authenticated, showing login page');
                 } else {
                     // Other error, show login page
+                    document.getElementById('loginPage').classList.remove('hidden');
                     console.error('[AUTH] Unexpected response:', response.status);
                 }
             } catch (error) {
                 // Network error or other issue, show login page
+                document.getElementById('loginPage').classList.remove('hidden');
                 console.error('[AUTH] Error checking authentication:', error);
             }
         }
