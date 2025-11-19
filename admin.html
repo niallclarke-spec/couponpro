@@ -1443,8 +1443,12 @@
 
                             <input type="hidden" id="squareFontColor" value="#FF273E">
                             <input type="hidden" id="storyFontColor" value="#FF273E">
+                            <input type="hidden" id="isEditing" value="false">
 
-                            <button type="submit" class="btn" id="submitBtn">Upload Template</button>
+                            <div style="display: flex; gap: 12px;">
+                                <button type="button" class="btn btn-secondary" onclick="clearTemplateForm()">New Template</button>
+                                <button type="submit" class="btn" id="submitBtn">Upload Template</button>
+                            </div>
                         </form>
                     </div>
 
@@ -2763,6 +2767,67 @@
         }
 
         // Template Upload
+        function clearTemplateForm() {
+            // Reset form fields
+            document.getElementById('name').value = '';
+            document.getElementById('slug').value = '';
+            document.getElementById('squareImage').value = '';
+            document.getElementById('storyImage').value = '';
+            
+            // Reset slug field to editable
+            const slugInput = document.getElementById('slug');
+            slugInput.readOnly = false;
+            slugInput.style.backgroundColor = '';
+            slugInput.style.cursor = '';
+            
+            // Reset coordinates to defaults
+            document.getElementById('squareLeftPct').value = 5;
+            document.getElementById('squareTopPct').value = 78;
+            document.getElementById('squareWidthPct').value = 25;
+            document.getElementById('squareHeightPct').value = 12;
+            document.getElementById('squareMaxFontPx').value = 80;
+            document.getElementById('squareMaxFontPxSlider').value = 80;
+            document.getElementById('squareShowLogo').checked = true;
+            
+            document.getElementById('storyLeftPct').value = 5;
+            document.getElementById('storyTopPct').value = 78;
+            document.getElementById('storyWidthPct').value = 25;
+            document.getElementById('storyHeightPct').value = 12;
+            document.getElementById('storyMaxFontPx').value = 80;
+            document.getElementById('storyMaxFontPxSlider').value = 80;
+            document.getElementById('storyShowLogo').checked = true;
+            
+            // Reset colors to default red
+            document.getElementById('squareFontColor').value = '#FF273E';
+            document.getElementById('storyFontColor').value = '#FF273E';
+            
+            // Reset color swatches
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('selected');
+                if (swatch.dataset.color === '#FF273E') {
+                    swatch.classList.add('selected');
+                }
+            });
+            
+            // Clear canvases
+            const squareCanvas = document.getElementById('previewSquare');
+            const storyCanvas = document.getElementById('previewStory');
+            if (squareCanvas) {
+                const ctx = squareCanvas.getContext('2d');
+                ctx.clearRect(0, 0, squareCanvas.width, squareCanvas.height);
+            }
+            if (storyCanvas) {
+                const ctx = storyCanvas.getContext('2d');
+                ctx.clearRect(0, 0, storyCanvas.width, storyCanvas.height);
+            }
+            
+            // Mark as not editing
+            document.getElementById('isEditing').value = 'false';
+            document.getElementById('submitBtn').textContent = 'Upload Template';
+            
+            console.log('[FORM] Template form cleared for new upload');
+        }
+
         async function handleUpload(event) {
             event.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -2820,15 +2885,12 @@
 
                 if (data.success) {
                     showAlert('uploadAlert', data.message + ' ✓');
-                    document.getElementById('templateForm').reset();
+                    clearTemplateForm();
                     isEditingTemplate = false;
-                    const slugInput = document.getElementById('slug');
-                    slugInput.readOnly = false;
-                    slugInput.style.backgroundColor = '';
-                    slugInput.style.cursor = '';
                     drawingState.square.hasDrawnBox = false;
                     drawingState.story.hasDrawnBox = false;
                     updatePreviewsImmediate();
+                    loadAssets(); // Refresh assets list to show the new/updated template
                 } else {
                     showAlert('uploadAlert', data.error || 'Upload failed', true);
                 }
@@ -2917,12 +2979,14 @@
                 switchTab('upload');
                 
                 isEditingTemplate = true;
+                document.getElementById('isEditing').value = 'true';
                 document.getElementById('name').value = meta.name || slug;
                 const slugInput = document.getElementById('slug');
                 slugInput.value = slug;
                 slugInput.readOnly = true;
                 slugInput.style.backgroundColor = '#f3f4f6';
                 slugInput.style.cursor = 'not-allowed';
+                document.getElementById('submitBtn').textContent = 'Update Template';
                 
                 document.getElementById('squareLeftPct').value = meta.square?.box?.leftPct || meta.square?.leftPct || 5;
                 document.getElementById('squareTopPct').value = meta.square?.box?.topPct || meta.square?.topPct || 78;

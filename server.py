@@ -885,6 +885,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if '..' in slug or '/' in slug or '\\' in slug:
                     raise ValueError('Invalid slug: path traversal detected')
                 
+                # Check if this is an edit or new upload
+                is_editing = form.getvalue('isEditing') == 'true'
+                print(f"[UPLOAD] isEditing flag: {is_editing}")
+                
                 # Check if template already exists (editing vs creating)
                 template_dir = os.path.join('assets', 'templates', slug)
                 is_existing_template = os.path.exists(template_dir)
@@ -910,6 +914,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             print(f"[UPLOAD] Template '{slug}' - assuming exists due to HTTP {e.code} (not 404)")
                     except Exception as e:
                         print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e}")
+                
+                # SLUG CONFLICT VALIDATION: Prevent accidental overwrites
+                if not is_editing and is_existing_template:
+                    error_msg = f"Template with slug '{slug}' already exists! Click 'New Template' to clear the form or edit the existing template instead."
+                    print(f"[UPLOAD] REJECTED: {error_msg}")
+                    raise ValueError(error_msg)
                 
                 # Check if images are provided (optional for updates, at least one required for new templates)
                 has_square_image = 'squareImage' in form and form['squareImage'].filename
@@ -1077,6 +1087,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         storage_service.upload_file(index_content.encode(), 'templates/index.json')
                         print(f"[UPLOAD] index.json uploaded to Spaces for persistence")
                 
+                # Clear Telegram bot cache so new template is available immediately
+                if TELEGRAM_BOT_AVAILABLE:
+                    telegram_bot.INDEX_CACHE['data'] = None
+                    telegram_bot.INDEX_CACHE['expires_at'] = 0
+                    print(f"[UPLOAD] Telegram cache cleared - template available immediately")
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -1160,6 +1176,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             index_content = f.read()
                         storage_service.upload_file(index_content.encode(), 'templates/index.json')
                         print(f"[DELETE] index.json uploaded to Spaces after deletion")
+                
+                # Clear Telegram bot cache so deletion is reflected immediately
+                if TELEGRAM_BOT_AVAILABLE:
+                    telegram_bot.INDEX_CACHE['data'] = None
+                    telegram_bot.INDEX_CACHE['expires_at'] = 0
+                    print(f"[DELETE] Telegram cache cleared - template removed immediately")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -1253,6 +1275,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 except Exception as e:
                     print(f"[TELEGRAM_TOGGLE] Warning: Index update failed: {e}")
                 
+                # Clear Telegram bot cache so visibility change is reflected immediately
+                if TELEGRAM_BOT_AVAILABLE:
+                    telegram_bot.INDEX_CACHE['data'] = None
+                    telegram_bot.INDEX_CACHE['expires_at'] = 0
+                    print(f"[TELEGRAM_TOGGLE] Telegram cache cleared - visibility change applied immediately")
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -1263,6 +1291,45 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"[TELEGRAM_TOGGLE] Error: {str(e)}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/clear-telegram-cache':
+            # Clear Telegram bot's template cache (requires admin auth)
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                if TELEGRAM_BOT_AVAILABLE:
+                    # Clear the INDEX_CACHE in telegram_bot module
+                    telegram_bot.INDEX_CACHE['data'] = None
+                    telegram_bot.INDEX_CACHE['expires_at'] = 0
+                    print(f"[CACHE] Telegram template cache cleared")
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'message': 'Telegram cache cleared - new templates available immediately'
+                    }).encode())
+                else:
+                    self.send_response(503)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': False,
+                        'error': 'Telegram bot not available'
+                    }).encode())
+                    
+            except Exception as e:
+                print(f"[CACHE] Error clearing cache: {str(e)}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
