@@ -377,7 +377,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
-        elif parsed_path.path == '/api/device-stats':
+        elif parsed_path.path == '/api/day-of-week-stats':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)
                 self.send_header('Content-type', 'application/json')
@@ -396,14 +396,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 query_params = parse_qs(parsed_path.query)
                 days = int(query_params.get('days', [30])[0])
                 
-                devices = db.get_device_stats(days)
+                day_stats = db.get_day_of_week_stats(days)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'devices': devices}).encode())
+                self.wfile.write(json.dumps({'days': day_stats}).encode())
             except Exception as e:
-                print(f"[API] Error getting device stats: {e}")
+                print(f"[API] Error getting day-of-week stats: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()

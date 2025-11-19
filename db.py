@@ -688,15 +688,15 @@ def get_bot_stats(days=30, template_filter=None):
         print(f"Error getting bot stats: {e}")
         return None
 
-def get_device_stats(days=30):
+def get_day_of_week_stats(days=30):
     """
-    Get device usage statistics.
+    Get day-of-week usage statistics.
     
     Args:
         days (int): Number of days to analyze
     
     Returns:
-        list: Device breakdown with counts and percentages
+        list: Day-of-week breakdown with counts (ordered Monday-Sunday)
     """
     try:
         if not db_pool.connection_pool:
@@ -708,51 +708,41 @@ def get_device_stats(days=30):
             
             cursor.execute("""
                 SELECT 
-                    device_type,
-                    COUNT(*) as count,
-                    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+                    TO_CHAR(created_at, 'Day') as day_name,
+                    EXTRACT(DOW FROM created_at) as day_num,
+                    COUNT(*) as count
                 FROM bot_usage
                 WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
                 AND success = true
-                GROUP BY device_type
-                ORDER BY count DESC
+                GROUP BY day_name, day_num
+                ORDER BY day_num
             """, (interval,))
             
-            device_data = {}
+            # Map to ensure all days are present
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            day_data = {i: 0 for i in range(7)}  # 0=Sunday, 1=Monday, etc.
+            
             for row in cursor.fetchall():
-                device_data[row[0]] = {
-                    'device_type': row[0],
-                    'count': row[1],
-                    'percentage': float(row[2])
-                }
+                day_num = int(row[1])
+                count = row[2]
+                day_data[day_num] = count
             
-            # Ensure all device types are present with zero counts if missing
-            all_device_types = ['mobile', 'desktop', 'tablet']
-            devices = []
-            for device_type in all_device_types:
-                if device_type in device_data:
-                    devices.append(device_data[device_type])
-                else:
-                    devices.append({
-                        'device_type': device_type,
-                        'count': 0,
-                        'percentage': 0.0
-                    })
+            # Reorder to start with Monday (PostgreSQL: 0=Sunday, 1=Monday, ... 6=Saturday)
+            # We want: Monday (1), Tuesday (2), ... Sunday (0)
+            ordered_days = []
+            for i in range(1, 7):  # Monday to Saturday
+                ordered_days.append({
+                    'day': day_names[i - 1],
+                    'count': day_data[i]
+                })
+            ordered_days.append({  # Sunday
+                'day': day_names[6],
+                'count': day_data[0]
+            })
             
-            # Add any other device types that were in the data but not in the predefined list
-            for device_type, data in device_data.items():
-                if device_type not in all_device_types:
-                    devices.append(data)
-            
-            # Recalculate percentages to ensure they sum to 100% after zero-filling
-            total_count = sum(d['count'] for d in devices)
-            if total_count > 0:
-                for device in devices:
-                    device['percentage'] = round((device['count'] * 100.0) / total_count, 2)
-            
-            return devices
+            return ordered_days
     except Exception as e:
-        print(f"Error getting device stats: {e}")
+        print(f"Error getting day-of-week stats: {e}")
         return []
 
 # Bot user tracking for broadcasts

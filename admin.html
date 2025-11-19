@@ -1834,7 +1834,6 @@
         // Bot Analytics
         let currentAnalyticsDays = 7;
         let dailyChart = null;
-        let deviceChart = null;
         let isEditingTemplate = false;
         
         // Coupon filter state
@@ -1953,11 +1952,11 @@
 
                 <div class="analytics-row">
                     <div class="card">
-                        <div class="card-title">📱 Device Analytics</div>
-                        <div id="deviceAnalyticsContainer" style="position: relative; height: 300px;">
-                            <canvas id="deviceChart"></canvas>
+                        <div class="card-title">📅 Most Popular Days</div>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="dayOfWeekChart"></canvas>
                         </div>
-                        <div id="deviceStatsText" style="margin-top: 20px; text-align: center; color: #4a5568;"></div>
+                        <div id="dayOfWeekStatsText" style="margin-top: 20px; text-align: center; color: #4a5568;"></div>
                     </div>
 
                     <div class="card">
@@ -1995,10 +1994,10 @@
                     renderCouponPage();
                 }
                 
-                // Load invalid coupons, most active users, and device analytics
+                // Load invalid coupons, most active users, and day-of-week analytics
                 loadInvalidCoupons();
                 loadMostActiveUsers();
-                loadDeviceAnalytics();
+                loadDayOfWeekStats();
             }, 0);
         }
 
@@ -2624,61 +2623,66 @@
         }
 
         // Device Analytics
-        async function loadDeviceAnalytics() {
+        async function loadDayOfWeekStats() {
             try {
-                const response = await fetch(`/api/device-stats?days=${currentAnalyticsDays}`);
+                const response = await fetch(`/api/day-of-week-stats?days=${currentAnalyticsDays}`);
                 const data = await response.json();
                 
-                if (data.devices && data.devices.length > 0) {
-                    renderDeviceChart(data.devices);
+                if (data.days && data.days.length > 0) {
+                    renderDayOfWeekChart(data.days);
                 } else {
-                    document.getElementById('deviceAnalyticsContainer').innerHTML = `
-                        <p style="color: #718096; text-align: center; padding: 40px;">No device data available yet</p>
+                    const chartContainer = document.querySelector('#dayOfWeekChart').parentElement;
+                    chartContainer.innerHTML = `
+                        <p style="color: #718096; text-align: center; padding: 40px;">No day-of-week data available yet</p>
                     `;
-                    document.getElementById('deviceStatsText').innerHTML = '';
+                    document.getElementById('dayOfWeekStatsText').innerHTML = '';
                 }
             } catch (error) {
-                console.error('Error loading device analytics:', error);
-                document.getElementById('deviceAnalyticsContainer').innerHTML = `
-                    <p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load device analytics</p>
-                `;
-                document.getElementById('deviceStatsText').innerHTML = '';
+                console.error('Error loading day-of-week analytics:', error);
+                const chartContainer = document.querySelector('#dayOfWeekChart')?.parentElement;
+                if (chartContainer) {
+                    chartContainer.innerHTML = `
+                        <p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load day-of-week analytics</p>
+                    `;
+                }
+                document.getElementById('dayOfWeekStatsText').innerHTML = '';
             }
         }
 
-        function renderDeviceChart(devices) {
+        let dayOfWeekChart = null;
+
+        function renderDayOfWeekChart(days) {
             // Destroy existing chart if it exists
-            if (deviceChart) {
-                deviceChart.destroy();
+            if (dayOfWeekChart) {
+                dayOfWeekChart.destroy();
             }
 
-            const ctx = document.getElementById('deviceChart');
+            const ctx = document.getElementById('dayOfWeekChart');
             if (!ctx) return;
 
-            // Define colors for each device type
-            const colorMap = {
-                'mobile': '#3b82f6',
-                'desktop': '#10b981',
-                'tablet': '#f59e0b',
-                'unknown': '#6b7280'
-            };
+            const labels = days.map(d => d.day);
+            const counts = days.map(d => d.count);
+            
+            // Find max value for highlighting
+            const maxCount = Math.max(...counts);
+            const backgroundColor = counts.map(count => 
+                count === maxCount && maxCount > 0 ? '#fbbf24' : '#667eea'
+            );
 
-            // Get colors in the same order as devices
-            const colors = devices.map(d => colorMap[d.device_type.toLowerCase()] || '#6b7280');
+            // Calculate total
+            const totalGenerations = counts.reduce((sum, count) => sum + count, 0);
+            const mostPopularDay = maxCount > 0 ? labels[counts.indexOf(maxCount)] : null;
 
-            // Calculate total and unique device types
-            const totalGenerations = devices.reduce((sum, d) => sum + d.count, 0);
-            const uniqueDevices = devices.length;
-
-            deviceChart = new Chart(ctx, {
-                type: 'doughnut',
+            dayOfWeekChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: devices.map(d => capitalizeFirst(d.device_type)),
+                    labels: labels,
                     datasets: [{
-                        data: devices.map(d => d.count),
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: '#1a202c'
+                        label: 'Bot Uses',
+                        data: counts,
+                        backgroundColor: backgroundColor,
+                        borderColor: backgroundColor,
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -2686,31 +2690,45 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: { 
-                                color: '#4a5568', 
-                                font: { size: 12 },
-                                padding: 15
-                            }
+                            display: false
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed || 0;
-                                    const percentage = devices[context.dataIndex].percentage;
-                                    return `${label}: ${value} (${percentage}%)`;
+                                    const value = context.parsed.y;
+                                    const isPeak = value === maxCount && maxCount > 0;
+                                    return `Uses: ${value}${isPeak ? ' 🏆 Most Popular!' : ''}`;
                                 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
                             }
                         }
                     }
                 }
             });
 
-            // Display total count summary
-            document.getElementById('deviceStatsText').innerHTML = `
-                <strong>Total: ${totalGenerations.toLocaleString()} generations across ${uniqueDevices} device type${uniqueDevices !== 1 ? 's' : ''}</strong>
-            `;
+            // Display summary
+            if (mostPopularDay) {
+                document.getElementById('dayOfWeekStatsText').innerHTML = `
+                    <strong>Total: ${totalGenerations.toLocaleString()} generations</strong> | 
+                    🏆 Most Popular: <strong>${mostPopularDay}</strong> (${maxCount} uses)
+                `;
+            } else {
+                document.getElementById('dayOfWeekStatsText').innerHTML = `
+                    <strong>Total: ${totalGenerations.toLocaleString()} generations</strong>
+                `;
+            }
         }
 
         function renderDailyChart(usageData, granularity) {
