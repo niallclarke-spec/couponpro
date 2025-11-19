@@ -512,14 +512,14 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     return ConversationHandler.END
 
 
-async def _log_usage(chat_id, template_slug, coupon_code, success, error_type, device_type='mobile'):
+async def _log_usage(chat_id, template_slug, coupon_code, success, error_type, device_type='unknown'):
     """
     Internal helper to log bot usage. Silently fails to avoid disrupting bot.
     Runs in background thread to avoid blocking event loop.
     
     Args:
-        device_type (str): Device type - Telegram bot API doesn't provide device info, defaults to 'mobile' 
-                          (most Telegram users are on mobile)
+        device_type (str): Device type - Telegram Bot API does not provide device information, 
+                          so this will always be 'unknown' for Telegram bot usage
     """
     import asyncio
     import sys
