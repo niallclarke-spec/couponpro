@@ -2672,8 +2672,9 @@
             if (!ctx) return;
             
             // Handle both new format (label/count) and old format (date/count)
-            const labels = usageData.map(d => d.label || d.date);
-            const counts = usageData.map(d => d.count);
+            // Reverse to show oldest on left, newest on right
+            const labels = usageData.map(d => d.label || d.date).reverse();
+            const counts = usageData.map(d => d.count).reverse();
             
             // Find peak value and index
             const maxCount = Math.max(...counts);
