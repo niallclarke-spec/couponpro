@@ -1274,19 +1274,15 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
                     <a class="nav-item active" onclick="showView('templates')">
-                        <span class="nav-item-icon">📦</span>
+                        <span class="nav-item-icon">🎨</span>
                         <span class="nav-item-text">Template Manager</span>
                     </a>
                     <a class="nav-item" onclick="showView('analytics')">
                         <span class="nav-item-icon">📊</span>
                         <span class="nav-item-text">Bot Analytics</span>
                     </a>
-                    <a class="nav-item" onclick="showView('campaigns')">
-                        <span class="nav-item-icon">🎯</span>
-                        <span class="nav-item-text">Campaigns</span>
-                    </a>
                     <a class="nav-item" onclick="showView('broadcast')">
-                        <span class="nav-item-icon">📢</span>
+                        <span class="nav-item-icon">📡</span>
                         <span class="nav-item-text">Broadcast</span>
                     </a>
                 </div>
@@ -1321,7 +1317,6 @@
                     <div class="tabs">
                         <button class="tab active" onclick="switchTab('upload')">Upload Template</button>
                         <button class="tab" onclick="switchTab('assets')">Current Assets</button>
-                        <button class="tab" onclick="switchTab('campaigns-tab')">Campaigns</button>
                     </div>
 
                     <!-- Upload Tab -->
@@ -1516,106 +1511,6 @@
                             <p style="color: #718096; text-align: center;">Loading templates...</p>
                         </div>
                     </div>
-
-                    <!-- Campaigns Tab -->
-                    <div id="campaignsTabContent" class="tab-content">
-                        <div id="campaignAlert"></div>
-                        
-                        <div class="card">
-                            <div class="card-title" id="campaignFormTitle">Create Campaign</div>
-                            <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
-                                <input type="hidden" id="editCampaignId" value="">
-                                
-                                <div class="form-group">
-                                    <label for="campaignTitle">Campaign Title *</label>
-                                    <input type="text" id="campaignTitle" required placeholder="e.g., Summer Giveaway 2025">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="campaignDescription">Description *</label>
-                                    <input type="text" id="campaignDescription" required placeholder="Brief description of the campaign">
-                                </div>
-
-                                <div class="row">
-                                    <div class="form-group">
-                                        <label for="campaignStartDate">Start Date *</label>
-                                        <input type="date" id="campaignStartDate" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="campaignEndDate">End Date *</label>
-                                        <input type="date" id="campaignEndDate" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="campaignPrize">Prize *</label>
-                                        <input type="text" id="campaignPrize" required placeholder="e.g., $500 Gift Card">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Platforms *</label>
-                                    <div style="display: flex; gap: 16px; margin-top: 8px;">
-                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
-                                            <input type="checkbox" id="platformInstagram" style="width:auto;margin:0;" />
-                                            <span>Instagram</span>
-                                        </label>
-                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
-                                            <input type="checkbox" id="platformTwitter" style="width:auto;margin:0;" />
-                                            <span>Twitter</span>
-                                        </label>
-                                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#2d3748;font-weight:normal;">
-                                            <input type="checkbox" id="platformFacebook" style="width:auto;margin:0;" />
-                                            <span>Facebook</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="campaignOverlay">Campaign Overlay Image (Optional)</label>
-                                    <input type="file" id="campaignOverlay" accept="image/png,image/jpeg" onchange="handleOverlayPreview(event)">
-                                    <small style="color: #718096; display: block; margin-top: 4px;">
-                                        PNG or JPEG. Will be overlaid on user-uploaded images during participation.
-                                    </small>
-                                    <div id="overlayPreview" style="margin-top: 12px; display: none;">
-                                        <img id="overlayPreviewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e2e8f0;">
-                                        <button type="button" onclick="clearOverlay()" class="btn btn-secondary" style="margin-top: 8px; padding: 8px 16px; font-size: 12px;">Remove</button>
-                                    </div>
-                                    <input type="hidden" id="existingOverlayUrl" value="">
-                                </div>
-
-                                <div style="display: flex; gap: 12px;">
-                                    <button type="submit" class="btn" id="campaignSubmitBtn">Create Campaign</button>
-                                    <button type="button" class="btn btn-secondary" onclick="cancelCampaignEdit()" id="campaignCancelBtn" style="display:none;">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-title">All Campaigns</div>
-                            <div id="campaignsList" class="assets-list">
-                                <p style="color: #718096; text-align: center;">Loading campaigns...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Campaigns View -->
-            <div id="campaignsView" class="view-container hidden">
-                <div class="content-header">
-                    <h1>Campaigns</h1>
-                    <p>Manage your promotional campaigns and giveaways</p>
-                </div>
-
-                <div class="content-body">
-                    <div id="campaignsViewAlert"></div>
-                    
-                    <div class="card">
-                        <div class="card-title">Create Campaign</div>
-                        <p style="color: #718096; font-size: 14px; margin-bottom: 20px;">
-                            Use the Campaigns tab in Template Manager to create and manage campaigns.
-                        </p>
-                        <button class="btn" onclick="showView('templates'); switchTab('campaigns-tab')">Go to Campaigns</button>
-                    </div>
                 </div>
             </div>
 
@@ -1780,17 +1675,13 @@
                 document.getElementById('analyticsView').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[1].classList.add('active');
                 loadAnalytics();
-            } else if (viewName === 'campaigns') {
-                document.getElementById('templatesView').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[2].classList.add('active');
-                switchTab('campaigns-tab');
             } else if (viewName === 'broadcast') {
                 document.getElementById('broadcastView').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[3].classList.add('active');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
                 loadBroadcastData();
             } else if (viewName === 'configuration') {
                 document.getElementById('configurationView').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[4].classList.add('active');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
             }
         }
 
@@ -2847,10 +2738,6 @@
                 tabButtons[1]?.classList.add('active');
                 document.getElementById('assetsTab').classList.add('active');
                 loadAssets();
-            } else if (tabName === 'campaigns-tab') {
-                tabButtons[2]?.classList.add('active');
-                document.getElementById('campaignsTabContent').classList.add('active');
-                loadCampaigns();
             }
         }
 
