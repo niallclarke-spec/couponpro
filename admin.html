@@ -4095,6 +4095,33 @@
 
         // Initial render
         updatePreviewsImmediate();
+
+        // Check authentication on page load
+        async function checkAuthOnLoad() {
+            try {
+                // Try to make an authenticated API call to check if we're logged in
+                const response = await fetch('/api/bot-stats?days=7');
+                
+                if (response.ok) {
+                    // User is authenticated, show dashboard
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    loadAssets();
+                } else if (response.status === 401) {
+                    // Not authenticated, show login page (already visible by default)
+                    console.log('[AUTH] Not authenticated, showing login page');
+                } else {
+                    // Other error, show login page
+                    console.error('[AUTH] Unexpected response:', response.status);
+                }
+            } catch (error) {
+                // Network error or other issue, show login page
+                console.error('[AUTH] Error checking authentication:', error);
+            }
+        }
+
+        // Run auth check when page loads
+        checkAuthOnLoad();
     </script>
 </body>
 </html>
