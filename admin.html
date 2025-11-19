@@ -1185,42 +1185,181 @@
             }
 
             .content-header {
-                padding: 24px 20px;
+                padding: 20px 16px;
             }
 
             .content-header h1 {
-                font-size: 24px;
+                font-size: 22px;
+                margin-bottom: 8px;
+            }
+
+            .content-header p {
+                font-size: 13px;
             }
 
             .content-body {
-                padding: 20px;
+                padding: 16px;
             }
 
             .card {
-                padding: 20px;
-                border-radius: 8px;
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 16px;
             }
 
+            .card-title {
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+
+            /* Analytics Stats Grid - Mobile Optimized */
             .analytics-stats-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
-                margin-bottom: 24px;
+                margin-bottom: 20px;
             }
 
             .analytics-stat-card {
-                padding: 20px;
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .analytics-stat-label {
+                font-size: 12px;
+                margin-bottom: 8px;
             }
 
             .analytics-stat-value {
+                font-size: 32px;
+                font-weight: 700;
+            }
+
+            .analytics-stat-subtext {
+                font-size: 11px;
+                margin-top: 6px;
+            }
+
+            /* Retention Cards */
+            .retention-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+
+            .retention-card {
+                padding: 16px;
+            }
+
+            .retention-value {
                 font-size: 28px;
             }
 
-            .analytics-section {
-                margin-bottom: 24px;
+            /* Chart containers */
+            .chart-container {
+                height: 280px !important;
+                margin-bottom: 16px;
             }
 
+            /* Tabs */
+            .tabs {
+                gap: 6px;
+                margin-bottom: 20px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                flex-wrap: nowrap;
+            }
+
+            .tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .tab {
+                padding: 10px 16px;
+                font-size: 13px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            /* Analytics Sections */
+            .analytics-section {
+                margin-bottom: 20px;
+            }
+
+            .analytics-row {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            /* Tables */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -16px;
+                padding: 0 16px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            th {
+                font-size: 12px;
+            }
+
+            /* Row/Grid layouts */
             .row {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            /* Filters */
+            .filter-section {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch !important;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            select, input {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            /* Popular Templates */
+            .popular-template-item {
+                padding: 14px;
+            }
+
+            .template-name {
+                font-size: 14px;
+            }
+
+            .template-count {
+                font-size: 13px;
+            }
+
+            /* Error items */
+            .error-item {
+                padding: 14px;
+            }
+
+            /* Day of week stats */
+            #dayOfWeekStatsText {
+                font-size: 12px;
+                line-height: 1.6;
             }
         }
 
