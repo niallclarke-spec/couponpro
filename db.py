@@ -568,20 +568,37 @@ def get_bot_stats(days=30, template_filter=None):
                 template_where = " AND template_slug = %s"
                 template_params.append(template_filter)
             
+            # Duplicate template_params for the CTE query
+            cte_params = list(template_params)
+            
             cursor.execute(f"""
+                WITH first_usage AS (
+                    SELECT DISTINCT ON (coupon_code)
+                        coupon_code,
+                        chat_id
+                    FROM bot_usage
+                    WHERE {where_clause}
+                    AND coupon_code IS NOT NULL
+                    AND success = true
+                    {template_where}
+                    ORDER BY coupon_code, created_at ASC
+                )
                 SELECT 
-                    coupon_code, 
+                    bu.coupon_code, 
                     COUNT(*) as total_uses,
-                    COUNT(DISTINCT chat_id) as unique_users
-                FROM bot_usage
+                    COUNT(DISTINCT bu.chat_id) as unique_users,
+                    COALESCE(u.username, u.first_name, u.last_name, 'Unknown') as generated_by
+                FROM bot_usage bu
+                LEFT JOIN first_usage fu ON bu.coupon_code = fu.coupon_code
+                LEFT JOIN bot_users u ON fu.chat_id = u.chat_id
                 WHERE {where_clause}
-                AND coupon_code IS NOT NULL
-                AND success = true
+                AND bu.coupon_code IS NOT NULL
+                AND bu.success = true
                 {template_where}
-                GROUP BY coupon_code
+                GROUP BY bu.coupon_code, COALESCE(u.username, u.first_name, u.last_name, 'Unknown')
                 ORDER BY total_uses DESC
-            """, tuple(template_params))
-            popular_coupons = [{'coupon': row[0], 'count': row[1], 'unique_users': row[2]} for row in cursor.fetchall()]
+            """, tuple(cte_params + template_params))
+            popular_coupons = [{'coupon': row[0], 'count': row[1], 'unique_users': row[2], 'generated_by': row[3]} for row in cursor.fetchall()]
             
             # Error breakdown
             cursor.execute(f"""
@@ -701,13 +718,37 @@ def get_device_stats(days=30):
                 ORDER BY count DESC
             """, (interval,))
             
-            devices = []
+            device_data = {}
             for row in cursor.fetchall():
-                devices.append({
+                device_data[row[0]] = {
                     'device_type': row[0],
                     'count': row[1],
                     'percentage': float(row[2])
-                })
+                }
+            
+            # Ensure all device types are present with zero counts if missing
+            all_device_types = ['mobile', 'desktop', 'tablet']
+            devices = []
+            for device_type in all_device_types:
+                if device_type in device_data:
+                    devices.append(device_data[device_type])
+                else:
+                    devices.append({
+                        'device_type': device_type,
+                        'count': 0,
+                        'percentage': 0.0
+                    })
+            
+            # Add any other device types that were in the data but not in the predefined list
+            for device_type, data in device_data.items():
+                if device_type not in all_device_types:
+                    devices.append(data)
+            
+            # Recalculate percentages to ensure they sum to 100% after zero-filling
+            total_count = sum(d['count'] for d in devices)
+            if total_count > 0:
+                for device in devices:
+                    device['percentage'] = round((device['count'] * 100.0) / total_count, 2)
             
             return devices
     except Exception as e:

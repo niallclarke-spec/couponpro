@@ -401,7 +401,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps(devices).encode())
+                self.wfile.write(json.dumps({'devices': devices}).encode())
             except Exception as e:
                 print(f"[API] Error getting device stats: {e}")
                 self.send_response(500)
