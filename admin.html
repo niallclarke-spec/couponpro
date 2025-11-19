@@ -215,6 +215,48 @@
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
+        .chart-card {
+            margin: 24px 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .day-of-week-stats {
+            margin-top: 20px;
+            text-align: center;
+            color: #4a5568;
+        }
+
+        .section-header {
+            margin: 32px 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-title {
+            margin: 0;
+            color: #1a202c;
+            font-size: 18px;
+        }
+
+        .section-subtitle {
+            margin: 8px 0 0 0;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .retention-grid {
+            margin-bottom: 24px;
+        }
+
+        .error-card {
+            background: #fef2f2;
+            border: 2px solid #fee2e2;
+        }
+
         .card:hover {
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
             transform: translateY(-2px);
@@ -1357,9 +1399,23 @@
             }
 
             /* Day of week stats */
-            #dayOfWeekStatsText {
+            #dayOfWeekStatsText, .day-of-week-stats {
                 font-size: 12px;
                 line-height: 1.6;
+            }
+
+            /* Section headers */
+            .section-header {
+                margin: 24px 0 12px 0;
+                padding-bottom: 10px;
+            }
+
+            .section-title {
+                font-size: 16px;
+            }
+
+            .section-subtitle {
+                font-size: 12px;
             }
         }
 
@@ -2047,17 +2103,19 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin: 24px 0;">
+                <div class="card chart-card">
                     <div class="card-title" id="usageChartTitle">Daily Usage</div>
-                    <canvas id="dailyChart" style="max-height: 300px;"></canvas>
+                    <div class="chart-container">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
                 </div>
                 
-                <div style="margin: 32px 0 16px 0; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
-                    <h3 style="margin: 0; color: #1a202c; font-size: 18px;">📈 User Retention Metrics</h3>
-                    <p style="margin: 8px 0 0 0; color: #718096; font-size: 13px;">Independent metrics showing % of users who return after first use (all-time data)</p>
+                <div class="section-header">
+                    <h3 class="section-title">📈 User Retention Metrics</h3>
+                    <p class="section-subtitle">Independent metrics showing % of users who return after first use (all-time data)</p>
                 </div>
                 
-                <div class="analytics-stats-grid" style="margin-bottom: 24px;">
+                <div class="analytics-stats-grid retention-grid">
                     <div class="analytics-stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="analytics-stat-label" style="color: rgba(255, 255, 255, 0.9);">Day 1 Retention</div>
                         <div class="analytics-stat-value" style="color: white;">${retention.day1}%</div>
@@ -2075,7 +2133,7 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-bottom: 24px;">
+                <div class="card">
                     <div class="card-title">🏆 Most Active Users</div>
                     <div id="mostActiveUsersContainer">
                         <p style="color: #718096; text-align: center; padding: 20px;">Loading most active users...</p>
@@ -2085,10 +2143,10 @@
                 <div class="analytics-row">
                     <div class="card">
                         <div id="dayOfWeekCardTitle" class="card-title">📅 Most Popular Days</div>
-                        <div style="position: relative; height: 300px;">
+                        <div class="chart-container">
                             <canvas id="dayOfWeekChart"></canvas>
                         </div>
-                        <div id="dayOfWeekStatsText" style="margin-top: 20px; text-align: center; color: #4a5568;"></div>
+                        <div id="dayOfWeekStatsText" class="day-of-week-stats"></div>
                     </div>
 
                     <div class="card">
@@ -2097,12 +2155,12 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-bottom: 24px;">
+                <div class="card">
                     <div class="card-title">🎟️ Popular Coupon Codes</div>
                     ${renderCouponsTable(stats.popular_coupons)}
                 </div>
 
-                <div class="card" style="margin-bottom: 24px; background: #fef2f2; border: 2px solid #fee2e2;">
+                <div class="card error-card">
                     <div class="card-title">⚠️ Invalid Coupon Attempts</div>
                     <div id="invalidCouponsContainer">
                         <p style="color: #718096; text-align: center; padding: 20px;">Loading invalid coupon attempts...</p>
