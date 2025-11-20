@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - Bot Studio</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #0f0f0f;
+            border-right: 1px solid #1f1f1f;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 0 20px 32px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: #6b7280;
+            display: block;
+        }
+
+        .nav {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #9ca3af;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .nav-item.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 20px 40px;
+            border-bottom: 1px solid #1f1f1f;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #222;
+            border-color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #222;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .content-area {
+            padding: 40px;
+            flex: 1;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            color: #fff;
+        }
+
+        /* Bot Cards */
+        .bots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .bot-card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .bot-card:hover {
+            border-color: #3a3a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        .bot-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .bot-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .bot-icon {
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .bot-details {
+            flex: 1;
+        }
+
+        .bot-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .bot-pair {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .bot-badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .badge-icon:hover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .badge-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .chart-section {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chart-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 80px;
+            background: #0f0f0f;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .win-rate-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 56px;
+            height: 56px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 12px 0;
+            border-top: 1px solid #1f1f1f;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 12px;
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .stat-value.positive {
+            color: #10b981;
+        }
+
+        .stat-value.negative {
+            color: #ef4444;
+        }
+
+        .side-badge {
+            padding: 3px 8px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        .provider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .provider-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 4px;
+        }
+
+        .provider-text {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .provider-name {
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .install-btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .install-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">▲</div>
+                <div>
+                    <div class="logo-text">trades.ai</div>
+                    <span class="logo-subtitle">Bot Studio</span>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="connections.html" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Connections
+                </a>
+                <a href="#" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    Marketplace
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Trade History
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    Notifications
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <button class="back-btn">← Back to Dashboard</button>
+                <div class="header-actions">
+                    <div class="icon-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </div>
+                    <div class="icon-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar"></div>
+                        <span class="user-name">Niall Clarke</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h1 class="page-title">Marketplace</h1>
+
+                <div class="bots-grid" id="botsGrid">
+                    <!-- Bot cards will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bots = [
+            { name: 'XAU', pair: 'XAU/USD [Gold]', winRate: 100, roi: 615.94, lastUpdated: 'Nov 15, 2025', side: 'Medium', provider: '3Trades', chartColor: '#10b981', data: [30, 35, 32, 45, 52, 48, 65, 70, 75, 82, 90, 100] },
+            { name: 'TRENDLINE BOT', pair: 'XAU/USD', winRate: 100, roi: 1.62, lastUpdated: 'Oct 29, 2025', side: 'Medium', provider: 'Joker', chartColor: '#10b981', data: [20, 25, 30, 28, 35, 42, 48, 55, 60, 68, 75, 100] },
+            { name: 'Gold 4H', pair: 'XAU/USD [Gold]', winRate: 100, roi: 69.70, lastUpdated: 'Jun 30, 2025', side: 'Medium', provider: 'UpTrade 12', chartColor: '#10b981', data: [15, 20, 18, 25, 30, 35, 40, 48, 55, 62, 70, 100] },
+            { name: 'VERTEX PRECISION', pair: 'XAU/USD [Gold]', winRate: 69, roi: -5.07, lastUpdated: 'Nov 19, 2025', side: 'Medium', provider: 'TradingPartners', chartColor: '#10b981', data: [40, 38, 42, 45, 48, 50, 52, 55, 58, 60, 62, 69] },
+            { name: 'TV Master', pair: 'XAU/USD', winRate: 84, roi: 0, lastUpdated: 'Nov 19, 2025', side: 'Medium', provider: '3Trades', chartColor: '#10b981', data: [10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 84] },
+            { name: 'OIL V7.1', pair: 'USOIL WTI Crude', winRate: 100, roi: 0, lastUpdated: 'Nov 19, 2025', side: 'Medium', provider: 'Joker', chartColor: '#10b981', data: [25, 30, 35, 40, 50, 60, 70, 75, 82, 90, 95, 100] },
+            { name: 'Saving G', pair: 'XAU/USD', winRate: 100, roi: 0, lastUpdated: 'Nov 19, 2025', side: 'Medium', provider: 'UpTrade 12', chartColor: '#10b981', data: [20, 28, 35, 42, 50, 58, 65, 73, 80, 88, 95, 100] },
+            { name: 'XAU swing', pair: 'XAU/USD [Gold]', winRate: 100, roi: 0, lastUpdated: 'Nov 19, 2025', side: 'Medium', provider: 'TradingPartners', chartColor: '#10b981', data: [30, 40, 48, 55, 62, 68, 75, 82, 88, 92, 96, 100] }
+        ];
+
+        const botsGrid = document.getElementById('botsGrid');
+
+        bots.forEach((bot, index) => {
+            const botCard = document.createElement('div');
+            botCard.className = 'bot-card';
+            
+            const roiClass = bot.roi > 0 ? 'positive' : bot.roi < 0 ? 'negative' : '';
+            const roiSign = bot.roi > 0 ? '+' : '';
+
+            botCard.innerHTML = `
+                <div class="bot-header">
+                    <div class="bot-info">
+                        <div class="bot-icon">${bot.name.substring(0, 2)}</div>
+                        <div class="bot-details">
+                            <div class="bot-name">${bot.name}</div>
+                            <div class="bot-pair">${bot.pair}</div>
+                        </div>
+                    </div>
+                    <div class="bot-badges">
+                        <div class="badge-icon">
+                            <svg fill="none" stroke="#fbbf24" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="badge-icon">
+                            <svg fill="none" stroke="#60a5fa" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-labels">
+                        <span class="chart-label">Performance</span>
+                        <span class="chart-label">Win Rate</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-${index}"></canvas>
+                        <div class="win-rate-badge">${bot.winRate}%</div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">Last Updated</span>
+                        <span class="stat-value">${bot.lastUpdated}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">ROI</span>
+                        <span class="stat-value ${roiClass}">${roiSign}${bot.roi}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Side</span>
+                        <span class="stat-value">
+                            <span class="side-badge">${bot.side}</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="provider-row">
+                    <div class="provider-info">
+                        <div class="provider-icon"></div>
+                        <div>
+                            <div class="provider-text">Powered by <span class="provider-name">${bot.provider}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="install-btn">⚡ Install Bot</button>
+            `;
+
+            botsGrid.appendChild(botCard);
+
+            // Create chart with gradient
+            const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 80);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(bot.data.length).fill(''),
+                    datasets: [{
+                        data: bot.data,
+                        borderColor: bot.chartColor,
+                        backgroundColor: gradient,
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            grid: { display: false }
+                        },
+                        y: {
+                            display: false,
+                            grid: { display: false },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
