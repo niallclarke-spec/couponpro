@@ -3,6 +3,10 @@
 ## Overview
 PromoStack is a promotional image generation platform offering web and Telegram bot interfaces. It enables users to rapidly create branded coupon images for marketing on social media and messaging platforms. The platform's core purpose is to streamline the creation of visually appealing marketing assets, accessible via a web application (dash.promostack.io) or through commands to @promostack_bot in Telegram channels.
 
+## Milestones
+- **V1-V7 Complete** (November 20, 2025): Core platform with web app, Telegram bot, campaigns, FunderPro integration, broadcast system, template visibility controls, and comprehensive analytics dashboard with coupon search functionality. Production-ready and deployed.
+- **V8 (In Planning)**: TBD - New feature development phase begins.
+
 ## User Preferences
 I prefer clear, concise communication. When suggesting changes or explaining concepts, please provide a high-level summary first, followed by details if necessary. I value iterative development and would like to be consulted before any major architectural changes or significant code refactoring. Please prioritize solutions that are robust and scalable, especially concerning file persistence and session management in ephemeral environments. Ensure that the visual design remains consistent and user-friendly, particularly in the admin interface.
 
