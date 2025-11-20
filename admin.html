@@ -2271,10 +2271,12 @@
         }
 
         let allCoupons = [];
+        let couponSearchQuery = '';
 
         function renderCouponsTable(coupons) {
             // Always reset state, even for empty datasets
             allCoupons = coupons || [];
+            couponSearchQuery = '';
             
             const hasActiveFilters = couponFilterDays !== 30 || (couponFilterTemplate && couponFilterTemplate !== 'all' && couponFilterTemplate !== 'null');
             
@@ -2327,6 +2329,24 @@
             }
             
             return filterControlsHtml + `
+                <div style="margin-bottom: 16px; position: relative;">
+                    <input 
+                        type="text" 
+                        id="couponSearchInput" 
+                        placeholder="🔍 Search coupons..." 
+                        oninput="searchCoupons(this.value)"
+                        style="width: 100%; padding: 10px 40px 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: all 0.2s;"
+                        onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.1)';"
+                        onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
+                    />
+                    <button 
+                        id="clearSearchBtn" 
+                        onclick="clearCouponSearch()" 
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; padding: 4px 8px; display: none; transition: color 0.2s;"
+                        onmouseover="this.style.color='#ef4444';"
+                        onmouseout="this.style.color='#94a3b8';"
+                    >×</button>
+                </div>
                 <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                     <button class="btn btn-secondary" onclick="exportCouponsCSV()" style="padding: 8px 16px;">
                         📥 Export CSV
@@ -2338,7 +2358,17 @@
             `;
         }
 
+        function getFilteredCoupons() {
+            if (!couponSearchQuery) {
+                return allCoupons;
+            }
+            const query = couponSearchQuery.toLowerCase();
+            return allCoupons.filter(c => c.coupon.toLowerCase().includes(query));
+        }
+
         function renderCouponPage() {
+            const filteredCoupons = getFilteredCoupons();
+            
             const tableHtml = `
                 <div class="table-scroll">
                     <table class="analytics-table">
@@ -2351,23 +2381,49 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${allCoupons.map(c => `
+                            ${filteredCoupons.length > 0 ? filteredCoupons.map(c => `
                                 <tr>
                                     <td>${c.coupon}</td>
                                     <td>${c.count.toLocaleString()}</td>
                                     <td>${(c.unique_users || 0).toLocaleString()}</td>
                                     <td>${c.generated_by || 'Unknown'}</td>
                                 </tr>
-                            `).join('')}
+                            `).join('') : `
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 30px; color: #718096;">
+                                        No coupons match "${couponSearchQuery}"
+                                    </td>
+                                </tr>
+                            `}
                         </tbody>
                     </table>
                 </div>
             `;
 
-            const summaryHtml = `<span style="color: #4a5568;">Showing all ${allCoupons.length} coupons</span>`;
+            const summaryHtml = couponSearchQuery 
+                ? `<span style="color: #4a5568;">Showing ${filteredCoupons.length} of ${allCoupons.length} coupons ${filteredCoupons.length === 0 ? '(no matches)' : '(filtered)'}</span>`
+                : `<span style="color: #4a5568;">Showing all ${allCoupons.length} coupons</span>`;
 
             document.getElementById('couponsTableContainer').innerHTML = tableHtml;
             document.getElementById('couponPagination').innerHTML = summaryHtml;
+        }
+
+        function searchCoupons(query) {
+            couponSearchQuery = query.trim();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) {
+                clearBtn.style.display = couponSearchQuery ? 'block' : 'none';
+            }
+            renderCouponPage();
+        }
+
+        function clearCouponSearch() {
+            couponSearchQuery = '';
+            const searchInput = document.getElementById('couponSearchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (searchInput) searchInput.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderCouponPage();
         }
 
 
@@ -2392,14 +2448,16 @@
         }
 
         function exportCouponsCSV() {
-            if (allCoupons.length === 0) {
+            const couponsToExport = getFilteredCoupons();
+            
+            if (couponsToExport.length === 0) {
                 alert('No coupon data to export');
                 return;
             }
 
             const csvContent = [
                 ['Coupon Code', 'Uses', 'Unique Users', 'Generated By'],
-                ...allCoupons.map(c => [c.coupon, c.count, c.unique_users || 0, c.generated_by || 'Unknown'])
+                ...couponsToExport.map(c => [c.coupon, c.count, c.unique_users || 0, c.generated_by || 'Unknown'])
             ].map(row => row.join(',')).join('\n');
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
