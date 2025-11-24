@@ -253,6 +253,53 @@ class DatabasePool:
                     ON broadcast_jobs(status)
                 """)
                 
+                # Create forex_signals table for forex trading bot
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS forex_signals (
+                        id SERIAL PRIMARY KEY,
+                        signal_type VARCHAR(10) NOT NULL,
+                        pair VARCHAR(20) NOT NULL,
+                        timeframe VARCHAR(10) NOT NULL,
+                        entry_price DECIMAL(10, 2) NOT NULL,
+                        take_profit DECIMAL(10, 2),
+                        stop_loss DECIMAL(10, 2),
+                        status VARCHAR(20) DEFAULT 'pending',
+                        rsi_value DECIMAL(5, 2),
+                        macd_value DECIMAL(10, 4),
+                        atr_value DECIMAL(10, 2),
+                        posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        closed_at TIMESTAMP,
+                        result_pips DECIMAL(10, 2)
+                    )
+                """)
+                
+                # Create indexes on forex_signals
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_forex_signals_status 
+                    ON forex_signals(status)
+                """)
+                
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_forex_signals_posted_at 
+                    ON forex_signals(posted_at)
+                """)
+                
+                # Create forex_config table for forex bot configuration
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS forex_config (
+                        id SERIAL PRIMARY KEY,
+                        setting_key VARCHAR(100) UNIQUE NOT NULL,
+                        setting_value TEXT,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create index on forex_config
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_forex_config_setting_key 
+                    ON forex_config(setting_key)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 return True
@@ -1398,3 +1445,237 @@ def get_recent_broadcast_jobs(limit=10):
     except Exception as e:
         print(f"Error getting recent broadcast jobs: {e}")
         return []
+
+# Forex signals operations
+def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=None, 
+                       stop_loss=None, rsi_value=None, macd_value=None, atr_value=None):
+    """
+    Create a new forex signal.
+    
+    Args:
+        signal_type (str): 'BUY' or 'SELL'
+        pair (str): Currency pair (e.g., 'XAU/USD', 'EUR/USD')
+        timeframe (str): Timeframe (e.g., '15m', '30m', '1h')
+        entry_price (float): Entry price for the signal
+        take_profit (float, optional): Take profit price
+        stop_loss (float, optional): Stop loss price
+        rsi_value (float, optional): RSI indicator value
+        macd_value (float, optional): MACD indicator value
+        atr_value (float, optional): ATR indicator value
+    
+    Returns:
+        int: Signal ID
+    """
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO forex_signals 
+                (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
+                 rsi_value, macd_value, atr_value, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
+                RETURNING id
+            """, (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
+                  rsi_value, macd_value, atr_value))
+            signal_id = cursor.fetchone()[0]
+            conn.commit()
+            return signal_id
+    except Exception as e:
+        print(f"Error creating forex signal: {e}")
+        raise
+
+def get_forex_signals(status=None, limit=100):
+    """
+    Get forex signals with optional status filtering.
+    
+    Args:
+        status (str, optional): Filter by status ('pending', 'won', 'lost', 'expired')
+        limit (int): Maximum number of signals to return (default: 100)
+    
+    Returns:
+        list: List of signal dictionaries
+    """
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if status:
+                cursor.execute("""
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    WHERE status = %s
+                    ORDER BY posted_at DESC
+                    LIMIT %s
+                """, (status, limit))
+            else:
+                cursor.execute("""
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    ORDER BY posted_at DESC
+                    LIMIT %s
+                """, (limit,))
+            
+            signals = []
+            for row in cursor.fetchall():
+                signals.append({
+                    'id': row[0],
+                    'signal_type': row[1],
+                    'pair': row[2],
+                    'timeframe': row[3],
+                    'entry_price': float(row[4]) if row[4] else None,
+                    'take_profit': float(row[5]) if row[5] else None,
+                    'stop_loss': float(row[6]) if row[6] else None,
+                    'status': row[7],
+                    'rsi_value': float(row[8]) if row[8] else None,
+                    'macd_value': float(row[9]) if row[9] else None,
+                    'atr_value': float(row[10]) if row[10] else None,
+                    'posted_at': row[11].isoformat() if row[11] else None,
+                    'closed_at': row[12].isoformat() if row[12] else None,
+                    'result_pips': float(row[13]) if row[13] else None
+                })
+            return signals
+    except Exception as e:
+        print(f"Error getting forex signals: {e}")
+        return []
+
+def update_forex_signal_status(signal_id, status, result_pips=None):
+    """
+    Update forex signal status and optionally set result.
+    
+    Args:
+        signal_id (int): Signal ID to update
+        status (str): New status ('pending', 'won', 'lost', 'expired')
+        result_pips (float, optional): Result in pips (positive for profit, negative for loss)
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if result_pips is not None:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET status = %s, result_pips = %s, closed_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (status, result_pips, signal_id))
+            else:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET status = %s, closed_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (status, signal_id))
+            
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"Error updating forex signal status: {e}")
+        raise
+
+def get_forex_stats(days=7):
+    """
+    Get forex signals statistics for the last N days.
+    
+    Args:
+        days (int): Number of days to analyze (default: 7)
+    
+    Returns:
+        dict: Statistics including total signals, win rate, profit/loss, etc.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Total signals in the period
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+            """, (f"{days} days",))
+            total_signals = cursor.fetchone()[0]
+            
+            # Closed signals (won + lost)
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                AND status IN ('won', 'lost')
+            """, (f"{days} days",))
+            closed_signals = cursor.fetchone()[0]
+            
+            # Won signals
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                AND status = 'won'
+            """, (f"{days} days",))
+            won_signals = cursor.fetchone()[0]
+            
+            # Lost signals
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                AND status = 'lost'
+            """, (f"{days} days",))
+            lost_signals = cursor.fetchone()[0]
+            
+            # Pending signals
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                AND status = 'pending'
+            """, (f"{days} days",))
+            pending_signals = cursor.fetchone()[0]
+            
+            # Total pips (profit/loss)
+            cursor.execute("""
+                SELECT COALESCE(SUM(result_pips), 0) FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                AND result_pips IS NOT NULL
+            """, (f"{days} days",))
+            total_pips = float(cursor.fetchone()[0])
+            
+            # Signals by pair
+            cursor.execute("""
+                SELECT pair, COUNT(*) as count
+                FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                GROUP BY pair
+                ORDER BY count DESC
+                LIMIT 10
+            """, (f"{days} days",))
+            signals_by_pair = [{'pair': row[0], 'count': row[1]} for row in cursor.fetchall()]
+            
+            # Daily signal count
+            cursor.execute("""
+                SELECT DATE(posted_at) as date, COUNT(*) as count
+                FROM forex_signals
+                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                GROUP BY DATE(posted_at)
+                ORDER BY date DESC
+            """, (f"{days} days",))
+            daily_signals = [{'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
+            
+            # Calculate win rate
+            win_rate = (won_signals / closed_signals * 100) if closed_signals > 0 else 0
+            
+            return {
+                'total_signals': total_signals,
+                'closed_signals': closed_signals,
+                'won_signals': won_signals,
+                'lost_signals': lost_signals,
+                'pending_signals': pending_signals,
+                'win_rate': round(win_rate, 1),
+                'total_pips': round(total_pips, 2),
+                'signals_by_pair': signals_by_pair,
+                'daily_signals': daily_signals
+            }
+    except Exception as e:
+        print(f"Error getting forex stats: {e}")
+        return None
