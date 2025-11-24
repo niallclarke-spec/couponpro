@@ -1679,3 +1679,133 @@ def get_forex_stats(days=7):
     except Exception as e:
         print(f"Error getting forex stats: {e}")
         return None
+
+def get_forex_signals_by_period(period='today'):
+    """
+    Get forex signals for a specific time period.
+    
+    Args:
+        period (str): Time period - 'today', 'yesterday', 'week', 'month'
+    
+    Returns:
+        list: List of signals for that period
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if period == 'today':
+                query = """
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    WHERE posted_at >= CURRENT_DATE
+                    ORDER BY posted_at DESC
+                """
+            elif period == 'yesterday':
+                query = """
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    WHERE posted_at >= CURRENT_DATE - INTERVAL '1 day'
+                    AND posted_at < CURRENT_DATE
+                    ORDER BY posted_at DESC
+                """
+            elif period == 'week':
+                query = """
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    WHERE posted_at >= CURRENT_DATE - INTERVAL '7 days'
+                    ORDER BY posted_at DESC
+                """
+            else:
+                query = """
+                    SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                           stop_loss, status, rsi_value, macd_value, atr_value, 
+                           posted_at, closed_at, result_pips
+                    FROM forex_signals
+                    WHERE posted_at >= CURRENT_DATE - INTERVAL '30 days'
+                    ORDER BY posted_at DESC
+                """
+            
+            cursor.execute(query)
+            
+            signals = []
+            for row in cursor.fetchall():
+                signals.append({
+                    'id': row[0],
+                    'signal_type': row[1],
+                    'pair': row[2],
+                    'timeframe': row[3],
+                    'entry_price': float(row[4]) if row[4] else None,
+                    'take_profit': float(row[5]) if row[5] else None,
+                    'stop_loss': float(row[6]) if row[6] else None,
+                    'status': row[7],
+                    'rsi_value': float(row[8]) if row[8] else None,
+                    'macd_value': float(row[9]) if row[9] else None,
+                    'atr_value': float(row[10]) if row[10] else None,
+                    'posted_at': row[11],
+                    'closed_at': row[12],
+                    'pips_result': float(row[13]) if row[13] else None
+                })
+            return signals
+    except Exception as e:
+        print(f"Error getting forex signals by period: {e}")
+        return []
+
+def get_forex_stats_by_period(period='today'):
+    """
+    Get forex statistics for a specific time period.
+    
+    Args:
+        period (str): 'today', 'yesterday', 'week', 'month'
+    
+    Returns:
+        dict: Statistics for that period
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if period == 'today':
+                time_filter = "posted_at >= CURRENT_DATE"
+            elif period == 'yesterday':
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '1 day' AND posted_at < CURRENT_DATE"
+            elif period == 'week':
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '7 days'"
+            else:
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '30 days'"
+            
+            cursor.execute(f"""
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'won' THEN 1 ELSE 0 END) as won,
+                    SUM(CASE WHEN status = 'lost' THEN 1 ELSE 0 END) as lost,
+                    SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
+                    COALESCE(SUM(result_pips), 0) as total_pips
+                FROM forex_signals
+                WHERE {time_filter}
+            """)
+            
+            row = cursor.fetchone()
+            
+            return {
+                'total_signals': row[0],
+                'won_signals': row[1] if row[1] else 0,
+                'lost_signals': row[2] if row[2] else 0,
+                'expired_signals': row[3] if row[3] else 0,
+                'total_pips': float(row[4]) if row[4] else 0.0
+            }
+    except Exception as e:
+        print(f"Error getting forex stats by period: {e}")
+        return None
