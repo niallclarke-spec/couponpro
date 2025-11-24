@@ -1533,8 +1533,8 @@ def get_forex_signals(status=None, limit=100):
                     'rsi_value': float(row[8]) if row[8] else None,
                     'macd_value': float(row[9]) if row[9] else None,
                     'atr_value': float(row[10]) if row[10] else None,
-                    'posted_at': row[11].isoformat() if row[11] else None,
-                    'closed_at': row[12].isoformat() if row[12] else None,
+                    'posted_at': row[11],
+                    'closed_at': row[12],
                     'result_pips': float(row[13]) if row[13] else None
                 })
             return signals
