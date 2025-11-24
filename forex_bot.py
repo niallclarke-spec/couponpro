@@ -63,8 +63,6 @@ class ForexTelegramBot:
 📊 RSI: {rsi:.2f}
 📈 MACD: {macd:.4f}
 📉 ATR: {atr:.2f}
-
-⏰ Posted: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
 """
             
             sent_message = await self.bot.send_message(
