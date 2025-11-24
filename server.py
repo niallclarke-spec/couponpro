@@ -53,6 +53,14 @@ except Exception as e:
     print(f"[INFO] Coupon validator not available: {e}")
     COUPON_VALIDATOR_AVAILABLE = False
 
+# Import forex signals scheduler
+try:
+    from forex_scheduler import start_forex_scheduler
+    FOREX_SCHEDULER_AVAILABLE = True
+except Exception as e:
+    print(f"[INFO] Forex scheduler not available: {e}")
+    FOREX_SCHEDULER_AVAILABLE = False
+
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
@@ -439,6 +447,88 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(retention).encode())
             except Exception as e:
                 print(f"[API] Error getting retention rates: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/forex-signals':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_forex_signals
+                query_params = parse_qs(parsed_path.query)
+                status_filter = query_params.get('status', [None])[0]
+                limit = int(query_params.get('limit', [100])[0])
+                
+                signals = get_forex_signals(status=status_filter, limit=limit)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(signals).encode())
+            except Exception as e:
+                print(f"[FOREX] Error getting signals: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/forex-stats':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_forex_stats
+                query_params = parse_qs(parsed_path.query)
+                days = int(query_params.get('days', [7])[0])
+                
+                stats = get_forex_stats(days=days)
+                
+                if stats:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(stats).encode())
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'total_signals': 0,
+                        'won_signals': 0,
+                        'lost_signals': 0,
+                        'pending_signals': 0,
+                        'win_rate': 0,
+                        'total_pips': 0,
+                        'signals_by_pair': [],
+                        'daily_signals': []
+                    }).encode())
+            except Exception as e:
+                print(f"[FOREX] Error getting stats: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -1649,6 +1739,26 @@ if __name__ == "__main__":
             import traceback
             traceback.print_exc()
     
+    # Start Forex signals scheduler in background thread if available
+    if FOREX_SCHEDULER_AVAILABLE:
+        import threading
+        import asyncio
+        
+        def run_forex_scheduler():
+            """Run the forex scheduler in a separate thread"""
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(start_forex_scheduler())
+            except Exception as e:
+                print(f"[FOREX] Scheduler error: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
+        scheduler_thread.start()
+        print("[FOREX] Signals scheduler started in background thread")
+    
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Server running at http://0.0.0.0:{PORT}/")
@@ -1661,4 +1771,6 @@ if __name__ == "__main__":
         print(f"  POST /api/delete-template (requires auth)")
         print(f"  POST /api/regenerate-index")
         print(f"  POST /api/telegram-webhook")
+        print(f"  GET  /api/forex-signals (requires auth)")
+        print(f"  GET  /api/forex-stats (requires auth)")
         httpd.serve_forever()
