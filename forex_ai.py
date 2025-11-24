@@ -24,30 +24,30 @@ def generate_tp_celebration(signal_id, pips_profit, signal_type):
         str: AI-generated celebration message
     """
     try:
-        prompt = f"""Generate a short, energetic, motivational celebration message for a successful forex trade. 
+        prompt = f"""Generate a professional, analytical message for a successful forex trade.
 
 The trade details:
 - Signal #{signal_id}
 - {signal_type} signal on XAU/USD (Gold)
 - Profit: +{pips_profit:.2f} pips
 
-Style: Keep it 1-2 sentences, upbeat and encouraging. Use emojis sparingly. Sound professional but enthusiastic.
+Style: 1-2 sentences. Professional and data-focused. Reference the technical setup, price action, or strategy execution. No emojis. Sound like a professional analyst.
 
 Examples of the tone we want:
-- "Another winner in the books! The market gave us the perfect setup and we took advantage."
-- "Precision trading at its finest! That's how we stack wins."
-- "The strategy delivered once again! Keep trusting the process."
+- "Signal #{signal_id} executed as planned - RSI divergence and MACD crossover delivered {pips_profit:.0f} pips on the {signal_type} setup."
+- "Technical indicators aligned perfectly on this {signal_type} entry, securing {pips_profit:.0f} pips before resistance tested the position."
+- "Price action confirmed our analysis - the {signal_type} signal captured {pips_profit:.0f} pips as predicted by the ATR volatility model."
 
-Generate a unique message now:"""
+Generate a unique analytical message now:"""
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an energetic but professional forex trading analyst who creates motivational messages for successful trades."},
+                {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical commentary on successful trades. Focus on technical analysis, price action, and strategy execution."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=100,
-            temperature=0.8
+            temperature=0.7
         )
         
         return response.choices[0].message.content.strip()
@@ -93,7 +93,7 @@ def generate_daily_recap():
         won_signals = stats.get('won_signals', 0)
         total_signals = stats.get('total_signals', 0)
         
-        prompt = f"""Generate a brief, professional recap commentary for today's forex trading signals.
+        prompt = f"""Generate a professional, data-driven recap commentary for today's forex trading signals.
 
 Today's Results:
 {signal_list}
@@ -101,14 +101,14 @@ Today's Results:
 Total Pips: {total_pips:+.2f}
 Win/Total: {won_signals}/{total_signals}
 
-Style: 2-3 sentences max. Be encouraging but realistic. Focus on the strategy and process, not just wins.
+Style: 2-3 sentences max. Analytical and professional. Reference market conditions, technical setups, or strategy performance. No emojis.
 
-Generate the recap commentary (don't repeat the numbers, just add insight):"""
+Generate the analytical recap commentary (don't repeat the numbers, focus on insights):"""
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional forex trading analyst who provides brief, insightful daily recaps."},
+                {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical daily recaps. Focus on market conditions, technical analysis, and strategy performance metrics."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=150,
@@ -142,7 +142,7 @@ def generate_weekly_recap():
         total_pips = stats.get('total_pips', 0)
         win_rate = (won_signals / total_signals * 100) if total_signals > 0 else 0
         
-        prompt = f"""Generate a brief weekly performance recap for forex trading signals.
+        prompt = f"""Generate a professional, analytical weekly performance recap for forex trading signals.
 
 This Week's Stats:
 - Total Signals: {total_signals}
@@ -151,14 +151,14 @@ This Week's Stats:
 - Win Rate: {win_rate:.1f}%
 - Total Pips: {total_pips:+.2f}
 
-Style: 3-4 sentences. Be analytical but encouraging. Highlight what worked and what to watch for next week.
+Style: 3-4 sentences. Professional and data-focused. Analyze strategy effectiveness, market conditions, and performance metrics. Reference technical patterns or market behavior. No emojis.
 
-Generate the recap:"""
+Generate the analytical recap:"""
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional forex trading analyst who provides weekly performance insights."},
+                {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical weekly performance recaps. Focus on strategy metrics, market conditions, and technical analysis patterns."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=200,
