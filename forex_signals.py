@@ -6,17 +6,53 @@ import os
 import time
 from datetime import datetime, timedelta
 from forex_api import twelve_data_client
-from db import create_forex_signal, get_forex_signals, update_forex_signal_status
+from db import create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config
 import asyncio
 
 class ForexSignalEngine:
     def __init__(self):
         self.symbol = 'XAU/USD'
-        self.rsi_oversold = 40
-        self.rsi_overbought = 60
-        self.atr_sl_multiplier = 2.0
-        self.atr_tp_multiplier = 4.0
-        self.adx_threshold = 15
+        # Load config from database
+        self.load_config()
+    
+    def load_config(self):
+        """Load configuration from database or use defaults"""
+        try:
+            config = get_forex_config()
+            if config:
+                self.rsi_oversold = config.get('rsi_oversold', 40)
+                self.rsi_overbought = config.get('rsi_overbought', 60)
+                self.atr_sl_multiplier = config.get('atr_sl_multiplier', 2.0)
+                self.atr_tp_multiplier = config.get('atr_tp_multiplier', 4.0)
+                self.adx_threshold = config.get('adx_threshold', 15)
+                self.trading_start_hour = config.get('trading_start_hour', 8)
+                self.trading_end_hour = config.get('trading_end_hour', 22)
+                print(f"[FOREX CONFIG] Loaded from database - RSI: {self.rsi_oversold}/{self.rsi_overbought}, ADX: {self.adx_threshold}, SL/TP: {self.atr_sl_multiplier}x/{self.atr_tp_multiplier}x")
+            else:
+                # Fallback to defaults
+                self.rsi_oversold = 40
+                self.rsi_overbought = 60
+                self.atr_sl_multiplier = 2.0
+                self.atr_tp_multiplier = 4.0
+                self.adx_threshold = 15
+                self.trading_start_hour = 8
+                self.trading_end_hour = 22
+                print("[FOREX CONFIG] Using default configuration")
+        except Exception as e:
+            # Fallback to defaults on error
+            self.rsi_oversold = 40
+            self.rsi_overbought = 60
+            self.atr_sl_multiplier = 2.0
+            self.atr_tp_multiplier = 4.0
+            self.adx_threshold = 15
+            self.trading_start_hour = 8
+            self.trading_end_hour = 22
+            print(f"[FOREX CONFIG] Error loading config, using defaults: {e}")
+    
+    def reload_config(self):
+        """Reload configuration from database"""
+        print("[FOREX CONFIG] Reloading configuration...")
+        self.load_config()
         
     def calculate_tp_sl(self, entry_price, atr_value, signal_type):
         """
@@ -78,6 +114,17 @@ class ForexSignalEngine:
             if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
                 print("[FOREX SIGNALS] ❌ Missing indicator data, skipping signal check")
                 return None
+            
+            # Type assertions for type checker (we know these are not None after the check above)
+            assert price is not None
+            assert rsi is not None
+            assert macd_data is not None
+            assert atr is not None
+            assert adx is not None
+            assert bbands is not None
+            assert stoch is not None
+            assert ema50 is not None
+            assert ema200 is not None
             
             print(f"[FOREX SIGNALS] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
             print(f"[FOREX SIGNALS] Trend: EMA50={ema50:.2f}, EMA200={ema200:.2f}, Stoch K={stoch['k']:.2f}")
@@ -265,13 +312,13 @@ class ForexSignalEngine:
     
     def is_trading_hours(self):
         """
-        Check if current time is within trading hours (8AM-10PM GMT)
+        Check if current time is within trading hours (configurable, default 8AM-10PM GMT)
         """
         from datetime import datetime
         now = datetime.utcnow()
         current_hour = now.hour
         
-        if 8 <= current_hour < 22:
+        if self.trading_start_hour <= current_hour < self.trading_end_hour:
             return True
         return False
 

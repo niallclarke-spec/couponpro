@@ -302,6 +302,10 @@ class DatabasePool:
                 
                 conn.commit()
                 print("✅ Database schema initialized")
+                
+                # Initialize default forex config
+                initialize_default_forex_config()
+                
                 return True
         except Exception as e:
             print(f"❌ Failed to initialize schema: {e}")
@@ -1533,8 +1537,8 @@ def get_forex_signals(status=None, limit=100):
                     'rsi_value': float(row[8]) if row[8] else None,
                     'macd_value': float(row[9]) if row[9] else None,
                     'atr_value': float(row[10]) if row[10] else None,
-                    'posted_at': row[11],
-                    'closed_at': row[12],
+                    'posted_at': row[11].isoformat() if row[11] else None,
+                    'closed_at': row[12].isoformat() if row[12] else None,
                     'result_pips': float(row[13]) if row[13] else None
                 })
             return signals
@@ -1751,9 +1755,9 @@ def get_forex_signals_by_period(period='today'):
                     'rsi_value': float(row[8]) if row[8] else None,
                     'macd_value': float(row[9]) if row[9] else None,
                     'atr_value': float(row[10]) if row[10] else None,
-                    'posted_at': row[11],
-                    'closed_at': row[12],
-                    'pips_result': float(row[13]) if row[13] else None
+                    'posted_at': row[11].isoformat() if row[11] else None,
+                    'closed_at': row[12].isoformat() if row[12] else None,
+                    'result_pips': float(row[13]) if row[13] else None
                 })
             return signals
     except Exception as e:
@@ -1809,3 +1813,141 @@ def get_forex_stats_by_period(period='today'):
     except Exception as e:
         print(f"Error getting forex stats by period: {e}")
         return None
+
+# Forex configuration operations
+def initialize_default_forex_config():
+    """
+    Initialize forex config with default values if not already set.
+    Should be called on startup.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        default_config = {
+            'rsi_oversold': '40',
+            'rsi_overbought': '60',
+            'adx_threshold': '15',
+            'atr_sl_multiplier': '2.0',
+            'atr_tp_multiplier': '4.0',
+            'trading_start_hour': '8',
+            'trading_end_hour': '22'
+        }
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            for key, value in default_config.items():
+                cursor.execute("""
+                    INSERT INTO forex_config (setting_key, setting_value, updated_at)
+                    VALUES (%s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (setting_key) 
+                    DO NOTHING
+                """, (key, value))
+            
+            conn.commit()
+            print("✅ Forex config initialized with defaults")
+            return True
+    except Exception as e:
+        print(f"Error initializing forex config: {e}")
+        return False
+
+def get_forex_config():
+    """
+    Get current forex configuration as a dictionary.
+    
+    Returns:
+        dict: Configuration with keys:
+            - rsi_oversold (int)
+            - rsi_overbought (int)
+            - adx_threshold (int)
+            - atr_sl_multiplier (float)
+            - atr_tp_multiplier (float)
+            - trading_start_hour (int)
+            - trading_end_hour (int)
+            - updated_at (datetime)
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT setting_key, setting_value, updated_at
+                FROM forex_config
+            """)
+            
+            config = {}
+            latest_update = None
+            
+            for row in cursor.fetchall():
+                key = row[0]
+                value = row[1]
+                updated_at = row[2]
+                
+                # Convert to appropriate type
+                if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour']:
+                    config[key] = int(value) if value else 0
+                elif key in ['atr_sl_multiplier', 'atr_tp_multiplier']:
+                    config[key] = float(value) if value else 0.0
+                else:
+                    config[key] = value
+                
+                # Track latest update time
+                if updated_at and (latest_update is None or updated_at > latest_update):
+                    latest_update = updated_at
+            
+            # Set default values if config is empty
+            if not config:
+                config = {
+                    'rsi_oversold': 40,
+                    'rsi_overbought': 60,
+                    'adx_threshold': 15,
+                    'atr_sl_multiplier': 2.0,
+                    'atr_tp_multiplier': 4.0,
+                    'trading_start_hour': 8,
+                    'trading_end_hour': 22
+                }
+            
+            config['updated_at'] = latest_update.isoformat() if latest_update else None
+            
+            return config
+    except Exception as e:
+        print(f"Error getting forex config: {e}")
+        return None
+
+def update_forex_config(config_updates):
+    """
+    Update forex configuration values.
+    
+    Args:
+        config_updates (dict): Dictionary with config keys and new values
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            for key, value in config_updates.items():
+                cursor.execute("""
+                    INSERT INTO forex_config (setting_key, setting_value, updated_at)
+                    VALUES (%s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (setting_key) 
+                    DO UPDATE SET 
+                        setting_value = EXCLUDED.setting_value,
+                        updated_at = CURRENT_TIMESTAMP
+                """, (key, str(value)))
+            
+            conn.commit()
+            print(f"✅ Forex config updated: {list(config_updates.keys())}")
+            return True
+    except Exception as e:
+        print(f"Error updating forex config: {e}")
+        raise

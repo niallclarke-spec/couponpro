@@ -486,6 +486,42 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/forex-config':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_forex_config
+                config = get_forex_config()
+                
+                if config:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(config).encode())
+                else:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Failed to load config'}).encode())
+            except Exception as e:
+                print(f"[FOREX] Error getting config: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/forex-stats':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)
@@ -919,6 +955,131 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Set-Cookie', f'admin_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True}).encode())
+        
+        elif parsed_path.path == '/api/forex-config':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                # Validate config values
+                valid_keys = ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 
+                             'atr_sl_multiplier', 'atr_tp_multiplier', 
+                             'trading_start_hour', 'trading_end_hour']
+                
+                config_updates = {}
+                errors = []
+                
+                for key in valid_keys:
+                    if key in data:
+                        value = data[key]
+                        
+                        # Validate based on key type
+                        if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour']:
+                            try:
+                                int_value = int(value)
+                                # Additional validation
+                                if key == 'rsi_oversold' and not (0 <= int_value <= 100):
+                                    errors.append(f'{key} must be between 0 and 100')
+                                elif key == 'rsi_overbought' and not (0 <= int_value <= 100):
+                                    errors.append(f'{key} must be between 0 and 100')
+                                elif key == 'adx_threshold' and not (0 <= int_value <= 100):
+                                    errors.append(f'{key} must be between 0 and 100')
+                                elif key == 'trading_start_hour' and not (0 <= int_value <= 23):
+                                    errors.append(f'{key} must be between 0 and 23')
+                                elif key == 'trading_end_hour' and not (0 <= int_value <= 23):
+                                    errors.append(f'{key} must be between 0 and 23')
+                                else:
+                                    config_updates[key] = int_value
+                            except ValueError:
+                                errors.append(f'{key} must be an integer')
+                        
+                        elif key in ['atr_sl_multiplier', 'atr_tp_multiplier']:
+                            try:
+                                float_value = float(value)
+                                if float_value <= 0:
+                                    errors.append(f'{key} must be greater than 0')
+                                else:
+                                    config_updates[key] = float_value
+                            except ValueError:
+                                errors.append(f'{key} must be a number')
+                
+                # Cross-field validation
+                if 'trading_start_hour' in config_updates and 'trading_end_hour' in config_updates:
+                    if config_updates['trading_start_hour'] >= config_updates['trading_end_hour']:
+                        errors.append('trading_start_hour must be less than trading_end_hour')
+                elif 'trading_start_hour' in config_updates or 'trading_end_hour' in config_updates:
+                    # If only one is being updated, validate against existing config
+                    from db import get_forex_config
+                    current_config = get_forex_config() or {}
+                    start_hour = config_updates.get('trading_start_hour', current_config.get('trading_start_hour', 8))
+                    end_hour = config_updates.get('trading_end_hour', current_config.get('trading_end_hour', 22))
+                    if start_hour >= end_hour:
+                        errors.append('trading_start_hour must be less than trading_end_hour')
+                
+                # RSI validation - oversold must be less than overbought
+                if 'rsi_oversold' in config_updates and 'rsi_overbought' in config_updates:
+                    if config_updates['rsi_oversold'] >= config_updates['rsi_overbought']:
+                        errors.append('rsi_oversold must be less than rsi_overbought')
+                
+                if errors:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': ', '.join(errors)}).encode())
+                    return
+                
+                if not config_updates:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'No valid config values provided'}).encode())
+                    return
+                
+                # Update config in database
+                from db import update_forex_config
+                update_forex_config(config_updates)
+                
+                # Reload config in forex signal engine
+                if FOREX_SCHEDULER_AVAILABLE:
+                    from forex_signals import forex_signal_engine
+                    forex_signal_engine.reload_config()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': 'Configuration updated successfully'
+                }).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Invalid request format'}).encode())
+            except Exception as e:
+                print(f"[FOREX] Error updating config: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/upload-overlay':
             if not self.check_auth():
