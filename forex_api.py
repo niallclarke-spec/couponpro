@@ -159,5 +159,145 @@ class TwelveDataClient:
         except Exception as e:
             print(f"Error fetching quote for {symbol}: {e}")
             return None
+    
+    def get_ema(self, symbol='XAU/USD', interval='1h', period=50):
+        """
+        Get EMA (Exponential Moving Average) value
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval (1h, 4h, 1d, etc.)
+            period: EMA period (default: 50)
+        
+        Returns:
+            float: EMA value or None if error
+        """
+        try:
+            data = self._make_request('ema', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'series_type': 'close',
+                'outputsize': 1
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                return float(data['values'][0]['ema'])
+            return None
+        except Exception as e:
+            print(f"Error fetching EMA for {symbol}: {e}")
+            return None
+    
+    def get_adx(self, symbol='XAU/USD', interval='15min', period=14):
+        """
+        Get ADX (Average Directional Index) - measures trend strength
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval (15min, 30min, 1h, etc.)
+            period: ADX period (default: 14)
+        
+        Returns:
+            float: ADX value (0-100) or None if error
+            ADX > 20 indicates strong trend
+        """
+        try:
+            data = self._make_request('adx', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'outputsize': 1
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                return float(data['values'][0]['adx'])
+            return None
+        except Exception as e:
+            print(f"Error fetching ADX for {symbol}: {e}")
+            return None
+    
+    def get_bbands(self, symbol='XAU/USD', interval='15min', period=20):
+        """
+        Get Bollinger Bands values
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval (15min, 30min, 1h, etc.)
+            period: BB period (default: 20)
+        
+        Returns:
+            dict: {
+                'upper': Upper band value,
+                'middle': Middle band (SMA),
+                'lower': Lower band value,
+                'current_price': Current price
+            } or None if error
+        """
+        try:
+            data = self._make_request('bbands', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'series_type': 'close',
+                'outputsize': 1
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                bb = data['values'][0]
+                price = self.get_price(symbol)
+                
+                return {
+                    'upper': float(bb['upper_band']),
+                    'middle': float(bb['middle_band']),
+                    'lower': float(bb['lower_band']),
+                    'current_price': price
+                }
+            return None
+        except Exception as e:
+            print(f"Error fetching Bollinger Bands for {symbol}: {e}")
+            return None
+    
+    def get_stoch(self, symbol='XAU/USD', interval='15min', k_period=14, d_period=3):
+        """
+        Get Stochastic Oscillator values
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval (15min, 30min, 1h, etc.)
+            k_period: %K period (default: 14)
+            d_period: %D period (default: 3)
+        
+        Returns:
+            dict: {
+                'k': %K value (0-100),
+                'd': %D value (0-100),
+                'is_oversold': True if %K < 20,
+                'is_overbought': True if %K > 80
+            } or None if error
+        """
+        try:
+            data = self._make_request('stoch', {
+                'symbol': symbol,
+                'interval': interval,
+                'fastkperiod': k_period,
+                'slowdperiod': d_period,
+                'outputsize': 1
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                stoch = data['values'][0]
+                k_value = float(stoch['slow_k'])
+                d_value = float(stoch['slow_d'])
+                
+                return {
+                    'k': k_value,
+                    'd': d_value,
+                    'is_oversold': k_value < 20,
+                    'is_overbought': k_value > 80
+                }
+            return None
+        except Exception as e:
+            print(f"Error fetching Stochastic for {symbol}: {e}")
+            return None
 
 twelve_data_client = TwelveDataClient()
