@@ -229,8 +229,7 @@ class TwelveDataClient:
             dict: {
                 'upper': Upper band value,
                 'middle': Middle band (SMA),
-                'lower': Lower band value,
-                'current_price': Current price
+                'lower': Lower band value
             } or None if error
         """
         try:
@@ -244,13 +243,11 @@ class TwelveDataClient:
             
             if 'values' in data and len(data['values']) > 0:
                 bb = data['values'][0]
-                price = self.get_price(symbol)
                 
                 return {
                     'upper': float(bb['upper_band']),
                     'middle': float(bb['middle_band']),
-                    'lower': float(bb['lower_band']),
-                    'current_price': price
+                    'lower': float(bb['lower_band'])
                 }
             return None
         except Exception as e:
