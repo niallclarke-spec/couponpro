@@ -100,26 +100,15 @@ class ForexTelegramBot:
         Args:
             signal_id: Database signal ID
             pips_profit: Profit in pips
-            ai_message: Optional AI-generated motivational message
+            ai_message: Optional AI-generated motivational message (ignored)
         """
         if not self.bot or not self.channel_id:
             return
         
         try:
-            if ai_message:
-                message = f"""🎉 <b>TAKE PROFIT HIT!</b> 🎉
+            message = f"""Take Profit Hit 🎉
 
-✅ Signal #{signal_id} closed with <b>+{pips_profit:.2f} pips</b> profit!
-
-{ai_message}
-"""
-            else:
-                message = f"""🎉 <b>TAKE PROFIT HIT!</b> 🎉
-
-✅ Signal #{signal_id} closed with <b>+{pips_profit:.2f} pips</b> profit!
-
-Great trade! 🚀
-"""
+<b>+{pips_profit:.2f} pips</b>"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
