@@ -64,11 +64,25 @@ class DatabasePool:
         except Exception as e:
             print(f"Database connection error: {e}")
             if conn:
-                conn.rollback()
+                try:
+                    # Only rollback if connection is still alive
+                    if not conn.closed:
+                        conn.rollback()
+                except Exception as rollback_error:
+                    print(f"Rollback failed (connection may be closed): {rollback_error}")
             raise
         finally:
             if conn:
-                self.connection_pool.putconn(conn)
+                try:
+                    # Check if connection is still usable
+                    if conn.closed:
+                        # Close it completely and don't return to pool
+                        self.connection_pool.putconn(conn, close=True)
+                    else:
+                        # Return healthy connection to pool
+                        self.connection_pool.putconn(conn)
+                except Exception as cleanup_error:
+                    print(f"Connection cleanup error: {cleanup_error}")
     
     def initialize_schema(self):
         """Create campaigns and submissions tables if they don't exist. Returns True on success."""
