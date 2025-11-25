@@ -83,6 +83,7 @@ class TwelveDataClient:
                 'macd': MACD line value,
                 'signal': Signal line value,
                 'histogram': MACD histogram value,
+                'histogram_slope': Histogram slope (positive = increasing momentum),
                 'is_bullish_cross': True if MACD just crossed above signal,
                 'is_bearish_cross': True if MACD just crossed below signal
             } or None if error
@@ -104,13 +105,18 @@ class TwelveDataClient:
                 macd_previous = float(previous['macd'])
                 signal_previous = float(previous['macd_signal'])
                 
+                hist_current = float(current['macd_hist'])
+                hist_previous = float(previous['macd_hist'])
+                hist_slope = hist_current - hist_previous
+                
                 bullish_cross = macd_previous <= signal_previous and macd_current > signal_current
                 bearish_cross = macd_previous >= signal_previous and macd_current < signal_current
                 
                 return {
                     'macd': macd_current,
                     'signal': signal_current,
-                    'histogram': float(current['macd_hist']),
+                    'histogram': hist_current,
+                    'histogram_slope': hist_slope,
                     'is_bullish_cross': bullish_cross,
                     'is_bearish_cross': bearish_cross
                 }
