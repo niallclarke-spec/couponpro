@@ -145,16 +145,20 @@ class ForexTelegramBot:
                 # Build signal list
                 signal_lines = []
                 for signal in signals_today:
+                    entry = signal.get('entry_price', 0)
+                    posted_at = datetime.fromisoformat(signal['posted_at'])
+                    time_str = posted_at.strftime('%H:%M')
+                    
                     if signal['status'] == 'won':
                         pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"✅ {signal['signal_type']} +{pips:.2f} pips")
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.2f}")
                     elif signal['status'] == 'lost':
                         pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"❌ {signal['signal_type']} {pips:.2f} pips")
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ {pips:.2f}")
                     elif signal['status'] == 'pending':
-                        signal_lines.append(f"⏳ {signal['signal_type']} Pending")
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                     elif signal['status'] == 'expired':
-                        signal_lines.append(f"⏱️ {signal['signal_type']} Expired")
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏱️")
                 
                 signal_list = "\n".join(signal_lines)
                 
@@ -212,16 +216,20 @@ class ForexTelegramBot:
                     message_lines.append(f"<b>{day}</b>")
                     
                     for signal in day_signals:
+                        entry = signal.get('entry_price', 0)
+                        posted_at = datetime.fromisoformat(signal['posted_at'])
+                        time_str = posted_at.strftime('%H:%M')
+                        
                         if signal['status'] == 'won':
                             pips = signal.get('result_pips', 0)
-                            message_lines.append(f"✅ {signal['signal_type']} +{pips:.2f}")
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.2f}")
                         elif signal['status'] == 'lost':
                             pips = signal.get('result_pips', 0)
-                            message_lines.append(f"❌ {signal['signal_type']} {pips:.2f}")
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ {pips:.2f}")
                         elif signal['status'] == 'pending':
-                            message_lines.append(f"⏳ {signal['signal_type']} Pending")
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                         elif signal['status'] == 'expired':
-                            message_lines.append(f"⏱️ {signal['signal_type']} Expired")
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏱️")
                     
                     message_lines.append("")  # Blank line between days
                 
