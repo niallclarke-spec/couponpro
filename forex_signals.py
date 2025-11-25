@@ -129,35 +129,27 @@ class ForexSignalEngine:
             print(f"[FOREX SIGNALS] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
             print(f"[FOREX SIGNALS] Trend: EMA50={ema50:.2f}, EMA200={ema200:.2f}, Stoch K={stoch['k']:.2f}")
             
-            # Step 1: Determine trend bias from 1-hour EMAs
+            # Step 1: Determine trend bias from 1-hour EMAs (for info only in testing mode)
             trend_is_bullish = ema50 > ema200
             trend_is_bearish = ema50 < ema200
-            
-            if not (trend_is_bullish or trend_is_bearish):
-                print("[FOREX SIGNALS] No clear trend - EMA 50/200 too close")
-                return None
+            trend_name = "Bullish" if trend_is_bullish else "Bearish" if trend_is_bearish else "Neutral"
             
             # Step 2: Check trend strength with ADX
             if adx < self.adx_threshold:
                 print(f"[FOREX SIGNALS] Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
                 return None
             
-            # Step 3: Check MACD histogram slope (momentum must be increasing)
+            # Step 3: Check MACD histogram slope (for info only in testing mode)
             macd_histogram = macd_data['histogram']
             macd_slope = macd_data['histogram_slope']
             
-            # For BUY: histogram should be positive AND slope positive (increasing bullish momentum)
-            # For SELL: histogram should be negative AND slope negative (increasing bearish momentum)
-            macd_momentum_increasing_bullish = macd_histogram > 0 and macd_slope > 0
-            macd_momentum_increasing_bearish = macd_histogram < 0 and macd_slope < 0
-            
             print(f"[FOREX SIGNALS] MACD Histogram: {macd_histogram:.4f}, Slope: {macd_slope:.4f}")
             
-            # Step 4: Check for signal conditions with BOTH confirmations required
+            # Step 4: Check for signal conditions - TESTING MODE (RSI-based only)
             signal_type = None
             
-            # BUY signal: Trend bullish + RSI oversold + MACD momentum increasing + at least 1 confirmation
-            if trend_is_bullish and rsi < self.rsi_oversold and macd_momentum_increasing_bullish:
+            # BUY signal: RSI oversold + at least 1 confirmation (ignore trend/MACD for testing)
+            if rsi < self.rsi_oversold:
                 # Check Bollinger Bands (price near lower band = oversold)
                 bb_distance = abs(price - bbands['lower'])
                 bb_touch = bb_distance < (atr * 0.5)
@@ -174,12 +166,12 @@ class ForexSignalEngine:
                         confirmations.append("Stoch_oversold")
                     
                     signal_type = 'BUY'
-                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend=Bullish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
+                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
                 else:
                     print(f"[FOREX SIGNALS] BUY conditions partial - BB_touch={bb_touch}, Stoch_oversold={stoch_oversold}")
             
-            # SELL signal: Trend bearish + RSI overbought + MACD momentum increasing + at least 1 confirmation
-            elif trend_is_bearish and rsi > self.rsi_overbought and macd_momentum_increasing_bearish:
+            # SELL signal: RSI overbought + at least 1 confirmation (ignore trend/MACD for testing)
+            elif rsi > self.rsi_overbought:
                 # Check Bollinger Bands (price near upper band = overbought)
                 bb_distance = abs(price - bbands['upper'])
                 bb_touch = bb_distance < (atr * 0.5)
