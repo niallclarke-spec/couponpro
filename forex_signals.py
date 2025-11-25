@@ -16,7 +16,7 @@ class ForexSignalEngine:
         self.rsi_overbought = 60
         self.atr_sl_multiplier = 2.0
         self.atr_tp_multiplier = 4.0
-        self.adx_threshold = 20
+        self.adx_threshold = 15
         
     def calculate_tp_sl(self, entry_price, atr_value, signal_type):
         """
@@ -109,7 +109,7 @@ class ForexSignalEngine:
             # Step 4: Check for signal conditions with BOTH confirmations required
             signal_type = None
             
-            # BUY signal: Trend bullish + RSI oversold + MACD momentum increasing + BOTH confirmations
+            # BUY signal: Trend bullish + RSI oversold + MACD momentum increasing + at least 1 confirmation
             if trend_is_bullish and rsi < self.rsi_oversold and macd_momentum_increasing_bullish:
                 # Check Bollinger Bands (price near lower band = oversold)
                 bb_distance = abs(price - bbands['lower'])
@@ -118,14 +118,20 @@ class ForexSignalEngine:
                 # Check Stochastic (oversold)
                 stoch_oversold = stoch['is_oversold']
                 
-                # Require BOTH confirmations
-                if bb_touch and stoch_oversold:
+                # Require at least 1 confirmation (BB touch OR Stochastic)
+                if bb_touch or stoch_oversold:
+                    confirmations = []
+                    if bb_touch:
+                        confirmations.append("BB_touch")
+                    if stoch_oversold:
+                        confirmations.append("Stoch_oversold")
+                    
                     signal_type = 'BUY'
-                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend=Bullish, RSI={rsi:.2f}, ADX={adx:.2f}, BB_touch=True, Stoch_oversold=True")
+                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend=Bullish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
                 else:
                     print(f"[FOREX SIGNALS] BUY conditions partial - BB_touch={bb_touch}, Stoch_oversold={stoch_oversold}")
             
-            # SELL signal: Trend bearish + RSI overbought + MACD momentum increasing + BOTH confirmations
+            # SELL signal: Trend bearish + RSI overbought + MACD momentum increasing + at least 1 confirmation
             elif trend_is_bearish and rsi > self.rsi_overbought and macd_momentum_increasing_bearish:
                 # Check Bollinger Bands (price near upper band = overbought)
                 bb_distance = abs(price - bbands['upper'])
@@ -134,10 +140,16 @@ class ForexSignalEngine:
                 # Check Stochastic (overbought)
                 stoch_overbought = stoch['is_overbought']
                 
-                # Require BOTH confirmations
-                if bb_touch and stoch_overbought:
+                # Require at least 1 confirmation (BB touch OR Stochastic)
+                if bb_touch or stoch_overbought:
+                    confirmations = []
+                    if bb_touch:
+                        confirmations.append("BB_touch")
+                    if stoch_overbought:
+                        confirmations.append("Stoch_overbought")
+                    
                     signal_type = 'SELL'
-                    print(f"[FOREX SIGNALS] 🔴 SELL signal - Trend=Bearish, RSI={rsi:.2f}, ADX={adx:.2f}, BB_touch=True, Stoch_overbought=True")
+                    print(f"[FOREX SIGNALS] 🔴 SELL signal - Trend=Bearish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
                 else:
                     print(f"[FOREX SIGNALS] SELL conditions partial - BB_touch={bb_touch}, Stoch_overbought={stoch_overbought}")
             
