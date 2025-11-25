@@ -11,10 +11,11 @@ import asyncio
 class ForexSignalEngine:
     def __init__(self):
         self.symbol = 'XAU/USD'
-        self.rsi_oversold = 35
-        self.rsi_overbought = 65
+        self.rsi_oversold = 40
+        self.rsi_overbought = 60
         self.atr_sl_multiplier = 2.0
         self.atr_tp_multiplier = 4.0
+        self.adx_threshold = 20
         
     def calculate_tp_sl(self, entry_price, atr_value, signal_type):
         """
@@ -39,7 +40,13 @@ class ForexSignalEngine:
     
     async def check_for_signals(self, timeframe='15min'):
         """
-        Check market conditions and generate signals if criteria met
+        Check market conditions using multi-indicator strategy
+        
+        Strategy:
+        1. Trend bias: 1-hour EMA 50/200 crossover
+        2. Trend strength: ADX > 20
+        3. Entry conditions: RSI 40/60 + MACD histogram direction
+        4. Confirmation: Bollinger Bands touch + Stochastic extreme
         
         Returns:
             dict: Signal data or None if no signal
@@ -47,29 +54,90 @@ class ForexSignalEngine:
         try:
             print(f"\n[FOREX SIGNALS] Checking for signals on {self.symbol} {timeframe}...")
             
+            # Fetch all indicators
+            price = twelve_data_client.get_price(self.symbol)
             rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
             macd_data = twelve_data_client.get_macd(self.symbol, timeframe)
             atr = twelve_data_client.get_atr(self.symbol, timeframe)
-            price = twelve_data_client.get_price(self.symbol)
+            adx = twelve_data_client.get_adx(self.symbol, timeframe)
+            bbands = twelve_data_client.get_bbands(self.symbol, timeframe)
+            stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
+            ema50 = twelve_data_client.get_ema(self.symbol, '1h', 50)
+            ema200 = twelve_data_client.get_ema(self.symbol, '1h', 200)
             
-            if not all([rsi, macd_data, atr, price]):
+            # Check if we have all required data
+            if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
                 print("[FOREX SIGNALS] ❌ Missing indicator data, skipping signal check")
                 return None
             
-            print(f"[FOREX SIGNALS] RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, Signal: {macd_data['signal']:.4f}, ATR: {atr:.2f}, Price: {price:.2f}")
+            print(f"[FOREX SIGNALS] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
+            print(f"[FOREX SIGNALS] Trend: EMA50={ema50:.2f}, EMA200={ema200:.2f}, Stoch K={stoch['k']:.2f}")
             
-            signal_type = None
+            # Step 1: Determine trend bias from 1-hour EMAs
+            trend_is_bullish = ema50 > ema200
+            trend_is_bearish = ema50 < ema200
             
-            if rsi < self.rsi_oversold and macd_data['is_bullish_cross']:
-                signal_type = 'BUY'
-                print(f"[FOREX SIGNALS] 🟢 BUY signal detected! RSI oversold ({rsi:.2f}) + MACD bullish cross")
-            elif rsi > self.rsi_overbought and macd_data['is_bearish_cross']:
-                signal_type = 'SELL'
-                print(f"[FOREX SIGNALS] 🔴 SELL signal detected! RSI overbought ({rsi:.2f}) + MACD bearish cross")
-            else:
-                print(f"[FOREX SIGNALS] No signal - RSI: {rsi:.2f}, MACD cross: Bullish={macd_data['is_bullish_cross']}, Bearish={macd_data['is_bearish_cross']}")
+            if not (trend_is_bullish or trend_is_bearish):
+                print("[FOREX SIGNALS] No clear trend - EMA 50/200 too close")
                 return None
             
+            # Step 2: Check trend strength with ADX
+            if adx < self.adx_threshold:
+                print(f"[FOREX SIGNALS] Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
+                return None
+            
+            # Step 3: Check MACD histogram direction (not just crossovers)
+            macd_histogram = macd_data['histogram']
+            macd_is_bullish = macd_histogram > 0
+            macd_is_bearish = macd_histogram < 0
+            
+            # Step 4: Check for signal conditions
+            signal_type = None
+            confirmations = []
+            
+            # BUY signal: Trend bullish + RSI oversold + MACD bullish + confirmations
+            if trend_is_bullish and rsi < self.rsi_oversold and macd_is_bullish:
+                # Check Bollinger Bands (price near lower band = oversold)
+                bb_distance = abs(price - bbands['lower'])
+                bb_touch = bb_distance < (atr * 0.5)
+                
+                # Check Stochastic (oversold)
+                stoch_oversold = stoch['is_oversold']
+                
+                if bb_touch:
+                    confirmations.append("BB_lower")
+                if stoch_oversold:
+                    confirmations.append("Stoch_oversold")
+                
+                # Require at least 1 confirmation
+                if len(confirmations) >= 1:
+                    signal_type = 'BUY'
+                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend=Bullish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
+            
+            # SELL signal: Trend bearish + RSI overbought + MACD bearish + confirmations
+            elif trend_is_bearish and rsi > self.rsi_overbought and macd_is_bearish:
+                # Check Bollinger Bands (price near upper band = overbought)
+                bb_distance = abs(price - bbands['upper'])
+                bb_touch = bb_distance < (atr * 0.5)
+                
+                # Check Stochastic (overbought)
+                stoch_overbought = stoch['is_overbought']
+                
+                if bb_touch:
+                    confirmations.append("BB_upper")
+                if stoch_overbought:
+                    confirmations.append("Stoch_overbought")
+                
+                # Require at least 1 confirmation
+                if len(confirmations) >= 1:
+                    signal_type = 'SELL'
+                    print(f"[FOREX SIGNALS] 🔴 SELL signal - Trend=Bearish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
+            
+            if not signal_type:
+                print(f"[FOREX SIGNALS] No signal - Trend={'Bullish' if trend_is_bullish else 'Bearish'}, RSI={rsi:.2f}, MACD={'Bullish' if macd_is_bullish else 'Bearish'}")
+                return None
+            
+            # Calculate TP/SL
             take_profit, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
             
             signal_data = {
