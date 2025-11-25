@@ -126,40 +126,43 @@ class ForexTelegramBot:
         Post daily performance recap at 11:59 PM GMT
         
         Args:
-            ai_recap: Optional AI-generated recap message with signal list
+            ai_recap: Optional AI-generated recap message (ignored)
         """
         if not self.bot or not self.channel_id:
             return
         
         try:
-            stats = get_forex_stats_by_period(period='today')
+            from db import get_forex_signals_by_period
             
-            if not stats:
-                print("No stats available for daily recap")
-                return
+            signals_today = get_forex_signals_by_period(period='today')
             
-            total_signals = stats.get('total_signals', 0)
-            won_signals = stats.get('won_signals', 0)
-            lost_signals = stats.get('lost_signals', 0)
-            expired_signals = stats.get('expired_signals', 0)
-            total_pips = stats.get('total_pips', 0)
-            
-            if total_signals == 0:
-                message = "📊 <b>Daily Recap</b>\n\nNo signals posted today. Market conditions didn't align."
+            if not signals_today or len(signals_today) == 0:
+                message = "📊 <b>Daily Recap</b>\n\nNo signals posted today."
             else:
-                message = f"""📊 <b>Daily Recap - {datetime.utcnow().strftime('%Y-%m-%d')}</b>
-
-<b>Performance:</b>
-✅ Won: {won_signals}
-❌ Lost: {lost_signals}
-⏱️ Expired: {expired_signals}
-📈 Total Pips: {total_pips:+.2f}
-
-<b>Total Signals:</b> {total_signals}
-"""
+                stats = get_forex_stats_by_period(period='today')
+                total_pips = stats.get('total_pips', 0)
                 
-                if ai_recap:
-                    message += f"\n{ai_recap}"
+                # Build signal list
+                signal_lines = []
+                for signal in signals_today:
+                    if signal['status'] == 'won':
+                        pips = signal.get('result_pips', 0)
+                        signal_lines.append(f"✅ {signal['signal_type']} +{pips:.2f} pips")
+                    elif signal['status'] == 'lost':
+                        pips = signal.get('result_pips', 0)
+                        signal_lines.append(f"❌ {signal['signal_type']} {pips:.2f} pips")
+                    elif signal['status'] == 'pending':
+                        signal_lines.append(f"⏳ {signal['signal_type']} Pending")
+                    elif signal['status'] == 'expired':
+                        signal_lines.append(f"⏱️ {signal['signal_type']} Expired")
+                
+                signal_list = "\n".join(signal_lines)
+                
+                message = f"""📊 <b>Daily Recap - {datetime.utcnow().strftime('%b %d')}</b>
+
+{signal_list}
+
+<b>Total: {total_pips:+.2f} pips</b>"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
@@ -177,41 +180,53 @@ class ForexTelegramBot:
         Post weekly performance recap on Sunday
         
         Args:
-            ai_recap: Optional AI-generated recap with weekly insights
+            ai_recap: Optional AI-generated recap (ignored)
         """
         if not self.bot or not self.channel_id:
             return
         
         try:
-            stats = get_forex_stats_by_period(period='week')
+            from db import get_forex_signals_by_period
+            from collections import defaultdict
             
-            if not stats:
-                print("No stats available for weekly recap")
-                return
+            signals_week = get_forex_signals_by_period(period='week')
             
-            total_signals = stats.get('total_signals', 0)
-            won_signals = stats.get('won_signals', 0)
-            lost_signals = stats.get('lost_signals', 0)
-            total_pips = stats.get('total_pips', 0)
-            
-            if total_signals == 0:
+            if not signals_week or len(signals_week) == 0:
                 message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
             else:
-                win_rate = (won_signals / total_signals * 100) if total_signals > 0 else 0
+                stats = get_forex_stats_by_period(period='week')
+                total_pips = stats.get('total_pips', 0)
                 
-                message = f"""📊 <b>Weekly Recap</b>
-
-<b>This Week's Performance:</b>
-✅ Won: {won_signals}
-❌ Lost: {lost_signals}
-📊 Win Rate: {win_rate:.1f}%
-📈 Total Pips: {total_pips:+.2f}
-
-<b>Total Signals:</b> {total_signals}
-"""
+                # Group signals by day
+                signals_by_day = defaultdict(list)
+                for signal in signals_week:
+                    posted_at = datetime.fromisoformat(signal['posted_at'])
+                    day_key = posted_at.strftime('%b %d')
+                    signals_by_day[day_key].append(signal)
                 
-                if ai_recap:
-                    message += f"\n{ai_recap}"
+                # Build message with daily breakdown
+                message_lines = ["📊 <b>Weekly Recap</b>\n"]
+                
+                for day in sorted(signals_by_day.keys()):
+                    day_signals = signals_by_day[day]
+                    message_lines.append(f"<b>{day}</b>")
+                    
+                    for signal in day_signals:
+                        if signal['status'] == 'won':
+                            pips = signal.get('result_pips', 0)
+                            message_lines.append(f"✅ {signal['signal_type']} +{pips:.2f}")
+                        elif signal['status'] == 'lost':
+                            pips = signal.get('result_pips', 0)
+                            message_lines.append(f"❌ {signal['signal_type']} {pips:.2f}")
+                        elif signal['status'] == 'pending':
+                            message_lines.append(f"⏳ {signal['signal_type']} Pending")
+                        elif signal['status'] == 'expired':
+                            message_lines.append(f"⏱️ {signal['signal_type']} Expired")
+                    
+                    message_lines.append("")  # Blank line between days
+                
+                message_lines.append(f"<b>Weekly Total: {total_pips:+.2f} pips</b>")
+                message = "\n".join(message_lines)
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
