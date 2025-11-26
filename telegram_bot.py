@@ -18,6 +18,7 @@ from telegram.ext import (
     MessageHandler,
     CallbackQueryHandler,
     ConversationHandler,
+    ChatMemberHandler,
     filters,
     ContextTypes,
     AIORateLimiter
@@ -1032,6 +1033,156 @@ def sync_check_user_in_channel(channel_id, user_id):
     except Exception as e:
         print(f"[TELEGRAM] Error in sync_check_user_in_channel: {e}")
         return None
+
+
+async def handle_chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle chat member updates (joins, leaves, etc.) in the forex signals channel.
+    
+    This function is triggered when a user joins the private forex channel and
+    automatically links their Telegram user ID to their subscription record.
+    
+    NOTE: Chat member updates must be enabled in BotFather settings:
+    /setprivacy -> Disable (to receive all messages)
+    OR bot must be admin in the channel to receive member updates
+    """
+    try:
+        if not update.chat_member:
+            return
+        
+        chat_member_update = update.chat_member
+        
+        # Check if this is the forex signals channel
+        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        if not forex_channel_id:
+            return
+        
+        # Convert to int for comparison (channel IDs are negative integers)
+        try:
+            forex_channel_id = int(forex_channel_id)
+        except ValueError:
+            print(f"[JOIN_TRACKER] Invalid FOREX_CHANNEL_ID format: {forex_channel_id}")
+            return
+        
+        if chat_member_update.chat.id != forex_channel_id:
+            return
+        
+        old_status = chat_member_update.old_chat_member.status
+        new_status = chat_member_update.new_chat_member.status
+        
+        # Check if this is a join event (user was not a member, now is a member)
+        # Member statuses: 'member', 'administrator', 'creator'
+        # Non-member statuses: 'left', 'kicked', 'restricted'
+        is_join = (old_status in ['left', 'kicked', 'restricted']) and (new_status in ['member', 'administrator', 'creator'])
+        
+        if not is_join:
+            return
+        
+        # Extract user information
+        user = chat_member_update.new_chat_member.user
+        telegram_user_id = user.id
+        telegram_username = user.username if user.username else None
+        
+        # Extract invite link if available (may be None)
+        invite_link = None
+        if hasattr(chat_member_update, 'invite_link') and chat_member_update.invite_link:
+            invite_link = chat_member_update.invite_link.invite_link
+        
+        # Get join timestamp
+        from datetime import datetime
+        joined_at = datetime.utcnow()
+        
+        print(f"[JOIN_TRACKER] User joined: {telegram_user_id} (@{telegram_username}), invite_link: {invite_link}")
+        
+        # Link to subscription in database (run in thread to avoid blocking event loop)
+        import db
+        result = await asyncio.to_thread(
+            db.link_subscription_to_telegram_user,
+            invite_link,
+            telegram_user_id,
+            telegram_username,
+            joined_at
+        )
+        
+        if result:
+            print(f"[JOIN_TRACKER] ✅ Successfully linked user {telegram_user_id} to subscription {result['email']}")
+        else:
+            print(f"[JOIN_TRACKER] ⚠️ Could not link user {telegram_user_id} (@{telegram_username}) - no matching pending subscription")
+        
+    except Exception as e:
+        print(f"[JOIN_TRACKER] ❌ Error handling chat member update: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def start_join_tracking():
+    """
+    Start the Telegram bot join tracking for the forex signals channel.
+    
+    This function creates a separate bot application that monitors member joins
+    in the private forex signals channel and automatically links Telegram user IDs
+    to subscription records.
+    
+    Requirements:
+    - FOREX_BOT_TOKEN environment variable must be set
+    - FOREX_CHANNEL_ID environment variable must be set
+    - Bot must be admin in the channel to receive chat member updates
+    - Chat member updates must be enabled in BotFather settings
+    
+    This runs independently via polling in a background task.
+    """
+    try:
+        forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        
+        if not forex_bot_token:
+            print("[JOIN_TRACKER] ⚠️ FOREX_BOT_TOKEN not set - join tracking disabled")
+            return
+        
+        if not forex_channel_id:
+            print("[JOIN_TRACKER] ⚠️ FOREX_CHANNEL_ID not set - join tracking disabled")
+            return
+        
+        print("[JOIN_TRACKER] Initializing join tracking bot...")
+        print(f"[JOIN_TRACKER] Monitoring channel: {forex_channel_id}")
+        print("[JOIN_TRACKER] NOTE: Bot must be admin in channel and chat member updates must be enabled in BotFather")
+        
+        # Create application
+        application = (
+            Application.builder()
+            .token(forex_bot_token)
+            .build()
+        )
+        
+        # Add chat member handler
+        application.add_handler(ChatMemberHandler(handle_chat_member_update, ChatMemberHandler.CHAT_MEMBER))
+        
+        print("[JOIN_TRACKER] ✅ Join tracking bot initialized, starting polling...")
+        
+        # Initialize and start the application manually (avoids signal handler issues in threads)
+        await application.initialize()
+        await application.start()
+        await application.updater.start_polling(allowed_updates=['chat_member'])
+        
+        print("[JOIN_TRACKER] ✅ Join tracking bot is now running")
+        
+        # Keep the bot running indefinitely
+        while True:
+            await asyncio.sleep(3600)
+        
+    except Exception as e:
+        print(f"[JOIN_TRACKER] ❌ Error starting join tracking: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Clean shutdown
+        try:
+            if 'application' in locals():
+                await application.updater.stop()
+                await application.stop()
+                await application.shutdown()
+        except Exception as cleanup_error:
+            print(f"[JOIN_TRACKER] Error during cleanup: {cleanup_error}")
 
 
 def run_bot(bot_token):

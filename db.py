@@ -2244,3 +2244,93 @@ def update_telegram_subscription_last_seen(telegram_user_id):
     except Exception as e:
         print(f"Error updating telegram subscription last seen: {e}")
         return False
+
+def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at):
+    """
+    Auto-link a Telegram user ID to a subscription record when they join the channel.
+    
+    This function is called by the Telegram bot join tracker when a user joins the private channel.
+    It matches the join event to a subscription record using the invite link (or fallback logic).
+    
+    Args:
+        invite_link (str): Invite link used to join (may be None if not available)
+        telegram_user_id (int): Telegram user ID
+        telegram_username (str): Telegram username (may be None)
+        joined_at (datetime): Timestamp when user joined
+    
+    Returns:
+        dict: Updated subscription record or None if no match found
+    """
+    try:
+        if not db_pool.connection_pool:
+            print("[JOIN_TRACKER] Database not available")
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Try to find subscription by invite_link first
+            subscription_id = None
+            if invite_link:
+                cursor.execute("""
+                    SELECT id, email FROM telegram_subscriptions
+                    WHERE invite_link = %s AND status = 'pending'
+                    LIMIT 1
+                """, (invite_link,))
+                result = cursor.fetchone()
+                if result:
+                    subscription_id = result[0]
+                    email = result[1]
+                    print(f"[JOIN_TRACKER] Found subscription by invite_link: {email}")
+            
+            # Fallback: Find most recent pending subscription if no invite_link match
+            if not subscription_id:
+                cursor.execute("""
+                    SELECT id, email FROM telegram_subscriptions
+                    WHERE status = 'pending' AND telegram_user_id IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """)
+                result = cursor.fetchone()
+                if result:
+                    subscription_id = result[0]
+                    email = result[1]
+                    print(f"[JOIN_TRACKER] Fallback: Using most recent pending subscription: {email}")
+                else:
+                    print(f"[JOIN_TRACKER] ⚠️ No pending subscription found for user {telegram_user_id} (@{telegram_username})")
+                    return None
+            
+            # Update the subscription with user info atomically
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET telegram_user_id = %s,
+                    telegram_username = %s,
+                    joined_at = %s,
+                    last_seen_at = %s,
+                    status = 'active',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                RETURNING id, email, telegram_user_id, telegram_username, status, joined_at
+            """, (telegram_user_id, telegram_username, joined_at, joined_at, subscription_id))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                print(f"[JOIN_TRACKER] ✅ Successfully linked subscription {result[1]} to Telegram user {telegram_user_id} (@{telegram_username})")
+                return {
+                    'id': result[0],
+                    'email': result[1],
+                    'telegram_user_id': result[2],
+                    'telegram_username': result[3],
+                    'status': result[4],
+                    'joined_at': result[5].isoformat() if result[5] else None
+                }
+            
+            return None
+            
+    except Exception as e:
+        print(f"[JOIN_TRACKER] ❌ Error linking subscription to telegram user: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
