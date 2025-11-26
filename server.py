@@ -1883,7 +1883,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     return
                 
                 # Generate invite link for private channel
-                private_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID', '-1002362748548')
+                private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                if not private_channel_id:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'FOREX_CHANNEL_ID not configured'}).encode())
+                    return
+                
                 invite_link = telegram_bot.sync_create_private_channel_invite_link(private_channel_id)
                 
                 if not invite_link:
@@ -1974,13 +1981,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Kick user from channel if they've joined
                 if telegram_user_id:
-                    private_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID', '-1002362748548')
-                    kicked = telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id)
-                    
-                    if kicked:
-                        print(f"[TELEGRAM-SUB] ✅ User {telegram_user_id} kicked from channel")
+                    private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                    if not private_channel_id:
+                        print("[TELEGRAM-SUB] ⚠️ FOREX_CHANNEL_ID not configured, cannot kick user")
                     else:
-                        print(f"[TELEGRAM-SUB] ⚠️  Failed to kick user {telegram_user_id}")
+                        kicked = telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                        
+                        if kicked:
+                            print(f"[TELEGRAM-SUB] ✅ User {telegram_user_id} kicked from channel")
+                        else:
+                            print(f"[TELEGRAM-SUB] ⚠️  Failed to kick user {telegram_user_id}")
                 
                 # TODO: Send cancellation email (when Resend is set up)
                 
