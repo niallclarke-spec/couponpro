@@ -25,7 +25,7 @@ The API key must be configured in both systems:
 
 ### 1. Grant Access (Create Subscription)
 
-Creates a new subscription and generates a private Telegram channel invite link.
+Creates a new subscription and generates a private Telegram channel invite link. Supports both paid (Stripe) and free users.
 
 **Endpoint**: `POST /api/telegram/grant-access`
 
@@ -36,14 +36,39 @@ Content-Type: application/json
 ```
 
 **Request Body**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | **Yes** | Customer email address |
+| `name` | string | No | Customer name |
+| `planType` | string | No | Plan type (default: "premium") |
+| `amountPaid` | number | No | Amount paid (default: 49.00, use 0 for free) |
+| `stripeCustomerId` | string | No | Stripe customer ID (null for free users) |
+| `stripeSubscriptionId` | string | No | Stripe subscription ID (null for free users) |
+
+**Plan Types**:
+- `"Free Gold Signals"` with `amountPaid: 0` = Free user
+- `"Premium Forex Signals"` with `amountPaid: 49` or `319` = Paid user
+
+**Paid User Example**:
 ```json
 {
   "email": "customer@example.com",
   "name": "John Doe",
-  "plan_type": "Premium Forex Signals",
-  "amount_paid": 49,
-  "stripe_customer_id": "cus_xxxxxxxxxxxxx",
-  "stripe_subscription_id": "sub_xxxxxxxxxxxxx"
+  "planType": "Premium Forex Signals",
+  "amountPaid": 49,
+  "stripeCustomerId": "cus_xxxxxxxxxxxxx",
+  "stripeSubscriptionId": "sub_xxxxxxxxxxxxx"
+}
+```
+
+**Free User Example**:
+```json
+{
+  "email": "freeuser@example.com",
+  "name": "Jane Smith",
+  "planType": "Free Gold Signals",
+  "amountPaid": 0
 }
 ```
 
@@ -57,11 +82,11 @@ Content-Type: application/json
 ```
 
 **Error Responses**:
-- `400`: Missing required fields or subscription already exists
+- `400`: Missing required field: email
 - `401`: Unauthorized - Invalid API key
 - `500`: Server error creating subscription
 
-**Example (Node.js)**:
+**Example - Paid User (Node.js)**:
 ```javascript
 const response = await fetch('https://dash.promostack.io/api/telegram/grant-access', {
   method: 'POST',
@@ -72,10 +97,10 @@ const response = await fetch('https://dash.promostack.io/api/telegram/grant-acce
   body: JSON.stringify({
     email: 'customer@example.com',
     name: 'John Doe',
-    plan_type: 'Premium Forex Signals',
-    amount_paid: 49,
-    stripe_customer_id: 'cus_xxxxxxxxxxxxx',
-    stripe_subscription_id: 'sub_xxxxxxxxxxxxx'
+    planType: 'Premium Forex Signals',
+    amountPaid: 49,
+    stripeCustomerId: 'cus_xxxxxxxxxxxxx',
+    stripeSubscriptionId: 'sub_xxxxxxxxxxxxx'
   })
 });
 
@@ -83,7 +108,27 @@ const data = await response.json();
 console.log('Invite link:', data.inviteLink);
 ```
 
-**Example (cURL)**:
+**Example - Free User (Node.js)**:
+```javascript
+const response = await fetch('https://dash.promostack.io/api/telegram/grant-access', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': process.env.PROMOSTACK_API_KEY,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'freeuser@example.com',
+    name: 'Jane Smith',
+    planType: 'Free Gold Signals',
+    amountPaid: 0
+  })
+});
+
+const data = await response.json();
+console.log('Invite link:', data.inviteLink);
+```
+
+**Example - Paid User (cURL)**:
 ```bash
 curl -X POST https://dash.promostack.io/api/telegram/grant-access \
   -H "X-API-Key: your_api_key_here" \
@@ -91,10 +136,23 @@ curl -X POST https://dash.promostack.io/api/telegram/grant-access \
   -d '{
     "email": "customer@example.com",
     "name": "John Doe",
-    "plan_type": "Premium Forex Signals",
-    "amount_paid": 49,
-    "stripe_customer_id": "cus_xxxxxxxxxxxxx",
-    "stripe_subscription_id": "sub_xxxxxxxxxxxxx"
+    "planType": "Premium Forex Signals",
+    "amountPaid": 49,
+    "stripeCustomerId": "cus_xxxxxxxxxxxxx",
+    "stripeSubscriptionId": "sub_xxxxxxxxxxxxx"
+  }'
+```
+
+**Example - Free User (cURL)**:
+```bash
+curl -X POST https://dash.promostack.io/api/telegram/grant-access \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "freeuser@example.com",
+    "name": "Jane Smith",
+    "planType": "Free Gold Signals",
+    "amountPaid": 0
   }'
 ```
 

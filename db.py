@@ -2011,16 +2011,20 @@ def update_forex_config(config_updates):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id, stripe_subscription_id, plan_type='premium', amount_paid=49.00, name=None):
+def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None):
     """
     Create a new telegram subscription record.
     
+    Supports both paid (Stripe) and free users:
+    - Paid users: Include stripeCustomerId and stripeSubscriptionId
+    - Free users: Pass None for Stripe fields, set planType='Free Gold Signals' and amountPaid=0
+    
     Args:
-        email (str): Customer email
-        stripe_customer_id (str): Stripe customer ID
-        stripe_subscription_id (str): Stripe subscription ID
-        plan_type (str): Plan type (default: 'premium')
-        amount_paid (float): Amount paid (default: 49.00)
+        email (str): Customer email (required)
+        stripe_customer_id (str): Stripe customer ID (optional, None for free users)
+        stripe_subscription_id (str): Stripe subscription ID (optional, None for free users)
+        plan_type (str): Plan type (default: 'premium', use 'Free Gold Signals' for free users)
+        amount_paid (float): Amount paid (default: 49.00, use 0 for free users)
         name (str): Customer name (optional)
     
     Returns:

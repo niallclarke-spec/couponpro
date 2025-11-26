@@ -1849,21 +1849,27 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 
                 email = data.get('email')
-                stripe_customer_id = data.get('stripeCustomerId')
-                stripe_subscription_id = data.get('stripeSubscriptionId')
+                
+                # Normalize Stripe fields - treat placeholders as None for clean data
+                stripe_placeholders = {'', 'free', 'free_signup', 'test', 'null', 'none', 'n/a'}
+                raw_customer_id = data.get('stripeCustomerId')
+                raw_subscription_id = data.get('stripeSubscriptionId')
+                stripe_customer_id = None if not raw_customer_id or str(raw_customer_id).lower().strip() in stripe_placeholders else raw_customer_id
+                stripe_subscription_id = None if not raw_subscription_id or str(raw_subscription_id).lower().strip() in stripe_placeholders else raw_subscription_id
                 user_id = data.get('userId')
                 name = data.get('name')
                 plan_type = data.get('planType', 'premium')
-                amount_paid = float(data.get('amountPaid', 49.00))
+                amount_paid = float(data.get('amountPaid', 49.00)) if data.get('amountPaid') is not None else 49.00
                 
-                if not email or not stripe_subscription_id:
+                if not email:
                     self.send_response(400)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing required fields: email, stripeSubscriptionId'}).encode())
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing required field: email'}).encode())
                     return
                 
-                print(f"[TELEGRAM-SUB] Grant access request for {email}")
+                is_free_user = amount_paid == 0 or plan_type == 'Free Gold Signals'
+                print(f"[TELEGRAM-SUB] Grant access request for {email} (plan: {plan_type}, amount: ${amount_paid}, free: {is_free_user})")
                 
                 # Create subscription record in database
                 subscription = db.create_telegram_subscription(
