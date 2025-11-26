@@ -882,21 +882,28 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
 async def create_private_channel_invite_link(channel_id):
     """
     Create a unique invite link for the private Telegram channel.
+    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
     
     Args:
-        channel_id (int|str): Telegram channel ID (e.g., -1002362748548)
+        channel_id (int|str): Telegram channel ID (e.g., -1003213499920)
     
     Returns:
         str: Invite link URL or None if error
     """
     try:
-        if _bot_application is None:
-            print("[TELEGRAM] ERROR: Bot not initialized, cannot create invite link")
+        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
+        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        if not forex_token:
+            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot create invite link")
             return None
         
-        # Create invite link with expiration (7 days) and member limit (1)
+        # Create a temporary bot instance for this operation
+        from telegram import Bot
+        bot = Bot(token=forex_token)
+        
+        # Create invite link with member limit (1) - single-use link
         # This ensures each link is unique and can be tracked
-        invite_link = await _bot_application.bot.create_chat_invite_link(
+        invite_link = await bot.create_chat_invite_link(
             chat_id=channel_id,
             member_limit=1,  # Single-use link
             name="EntryLab Subscription"
@@ -915,6 +922,7 @@ async def create_private_channel_invite_link(channel_id):
 async def kick_user_from_channel(channel_id, user_id):
     """
     Remove a user from the private Telegram channel.
+    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
     
     Args:
         channel_id (int|str): Telegram channel ID
@@ -924,18 +932,24 @@ async def kick_user_from_channel(channel_id, user_id):
         bool: True if successful, False otherwise
     """
     try:
-        if _bot_application is None:
-            print("[TELEGRAM] ERROR: Bot not initialized, cannot kick user")
+        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
+        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        if not forex_token:
+            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot kick user")
             return False
         
+        # Create a temporary bot instance for this operation
+        from telegram import Bot
+        bot = Bot(token=forex_token)
+        
         # Ban user (this kicks them out)
-        await _bot_application.bot.ban_chat_member(
+        await bot.ban_chat_member(
             chat_id=channel_id,
             user_id=user_id
         )
         
         # Unban immediately so they can be re-added later if they resubscribe
-        await _bot_application.bot.unban_chat_member(
+        await bot.unban_chat_member(
             chat_id=channel_id,
             user_id=user_id
         )
@@ -953,6 +967,7 @@ async def kick_user_from_channel(channel_id, user_id):
 async def check_user_in_channel(channel_id, user_id):
     """
     Check if a user is a member of the channel.
+    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
     
     Args:
         channel_id (int|str): Telegram channel ID
@@ -962,11 +977,17 @@ async def check_user_in_channel(channel_id, user_id):
         dict: {'is_member': bool, 'status': str} or None if error
     """
     try:
-        if _bot_application is None:
-            print("[TELEGRAM] ERROR: Bot not initialized, cannot check user")
+        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
+        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        if not forex_token:
+            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot check user")
             return None
         
-        member = await _bot_application.bot.get_chat_member(
+        # Create a temporary bot instance for this operation
+        from telegram import Bot
+        bot = Bot(token=forex_token)
+        
+        member = await bot.get_chat_member(
             chat_id=channel_id,
             user_id=user_id
         )
