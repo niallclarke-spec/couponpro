@@ -2386,7 +2386,9 @@
                 activeView.classList.add('active');
                 
                 // Load data for specific views
-                if (viewId === 'coupon-analytics') {
+                if (viewId === 'coupon-templates') {
+                    loadAssets();
+                } else if (viewId === 'coupon-analytics') {
                     loadAnalytics();
                 } else if (viewId === 'forex-subscriptions') {
                     loadSubscriptions();
