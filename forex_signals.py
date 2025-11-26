@@ -193,7 +193,8 @@ class ForexSignalEngine:
                     print(f"[FOREX SIGNALS] SELL conditions partial - BB_touch={bb_touch}, Stoch_overbought={stoch_overbought}")
             
             if not signal_type:
-                print(f"[FOREX SIGNALS] No signal - Trend={'Bullish' if trend_is_bullish else 'Bearish'}, RSI={rsi:.2f}, MACD_momentum={'Increasing_Bullish' if macd_momentum_increasing_bullish else 'Increasing_Bearish' if macd_momentum_increasing_bearish else 'Not_Increasing'}")
+                macd_momentum = 'Increasing_Bullish' if macd_slope > 0 and macd_histogram > 0 else 'Increasing_Bearish' if macd_slope < 0 and macd_histogram < 0 else 'Not_Increasing'
+                print(f"[FOREX SIGNALS] No signal - Trend={'Bullish' if trend_is_bullish else 'Bearish'}, RSI={rsi:.2f}, MACD_momentum={macd_momentum}")
                 return None
             
             # Calculate TP/SL
@@ -249,6 +250,10 @@ class ForexSignalEngine:
                 tp = float(signal['take_profit'])
                 sl = float(signal['stop_loss'])
                 posted_at = signal['posted_at']
+                
+                # Parse posted_at if it's a string
+                if isinstance(posted_at, str):
+                    posted_at = datetime.fromisoformat(posted_at.replace('Z', '+00:00'))
                 
                 hours_elapsed = (now - posted_at).total_seconds() / 3600
                 
