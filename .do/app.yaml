@@ -49,6 +49,18 @@ services:
       - key: DB_PASSWORD
         scope: RUN_TIME
         type: SECRET
+      - key: ENTRYLAB_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: FOREX_BOT_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: FOREX_CHANNEL_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWELVE_DATA_API_KEY
+        scope: RUN_TIME
+        type: SECRET
 
 # telegram-bot worker removed - webhook mode in server.py handles all bot traffic
 # This prevents dual-process state conflicts where coupon_cache becomes inconsistent
