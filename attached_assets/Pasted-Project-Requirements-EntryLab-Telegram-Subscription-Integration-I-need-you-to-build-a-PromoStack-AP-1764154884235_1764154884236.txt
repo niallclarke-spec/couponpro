@@ -1,0 +1,178 @@
+Project Requirements: EntryLab Telegram Subscription Integration
+I need you to build a PromoStack API integration that manages Telegram channel access for my subscription-based trading signals service (EntryLab). This will handle automatic grant/revoke of channel access based on Stripe subscription events.
+
+System Overview
+EntryLab Architecture:
+
+Main app: entrylab.io (this Replit project)
+Stripe-based subscriptions: $49/month or $319/year
+Database tracking: PostgreSQL with signal_users and subscriptions tables
+Webhook handler: Processes Stripe events and calls PromoStack API
+Telegram Channels:
+
+Public Channel: https://t.me/entrylabs (for email captures, anyone can join)
+Private Channel: https://t.me/+TbJsf9xRrNkwN2E0 (for paid subscribers only)
+Bot Token Available: TELEGRAM_BOT_TOKEN environment variable
+
+Required API Endpoints
+Build these RESTful endpoints that EntryLab will call:
+
+1. Grant Access Endpoint
+POST /api/telegram/grant-access
+
+Request Body:
+
+{
+  "email": "customer@example.com",
+  "stripeCustomerId": "cus_ABC123",
+  "stripeSubscriptionId": "sub_XYZ789",
+  "userId": "uuid-here"
+}
+
+What This Should Do:
+
+Generate a private invite link for https://t.me/+TbJsf9xRrNkwN2E0
+Store user association (email → Telegram user when they join)
+Send welcome email with invite link and instructions
+Return the invite link
+Response:
+
+{
+  "success": true,
+  "inviteLink": "https://t.me/+uniqueInviteCode",
+  "message": "Access granted"
+}
+
+2. Revoke Access Endpoint
+POST /api/telegram/revoke-access
+
+Request Body:
+
+{
+  "email": "customer@example.com",
+  "stripeSubscriptionId": "sub_XYZ789",
+  "reason": "subscription_canceled" // or "payment_failed", "subscription_expired"
+}
+
+What This Should Do:
+
+Look up Telegram user ID by email/subscription
+Kick/ban user from private channel https://t.me/+TbJsf9xRrNkwN2E0
+Send cancellation email notification
+Log the action
+Response:
+
+{
+  "success": true,
+  "message": "Access revoked for customer@example.com"
+}
+
+3. Check Access Status Endpoint
+GET /api/telegram/check-access/:email
+
+Response:
+
+{
+  "hasAccess": true,
+  "telegramUserId": "123456789",
+  "telegramUsername": "@username",
+  "joinedAt": "2025-11-25T12:00:00Z"
+}
+
+When EntryLab Will Call These Endpoints
+Grant Access Called On:
+
+✅ checkout.session.completed - New subscription payment
+✅ invoice.payment_succeeded - Renewal payment or reactivation
+Revoke Access Called On:
+
+❌ customer.subscription.deleted - Subscription canceled
+❌ customer.subscription.updated (status: canceled/past_due)
+❌ invoice.payment_failed - Payment failed (after grace period)
+❌ Daily cron job - Catches expired subscriptions
+Email Notifications Needed
+Please implement email sending (via Resend, SendGrid, or similar):
+
+Welcome Email (on grant access):
+
+Subject: "Welcome to EntryLab Premium Signals 🎯"
+Body: Invite link, instructions, channel rules
+CTA: "Join Private Channel"
+Cancellation Email (on revoke access):
+
+Subject: "Your EntryLab Subscription Has Ended"
+Body: Reason for removal, resubscribe link
+CTA: "Reactivate Subscription"
+Payment Failed Warning:
+
+Subject: "Payment Failed - Update Your Card"
+Body: Grace period info, update payment link
+Technical Requirements
+Telegram Bot Setup:
+
+Use the TELEGRAM_BOT_TOKEN from environment
+Bot must be admin in https://t.me/+TbJsf9xRrNkwN2E0
+Bot permissions needed:
+Can invite users via link
+Can restrict members (kick/ban)
+Can send messages (for notifications)
+API Methods Needed:
+
+exportChatInviteLink() - Generate invite links
+banChatMember() - Kick users
+getChatMember() - Check if user is in channel
+Database Tracking:
+
+Store mapping: email → telegramUserId → telegramUsername
+Log all grant/revoke actions with timestamps
+Track invite link usage
+Security:
+
+Require API key authentication for all endpoints
+Rate limiting on endpoints
+Validate webhook signatures if needed
+Environment Variables You'll Need
+TELEGRAM_BOT_TOKEN=<provided by me>
+TELEGRAM_PRIVATE_CHANNEL_ID=-1002362748548  # https://t.me/+TbJsf9xRrNkwN2E0
+TELEGRAM_PUBLIC_CHANNEL_ID=@entrylabs  # https://t.me/entrylabs
+PROMOSTACK_API_KEY=<generate a secure key>
+RESEND_API_KEY=<for emails>
+DATABASE_URL=<PostgreSQL connection>
+
+Expected Flow Example
+New Subscription Flow:
+
+User pays on EntryLab → Stripe webhook fires
+EntryLab calls POST /api/telegram/grant-access
+PromoStack generates invite link
+PromoStack sends welcome email with link
+User joins private channel
+PromoStack stores Telegram user ID
+Cancellation Flow:
+
+User cancels → Stripe webhook fires
+EntryLab calls POST /api/telegram/revoke-access
+PromoStack kicks user from channel
+PromoStack sends cancellation email
+User removed from access
+Success Criteria
+When done, I should be able to:
+
+✅ Call your API to grant access → user gets invite link via email
+✅ User joins channel successfully
+✅ Call your API to revoke access → user immediately kicked
+✅ Query access status for any email
+✅ All actions logged in your database
+Additional Features (Nice to Have)
+Admin Dashboard - View all active subscriptions, manually grant/revoke
+Webhook Endpoint - Receive updates from EntryLab about status changes
+Analytics - Track join rates, active members, churn
+Scheduled Jobs - Daily check for expired subscriptions
+Grace Period - Allow 3-day grace for failed payments before kicking
+Please build these endpoints and provide me with:
+
+Base URL for your API (e.g., https://promostack.replit.dev)
+API key for authentication
+Documentation for all endpoints
+Webhook URL if you support receiving status updates
+Let me know when the endpoints are ready for integration testing!
