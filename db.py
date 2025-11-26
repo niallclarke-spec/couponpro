@@ -314,6 +314,49 @@ class DatabasePool:
                     ON forex_config(setting_key)
                 """)
                 
+                # Create telegram_subscriptions table for EntryLab integration
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS telegram_subscriptions (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        name VARCHAR(255),
+                        telegram_user_id BIGINT UNIQUE,
+                        telegram_username VARCHAR(255),
+                        stripe_customer_id VARCHAR(255),
+                        stripe_subscription_id VARCHAR(255) UNIQUE,
+                        plan_type VARCHAR(50),
+                        amount_paid DECIMAL(10, 2),
+                        status VARCHAR(50) DEFAULT 'pending',
+                        invite_link TEXT,
+                        joined_at TIMESTAMP,
+                        last_seen_at TIMESTAMP,
+                        revoked_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create indexes on telegram_subscriptions
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_email 
+                    ON telegram_subscriptions(email)
+                """)
+                
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_telegram_user_id 
+                    ON telegram_subscriptions(telegram_user_id)
+                """)
+                
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_status 
+                    ON telegram_subscriptions(status)
+                """)
+                
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_stripe_subscription_id 
+                    ON telegram_subscriptions(stripe_subscription_id)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -1965,3 +2008,239 @@ def update_forex_config(config_updates):
     except Exception as e:
         print(f"Error updating forex config: {e}")
         raise
+
+# ===== Telegram Subscriptions Functions =====
+
+def create_telegram_subscription(email, stripe_customer_id, stripe_subscription_id, plan_type='premium', amount_paid=49.00, name=None):
+    """
+    Create a new telegram subscription record.
+    
+    Args:
+        email (str): Customer email
+        stripe_customer_id (str): Stripe customer ID
+        stripe_subscription_id (str): Stripe subscription ID
+        plan_type (str): Plan type (default: 'premium')
+        amount_paid (float): Amount paid (default: 49.00)
+        name (str): Customer name (optional)
+    
+    Returns:
+        dict: Created subscription record or None if failed
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO telegram_subscriptions 
+                (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, status, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at
+            """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                return {
+                    'id': result[0],
+                    'email': result[1],
+                    'stripe_customer_id': result[2],
+                    'stripe_subscription_id': result[3],
+                    'status': result[4],
+                    'created_at': result[5].isoformat() if result[5] else None
+                }
+            
+            return None
+    except Exception as e:
+        print(f"Error creating telegram subscription: {e}")
+        return None
+
+def get_telegram_subscription_by_email(email):
+    """Get telegram subscription by email"""
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, email, name, telegram_user_id, telegram_username, 
+                       stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                       status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
+                FROM telegram_subscriptions
+                WHERE email = %s
+            """, (email,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'id': row[0],
+                'email': row[1],
+                'name': row[2],
+                'telegram_user_id': row[3],
+                'telegram_username': row[4],
+                'stripe_customer_id': row[5],
+                'stripe_subscription_id': row[6],
+                'plan_type': row[7],
+                'amount_paid': float(row[8]) if row[8] else 0.0,
+                'status': row[9],
+                'invite_link': row[10],
+                'joined_at': row[11].isoformat() if row[11] else None,
+                'last_seen_at': row[12].isoformat() if row[12] else None,
+                'revoked_at': row[13].isoformat() if row[13] else None,
+                'created_at': row[14].isoformat() if row[14] else None,
+                'updated_at': row[15].isoformat() if row[15] else None
+            }
+    except Exception as e:
+        print(f"Error getting telegram subscription by email: {e}")
+        return None
+
+def update_telegram_subscription_invite(email, invite_link):
+    """Update telegram subscription with invite link"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET invite_link = %s, status = 'active', updated_at = CURRENT_TIMESTAMP
+                WHERE email = %s
+            """, (invite_link, email))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating telegram subscription invite: {e}")
+        return False
+
+def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username):
+    """Update telegram subscription when user joins channel"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET telegram_user_id = %s, telegram_username = %s, 
+                    joined_at = CURRENT_TIMESTAMP, last_seen_at = CURRENT_TIMESTAMP,
+                    status = 'active', updated_at = CURRENT_TIMESTAMP
+                WHERE email = %s
+            """, (telegram_user_id, telegram_username, email))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating telegram subscription user joined: {e}")
+        return False
+
+def revoke_telegram_subscription(email, reason='subscription_canceled'):
+    """Revoke telegram subscription access"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET status = 'revoked', revoked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                WHERE email = %s
+                RETURNING telegram_user_id
+            """, (email,))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                return result[0]
+            return None
+    except Exception as e:
+        print(f"Error revoking telegram subscription: {e}")
+        return None
+
+def get_all_telegram_subscriptions(status_filter=None):
+    """Get all telegram subscriptions with optional status filter"""
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if status_filter:
+                cursor.execute("""
+                    SELECT id, email, name, telegram_user_id, telegram_username, 
+                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
+                    FROM telegram_subscriptions
+                    WHERE status = %s
+                    ORDER BY created_at DESC
+                """, (status_filter,))
+            else:
+                cursor.execute("""
+                    SELECT id, email, name, telegram_user_id, telegram_username, 
+                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
+                    FROM telegram_subscriptions
+                    ORDER BY created_at DESC
+                """)
+            
+            subscriptions = []
+            for row in cursor.fetchall():
+                subscriptions.append({
+                    'id': row[0],
+                    'email': row[1],
+                    'name': row[2],
+                    'telegram_user_id': row[3],
+                    'telegram_username': row[4],
+                    'stripe_customer_id': row[5],
+                    'stripe_subscription_id': row[6],
+                    'plan_type': row[7],
+                    'amount_paid': float(row[8]) if row[8] else 0.0,
+                    'status': row[9],
+                    'invite_link': row[10],
+                    'joined_at': row[11].isoformat() if row[11] else None,
+                    'last_seen_at': row[12].isoformat() if row[12] else None,
+                    'revoked_at': row[13].isoformat() if row[13] else None,
+                    'created_at': row[14].isoformat() if row[14] else None,
+                    'updated_at': row[15].isoformat() if row[15] else None
+                })
+            
+            return subscriptions
+    except Exception as e:
+        print(f"Error getting all telegram subscriptions: {e}")
+        return []
+
+def update_telegram_subscription_last_seen(telegram_user_id):
+    """Update last_seen_at for a telegram user"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET last_seen_at = CURRENT_TIMESTAMP
+                WHERE telegram_user_id = %s
+            """, (telegram_user_id,))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating telegram subscription last seen: {e}")
+        return False

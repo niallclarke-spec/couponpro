@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Subscriptions - PromoStack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #a0a0b0;
+            font-size: 1.1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-buttons button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-buttons button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-buttons button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-revoked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .view-details-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .view-details-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .detail-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            color: #a0a0b0;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-revoke {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+
+        .btn-revoke:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.2rem;
+            color: #a0a0b0;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.9rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .filter-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💳 Telegram Subscriptions</h1>
+            <p class="subtitle">Manage EntryLab subscriber access to private channel</p>
+            <a href="https://admin.promostack.io" class="back-link">← Back to Admin Panel</a>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search by email or name..." />
+            </div>
+            <div class="filter-buttons">
+                <button class="active" data-status="all">All</button>
+                <button data-status="active">Active</button>
+                <button data-status="pending">Pending</button>
+                <button data-status="revoked">Revoked</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Subscriptions</h2>
+            <div id="subscriptionsContent">
+                <div class="loading">Loading subscriptions...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Customer Details</div>
+            <div id="modalDetails"></div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-close" onclick="closeModal()">Close</button>
+                <button id="revokeBtn" class="modal-btn btn-revoke" onclick="revokeAccess()">Revoke Access</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allSubscriptions = [];
+        let currentFilter = 'all';
+        let currentSubscription = null;
+
+        async function loadSubscriptions() {
+            try {
+                const response = await fetch('/api/telegram-subscriptions');
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        document.getElementById('subscriptionsContent').innerHTML = `
+                            <div class="error">
+                                <h2>🔒 Authentication Required</h2>
+                                <p>Please log in to view subscriptions.</p>
+                                <a href="https://admin.promostack.io" class="back-link">→ Go to Admin Login</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    throw new Error('Failed to load subscriptions');
+                }
+
+                const data = await response.json();
+                allSubscriptions = data.subscriptions || [];
+                renderSubscriptions();
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+                document.getElementById('subscriptionsContent').innerHTML = `
+                    <div class="error">
+                        <h2>❌ Error Loading Subscriptions</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderSubscriptions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allSubscriptions;
+            
+            // Apply status filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(sub => sub.status === currentFilter);
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(sub => 
+                    (sub.email && sub.email.toLowerCase().includes(searchTerm)) ||
+                    (sub.name && sub.name.toLowerCase().includes(searchTerm)) ||
+                    (sub.telegram_username && sub.telegram_username.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('subscriptionsContent').innerHTML = `
+                    <div class="empty">No subscriptions found</div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Customer</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Telegram</th>
+                                <th>Signed Up</th>
+                                <th>Last Seen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map((sub, index) => `
+                                <tr>
+                                    <td>#${index + 1}</td>
+                                    <td>
+                                        <div>${sub.name || 'Unknown'}</div>
+                                        <div style="font-size: 0.85rem; color: #a0a0b0;">${sub.email}</div>
+                                    </td>
+                                    <td>${sub.plan_type || 'Premium'} ($${sub.amount_paid || '49'})</td>
+                                    <td>
+                                        <span class="status-badge status-${sub.status}">
+                                            ${sub.status === 'active' ? '🟢' : sub.status === 'pending' ? '⏸️' : '🔴'} ${sub.status}
+                                        </span>
+                                    </td>
+                                    <td>${sub.telegram_username || 'Not joined'}</td>
+                                    <td>${formatDate(sub.created_at)}</td>
+                                    <td>${formatDate(sub.last_seen_at) || '-'}</td>
+                                    <td>
+                                        <button class="view-details-btn" onclick="showDetails(${index})">View Details</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('subscriptionsContent').innerHTML = tableHTML;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function showDetails(index) {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allSubscriptions;
+            
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(sub => sub.status === currentFilter);
+            }
+            
+            if (searchTerm) {
+                filtered = filtered.filter(sub => 
+                    (sub.email && sub.email.toLowerCase().includes(searchTerm)) ||
+                    (sub.name && sub.name.toLowerCase().includes(searchTerm)) ||
+                    (sub.telegram_username && sub.telegram_username.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            currentSubscription = filtered[index];
+            
+            const detailsHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">📧 Email</div>
+                    <div class="detail-value">${currentSubscription.email}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">👤 Name</div>
+                    <div class="detail-value">${currentSubscription.name || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">💰 Total Paid</div>
+                    <div class="detail-value">$${currentSubscription.amount_paid || '0'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">📅 Signed Up</div>
+                    <div class="detail-value">${formatDate(currentSubscription.created_at)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🔔 Last Seen</div>
+                    <div class="detail-value">${formatDate(currentSubscription.last_seen_at) || 'Never'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">📱 Telegram</div>
+                    <div class="detail-value">${currentSubscription.telegram_username || 'Not joined'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🏷️ Plan</div>
+                    <div class="detail-value">${currentSubscription.plan_type || 'Premium'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🔄 Status</div>
+                    <div class="detail-value">
+                        <span class="status-badge status-${currentSubscription.status}">${currentSubscription.status}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">💳 Stripe Customer ID</div>
+                    <div class="detail-value" style="font-size: 0.9rem;">${currentSubscription.stripe_customer_id || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🔗 Subscription ID</div>
+                    <div class="detail-value" style="font-size: 0.9rem;">${currentSubscription.stripe_subscription_id || 'N/A'}</div>
+                </div>
+            `;
+
+            document.getElementById('modalDetails').innerHTML = detailsHTML;
+            document.getElementById('revokeBtn').style.display = currentSubscription.status === 'active' ? 'block' : 'none';
+            document.getElementById('detailsModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+            currentSubscription = null;
+        }
+
+        async function revokeAccess() {
+            if (!currentSubscription || !confirm(`Revoke access for ${currentSubscription.email}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/telegram/revoke-access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: currentSubscription.email,
+                        reason: 'manual_revocation'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to revoke access');
+                }
+
+                alert('Access revoked successfully!');
+                closeModal();
+                loadSubscriptions();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderSubscriptions);
+
+        document.querySelectorAll('.filter-buttons button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.getAttribute('data-status');
+                renderSubscriptions();
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('detailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Load on page load
+        loadSubscriptions();
+    </script>
+</body>
+</html>

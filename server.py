@@ -570,6 +570,103 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path.startswith('/api/telegram/check-access/'):
+            # EntryLab API - Check subscription access status by email
+            api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
+            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            
+            if not api_key or api_key != expected_key or not expected_key:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'hasAccess': False, 'error': 'Unauthorized - Invalid API key'}).encode())
+                return
+            
+            try:
+                # Extract email from path (URL-encoded)
+                from urllib.parse import unquote
+                email = unquote(parsed_path.path.split('/api/telegram/check-access/')[1])
+                
+                if not email:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'hasAccess': False, 'error': 'Email parameter required'}).encode())
+                    return
+                
+                # Get subscription from database
+                subscription = db.get_telegram_subscription_by_email(email)
+                
+                if not subscription:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'hasAccess': False,
+                        'error': f'No subscription found for {email}'
+                    }).encode())
+                    return
+                
+                has_access = subscription['status'] == 'active' and subscription['telegram_user_id'] is not None
+                
+                response_data = {
+                    'hasAccess': has_access,
+                    'telegramUserId': subscription.get('telegram_user_id'),
+                    'telegramUsername': subscription.get('telegram_username'),
+                    'status': subscription.get('status'),
+                    'joinedAt': subscription.get('joined_at'),
+                    'lastSeenAt': subscription.get('last_seen_at')
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(response_data).encode())
+                
+            except Exception as e:
+                print(f"[TELEGRAM-SUB] Error checking access: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'hasAccess': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/telegram-subscriptions':
+            # Admin endpoint - Get all telegram subscriptions for dashboard
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                query_params = parse_qs(parsed_path.query)
+                status_filter = query_params.get('status', [None])[0]
+                
+                subscriptions = db.get_all_telegram_subscriptions(status_filter=status_filter)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'subscriptions': subscriptions}).encode())
+            except Exception as e:
+                print(f"[TELEGRAM-SUB] Error getting subscriptions: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/broadcast-status/'):
             if not DATABASE_AVAILABLE:
                 self.send_response(503)
@@ -1726,6 +1823,188 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/telegram/grant-access':
+            # EntryLab API - Grant access to private Telegram channel
+            api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
+            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            
+            if not api_key or api_key != expected_key or not expected_key:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized - Invalid API key'}).encode())
+                return
+            
+            if not TELEGRAM_BOT_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Telegram bot not available'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                email = data.get('email')
+                stripe_customer_id = data.get('stripeCustomerId')
+                stripe_subscription_id = data.get('stripeSubscriptionId')
+                user_id = data.get('userId')
+                name = data.get('name')
+                plan_type = data.get('planType', 'premium')
+                amount_paid = float(data.get('amountPaid', 49.00))
+                
+                if not email or not stripe_subscription_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing required fields: email, stripeSubscriptionId'}).encode())
+                    return
+                
+                print(f"[TELEGRAM-SUB] Grant access request for {email}")
+                
+                # Create subscription record in database
+                subscription = db.create_telegram_subscription(
+                    email=email,
+                    stripe_customer_id=stripe_customer_id,
+                    stripe_subscription_id=stripe_subscription_id,
+                    plan_type=plan_type,
+                    amount_paid=amount_paid,
+                    name=name
+                )
+                
+                if not subscription:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Failed to create subscription record'}).encode())
+                    return
+                
+                # Generate invite link for private channel
+                private_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID', '-1002362748548')
+                invite_link = telegram_bot.sync_create_private_channel_invite_link(private_channel_id)
+                
+                if not invite_link:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Failed to create invite link'}).encode())
+                    return
+                
+                # Update subscription with invite link
+                db.update_telegram_subscription_invite(email, invite_link)
+                
+                print(f"[TELEGRAM-SUB] ✅ Access granted for {email}, invite: {invite_link}")
+                
+                # TODO: Send welcome email with invite link (when Resend is set up)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'inviteLink': invite_link,
+                    'message': 'Access granted successfully'
+                }).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
+            except Exception as e:
+                print(f"[TELEGRAM-SUB] Error granting access: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/telegram/revoke-access':
+            # EntryLab API - Revoke access to private Telegram channel
+            api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
+            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            
+            if not api_key or api_key != expected_key or not expected_key:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized - Invalid API key'}).encode())
+                return
+            
+            if not TELEGRAM_BOT_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Telegram bot not available'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                email = data.get('email')
+                reason = data.get('reason', 'subscription_canceled')
+                
+                if not email:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing required field: email'}).encode())
+                    return
+                
+                print(f"[TELEGRAM-SUB] Revoke access request for {email}, reason: {reason}")
+                
+                # Get subscription to find Telegram user ID
+                subscription = db.get_telegram_subscription_by_email(email)
+                
+                if not subscription:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': f'No subscription found for {email}'}).encode())
+                    return
+                
+                # Revoke in database
+                telegram_user_id = db.revoke_telegram_subscription(email, reason)
+                
+                # Kick user from channel if they've joined
+                if telegram_user_id:
+                    private_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID', '-1002362748548')
+                    kicked = telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                    
+                    if kicked:
+                        print(f"[TELEGRAM-SUB] ✅ User {telegram_user_id} kicked from channel")
+                    else:
+                        print(f"[TELEGRAM-SUB] ⚠️  Failed to kick user {telegram_user_id}")
+                
+                # TODO: Send cancellation email (when Resend is set up)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Access revoked for {email}'
+                }).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
+            except Exception as e:
+                print(f"[TELEGRAM-SUB] Error revoking access: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/campaigns':
             if not DATABASE_AVAILABLE:

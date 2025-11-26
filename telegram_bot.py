@@ -878,6 +878,162 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
         return {'status': 'error', 'message': str(e)}
 
 
+async def create_private_channel_invite_link(channel_id):
+    """
+    Create a unique invite link for the private Telegram channel.
+    
+    Args:
+        channel_id (int|str): Telegram channel ID (e.g., -1002362748548)
+    
+    Returns:
+        str: Invite link URL or None if error
+    """
+    try:
+        if _bot_application is None:
+            print("[TELEGRAM] ERROR: Bot not initialized, cannot create invite link")
+            return None
+        
+        # Create invite link with expiration (7 days) and member limit (1)
+        # This ensures each link is unique and can be tracked
+        invite_link = await _bot_application.bot.create_chat_invite_link(
+            chat_id=channel_id,
+            member_limit=1,  # Single-use link
+            name="EntryLab Subscription"
+        )
+        
+        print(f"[TELEGRAM] Created invite link: {invite_link.invite_link}")
+        return invite_link.invite_link
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Error creating invite link: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+async def kick_user_from_channel(channel_id, user_id):
+    """
+    Remove a user from the private Telegram channel.
+    
+    Args:
+        channel_id (int|str): Telegram channel ID
+        user_id (int): Telegram user ID to kick
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        if _bot_application is None:
+            print("[TELEGRAM] ERROR: Bot not initialized, cannot kick user")
+            return False
+        
+        # Ban user (this kicks them out)
+        await _bot_application.bot.ban_chat_member(
+            chat_id=channel_id,
+            user_id=user_id
+        )
+        
+        # Unban immediately so they can be re-added later if they resubscribe
+        await _bot_application.bot.unban_chat_member(
+            chat_id=channel_id,
+            user_id=user_id
+        )
+        
+        print(f"[TELEGRAM] Kicked user {user_id} from channel {channel_id}")
+        return True
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Error kicking user: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+async def check_user_in_channel(channel_id, user_id):
+    """
+    Check if a user is a member of the channel.
+    
+    Args:
+        channel_id (int|str): Telegram channel ID
+        user_id (int): Telegram user ID
+    
+    Returns:
+        dict: {'is_member': bool, 'status': str} or None if error
+    """
+    try:
+        if _bot_application is None:
+            print("[TELEGRAM] ERROR: Bot not initialized, cannot check user")
+            return None
+        
+        member = await _bot_application.bot.get_chat_member(
+            chat_id=channel_id,
+            user_id=user_id
+        )
+        
+        # Member status can be: 'creator', 'administrator', 'member', 'restricted', 'left', 'kicked'
+        is_member = member.status in ['creator', 'administrator', 'member', 'restricted']
+        
+        return {
+            'is_member': is_member,
+            'status': member.status
+        }
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Error checking user membership: {e}")
+        return None
+
+
+def sync_create_private_channel_invite_link(channel_id):
+    """Synchronous wrapper for creating invite links (for use in HTTP handlers)"""
+    if _bot_loop is None:
+        print("[TELEGRAM] ERROR: Bot loop not initialized")
+        return None
+    
+    try:
+        future = asyncio.run_coroutine_threadsafe(
+            create_private_channel_invite_link(channel_id),
+            _bot_loop
+        )
+        return future.result(timeout=10)
+    except Exception as e:
+        print(f"[TELEGRAM] Error in sync_create_private_channel_invite_link: {e}")
+        return None
+
+
+def sync_kick_user_from_channel(channel_id, user_id):
+    """Synchronous wrapper for kicking users (for use in HTTP handlers)"""
+    if _bot_loop is None:
+        print("[TELEGRAM] ERROR: Bot loop not initialized")
+        return False
+    
+    try:
+        future = asyncio.run_coroutine_threadsafe(
+            kick_user_from_channel(channel_id, user_id),
+            _bot_loop
+        )
+        return future.result(timeout=10)
+    except Exception as e:
+        print(f"[TELEGRAM] Error in sync_kick_user_from_channel: {e}")
+        return False
+
+
+def sync_check_user_in_channel(channel_id, user_id):
+    """Synchronous wrapper for checking user membership (for use in HTTP handlers)"""
+    if _bot_loop is None:
+        print("[TELEGRAM] ERROR: Bot loop not initialized")
+        return None
+    
+    try:
+        future = asyncio.run_coroutine_threadsafe(
+            check_user_in_channel(channel_id, user_id),
+            _bot_loop
+        )
+        return future.result(timeout=10)
+    except Exception as e:
+        print(f"[TELEGRAM] Error in sync_check_user_in_channel: {e}")
+        return None
+
+
 def run_bot(bot_token):
     """
     Start the Telegram bot with polling.
