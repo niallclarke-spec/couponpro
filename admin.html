@@ -632,6 +632,296 @@
             color: #a0aec0;
         }
 
+        /* Analytics Chart Card */
+        .chart-card {
+            margin: 24px 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .day-of-week-stats {
+            margin-top: 20px;
+            text-align: center;
+            color: #4a5568;
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin: 32px 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-title {
+            margin: 0;
+            color: #1a202c;
+            font-size: 18px;
+        }
+
+        .section-subtitle {
+            margin: 8px 0 0 0;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        /* Retention Grid */
+        .retention-grid {
+            margin-bottom: 24px;
+        }
+
+        .retention-card-day1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .retention-card-day7 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .retention-card-day30 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .retention-card-day1 .analytics-stat-label,
+        .retention-card-day7 .analytics-stat-label,
+        .retention-card-day30 .analytics-stat-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .retention-card-day1 .analytics-stat-value,
+        .retention-card-day7 .analytics-stat-value,
+        .retention-card-day30 .analytics-stat-value {
+            color: white;
+        }
+
+        .analytics-stat-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .loading-text {
+            color: #718096;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Analytics Stats Grid */
+        .analytics-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .analytics-stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 24px;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .analytics-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+        }
+
+        .analytics-stat-label {
+            font-size: 13px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analytics-stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* Analytics Tables */
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .analytics-table thead {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .analytics-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analytics-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .analytics-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .analytics-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .analytics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Scrollable Table Container */
+        .table-scroll {
+            max-height: 360px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Side-by-side layout for Analytics */
+        .analytics-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .analytics-row .card {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-row {
+                flex-direction: column;
+            }
+            
+            .analytics-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .analytics-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table thead {
+            background: #f7fafc;
+        }
+
+        .leaderboard-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .leaderboard-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        .leaderboard-table tbody tr {
+            transition: transform 0.2s;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            transform: scale(1.01);
+        }
+
+        .leaderboard-rank-1 {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%) !important;
+        }
+
+        .leaderboard-rank-2 {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%) !important;
+        }
+
+        .leaderboard-rank-3 {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%) !important;
+        }
+
+        .leaderboard-rank {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Telegram Link */
+        .telegram-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .telegram-link:hover {
+            text-decoration: underline;
+        }
+
         /* Placeholder */
         .placeholder-view {
             text-align: center;
@@ -3602,6 +3892,8 @@
         // Analytics Functions
         let currentAnalyticsDays = 7;
         let analyticsChart = null;
+        let allInvalidCoupons = [];
+        let dayOfWeekChart = null;
 
         async function changeAnalyticsPeriod(days) {
             currentAnalyticsDays = days;
@@ -3618,14 +3910,18 @@
 
         async function loadAnalytics() {
             try {
-                const response = await fetch(`/api/bot-stats?days=${currentAnalyticsDays}`);
+                const [statsResponse, retentionResponse] = await Promise.all([
+                    fetch(`/api/bot-stats?days=${currentAnalyticsDays}`),
+                    fetch('/api/retention-rates')
+                ]);
                 
-                if (!response.ok) {
+                if (!statsResponse.ok) {
                     throw new Error('Failed to load analytics');
                 }
 
-                const stats = await response.json();
-                renderAnalyticsStats(stats);
+                const stats = await statsResponse.json();
+                const retention = retentionResponse.ok ? await retentionResponse.json() : { day1: 0, day7: 0, day30: 0 };
+                renderAnalyticsStats(stats, retention);
             } catch (error) {
                 console.error('Error loading analytics:', error);
                 document.getElementById('analytics-content').innerHTML = `
@@ -3636,7 +3932,7 @@
             }
         }
 
-        function renderAnalyticsStats(stats) {
+        function renderAnalyticsStats(stats, retention = { day1: 0, day7: 0, day30: 0 }) {
             const content = document.getElementById('analytics-content');
             
             if (stats.total_uses === 0) {
@@ -3650,48 +3946,91 @@
             }
 
             content.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Uses</div>
-                        <div class="stat-value">${stats.total_uses.toLocaleString()}</div>
+                <div class="analytics-stats-grid">
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-label">Total Uses</div>
+                        <div class="analytics-stat-value">${stats.total_uses.toLocaleString()}</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Success Rate</div>
-                        <div class="stat-value">${stats.success_rate}%</div>
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-label">Success Rate</div>
+                        <div class="analytics-stat-value">${stats.success_rate}%</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Unique Users</div>
-                        <div class="stat-value">${stats.unique_users.toLocaleString()}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Successful Uses</div>
-                        <div class="stat-value">${stats.successful_uses.toLocaleString()}</div>
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-label">Unique Users</div>
+                        <div class="analytics-stat-value">${stats.unique_users.toLocaleString()}</div>
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 24px;">
-                    <h2 class="card-title">Daily Usage</h2>
-                    <div style="height: 300px; padding: 16px;">
+                <div class="card chart-card">
+                    <div class="card-title" id="usageChartTitle">Daily Usage</div>
+                    <div class="chart-container">
                         <canvas id="analyticsChart"></canvas>
                     </div>
                 </div>
-
-                <div class="card" style="margin-top: 24px;">
-                    <h2 class="card-title">Popular Templates</h2>
-                    <div class="table-container">
-                        ${renderAnalyticsTemplatesTable(stats.popular_templates)}
+                
+                <div class="section-header">
+                    <h3 class="section-title">📈 User Retention Metrics</h3>
+                    <p class="section-subtitle">Independent metrics showing % of users who return after first use (all-time data)</p>
+                </div>
+                
+                <div class="analytics-stats-grid retention-grid">
+                    <div class="analytics-stat-card retention-card-day1">
+                        <div class="analytics-stat-label">Day 1 Retention</div>
+                        <div class="analytics-stat-value">${retention.day1}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 24-48h</div>
+                    </div>
+                    <div class="analytics-stat-card retention-card-day7">
+                        <div class="analytics-stat-label">Day 7 Retention</div>
+                        <div class="analytics-stat-value">${retention.day7}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 7-14 days</div>
+                    </div>
+                    <div class="analytics-stat-card retention-card-day30">
+                        <div class="analytics-stat-label">Day 30 Retention</div>
+                        <div class="analytics-stat-value">${retention.day30}%</div>
+                        <div class="analytics-stat-subtext">Users who return within 30-60 days</div>
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 24px;">
-                    <h2 class="card-title">Popular Coupon Codes</h2>
+                <div class="card">
+                    <div class="card-title">🏆 Most Active Users</div>
+                    <div id="mostActiveUsersContainer">
+                        <p class="loading-text">Loading most active users...</p>
+                    </div>
+                </div>
+
+                <div class="analytics-row">
+                    <div class="card">
+                        <div id="dayOfWeekCardTitle" class="card-title">📅 Most Popular Days</div>
+                        <div class="chart-container">
+                            <canvas id="dayOfWeekChart"></canvas>
+                        </div>
+                        <div id="dayOfWeekStatsText" class="day-of-week-stats"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">📊 Popular Templates</div>
+                        <div class="table-container">
+                            ${renderAnalyticsTemplatesTable(stats.popular_templates)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎟️ Popular Coupon Codes</div>
                     <div class="table-container">
                         ${renderAnalyticsCouponsTable(stats.popular_coupons)}
                     </div>
                 </div>
 
+                <div class="card" style="background: #fef2f2; border: 2px solid #fee2e2;">
+                    <div class="card-title">⚠️ Invalid Coupon Attempts</div>
+                    <div id="invalidCouponsContainer">
+                        <p class="loading-text">Loading invalid coupon attempts...</p>
+                    </div>
+                </div>
+
                 ${stats.errors && stats.errors.length > 0 ? `
-                    <div class="card" style="margin-top: 24px;">
+                    <div class="card">
                         <h2 class="card-title">Error Breakdown</h2>
                         <div class="table-container">
                             ${renderAnalyticsErrorsTable(stats.errors)}
@@ -3701,6 +4040,12 @@
             `;
 
             renderAnalyticsChart(stats.daily_usage);
+            
+            setTimeout(() => {
+                loadInvalidCoupons();
+                loadMostActiveUsers();
+                loadDayOfWeekStats();
+            }, 0);
         }
 
         function renderAnalyticsTemplatesTable(templates) {
@@ -3818,9 +4163,422 @@
             });
         }
 
+        // Invalid Coupon Attempts
+        async function loadInvalidCoupons() {
+            try {
+                const response = await fetch(`/api/invalid-coupons?limit=1000&offset=0&days=${currentAnalyticsDays}`);
+                const data = await response.json();
+                
+                allInvalidCoupons = data.attempts || [];
+                renderInvalidCoupons(data.attempts || [], data.total || 0);
+            } catch (error) {
+                console.error('Error loading invalid coupons:', error);
+                document.getElementById('invalidCouponsContainer').innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 20px;">Failed to load invalid coupon attempts</p>
+                `;
+            }
+        }
+
+        function renderInvalidCoupons(attempts, total) {
+            const container = document.getElementById('invalidCouponsContainer');
+            
+            if (attempts.length === 0) {
+                container.innerHTML = '<p style="color: #718096; text-align: center; padding: 20px;">No invalid coupon attempts</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-secondary" onclick="exportInvalidCouponsCSV()" style="padding: 8px 16px;">
+                        📥 Export CSV
+                    </button>
+                    <span style="color: #4a5568;"><strong>${total.toLocaleString()}</strong> total invalid attempts</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="analytics-table">
+                        <thead style="background: #fecaca;">
+                            <tr>
+                                <th>Invalid Code</th>
+                                <th>Template Used</th>
+                                <th>User</th>
+                                <th>Timestamp</th>
+                                <th>Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allInvalidCoupons.map(a => {
+                                let userDisplay;
+                                const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
+                                const usernameLink = a.username ? `<a href="https://t.me/${a.username}" target="_blank" class="telegram-link">@${a.username}</a>` : '';
+                                
+                                if (fullName && a.username) {
+                                    userDisplay = `${fullName} (${usernameLink})`;
+                                } else if (a.username) {
+                                    userDisplay = usernameLink;
+                                } else if (fullName) {
+                                    userDisplay = fullName;
+                                } else {
+                                    userDisplay = 'Unknown User';
+                                }
+                                
+                                return `
+                                    <tr>
+                                        <td><code>${a.coupon_code}</code></td>
+                                        <td>${a.template_name || 'N/A'}</td>
+                                        <td>${userDisplay}</td>
+                                        <td>${new Date(a.timestamp).toLocaleString()}</td>
+                                        <td>${a.attempt_count || 1}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function exportInvalidCouponsCSV() {
+            if (allInvalidCoupons.length === 0) {
+                alert('No invalid coupon data to export');
+                return;
+            }
+
+            const csvContent = [
+                ['Coupon Code', 'Template', 'Username', 'First Name', 'Last Name', 'Timestamp', 'Attempts'],
+                ...allInvalidCoupons.map(a => [
+                    a.coupon_code,
+                    a.template_name || 'N/A',
+                    a.username || '',
+                    a.first_name || '',
+                    a.last_name || '',
+                    new Date(a.timestamp).toISOString(),
+                    a.attempt_count || 1
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `invalid-coupons-${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // User Details Modal
+        async function showUserDetails(chatId) {
+            const modal = document.getElementById('userDetailsModal');
+            const content = document.getElementById('userDetailsContent');
+            
+            modal.classList.add('active');
+            content.innerHTML = '<p style="color: #718096; text-align: center; padding: 40px;">Loading user details...</p>';
+            
+            try {
+                const response = await fetch(`/api/user-activity/${chatId}`);
+                const data = await response.json();
+                
+                const user = data.user || {};
+                const history = data.history || [];
+                
+                let userDisplay;
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+                const usernameLink = user.username ? `<a href="https://t.me/${user.username}" target="_blank" class="telegram-link">@${user.username}</a>` : '';
+                
+                if (fullName && user.username) {
+                    userDisplay = `${fullName} (${usernameLink})`;
+                } else if (user.username) {
+                    userDisplay = usernameLink;
+                } else if (fullName) {
+                    userDisplay = fullName;
+                } else {
+                    userDisplay = 'Unknown User';
+                }
+                
+                content.innerHTML = `
+                    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 12px; color: #1a202c;">User Profile</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div>
+                                <strong style="color: #4a5568;">User:</strong> ${userDisplay}
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Chat ID:</strong> <code>${user.chat_id}</code>
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Total Generations:</strong> ${user.total_generations || 0}
+                            </div>
+                            <div>
+                                <strong style="color: #4a5568;">Unique Coupons:</strong> ${user.unique_coupons || 0}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 12px; color: #1a202c;">Activity History</h3>
+                    ${history.length === 0 ? `
+                        <p style="color: #718096; text-align: center; padding: 20px;">No activity history</p>
+                    ` : `
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Template</th>
+                                        <th>Coupon</th>
+                                        <th>Status</th>
+                                        <th>Error Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${history.map(h => {
+                                        const isSuccess = h.success || h.status === 'success';
+                                        const statusBadge = isSuccess 
+                                            ? '<span class="status-badge status-success">Success</span>'
+                                            : '<span class="status-badge status-error">Failed</span>';
+                                        
+                                        return `
+                                            <tr>
+                                                <td>${new Date(h.timestamp).toLocaleString()}</td>
+                                                <td>${h.template || 'N/A'}</td>
+                                                <td><code>${h.coupon_code || 'N/A'}</code></td>
+                                                <td>${statusBadge}</td>
+                                                <td>${h.error_type || '-'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                `;
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                content.innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 40px;">
+                        Failed to load user details. Please try again.
+                    </p>
+                `;
+            }
+        }
+
+        function closeUserDetailsModal() {
+            document.getElementById('userDetailsModal').classList.remove('active');
+        }
+
+        // Most Active Users Leaderboard
+        async function loadMostActiveUsers() {
+            try {
+                const response = await fetch('/api/bot-users?limit=1000&offset=0');
+                const data = await response.json();
+                
+                renderMostActiveUsers(data.users || []);
+            } catch (error) {
+                console.error('Error loading most active users:', error);
+                document.getElementById('mostActiveUsersContainer').innerHTML = `
+                    <p style="color: #ef4444; text-align: center; padding: 20px;">Failed to load most active users</p>
+                `;
+            }
+        }
+
+        function renderMostActiveUsers(users) {
+            const container = document.getElementById('mostActiveUsersContainer');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p style="color: #718096; text-align: center; padding: 20px;">No user data available</p>';
+                return;
+            }
+
+            const badges = ['🥇', '🥈', '🥉'];
+            const rankClasses = ['leaderboard-rank-1', 'leaderboard-rank-2', 'leaderboard-rank-3'];
+
+            container.innerHTML = `
+                <div class="table-scroll">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User</th>
+                                <th>Total Gens</th>
+                                <th>Unique Coupons</th>
+                                <th>First Seen</th>
+                                <th>Last Seen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map((u, index) => {
+                                const rank = index + 1;
+                                const badge = rank <= 3 ? badges[index] : '';
+                                const rankClass = rank <= 3 ? rankClasses[index] : '';
+                                
+                                let userDisplay;
+                                const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ');
+                                const usernameLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" class="telegram-link">@${u.username}</a>` : '';
+                                
+                                if (fullName && u.username) {
+                                    userDisplay = `${fullName} (${usernameLink})`;
+                                } else if (u.username) {
+                                    userDisplay = usernameLink;
+                                } else if (fullName) {
+                                    userDisplay = fullName;
+                                } else {
+                                    userDisplay = 'Unknown User';
+                                }
+                                
+                                return `
+                                    <tr class="${rankClass}">
+                                        <td><span class="leaderboard-rank">${badge} #${rank}</span></td>
+                                        <td>${userDisplay}</td>
+                                        <td>${u.total_generations || 0}</td>
+                                        <td>${u.unique_coupons || 0}</td>
+                                        <td>${u.first_used ? new Date(u.first_used).toLocaleDateString() : 'N/A'}</td>
+                                        <td>${u.last_used ? new Date(u.last_used).toLocaleDateString() : 'N/A'}</td>
+                                        <td><button class="view-details-btn" style="padding: 6px 12px; font-size: 12px; border: 2px solid #7c3aed; color: #7c3aed; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;" onclick="showUserDetails(${u.chat_id})">View Details</button></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Utility function to capitalize first letter
+        function capitalizeFirst(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // Day of Week / Hour Analytics
+        async function loadDayOfWeekStats() {
+            try {
+                const response = await fetch(`/api/day-of-week-stats?days=${currentAnalyticsDays}`);
+                const result = await response.json();
+                
+                const titleElement = document.getElementById('dayOfWeekCardTitle');
+                if (result.type === 'hourly') {
+                    titleElement.textContent = '⏰ Most Popular Hours';
+                } else {
+                    titleElement.textContent = '📅 Most Popular Days';
+                }
+                
+                if (result.data && result.data.length > 0) {
+                    renderDayOfWeekChart(result.data, result.type);
+                } else {
+                    const chartContainer = document.querySelector('#dayOfWeekChart').parentElement;
+                    chartContainer.innerHTML = `
+                        <p style="color: #718096; text-align: center; padding: 40px;">No data available yet</p>
+                    `;
+                    document.getElementById('dayOfWeekStatsText').innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Error loading day-of-week analytics:', error);
+                const chartContainer = document.querySelector('#dayOfWeekChart')?.parentElement;
+                if (chartContainer) {
+                    chartContainer.innerHTML = `
+                        <p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load analytics</p>
+                    `;
+                }
+                document.getElementById('dayOfWeekStatsText').innerHTML = '';
+            }
+        }
+
+        function renderDayOfWeekChart(data, type) {
+            if (dayOfWeekChart) {
+                dayOfWeekChart.destroy();
+            }
+
+            const ctx = document.getElementById('dayOfWeekChart');
+            if (!ctx) return;
+
+            const labels = data.map(d => d.label);
+            const counts = data.map(d => d.count);
+            
+            const maxCount = Math.max(...counts);
+            const backgroundColor = counts.map(count => 
+                count === maxCount && maxCount > 0 ? '#fbbf24' : '#667eea'
+            );
+
+            const totalGenerations = counts.reduce((sum, count) => sum + count, 0);
+            const mostPopularLabel = maxCount > 0 ? labels[counts.indexOf(maxCount)] : null;
+
+            dayOfWeekChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Bot Uses',
+                        data: counts,
+                        backgroundColor: backgroundColor,
+                        borderColor: backgroundColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    const isPeak = value === maxCount && maxCount > 0;
+                                    return `Uses: ${value}${isPeak ? ' 🏆 Peak!' : ''}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const labelType = type === 'hourly' ? 'Hour' : 'Day';
+            if (mostPopularLabel) {
+                document.getElementById('dayOfWeekStatsText').innerHTML = `
+                    <strong>Total: ${totalGenerations.toLocaleString()} generations</strong> | 
+                    🏆 Most Popular ${labelType}: <strong>${mostPopularLabel}</strong> (${maxCount} uses)
+                `;
+            } else {
+                document.getElementById('dayOfWeekStatsText').innerHTML = `
+                    <strong>Total: ${totalGenerations.toLocaleString()} generations</strong>
+                `;
+            }
+        }
+
         // Initial render
         updatePreviewsImmediate();
 
     </script>
+
+    <!-- User Details Modal -->
+    <div class="modal-overlay" id="userDetailsModal">
+        <div class="modal-box" style="max-width: 900px;">
+            <div class="modal-title">User Details</div>
+            <div id="userDetailsContent" style="margin: 20px 0; max-height: 500px; overflow-y: auto;">
+                <p style="color: #718096; text-align: center;">Loading user details...</p>
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn modal-btn-cancel" onclick="closeUserDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
