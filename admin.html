@@ -2483,7 +2483,9 @@
 
         async function loadSubscriptions() {
             try {
-                const response = await fetch('/api/telegram-subscriptions');
+                const response = await fetch('/api/telegram-subscriptions', {
+                    credentials: 'include'
+                });
                 if (!response.ok) throw new Error('Failed to load subscriptions');
                 
                 const data = await response.json();
