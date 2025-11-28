@@ -2098,13 +2098,36 @@
                 <div class="content-body">
                     <div class="controls" style="margin-bottom: 20px;">
                         <div style="flex: 1; min-width: 300px;">
-                            <input type="text" id="subscriptionSearchInput" placeholder="🔍 Search by email or name..." style="width: 100%;" oninput="searchSubscriptions(this.value)">
+                            <input type="text" id="subscriptionSearchInput" placeholder="Search by email, name, or Stripe ID..." style="width: 100%;" oninput="searchSubscriptions(this.value)">
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
                             <button class="btn active" data-status="all" onclick="filterSubscriptions('all')">All</button>
                             <button class="btn btn-secondary" data-status="active" onclick="filterSubscriptions('active')">Active</button>
                             <button class="btn btn-secondary" data-status="pending" onclick="filterSubscriptions('pending')">Pending</button>
                             <button class="btn btn-secondary" data-status="revoked" onclick="filterSubscriptions('revoked')">Revoked</button>
+                            <div style="border-left: 1px solid #3d3d4d; height: 24px; margin: 0 10px;"></div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #a0a0b0;">
+                                <input type="checkbox" id="showTestData" onchange="toggleTestData(this.checked)" style="width: 16px; height: 16px;">
+                                Show Test Data
+                            </label>
+                        </div>
+                    </div>
+                    <div id="subscriptionStats" style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div class="stat-card" style="flex: 1;">
+                            <div class="stat-label">Total Subscribers</div>
+                            <div class="stat-value" id="totalSubscribers">--</div>
+                        </div>
+                        <div class="stat-card" style="flex: 1;">
+                            <div class="stat-label">Active</div>
+                            <div class="stat-value" id="activeSubscribers">--</div>
+                        </div>
+                        <div class="stat-card" style="flex: 1;">
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value" id="pendingSubscribers">--</div>
+                        </div>
+                        <div class="stat-card" style="flex: 1;">
+                            <div class="stat-label">Monthly Revenue</div>
+                            <div class="stat-value" id="monthlyRevenue">$--</div>
                         </div>
                     </div>
                     <div class="card">
@@ -2480,16 +2503,19 @@
         // Subscriptions Functions
         let allSubscriptions = [];
         let currentFilter = 'all';
+        let showTestData = false;
 
         async function loadSubscriptions() {
             try {
-                const response = await fetch('/api/telegram-subscriptions', {
+                const url = `/api/telegram-subscriptions?include_test=${showTestData}`;
+                const response = await fetch(url, {
                     credentials: 'include'
                 });
                 if (!response.ok) throw new Error('Failed to load subscriptions');
                 
                 const data = await response.json();
                 allSubscriptions = data.subscriptions || [];
+                updateSubscriptionStats();
                 renderSubscriptions();
             } catch (error) {
                 console.error('Error loading subscriptions:', error);
@@ -2502,10 +2528,28 @@
             }
         }
 
+        function toggleTestData(checked) {
+            showTestData = checked;
+            loadSubscriptions();
+        }
+
+        function updateSubscriptionStats() {
+            const total = allSubscriptions.length;
+            const active = allSubscriptions.filter(s => s.status === 'active').length;
+            const pending = allSubscriptions.filter(s => s.status === 'pending').length;
+            const monthlyRevenue = allSubscriptions
+                .filter(s => s.status === 'active' && !s.is_test)
+                .reduce((sum, s) => sum + (s.amount_paid || 0), 0);
+            
+            document.getElementById('totalSubscribers').textContent = total;
+            document.getElementById('activeSubscribers').textContent = active;
+            document.getElementById('pendingSubscribers').textContent = pending;
+            document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toFixed(0)}`;
+        }
+
         function filterSubscriptions(status) {
             currentFilter = status;
             
-            // Update button states
             document.querySelectorAll('[data-status]').forEach(btn => {
                 if (btn.getAttribute('data-status') === status) {
                     btn.classList.remove('btn-secondary');
@@ -2532,13 +2576,18 @@
                 filtered = filtered.filter(sub => 
                     (sub.email && sub.email.toLowerCase().includes(searchQuery)) ||
                     (sub.name && sub.name.toLowerCase().includes(searchQuery)) ||
-                    (sub.telegram_username && sub.telegram_username.toLowerCase().includes(searchQuery))
+                    (sub.telegram_username && sub.telegram_username.toLowerCase().includes(searchQuery)) ||
+                    (sub.stripe_customer_id && sub.stripe_customer_id.toLowerCase().includes(searchQuery)) ||
+                    (sub.stripe_subscription_id && sub.stripe_subscription_id.toLowerCase().includes(searchQuery))
                 );
             }
 
             if (filtered.length === 0) {
+                const message = showTestData 
+                    ? 'No subscriptions found' 
+                    : 'No live subscriptions yet. Check "Show Test Data" to see test records.';
                 document.getElementById('subscriptionsContent').innerHTML = `
-                    <div class="empty-state">No subscriptions found</div>
+                    <div class="empty-state">${message}</div>
                 `;
                 return;
             }
@@ -2548,6 +2597,7 @@
                     <thead>
                         <tr>
                             <th>Customer</th>
+                            <th>Stripe IDs</th>
                             <th>Plan</th>
                             <th>Status</th>
                             <th>Telegram</th>
@@ -2556,14 +2606,24 @@
                     </thead>
                     <tbody>
                         ${filtered.map(sub => `
-                            <tr>
+                            <tr${sub.is_test ? ' style="opacity: 0.7; background: rgba(255,193,7,0.05);"' : ''}>
                                 <td>
-                                    <div>${sub.name || 'Unknown'}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        ${sub.is_test ? '<span style="background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">TEST</span>' : ''}
+                                        <span>${sub.name || 'Unknown'}</span>
+                                    </div>
                                     <div style="font-size: 0.85rem; color: #a0a0b0;">${sub.email}</div>
                                 </td>
-                                <td>${sub.plan_type || 'Premium'} ($${sub.amount_paid || '49'})</td>
+                                <td style="font-size: 0.8rem; font-family: monospace;">
+                                    ${sub.stripe_customer_id ? `<div title="Customer ID" style="color: #a0a0b0;">cus: ${sub.stripe_customer_id.substring(0, 14)}...</div>` : '<div style="color: #666;">No Stripe ID</div>'}
+                                    ${sub.stripe_subscription_id ? `<div title="Subscription ID" style="color: #7c8aff;">sub: ${sub.stripe_subscription_id.substring(0, 14)}...</div>` : ''}
+                                </td>
+                                <td>
+                                    <div>${sub.plan_type || 'Premium'}</div>
+                                    <div style="color: #4caf50; font-weight: bold;">$${sub.amount_paid || '0'}</div>
+                                </td>
                                 <td><span class="badge status-${sub.status}">${sub.status}</span></td>
-                                <td>${sub.telegram_username || 'Not joined'}</td>
+                                <td>${sub.telegram_username ? `@${sub.telegram_username}` : '<span style="color: #666;">Not joined</span>'}</td>
                                 <td>${formatDate(sub.created_at)}</td>
                             </tr>
                         `).join('')}

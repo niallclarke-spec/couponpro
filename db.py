@@ -2175,8 +2175,8 @@ def revoke_telegram_subscription(email, reason='subscription_canceled'):
         print(f"Error revoking telegram subscription: {e}")
         return None
 
-def get_all_telegram_subscriptions(status_filter=None):
-    """Get all telegram subscriptions with optional status filter"""
+def get_all_telegram_subscriptions(status_filter=None, include_test=False):
+    """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
             return []
@@ -2184,23 +2184,29 @@ def get_all_telegram_subscriptions(status_filter=None):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
+            conditions = []
+            params = []
+            
             if status_filter:
-                cursor.execute("""
-                    SELECT id, email, name, telegram_user_id, telegram_username, 
-                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
-                    FROM telegram_subscriptions
-                    WHERE status = %s
-                    ORDER BY created_at DESC
-                """, (status_filter,))
-            else:
-                cursor.execute("""
-                    SELECT id, email, name, telegram_user_id, telegram_username, 
-                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
-                    FROM telegram_subscriptions
-                    ORDER BY created_at DESC
-                """)
+                conditions.append("status = %s")
+                params.append(status_filter)
+            
+            if not include_test:
+                conditions.append("(is_test = FALSE OR is_test IS NULL)")
+            
+            where_clause = ""
+            if conditions:
+                where_clause = "WHERE " + " AND ".join(conditions)
+            
+            cursor.execute(f"""
+                SELECT id, email, name, telegram_user_id, telegram_username, 
+                       stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                       status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at,
+                       COALESCE(is_test, FALSE) as is_test
+                FROM telegram_subscriptions
+                {where_clause}
+                ORDER BY created_at DESC
+            """, params)
             
             subscriptions = []
             for row in cursor.fetchall():
@@ -2220,7 +2226,8 @@ def get_all_telegram_subscriptions(status_filter=None):
                     'last_seen_at': row[12].isoformat() if row[12] else None,
                     'revoked_at': row[13].isoformat() if row[13] else None,
                     'created_at': row[14].isoformat() if row[14] else None,
-                    'updated_at': row[15].isoformat() if row[15] else None
+                    'updated_at': row[15].isoformat() if row[15] else None,
+                    'is_test': row[16]
                 })
             
             return subscriptions

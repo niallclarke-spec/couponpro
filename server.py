@@ -651,8 +651,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 query_params = parse_qs(parsed_path.query)
                 status_filter = query_params.get('status', [None])[0]
+                include_test = query_params.get('include_test', ['false'])[0].lower() == 'true'
                 
-                subscriptions = db.get_all_telegram_subscriptions(status_filter=status_filter)
+                subscriptions = db.get_all_telegram_subscriptions(status_filter=status_filter, include_test=include_test)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
