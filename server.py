@@ -1860,7 +1860,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 user_id = data.get('userId')
                 name = data.get('name')
                 plan_type = data.get('planType', 'premium')
-                amount_paid = float(data.get('amountPaid', 49.00)) if data.get('amountPaid') is not None else 49.00
+                
+                # Smart default for amount: Free plans default to 0, Premium defaults to 49
+                raw_amount = data.get('amountPaid')
+                if raw_amount is not None:
+                    amount_paid = float(raw_amount)
+                elif 'free' in plan_type.lower():
+                    amount_paid = 0.0
+                else:
+                    amount_paid = 49.00
                 
                 if not email:
                     self.send_response(400)
