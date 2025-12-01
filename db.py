@@ -2037,6 +2037,15 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
             print("[DB] No connection pool available")
             return None, "Database connection pool not available"
         
+        # Normalize Stripe IDs - empty/placeholder strings become NULL
+        placeholders = {'', 'free', 'free_signup', 'test', 'null', 'none', 'n/a', 'undefined'}
+        if stripe_customer_id and str(stripe_customer_id).lower().strip() in placeholders:
+            stripe_customer_id = None
+        if stripe_subscription_id and str(stripe_subscription_id).lower().strip() in placeholders:
+            stripe_subscription_id = None
+        
+        print(f"[DB] Creating subscription: email={email}, stripe_sub_id={stripe_subscription_id}")
+        
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
