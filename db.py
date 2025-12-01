@@ -2030,12 +2030,12 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         name (str): Customer name (optional)
     
     Returns:
-        dict: Created/updated subscription record or None if failed
+        tuple: (subscription_dict or None, error_message or None)
     """
     try:
         if not db_pool.connection_pool:
             print("[DB] No connection pool available")
-            return None
+            return None, "Database connection pool not available"
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -2066,12 +2066,16 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
                     'stripe_subscription_id': result[3],
                     'status': result[4],
                     'created_at': result[5].isoformat() if result[5] else None
-                }
+                }, None
             
-            return None
+            return None, "No result returned from database"
     except Exception as e:
-        print(f"Error creating telegram subscription: {e}")
-        return None
+        import traceback
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"[DB ERROR] Failed to create telegram subscription for {email}")
+        print(f"[DB ERROR] {error_msg}")
+        print(f"[DB ERROR] Traceback: {traceback.format_exc()}")
+        return None, error_msg
 
 def get_telegram_subscription_by_email(email):
     """Get telegram subscription by email"""

@@ -1891,10 +1891,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     return
                 
                 is_free_user = amount_paid == 0 or 'free' in plan_type.lower()
-                print(f"[TELEGRAM-SUB] Grant access request for {email} (plan: {plan_type}, amount: ${amount_paid}, free: {is_free_user})")
+                print(f"[TELEGRAM-SUB] Grant access request for {email}")
+                print(f"[TELEGRAM-SUB] Data: plan={plan_type}, amount=${amount_paid}, free={is_free_user}")
+                print(f"[TELEGRAM-SUB] Stripe: customer_id={stripe_customer_id}, subscription_id={stripe_subscription_id}")
                 
                 # Create subscription record in database
-                subscription = db.create_telegram_subscription(
+                subscription, db_error = db.create_telegram_subscription(
                     email=email,
                     stripe_customer_id=stripe_customer_id,
                     stripe_subscription_id=stripe_subscription_id,
@@ -1904,10 +1906,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 )
                 
                 if not subscription:
+                    error_msg = db_error or 'Failed to create subscription record'
+                    print(f"[TELEGRAM-SUB] ❌ Database error: {error_msg}")
                     self.send_response(500)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({'success': False, 'error': 'Failed to create subscription record'}).encode())
+                    self.wfile.write(json.dumps({'success': False, 'error': error_msg}).encode())
                     return
                 
                 # FREE USERS: Just record the lead, no private invite link needed
