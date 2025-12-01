@@ -209,3 +209,55 @@ def get_customer_billing_info(stripe_customer_id):
     except Exception as e:
         print(f"[Stripe] Error fetching customer {stripe_customer_id}: {e}")
         return None
+
+def cancel_subscription(stripe_subscription_id, cancel_immediately=False):
+    """
+    Cancel a Stripe subscription
+    
+    Args:
+        stripe_subscription_id: The Stripe subscription ID to cancel
+        cancel_immediately: If True, cancels immediately. If False, cancels at period end.
+    
+    Returns:
+        dict with cancellation result or error
+    """
+    if not stripe_subscription_id:
+        return {'success': False, 'error': 'No subscription ID provided'}
+    
+    try:
+        client = get_stripe_client()
+        
+        if cancel_immediately:
+            # Cancel immediately - subscription ends now
+            subscription = client.Subscription.cancel(stripe_subscription_id)
+            return {
+                'success': True,
+                'subscription_id': subscription.id,
+                'status': subscription.status,
+                'canceled_at': datetime.fromtimestamp(subscription.canceled_at).isoformat() if subscription.canceled_at else None,
+                'message': 'Subscription canceled immediately'
+            }
+        else:
+            # Cancel at period end - subscription remains active until current period ends
+            subscription = client.Subscription.modify(
+                stripe_subscription_id,
+                cancel_at_period_end=True
+            )
+            return {
+                'success': True,
+                'subscription_id': subscription.id,
+                'status': subscription.status,
+                'cancel_at_period_end': subscription.cancel_at_period_end,
+                'current_period_end': datetime.fromtimestamp(subscription.current_period_end).isoformat() if subscription.current_period_end else None,
+                'message': 'Subscription will cancel at end of billing period'
+            }
+        
+    except stripe.error.InvalidRequestError as e:
+        print(f"[Stripe] Invalid request to cancel subscription {stripe_subscription_id}: {e}")
+        return {'success': False, 'error': str(e)}
+    except stripe.error.AuthenticationError as e:
+        print(f"[Stripe] Authentication error: {e}")
+        return {'success': False, 'error': 'Stripe authentication failed'}
+    except Exception as e:
+        print(f"[Stripe] Error canceling subscription {stripe_subscription_id}: {e}")
+        return {'success': False, 'error': str(e)}

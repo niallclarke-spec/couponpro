@@ -2968,6 +2968,21 @@
                                 Loading billing info...
                             </div>
                         </div>
+                        <div id="cancelActions" class="cancel-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 0.85rem; color: #a0a0b0; margin-bottom: 10px;">Subscription Actions</div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button onclick="cancelSubscription(${sub.id}, false)" class="btn-cancel-period" style="padding: 8px 16px; background: #f59e0b; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                                    Cancel at Period End
+                                </button>
+                                <button onclick="cancelSubscription(${sub.id}, true)" class="btn-cancel-now" style="padding: 8px 16px; background: #ef4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                                    Cancel Immediately
+                                </button>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #666; margin-top: 8px;">
+                                <strong>Cancel at Period End:</strong> User keeps access until billing period ends<br>
+                                <strong>Cancel Immediately:</strong> User loses access and is removed from channel now
+                            </div>
+                        </div>
                     </div>
                 `;
             }
@@ -3091,6 +3106,82 @@
                 billingContainer.innerHTML = `
                     <div class="billing-error">Unable to load billing info</div>
                 `;
+            }
+        }
+        
+        async function cancelSubscription(subscriptionId, cancelImmediately) {
+            const actionText = cancelImmediately ? 'cancel immediately' : 'cancel at period end';
+            const warningText = cancelImmediately 
+                ? 'This will immediately revoke access and remove the user from the Telegram channel.'
+                : 'This will cancel the subscription at the end of the current billing period. The user will retain access until then.';
+            
+            if (!confirm(`Are you sure you want to ${actionText} this subscription?\n\n${warningText}`)) {
+                return;
+            }
+            
+            const cancelActions = document.getElementById('cancelActions');
+            if (cancelActions) {
+                cancelActions.innerHTML = `
+                    <div style="color: #a0a0b0; display: flex; align-items: center; gap: 10px;">
+                        <div class="billing-loading-spinner"></div>
+                        Processing cancellation...
+                    </div>
+                `;
+            }
+            
+            try {
+                const response = await fetch('/api/telegram/cancel-subscription', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subscriptionId: subscriptionId,
+                        cancelImmediately: cancelImmediately
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (cancelActions) {
+                        cancelActions.innerHTML = `
+                            <div style="color: #4caf50; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 6px;">
+                                ✅ ${result.message}
+                            </div>
+                        `;
+                    }
+                    
+                    // Refresh the billing info after a short delay
+                    setTimeout(() => {
+                        fetchBillingInfo(subscriptionId);
+                        loadSubscriptions(); // Refresh the main list
+                    }, 1500);
+                } else {
+                    if (cancelActions) {
+                        cancelActions.innerHTML = `
+                            <div style="color: #ef4444; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                                ❌ Failed to cancel: ${result.error || 'Unknown error'}
+                            </div>
+                            <button onclick="showSubscriptionDetails(${subscriptionId})" style="margin-top: 10px; padding: 8px 16px; background: #666; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+                                Try Again
+                            </button>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error canceling subscription:', error);
+                if (cancelActions) {
+                    cancelActions.innerHTML = `
+                        <div style="color: #ef4444; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                            ❌ Error: ${error.message}
+                        </div>
+                        <button onclick="showSubscriptionDetails(${subscriptionId})" style="margin-top: 10px; padding: 8px 16px; background: #666; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+                            Try Again
+                        </button>
+                    `;
+                }
             }
         }
         

@@ -2121,6 +2121,84 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/cancel-subscription':
+            # Admin API - Cancel a Stripe subscription
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                subscription_id = data.get('subscriptionId')
+                cancel_immediately = data.get('cancelImmediately', False)
+                
+                if not subscription_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing subscriptionId'}).encode())
+                    return
+                
+                # Get subscription from our database
+                subscription = db.get_telegram_subscription_by_id(int(subscription_id))
+                
+                if not subscription:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Subscription not found'}).encode())
+                    return
+                
+                stripe_subscription_id = subscription.get('stripe_subscription_id')
+                
+                if not stripe_subscription_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'No Stripe subscription linked to this record'}).encode())
+                    return
+                
+                print(f"[CANCEL] Canceling subscription {stripe_subscription_id} for user {subscription.get('email')}, immediately={cancel_immediately}")
+                
+                # Cancel in Stripe
+                from stripe_client import cancel_subscription
+                result = cancel_subscription(stripe_subscription_id, cancel_immediately=cancel_immediately)
+                
+                if result.get('success'):
+                    # If canceled immediately, also revoke access in our database
+                    if cancel_immediately:
+                        db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled')
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(result).encode())
+                else:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(result).encode())
+                    
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
+            except Exception as e:
+                print(f"[CANCEL] Error canceling subscription: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/telegram/revoke-access':
             # EntryLab API - Revoke access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
