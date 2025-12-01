@@ -1877,7 +1877,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({'success': False, 'error': 'Missing required field: email'}).encode())
                     return
                 
-                is_free_user = amount_paid == 0 or plan_type == 'Free Gold Signals'
+                is_free_user = amount_paid == 0 or 'free' in plan_type.lower()
                 print(f"[TELEGRAM-SUB] Grant access request for {email} (plan: {plan_type}, amount: ${amount_paid}, free: {is_free_user})")
                 
                 # Create subscription record in database
@@ -1897,7 +1897,22 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({'success': False, 'error': 'Failed to create subscription record'}).encode())
                     return
                 
-                # Generate invite link for private channel
+                # FREE USERS: Just record the lead, no private invite link needed
+                # They will be given the public channel link by EntryLab
+                if is_free_user:
+                    print(f"[TELEGRAM-SUB] ✅ Free lead captured for {email}")
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'inviteLink': None,
+                        'message': 'Free lead captured successfully',
+                        'isFreeUser': True
+                    }).encode())
+                    return
+                
+                # PREMIUM USERS: Generate unique invite link for private channel
                 private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
                 if not private_channel_id:
                     self.send_response(500)
@@ -1918,9 +1933,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Update subscription with invite link
                 db.update_telegram_subscription_invite(email, invite_link)
                 
-                print(f"[TELEGRAM-SUB] ✅ Access granted for {email}, invite: {invite_link}")
-                
-                # TODO: Send welcome email with invite link (when Resend is set up)
+                print(f"[TELEGRAM-SUB] ✅ Premium access granted for {email}, invite: {invite_link}")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -1928,7 +1941,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({
                     'success': True,
                     'inviteLink': invite_link,
-                    'message': 'Access granted successfully'
+                    'message': 'Premium access granted successfully',
+                    'isFreeUser': False
                 }).encode())
                 
             except json.JSONDecodeError:
