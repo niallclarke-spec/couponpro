@@ -2883,11 +2883,11 @@
             }
         }
         
-        function showAlert(title, message) {
+        function showModalAlert(title, message) {
             return showCustomModal(title, message, { type: 'alert' });
         }
         
-        function showConfirm(title, message, options = {}) {
+        function showModalConfirm(title, message, options = {}) {
             return showCustomModal(title, message, options);
         }
 
@@ -3250,7 +3250,7 @@
         }
         
         async function cleanupTestData() {
-            const confirmed = await showConfirm(
+            const confirmed = await showModalConfirm(
                 'Delete Test Data',
                 'This will remove records with:<br><br>• Emails starting with test@ or demo@<br>• Emails ending with @example.com<br>• That have fake payment amounts<br><br><strong>Real subscriber data will NOT be affected.</strong>',
                 { danger: true, confirmText: 'Delete Test Data' }
@@ -3270,14 +3270,14 @@
                     const deletedList = result.deleted.length > 0 
                         ? result.deleted.map(r => `• ${r.email} ($${r.amount})`).join('<br>') 
                         : 'None found';
-                    await showAlert('Success', `${result.message}<br><br>${deletedList}`);
+                    await showModalAlert('Success', `${result.message}<br><br>${deletedList}`);
                     loadSubscriptions();
                 } else {
-                    await showAlert('Error', `Failed to cleanup: ${result.error || 'Unknown error'}`);
+                    await showModalAlert('Error', `Failed to cleanup: ${result.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error cleaning up test data:', error);
-                await showAlert('Error', `Error: ${error.message}`);
+                await showModalAlert('Error', `Error: ${error.message}`);
             }
         }
         
@@ -3287,7 +3287,7 @@
                 ? 'This will <strong>immediately revoke access</strong> and remove the user from the Telegram channel.'
                 : 'This will cancel the subscription at the end of the current billing period. The user will <strong>retain access until then</strong>.';
             
-            const confirmed = await showConfirm(actionText, warningText, { 
+            const confirmed = await showModalConfirm(actionText, warningText, { 
                 danger: cancelImmediately,
                 confirmText: cancelImmediately ? 'Cancel Now' : 'Cancel at Period End'
             });
@@ -3361,7 +3361,7 @@
         }
         
         async function deleteSubscription(subscriptionId, email, telegramUserId) {
-            const confirmed = await showConfirm(
+            const confirmed = await showModalConfirm(
                 'Delete Subscription Record',
                 `<strong>Email:</strong> ${email}<br><br>This action cannot be undone. The record will be permanently removed from the database.`,
                 { danger: true, confirmText: 'Delete' }
@@ -3385,15 +3385,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    await showAlert('Success', `Deleted successfully: ${email}`);
+                    await showModalAlert('Success', `Deleted successfully: ${email}`);
                     closeSubscriptionDetailModal();
                     loadSubscriptions();
                 } else {
-                    await showAlert('Error', `Failed to delete: ${result.error || 'Unknown error'}`);
+                    await showModalAlert('Error', `Failed to delete: ${result.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error deleting subscription:', error);
-                await showAlert('Error', `Error: ${error.message}`);
+                await showModalAlert('Error', `Error: ${error.message}`);
             }
         }
         
