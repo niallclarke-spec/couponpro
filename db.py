@@ -2013,11 +2013,13 @@ def update_forex_config(config_updates):
 
 def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None):
     """
-    Create a new telegram subscription record.
+    Create or update a telegram subscription record (UPSERT).
     
     Supports both paid (Stripe) and free users:
     - Paid users: Include stripeCustomerId and stripeSubscriptionId
     - Free users: Pass None for Stripe fields, set planType='Free Gold Signals' and amountPaid=0
+    
+    If email already exists, updates the existing record.
     
     Args:
         email (str): Customer email (required)
@@ -2028,19 +2030,28 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         name (str): Customer name (optional)
     
     Returns:
-        dict: Created subscription record or None if failed
+        dict: Created/updated subscription record or None if failed
     """
     try:
         if not db_pool.connection_pool:
+            print("[DB] No connection pool available")
             return None
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
+            # UPSERT: Insert or update if email already exists
             cursor.execute("""
                 INSERT INTO telegram_subscriptions 
                 (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, status, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (email) DO UPDATE SET
+                    name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
+                    stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, telegram_subscriptions.stripe_customer_id),
+                    stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, telegram_subscriptions.stripe_subscription_id),
+                    plan_type = EXCLUDED.plan_type,
+                    amount_paid = EXCLUDED.amount_paid,
+                    updated_at = CURRENT_TIMESTAMP
                 RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at
             """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid))
             
