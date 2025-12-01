@@ -2295,6 +2295,32 @@ def cleanup_test_telegram_subscriptions():
         print(f"Error cleaning up test telegram subscriptions: {e}")
         raise
 
+def delete_telegram_subscription(subscription_id):
+    """Delete a specific telegram subscription by ID"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM telegram_subscriptions 
+                WHERE id = %s
+                RETURNING id
+            """, (subscription_id,))
+            
+            deleted = cursor.fetchone()
+            conn.commit()
+            
+            if deleted:
+                print(f"[DB] Deleted telegram subscription ID={subscription_id}")
+                return True
+            return False
+    except Exception as e:
+        print(f"Error deleting telegram subscription {subscription_id}: {e}")
+        raise
+
 def get_all_telegram_subscriptions(status_filter=None, include_test=False):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:

@@ -3052,6 +3052,17 @@
                 </div>
                 ` : ''}
                 ${billingSection}
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                    <div style="font-size: 0.85rem; color: #a0a0b0; margin-bottom: 10px;">Danger Zone</div>
+                    <button onclick="deleteSubscription(${sub.id}, '${(sub.email || '').replace(/'/g, "\\'")}', ${sub.telegram_user_id || 'null'})" 
+                            style="padding: 10px 20px; background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%;">
+                        🗑️ Delete This Record
+                    </button>
+                    <div style="font-size: 0.75rem; color: #666; margin-top: 8px;">
+                        Permanently deletes this subscription record from the database. Cannot be undone.
+                    </div>
+                </div>
             `;
             
             document.getElementById('subscriptionDetailContent').innerHTML = modalContent;
@@ -3229,6 +3240,41 @@
                         </button>
                     `;
                 }
+            }
+        }
+        
+        async function deleteSubscription(subscriptionId, email, telegramUserId) {
+            const confirmMsg = `Are you sure you want to DELETE this subscription record?\n\nEmail: ${email}\n\nThis action cannot be undone. The record will be permanently removed from the database.`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/telegram/delete-subscription', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subscriptionId: subscriptionId,
+                        telegramUserId: telegramUserId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Deleted successfully: ${email}`);
+                    closeSubscriptionModal();
+                    loadSubscriptions(); // Refresh the list
+                } else {
+                    alert(`Failed to delete: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error deleting subscription:', error);
+                alert(`Error: ${error.message}`);
             }
         }
         

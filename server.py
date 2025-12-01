@@ -2247,6 +2247,77 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/delete-subscription':
+            # Admin API - Delete a subscription record from the database
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                subscription_id = data.get('subscriptionId')
+                telegram_user_id = data.get('telegramUserId')
+                
+                if not subscription_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing subscriptionId'}).encode())
+                    return
+                
+                # Get subscription first to log what we're deleting
+                subscription = db.get_telegram_subscription_by_id(int(subscription_id))
+                if subscription:
+                    print(f"[DELETE] Deleting subscription record: ID={subscription_id}, Email={subscription.get('email')}")
+                
+                # Kick from Telegram if they have a telegram_user_id
+                kicked = False
+                if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
+                    private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                    if private_channel_id:
+                        from telegram_bot import sync_kick_user_from_channel
+                        kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                        if kicked:
+                            print(f"[DELETE] Kicked user {telegram_user_id} from Telegram channel")
+                
+                # Delete from database
+                deleted = db.delete_telegram_subscription(int(subscription_id))
+                
+                if deleted:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'message': 'Subscription deleted successfully',
+                        'kicked_from_telegram': kicked
+                    }).encode())
+                else:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Subscription not found or already deleted'}).encode())
+                    
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
+            except Exception as e:
+                print(f"[DELETE] Error deleting subscription: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/telegram/revoke-access':
             # EntryLab API - Revoke access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
