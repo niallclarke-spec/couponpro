@@ -2129,6 +2129,49 @@ def get_telegram_subscription_by_email(email):
         print(f"Error getting telegram subscription by email: {e}")
         return None
 
+def get_telegram_subscription_by_id(subscription_id):
+    """Get telegram subscription by ID"""
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, email, name, telegram_user_id, telegram_username, 
+                       stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                       status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
+                FROM telegram_subscriptions
+                WHERE id = %s
+            """, (subscription_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'id': row[0],
+                'email': row[1],
+                'name': row[2],
+                'telegram_user_id': row[3],
+                'telegram_username': row[4],
+                'stripe_customer_id': row[5],
+                'stripe_subscription_id': row[6],
+                'plan_type': row[7],
+                'amount_paid': float(row[8]) if row[8] else 0.0,
+                'status': row[9],
+                'invite_link': row[10],
+                'joined_at': row[11].isoformat() if row[11] else None,
+                'last_seen_at': row[12].isoformat() if row[12] else None,
+                'revoked_at': row[13].isoformat() if row[13] else None,
+                'created_at': row[14].isoformat() if row[14] else None,
+                'updated_at': row[15].isoformat() if row[15] else None
+            }
+    except Exception as e:
+        print(f"Error getting telegram subscription by id: {e}")
+        return None
+
 def update_telegram_subscription_invite(email, invite_link):
     """Update telegram subscription with invite link"""
     try:

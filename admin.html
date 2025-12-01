@@ -1761,6 +1761,135 @@
         .subscription-detail-modal::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.25);
         }
+
+        /* Billing Section Styles */
+        .billing-divider {
+            margin: 20px 0;
+            padding-top: 20px;
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .billing-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .billing-section-title::before {
+            content: '💳';
+        }
+
+        .billing-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #a0aec0;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .billing-loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: billing-spin 0.8s linear infinite;
+        }
+
+        @keyframes billing-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .billing-error {
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .billing-na {
+            padding: 16px;
+            background: rgba(107, 114, 128, 0.1);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+            border-radius: 8px;
+            color: #9ca3af;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Stripe Status Badges */
+        .stripe-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .stripe-status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .stripe-status-past_due {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .stripe-status-canceled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .stripe-status-unpaid {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .stripe-status-trialing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .stripe-status-incomplete {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .stripe-status-incomplete_expired {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .stripe-status-paused {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .cancel-warning {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(251, 146, 60, 0.15);
+            border: 1px solid rgba(251, 146, 60, 0.3);
+            border-radius: 6px;
+            color: #fb923c;
+            font-size: 12px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -2811,6 +2940,38 @@
             const sub = filtered[index];
             if (!sub) return;
             
+            const isPaidUser = parseFloat(sub.amount_paid || 0) > 0;
+            const hasStripeSubscription = !!sub.stripe_subscription_id;
+            
+            let billingSection = '';
+            if (!isPaidUser) {
+                billingSection = `
+                    <div class="billing-divider">
+                        <div class="billing-section-title">Billing Information</div>
+                        <div class="billing-na">N/A - Free user</div>
+                    </div>
+                `;
+            } else if (!hasStripeSubscription) {
+                billingSection = `
+                    <div class="billing-divider">
+                        <div class="billing-section-title">Billing Information</div>
+                        <div class="billing-na">No Stripe subscription linked</div>
+                    </div>
+                `;
+            } else {
+                billingSection = `
+                    <div class="billing-divider">
+                        <div class="billing-section-title">Billing Information</div>
+                        <div id="billingContent">
+                            <div class="billing-loading">
+                                <div class="billing-loading-spinner"></div>
+                                Loading billing info...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             const modalContent = `
                 <div class="detail-row">
                     <div class="detail-label">Name</div>
@@ -2870,10 +3031,150 @@
                     <div class="detail-value" style="color: #ef4444;">${formatDateFull(sub.revoked_at)}</div>
                 </div>
                 ` : ''}
+                ${billingSection}
             `;
             
             document.getElementById('subscriptionDetailContent').innerHTML = modalContent;
             document.getElementById('subscriptionDetailModal').classList.add('active');
+            
+            if (isPaidUser && hasStripeSubscription) {
+                fetchBillingInfo(sub.id);
+            }
+        }
+        
+        async function fetchBillingInfo(subscriptionId) {
+            const billingContainer = document.getElementById('billingContent');
+            if (!billingContainer) return;
+            
+            try {
+                const response = await fetch(`/api/telegram/billing/${subscriptionId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch billing info');
+                }
+                
+                const data = await response.json();
+                const billing = data.billing;
+                const billingStatus = data.billing_status;
+                
+                // Handle different billing statuses
+                if (billingStatus === 'free_user') {
+                    billingContainer.innerHTML = `
+                        <div class="billing-na">N/A - Free user</div>
+                    `;
+                    return;
+                }
+                
+                if (billingStatus === 'no_stripe_ids') {
+                    billingContainer.innerHTML = `
+                        <div class="billing-error">No Stripe subscription linked</div>
+                    `;
+                    return;
+                }
+                
+                if (billingStatus === 'stripe_error' || !billing) {
+                    const errorMsg = data.error || 'Unable to fetch billing info from Stripe';
+                    billingContainer.innerHTML = `
+                        <div class="billing-error">${errorMsg}</div>
+                    `;
+                    return;
+                }
+                
+                // Success - render billing info
+                const billingHtml = renderBillingInfo(billing);
+                billingContainer.innerHTML = billingHtml;
+                
+            } catch (error) {
+                console.error('Error fetching billing info:', error);
+                billingContainer.innerHTML = `
+                    <div class="billing-error">Unable to load billing info</div>
+                `;
+            }
+        }
+        
+        function renderBillingInfo(billing) {
+            const formatCurrency = (amount, currency) => {
+                const symbol = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency + ' ';
+                return `${symbol}${parseFloat(amount).toFixed(2)}`;
+            };
+            
+            const formatBillingDate = (dateStr) => {
+                if (!dateStr) return 'N/A';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            };
+            
+            const formatBillingInterval = (interval, count) => {
+                if (count === 1) {
+                    return interval === 'month' ? 'Monthly' : interval === 'year' ? 'Yearly' : interval;
+                }
+                return `Every ${count} ${interval}s`;
+            };
+            
+            const statusClass = `stripe-status stripe-status-${billing.status}`;
+            
+            let cancelWarning = '';
+            if (billing.cancel_at_period_end) {
+                cancelWarning = `
+                    <div class="detail-row">
+                        <div class="detail-label">Cancel Status</div>
+                        <div class="detail-value">
+                            <span class="cancel-warning">⚠️ Cancels at period end</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            let canceledAt = '';
+            if (billing.canceled_at) {
+                canceledAt = `
+                    <div class="detail-row">
+                        <div class="detail-label">Canceled At</div>
+                        <div class="detail-value" style="color: #ef4444;">${formatBillingDate(billing.canceled_at)}</div>
+                    </div>
+                `;
+            }
+            
+            let lastPayment = 'N/A';
+            if (billing.latest_invoice && billing.latest_invoice.paid_at) {
+                lastPayment = `${formatBillingDate(billing.latest_invoice.paid_at)} - ${formatCurrency(billing.latest_invoice.amount_paid, billing.latest_invoice.currency)}`;
+            }
+            
+            let nextPayment = 'N/A';
+            if (billing.upcoming_invoice && billing.upcoming_invoice.next_payment_attempt) {
+                nextPayment = `${formatBillingDate(billing.upcoming_invoice.next_payment_attempt)} - ${formatCurrency(billing.upcoming_invoice.amount_due, billing.upcoming_invoice.currency)}`;
+            }
+            
+            return `
+                <div class="detail-row">
+                    <div class="detail-label">Stripe Status</div>
+                    <div class="detail-value"><span class="${statusClass}">${billing.status}</span></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Billing Cycle</div>
+                    <div class="detail-value">${formatBillingInterval(billing.billing_interval, billing.billing_interval_count)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Current Period</div>
+                    <div class="detail-value">${formatBillingDate(billing.current_period_start)} → ${formatBillingDate(billing.current_period_end)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Last Payment</div>
+                    <div class="detail-value" style="color: #10b981;">${lastPayment}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Next Payment Due</div>
+                    <div class="detail-value">${nextPayment}</div>
+                </div>
+                ${cancelWarning}
+                ${canceledAt}
+            `;
         }
         
         function closeSubscriptionDetailModal() {

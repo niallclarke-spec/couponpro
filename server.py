@@ -681,6 +681,124 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path.startswith('/api/telegram/billing/'):
+            # Admin endpoint - Get billing info from Stripe for a subscription
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                # Extract subscription ID from path
+                subscription_id = parsed_path.path.split('/api/telegram/billing/')[1]
+                
+                if not subscription_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Subscription ID required'}).encode())
+                    return
+                
+                # Get subscription from our database first
+                subscription = db.get_telegram_subscription_by_id(int(subscription_id))
+                
+                if not subscription:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Subscription not found'}).encode())
+                    return
+                
+                stripe_customer_id = subscription.get('stripe_customer_id')
+                stripe_subscription_id = subscription.get('stripe_subscription_id')
+                amount_paid = float(subscription.get('amount_paid') or 0)
+                
+                # For free users, return subscription data without billing
+                if amount_paid == 0:
+                    response_data = {
+                        'subscription': subscription,
+                        'billing': None,
+                        'billing_status': 'free_user'
+                    }
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(response_data).encode())
+                    return
+                
+                # For paid users, we need Stripe IDs
+                if not stripe_subscription_id and not stripe_customer_id:
+                    response_data = {
+                        'subscription': subscription,
+                        'billing': None,
+                        'billing_status': 'no_stripe_ids',
+                        'error': 'No Stripe subscription or customer ID linked'
+                    }
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(response_data).encode())
+                    return
+                
+                # Try to fetch billing from Stripe
+                billing_info = None
+                billing_error = None
+                
+                if stripe_subscription_id:
+                    try:
+                        from stripe_client import get_subscription_billing_info
+                        billing_info = get_subscription_billing_info(stripe_subscription_id)
+                        if billing_info and billing_info.get('error'):
+                            billing_error = billing_info.get('error')
+                            billing_info = None
+                    except Exception as stripe_err:
+                        print(f"[BILLING] Error fetching subscription from Stripe: {stripe_err}")
+                        billing_error = str(stripe_err)
+                
+                # Fall back to customer info if subscription fetch failed
+                if not billing_info and stripe_customer_id:
+                    try:
+                        from stripe_client import get_customer_billing_info
+                        billing_info = get_customer_billing_info(stripe_customer_id)
+                        if billing_info and billing_info.get('error'):
+                            billing_error = billing_info.get('error')
+                            billing_info = None
+                    except Exception as stripe_err:
+                        print(f"[BILLING] Error fetching customer from Stripe: {stripe_err}")
+                        billing_error = str(stripe_err)
+                
+                # Build response based on what we got
+                if billing_info:
+                    response_data = {
+                        'subscription': subscription,
+                        'billing': billing_info,
+                        'billing_status': 'success'
+                    }
+                    self.send_response(200)
+                else:
+                    response_data = {
+                        'subscription': subscription,
+                        'billing': None,
+                        'billing_status': 'stripe_error',
+                        'error': billing_error or 'Unable to fetch billing info from Stripe'
+                    }
+                    self.send_response(200)  # Still 200 so frontend can handle gracefully
+                
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(response_data).encode())
+                
+            except Exception as e:
+                print(f"[BILLING] Error getting billing info: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/broadcast-status/'):
             if not DATABASE_AVAILABLE:
                 self.send_response(503)

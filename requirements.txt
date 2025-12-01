@@ -9,3 +9,5 @@ requests
 psycopg2-binary
 aiolimiter
 openai
+telegram
+stripe
