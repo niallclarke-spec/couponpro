@@ -2011,7 +2011,7 @@ def update_forex_config(config_updates):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, is_test=False):
+def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None):
     """
     Create a new telegram subscription record.
     
@@ -2026,7 +2026,6 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         plan_type (str): Plan type (default: 'premium', use 'Free Gold Signals' for free users)
         amount_paid (float): Amount paid (default: 49.00, use 0 for free users)
         name (str): Customer name (optional)
-        is_test (bool): Whether this is a test record (default: False)
     
     Returns:
         dict: Created subscription record or None if failed
@@ -2040,10 +2039,10 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
             
             cursor.execute("""
                 INSERT INTO telegram_subscriptions 
-                (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, status, is_test, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, 'pending', %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, status, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at
-            """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, is_test))
+            """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid))
             
             result = cursor.fetchone()
             conn.commit()
