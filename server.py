@@ -1976,6 +1976,33 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/clear-all':
+            # Admin API - Clear all telegram subscriptions (for testing)
+            api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
+            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            
+            if not api_key or api_key != expected_key or not expected_key:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                deleted = db.clear_all_telegram_subscriptions()
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Cleared {deleted} subscription records'
+                }).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/telegram/revoke-access':
             # EntryLab API - Revoke access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')

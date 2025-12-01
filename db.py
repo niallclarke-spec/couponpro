@@ -2199,6 +2199,28 @@ def revoke_telegram_subscription(email, reason='subscription_canceled'):
         print(f"Error revoking telegram subscription: {e}")
         return None
 
+def clear_all_telegram_subscriptions():
+    """Delete all telegram subscriptions (for testing/cleanup)"""
+    try:
+        if not db_pool.connection_pool:
+            return 0
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("DELETE FROM telegram_subscriptions")
+            deleted_count = cursor.rowcount
+            
+            # Reset the ID sequence
+            cursor.execute("ALTER SEQUENCE telegram_subscriptions_id_seq RESTART WITH 1")
+            
+            conn.commit()
+            print(f"[DB] Cleared {deleted_count} telegram subscriptions")
+            return deleted_count
+    except Exception as e:
+        print(f"Error clearing telegram subscriptions: {e}")
+        raise
+
 def get_all_telegram_subscriptions(status_filter=None, include_test=False):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
