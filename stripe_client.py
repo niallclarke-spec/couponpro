@@ -10,52 +10,77 @@ from datetime import datetime
 _stripe_credentials = None
 
 def get_stripe_credentials():
-    """Fetch Stripe credentials from Replit connection API"""
+    """
+    Fetch Stripe credentials - tries Replit connector first, then falls back to env vars
+    
+    Supports:
+    1. Replit Stripe Connector (preferred)
+    2. Manual env vars: STRIPE_SECRET_KEY/STRIPE_SECRET + STRIPE_PUBLISHABLE_KEY
+    """
     global _stripe_credentials
     
     if _stripe_credentials:
         return _stripe_credentials
     
+    # First, try to get from manual environment variables (fallback)
+    manual_secret = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
+    manual_publishable = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    
+    # Try Replit connector API first
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
     
-    repl_identity = os.environ.get('REPL_IDENTITY')
-    web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
+    if hostname:
+        try:
+            repl_identity = os.environ.get('REPL_IDENTITY')
+            web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
+            
+            if repl_identity:
+                x_replit_token = f'repl {repl_identity}'
+            elif web_repl_renewal:
+                x_replit_token = f'depl {web_repl_renewal}'
+            else:
+                raise Exception('X_REPLIT_TOKEN not found for repl/depl')
+            
+            is_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+            target_environment = 'production' if is_production else 'development'
+            
+            url = f'https://{hostname}/api/v2/connection'
+            params = {
+                'include_secrets': 'true',
+                'connector_names': 'stripe',
+                'environment': target_environment
+            }
+            
+            response = requests.get(url, params=params, headers={
+                'Accept': 'application/json',
+                'X_REPLIT_TOKEN': x_replit_token
+            })
+            
+            data = response.json()
+            connection = data.get('items', [{}])[0] if data.get('items') else {}
+            settings = connection.get('settings', {})
+            
+            if settings.get('publishable') and settings.get('secret'):
+                print(f"[STRIPE] Using Replit connector credentials ({target_environment})")
+                _stripe_credentials = {
+                    'publishable_key': settings['publishable'],
+                    'secret_key': settings['secret']
+                }
+                return _stripe_credentials
+        except Exception as e:
+            print(f"[STRIPE] Replit connector failed: {e}, trying manual env vars...")
     
-    if repl_identity:
-        x_replit_token = f'repl {repl_identity}'
-    elif web_repl_renewal:
-        x_replit_token = f'depl {web_repl_renewal}'
-    else:
-        raise Exception('X_REPLIT_TOKEN not found for repl/depl')
+    # Fall back to manual environment variables
+    if manual_secret and manual_publishable:
+        print("[STRIPE] Using manual environment variables (STRIPE_SECRET_KEY/STRIPE_PUBLISHABLE_KEY)")
+        _stripe_credentials = {
+            'publishable_key': manual_publishable,
+            'secret_key': manual_secret
+        }
+        return _stripe_credentials
     
-    is_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
-    target_environment = 'production' if is_production else 'development'
-    
-    url = f'https://{hostname}/api/v2/connection'
-    params = {
-        'include_secrets': 'true',
-        'connector_names': 'stripe',
-        'environment': target_environment
-    }
-    
-    response = requests.get(url, params=params, headers={
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': x_replit_token
-    })
-    
-    data = response.json()
-    connection = data.get('items', [{}])[0] if data.get('items') else {}
-    settings = connection.get('settings', {})
-    
-    if not settings.get('publishable') or not settings.get('secret'):
-        raise Exception(f'Stripe {target_environment} connection not found')
-    
-    _stripe_credentials = {
-        'publishable_key': settings['publishable'],
-        'secret_key': settings['secret']
-    }
-    
-    return _stripe_credentials
+    # Neither worked
+    raise Exception('Stripe credentials not found. Set up Replit Stripe connector or add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables.')
 
 def get_stripe_client():
     """Get configured Stripe client"""
