@@ -237,6 +237,19 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
+        elif parsed_path.path == '/api/check-auth':
+            # Check if user is authenticated (for page refresh)
+            if self.check_auth():
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'authenticated': True}).encode())
+            else:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'authenticated': False}).encode())
+        
         elif parsed_path.path == '/api/campaigns':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)
