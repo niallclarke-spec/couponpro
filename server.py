@@ -2171,9 +2171,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 result = cancel_subscription(stripe_subscription_id, cancel_immediately=cancel_immediately)
                 
                 if result.get('success'):
-                    # If canceled immediately, also revoke access in our database
+                    # If canceled immediately, also revoke access and kick from Telegram
+                    kicked_from_telegram = False
                     if cancel_immediately:
-                        db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled')
+                        telegram_user_id = db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled')
+                        
+                        # Kick user from Telegram channel if they have joined
+                        if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
+                            private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                            if private_channel_id:
+                                from telegram_bot import sync_kick_user_from_channel
+                                kicked_from_telegram = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                                if kicked_from_telegram:
+                                    print(f"[CANCEL] Kicked user {telegram_user_id} from Telegram channel")
+                                else:
+                                    print(f"[CANCEL] Warning: Failed to kick user {telegram_user_id} from Telegram channel")
+                        
+                        result['kicked_from_telegram'] = kicked_from_telegram
+                        result['message'] = 'Subscription canceled immediately' + (' and removed from Telegram channel' if kicked_from_telegram else '')
                     
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
