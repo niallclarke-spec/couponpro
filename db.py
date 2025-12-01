@@ -2203,10 +2203,18 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
+            print("[DB] No connection pool for get_all_telegram_subscriptions")
             return []
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
+            
+            # Check if is_test column exists
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name = 'telegram_subscriptions' AND column_name = 'is_test'
+            """)
+            has_is_test_column = cursor.fetchone() is not None
             
             conditions = []
             params = []
@@ -2215,22 +2223,38 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False):
                 conditions.append("status = %s")
                 params.append(status_filter)
             
-            if not include_test:
+            # Only filter by is_test if the column exists
+            if has_is_test_column and not include_test:
                 conditions.append("(is_test = FALSE OR is_test IS NULL)")
             
             where_clause = ""
             if conditions:
                 where_clause = "WHERE " + " AND ".join(conditions)
             
-            cursor.execute(f"""
-                SELECT id, email, name, telegram_user_id, telegram_username, 
-                       stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                       status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at,
-                       COALESCE(is_test, FALSE) as is_test
-                FROM telegram_subscriptions
-                {where_clause}
-                ORDER BY created_at DESC
-            """, params)
+            # Build query based on whether is_test column exists
+            if has_is_test_column:
+                query = f"""
+                    SELECT id, email, name, telegram_user_id, telegram_username, 
+                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at,
+                           COALESCE(is_test, FALSE) as is_test
+                    FROM telegram_subscriptions
+                    {where_clause}
+                    ORDER BY created_at DESC
+                """
+            else:
+                query = f"""
+                    SELECT id, email, name, telegram_user_id, telegram_username, 
+                           stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                           status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at,
+                           FALSE as is_test
+                    FROM telegram_subscriptions
+                    {where_clause}
+                    ORDER BY created_at DESC
+                """
+            
+            cursor.execute(query, params)
+            print(f"[DB] get_all_telegram_subscriptions: found {cursor.rowcount} rows")
             
             subscriptions = []
             for row in cursor.fetchall():
