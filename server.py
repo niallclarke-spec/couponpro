@@ -2121,6 +2121,59 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/cleanup-test-data':
+            # Admin API - Delete test subscription records (fake paid data)
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                # Delete records with fake test emails (test@, demo@, etc.) that have amount > 0
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                
+                # Find and delete test records with fake payments
+                cursor.execute("""
+                    DELETE FROM telegram_subscriptions 
+                    WHERE amount_paid > 0 
+                    AND (
+                        email LIKE 'test%@%' OR 
+                        email LIKE 'demo%@%' OR
+                        email LIKE '%@example.com'
+                    )
+                    RETURNING id, email, amount_paid
+                """)
+                
+                deleted_records = cursor.fetchall()
+                conn.commit()
+                cursor.close()
+                conn.close()
+                
+                deleted_info = [{'id': r[0], 'email': r[1], 'amount': float(r[2])} for r in deleted_records]
+                
+                print(f"[CLEANUP] Deleted {len(deleted_records)} test records: {deleted_info}")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Deleted {len(deleted_records)} test records',
+                    'deleted': deleted_info
+                }).encode())
+                
+            except Exception as e:
+                print(f"[CLEANUP] Error: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/telegram/cancel-subscription':
             # Admin API - Cancel a Stripe subscription
             if not self.check_auth():
