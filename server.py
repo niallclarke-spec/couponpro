@@ -2131,37 +2131,17 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                # Delete records with fake test emails (test@, demo@, etc.) that have amount > 0
-                conn = db.get_connection()
-                cursor = conn.cursor()
+                # Use db function to cleanup test records
+                deleted_info = db.cleanup_test_telegram_subscriptions()
                 
-                # Find and delete test records with fake payments
-                cursor.execute("""
-                    DELETE FROM telegram_subscriptions 
-                    WHERE amount_paid > 0 
-                    AND (
-                        email LIKE 'test%@%' OR 
-                        email LIKE 'demo%@%' OR
-                        email LIKE '%@example.com'
-                    )
-                    RETURNING id, email, amount_paid
-                """)
-                
-                deleted_records = cursor.fetchall()
-                conn.commit()
-                cursor.close()
-                conn.close()
-                
-                deleted_info = [{'id': r[0], 'email': r[1], 'amount': float(r[2])} for r in deleted_records]
-                
-                print(f"[CLEANUP] Deleted {len(deleted_records)} test records: {deleted_info}")
+                print(f"[CLEANUP] Deleted {len(deleted_info)} test records: {deleted_info}")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     'success': True,
-                    'message': f'Deleted {len(deleted_records)} test records',
+                    'message': f'Deleted {len(deleted_info)} test records',
                     'deleted': deleted_info
                 }).encode())
                 
