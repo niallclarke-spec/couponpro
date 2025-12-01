@@ -2360,6 +2360,9 @@
                                 <input type="checkbox" id="showTestData" onchange="toggleTestData(this.checked)" style="width: 16px; height: 16px;">
                                 Show Test Data
                             </label>
+                            <button onclick="cleanupTestData()" class="btn" style="background: #dc2626; color: white; padding: 6px 12px; font-size: 0.85rem;">
+                                🗑️ Cleanup Test Data
+                            </button>
                         </div>
                     </div>
                     <div id="subscriptionStats" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -3106,6 +3109,31 @@
                 billingContainer.innerHTML = `
                     <div class="billing-error">Unable to load billing info</div>
                 `;
+            }
+        }
+        
+        async function cleanupTestData() {
+            if (!confirm('Are you sure you want to delete all test data?\n\nThis will remove records with:\n- Emails starting with test@ or demo@\n- Emails ending with @example.com\n- That have fake payment amounts\n\nReal subscriber data will NOT be affected.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/telegram/cleanup-test-data', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ ${result.message}\n\nDeleted records:\n${result.deleted.map(r => `- ${r.email} ($${r.amount})`).join('\n') || 'None found'}`);
+                    loadSubscriptions(); // Refresh the list
+                } else {
+                    alert(`❌ Failed to cleanup: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error cleaning up test data:', error);
+                alert(`❌ Error: ${error.message}`);
             }
         }
         
