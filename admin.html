@@ -3267,7 +3267,7 @@
                 
                 if (result.success) {
                     alert(`Deleted successfully: ${email}`);
-                    closeSubscriptionModal();
+                    closeSubscriptionDetailModal();
                     loadSubscriptions(); // Refresh the list
                 } else {
                     alert(`Failed to delete: ${result.error || 'Unknown error'}`);
