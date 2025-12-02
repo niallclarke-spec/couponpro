@@ -243,7 +243,7 @@ _metrics_cache = {
 }
 METRICS_CACHE_TTL_SECONDS = 60  # 1 minute cache for fresh data
 
-def get_stripe_metrics(subscription_ids=None, product_name_filter="Forex"):
+def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
     """
     Fetch revenue metrics directly from Stripe API.
     
