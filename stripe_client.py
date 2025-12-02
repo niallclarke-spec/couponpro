@@ -362,8 +362,8 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                     
                     # Use upcoming invoice API to get exact rebill amount (includes discounts)
                     try:
-                        # Stripe API: use stripe.Invoice.upcoming() directly
-                        upcoming = stripe.Invoice.upcoming(subscription=sub_id)
+                        # Stripe API v5+: use create_preview instead of upcoming
+                        upcoming = stripe.Invoice.create_preview(subscription=sub_id)
                         next_payment_date = upcoming.get('next_payment_attempt') or upcoming.get('period_end') or upcoming.get('created')
                         rebill_amount = (upcoming.get('amount_due', 0) or 0) / 100
                         
