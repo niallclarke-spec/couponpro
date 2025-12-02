@@ -345,12 +345,15 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         for sub_id in active_sub_ids:
             try:
                 sub = client.Subscription.retrieve(sub_id)
+                # Debug: print all keys in subscription object
+                print(f"[Stripe] Sub keys: {list(sub.keys())[:20]}...")
+                
                 # Use safe dict access for all fields
                 status = sub.get('status', 'unknown')
                 cancel_at_period_end = sub.get('cancel_at_period_end', False)
                 current_period_end = sub.get('current_period_end')
                 
-                print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_period_end={cancel_at_period_end}")
+                print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_period_end={cancel_at_period_end}, current_period_end={current_period_end}")
                 
                 if status == 'active':
                     active_count += 1
