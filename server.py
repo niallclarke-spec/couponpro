@@ -2472,6 +2472,224 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/stripe/webhook':
+            # Stripe Webhook - Handle subscription events automatically
+            # No auth required - uses Stripe signature verification
+            try:
+                content_length = int(self.headers['Content-Length'])
+                payload = self.rfile.read(content_length)
+                sig_header = self.headers.get('Stripe-Signature')
+                
+                webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+                
+                if not STRIPE_AVAILABLE:
+                    print("[STRIPE WEBHOOK] Stripe not available")
+                    self.send_response(503)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Stripe not available'}).encode())
+                    return
+                
+                from stripe_client import verify_webhook_signature, get_subscription_details
+                
+                # If webhook secret is configured, verify signature
+                if webhook_secret and sig_header:
+                    event, error = verify_webhook_signature(payload, sig_header, webhook_secret)
+                    if error:
+                        print(f"[STRIPE WEBHOOK] Signature verification failed: {error}")
+                        self.send_response(400)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'error': error}).encode())
+                        return
+                else:
+                    # No webhook secret - parse event directly (less secure, for development)
+                    try:
+                        event = json.loads(payload.decode('utf-8'))
+                        print(f"[STRIPE WEBHOOK] Warning: No webhook secret configured, skipping signature verification")
+                    except json.JSONDecodeError as e:
+                        self.send_response(400)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
+                        return
+                
+                event_type = event.get('type') if isinstance(event, dict) else event.type
+                event_data = event.get('data', {}).get('object', {}) if isinstance(event, dict) else event.data.object
+                
+                print(f"[STRIPE WEBHOOK] Received event: {event_type}")
+                
+                # Handle different event types
+                if event_type == 'checkout.session.completed':
+                    # New subscription payment completed
+                    subscription_id = event_data.get('subscription') if isinstance(event_data, dict) else getattr(event_data, 'subscription', None)
+                    customer_id = event_data.get('customer') if isinstance(event_data, dict) else getattr(event_data, 'customer', None)
+                    customer_email = event_data.get('customer_email') if isinstance(event_data, dict) else getattr(event_data, 'customer_email', None)
+                    amount_total = (event_data.get('amount_total') if isinstance(event_data, dict) else getattr(event_data, 'amount_total', 0)) or 0
+                    
+                    if subscription_id:
+                        # Get full subscription details from Stripe
+                        sub_details = get_subscription_details(subscription_id)
+                        
+                        if sub_details:
+                            email = sub_details.get('email') or customer_email
+                            name = sub_details.get('name')
+                            amount_paid = sub_details.get('amount_paid') or (amount_total / 100)
+                            plan_name = sub_details.get('plan_name') or 'premium'
+                            
+                            print(f"[STRIPE WEBHOOK] Creating subscription: email={email}, sub_id={subscription_id}, amount=${amount_paid}")
+                            
+                            # Create or update subscription in database
+                            result, error = db.create_or_update_telegram_subscription(
+                                email=email,
+                                stripe_customer_id=customer_id,
+                                stripe_subscription_id=subscription_id,
+                                plan_type=plan_name,
+                                amount_paid=amount_paid,
+                                name=name
+                            )
+                            
+                            if result:
+                                print(f"[STRIPE WEBHOOK] ✅ Subscription created/updated: {email}")
+                            else:
+                                print(f"[STRIPE WEBHOOK] ❌ Failed to create subscription: {error}")
+                        else:
+                            print(f"[STRIPE WEBHOOK] Could not fetch subscription details for {subscription_id}")
+                    else:
+                        print(f"[STRIPE WEBHOOK] checkout.session.completed without subscription_id (one-time payment?)")
+                
+                elif event_type == 'customer.subscription.created':
+                    # Subscription created
+                    subscription_id = event_data.get('id') if isinstance(event_data, dict) else event_data.id
+                    
+                    sub_details = get_subscription_details(subscription_id)
+                    if sub_details and sub_details.get('email'):
+                        result, error = db.create_or_update_telegram_subscription(
+                            email=sub_details['email'],
+                            stripe_customer_id=sub_details.get('customer_id'),
+                            stripe_subscription_id=subscription_id,
+                            plan_type=sub_details.get('plan_name') or 'premium',
+                            amount_paid=sub_details.get('amount_paid', 0),
+                            name=sub_details.get('name')
+                        )
+                        print(f"[STRIPE WEBHOOK] customer.subscription.created: {sub_details['email']} - {'success' if result else error}")
+                
+                elif event_type == 'customer.subscription.updated':
+                    # Subscription updated (e.g., plan change, cancellation scheduled)
+                    subscription_id = event_data.get('id') if isinstance(event_data, dict) else event_data.id
+                    cancel_at_period_end = event_data.get('cancel_at_period_end') if isinstance(event_data, dict) else getattr(event_data, 'cancel_at_period_end', False)
+                    status = event_data.get('status') if isinstance(event_data, dict) else event_data.status
+                    
+                    print(f"[STRIPE WEBHOOK] customer.subscription.updated: {subscription_id}, status={status}, cancel_at_period_end={cancel_at_period_end}")
+                    
+                    # Update subscription status in database if needed
+                    sub_details = get_subscription_details(subscription_id)
+                    if sub_details and sub_details.get('email'):
+                        # Just log for now - could update status in DB
+                        print(f"[STRIPE WEBHOOK] Subscription {subscription_id} updated for {sub_details['email']}")
+                
+                elif event_type == 'customer.subscription.deleted':
+                    # Subscription canceled/ended
+                    subscription_id = event_data.get('id') if isinstance(event_data, dict) else event_data.id
+                    print(f"[STRIPE WEBHOOK] customer.subscription.deleted: {subscription_id}")
+                    
+                    sub_details = get_subscription_details(subscription_id)
+                    if sub_details and sub_details.get('email'):
+                        # Revoke access in database
+                        telegram_user_id = db.revoke_telegram_subscription(sub_details['email'], 'subscription_canceled')
+                        print(f"[STRIPE WEBHOOK] Revoked access for {sub_details['email']}")
+                        
+                        # Kick from Telegram if configured
+                        if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
+                            private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                            if private_channel_id:
+                                from telegram_bot import sync_kick_user_from_channel
+                                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                                print(f"[STRIPE WEBHOOK] Kicked user {telegram_user_id}: {kicked}")
+                
+                elif event_type == 'invoice.paid':
+                    # Invoice paid - update amount_paid for renewals
+                    subscription_id = event_data.get('subscription') if isinstance(event_data, dict) else getattr(event_data, 'subscription', None)
+                    amount_paid = (event_data.get('amount_paid') if isinstance(event_data, dict) else getattr(event_data, 'amount_paid', 0)) or 0
+                    customer_email = event_data.get('customer_email') if isinstance(event_data, dict) else getattr(event_data, 'customer_email', None)
+                    
+                    if subscription_id and amount_paid > 0:
+                        print(f"[STRIPE WEBHOOK] invoice.paid: {subscription_id}, amount=${amount_paid/100}, email={customer_email}")
+                
+                # Always return 200 to acknowledge receipt
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'received': True}).encode())
+                
+            except Exception as e:
+                print(f"[STRIPE WEBHOOK] Error processing webhook: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/stripe/sync':
+            # Admin API - Sync all active subscriptions from Stripe to database
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            if not STRIPE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Stripe not available'}).encode())
+                return
+            
+            try:
+                from stripe_client import fetch_active_subscriptions
+                
+                subscriptions = fetch_active_subscriptions()
+                synced = 0
+                errors = []
+                
+                for sub in subscriptions:
+                    if sub.get('email'):
+                        result, error = db.create_or_update_telegram_subscription(
+                            email=sub['email'],
+                            stripe_customer_id=sub.get('customer_id'),
+                            stripe_subscription_id=sub.get('subscription_id'),
+                            plan_type=sub.get('plan_name') or 'premium',
+                            amount_paid=sub.get('amount_paid', 0),
+                            name=sub.get('name')
+                        )
+                        if result:
+                            synced += 1
+                            print(f"[STRIPE SYNC] Synced: {sub['email']}")
+                        else:
+                            errors.append(f"{sub['email']}: {error}")
+                            print(f"[STRIPE SYNC] Failed: {sub['email']} - {error}")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'synced': synced,
+                    'total': len(subscriptions),
+                    'errors': errors
+                }).encode())
+                
+            except Exception as e:
+                print(f"[STRIPE SYNC] Error: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/campaigns':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)

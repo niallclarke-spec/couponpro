@@ -384,3 +384,126 @@ def cancel_subscription(stripe_subscription_id, cancel_immediately=False):
     except Exception as e:
         print(f"[Stripe] Error canceling subscription {stripe_subscription_id}: {e}")
         return {'success': False, 'error': str(e)}
+
+
+def verify_webhook_signature(payload, sig_header, webhook_secret):
+    """
+    Verify Stripe webhook signature
+    
+    Args:
+        payload: Raw request body bytes
+        sig_header: Stripe-Signature header value
+        webhook_secret: Webhook signing secret from Stripe
+    
+    Returns:
+        tuple: (event_dict or None, error_message or None)
+    """
+    try:
+        client = get_stripe_client()
+        event = client.Webhook.construct_event(
+            payload, sig_header, webhook_secret
+        )
+        return event, None
+    except ValueError as e:
+        print(f"[Stripe Webhook] Invalid payload: {e}")
+        return None, "Invalid payload"
+    except stripe.error.SignatureVerificationError as e:
+        print(f"[Stripe Webhook] Invalid signature: {e}")
+        return None, "Invalid signature"
+    except Exception as e:
+        print(f"[Stripe Webhook] Error verifying webhook: {e}")
+        return None, str(e)
+
+
+def get_subscription_details(subscription_id):
+    """
+    Fetch subscription details from Stripe
+    
+    Returns dict with subscription info or None
+    """
+    try:
+        client = get_stripe_client()
+        subscription = client.Subscription.retrieve(
+            subscription_id,
+            expand=['customer', 'latest_invoice']
+        )
+        
+        # Get customer email
+        customer = subscription.customer
+        email = customer.email if hasattr(customer, 'email') else None
+        name = customer.name if hasattr(customer, 'name') else None
+        
+        # Get amount from latest invoice
+        amount_paid = 0
+        if subscription.latest_invoice and hasattr(subscription.latest_invoice, 'amount_paid'):
+            amount_paid = subscription.latest_invoice.amount_paid / 100
+        
+        # Get plan info
+        plan_name = None
+        if subscription.items and subscription.items.data:
+            item = subscription.items.data[0]
+            if item.price and item.price.product:
+                # Product might be an ID or expanded object
+                product = item.price.product
+                if hasattr(product, 'name'):
+                    plan_name = product.name
+        
+        return {
+            'subscription_id': subscription.id,
+            'customer_id': customer.id if hasattr(customer, 'id') else subscription.customer,
+            'email': email,
+            'name': name,
+            'status': subscription.status,
+            'plan_name': plan_name,
+            'amount_paid': amount_paid,
+            'current_period_start': subscription.current_period_start,
+            'current_period_end': subscription.current_period_end,
+            'cancel_at_period_end': subscription.cancel_at_period_end
+        }
+    except Exception as e:
+        print(f"[Stripe] Error fetching subscription {subscription_id}: {e}")
+        return None
+
+
+def fetch_active_subscriptions():
+    """
+    Fetch all active subscriptions from Stripe for backfill purposes
+    
+    Returns list of subscription dicts
+    """
+    try:
+        client = get_stripe_client()
+        subscriptions = []
+        
+        # Fetch active subscriptions
+        for sub in client.Subscription.list(status='active', expand=['data.customer', 'data.latest_invoice']).auto_paging_iter():
+            customer = sub.customer
+            email = customer.email if hasattr(customer, 'email') else None
+            name = customer.name if hasattr(customer, 'name') else None
+            
+            amount_paid = 0
+            if sub.latest_invoice and hasattr(sub.latest_invoice, 'amount_paid'):
+                amount_paid = sub.latest_invoice.amount_paid / 100
+            
+            plan_name = None
+            if sub.items and sub.items.data:
+                item = sub.items.data[0]
+                if item.price and item.price.product:
+                    product = item.price.product
+                    if hasattr(product, 'name'):
+                        plan_name = product.name
+            
+            subscriptions.append({
+                'subscription_id': sub.id,
+                'customer_id': customer.id if hasattr(customer, 'id') else sub.customer,
+                'email': email,
+                'name': name,
+                'status': sub.status,
+                'plan_name': plan_name,
+                'amount_paid': amount_paid
+            })
+        
+        return subscriptions
+    except Exception as e:
+        print(f"[Stripe] Error fetching active subscriptions: {e}")
+        return []
