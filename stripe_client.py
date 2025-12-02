@@ -243,32 +243,61 @@ _metrics_cache = {
 }
 METRICS_CACHE_TTL_SECONDS = 60  # 1 minute cache for fresh data
 
-def get_stripe_metrics(subscription_ids=None):
+def get_stripe_metrics(subscription_ids=None, product_name_filter="Forex"):
     """
-    Fetch revenue metrics directly from Stripe API for specific subscriptions.
+    Fetch revenue metrics directly from Stripe API.
     
-    IMPORTANT: Only counts invoices/subscriptions that match the provided IDs.
-    This ensures we only count PromoStack data, not the entire Stripe account.
+    Strategy:
+    1. If subscription_ids provided, try those first
+    2. If no valid subscriptions found, fetch directly from Stripe filtered by product name
     
     Args:
-        subscription_ids: List of Stripe subscription IDs to filter by.
-                         If None or empty, returns zeros (safety measure).
+        subscription_ids: List of Stripe subscription IDs from database (may be stale)
+        product_name_filter: Product name to filter by when fetching from Stripe directly
     
     Returns:
         dict with total_revenue, monthly_rebill, subscription_count, currency
     """
-    # Safety: require subscription_ids to prevent counting entire Stripe account
-    if not subscription_ids:
-        print(f"[Stripe] No subscription IDs provided, returning zeros")
+    # Try database IDs first, but fall back to Stripe if they're stale
+    sub_id_set = set(subscription_ids) if subscription_ids else set()
+    
+    # If we have database IDs, verify at least one exists in Stripe
+    if sub_id_set:
+        try:
+            client = get_stripe_client()
+            test_id = list(sub_id_set)[0]
+            client.Subscription.retrieve(test_id)
+            print(f"[Stripe] Using {len(sub_id_set)} subscription IDs from database")
+        except Exception as e:
+            print(f"[Stripe] Database subscription IDs are stale ({e}), fetching from Stripe...")
+            sub_id_set = set()  # Clear and fetch fresh from Stripe
+    
+    # If no valid IDs, fetch subscriptions directly from Stripe
+    if not sub_id_set:
+        print(f"[Stripe] Fetching subscriptions directly from Stripe (filter: {product_name_filter})...")
+        try:
+            client = get_stripe_client()
+            for sub in client.Subscription.list(status='active', expand=['data.items.data.price.product']).auto_paging_iter():
+                # Check if this subscription is for our product
+                if sub.items and sub.items.data:
+                    for item in sub.items.data:
+                        product = item.price.product if item.price else None
+                        product_name = getattr(product, 'name', '') if product else ''
+                        if product_name_filter.lower() in product_name.lower():
+                            sub_id_set.add(sub.id)
+                            print(f"[Stripe] Found subscription: {sub.id} ({product_name})")
+                            break
+        except Exception as e:
+            print(f"[Stripe] Error fetching subscriptions: {e}")
+    
+    if not sub_id_set:
+        print(f"[Stripe] No subscriptions found for filter '{product_name_filter}'")
         return {
             'total_revenue': 0,
             'monthly_rebill': 0,
             'subscription_count': 0,
             'currency': 'USD'
         }
-    
-    # Create set for fast lookup
-    sub_id_set = set(subscription_ids)
     
     # Check cache (include subscription IDs in cache key)
     now = datetime.now()
