@@ -304,20 +304,29 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         # ========== ALSO FETCH ACTIVE SUBSCRIPTIONS DIRECTLY ==========
         # Some invoices don't have subscription IDs, so also check active subscriptions
         print(f"[Stripe] Also fetching active subscriptions directly from Stripe...")
-        for sub in client.Subscription.list(status='active', limit=100, expand=['data.items.data.price.product']).auto_paging_iter():
+        for sub in client.Subscription.list(status='active', limit=100).auto_paging_iter():
             # Check if this subscription is for a VIP product
-            if sub.items and sub.items.data:
-                for item in sub.items.data:
+            # Access items via subscription['items'] to avoid method call issue
+            items_data = sub.get('items', {})
+            if items_data and hasattr(items_data, 'data'):
+                for item in items_data.data:
                     product_name = ''
-                    if hasattr(item.price, 'product'):
-                        product = item.price.product
-                        if hasattr(product, 'name'):
-                            product_name = product.name
-                        elif isinstance(product, str):
-                            # Product is just an ID, try to get name from nickname
-                            product_name = item.price.nickname or ''
+                    # Get product name - fetch product if needed
+                    price = item.get('price', {}) if isinstance(item, dict) else getattr(item, 'price', None)
+                    if price:
+                        product_id = price.get('product') if isinstance(price, dict) else getattr(price, 'product', None)
+                        if product_id:
+                            if isinstance(product_id, str):
+                                # Product is just an ID, fetch it
+                                try:
+                                    prod_obj = client.Product.retrieve(product_id)
+                                    product_name = prod_obj.name or ''
+                                except:
+                                    product_name = price.get('nickname', '') if isinstance(price, dict) else getattr(price, 'nickname', '') or ''
+                            elif hasattr(product_id, 'name'):
+                                product_name = product_id.name
                     
-                    if product_name_filter.lower() in product_name.lower():
+                    if product_name and product_name_filter.lower() in product_name.lower():
                         active_sub_ids.add(sub.id)
                         print(f"[Stripe] Found active VIP sub: {sub.id[:15]}... - {product_name}")
                         break
