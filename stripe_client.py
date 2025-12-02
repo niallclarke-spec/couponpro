@@ -298,15 +298,23 @@ def get_revenue_metrics(subscription_ids):
                 if subscription.status == 'active' and not subscription.cancel_at_period_end:
                     try:
                         upcoming = client.Invoice.upcoming(subscription=sub_id)
-                        if upcoming and upcoming.next_payment_attempt:
-                            next_billing = datetime.fromtimestamp(upcoming.next_payment_attempt)
-                            if month_start <= next_billing < month_end:
-                                # Use upcoming invoice amount (matches what Stripe shows)
-                                upcoming_amount = (upcoming.amount_due or 0) / 100
-                                monthly_rebill += upcoming_amount
-                                print(f"[Stripe] Sub {sub_id} renews {next_billing.date()} for ${upcoming_amount}")
-                    except stripe.error.InvalidRequestError:
+                        if upcoming:
+                            # Use subscription's current_period_end as the next billing date
+                            # This is more reliable than next_payment_attempt which may not exist
+                            next_billing_ts = upcoming.next_payment_attempt or subscription.current_period_end
+                            if next_billing_ts:
+                                next_billing = datetime.fromtimestamp(next_billing_ts)
+                                print(f"[Stripe] Sub {sub_id} next billing: {next_billing.date()}, month range: {month_start.date()} - {month_end.date()}")
+                                if month_start <= next_billing < month_end:
+                                    # Use upcoming invoice amount (matches what Stripe shows)
+                                    upcoming_amount = (upcoming.amount_due or 0) / 100
+                                    monthly_rebill += upcoming_amount
+                                    print(f"[Stripe] Sub {sub_id} renews {next_billing.date()} for ${upcoming_amount}")
+                                else:
+                                    print(f"[Stripe] Sub {sub_id} next billing {next_billing.date()} not in current month")
+                    except stripe.error.InvalidRequestError as e:
                         # No upcoming invoice (cancelled or past due)
+                        print(f"[Stripe] No upcoming invoice for {sub_id}: {e}")
                         pass
                     
             except stripe.error.InvalidRequestError as e:
