@@ -312,6 +312,7 @@ def get_stripe_metrics(subscription_ids=None):
         print(f"[Stripe] Total revenue from {invoice_count} matched invoices: ${total_revenue}")
         
         # ========== SUBSCRIPTIONS: Count active + calculate rebill ==========
+        # Rebill = sum of renewals happening THIS MONTH (not yet billed)
         for sub_id in sub_id_set:
             try:
                 subscription = client.Subscription.retrieve(sub_id)
@@ -319,26 +320,33 @@ def get_stripe_metrics(subscription_ids=None):
                 if subscription.status in ['active', 'trialing']:
                     active_count += 1
                 
-                # Check if this subscription renews this month
+                # Check if this subscription renews this month (and hasn't cancelled)
                 if subscription.status == 'active' and not subscription.cancel_at_period_end:
                     period_end = datetime.fromtimestamp(subscription.current_period_end) if subscription.current_period_end else None
                     
                     if period_end and month_start <= period_end < month_end:
-                        # Renewal is this month - get upcoming invoice amount
+                        # This subscription renews this month
+                        renewal_amount = 0
+                        
+                        # Try to get upcoming invoice (preferred - includes discounts)
                         try:
                             upcoming = client.Invoice.upcoming(subscription=sub_id)
-                            if upcoming:
-                                amount = (upcoming.amount_due or upcoming.total or 0) / 100
-                                monthly_rebill += amount
-                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ${amount}")
+                            if upcoming and upcoming.amount_due:
+                                renewal_amount = upcoming.amount_due / 100
+                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ${renewal_amount} (upcoming)")
                         except stripe.error.InvalidRequestError:
-                            # No upcoming invoice - use plan price as fallback
-                            if subscription.items and subscription.items.data:
-                                amount = (subscription.items.data[0].price.unit_amount or 0) / 100
-                                monthly_rebill += amount
-                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ~${amount} (plan)")
+                            pass  # No upcoming invoice available
                         except Exception as e:
-                            print(f"[Stripe] Error getting upcoming for {sub_id}: {e}")
+                            print(f"[Stripe] Upcoming invoice error for {sub_id}: {e}")
+                        
+                        # Fallback to plan price if no upcoming invoice
+                        if renewal_amount == 0 and subscription.items and subscription.items.data:
+                            item = subscription.items.data[0]
+                            if item.price and item.price.unit_amount:
+                                renewal_amount = item.price.unit_amount / 100
+                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ~${renewal_amount} (plan price)")
+                        
+                        monthly_rebill += renewal_amount
                     else:
                         if period_end:
                             print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} (not this month)")
