@@ -11,22 +11,32 @@ _stripe_credentials = None
 
 def get_stripe_credentials():
     """
-    Fetch Stripe credentials - tries Replit connector first, then falls back to env vars
+    Fetch Stripe credentials - prioritizes manual env vars (live keys), then Replit connector
     
     Supports:
-    1. Replit Stripe Connector (preferred)
-    2. Manual env vars: STRIPE_SECRET_KEY/STRIPE_SECRET + STRIPE_PUBLISHABLE_KEY
+    1. Manual env vars: STRIPE_SECRET_KEY/STRIPE_SECRET (preferred - allows using live keys in dev)
+    2. Replit Stripe Connector (fallback)
     """
     global _stripe_credentials
     
     if _stripe_credentials:
         return _stripe_credentials
     
-    # First, try to get from manual environment variables (fallback)
+    # First, check for manual environment variables (preferred - allows live keys in dev)
     manual_secret = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
     manual_publishable = os.environ.get('STRIPE_PUBLISHABLE_KEY')
     
-    # Try Replit connector API first
+    if manual_secret:
+        # Detect if it's a live or test key
+        key_type = 'LIVE' if 'live' in manual_secret else 'TEST'
+        print(f"[STRIPE] Using manual environment variables ({key_type} mode)")
+        _stripe_credentials = {
+            'publishable_key': manual_publishable or '',
+            'secret_key': manual_secret
+        }
+        return _stripe_credentials
+    
+    # Fall back to Replit connector API
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
     
     if hostname:
@@ -68,20 +78,10 @@ def get_stripe_credentials():
                 }
                 return _stripe_credentials
         except Exception as e:
-            print(f"[STRIPE] Replit connector failed: {e}, trying manual env vars...")
-    
-    # Fall back to manual environment variables
-    # For server-side API calls, we only need the secret key (publishable is optional)
-    if manual_secret:
-        print(f"[STRIPE] Using manual environment variables (secret key only: {bool(manual_secret)}, publishable: {bool(manual_publishable)})")
-        _stripe_credentials = {
-            'publishable_key': manual_publishable or '',  # Optional for server-side usage
-            'secret_key': manual_secret
-        }
-        return _stripe_credentials
+            print(f"[STRIPE] Replit connector failed: {e}")
     
     # Neither worked
-    raise Exception('Stripe credentials not found. Set up Replit Stripe connector or add STRIPE_SECRET_KEY environment variable.')
+    raise Exception('Stripe credentials not found. Set STRIPE_SECRET_KEY environment variable or set up Replit Stripe connector.')
 
 def get_stripe_client():
     """Get configured Stripe client"""
@@ -303,11 +303,13 @@ def get_stripe_metrics(subscription_ids=None):
         
         for invoice in paid_invoices.auto_paging_iter():
             # FILTER: Only count invoices for our subscriptions
-            if invoice.subscription and invoice.subscription in sub_id_set:
+            # Use getattr to safely handle invoices without subscription field (e.g., one-time payments)
+            sub_id = getattr(invoice, 'subscription', None)
+            if sub_id and sub_id in sub_id_set:
                 amount = (invoice.amount_paid or 0) / 100
                 total_revenue += amount
                 invoice_count += 1
-                print(f"[Stripe] Invoice {invoice.id}: ${amount} (sub: {invoice.subscription[:20]}...)")
+                print(f"[Stripe] Invoice {invoice.id}: ${amount} (sub: {sub_id[:20]}...)")
         
         print(f"[Stripe] Total revenue from {invoice_count} matched invoices: ${total_revenue}")
         
