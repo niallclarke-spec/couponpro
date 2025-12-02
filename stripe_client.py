@@ -696,7 +696,10 @@ def get_subscription_details(subscription_id):
 
 def fetch_active_subscriptions():
     """
-    Fetch all active subscriptions from Stripe for backfill purposes
+    Fetch all active subscriptions from Stripe for backfill purposes.
+    
+    Gets total amount paid from ALL invoices for each subscription,
+    not just the latest invoice (which might be a renewal or different amount).
     
     Returns list of subscription dicts
     """
@@ -704,15 +707,23 @@ def fetch_active_subscriptions():
         client = get_stripe_client()
         subscriptions = []
         
+        print(f"[Stripe] Fetching active subscriptions for sync...")
+        
         # Fetch active subscriptions
-        for sub in client.Subscription.list(status='active', expand=['data.customer', 'data.latest_invoice']).auto_paging_iter():
+        for sub in client.Subscription.list(status='active', expand=['data.customer']).auto_paging_iter():
             customer = sub.customer
             email = customer.email if hasattr(customer, 'email') else None
             name = customer.name if hasattr(customer, 'name') else None
             
-            amount_paid = 0
-            if sub.latest_invoice and hasattr(sub.latest_invoice, 'amount_paid'):
-                amount_paid = sub.latest_invoice.amount_paid / 100
+            # Get total amount paid from ALL invoices for this subscription
+            total_paid = 0
+            try:
+                invoices = client.Invoice.list(subscription=sub.id, status='paid', limit=100)
+                for invoice in invoices.auto_paging_iter():
+                    total_paid += (invoice.amount_paid or 0) / 100
+                print(f"[Stripe] Sub {sub.id[:20]}...: {email}, total_paid=${total_paid}")
+            except Exception as e:
+                print(f"[Stripe] Error fetching invoices for {sub.id}: {e}")
             
             plan_name = None
             if sub.items and sub.items.data:
@@ -729,10 +740,13 @@ def fetch_active_subscriptions():
                 'name': name,
                 'status': sub.status,
                 'plan_name': plan_name,
-                'amount_paid': amount_paid
+                'amount_paid': round(total_paid, 2)
             })
         
+        print(f"[Stripe] Found {len(subscriptions)} active subscriptions")
         return subscriptions
     except Exception as e:
         print(f"[Stripe] Error fetching active subscriptions: {e}")
+        import traceback
+        traceback.print_exc()
         return []
