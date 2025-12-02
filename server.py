@@ -692,9 +692,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/telegram/revenue-metrics':
-            # Admin endpoint - Get revenue metrics
-            # Revenue comes from DATABASE (has correct discounted amounts)
-            # Rebill comes from STRIPE (upcoming invoice amounts)
+            # Admin endpoint - Get revenue metrics DIRECTLY FROM STRIPE
+            # Best practice: Stripe is source of truth for all financial data
             if not self.check_auth():
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
@@ -703,36 +702,22 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                # Get all subscriptions
-                subscriptions = db.get_all_telegram_subscriptions()
+                if not STRIPE_AVAILABLE:
+                    raise Exception("Stripe not configured")
                 
-                # REVENUE: Sum amount_paid from database (correct discounted values)
-                paid_subs = [s for s in subscriptions if float(s.get('amount_paid') or 0) > 0 and s.get('status') != 'revoked']
-                total_revenue = sum(float(s.get('amount_paid') or 0) for s in paid_subs)
+                from stripe_client import get_stripe_metrics
                 
-                print(f"[REVENUE] Database: {len(paid_subs)} paid subs, total=${total_revenue}")
+                print(f"[REVENUE] Fetching metrics directly from Stripe API...")
+                metrics = get_stripe_metrics()
                 
-                # REBILL: Use Stripe to get upcoming renewals this month
-                monthly_rebill = 0
-                stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id') and s.get('status') == 'active']
-                
-                if STRIPE_AVAILABLE and stripe_sub_ids:
-                    try:
-                        from stripe_client import get_rebill_this_month
-                        monthly_rebill = get_rebill_this_month(stripe_sub_ids)
-                        print(f"[REVENUE] Stripe rebill this month: ${monthly_rebill}")
-                    except Exception as e:
-                        print(f"[REVENUE] Error getting rebill from Stripe: {e}")
-                
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    'total_revenue': round(total_revenue, 2),
-                    'monthly_rebill': round(monthly_rebill, 2),
-                    'subscription_count': len(paid_subs),
-                    'currency': 'USD'
-                }).encode())
+                if metrics:
+                    print(f"[REVENUE] Stripe returned: revenue=${metrics.get('total_revenue')}, rebill=${metrics.get('monthly_rebill')}")
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(metrics).encode())
+                else:
+                    raise Exception("Failed to fetch metrics from Stripe")
                 
             except Exception as e:
                 print(f"[REVENUE] Error getting metrics: {e}")

@@ -237,6 +237,122 @@ def get_customer_billing_info(stripe_customer_id):
         return None
 
 # Revenue metrics cache with TTL
+_metrics_cache = {
+    'data': None,
+    'expires_at': None
+}
+METRICS_CACHE_TTL_SECONDS = 60  # 1 minute cache for fresh data
+
+def get_stripe_metrics():
+    """
+    Fetch ALL revenue metrics directly from Stripe API.
+    
+    This is the source-of-truth approach:
+    - Revenue = sum of all paid invoices (amount_paid respects discounts)
+    - Rebill = sum of upcoming invoices for active subscriptions renewing this month
+    - Active count = count of active subscriptions
+    
+    No dependency on local database - Stripe is the single source of truth.
+    
+    Returns:
+        dict with total_revenue, monthly_rebill, subscription_count, currency
+    """
+    # Check cache
+    now = datetime.now()
+    if (_metrics_cache['data'] and 
+        _metrics_cache['expires_at'] and 
+        _metrics_cache['expires_at'] > now):
+        print(f"[Stripe] Returning cached metrics (expires in {(_metrics_cache['expires_at'] - now).seconds}s)")
+        return _metrics_cache['data']
+    
+    try:
+        client = get_stripe_client()
+        
+        total_revenue = 0
+        monthly_rebill = 0
+        active_count = 0
+        
+        # Get current month boundaries
+        month_start = datetime(now.year, now.month, 1)
+        if now.month == 12:
+            month_end = datetime(now.year + 1, 1, 1)
+        else:
+            month_end = datetime(now.year, now.month + 1, 1)
+        
+        print(f"[Stripe] Fetching metrics directly from Stripe API...")
+        print(f"[Stripe] Month window: {month_start.date()} to {month_end.date()}")
+        
+        # ========== REVENUE: Sum all paid invoices ==========
+        # This respects discounts, coupons, and all adjustments
+        paid_invoices = client.Invoice.list(status='paid', limit=100)
+        invoice_count = 0
+        
+        for invoice in paid_invoices.auto_paging_iter():
+            # Only count invoices with a subscription (not one-time payments)
+            if invoice.subscription:
+                amount = (invoice.amount_paid or 0) / 100
+                total_revenue += amount
+                invoice_count += 1
+                print(f"[Stripe] Invoice {invoice.id}: ${amount} (sub: {invoice.subscription[:20]}...)")
+        
+        print(f"[Stripe] Total revenue from {invoice_count} paid invoices: ${total_revenue}")
+        
+        # ========== SUBSCRIPTIONS: Count active + calculate rebill ==========
+        active_subs = client.Subscription.list(status='active', limit=100)
+        
+        for subscription in active_subs.auto_paging_iter():
+            active_count += 1
+            
+            # Check if this subscription renews this month
+            if not subscription.cancel_at_period_end:
+                period_end = datetime.fromtimestamp(subscription.current_period_end) if subscription.current_period_end else None
+                
+                if period_end and month_start <= period_end < month_end:
+                    # Renewal is this month - get upcoming invoice amount
+                    try:
+                        upcoming = client.Invoice.upcoming(subscription=subscription.id)
+                        if upcoming:
+                            amount = (upcoming.amount_due or upcoming.total or 0) / 100
+                            monthly_rebill += amount
+                            print(f"[Stripe] Sub {subscription.id[:20]}... renews {period_end.date()} for ${amount}")
+                    except stripe.error.InvalidRequestError:
+                        # No upcoming invoice - use plan price as fallback
+                        if subscription.items and subscription.items.data:
+                            amount = (subscription.items.data[0].price.unit_amount or 0) / 100
+                            monthly_rebill += amount
+                            print(f"[Stripe] Sub {subscription.id[:20]}... renews {period_end.date()} for ~${amount} (plan)")
+                    except Exception as e:
+                        print(f"[Stripe] Error getting upcoming for {subscription.id}: {e}")
+                else:
+                    if period_end:
+                        print(f"[Stripe] Sub {subscription.id[:20]}... renews {period_end.date()} (not this month)")
+        
+        print(f"[Stripe] Active subscriptions: {active_count}, Rebill this month: ${monthly_rebill}")
+        
+        result = {
+            'total_revenue': round(total_revenue, 2),
+            'monthly_rebill': round(monthly_rebill, 2),
+            'subscription_count': active_count,
+            'currency': 'USD'
+        }
+        
+        # Update cache
+        _metrics_cache['data'] = result
+        _metrics_cache['expires_at'] = now + timedelta(seconds=METRICS_CACHE_TTL_SECONDS)
+        
+        return result
+        
+    except stripe.error.AuthenticationError as e:
+        print(f"[Stripe] Authentication error: {e}")
+        return None
+    except Exception as e:
+        print(f"[Stripe] Error fetching metrics: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+# Legacy function - kept for backward compatibility
 _revenue_cache = {
     'data': None,
     'expires_at': None,
