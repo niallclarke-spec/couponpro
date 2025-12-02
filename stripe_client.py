@@ -241,9 +241,9 @@ def get_revenue_metrics(subscription_ids):
     
     Returns:
         dict with:
-        - total_revenue: Total amount collected from all paid invoices (net after discounts)
-        - monthly_rebill: Sum of upcoming invoice amounts due this month
-        - subscription_count: Number of active subscriptions with billing info
+        - total_revenue: Total amount actually collected (amount_paid after discounts)
+        - monthly_rebill: Expected renewals at FULL plan price (before discounts)
+        - subscription_count: Number of active subscriptions
     """
     if not subscription_ids:
         return {
@@ -273,16 +273,21 @@ def get_revenue_metrics(subscription_ids):
                 continue
                 
             try:
-                # Get subscription with latest invoice
-                subscription = client.Subscription.retrieve(
-                    sub_id,
-                    expand=['latest_invoice']
-                )
+                # Get subscription details
+                subscription = client.Subscription.retrieve(sub_id)
                 
                 if subscription.status in ['active', 'trialing']:
                     active_count += 1
                 
+                # Get the plan's base price (unit_amount before any discounts)
+                plan_price = 0
+                if subscription.items and subscription.items.data:
+                    price = subscription.items.data[0].price
+                    if price and price.unit_amount:
+                        plan_price = price.unit_amount / 100
+                
                 # Get all paid invoices for this subscription
+                # amount_paid = actual cash collected AFTER discounts
                 invoices = client.Invoice.list(
                     subscription=sub_id,
                     status='paid',
@@ -291,18 +296,18 @@ def get_revenue_metrics(subscription_ids):
                 
                 for invoice in invoices.auto_paging_iter():
                     # amount_paid is the actual amount collected (after discounts)
-                    total_revenue += (invoice.amount_paid or 0) / 100
+                    amount_paid = (invoice.amount_paid or 0) / 100
+                    total_revenue += amount_paid
+                    print(f"[Stripe] Invoice {invoice.id}: amount_paid=${amount_paid}")
                 
-                # Check upcoming invoice for this month's rebill
-                try:
-                    upcoming = client.Invoice.upcoming(subscription=sub_id)
-                    if upcoming and upcoming.next_payment_attempt:
-                        next_date = datetime.fromtimestamp(upcoming.next_payment_attempt)
-                        if month_start <= next_date < month_end:
-                            monthly_rebill += (upcoming.amount_due or 0) / 100
-                except stripe.error.InvalidRequestError:
-                    # No upcoming invoice (cancelled or past due)
-                    pass
+                # Check if subscription renews this month - use FULL plan price
+                if subscription.status == 'active' and not subscription.cancel_at_period_end:
+                    if subscription.current_period_end:
+                        next_billing = datetime.fromtimestamp(subscription.current_period_end)
+                        if month_start <= next_billing < month_end:
+                            # Use full plan price, not discounted amount
+                            monthly_rebill += plan_price
+                            print(f"[Stripe] Sub {sub_id} renews {next_billing.date()} at full price ${plan_price}")
                     
             except stripe.error.InvalidRequestError as e:
                 print(f"[Stripe] Subscription {sub_id} not found: {e}")
@@ -310,6 +315,8 @@ def get_revenue_metrics(subscription_ids):
             except Exception as e:
                 print(f"[Stripe] Error fetching subscription {sub_id}: {e}")
                 continue
+        
+        print(f"[Stripe] Revenue metrics: total_revenue=${total_revenue}, monthly_rebill=${monthly_rebill}")
         
         return {
             'total_revenue': round(total_revenue, 2),

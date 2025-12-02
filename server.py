@@ -61,6 +61,16 @@ except Exception as e:
     print(f"[INFO] Forex scheduler not available: {e}")
     FOREX_SCHEDULER_AVAILABLE = False
 
+# Import Stripe client for revenue metrics
+try:
+    from stripe_client import get_stripe_client
+    get_stripe_client()  # Test that credentials are available
+    STRIPE_AVAILABLE = True
+    print("[INFO] Stripe client initialized")
+except Exception as e:
+    print(f"[INFO] Stripe not available: {e}")
+    STRIPE_AVAILABLE = False
+
 PORT = int(os.environ.get('PORT', 5000))
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
