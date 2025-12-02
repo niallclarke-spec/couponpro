@@ -357,6 +357,21 @@ class DatabasePool:
                     ON telegram_subscriptions(stripe_subscription_id)
                 """)
                 
+                # Create processed_webhook_events table for idempotency
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS processed_webhook_events (
+                        event_id VARCHAR(255) PRIMARY KEY,
+                        event_type VARCHAR(100),
+                        processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create index for cleanup (events older than 24 hours can be deleted)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_processed_webhook_events_processed_at 
+                    ON processed_webhook_events(processed_at)
+                """)
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -2086,6 +2101,9 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         print(f"[DB ERROR] Traceback: {traceback.format_exc()}")
         return None, error_msg
 
+# Alias for backwards compatibility with webhook handlers
+create_or_update_telegram_subscription = create_telegram_subscription
+
 def get_telegram_subscription_by_email(email):
     """Get telegram subscription by email"""
     try:
@@ -2515,3 +2533,88 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
         import traceback
         traceback.print_exc()
         return None
+
+# ===== Webhook Idempotency Functions =====
+
+def is_webhook_event_processed(event_id):
+    """
+    Check if a webhook event has already been processed.
+    Used to prevent duplicate processing of Stripe webhook events.
+    
+    Args:
+        event_id (str): The Stripe event ID (e.g., 'evt_xxx')
+    
+    Returns:
+        bool: True if event was already processed, False otherwise
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 1 FROM processed_webhook_events WHERE event_id = %s
+            """, (event_id,))
+            return cursor.fetchone() is not None
+    except Exception as e:
+        print(f"[IDEMPOTENCY] Error checking webhook event: {e}")
+        return False
+
+def record_webhook_event_processed(event_id, event_type):
+    """
+    Record that a webhook event has been processed.
+    
+    Args:
+        event_id (str): The Stripe event ID
+        event_type (str): The event type (e.g., 'checkout.session.completed')
+    
+    Returns:
+        bool: True if recorded successfully
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (event_id) DO NOTHING
+            """, (event_id, event_type))
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"[IDEMPOTENCY] Error recording webhook event: {e}")
+        return False
+
+def cleanup_old_webhook_events(hours=24):
+    """
+    Clean up old processed webhook events to prevent table growth.
+    Events older than specified hours are deleted.
+    
+    Args:
+        hours (int): Delete events older than this many hours
+    
+    Returns:
+        int: Number of events deleted
+    """
+    try:
+        if not db_pool.connection_pool:
+            return 0
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM processed_webhook_events 
+                WHERE processed_at < CURRENT_TIMESTAMP - INTERVAL '%s hours'
+            """, (hours,))
+            deleted = cursor.rowcount
+            conn.commit()
+            if deleted > 0:
+                print(f"[IDEMPOTENCY] Cleaned up {deleted} old webhook events")
+            return deleted
+    except Exception as e:
+        print(f"[IDEMPOTENCY] Error cleaning up webhook events: {e}")
+        return 0

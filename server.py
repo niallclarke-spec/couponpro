@@ -2515,9 +2515,19 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         return
                 
                 event_type = event.get('type') if isinstance(event, dict) else event.type
+                event_id = event.get('id') if isinstance(event, dict) else event.id
                 event_data = event.get('data', {}).get('object', {}) if isinstance(event, dict) else event.data.object
                 
-                print(f"[STRIPE WEBHOOK] Received event: {event_type}")
+                print(f"[STRIPE WEBHOOK] Received event: {event_type} ({event_id})")
+                
+                # Idempotency check - skip if we've already processed this event
+                if event_id and db.is_webhook_event_processed(event_id):
+                    print(f"[STRIPE WEBHOOK] ⏭️ Event {event_id} already processed, skipping")
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'received': True, 'duplicate': True}).encode())
+                    return
                 
                 # Handle different event types
                 if event_type == 'checkout.session.completed':
@@ -2616,6 +2626,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     if subscription_id and amount_paid > 0:
                         print(f"[STRIPE WEBHOOK] invoice.paid: {subscription_id}, amount=${amount_paid/100}, email={customer_email}")
                 
+                # Record this event as processed to prevent duplicate handling
+                if event_id:
+                    db.record_webhook_event_processed(event_id, event_type)
+                    print(f"[STRIPE WEBHOOK] ✅ Event {event_id} recorded as processed")
+                
+                # Periodically cleanup old events (every ~100 requests)
+                import random
+                if random.random() < 0.01:  # 1% chance
+                    db.cleanup_old_webhook_events(hours=24)
+                
                 # Always return 200 to acknowledge receipt
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -2623,13 +2643,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'received': True}).encode())
                 
             except Exception as e:
-                print(f"[STRIPE WEBHOOK] Error processing webhook: {e}")
+                # CRITICAL: Always return 200 to prevent Stripe retries
+                # Log the error but acknowledge receipt to avoid webhook loops
+                print(f"[STRIPE WEBHOOK] ❌ Error processing webhook: {e}")
                 import traceback
                 traceback.print_exc()
-                self.send_response(500)
+                # Still return 200 so Stripe doesn't retry endlessly
+                self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode())
+                self.wfile.write(json.dumps({'received': True, 'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/stripe/sync':
             # Admin API - Sync all active subscriptions from Stripe to database
