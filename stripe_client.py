@@ -345,25 +345,34 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         for sub_id in active_sub_ids:
             try:
                 sub = client.Subscription.retrieve(sub_id)
-                print(f"[Stripe] Sub {sub_id[:15]}... status={sub.status}, cancel_at_period_end={sub.cancel_at_period_end}")
+                # Use safe dict access for all fields
+                status = sub.get('status', 'unknown')
+                cancel_at_period_end = sub.get('cancel_at_period_end', False)
+                current_period_end = sub.get('current_period_end')
                 
-                if sub.status == 'active':
+                print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_period_end={cancel_at_period_end}")
+                
+                if status == 'active':
                     active_count += 1
                     # Check if renews this month
-                    if sub.current_period_end:
-                        period_end = datetime.fromtimestamp(sub.current_period_end)
-                        print(f"[Stripe] Sub renews on {period_end.date()}, cancel_at_period_end={sub.cancel_at_period_end}")
+                    if current_period_end:
+                        period_end = datetime.fromtimestamp(current_period_end)
+                        print(f"[Stripe] Sub renews on {period_end.date()}, cancel_at_period_end={cancel_at_period_end}")
                         
-                        if not sub.cancel_at_period_end and month_start <= period_end < month_end:
+                        if not cancel_at_period_end and month_start <= period_end < month_end:
                             try:
                                 upcoming = client.Invoice.upcoming(subscription=sub_id)
-                                rebill_amount = (upcoming.amount_due or 0) / 100
+                                rebill_amount = (upcoming.get('amount_due', 0) or 0) / 100
                                 monthly_rebill += rebill_amount
                                 print(f"[Stripe] ✓ Rebill: ${rebill_amount} on {period_end.date()}")
                             except Exception as e:
                                 # Fallback to subscription item price
-                                if sub.items and sub.items.data:
-                                    rebill_amount = (sub.items.data[0].price.unit_amount or 0) / 100
+                                print(f"[Stripe] Upcoming invoice failed: {e}, trying item price...")
+                                items_data = sub.get('items', {})
+                                if items_data and hasattr(items_data, 'data') and items_data.data:
+                                    price = items_data.data[0].get('price', {}) if isinstance(items_data.data[0], dict) else getattr(items_data.data[0], 'price', {})
+                                    unit_amount = price.get('unit_amount', 0) if isinstance(price, dict) else getattr(price, 'unit_amount', 0)
+                                    rebill_amount = (unit_amount or 0) / 100
                                     monthly_rebill += rebill_amount
                                     print(f"[Stripe] ✓ Rebill (from price): ${rebill_amount} on {period_end.date()}")
                         else:
