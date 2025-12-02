@@ -2643,16 +2643,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'received': True}).encode())
                 
             except Exception as e:
-                # CRITICAL: Always return 200 to prevent Stripe retries
-                # Log the error but acknowledge receipt to avoid webhook loops
+                # Return 500 for processing errors to allow Stripe retries
+                # The idempotency table prevents duplicate processing on retry
                 print(f"[STRIPE WEBHOOK] ❌ Error processing webhook: {e}")
                 import traceback
                 traceback.print_exc()
-                # Still return 200 so Stripe doesn't retry endlessly
-                self.send_response(200)
+                # Return 500 so Stripe will retry (idempotency handles duplicates)
+                self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'received': True, 'error': str(e)}).encode())
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/stripe/sync':
             # Admin API - Sync all active subscriptions from Stripe to database
