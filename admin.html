@@ -2452,8 +2452,14 @@
                             <div class="stat-subtext">Email captured</div>
                         </div>
                         <div class="stat-card" style="flex: 1; min-width: 150px;">
-                            <div class="stat-label">Monthly Revenue</div>
-                            <div class="stat-value" id="monthlyRevenue">$--</div>
+                            <div class="stat-label">Net Revenue</div>
+                            <div class="stat-value" id="netRevenue">$--</div>
+                            <div class="stat-subtext" id="netRevenueSubtext">All time</div>
+                        </div>
+                        <div class="stat-card" style="flex: 1; min-width: 150px;">
+                            <div class="stat-label">Rebill This Month</div>
+                            <div class="stat-value" id="monthlyRebill">$--</div>
+                            <div class="stat-subtext">Expected renewals</div>
                         </div>
                     </div>
                     <div class="card">
@@ -2931,12 +2937,43 @@
             const freePlanSubs = allSubscriptions.filter(s => 
                 (s.amount_paid === 0 || s.amount_paid === null) && s.status !== 'revoked'
             ).length;
-            const monthlyRevenue = paidSubs.reduce((sum, s) => sum + (s.amount_paid || 0), 0);
             
             document.getElementById('paidSubscribers').textContent = paidCount;
             document.getElementById('activeSubscribers').textContent = activePaid;
             document.getElementById('freePlanSubscribers').textContent = freePlanSubs;
-            document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toFixed(0)}`;
+            
+            // Fetch revenue metrics from Stripe
+            fetchRevenueMetrics();
+        }
+        
+        async function fetchRevenueMetrics() {
+            try {
+                const response = await fetch('/api/telegram/revenue-metrics', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch revenue metrics');
+                
+                const metrics = await response.json();
+                
+                document.getElementById('netRevenue').textContent = `$${metrics.total_revenue.toFixed(0)}`;
+                document.getElementById('monthlyRebill').textContent = `$${metrics.monthly_rebill.toFixed(0)}`;
+                
+                if (metrics.source === 'database_fallback') {
+                    document.getElementById('netRevenueSubtext').textContent = 'From database';
+                } else {
+                    document.getElementById('netRevenueSubtext').textContent = 'All time (net)';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching revenue metrics:', error);
+                // Fallback to database amounts
+                const paidSubs = allSubscriptions.filter(s => s.amount_paid > 0 && s.status !== 'revoked');
+                const totalFromDb = paidSubs.reduce((sum, s) => sum + (s.amount_paid || 0), 0);
+                document.getElementById('netRevenue').textContent = `$${totalFromDb.toFixed(0)}`;
+                document.getElementById('monthlyRebill').textContent = '$--';
+                document.getElementById('netRevenueSubtext').textContent = 'From database';
+            }
         }
 
         function filterSubscriptions(status) {
