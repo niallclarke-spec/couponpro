@@ -360,9 +360,10 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
-                    # Use Invoice.upcoming() to get the next rebill - this always works
+                    # Use upcoming invoice API to get exact rebill amount (includes discounts)
                     try:
-                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        # Stripe API: use stripe.Invoice.upcoming() directly
+                        upcoming = stripe.Invoice.upcoming(subscription=sub_id)
                         next_payment_date = upcoming.get('next_payment_attempt') or upcoming.get('period_end') or upcoming.get('created')
                         rebill_amount = (upcoming.get('amount_due', 0) or 0) / 100
                         
@@ -381,15 +382,7 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                             monthly_rebill += rebill_amount
                             print(f"[Stripe] ✓ Rebill (no date): ${rebill_amount}")
                     except Exception as e:
-                        # Fallback to subscription item price
-                        print(f"[Stripe] Upcoming invoice failed: {e}, trying item price...")
-                        items_data = sub.get('items', {})
-                        if items_data and hasattr(items_data, 'data') and items_data.data:
-                            price = items_data.data[0].get('price', {}) if isinstance(items_data.data[0], dict) else getattr(items_data.data[0], 'price', {})
-                            unit_amount = price.get('unit_amount', 0) if isinstance(price, dict) else getattr(price, 'unit_amount', 0)
-                            rebill_amount = (unit_amount or 0) / 100
-                            monthly_rebill += rebill_amount
-                            print(f"[Stripe] ✓ Rebill (from price): ${rebill_amount}")
+                        print(f"[Stripe] Upcoming invoice error: {e}")
             except Exception as e:
                 print(f"[Stripe] Sub check error for {sub_id}: {e}")
                 import traceback
