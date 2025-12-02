@@ -694,6 +694,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/telegram/revenue-metrics':
             # Admin endpoint - Get revenue metrics DIRECTLY FROM STRIPE
             # Best practice: Stripe is source of truth for all financial data
+            # IMPORTANT: Filter to only PromoStack subscriptions (not entire Stripe account)
             if not self.check_auth():
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
@@ -705,10 +706,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not STRIPE_AVAILABLE:
                     raise Exception("Stripe not configured")
                 
+                # Get subscription IDs from our database to filter Stripe data
+                subscriptions = db.get_all_telegram_subscriptions()
+                stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
+                
                 from stripe_client import get_stripe_metrics
                 
-                print(f"[REVENUE] Fetching metrics directly from Stripe API...")
-                metrics = get_stripe_metrics()
+                print(f"[REVENUE] Fetching metrics for {len(stripe_sub_ids)} PromoStack subscriptions...")
+                metrics = get_stripe_metrics(subscription_ids=stripe_sub_ids)
                 
                 if metrics:
                     print(f"[REVENUE] Stripe returned: revenue=${metrics.get('total_revenue')}, rebill=${metrics.get('monthly_rebill')}")
