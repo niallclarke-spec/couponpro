@@ -705,10 +705,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 subscriptions = db.get_all_telegram_subscriptions()
                 stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
                 
+                print(f"[REVENUE] STRIPE_AVAILABLE={STRIPE_AVAILABLE}, stripe_sub_ids count={len(stripe_sub_ids)}")
+                
                 # Fetch revenue metrics from Stripe
                 if STRIPE_AVAILABLE and stripe_sub_ids:
                     from stripe_client import get_revenue_metrics
+                    print(f"[REVENUE] Calling Stripe with IDs: {stripe_sub_ids}")
                     metrics = get_revenue_metrics(stripe_sub_ids)
+                    print(f"[REVENUE] Stripe returned: {metrics}")
                     
                     if metrics:
                         self.send_response(200)
@@ -716,6 +720,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         self.end_headers()
                         self.wfile.write(json.dumps(metrics).encode())
                         return
+                    else:
+                        print(f"[REVENUE] Stripe returned None, falling back to database")
+                else:
+                    print(f"[REVENUE] Skipping Stripe: STRIPE_AVAILABLE={STRIPE_AVAILABLE}, has_sub_ids={bool(stripe_sub_ids)}")
                 
                 # Fallback: use database amounts
                 paid_subs = [s for s in subscriptions if float(s.get('amount_paid') or 0) > 0]

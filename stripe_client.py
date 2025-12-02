@@ -71,16 +71,17 @@ def get_stripe_credentials():
             print(f"[STRIPE] Replit connector failed: {e}, trying manual env vars...")
     
     # Fall back to manual environment variables
-    if manual_secret and manual_publishable:
-        print("[STRIPE] Using manual environment variables (STRIPE_SECRET_KEY/STRIPE_PUBLISHABLE_KEY)")
+    # For server-side API calls, we only need the secret key (publishable is optional)
+    if manual_secret:
+        print(f"[STRIPE] Using manual environment variables (secret key only: {bool(manual_secret)}, publishable: {bool(manual_publishable)})")
         _stripe_credentials = {
-            'publishable_key': manual_publishable,
+            'publishable_key': manual_publishable or '',  # Optional for server-side usage
             'secret_key': manual_secret
         }
         return _stripe_credentials
     
     # Neither worked
-    raise Exception('Stripe credentials not found. Set up Replit Stripe connector or add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables.')
+    raise Exception('Stripe credentials not found. Set up Replit Stripe connector or add STRIPE_SECRET_KEY environment variable.')
 
 def get_stripe_client():
     """Get configured Stripe client"""
