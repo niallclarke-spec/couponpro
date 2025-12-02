@@ -415,6 +415,28 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+            color: #7c8aff;
+            vertical-align: middle;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+        }
+
+        .copy-btn svg {
+            display: block;
+        }
+
         /* Form Styles */
         .form-group {
             margin-bottom: 20px;
@@ -3038,10 +3060,13 @@
                             return `
                             <tr>
                                 <td>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
                                         <span style="font-size: 0.9rem;">${sub.email}</span>
-                                        <button onclick="copyToClipboard('${sub.email}')" style="background: none; border: none; cursor: pointer; padding: 2px; color: #7c8aff; font-size: 0.8rem;" title="Copy email">
-                                            📋
+                                        <button onclick="copyToClipboard('${sub.email}', this)" class="copy-btn" title="Copy email">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
                                         </button>
                                     </div>
                                 </td>
@@ -3269,20 +3294,19 @@
             }
         }
         
-        function copyToClipboard(text) {
+        function copyToClipboard(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
-                // Show brief visual feedback
-                const originalEvent = event.target;
-                const originalText = originalEvent.textContent;
-                originalEvent.textContent = '✓';
-                originalEvent.style.color = '#4caf50';
+                // Show brief visual feedback with checkmark
+                const svg = btn.querySelector('svg');
+                const originalSvg = svg.outerHTML;
+                svg.outerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                btn.style.opacity = '1';
                 setTimeout(() => {
-                    originalEvent.textContent = originalText;
-                    originalEvent.style.color = '#7c8aff';
+                    btn.innerHTML = originalSvg;
+                    btn.style.opacity = '';
                 }, 1000);
             }).catch(err => {
                 console.error('Failed to copy:', err);
-                alert('Failed to copy to clipboard');
             });
         }
         
