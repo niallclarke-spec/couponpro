@@ -279,13 +279,6 @@ def get_revenue_metrics(subscription_ids):
                 if subscription.status in ['active', 'trialing']:
                     active_count += 1
                 
-                # Get the plan's base price (unit_amount before any discounts)
-                plan_price = 0
-                if subscription.items and subscription.items.data:
-                    price = subscription.items.data[0].price
-                    if price and price.unit_amount:
-                        plan_price = price.unit_amount / 100
-                
                 # Get all paid invoices for this subscription
                 # amount_paid = actual cash collected AFTER discounts
                 invoices = client.Invoice.list(
@@ -300,14 +293,20 @@ def get_revenue_metrics(subscription_ids):
                     total_revenue += amount_paid
                     print(f"[Stripe] Invoice {invoice.id}: amount_paid=${amount_paid}")
                 
-                # Check if subscription renews this month - use FULL plan price
+                # Check upcoming invoice for rebill amount (what Stripe will actually charge)
                 if subscription.status == 'active' and not subscription.cancel_at_period_end:
-                    if subscription.current_period_end:
-                        next_billing = datetime.fromtimestamp(subscription.current_period_end)
-                        if month_start <= next_billing < month_end:
-                            # Use full plan price, not discounted amount
-                            monthly_rebill += plan_price
-                            print(f"[Stripe] Sub {sub_id} renews {next_billing.date()} at full price ${plan_price}")
+                    try:
+                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        if upcoming and upcoming.next_payment_attempt:
+                            next_billing = datetime.fromtimestamp(upcoming.next_payment_attempt)
+                            if month_start <= next_billing < month_end:
+                                # Use upcoming invoice amount (matches what Stripe shows)
+                                upcoming_amount = (upcoming.amount_due or 0) / 100
+                                monthly_rebill += upcoming_amount
+                                print(f"[Stripe] Sub {sub_id} renews {next_billing.date()} for ${upcoming_amount}")
+                    except stripe.error.InvalidRequestError:
+                        # No upcoming invoice (cancelled or past due)
+                        pass
                     
             except stripe.error.InvalidRequestError as e:
                 print(f"[Stripe] Subscription {sub_id} not found: {e}")
