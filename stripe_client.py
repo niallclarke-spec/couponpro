@@ -372,6 +372,80 @@ def get_revenue_metrics(subscription_ids):
         return None
 
 
+def get_rebill_this_month(subscription_ids):
+    """
+    Calculate total rebill amount for subscriptions renewing this month.
+    
+    Uses subscription.current_period_end to determine if renewal is this month,
+    then fetches upcoming invoice amount.
+    
+    Args:
+        subscription_ids: List of Stripe subscription IDs
+        
+    Returns:
+        float: Total rebill amount for this month
+    """
+    if not subscription_ids:
+        return 0
+    
+    try:
+        client = get_stripe_client()
+        now = datetime.now()
+        
+        # Get current month boundaries
+        month_start = datetime(now.year, now.month, 1)
+        if now.month == 12:
+            month_end = datetime(now.year + 1, 1, 1)
+        else:
+            month_end = datetime(now.year, now.month + 1, 1)
+        
+        monthly_rebill = 0
+        
+        print(f"[Stripe] Calculating rebill for {len(subscription_ids)} subscriptions")
+        print(f"[Stripe] Month window: {month_start.date()} to {month_end.date()}")
+        
+        for sub_id in subscription_ids:
+            try:
+                subscription = client.Subscription.retrieve(sub_id)
+                
+                # Skip if not active or canceling
+                if subscription.status != 'active' or subscription.cancel_at_period_end:
+                    print(f"[Stripe] Sub {sub_id}: skipped (status={subscription.status}, cancel_at_end={subscription.cancel_at_period_end})")
+                    continue
+                
+                # Check if current_period_end is this month
+                period_end = datetime.fromtimestamp(subscription.current_period_end) if subscription.current_period_end else None
+                
+                if period_end and month_start <= period_end < month_end:
+                    # Renewal is this month - get upcoming invoice amount
+                    try:
+                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        if upcoming:
+                            amount = (upcoming.amount_due or upcoming.total or 0) / 100
+                            monthly_rebill += amount
+                            print(f"[Stripe] Sub {sub_id}: renews {period_end.date()} for ${amount}")
+                    except stripe.error.InvalidRequestError:
+                        # No upcoming invoice - use plan price
+                        if subscription.items and subscription.items.data:
+                            amount = (subscription.items.data[0].price.unit_amount or 0) / 100
+                            monthly_rebill += amount
+                            print(f"[Stripe] Sub {sub_id}: renews {period_end.date()} for ~${amount} (plan)")
+                else:
+                    print(f"[Stripe] Sub {sub_id}: renews {period_end.date() if period_end else 'N/A'} (not this month)")
+                    
+            except stripe.error.InvalidRequestError as e:
+                print(f"[Stripe] Subscription {sub_id} not found: {e}")
+            except Exception as e:
+                print(f"[Stripe] Error processing {sub_id}: {e}")
+        
+        print(f"[Stripe] Total rebill this month: ${monthly_rebill}")
+        return round(monthly_rebill, 2)
+        
+    except Exception as e:
+        print(f"[Stripe] Error calculating rebill: {e}")
+        return 0
+
+
 def cancel_subscription(stripe_subscription_id, cancel_immediately=False):
     """
     Cancel a Stripe subscription

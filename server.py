@@ -692,7 +692,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
         elif parsed_path.path == '/api/telegram/revenue-metrics':
-            # Admin endpoint - Get revenue metrics from Stripe
+            # Admin endpoint - Get revenue metrics
+            # Revenue comes from DATABASE (has correct discounted amounts)
+            # Rebill comes from STRIPE (upcoming invoice amounts)
             if not self.check_auth():
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
@@ -701,43 +703,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                # Get all subscriptions with Stripe IDs
+                # Get all subscriptions
                 subscriptions = db.get_all_telegram_subscriptions()
-                stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
                 
-                print(f"[REVENUE] STRIPE_AVAILABLE={STRIPE_AVAILABLE}, stripe_sub_ids count={len(stripe_sub_ids)}")
+                # REVENUE: Sum amount_paid from database (correct discounted values)
+                paid_subs = [s for s in subscriptions if float(s.get('amount_paid') or 0) > 0 and s.get('status') != 'revoked']
+                total_revenue = sum(float(s.get('amount_paid') or 0) for s in paid_subs)
                 
-                # Fetch revenue metrics from Stripe
+                print(f"[REVENUE] Database: {len(paid_subs)} paid subs, total=${total_revenue}")
+                
+                # REBILL: Use Stripe to get upcoming renewals this month
+                monthly_rebill = 0
+                stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id') and s.get('status') == 'active']
+                
                 if STRIPE_AVAILABLE and stripe_sub_ids:
-                    from stripe_client import get_revenue_metrics
-                    print(f"[REVENUE] Calling Stripe with IDs: {stripe_sub_ids}")
-                    metrics = get_revenue_metrics(stripe_sub_ids)
-                    print(f"[REVENUE] Stripe returned: {metrics}")
-                    
-                    if metrics:
-                        self.send_response(200)
-                        self.send_header('Content-type', 'application/json')
-                        self.end_headers()
-                        self.wfile.write(json.dumps(metrics).encode())
-                        return
-                    else:
-                        print(f"[REVENUE] Stripe returned None, falling back to database")
-                else:
-                    print(f"[REVENUE] Skipping Stripe: STRIPE_AVAILABLE={STRIPE_AVAILABLE}, has_sub_ids={bool(stripe_sub_ids)}")
-                
-                # Fallback: use database amounts
-                paid_subs = [s for s in subscriptions if float(s.get('amount_paid') or 0) > 0]
-                total_from_db = sum(float(s.get('amount_paid') or 0) for s in paid_subs)
+                    try:
+                        from stripe_client import get_rebill_this_month
+                        monthly_rebill = get_rebill_this_month(stripe_sub_ids)
+                        print(f"[REVENUE] Stripe rebill this month: ${monthly_rebill}")
+                    except Exception as e:
+                        print(f"[REVENUE] Error getting rebill from Stripe: {e}")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
-                    'total_revenue': total_from_db,
-                    'monthly_rebill': 0,
+                    'total_revenue': round(total_revenue, 2),
+                    'monthly_rebill': round(monthly_rebill, 2),
                     'subscription_count': len(paid_subs),
-                    'currency': 'USD',
-                    'source': 'database_fallback'
+                    'currency': 'USD'
                 }).encode())
                 
             except Exception as e:
