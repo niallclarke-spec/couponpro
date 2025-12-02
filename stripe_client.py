@@ -346,7 +346,11 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
             try:
                 sub = client.Subscription.retrieve(sub_id)
                 # Debug: print all keys in subscription object
-                print(f"[Stripe] Sub keys: {list(sub.keys())[:20]}...")
+                all_keys = list(sub.keys())
+                print(f"[Stripe] Sub ALL keys: {all_keys}")
+                
+                # Debug: print period-related values directly
+                print(f"[Stripe] Raw period values: current_period_end={sub.get('current_period_end')}, current_period_start={sub.get('current_period_start')}, billing_cycle_anchor={sub.get('billing_cycle_anchor')}")
                 
                 # Use safe dict access for all fields
                 status = sub.get('status', 'unknown')
