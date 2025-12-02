@@ -105,60 +105,86 @@ def get_subscription_billing_info(stripe_subscription_id):
             expand=['customer', 'latest_invoice', 'default_payment_method']
         )
         
-        customer = subscription.customer if hasattr(subscription, 'customer') else None
-        latest_invoice = subscription.latest_invoice if hasattr(subscription, 'latest_invoice') else None
+        # Use safe dict access for all fields
+        customer = subscription.get('customer')
+        latest_invoice = subscription.get('latest_invoice')
+        
+        # Get period fields safely (may not exist in newer billing modes)
+        current_period_start = subscription.get('current_period_start')
+        current_period_end = subscription.get('current_period_end')
+        canceled_at = subscription.get('canceled_at')
+        created = subscription.get('created')
         
         billing_info = {
-            'subscription_id': subscription.id,
-            'status': subscription.status,
-            'current_period_start': datetime.fromtimestamp(subscription.current_period_start).isoformat() if subscription.current_period_start else None,
-            'current_period_end': datetime.fromtimestamp(subscription.current_period_end).isoformat() if subscription.current_period_end else None,
-            'cancel_at_period_end': subscription.cancel_at_period_end,
-            'canceled_at': datetime.fromtimestamp(subscription.canceled_at).isoformat() if subscription.canceled_at else None,
-            'created': datetime.fromtimestamp(subscription.created).isoformat() if subscription.created else None,
+            'subscription_id': subscription.get('id'),
+            'status': subscription.get('status'),
+            'current_period_start': datetime.fromtimestamp(current_period_start).isoformat() if current_period_start else None,
+            'current_period_end': datetime.fromtimestamp(current_period_end).isoformat() if current_period_end else None,
+            'cancel_at_period_end': subscription.get('cancel_at_period_end', False),
+            'canceled_at': datetime.fromtimestamp(canceled_at).isoformat() if canceled_at else None,
+            'created': datetime.fromtimestamp(created).isoformat() if created else None,
             'billing_interval': None,
             'billing_interval_count': None,
             'amount': None,
             'currency': None,
         }
         
-        if subscription.items and subscription.items.data:
-            price = subscription.items.data[0].price
+        # Get items safely
+        items_data = subscription.get('items', {})
+        if items_data and hasattr(items_data, 'data') and items_data.data:
+            item = items_data.data[0]
+            price = item.get('price') if isinstance(item, dict) else getattr(item, 'price', None)
             if price:
-                billing_info['amount'] = price.unit_amount / 100 if price.unit_amount else None
-                billing_info['currency'] = price.currency.upper() if price.currency else None
-                if price.recurring:
-                    billing_info['billing_interval'] = price.recurring.interval
-                    billing_info['billing_interval_count'] = price.recurring.interval_count
+                unit_amount = price.get('unit_amount') if isinstance(price, dict) else getattr(price, 'unit_amount', None)
+                currency = price.get('currency') if isinstance(price, dict) else getattr(price, 'currency', None)
+                recurring = price.get('recurring') if isinstance(price, dict) else getattr(price, 'recurring', None)
+                
+                billing_info['amount'] = unit_amount / 100 if unit_amount else None
+                billing_info['currency'] = currency.upper() if currency else None
+                if recurring:
+                    billing_info['billing_interval'] = recurring.get('interval') if isinstance(recurring, dict) else getattr(recurring, 'interval', None)
+                    billing_info['billing_interval_count'] = recurring.get('interval_count') if isinstance(recurring, dict) else getattr(recurring, 'interval_count', None)
         
-        if customer and hasattr(customer, 'id'):
-            billing_info['customer'] = {
-                'id': customer.id,
-                'email': customer.email if hasattr(customer, 'email') else None,
-                'name': customer.name if hasattr(customer, 'name') else None,
-                'created': datetime.fromtimestamp(customer.created).isoformat() if hasattr(customer, 'created') and customer.created else None,
-            }
-        
-        if latest_invoice and hasattr(latest_invoice, 'id'):
-            billing_info['latest_invoice'] = {
-                'id': latest_invoice.id,
-                'status': latest_invoice.status if hasattr(latest_invoice, 'status') else None,
-                'amount_paid': latest_invoice.amount_paid / 100 if hasattr(latest_invoice, 'amount_paid') and latest_invoice.amount_paid else None,
-                'amount_due': latest_invoice.amount_due / 100 if hasattr(latest_invoice, 'amount_due') and latest_invoice.amount_due else None,
-                'currency': latest_invoice.currency.upper() if hasattr(latest_invoice, 'currency') and latest_invoice.currency else None,
-                'created': datetime.fromtimestamp(latest_invoice.created).isoformat() if hasattr(latest_invoice, 'created') and latest_invoice.created else None,
-                'paid_at': datetime.fromtimestamp(latest_invoice.status_transitions.paid_at).isoformat() if hasattr(latest_invoice, 'status_transitions') and latest_invoice.status_transitions and latest_invoice.status_transitions.paid_at else None,
-            }
-        
-        try:
-            upcoming = client.Invoice.upcoming(subscription=stripe_subscription_id)
-            if upcoming:
-                billing_info['upcoming_invoice'] = {
-                    'amount_due': upcoming.amount_due / 100 if upcoming.amount_due else None,
-                    'currency': upcoming.currency.upper() if upcoming.currency else None,
-                    'next_payment_attempt': datetime.fromtimestamp(upcoming.next_payment_attempt).isoformat() if upcoming.next_payment_attempt else None,
+        if customer:
+            cust_id = customer.get('id') if isinstance(customer, dict) else getattr(customer, 'id', None)
+            if cust_id:
+                billing_info['customer'] = {
+                    'id': cust_id,
+                    'email': customer.get('email') if isinstance(customer, dict) else getattr(customer, 'email', None),
+                    'name': customer.get('name') if isinstance(customer, dict) else getattr(customer, 'name', None),
+                    'created': datetime.fromtimestamp(customer.get('created') if isinstance(customer, dict) else getattr(customer, 'created', None)).isoformat() if (customer.get('created') if isinstance(customer, dict) else getattr(customer, 'created', None)) else None,
                 }
-        except stripe.error.InvalidRequestError:
+        
+        if latest_invoice:
+            inv_id = latest_invoice.get('id') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'id', None)
+            if inv_id:
+                inv_amount_paid = latest_invoice.get('amount_paid') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'amount_paid', None)
+                inv_amount_due = latest_invoice.get('amount_due') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'amount_due', None)
+                inv_currency = latest_invoice.get('currency') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'currency', None)
+                inv_created = latest_invoice.get('created') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'created', None)
+                inv_status = latest_invoice.get('status') if isinstance(latest_invoice, dict) else getattr(latest_invoice, 'status', None)
+                
+                billing_info['latest_invoice'] = {
+                    'id': inv_id,
+                    'status': inv_status,
+                    'amount_paid': inv_amount_paid / 100 if inv_amount_paid else None,
+                    'amount_due': inv_amount_due / 100 if inv_amount_due else None,
+                    'currency': inv_currency.upper() if inv_currency else None,
+                    'created': datetime.fromtimestamp(inv_created).isoformat() if inv_created else None,
+                    'paid_at': None,
+                }
+        
+        # Get upcoming invoice using create_preview (Stripe API v5+)
+        try:
+            upcoming = stripe.Invoice.create_preview(subscription=stripe_subscription_id)
+            if upcoming:
+                next_payment = upcoming.get('next_payment_attempt') or upcoming.get('period_end')
+                billing_info['upcoming_invoice'] = {
+                    'amount_due': upcoming.get('amount_due', 0) / 100 if upcoming.get('amount_due') else None,
+                    'currency': upcoming.get('currency', '').upper() if upcoming.get('currency') else None,
+                    'next_payment_attempt': datetime.fromtimestamp(next_payment).isoformat() if next_payment else None,
+                }
+        except Exception:
             billing_info['upcoming_invoice'] = None
         
         return billing_info
