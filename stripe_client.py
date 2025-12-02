@@ -284,16 +284,16 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         amount = (invoice.amount_paid or 0) / 100
                         total_revenue += amount
                         invoice_count += 1
-                        # Get subscription ID - handle both expanded object and string ID
-                        sub = invoice.subscription
-                        if sub:
+                        # Get subscription ID - safely handle missing attribute
+                        sub_id = None
+                        if hasattr(invoice, 'subscription') and invoice.subscription:
+                            sub = invoice.subscription
                             # If expanded, it's an object with .id; otherwise it's a string
-                            sub_id = sub.id if hasattr(sub, 'id') else sub
-                            if sub_id:
-                                active_sub_ids.add(sub_id)
-                                print(f"[Stripe] Invoice: ${amount} - {description[:40]} (sub: {sub_id[:15]}...)")
-                            else:
-                                print(f"[Stripe] Invoice: ${amount} - {description[:40]} (sub obj but no id)")
+                            sub_id = sub.id if hasattr(sub, 'id') else str(sub)
+                        
+                        if sub_id:
+                            active_sub_ids.add(sub_id)
+                            print(f"[Stripe] Invoice: ${amount} - {description[:40]} (sub: {sub_id[:15]}...)")
                         else:
                             print(f"[Stripe] Invoice: ${amount} - {description[:40]} (no sub)")
                         break  # Count each invoice once
