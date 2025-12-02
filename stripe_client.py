@@ -301,6 +301,29 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         print(f"[Stripe] Total revenue from {invoice_count} VIP invoices: ${total_revenue}")
         print(f"[Stripe] Found {len(active_sub_ids)} subscription IDs from invoices")
         
+        # ========== ALSO FETCH ACTIVE SUBSCRIPTIONS DIRECTLY ==========
+        # Some invoices don't have subscription IDs, so also check active subscriptions
+        print(f"[Stripe] Also fetching active subscriptions directly from Stripe...")
+        for sub in client.Subscription.list(status='active', limit=100, expand=['data.items.data.price.product']).auto_paging_iter():
+            # Check if this subscription is for a VIP product
+            if sub.items and sub.items.data:
+                for item in sub.items.data:
+                    product_name = ''
+                    if hasattr(item.price, 'product'):
+                        product = item.price.product
+                        if hasattr(product, 'name'):
+                            product_name = product.name
+                        elif isinstance(product, str):
+                            # Product is just an ID, try to get name from nickname
+                            product_name = item.price.nickname or ''
+                    
+                    if product_name_filter.lower() in product_name.lower():
+                        active_sub_ids.add(sub.id)
+                        print(f"[Stripe] Found active VIP sub: {sub.id[:15]}... - {product_name}")
+                        break
+        
+        print(f"[Stripe] Total subscription IDs to check: {len(active_sub_ids)}")
+        
         # ========== REBILL: Check active subscriptions ==========
         monthly_rebill = 0
         active_count = 0
