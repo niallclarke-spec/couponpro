@@ -681,6 +681,56 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/revenue-metrics':
+            # Admin endpoint - Get revenue metrics from Stripe
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                # Get all subscriptions with Stripe IDs
+                subscriptions = db.get_all_telegram_subscriptions()
+                stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
+                
+                # Fetch revenue metrics from Stripe
+                if STRIPE_AVAILABLE and stripe_sub_ids:
+                    from stripe_client import get_revenue_metrics
+                    metrics = get_revenue_metrics(stripe_sub_ids)
+                    
+                    if metrics:
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps(metrics).encode())
+                        return
+                
+                # Fallback: use database amounts
+                paid_subs = [s for s in subscriptions if float(s.get('amount_paid') or 0) > 0]
+                total_from_db = sum(float(s.get('amount_paid') or 0) for s in paid_subs)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'total_revenue': total_from_db,
+                    'monthly_rebill': 0,
+                    'subscription_count': len(paid_subs),
+                    'currency': 'USD',
+                    'source': 'database_fallback'
+                }).encode())
+                
+            except Exception as e:
+                print(f"[REVENUE] Error getting metrics: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/telegram/billing/'):
             # Admin endpoint - Get billing info from Stripe for a subscription
             if not self.check_auth():

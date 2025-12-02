@@ -235,6 +235,97 @@ def get_customer_billing_info(stripe_customer_id):
         print(f"[Stripe] Error fetching customer {stripe_customer_id}: {e}")
         return None
 
+def get_revenue_metrics(subscription_ids):
+    """
+    Fetch revenue metrics from Stripe for given subscription IDs
+    
+    Returns:
+        dict with:
+        - total_revenue: Total amount collected from all paid invoices (net after discounts)
+        - monthly_rebill: Sum of upcoming invoice amounts due this month
+        - subscription_count: Number of active subscriptions with billing info
+    """
+    if not subscription_ids:
+        return {
+            'total_revenue': 0,
+            'monthly_rebill': 0,
+            'subscription_count': 0,
+            'currency': 'USD'
+        }
+    
+    try:
+        client = get_stripe_client()
+        
+        total_revenue = 0
+        monthly_rebill = 0
+        active_count = 0
+        
+        # Get current month boundaries
+        now = datetime.now()
+        month_start = datetime(now.year, now.month, 1)
+        if now.month == 12:
+            month_end = datetime(now.year + 1, 1, 1)
+        else:
+            month_end = datetime(now.year, now.month + 1, 1)
+        
+        for sub_id in subscription_ids:
+            if not sub_id:
+                continue
+                
+            try:
+                # Get subscription with latest invoice
+                subscription = client.Subscription.retrieve(
+                    sub_id,
+                    expand=['latest_invoice']
+                )
+                
+                if subscription.status in ['active', 'trialing']:
+                    active_count += 1
+                
+                # Get all paid invoices for this subscription
+                invoices = client.Invoice.list(
+                    subscription=sub_id,
+                    status='paid',
+                    limit=100
+                )
+                
+                for invoice in invoices.auto_paging_iter():
+                    # amount_paid is the actual amount collected (after discounts)
+                    total_revenue += (invoice.amount_paid or 0) / 100
+                
+                # Check upcoming invoice for this month's rebill
+                try:
+                    upcoming = client.Invoice.upcoming(subscription=sub_id)
+                    if upcoming and upcoming.next_payment_attempt:
+                        next_date = datetime.fromtimestamp(upcoming.next_payment_attempt)
+                        if month_start <= next_date < month_end:
+                            monthly_rebill += (upcoming.amount_due or 0) / 100
+                except stripe.error.InvalidRequestError:
+                    # No upcoming invoice (cancelled or past due)
+                    pass
+                    
+            except stripe.error.InvalidRequestError as e:
+                print(f"[Stripe] Subscription {sub_id} not found: {e}")
+                continue
+            except Exception as e:
+                print(f"[Stripe] Error fetching subscription {sub_id}: {e}")
+                continue
+        
+        return {
+            'total_revenue': round(total_revenue, 2),
+            'monthly_rebill': round(monthly_rebill, 2),
+            'subscription_count': active_count,
+            'currency': 'USD'
+        }
+        
+    except stripe.error.AuthenticationError as e:
+        print(f"[Stripe] Authentication error: {e}")
+        return None
+    except Exception as e:
+        print(f"[Stripe] Error fetching revenue metrics: {e}")
+        return None
+
+
 def cancel_subscription(stripe_subscription_id, cancel_immediately=False):
     """
     Cancel a Stripe subscription
