@@ -247,147 +247,78 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
     """
     Fetch revenue metrics directly from Stripe API.
     
-    Strategy:
-    1. If subscription_ids provided, try those first
-    2. If no valid subscriptions found, fetch directly from Stripe filtered by product name
-    
-    Args:
-        subscription_ids: List of Stripe subscription IDs from database (may be stale)
-        product_name_filter: Product name to filter by when fetching from Stripe directly
+    Simple approach:
+    1. Get ALL paid invoices from Stripe
+    2. Filter by line item description containing "VIP"
+    3. Sum the amounts paid (respects discounts)
     
     Returns:
         dict with total_revenue, monthly_rebill, subscription_count, currency
     """
-    # Try database IDs first, but fall back to Stripe if they're stale
-    sub_id_set = set(subscription_ids) if subscription_ids else set()
-    
-    # If we have database IDs, verify at least one exists in Stripe
-    if sub_id_set:
-        try:
-            client = get_stripe_client()
-            test_id = list(sub_id_set)[0]
-            client.Subscription.retrieve(test_id)
-            print(f"[Stripe] Using {len(sub_id_set)} subscription IDs from database")
-        except Exception as e:
-            print(f"[Stripe] Database subscription IDs are stale ({e}), fetching from Stripe...")
-            sub_id_set = set()  # Clear and fetch fresh from Stripe
-    
-    # If no valid IDs, fetch subscriptions directly from Stripe
-    if not sub_id_set:
-        print(f"[Stripe] Fetching subscriptions directly from Stripe (filter: {product_name_filter})...")
-        try:
-            client = get_stripe_client()
-            for sub in client.Subscription.list(status='active', expand=['data.items.data.price.product']).auto_paging_iter():
-                # Check if this subscription is for our product
-                if sub.items and sub.items.data:
-                    for item in sub.items.data:
-                        product = item.price.product if item.price else None
-                        product_name = getattr(product, 'name', '') if product else ''
-                        if product_name_filter.lower() in product_name.lower():
-                            sub_id_set.add(sub.id)
-                            print(f"[Stripe] Found subscription: {sub.id} ({product_name})")
-                            break
-        except Exception as e:
-            print(f"[Stripe] Error fetching subscriptions: {e}")
-    
-    if not sub_id_set:
-        print(f"[Stripe] No subscriptions found for filter '{product_name_filter}'")
-        return {
-            'total_revenue': 0,
-            'monthly_rebill': 0,
-            'subscription_count': 0,
-            'currency': 'USD'
-        }
-    
-    # Check cache (include subscription IDs in cache key)
+    # Check cache first
     now = datetime.now()
-    cache_key = hash(tuple(sorted(sub_id_set)))
     if (_metrics_cache['data'] and 
         _metrics_cache['expires_at'] and 
-        _metrics_cache['expires_at'] > now and
-        _metrics_cache.get('cache_key') == cache_key):
-        print(f"[Stripe] Returning cached metrics (expires in {(_metrics_cache['expires_at'] - now).seconds}s)")
+        _metrics_cache['expires_at'] > now):
+        print(f"[Stripe] Returning cached metrics")
         return _metrics_cache['data']
+    
+    print(f"[Stripe] Fetching revenue metrics from Stripe (filter: '{product_name_filter}')...")
     
     try:
         client = get_stripe_client()
         
         total_revenue = 0
-        monthly_rebill = 0
-        active_count = 0
-        
-        # Get current month boundaries
-        month_start = datetime(now.year, now.month, 1)
-        if now.month == 12:
-            month_end = datetime(now.year + 1, 1, 1)
-        else:
-            month_end = datetime(now.year, now.month + 1, 1)
-        
-        print(f"[Stripe] Fetching metrics for {len(sub_id_set)} subscriptions...")
-        print(f"[Stripe] Month window: {month_start.date()} to {month_end.date()}")
-        
-        # ========== REVENUE: Sum paid invoices for our subscriptions only ==========
-        paid_invoices = client.Invoice.list(status='paid', limit=100)
+        active_sub_ids = set()
         invoice_count = 0
         
-        for invoice in paid_invoices.auto_paging_iter():
-            # FILTER: Only count invoices for our subscriptions
-            # Use getattr to safely handle invoices without subscription field (e.g., one-time payments)
-            sub_id = getattr(invoice, 'subscription', None)
-            if sub_id and sub_id in sub_id_set:
-                amount = (invoice.amount_paid or 0) / 100
-                total_revenue += amount
-                invoice_count += 1
-                print(f"[Stripe] Invoice {invoice.id}: ${amount} (sub: {sub_id[:20]}...)")
+        # ========== REVENUE: Get ALL paid invoices ==========
+        print(f"[Stripe] Fetching all paid invoices...")
+        for invoice in client.Invoice.list(status='paid', limit=100, expand=['data.lines.data']).auto_paging_iter():
+            # Check each line item for VIP products
+            if invoice.lines and invoice.lines.data:
+                for line in invoice.lines.data:
+                    description = line.description or ''
+                    # Check if this invoice is for a VIP product
+                    if product_name_filter.lower() in description.lower():
+                        amount = (invoice.amount_paid or 0) / 100
+                        total_revenue += amount
+                        invoice_count += 1
+                        sub_id = getattr(invoice, 'subscription', None)
+                        if sub_id:
+                            active_sub_ids.add(sub_id)
+                        print(f"[Stripe] Invoice: ${amount} - {description[:40]}")
+                        break  # Count each invoice once
         
-        print(f"[Stripe] Total revenue from {invoice_count} matched invoices: ${total_revenue}")
+        print(f"[Stripe] Total revenue from {invoice_count} VIP invoices: ${total_revenue}")
         
-        # ========== SUBSCRIPTIONS: Count active + calculate rebill ==========
-        # Rebill = sum of renewals happening THIS MONTH (not yet billed)
-        for sub_id in sub_id_set:
+        # ========== REBILL: Check active subscriptions ==========
+        monthly_rebill = 0
+        active_count = 0
+        month_start = datetime(now.year, now.month, 1)
+        month_end = datetime(now.year + 1, 1, 1) if now.month == 12 else datetime(now.year, now.month + 1, 1)
+        
+        # Only check subscriptions we found from invoices
+        for sub_id in active_sub_ids:
             try:
-                subscription = client.Subscription.retrieve(sub_id)
-                
-                if subscription.status in ['active', 'trialing']:
+                sub = client.Subscription.retrieve(sub_id)
+                if sub.status == 'active':
                     active_count += 1
-                
-                # Check if this subscription renews this month (and hasn't cancelled)
-                if subscription.status == 'active' and not subscription.cancel_at_period_end:
-                    period_end = datetime.fromtimestamp(subscription.current_period_end) if subscription.current_period_end else None
-                    
-                    if period_end and month_start <= period_end < month_end:
-                        # This subscription renews this month
-                        renewal_amount = 0
-                        
-                        # Try to get upcoming invoice (preferred - includes discounts)
-                        try:
-                            upcoming = client.Invoice.upcoming(subscription=sub_id)
-                            if upcoming and upcoming.amount_due:
-                                renewal_amount = upcoming.amount_due / 100
-                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ${renewal_amount} (upcoming)")
-                        except stripe.error.InvalidRequestError:
-                            pass  # No upcoming invoice available
-                        except Exception as e:
-                            print(f"[Stripe] Upcoming invoice error for {sub_id}: {e}")
-                        
-                        # Fallback to plan price if no upcoming invoice
-                        if renewal_amount == 0 and subscription.items and subscription.items.data:
-                            item = subscription.items.data[0]
-                            if item.price and item.price.unit_amount:
-                                renewal_amount = item.price.unit_amount / 100
-                                print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} for ~${renewal_amount} (plan price)")
-                        
-                        monthly_rebill += renewal_amount
-                    else:
-                        if period_end:
-                            print(f"[Stripe] Sub {sub_id[:20]}... renews {period_end.date()} (not this month)")
-                            
-            except stripe.error.InvalidRequestError as e:
-                print(f"[Stripe] Subscription {sub_id} not found: {e}")
+                    # Check if renews this month
+                    if not sub.cancel_at_period_end and sub.current_period_end:
+                        period_end = datetime.fromtimestamp(sub.current_period_end)
+                        if month_start <= period_end < month_end:
+                            try:
+                                upcoming = client.Invoice.upcoming(subscription=sub_id)
+                                rebill_amount = (upcoming.amount_due or 0) / 100
+                                monthly_rebill += rebill_amount
+                                print(f"[Stripe] Rebill: ${rebill_amount} on {period_end.date()}")
+                            except:
+                                pass
             except Exception as e:
-                print(f"[Stripe] Error fetching subscription {sub_id}: {e}")
+                print(f"[Stripe] Sub check error: {e}")
         
-        print(f"[Stripe] Active subscriptions: {active_count}, Rebill this month: ${monthly_rebill}")
+        print(f"[Stripe] Active: {active_count}, Rebill this month: ${monthly_rebill}")
         
         result = {
             'total_revenue': round(total_revenue, 2),
@@ -399,7 +330,6 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         # Update cache
         _metrics_cache['data'] = result
         _metrics_cache['expires_at'] = now + timedelta(seconds=METRICS_CACHE_TTL_SECONDS)
-        _metrics_cache['cache_key'] = cache_key
         
         return result
         
