@@ -274,7 +274,7 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         
         # ========== REVENUE: Get ALL paid invoices ==========
         print(f"[Stripe] Fetching all paid invoices...")
-        for invoice in client.Invoice.list(status='paid', limit=100, expand=['data.lines.data']).auto_paging_iter():
+        for invoice in client.Invoice.list(status='paid', limit=100, expand=['data.lines.data', 'data.subscription']).auto_paging_iter():
             # Check each line item for VIP products
             if invoice.lines and invoice.lines.data:
                 for line in invoice.lines.data:
@@ -284,13 +284,22 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         amount = (invoice.amount_paid or 0) / 100
                         total_revenue += amount
                         invoice_count += 1
-                        sub_id = getattr(invoice, 'subscription', None)
-                        if sub_id:
-                            active_sub_ids.add(sub_id)
-                        print(f"[Stripe] Invoice: ${amount} - {description[:40]}")
+                        # Get subscription ID - handle both expanded object and string ID
+                        sub = invoice.subscription
+                        if sub:
+                            # If expanded, it's an object with .id; otherwise it's a string
+                            sub_id = sub.id if hasattr(sub, 'id') else sub
+                            if sub_id:
+                                active_sub_ids.add(sub_id)
+                                print(f"[Stripe] Invoice: ${amount} - {description[:40]} (sub: {sub_id[:15]}...)")
+                            else:
+                                print(f"[Stripe] Invoice: ${amount} - {description[:40]} (sub obj but no id)")
+                        else:
+                            print(f"[Stripe] Invoice: ${amount} - {description[:40]} (no sub)")
                         break  # Count each invoice once
         
         print(f"[Stripe] Total revenue from {invoice_count} VIP invoices: ${total_revenue}")
+        print(f"[Stripe] Found {len(active_sub_ids)} subscription IDs from invoices")
         
         # ========== REBILL: Check active subscriptions ==========
         monthly_rebill = 0
@@ -298,25 +307,39 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         month_start = datetime(now.year, now.month, 1)
         month_end = datetime(now.year + 1, 1, 1) if now.month == 12 else datetime(now.year, now.month + 1, 1)
         
-        # Only check subscriptions we found from invoices
+        print(f"[Stripe] Checking {len(active_sub_ids)} subscriptions for rebill (month: {month_start.date()} to {month_end.date()})...")
+        
+        # Check subscriptions we found from invoices
         for sub_id in active_sub_ids:
             try:
                 sub = client.Subscription.retrieve(sub_id)
+                print(f"[Stripe] Sub {sub_id[:15]}... status={sub.status}, cancel_at_period_end={sub.cancel_at_period_end}")
+                
                 if sub.status == 'active':
                     active_count += 1
                     # Check if renews this month
-                    if not sub.cancel_at_period_end and sub.current_period_end:
+                    if sub.current_period_end:
                         period_end = datetime.fromtimestamp(sub.current_period_end)
-                        if month_start <= period_end < month_end:
+                        print(f"[Stripe] Sub renews on {period_end.date()}, cancel_at_period_end={sub.cancel_at_period_end}")
+                        
+                        if not sub.cancel_at_period_end and month_start <= period_end < month_end:
                             try:
                                 upcoming = client.Invoice.upcoming(subscription=sub_id)
                                 rebill_amount = (upcoming.amount_due or 0) / 100
                                 monthly_rebill += rebill_amount
-                                print(f"[Stripe] Rebill: ${rebill_amount} on {period_end.date()}")
-                            except:
-                                pass
+                                print(f"[Stripe] ✓ Rebill: ${rebill_amount} on {period_end.date()}")
+                            except Exception as e:
+                                # Fallback to subscription item price
+                                if sub.items and sub.items.data:
+                                    rebill_amount = (sub.items.data[0].price.unit_amount or 0) / 100
+                                    monthly_rebill += rebill_amount
+                                    print(f"[Stripe] ✓ Rebill (from price): ${rebill_amount} on {period_end.date()}")
+                        else:
+                            print(f"[Stripe] Sub not renewing this month or cancelled")
             except Exception as e:
-                print(f"[Stripe] Sub check error: {e}")
+                print(f"[Stripe] Sub check error for {sub_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print(f"[Stripe] Active: {active_count}, Rebill this month: ${monthly_rebill}")
         
