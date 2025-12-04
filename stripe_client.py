@@ -390,7 +390,8 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                     # Try to get upcoming invoice - simplest approach
                     # If no upcoming invoice exists (one-time/lifetime), Stripe returns error
                     try:
-                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        # Use stripe module directly - StripeClient uses different path
+                        upcoming = stripe.Invoice.upcoming(subscription=sub_id)
                         
                         # Get the next payment date - try multiple fields
                         next_payment_ts = getattr(upcoming, 'next_payment_attempt', None)
@@ -543,7 +544,7 @@ def get_revenue_metrics(subscription_ids):
                     if period_end and month_start <= period_end < month_end:
                         # Renewal is this month - get the upcoming invoice amount
                         try:
-                            upcoming = client.Invoice.upcoming(subscription=sub_id)
+                            upcoming = stripe.Invoice.upcoming(subscription=sub_id)
                             if upcoming:
                                 # Use amount_due (or total as fallback)
                                 upcoming_amount = (upcoming.amount_due or upcoming.total or 0) / 100
@@ -636,7 +637,7 @@ def get_rebill_this_month(subscription_ids):
                 if period_end and month_start <= period_end < month_end:
                     # Renewal is this month - get upcoming invoice amount
                     try:
-                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        upcoming = stripe.Invoice.upcoming(subscription=sub_id)
                         if upcoming:
                             amount = (upcoming.amount_due or upcoming.total or 0) / 100
                             monthly_rebill += amount
