@@ -372,11 +372,12 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
             try:
                 sub = client.Subscription.retrieve(sub_id)
                 
-                # Use safe dict access for all fields
-                status = sub.get('status', 'unknown')
-                cancel_at_period_end = sub.get('cancel_at_period_end', False)
+                # Use attribute access for Stripe objects (not dict .get())
+                status = getattr(sub, 'status', 'unknown')
+                cancel_at_period_end = getattr(sub, 'cancel_at_period_end', False)
+                customer_id = getattr(sub, 'customer', None)
                 
-                print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_period_end={cancel_at_period_end}")
+                print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_end={cancel_at_period_end}")
                 
                 if status == 'active':
                     active_count += 1
@@ -386,17 +387,12 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
-                    # Check if this is a one-time/lifetime subscription (no rebill)
-                    # These don't have a next billing date
-                    items_data = sub.get('items', {})
+                    # Check if this is a recurring subscription (has recurring price)
                     is_recurring = False
-                    plan_name = "Unknown"
-                    if items_data and hasattr(items_data, 'data') and items_data.data:
-                        for item in items_data.data:
-                            price = getattr(item, 'price', None) if hasattr(item, 'price') else item.get('price')
-                            if price:
-                                recurring = getattr(price, 'recurring', None) if hasattr(price, 'recurring') else price.get('recurring')
-                                plan_name = getattr(price, 'nickname', None) or 'Unknown'
+                    if hasattr(sub, 'items') and sub.items and hasattr(sub.items, 'data'):
+                        for item in sub.items.data:
+                            if hasattr(item, 'price') and item.price:
+                                recurring = getattr(item.price, 'recurring', None)
                                 if recurring:
                                     is_recurring = True
                                     break
@@ -405,25 +401,36 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub {sub_id[:15]}... is one-time/lifetime (no rebill)")
                         continue
                     
-                    # Get current_period_end from the subscription itself (more reliable)
-                    current_period_end = sub.get('current_period_end')
-                    if not current_period_end:
-                        print(f"[Stripe] Sub {sub_id[:15]}... has no period_end, skipping")
-                        continue
-                    
-                    period_end = datetime.fromtimestamp(current_period_end)
-                    
-                    # Check if renews this month
-                    if not (month_start <= period_end < month_end):
-                        print(f"[Stripe] Sub renews {period_end.date()} (not this month)")
-                        continue
-                    
-                    # Use upcoming invoice API to get exact rebill amount (includes discounts)
+                    # Use Invoice.upcoming to get the next payment details
+                    # This is the correct API for getting upcoming invoice amounts with discounts
                     try:
-                        upcoming = stripe.Invoice.create_preview(subscription=sub_id)
-                        rebill_amount = (upcoming.get('amount_due', 0) or 0) / 100
-                        monthly_rebill += rebill_amount
-                        print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {period_end.date()}")
+                        upcoming = client.Invoice.upcoming(subscription=sub_id)
+                        
+                        # Get the next payment date and amount
+                        next_payment_ts = getattr(upcoming, 'next_payment_attempt', None) or \
+                                          getattr(upcoming, 'due_date', None) or \
+                                          getattr(upcoming, 'period_end', None)
+                        
+                        # total already includes discounts/coupons
+                        rebill_amount = (getattr(upcoming, 'total', 0) or 0) / 100
+                        
+                        if next_payment_ts:
+                            next_payment_date = datetime.fromtimestamp(next_payment_ts)
+                            
+                            # Check if renews this month
+                            if month_start <= next_payment_date < month_end:
+                                monthly_rebill += rebill_amount
+                                print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                            else:
+                                print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                        else:
+                            # No date but has upcoming invoice - count it
+                            monthly_rebill += rebill_amount
+                            print(f"[Stripe] ✓ Rebill (date unknown): ${rebill_amount}")
+                            
+                    except stripe.error.InvalidRequestError as e:
+                        # No upcoming invoice - subscription may have been canceled or is one-time
+                        print(f"[Stripe] No upcoming invoice for {sub_id[:15]}...: {e}")
                     except Exception as e:
                         print(f"[Stripe] Upcoming invoice error: {e}")
             except Exception as e:
