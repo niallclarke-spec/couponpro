@@ -372,10 +372,21 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
             try:
                 sub = client.Subscription.retrieve(sub_id)
                 
+                # Debug: print all keys of the subscription object
+                if hasattr(sub, 'keys'):
+                    print(f"[Stripe] Sub keys: {list(sub.keys())[:10]}...")
+                
                 # Use attribute access for Stripe objects (not dict .get())
                 status = getattr(sub, 'status', 'unknown')
                 cancel_at_period_end = getattr(sub, 'cancel_at_period_end', False)
                 customer_id = getattr(sub, 'customer', None)
+                
+                # Try direct dict-style access which works for Stripe objects
+                try:
+                    period_end_direct = sub['current_period_end']
+                    print(f"[Stripe] Direct access period_end: {period_end_direct}")
+                except Exception as e:
+                    print(f"[Stripe] Direct access failed: {e}")
                 
                 print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_end={cancel_at_period_end}")
                 
