@@ -387,32 +387,22 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
-                    # Check if this is a recurring subscription (has recurring price)
-                    is_recurring = False
-                    if hasattr(sub, 'items') and sub.items and hasattr(sub.items, 'data'):
-                        for item in sub.items.data:
-                            if hasattr(item, 'price') and item.price:
-                                recurring = getattr(item.price, 'recurring', None)
-                                if recurring:
-                                    is_recurring = True
-                                    break
-                    
-                    if not is_recurring:
-                        print(f"[Stripe] Sub {sub_id[:15]}... is one-time/lifetime (no rebill)")
-                        continue
-                    
-                    # Use Invoice.upcoming to get the next payment details
-                    # This is the correct API for getting upcoming invoice amounts with discounts
+                    # Try to get upcoming invoice - simplest approach
+                    # If no upcoming invoice exists (one-time/lifetime), Stripe returns error
                     try:
                         upcoming = client.Invoice.upcoming(subscription=sub_id)
                         
-                        # Get the next payment date and amount
-                        next_payment_ts = getattr(upcoming, 'next_payment_attempt', None) or \
-                                          getattr(upcoming, 'due_date', None) or \
-                                          getattr(upcoming, 'period_end', None)
+                        # Get the next payment date - try multiple fields
+                        next_payment_ts = getattr(upcoming, 'next_payment_attempt', None)
+                        if not next_payment_ts:
+                            next_payment_ts = getattr(upcoming, 'due_date', None)
+                        if not next_payment_ts:
+                            next_payment_ts = getattr(upcoming, 'period_end', None)
                         
                         # total already includes discounts/coupons
                         rebill_amount = (getattr(upcoming, 'total', 0) or 0) / 100
+                        
+                        print(f"[Stripe] Upcoming invoice: ${rebill_amount}, next_payment_ts={next_payment_ts}")
                         
                         if next_payment_ts:
                             next_payment_date = datetime.fromtimestamp(next_payment_ts)
@@ -424,13 +414,13 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                             else:
                                 print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
                         else:
-                            # No date but has upcoming invoice - count it
+                            # No date but has upcoming invoice - count it as this month
                             monthly_rebill += rebill_amount
                             print(f"[Stripe] ✓ Rebill (date unknown): ${rebill_amount}")
                             
                     except stripe.error.InvalidRequestError as e:
-                        # No upcoming invoice - subscription may have been canceled or is one-time
-                        print(f"[Stripe] No upcoming invoice for {sub_id[:15]}...: {e}")
+                        # No upcoming invoice - likely one-time/lifetime subscription
+                        print(f"[Stripe] No upcoming invoice: {str(e)[:50]}...")
                     except Exception as e:
                         print(f"[Stripe] Upcoming invoice error: {e}")
             except Exception as e:
