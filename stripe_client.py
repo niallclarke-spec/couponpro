@@ -399,7 +399,6 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         continue
                     
                     # Get upcoming invoice using create_preview (Stripe SDK 14+)
-                    # This works for both old and new billing models
                     try:
                         upcoming = stripe.Invoice.create_preview(subscription=sub_id)
                         
@@ -408,8 +407,50 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                                           getattr(upcoming, 'next_payment_attempt', None) or \
                                           getattr(upcoming, 'created', None)
                         
-                        # total includes discounts/coupons
+                        # Default rebill from preview
                         rebill_amount = (getattr(upcoming, 'total', 0) or 0) / 100
+                        
+                        # FIX: Check if discount was "once" and first invoice is paid
+                        # In this case, the preview still shows discounted price but the 
+                        # ACTUAL renewal will be at full price
+                        try:
+                            # Retrieve subscription with expanded fields
+                            sub_expanded = client.Subscription.retrieve(
+                                sub_id,
+                                expand=['discount.coupon', 'latest_invoice', 'items.data.price']
+                            )
+                            
+                            # Check if coupon was "once" and first invoice already paid
+                            discount = getattr(sub_expanded, 'discount', None)
+                            latest_invoice = getattr(sub_expanded, 'latest_invoice', None)
+                            
+                            coupon_duration = None
+                            if discount:
+                                coupon = getattr(discount, 'coupon', None)
+                                if coupon:
+                                    coupon_duration = getattr(coupon, 'duration', None)
+                            
+                            latest_status = None
+                            latest_reason = None
+                            if latest_invoice:
+                                latest_status = getattr(latest_invoice, 'status', None)
+                                latest_reason = getattr(latest_invoice, 'billing_reason', None)
+                            
+                            # If once-off coupon and first invoice is paid, use base price
+                            if (coupon_duration == 'once' and 
+                                latest_status == 'paid' and 
+                                latest_reason == 'subscription_create'):
+                                
+                                # Get base price from subscription items
+                                items = getattr(sub_expanded, 'items', None)
+                                if items and hasattr(items, 'data') and items.data:
+                                    price = getattr(items.data[0], 'price', None)
+                                    if price:
+                                        base_amount = (getattr(price, 'unit_amount', 0) or 0) / 100
+                                        print(f"[Stripe] Once-off discount already used, using base price: ${base_amount}")
+                                        rebill_amount = base_amount
+                        except Exception as e:
+                            print(f"[Stripe] Coupon check error: {e}")
                         
                         if next_payment_ts:
                             next_payment_date = datetime.fromtimestamp(next_payment_ts)
