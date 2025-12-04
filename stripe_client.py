@@ -267,7 +267,7 @@ _metrics_cache = {
     'data': None,
     'expires_at': None
 }
-METRICS_CACHE_TTL_SECONDS = 60  # 1 minute cache for fresh data
+METRICS_CACHE_TTL_SECONDS = 30  # 30 seconds cache for fresh data
 
 def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
     """
@@ -386,27 +386,44 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
+                    # Check if this is a one-time/lifetime subscription (no rebill)
+                    # These don't have a next billing date
+                    items_data = sub.get('items', {})
+                    is_recurring = False
+                    plan_name = "Unknown"
+                    if items_data and hasattr(items_data, 'data') and items_data.data:
+                        for item in items_data.data:
+                            price = getattr(item, 'price', None) if hasattr(item, 'price') else item.get('price')
+                            if price:
+                                recurring = getattr(price, 'recurring', None) if hasattr(price, 'recurring') else price.get('recurring')
+                                plan_name = getattr(price, 'nickname', None) or 'Unknown'
+                                if recurring:
+                                    is_recurring = True
+                                    break
+                    
+                    if not is_recurring:
+                        print(f"[Stripe] Sub {sub_id[:15]}... is one-time/lifetime (no rebill)")
+                        continue
+                    
+                    # Get current_period_end from the subscription itself (more reliable)
+                    current_period_end = sub.get('current_period_end')
+                    if not current_period_end:
+                        print(f"[Stripe] Sub {sub_id[:15]}... has no period_end, skipping")
+                        continue
+                    
+                    period_end = datetime.fromtimestamp(current_period_end)
+                    
+                    # Check if renews this month
+                    if not (month_start <= period_end < month_end):
+                        print(f"[Stripe] Sub renews {period_end.date()} (not this month)")
+                        continue
+                    
                     # Use upcoming invoice API to get exact rebill amount (includes discounts)
                     try:
-                        # Stripe API v5+: use create_preview instead of upcoming
                         upcoming = stripe.Invoice.create_preview(subscription=sub_id)
-                        next_payment_date = upcoming.get('next_payment_attempt') or upcoming.get('period_end') or upcoming.get('created')
                         rebill_amount = (upcoming.get('amount_due', 0) or 0) / 100
-                        
-                        if next_payment_date:
-                            period_end = datetime.fromtimestamp(next_payment_date)
-                            print(f"[Stripe] Next payment: ${rebill_amount} on {period_end.date()}")
-                            
-                            # Check if renews this month
-                            if month_start <= period_end < month_end:
-                                monthly_rebill += rebill_amount
-                                print(f"[Stripe] ✓ Rebill this month: ${rebill_amount}")
-                            else:
-                                print(f"[Stripe] Rebill not this month (date: {period_end.date()})")
-                        else:
-                            # Still add the rebill if we can't determine the date
-                            monthly_rebill += rebill_amount
-                            print(f"[Stripe] ✓ Rebill (no date): ${rebill_amount}")
+                        monthly_rebill += rebill_amount
+                        print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {period_end.date()}")
                     except Exception as e:
                         print(f"[Stripe] Upcoming invoice error: {e}")
             except Exception as e:
