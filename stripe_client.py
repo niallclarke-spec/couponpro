@@ -398,50 +398,35 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
-                    # Get subscription's current_period_end for renewal date
-                    # Try different access methods for Stripe SDK objects
-                    current_period_end = None
-                    if hasattr(sub, 'current_period_end'):
-                        current_period_end = sub.current_period_end
-                    elif isinstance(sub, dict):
-                        current_period_end = sub.get('current_period_end')
-                    else:
-                        # Try to access as attribute directly
-                        try:
-                            current_period_end = sub['current_period_end']
-                        except:
-                            pass
-                    
-                    print(f"[Stripe] Sub period_end raw: {current_period_end}, type: {type(sub).__name__}")
-                    
-                    if not current_period_end:
-                        print(f"[Stripe] Sub {sub_id[:15]}... has no period_end")
-                        continue
-                    
-                    next_payment_date = datetime.fromtimestamp(current_period_end)
-                    
-                    # Check if renews this month
-                    if not (month_start <= next_payment_date < month_end):
-                        print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
-                        continue
-                    
-                    # Get upcoming invoice amount using create_preview (Stripe SDK 14+)
+                    # Get upcoming invoice using create_preview (Stripe SDK 14+)
+                    # This works for both old and new billing models
                     try:
                         upcoming = stripe.Invoice.create_preview(subscription=sub_id)
                         
+                        # Get next payment date from the preview invoice
+                        next_payment_ts = getattr(upcoming, 'period_end', None) or \
+                                          getattr(upcoming, 'next_payment_attempt', None) or \
+                                          getattr(upcoming, 'created', None)
+                        
                         # total includes discounts/coupons
                         rebill_amount = (getattr(upcoming, 'total', 0) or 0) / 100
-                        monthly_rebill += rebill_amount
-                        print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                        
+                        if next_payment_ts:
+                            next_payment_date = datetime.fromtimestamp(next_payment_ts)
+                            
+                            # Check if renews this month
+                            if month_start <= next_payment_date < month_end:
+                                monthly_rebill += rebill_amount
+                                print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                            else:
+                                print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                        else:
+                            # No date info - count it anyway
+                            monthly_rebill += rebill_amount
+                            print(f"[Stripe] ✓ Rebill (no date): ${rebill_amount}")
                             
                     except stripe.error.InvalidRequestError as e:
-                        # No upcoming invoice - use plan price as fallback
-                        if hasattr(sub, 'items') and sub.items and hasattr(sub.items, 'data') and sub.items.data:
-                            plan_amount = (getattr(sub.items.data[0].price, 'unit_amount', 0) or 0) / 100
-                            monthly_rebill += plan_amount
-                            print(f"[Stripe] ✓ Rebill (plan price): ${plan_amount} on {next_payment_date.date()}")
-                        else:
-                            print(f"[Stripe] No upcoming invoice: {str(e)[:50]}...")
+                        print(f"[Stripe] No upcoming invoice: {str(e)[:60]}...")
                     except Exception as e:
                         print(f"[Stripe] Preview error: {e}")
             except Exception as e:
