@@ -1682,7 +1682,7 @@ def get_forex_signals(status=None, limit=100):
                 cursor.execute("""
                     SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
                            stop_loss, status, rsi_value, macd_value, atr_value, 
-                           posted_at, closed_at, result_pips
+                           posted_at, closed_at, result_pips, bot_type
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1692,7 +1692,7 @@ def get_forex_signals(status=None, limit=100):
                 cursor.execute("""
                     SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
                            stop_loss, status, rsi_value, macd_value, atr_value, 
-                           posted_at, closed_at, result_pips
+                           posted_at, closed_at, result_pips, bot_type
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -1714,7 +1714,8 @@ def get_forex_signals(status=None, limit=100):
                     'atr_value': float(row[10]) if row[10] else None,
                     'posted_at': row[11].isoformat() if row[11] else None,
                     'closed_at': row[12].isoformat() if row[12] else None,
-                    'result_pips': float(row[13]) if row[13] else None
+                    'result_pips': float(row[13]) if row[13] else None,
+                    'bot_type': row[14] if row[14] else 'custom'
                 })
             return signals
     except Exception as e:
