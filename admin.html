@@ -608,6 +608,263 @@
             color: #94a3b8;
         }
 
+        /* Bot Type Badges */
+        .badge-aggressive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .badge-conservative {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .badge-custom {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+        }
+
+        /* Active Signal Banner */
+        .active-signal-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .active-signal-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0); }
+        }
+        
+        .active-signal-info {
+            flex: 1;
+        }
+        
+        .active-signal-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .active-signal-details {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .active-signal-meta {
+            text-align: right;
+        }
+        
+        .active-signal-time {
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .active-signal-breakeven {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Bot Settings Styles */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+        }
+        
+        @media (max-width: 900px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card-description {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .bot-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .bot-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .bot-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .bot-option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .bot-option.active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .bot-option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .bot-option-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .bot-option-icon.aggressive {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        .bot-option-icon.conservative {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
+        .bot-option-icon.custom {
+            background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+        }
+        
+        .bot-option-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .bot-option-description {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        
+        .bot-option-indicators {
+            font-size: 11px;
+            color: #a0aec0;
+            font-family: monospace;
+            background: #f7fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-info {
+            margin-bottom: 20px;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .status-label {
+            color: #718096;
+            font-size: 13px;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 13px;
+            text-transform: capitalize;
+        }
+        
+        .subsection-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+        }
+        
+        .bot-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .bot-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        
+        .bot-stat-label {
+            color: #718096;
+        }
+        
+        .bot-stat-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
         /* Custom Modal Styles */
         .custom-modal-overlay {
             display: none;
@@ -2498,6 +2755,22 @@
                     <p>XAU/USD trading signals with live performance metrics</p>
                 </div>
                 <div class="content-body">
+                    <div id="activeSignalBanner" class="active-signal-banner" style="display: none;">
+                        <div class="active-signal-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="active-signal-info">
+                            <div class="active-signal-title">Active Signal</div>
+                            <div class="active-signal-details" id="activeSignalDetails">Loading...</div>
+                        </div>
+                        <div class="active-signal-meta">
+                            <div class="active-signal-time" id="activeSignalTime"></div>
+                            <div class="active-signal-breakeven" id="activeSignalBreakeven"></div>
+                        </div>
+                    </div>
+                    
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-label">Win Rate</div>
@@ -2514,9 +2787,23 @@
                             <div class="stat-value" id="totalSignals">--</div>
                             <div class="stat-subtext" id="signalsBreakdown">Loading...</div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Bot</div>
+                            <div class="stat-value" id="activeBotType" style="text-transform: capitalize;">--</div>
+                            <div class="stat-subtext" id="activeBotSubtext">Strategy mode</div>
+                        </div>
                     </div>
                     
                     <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Bot Type</label>
+                            <select id="filterBotType">
+                                <option value="all">All Bots</option>
+                                <option value="aggressive">Aggressive</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
                         <div class="filter-group">
                             <label>Signal Type</label>
                             <select id="filterType">
@@ -2532,7 +2819,6 @@
                                 <option value="pending">Pending</option>
                                 <option value="won">Won</option>
                                 <option value="lost">Lost</option>
-                                <option value="expired">Expired</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -2569,13 +2855,97 @@
 
             <div id="forex-settings" class="view-container">
                 <div class="content-header">
-                    <h1>Settings</h1>
-                    <p>Configure Forex Signals Bot settings</p>
+                    <h1>Bot Settings</h1>
+                    <p>Configure signal bot strategy and settings</p>
                 </div>
                 <div class="content-body">
-                    <div class="placeholder-view">
-                        <h2>⚙️ Settings Coming Soon</h2>
-                        <p>Settings configuration will be available soon</p>
+                    <div class="settings-grid">
+                        <div class="card bot-control-card">
+                            <h2 class="card-title">Active Strategy</h2>
+                            <p class="card-description">Select the trading strategy mode. You can only switch when no signal is active.</p>
+                            
+                            <div id="botSwitchError" class="alert alert-error" style="display: none;"></div>
+                            <div id="botSwitchSuccess" class="alert alert-success" style="display: none;"></div>
+                            
+                            <div class="bot-options">
+                                <div class="bot-option" data-bot="aggressive" onclick="selectBot('aggressive')">
+                                    <div class="bot-option-header">
+                                        <div class="bot-option-icon aggressive">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                            </svg>
+                                        </div>
+                                        <div class="bot-option-title">Aggressive</div>
+                                    </div>
+                                    <div class="bot-option-description">High-risk, high-reward. Uses momentum indicators with lower confirmation thresholds for more frequent signals.</div>
+                                    <div class="bot-option-indicators">RSI(30/70), MACD, Bollinger Bands</div>
+                                </div>
+                                
+                                <div class="bot-option" data-bot="conservative" onclick="selectBot('conservative')">
+                                    <div class="bot-option-header">
+                                        <div class="bot-option-icon conservative">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                            </svg>
+                                        </div>
+                                        <div class="bot-option-title">Conservative</div>
+                                    </div>
+                                    <div class="bot-option-description">Lower-risk, confirmed trends only. Requires multiple indicator alignment and strong trend confirmation.</div>
+                                    <div class="bot-option-indicators">EMA(20/50), ADX(25+), RSI(40/60), Stochastic</div>
+                                </div>
+                                
+                                <div class="bot-option" data-bot="custom" onclick="selectBot('custom')">
+                                    <div class="bot-option-header">
+                                        <div class="bot-option-icon custom">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                                            </svg>
+                                        </div>
+                                        <div class="bot-option-title">Custom</div>
+                                    </div>
+                                    <div class="bot-option-description">Balanced approach with configurable parameters. Uses database-stored thresholds you can adjust.</div>
+                                    <div class="bot-option-indicators">Configurable RSI, ADX, SL/TP ratios</div>
+                                </div>
+                            </div>
+                            
+                            <button id="switchBotBtn" class="btn-primary" onclick="switchActiveBot()" disabled>
+                                <span id="switchBotBtnText">Select a strategy to switch</span>
+                            </button>
+                        </div>
+                        
+                        <div class="card">
+                            <h2 class="card-title">Current Status</h2>
+                            <div class="status-info">
+                                <div class="status-row">
+                                    <span class="status-label">Active Bot:</span>
+                                    <span class="status-value" id="settingsActiveBot">--</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Open Signal:</span>
+                                    <span class="status-value" id="settingsOpenSignal">None</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Scheduler:</span>
+                                    <span class="status-value status-active">Running</span>
+                                </div>
+                            </div>
+                            
+                            <h3 class="subsection-title">Recent Signals by Bot</h3>
+                            <div class="bot-stats">
+                                <div class="bot-stat">
+                                    <span class="bot-stat-label">Aggressive:</span>
+                                    <span class="bot-stat-value" id="aggressiveCount">--</span>
+                                </div>
+                                <div class="bot-stat">
+                                    <span class="bot-stat-label">Conservative:</span>
+                                    <span class="bot-stat-value" id="conservativeCount">--</span>
+                                </div>
+                                <div class="bot-stat">
+                                    <span class="bot-stat-label">Custom:</span>
+                                    <span class="bot-stat-value" id="customCount">--</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2799,6 +3169,8 @@
                     loadSubscriptions();
                 } else if (viewId === 'forex-signals') {
                     loadForexSignals();
+                } else if (viewId === 'forex-settings') {
+                    loadForexSettings();
                 }
             }
             
@@ -3559,6 +3931,8 @@
 
         // Forex Signals Functions
         let allSignals = [];
+        let botStatus = null;
+        let selectedBotType = null;
 
         async function loadForexSignals() {
             try {
@@ -3571,6 +3945,7 @@
                 allSignals = await response.json();
                 applySignalFilters();
                 updateForexMetrics();
+                loadBotStatus();
             } catch (error) {
                 console.error('Error loading signals:', error);
                 document.getElementById('signalsTableContent').innerHTML = `
@@ -3582,13 +3957,103 @@
             }
         }
 
+        async function loadBotStatus() {
+            try {
+                const response = await fetch('/api/signal-bot/status', {
+                    credentials: 'include'
+                });
+                if (!response.ok) throw new Error('Failed to load bot status');
+                
+                botStatus = await response.json();
+                updateBotStatusUI();
+                updateActiveSignalBanner();
+            } catch (error) {
+                console.error('Error loading bot status:', error);
+            }
+        }
+
+        function updateBotStatusUI() {
+            if (!botStatus) return;
+            
+            // Update signals page
+            const activeBotEl = document.getElementById('activeBotType');
+            if (activeBotEl) {
+                activeBotEl.textContent = botStatus.active_bot || '--';
+            }
+            
+            // Update settings page
+            const settingsActiveBot = document.getElementById('settingsActiveBot');
+            if (settingsActiveBot) {
+                settingsActiveBot.textContent = botStatus.active_bot || '--';
+            }
+            
+            const settingsOpenSignal = document.getElementById('settingsOpenSignal');
+            if (settingsOpenSignal) {
+                if (botStatus.open_signal) {
+                    settingsOpenSignal.innerHTML = `<span style="color: #667eea;">#${botStatus.open_signal.id} (${botStatus.open_signal.signal_type})</span>`;
+                } else {
+                    settingsOpenSignal.textContent = 'None';
+                }
+            }
+            
+            // Update signal counts
+            const aggressiveCount = document.getElementById('aggressiveCount');
+            const conservativeCount = document.getElementById('conservativeCount');
+            const customCount = document.getElementById('customCount');
+            
+            if (aggressiveCount) aggressiveCount.textContent = botStatus.recent_signals?.aggressive || 0;
+            if (conservativeCount) conservativeCount.textContent = botStatus.recent_signals?.conservative || 0;
+            if (customCount) customCount.textContent = botStatus.recent_signals?.custom || 0;
+            
+            // Update bot option active states
+            document.querySelectorAll('.bot-option').forEach(opt => {
+                opt.classList.remove('active', 'selected');
+                if (opt.dataset.bot === botStatus.active_bot) {
+                    opt.classList.add('active');
+                }
+            });
+        }
+
+        function updateActiveSignalBanner() {
+            const banner = document.getElementById('activeSignalBanner');
+            if (!banner) return;
+            
+            if (botStatus?.open_signal) {
+                const signal = botStatus.open_signal;
+                banner.style.display = 'flex';
+                
+                document.getElementById('activeSignalDetails').innerHTML = 
+                    `${signal.signal_type} @ $${signal.entry_price?.toFixed(2)} | TP: $${signal.take_profit?.toFixed(2)} | SL: $${signal.stop_loss?.toFixed(2)}`;
+                
+                // Calculate time open
+                const postedAt = new Date(signal.posted_at);
+                const now = new Date();
+                const hoursOpen = Math.floor((now - postedAt) / (1000 * 60 * 60));
+                const minsOpen = Math.floor(((now - postedAt) / (1000 * 60)) % 60);
+                document.getElementById('activeSignalTime').textContent = `${hoursOpen}h ${minsOpen}m open`;
+                
+                // Breakeven status
+                const breakevenEl = document.getElementById('activeSignalBreakeven');
+                if (signal.breakeven_set) {
+                    breakevenEl.textContent = 'Breakeven Protected';
+                    breakevenEl.style.color = '#10b981';
+                } else {
+                    breakevenEl.textContent = '';
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
         function applySignalFilters() {
             const typeFilter = document.getElementById('filterType')?.value || 'all';
             const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+            const botTypeFilter = document.getElementById('filterBotType')?.value || 'all';
             
             let filtered = allSignals.filter(signal => {
                 if (typeFilter !== 'all' && signal.signal_type !== typeFilter) return false;
                 if (statusFilter !== 'all' && signal.status !== statusFilter) return false;
+                if (botTypeFilter !== 'all' && signal.bot_type !== botTypeFilter) return false;
                 return true;
             });
             
@@ -3611,8 +4076,9 @@
                     <thead>
                         <tr>
                             <th>Date/Time</th>
+                            <th>Bot</th>
                             <th>Type</th>
-                            <th>Entry Price</th>
+                            <th>Entry</th>
                             <th>TP</th>
                             <th>SL</th>
                             <th>Status</th>
@@ -3629,10 +4095,12 @@
                             });
                             const pips = signal.result_pips || 0;
                             const pipsDisplay = pips > 0 ? `+${pips.toFixed(2)}` : pips.toFixed(2);
+                            const botType = signal.bot_type || 'custom';
                             
                             return `
                                 <tr>
                                     <td>${date}</td>
+                                    <td><span class="badge badge-${botType}" style="text-transform: capitalize;">${botType}</span></td>
                                     <td><span class="badge badge-${signal.signal_type.toLowerCase()}">${signal.signal_type}</span></td>
                                     <td>$${signal.entry_price ? signal.entry_price.toFixed(2) : '--'}</td>
                                     <td>$${signal.take_profit ? signal.take_profit.toFixed(2) : '--'}</td>
@@ -3673,6 +4141,81 @@
             }
         }
 
+        // Bot Settings Functions
+        function selectBot(botType) {
+            if (botStatus?.open_signal) {
+                // Can't switch if signal is active
+                return;
+            }
+            
+            selectedBotType = botType;
+            
+            document.querySelectorAll('.bot-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.bot === botType && botType !== botStatus?.active_bot) {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            const switchBtn = document.getElementById('switchBotBtn');
+            const switchBtnText = document.getElementById('switchBotBtnText');
+            
+            if (botType === botStatus?.active_bot) {
+                switchBtn.disabled = true;
+                switchBtnText.textContent = `${botType} is already active`;
+            } else {
+                switchBtn.disabled = false;
+                switchBtnText.textContent = `Switch to ${botType}`;
+            }
+        }
+
+        async function switchActiveBot() {
+            if (!selectedBotType || selectedBotType === botStatus?.active_bot) return;
+            
+            const switchBtn = document.getElementById('switchBotBtn');
+            const switchBtnText = document.getElementById('switchBotBtnText');
+            const errorEl = document.getElementById('botSwitchError');
+            const successEl = document.getElementById('botSwitchSuccess');
+            
+            switchBtn.disabled = true;
+            switchBtnText.textContent = 'Switching...';
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/signal-bot/set-active', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bot_type: selectedBotType })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successEl.textContent = result.message;
+                    successEl.style.display = 'block';
+                    await loadBotStatus();
+                    switchBtnText.textContent = 'Select a strategy to switch';
+                    selectedBotType = null;
+                } else {
+                    errorEl.textContent = result.error;
+                    errorEl.style.display = 'block';
+                    switchBtnText.textContent = `Switch to ${selectedBotType}`;
+                    switchBtn.disabled = false;
+                }
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.style.display = 'block';
+                switchBtnText.textContent = `Switch to ${selectedBotType}`;
+                switchBtn.disabled = false;
+            }
+        }
+
+        async function loadForexSettings() {
+            await loadBotStatus();
+        }
+
         // Utility Functions
         function formatDate(dateString) {
             if (!dateString) return '-';
@@ -3689,10 +4232,12 @@
             const filterType = document.getElementById('filterType');
             const filterStatus = document.getElementById('filterStatus');
             const filterLimit = document.getElementById('filterLimit');
+            const filterBotType = document.getElementById('filterBotType');
             
             if (filterType) filterType.addEventListener('change', applySignalFilters);
             if (filterStatus) filterStatus.addEventListener('change', applySignalFilters);
             if (filterLimit) filterLimit.addEventListener('change', loadForexSignals);
+            if (filterBotType) filterBotType.addEventListener('change', applySignalFilters);
         }, 1000);
 
         // ============================================
