@@ -593,6 +593,91 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/signal-bot/status':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_active_bot, get_open_signal, get_signals_by_bot_type
+                
+                active_bot = get_active_bot()
+                open_signal = get_open_signal()
+                
+                aggressive_signals = get_signals_by_bot_type('aggressive', limit=10)
+                conservative_signals = get_signals_by_bot_type('conservative', limit=10)
+                custom_signals = get_signals_by_bot_type('custom', limit=10)
+                
+                status = {
+                    'active_bot': active_bot or 'aggressive',
+                    'available_bots': ['aggressive', 'conservative', 'custom'],
+                    'open_signal': open_signal,
+                    'recent_signals': {
+                        'aggressive': len(aggressive_signals),
+                        'conservative': len(conservative_signals),
+                        'custom': len(custom_signals)
+                    }
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(status).encode())
+            except Exception as e:
+                print(f"[SIGNAL BOT] Error getting status: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/signal-bot/signals':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_signals_by_bot_type, get_forex_signals
+                query_params = parse_qs(parsed_path.query)
+                bot_type = query_params.get('bot_type', [None])[0]
+                status_filter = query_params.get('status', [None])[0]
+                limit = int(query_params.get('limit', [50])[0])
+                
+                if bot_type:
+                    signals = get_signals_by_bot_type(bot_type, status=status_filter, limit=limit)
+                else:
+                    signals = get_forex_signals(status=status_filter, limit=limit)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(signals).encode())
+            except Exception as e:
+                print(f"[SIGNAL BOT] Error getting signals: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/telegram/check-access/'):
             # EntryLab API - Check subscription access status by email
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
@@ -1357,6 +1442,86 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print(f"[FOREX] Error updating config: {e}")
                 import traceback
                 traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/signal-bot/set-active':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                bot_type = data.get('bot_type')
+                
+                if not bot_type:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'bot_type is required'}).encode())
+                    return
+                
+                valid_bots = ['aggressive', 'conservative', 'custom']
+                if bot_type not in valid_bots:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'error': f'Invalid bot_type. Must be one of: {", ".join(valid_bots)}'
+                    }).encode())
+                    return
+                
+                from db import set_active_bot, get_open_signal
+                
+                open_signal = get_open_signal()
+                if open_signal:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'error': f'Cannot switch bot while signal #{open_signal["id"]} is still open. Wait for it to close first.'
+                    }).encode())
+                    return
+                
+                success = set_active_bot(bot_type)
+                
+                if success:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'active_bot': bot_type,
+                        'message': f'Switched to {bot_type} strategy'
+                    }).encode())
+                else:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Failed to update bot type'}).encode())
+                    
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
+            except Exception as e:
+                print(f"[SIGNAL BOT] Error setting active bot: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()

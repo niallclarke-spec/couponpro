@@ -298,6 +298,102 @@ class DatabasePool:
                     ON forex_signals(posted_at)
                 """)
                 
+                # Migration: Add new forex_signals columns for signal bot system
+                print("[MIGRATION] Checking forex_signals table for new signal bot columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name IN (
+                        'bot_type', 'telegram_message_id', 'breakeven_set', 'breakeven_price',
+                        'guidance_count', 'last_guidance_at', 'indicators_used', 'notes'
+                    )
+                """)
+                existing_signal_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'bot_type' not in existing_signal_columns:
+                    print("[MIGRATION] Adding bot_type column to forex_signals table...")
+                    cursor.execute("""
+                        ALTER TABLE forex_signals 
+                        ADD COLUMN bot_type VARCHAR(20) DEFAULT 'aggressive'
+                    """)
+                    print("[MIGRATION] ✅ bot_type column added successfully")
+                else:
+                    print("[MIGRATION] bot_type column already exists, skipping")
+                
+                if 'telegram_message_id' not in existing_signal_columns:
+                    print("[MIGRATION] Adding telegram_message_id column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN telegram_message_id BIGINT")
+                    print("[MIGRATION] ✅ telegram_message_id column added successfully")
+                else:
+                    print("[MIGRATION] telegram_message_id column already exists, skipping")
+                
+                if 'breakeven_set' not in existing_signal_columns:
+                    print("[MIGRATION] Adding breakeven_set column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_set BOOLEAN DEFAULT FALSE")
+                    print("[MIGRATION] ✅ breakeven_set column added successfully")
+                else:
+                    print("[MIGRATION] breakeven_set column already exists, skipping")
+                
+                if 'breakeven_price' not in existing_signal_columns:
+                    print("[MIGRATION] Adding breakeven_price column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_price DECIMAL(10, 2)")
+                    print("[MIGRATION] ✅ breakeven_price column added successfully")
+                else:
+                    print("[MIGRATION] breakeven_price column already exists, skipping")
+                
+                if 'guidance_count' not in existing_signal_columns:
+                    print("[MIGRATION] Adding guidance_count column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN guidance_count INTEGER DEFAULT 0")
+                    print("[MIGRATION] ✅ guidance_count column added successfully")
+                else:
+                    print("[MIGRATION] guidance_count column already exists, skipping")
+                
+                if 'last_guidance_at' not in existing_signal_columns:
+                    print("[MIGRATION] Adding last_guidance_at column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_guidance_at TIMESTAMP")
+                    print("[MIGRATION] ✅ last_guidance_at column added successfully")
+                else:
+                    print("[MIGRATION] last_guidance_at column already exists, skipping")
+                
+                if 'indicators_used' not in existing_signal_columns:
+                    print("[MIGRATION] Adding indicators_used column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN indicators_used JSONB")
+                    print("[MIGRATION] ✅ indicators_used column added successfully")
+                else:
+                    print("[MIGRATION] indicators_used column already exists, skipping")
+                
+                if 'notes' not in existing_signal_columns:
+                    print("[MIGRATION] Adding notes column to forex_signals table...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN notes TEXT")
+                    print("[MIGRATION] ✅ notes column added successfully")
+                else:
+                    print("[MIGRATION] notes column already exists, skipping")
+                
+                # Create index on bot_type for filtering by bot type
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_forex_signals_bot_type 
+                    ON forex_signals(bot_type)
+                """)
+                
+                # Migration: Update 'expired' status to 'lost' if any exist
+                print("[MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...")
+                cursor.execute("""
+                    UPDATE forex_signals SET status = 'lost' WHERE status = 'expired'
+                """)
+                updated_count = cursor.rowcount
+                if updated_count > 0:
+                    print(f"[MIGRATION] ✅ Updated {updated_count} signals from 'expired' to 'lost'")
+                else:
+                    print("[MIGRATION] No 'expired' signals found to update")
+                
+                # Create bot_config table for signal bot configuration
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS bot_config (
+                        setting_key VARCHAR(100) PRIMARY KEY,
+                        setting_value TEXT,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
                 # Create forex_config table for forex bot configuration
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS forex_config (
@@ -377,6 +473,9 @@ class DatabasePool:
                 
                 # Initialize default forex config
                 initialize_default_forex_config()
+                
+                # Initialize default bot config
+                initialize_default_bot_config()
                 
                 return True
         except Exception as e:
@@ -1524,7 +1623,8 @@ def get_recent_broadcast_jobs(limit=10):
 
 # Forex signals operations
 def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=None, 
-                       stop_loss=None, rsi_value=None, macd_value=None, atr_value=None):
+                       stop_loss=None, rsi_value=None, macd_value=None, atr_value=None,
+                       bot_type='aggressive', indicators_used=None, notes=None):
     """
     Create a new forex signal.
     
@@ -1538,6 +1638,9 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         rsi_value (float, optional): RSI indicator value
         macd_value (float, optional): MACD indicator value
         atr_value (float, optional): ATR indicator value
+        bot_type (str): 'aggressive', 'conservative', or 'custom'
+        indicators_used (str, optional): JSON string of indicators used
+        notes (str, optional): Notes about the signal
     
     Returns:
         int: Signal ID
@@ -1548,11 +1651,11 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
             cursor.execute("""
                 INSERT INTO forex_signals 
                 (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
-                 rsi_value, macd_value, atr_value, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
+                 rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s::jsonb, %s)
                 RETURNING id
             """, (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
-                  rsi_value, macd_value, atr_value))
+                  rsi_value, macd_value, atr_value, bot_type, indicators_used, notes))
             signal_id = cursor.fetchone()[0]
             conn.commit()
             return signal_id
@@ -2023,6 +2126,323 @@ def update_forex_config(config_updates):
     except Exception as e:
         print(f"Error updating forex config: {e}")
         raise
+
+# ===== Bot Config Functions =====
+
+def initialize_default_bot_config():
+    """
+    Initialize bot_config with default values if not already set.
+    Should be called on startup.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        default_config = {
+            'active_bot': 'aggressive'
+        }
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            for key, value in default_config.items():
+                cursor.execute("""
+                    INSERT INTO bot_config (setting_key, setting_value, updated_at)
+                    VALUES (%s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (setting_key) 
+                    DO NOTHING
+                """, (key, value))
+            
+            conn.commit()
+            print("✅ Bot config initialized with defaults")
+            return True
+    except Exception as e:
+        print(f"Error initializing bot config: {e}")
+        return False
+
+def get_active_bot():
+    """
+    Get the current active bot type.
+    
+    Returns:
+        str: Active bot type ('aggressive', 'conservative', or 'custom')
+    """
+    try:
+        if not db_pool.connection_pool:
+            return 'aggressive'
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT setting_value FROM bot_config
+                WHERE setting_key = 'active_bot'
+            """)
+            
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return 'aggressive'
+    except Exception as e:
+        print(f"Error getting active bot: {e}")
+        return 'aggressive'
+
+def set_active_bot(bot_type):
+    """
+    Set the active bot type.
+    
+    Args:
+        bot_type (str): Bot type ('aggressive', 'conservative', or 'custom')
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        if bot_type not in ('aggressive', 'conservative', 'custom'):
+            raise ValueError(f"Invalid bot type: {bot_type}")
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO bot_config (setting_key, setting_value, updated_at)
+                VALUES ('active_bot', %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (setting_key) 
+                DO UPDATE SET 
+                    setting_value = EXCLUDED.setting_value,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (bot_type,))
+            
+            conn.commit()
+            print(f"✅ Active bot set to: {bot_type}")
+            return True
+    except Exception as e:
+        print(f"Error setting active bot: {e}")
+        raise
+
+def get_open_signal():
+    """
+    Get the currently open signal if any.
+    
+    Returns:
+        dict: Signal dictionary or None if no open signal exists
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                       stop_loss, status, rsi_value, macd_value, atr_value, 
+                       posted_at, closed_at, result_pips, bot_type, telegram_message_id,
+                       breakeven_set, breakeven_price, guidance_count, last_guidance_at,
+                       indicators_used, notes
+                FROM forex_signals
+                WHERE status = 'open'
+                ORDER BY posted_at DESC
+                LIMIT 1
+            """)
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'id': row[0],
+                    'signal_type': row[1],
+                    'pair': row[2],
+                    'timeframe': row[3],
+                    'entry_price': float(row[4]) if row[4] else None,
+                    'take_profit': float(row[5]) if row[5] else None,
+                    'stop_loss': float(row[6]) if row[6] else None,
+                    'status': row[7],
+                    'rsi_value': float(row[8]) if row[8] else None,
+                    'macd_value': float(row[9]) if row[9] else None,
+                    'atr_value': float(row[10]) if row[10] else None,
+                    'posted_at': row[11].isoformat() if row[11] else None,
+                    'closed_at': row[12].isoformat() if row[12] else None,
+                    'result_pips': float(row[13]) if row[13] else None,
+                    'bot_type': row[14] or 'aggressive',
+                    'telegram_message_id': row[15],
+                    'breakeven_set': row[16] or False,
+                    'breakeven_price': float(row[17]) if row[17] else None,
+                    'guidance_count': row[18] or 0,
+                    'last_guidance_at': row[19].isoformat() if row[19] else None,
+                    'indicators_used': row[20],
+                    'notes': row[21]
+                }
+            return None
+    except Exception as e:
+        print(f"Error getting open signal: {e}")
+        return None
+
+def get_signals_by_bot_type(bot_type, status=None, limit=50):
+    """
+    Get forex signals filtered by bot type.
+    
+    Args:
+        bot_type (str): Bot type ('aggressive', 'conservative', or 'custom')
+        status (str, optional): Filter by status ('pending', 'open', 'won', 'lost')
+        limit (int): Maximum number of signals to return (default: 50)
+    
+    Returns:
+        list: List of signal dictionaries
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            query = """
+                SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                       stop_loss, status, rsi_value, macd_value, atr_value, 
+                       posted_at, closed_at, result_pips, bot_type, telegram_message_id,
+                       breakeven_set, breakeven_price, guidance_count, last_guidance_at,
+                       indicators_used, notes
+                FROM forex_signals
+                WHERE bot_type = %s
+            """
+            params = [bot_type]
+            
+            if status:
+                query += " AND status = %s"
+                params.append(status)
+            
+            query += " ORDER BY posted_at DESC LIMIT %s"
+            params.append(limit)
+            
+            cursor.execute(query, params)
+            
+            signals = []
+            for row in cursor.fetchall():
+                signals.append({
+                    'id': row[0],
+                    'signal_type': row[1],
+                    'pair': row[2],
+                    'timeframe': row[3],
+                    'entry_price': float(row[4]) if row[4] else None,
+                    'take_profit': float(row[5]) if row[5] else None,
+                    'stop_loss': float(row[6]) if row[6] else None,
+                    'status': row[7],
+                    'rsi_value': float(row[8]) if row[8] else None,
+                    'macd_value': float(row[9]) if row[9] else None,
+                    'atr_value': float(row[10]) if row[10] else None,
+                    'posted_at': row[11].isoformat() if row[11] else None,
+                    'closed_at': row[12].isoformat() if row[12] else None,
+                    'result_pips': float(row[13]) if row[13] else None,
+                    'bot_type': row[14] or 'aggressive',
+                    'telegram_message_id': row[15],
+                    'breakeven_set': row[16] or False,
+                    'breakeven_price': float(row[17]) if row[17] else None,
+                    'guidance_count': row[18] or 0,
+                    'last_guidance_at': row[19].isoformat() if row[19] else None,
+                    'indicators_used': row[20],
+                    'notes': row[21]
+                })
+            return signals
+    except Exception as e:
+        print(f"Error getting signals by bot type: {e}")
+        return []
+
+def update_signal_telegram_message_id(signal_id, message_id):
+    """
+    Update the telegram_message_id for a signal.
+    
+    Args:
+        signal_id (int): Signal ID
+        message_id (int): Telegram message ID
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET telegram_message_id = %s
+                WHERE id = %s
+            """, (message_id, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal telegram message ID: {e}")
+        return False
+
+def update_signal_breakeven(signal_id, breakeven_price):
+    """
+    Update breakeven status for a signal.
+    
+    Args:
+        signal_id (int): Signal ID
+        breakeven_price (float): Breakeven price (entry price)
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET breakeven_set = TRUE,
+                    breakeven_price = %s
+                WHERE id = %s
+            """, (breakeven_price, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal breakeven: {e}")
+        return False
+
+def update_signal_guidance(signal_id, notes):
+    """
+    Update guidance information for a signal.
+    Increments guidance_count and updates last_guidance_at and notes.
+    
+    Args:
+        signal_id (int): Signal ID
+        notes (str): AI guidance notes/reasons
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET guidance_count = COALESCE(guidance_count, 0) + 1,
+                    last_guidance_at = CURRENT_TIMESTAMP,
+                    notes = %s
+                WHERE id = %s
+            """, (notes, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal guidance: {e}")
+        return False
 
 # ===== Telegram Subscriptions Functions =====
 
