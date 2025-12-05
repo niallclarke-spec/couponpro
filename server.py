@@ -617,6 +617,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 aggressive_signals = get_signals_by_bot_type('aggressive', limit=10)
                 conservative_signals = get_signals_by_bot_type('conservative', limit=10)
                 custom_signals = get_signals_by_bot_type('custom', limit=10)
+                legacy_signals = get_signals_by_bot_type('legacy', limit=10)
                 
                 status = {
                     'active_bot': active_bot or 'aggressive',
@@ -625,7 +626,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'recent_signals': {
                         'aggressive': len(aggressive_signals),
                         'conservative': len(conservative_signals),
-                        'custom': len(custom_signals)
+                        'custom': len(custom_signals),
+                        'legacy': len(legacy_signals)
                     }
                 }
                 

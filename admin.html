@@ -623,6 +623,11 @@
             background: rgba(99, 102, 241, 0.2);
             color: #6366f1;
         }
+        
+        .badge-legacy {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
 
         /* Active Signal Banner */
         .active-signal-banner {
@@ -2802,6 +2807,7 @@
                                 <option value="aggressive">Aggressive</option>
                                 <option value="conservative">Conservative</option>
                                 <option value="custom">Custom</option>
+                                <option value="legacy">Legacy</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -2943,6 +2949,10 @@
                                 <div class="bot-stat">
                                     <span class="bot-stat-label">Custom:</span>
                                     <span class="bot-stat-value" id="customCount">--</span>
+                                </div>
+                                <div class="bot-stat">
+                                    <span class="bot-stat-label">Legacy:</span>
+                                    <span class="bot-stat-value" id="legacyCount">--</span>
                                 </div>
                             </div>
                         </div>
@@ -4000,10 +4010,12 @@
             const aggressiveCount = document.getElementById('aggressiveCount');
             const conservativeCount = document.getElementById('conservativeCount');
             const customCount = document.getElementById('customCount');
+            const legacyCount = document.getElementById('legacyCount');
             
             if (aggressiveCount) aggressiveCount.textContent = botStatus.recent_signals?.aggressive || 0;
             if (conservativeCount) conservativeCount.textContent = botStatus.recent_signals?.conservative || 0;
             if (customCount) customCount.textContent = botStatus.recent_signals?.custom || 0;
+            if (legacyCount) legacyCount.textContent = botStatus.recent_signals?.legacy || 0;
             
             // Update bot option active states
             document.querySelectorAll('.bot-option').forEach(opt => {
