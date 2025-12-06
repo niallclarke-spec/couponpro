@@ -121,6 +121,67 @@ class ForexTelegramBot:
         except Exception as e:
             print(f"❌ Failed to post TP celebration: {e}")
     
+    async def post_sl_hit(self, signal_id, pips_loss, signal_type='BUY'):
+        """
+        Post a message when Stop Loss is hit
+        
+        Args:
+            signal_id: Database signal ID
+            pips_loss: Loss in pips (should be negative)
+            signal_type: 'BUY' or 'SELL'
+        """
+        if not self.bot or not self.channel_id:
+            return
+        
+        try:
+            message = f"""Stop Loss Hit
+
+<b>{pips_loss:.2f} pips</b>
+
+Risk was managed. Onwards to the next opportunity."""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted SL notification for signal #{signal_id}")
+            
+        except Exception as e:
+            print(f"❌ Failed to post SL notification: {e}")
+    
+    async def post_signal_expired(self, signal_id, pips, signal_type='BUY'):
+        """
+        Post a message when signal expires (timeout)
+        
+        Args:
+            signal_id: Database signal ID
+            pips: Current P/L in pips
+            signal_type: 'BUY' or 'SELL'
+        """
+        if not self.bot or not self.channel_id:
+            return
+        
+        try:
+            result_text = "profit" if pips > 0 else "loss" if pips < 0 else "breakeven"
+            message = f"""Trade Closed (Timeout)
+
+<b>{pips:+.2f} pips</b> {result_text}
+
+Signal closed after maximum hold time."""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted expiry notification for signal #{signal_id}")
+            
+        except Exception as e:
+            print(f"❌ Failed to post expiry notification: {e}")
+    
     async def post_daily_recap(self, ai_recap=None):
         """
         Post daily performance recap at 11:59 PM GMT

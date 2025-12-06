@@ -49,19 +49,28 @@ class ForexScheduler:
                 
                 update_forex_signal_status(signal_id, status, pips)
                 
+                from db import get_forex_signals
+                signals_data = get_forex_signals(status=None, limit=10)
+                matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
+                signal_type = matching_signal.get('signal_type', 'BUY') if matching_signal else 'BUY'
+                
                 if status == 'won':
-                    from db import get_forex_signals
+                    ai_message = generate_tp_celebration(signal_id, pips, signal_type)
+                    await forex_telegram_bot.post_tp_celebration(signal_id, pips, ai_message)
+                    print(f"[SCHEDULER] ✅ Posted TP celebration for signal #{signal_id}")
                     
-                    signals_data = get_forex_signals(status=None, limit=1)
-                    matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
+                elif status == 'lost':
+                    await forex_telegram_bot.post_sl_hit(signal_id, pips, signal_type)
+                    print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
-                    if matching_signal:
-                        signal_type = matching_signal.get('signal_type', 'BUY')
-                        ai_message = generate_tp_celebration(signal_id, pips, signal_type)
-                        await forex_telegram_bot.post_tp_celebration(signal_id, pips, ai_message)
+                elif status == 'expired':
+                    await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
+                    print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id}")
                 
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in signal monitoring: {e}")
+            import traceback
+            traceback.print_exc()
     
     async def check_daily_recap(self):
         """Post daily recap at 11:59 PM GMT"""
