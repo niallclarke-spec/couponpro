@@ -3037,25 +3037,24 @@ if __name__ == "__main__":
             import traceback
             traceback.print_exc()
     
-    # Start Telegram join tracking in background thread if available
-    if TELEGRAM_BOT_AVAILABLE:
-        import threading
-        import asyncio
-        
-        def run_join_tracker():
-            """Run the Telegram join tracker in a separate thread"""
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(telegram_bot.start_join_tracking())
-            except Exception as e:
-                print(f"[JOIN_TRACKER] Join tracker error: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        join_tracker_thread = threading.Thread(target=run_join_tracker, daemon=True)
-        join_tracker_thread.start()
-        print("[JOIN_TRACKER] Telegram join tracking started in background thread")
+    # DISABLED: Join tracking uses polling mode which conflicts with production server
+    # The production server on DigitalOcean handles join tracking
+    # if TELEGRAM_BOT_AVAILABLE:
+    #     import threading
+    #     import asyncio
+    #     
+    #     def run_join_tracker():
+    #         loop = asyncio.new_event_loop()
+    #         asyncio.set_event_loop(loop)
+    #         try:
+    #             loop.run_until_complete(telegram_bot.start_join_tracking())
+    #         except Exception as e:
+    #             print(f"[JOIN_TRACKER] Join tracker error: {e}")
+    #     
+    #     join_tracker_thread = threading.Thread(target=run_join_tracker, daemon=True)
+    #     join_tracker_thread.start()
+    #     print("[JOIN_TRACKER] Telegram join tracking started in background thread")
+    print("[JOIN_TRACKER] Disabled in development (production handles join tracking)")
     
     # Start Forex signals scheduler in background thread if available
     if FOREX_SCHEDULER_AVAILABLE:
