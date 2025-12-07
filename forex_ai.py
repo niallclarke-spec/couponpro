@@ -120,7 +120,8 @@ def get_repetition_avoidance_instruction(phrase_type):
 
 def generate_tp_celebration(signal_id, pips_profit, signal_type):
     """
-    Generate an AI celebration message for a Take Profit hit
+    Generate a short, engaging celebration message for a Take Profit hit.
+    Uses emojis and line breaks for a fun, scannable format.
     
     Args:
         signal_id: Database signal ID
@@ -128,58 +129,68 @@ def generate_tp_celebration(signal_id, pips_profit, signal_type):
         signal_type: 'BUY' or 'SELL'
     
     Returns:
-        str: AI-generated celebration message
+        str: Formatted celebration message
     """
     try:
         # Get context for personalization
         context = get_trading_context()
-        streak_context = context['streak_context']
-        session = context['session']
+        streak = context['streak']
         
-        # Get phrases to avoid
+        # Get a short AI-generated line (just the closing thought)
         avoid_instruction = get_repetition_avoidance_instruction('celebration')
         
-        prompt = f"""Generate a professional, analytical message for a successful forex trade.
+        prompt = f"""Generate ONE short celebration line (max 8 words) for a winning forex trade.
 
-The trade details:
-- Signal #{signal_id}
-- {signal_type} signal on XAU/USD (Gold)
-- Profit: +{pips_profit:.2f} pips
-- Trading during: {session}
-{f'- Context: {streak_context}' if streak_context else ''}
+Context:
+- +{pips_profit:.2f} pips profit
+- {signal_type} on Gold
+{f"- After {streak['count']} losses, this is a relief win!" if streak['type'] == 'loss' and streak['count'] >= 2 else ''}
+{f"- Win streak: {streak['count']} in a row!" if streak['type'] == 'win' and streak['count'] >= 2 else ''}
 
-Style: 1-2 sentences. Professional and data-focused. Reference the technical setup, price action, or strategy execution. No emojis. Sound like a professional analyst.
-
-Examples of the tone we want:
-- "Signal #{signal_id} executed as planned - RSI divergence and MACD crossover delivered {pips_profit:.0f} pips on the {signal_type} setup."
-- "Technical indicators aligned perfectly on this {signal_type} entry, securing {pips_profit:.0f} pips before resistance tested the position."
-- "Price action confirmed our analysis - the {signal_type} signal captured {pips_profit:.0f} pips as predicted by the ATR volatility model."
+Style: Short, punchy, celebratory. Like "Another profitable trade!" or "Gold delivered today!" or "Clean execution pays off!"
 {avoid_instruction}
 
-Generate a unique analytical message now:"""
+Generate just the short line, no emojis:"""
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical commentary on successful trades. Focus on technical analysis, price action, and strategy execution."},
+                {"role": "system", "content": "You write ultra-short celebratory trading messages. Max 8 words. Punchy and fun."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=100,
-            temperature=0.8
+            max_tokens=30,
+            temperature=0.9
         )
         
-        content = response.choices[0].message.content
-        message = content.strip() if content else None
+        ai_line = response.choices[0].message.content.strip() if response.choices[0].message.content else "Another profitable trade!"
+        
+        # Remove any quotes the AI might add
+        ai_line = ai_line.strip('"\'')
         
         # Save phrase for future repetition avoidance
-        if message:
-            add_recent_phrase('celebration', message)
+        add_recent_phrase('celebration', ai_line)
+        
+        # Build the formatted message
+        direction = "LONG" if signal_type == "BUY" else "SHORT"
+        
+        message = f"""🎇🎇 XAUUSD 🎇🎇
+
+TP HIT:
+✅ +{pips_profit:.2f} pips
+
+{ai_line} 🎊"""
         
         return message
         
     except Exception as e:
         print(f"❌ Error generating AI celebration: {e}")
-        return None
+        # Fallback message
+        return f"""🎇🎇 XAUUSD 🎇🎇
+
+TP HIT:
+✅ +{pips_profit:.2f} pips
+
+Another profitable trade! 🎊"""
 
 def generate_daily_recap():
     """
@@ -300,13 +311,13 @@ Generate the analytical recap:"""
 
 def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_type, current_price, entry_price, tp_price, sl_price, indicator_deltas=None, minutes_open=None):
     """
-    Generate AI guidance message for active signal updates with context awareness.
+    Generate short, engaging guidance message with emojis and line breaks.
     
     Args:
         signal_id: Database signal ID
         signal_type: 'BUY' or 'SELL'
         progress_percent: Progress toward TP (positive) or SL (negative)
-        guidance_type: 'progress', 'breakeven', 'caution', 'decision'
+        guidance_type: 'progress_30', 'breakeven_60', 'decision_85', 'caution_30', 'caution_60'
         current_price: Current market price
         entry_price: Signal entry price
         tp_price: Take profit price
@@ -315,118 +326,126 @@ def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_
         minutes_open: Optional minutes since signal opened
     
     Returns:
-        str: AI-generated guidance message
+        str: Formatted guidance message with emojis
     """
     try:
-        # Get trading context for personalization
+        # Get trading context
         context = get_trading_context()
-        streak_context = context['streak_context']
-        session = context['session']
-        
-        # Classify the type of guidance based on indicator changes
         tiered_type = classify_guidance_type(indicator_deltas) if indicator_deltas else 'stagnant'
-        
-        # Get phrases to avoid
         avoid_instruction = get_repetition_avoidance_instruction('guidance')
         
-        direction = "in profit" if progress_percent > 0 else "under pressure"
         abs_progress = abs(progress_percent)
+        direction = "LONG" if signal_type == "BUY" else "SHORT"
+        pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
         
-        # Calculate trade duration context
-        duration_context = ""
-        if minutes_open:
-            if minutes_open < 30:
-                duration_context = "Trade is still young, early stage of development."
-            elif minutes_open < 90:
-                duration_context = "Trade has been open for over an hour, past initial volatility."
-            else:
-                duration_context = "Extended hold time, monitoring for thesis validity."
+        # Determine emoji and header based on guidance type
+        if 'progress' in guidance_type or 'breakeven' in guidance_type:
+            header_emoji = "📈"
+            status = "IN PROFIT"
+        elif 'caution' in guidance_type or 'decision' in guidance_type:
+            header_emoji = "⚠️"
+            status = "CAUTION"
+        else:
+            header_emoji = "📊"
+            status = "UPDATE"
         
-        # Tiered guidance context based on what indicators are doing
-        tiered_context = {
-            'momentum': "Focus on RSI/MACD momentum changes in your update.",
-            'volatility': "Note the volatility/ATR changes in market conditions.",
-            'structure': "Reference the price structure and level testing.",
-            'divergence': "Note the indicator divergence (conflicting signals).",
-            'stagnant': "Note the consolidation and low activity."
-        }
-        
-        context_map = {
-            'progress': f"Signal is {abs_progress:.0f}% toward {'target' if progress_percent > 0 else 'stop loss'}. Provide a brief market update.",
-            'breakeven': f"Signal has moved {abs_progress:.0f}% toward target. Advise traders to consider moving stop loss to breakeven (entry price) to lock in gains.",
-            'caution': f"Price has reversed and is now {abs_progress:.0f}% toward stop loss. Provide cautious guidance without causing panic.",
-            'decision': f"Signal is {abs_progress:.0f}% toward stop loss with weakening momentum. Suggest whether to hold or consider early exit."
-        }
-        
-        prompt = f"""Generate a professional, analytical trade update message.
+        # Get short AI line
+        prompt = f"""Generate ONE short update line (max 12 words) for an active forex trade.
 
-Trade Details:
-- Signal #{signal_id} - {signal_type} XAU/USD (Gold)
-- Entry: ${entry_price:.2f}
-- Current Price: ${current_price:.2f}
-- Take Profit: ${tp_price:.2f}
-- Stop Loss: ${sl_price:.2f}
-- Status: {direction}
-- Session: {session}
-{f'- Duration: {duration_context}' if duration_context else ''}
-{f'- Recent streak context: {streak_context}' if streak_context else ''}
+Context:
+- {direction} Gold @ ${entry_price:.2f}
+- Now: ${current_price:.2f} ({pips_move:+.2f} pips)
+- Progress: {abs_progress:.0f}% toward {'TP' if progress_percent > 0 else 'SL'}
+- Indicator movement: {tiered_type}
+{f'- Open for {minutes_open} minutes' if minutes_open else ''}
 
-Update Focus: {tiered_context.get(tiered_type, '')}
+Type: {'Positive momentum update' if progress_percent > 0 else 'Caution/pullback update'}
 
-Context: {context_map.get(guidance_type, context_map['progress'])}
-
-Style: 2-3 sentences max. Professional and calm. Reference price levels and technical context. No excessive emojis (1-2 max at start). Sound like a professional analyst giving a brief update.
+Style: Short, informative. Like "Momentum building, watching $4200 level" or "RSI cooling off, stay patient" or "Breakeven zone - consider locking gains"
 {avoid_instruction}
 
-Generate the update:"""
-
+Generate just the short line:"""
+        
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional forex analyst providing trade management updates. Be calm, data-focused, and actionable. Never use fear-inducing language."},
+                {"role": "system", "content": "You write ultra-short trading updates. Max 12 words. Informative and calm."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=120,
+            max_tokens=40,
             temperature=0.8
         )
         
-        content = response.choices[0].message.content
-        message = content.strip() if content else get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price)
+        ai_line = response.choices[0].message.content.strip() if response.choices[0].message.content else "Monitoring price action"
+        ai_line = ai_line.strip('"\'')
         
-        # Save phrase for future repetition avoidance
-        if message and content:
-            add_recent_phrase('guidance', message)
+        add_recent_phrase('guidance', ai_line)
+        
+        # Build formatted message
+        if 'breakeven' in guidance_type:
+            message = f"""{header_emoji} XAUUSD {direction}
+
+{status}:
+✅ {pips_move:+.2f} pips ({abs_progress:.0f}% to TP)
+
+🔒 Consider breakeven @ ${entry_price:.2f}
+
+{ai_line}"""
+        elif 'caution' in guidance_type or 'decision' in guidance_type:
+            message = f"""{header_emoji} XAUUSD {direction}
+
+{status}:
+📍 Now @ ${current_price:.2f}
+📉 {abs_progress:.0f}% toward SL
+
+{ai_line}"""
+        else:
+            message = f"""{header_emoji} XAUUSD {direction}
+
+{status}:
+📍 Now @ ${current_price:.2f}
+✅ {pips_move:+.2f} pips
+
+{ai_line}"""
         
         return message
         
     except Exception as e:
         print(f"❌ Error generating signal guidance: {e}")
-        return get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price)
+        return get_fallback_guidance(guidance_type, signal_type, progress_percent, current_price, entry_price)
 
-def get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price):
+def get_fallback_guidance(guidance_type, signal_type, progress_percent, current_price, entry_price):
     """Fallback template messages when AI is unavailable"""
     abs_progress = abs(progress_percent)
+    direction = "LONG" if signal_type == "BUY" else "SHORT"
+    pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
     
-    if guidance_type == 'progress':
-        if progress_percent > 0:
-            return f"📊 Signal Update: Trade is {abs_progress:.0f}% toward target. Momentum remains favorable."
-        else:
-            return f"📊 Signal Update: Trade is testing support. Monitoring price action closely."
+    if 'breakeven' in guidance_type:
+        return f"""📈 XAUUSD {direction}
+
+IN PROFIT:
+✅ {pips_move:+.2f} pips ({abs_progress:.0f}% to TP)
+
+🔒 Consider breakeven @ ${entry_price:.2f}"""
     
-    elif guidance_type == 'breakeven':
-        return f"🔒 Breakeven Alert: Consider moving stop loss to entry (${entry_price:.2f}) to protect gains."
+    elif 'caution' in guidance_type or 'decision' in guidance_type:
+        return f"""⚠️ XAUUSD {direction}
+
+CAUTION:
+📍 Now @ ${current_price:.2f}
+📉 {abs_progress:.0f}% toward SL
+
+Monitoring closely"""
     
-    elif guidance_type == 'caution':
-        return f"⚠️ Trade Update: Price has pulled back. Current setup still valid - monitoring for reversal."
-    
-    elif guidance_type == 'decision':
-        return f"📉 Decision Point: Trade under pressure. Consider reducing position or holding with original SL."
-    
-    return "📊 Signal update: Monitoring position."
+    return f"""📊 XAUUSD {direction}
+
+UPDATE:
+📍 Now @ ${current_price:.2f}
+{'+' if pips_move > 0 else ''}{pips_move:.2f} pips"""
 
 def generate_revalidation_message(signal_id, signal_type, thesis_status, reasons, minutes_elapsed, current_price, entry_price, tp_price, sl_price):
     """
-    Generate AI message for thesis re-validation updates on stagnant trades.
+    Generate short, engaging revalidation message with emojis and line breaks.
     
     Args:
         signal_id: Database signal ID
@@ -440,62 +459,78 @@ def generate_revalidation_message(signal_id, signal_type, thesis_status, reasons
         sl_price: Stop loss price
     
     Returns:
-        str: AI-generated revalidation message
+        str: Formatted revalidation message with emojis
     """
     try:
+        direction = "LONG" if signal_type == "BUY" else "SHORT"
         hours_elapsed = minutes_elapsed / 60
-        reasons_text = "; ".join(reasons) if reasons else "Indicators remain supportive"
+        pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
         
-        status_context = {
-            'intact': f"After {hours_elapsed:.1f} hours, technical indicators still support the original trade thesis. The trade is consolidating but setup remains valid.",
-            'weakening': f"After {hours_elapsed:.1f} hours, some technical indicators are showing mixed signals. The original thesis may be weakening. Reasons: {reasons_text}",
-            'broken': f"After {hours_elapsed:.1f} hours, key technical indicators have reversed against the trade. The original thesis appears invalid. Reasons: {reasons_text}"
-        }
+        # Determine header based on status
+        if thesis_status == 'intact':
+            header = "📊 THESIS CHECK"
+            status_label = "INTACT"
+        elif thesis_status == 'weakening':
+            header = "⚠️ THESIS CHECK"
+            status_label = "WEAKENING"
+        else:
+            header = "🚨 THESIS CHECK"
+            status_label = "BROKEN"
         
-        action_guidance = {
-            'intact': "Provide a calm status update. Reassure traders that the setup is still valid and to hold positions.",
-            'weakening': "Advise traders to monitor closely and consider tightening stops or reducing position size.",
-            'broken': "Recommend closing the position or taking protective action immediately. Be direct but professional."
-        }
+        # Get short AI line for the advice
+        reasons_text = reasons[0] if reasons else "Mixed signals"
+        avoid_instruction = get_repetition_avoidance_instruction('revalidation')
         
-        prompt = f"""Generate a professional trade status message based on indicator re-validation.
+        prompt = f"""Generate ONE short advice line (max 10 words) for a trade thesis update.
 
-Trade Details:
-- Signal #{signal_id} - {signal_type} XAU/USD (Gold)
-- Entry: ${entry_price:.2f}
-- Current Price: ${current_price:.2f}
-- Take Profit: ${tp_price:.2f}
-- Stop Loss: ${sl_price:.2f}
-- Time in Trade: {hours_elapsed:.1f} hours
-- Thesis Status: {thesis_status.upper()}
+Context:
+- {direction} Gold, open {hours_elapsed:.1f}h
+- Thesis: {thesis_status}
+- Issue: {reasons_text}
 
-Context: {status_context.get(thesis_status, status_context['intact'])}
+Style based on status:
+- intact: Reassuring, like "Setup still valid, holding" or "Patience - thesis intact"
+- weakening: Cautious, like "Tighten stops, watching closely" or "Mixed signals - be ready"
+- broken: Urgent, like "Consider exit - thesis broken" or "Time to protect capital"
+{avoid_instruction}
 
-Guidance: {action_guidance.get(thesis_status, action_guidance['intact'])}
-
-Style: 2-3 sentences max. Professional and analytical. Reference the indicator analysis. Use appropriate emoji at start based on status:
-- Intact: 📊 (neutral/informational)
-- Weakening: ⚠️ (caution)
-- Broken: 🚨 (alert/action needed)
-
-Generate the message:"""
-
+Generate just the short line:"""
+        
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional forex analyst providing trade thesis updates. Be calm, data-focused, and provide clear actionable guidance based on technical analysis."},
+                {"role": "system", "content": "You write ultra-short trading updates. Max 10 words."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=150,
-            temperature=0.7
+            max_tokens=30,
+            temperature=0.8
         )
         
-        content = response.choices[0].message.content
-        return content.strip() if content else get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price)
+        ai_line = response.choices[0].message.content.strip() if response.choices[0].message.content else "Monitoring the setup"
+        ai_line = ai_line.strip('"\'')
+        
+        add_recent_phrase('revalidation', ai_line)
+        
+        # Format the short reason
+        short_reason = reasons[0][:50] if reasons else "Indicators mixed"
+        
+        # Build formatted message
+        message = f"""{header}
+
+XAUUSD {direction}:
+⏱️ {hours_elapsed:.1f}h open
+📍 {pips_move:+.2f} pips
+
+Status: {status_label}
+{f'📋 {short_reason}' if thesis_status != 'intact' else ''}
+
+{ai_line}"""
+        
+        return message
         
     except Exception as e:
         print(f"❌ Error generating revalidation message: {e}")
-        return get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price)
+        return get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, current_price, entry_price)
 
 def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_price, entry_price, tp_price, sl_price, current_indicators=None, original_indicators=None):
     """
@@ -588,21 +623,54 @@ Generate the message:"""
         print(f"❌ Error generating timeout message: {e}")
         return get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators)
 
-def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price):
+def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, current_price, entry_price):
     """Fallback template messages for revalidation when AI is unavailable"""
     hours = minutes_elapsed / 60
-    reasons_text = "; ".join(reasons[:2]) if reasons else ""
+    direction = "LONG" if signal_type == "BUY" else "SHORT"
+    pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
+    short_reason = reasons[0][:50] if reasons else "Mixed signals"
     
     if thesis_status == 'intact':
-        return f"📊 Trade Status ({hours:.1f}h): Indicators still support {signal_type} thesis. Trade consolidating - setup remains valid. Hold position."
+        return f"""📊 THESIS CHECK
+
+XAUUSD {direction}:
+⏱️ {hours:.1f}h open
+📍 {pips_move:+.2f} pips
+
+Status: INTACT
+
+Setup still valid, holding"""
     
     elif thesis_status == 'weakening':
-        return f"⚠️ Trade Status ({hours:.1f}h): Some indicators showing mixed signals{': ' + reasons_text if reasons_text else ''}. Consider tightening stops or reducing position."
+        return f"""⚠️ THESIS CHECK
+
+XAUUSD {direction}:
+⏱️ {hours:.1f}h open
+📍 {pips_move:+.2f} pips
+
+Status: WEAKENING
+📋 {short_reason}
+
+Tighten stops, watching closely"""
     
     elif thesis_status == 'broken':
-        return f"🚨 Trade Alert ({hours:.1f}h): Technical indicators have reversed{': ' + reasons_text if reasons_text else ''}. Original thesis invalidated - recommend closing position."
+        return f"""🚨 THESIS CHECK
+
+XAUUSD {direction}:
+⏱️ {hours:.1f}h open
+📍 {pips_move:+.2f} pips
+
+Status: BROKEN
+📋 {short_reason}
+
+Consider exit - thesis broken"""
     
-    return f"📊 Trade Status: Monitoring signal at {hours:.1f} hours."
+    return f"""📊 THESIS CHECK
+
+XAUUSD {direction}:
+⏱️ {hours:.1f}h open
+
+Monitoring the setup"""
 
 def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators=None):
     """Fallback template message for timeout when AI is unavailable"""
