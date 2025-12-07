@@ -14,6 +14,11 @@ class ForexSignalEngine:
         self.symbol = 'XAU/USD'
         # Load config from database
         self.load_config()
+        
+        # Stagnant trade re-validation settings (configurable)
+        self.revalidation_first_check_minutes = 90  # First indicator recheck at 90 min
+        self.revalidation_interval_minutes = 30     # Subsequent rechecks every 30 min
+        self.hard_timeout_minutes = 180             # 3-hour hard timeout
     
     def load_config(self):
         """Load configuration from database or use defaults"""
@@ -209,7 +214,9 @@ class ForexSignalEngine:
                 'stop_loss': stop_loss,
                 'rsi_value': rsi,
                 'macd_value': macd_data['macd'],
-                'atr_value': atr
+                'atr_value': atr,
+                'adx_value': adx,
+                'stoch_k_value': stoch['k']
             }
             
             print(f"[FOREX SIGNALS] ✅ Signal generated: {signal_type} @ {price:.2f}, TP: {take_profit:.2f}, SL: {stop_loss:.2f}")
@@ -451,5 +458,269 @@ class ForexSignalEngine:
             import traceback
             traceback.print_exc()
             return []
+    
+    def validate_thesis(self, signal, current_indicators):
+        """
+        Compare current indicators against original to determine thesis status.
+        
+        Args:
+            signal (dict): Signal data including original indicator values
+            current_indicators (dict): Current RSI, MACD, ADX, Stochastic values
+        
+        Returns:
+            dict: {
+                'status': 'intact' | 'weakening' | 'broken',
+                'reasons': list of strings explaining the status,
+                'indicators_changed': dict of indicator changes
+            }
+        """
+        signal_type = signal['signal_type']
+        original_rsi = signal.get('original_rsi') or signal.get('rsi_value')
+        original_macd = signal.get('original_macd') or signal.get('macd_value')
+        original_adx = signal.get('original_adx')
+        original_stoch = signal.get('original_stoch_k')
+        
+        current_rsi = current_indicators.get('rsi')
+        current_macd = current_indicators.get('macd')
+        current_adx = current_indicators.get('adx')
+        current_stoch = current_indicators.get('stoch_k')
+        
+        reasons = []
+        indicators_changed = {}
+        weakening_count = 0
+        breaking_count = 0
+        
+        # RSI analysis
+        if original_rsi and current_rsi:
+            rsi_change = current_rsi - original_rsi
+            indicators_changed['rsi'] = {'original': original_rsi, 'current': current_rsi, 'change': rsi_change}
+            
+            if signal_type == 'BUY':
+                # For BUY: RSI should ideally stay supportive (not overbought)
+                if current_rsi > 70:  # Moved into overbought territory
+                    reasons.append(f"RSI now overbought ({current_rsi:.1f})")
+                    breaking_count += 1
+                elif current_rsi > 60 and original_rsi < 50:  # Moving toward overbought
+                    reasons.append(f"RSI rising to neutral ({current_rsi:.1f})")
+                    weakening_count += 1
+            else:  # SELL
+                # For SELL: RSI should ideally stay supportive (not oversold)
+                if current_rsi < 30:  # Moved into oversold territory
+                    reasons.append(f"RSI now oversold ({current_rsi:.1f})")
+                    breaking_count += 1
+                elif current_rsi < 40 and original_rsi > 50:  # Moving toward oversold
+                    reasons.append(f"RSI falling to neutral ({current_rsi:.1f})")
+                    weakening_count += 1
+        
+        # MACD analysis
+        if original_macd is not None and current_macd is not None:
+            macd_change = current_macd - original_macd
+            indicators_changed['macd'] = {'original': original_macd, 'current': current_macd, 'change': macd_change}
+            
+            if signal_type == 'BUY':
+                # For BUY: MACD crossing below zero or reversing direction is bad
+                if original_macd > 0 and current_macd < 0:
+                    reasons.append("MACD crossed below zero")
+                    breaking_count += 1
+                elif macd_change < -0.5:  # Significant negative change
+                    reasons.append(f"MACD momentum decreasing")
+                    weakening_count += 1
+            else:  # SELL
+                # For SELL: MACD crossing above zero or reversing direction is bad
+                if original_macd < 0 and current_macd > 0:
+                    reasons.append("MACD crossed above zero")
+                    breaking_count += 1
+                elif macd_change > 0.5:  # Significant positive change
+                    reasons.append(f"MACD momentum increasing")
+                    weakening_count += 1
+        
+        # ADX analysis (trend strength)
+        if original_adx and current_adx:
+            adx_change = current_adx - original_adx
+            indicators_changed['adx'] = {'original': original_adx, 'current': current_adx, 'change': adx_change}
+            
+            if current_adx < self.adx_threshold:
+                reasons.append(f"ADX below threshold ({current_adx:.1f} < {self.adx_threshold})")
+                weakening_count += 1
+            elif adx_change < -10:  # Significant loss of trend strength
+                reasons.append(f"ADX momentum fading ({adx_change:.1f} decline)")
+                weakening_count += 1
+        
+        # Stochastic analysis
+        if original_stoch and current_stoch:
+            stoch_change = current_stoch - original_stoch
+            indicators_changed['stoch'] = {'original': original_stoch, 'current': current_stoch, 'change': stoch_change}
+            
+            if signal_type == 'BUY':
+                if current_stoch > 80 and original_stoch < 50:  # Moved to overbought
+                    reasons.append(f"Stochastic now overbought ({current_stoch:.1f})")
+                    weakening_count += 1
+            else:  # SELL
+                if current_stoch < 20 and original_stoch > 50:  # Moved to oversold
+                    reasons.append(f"Stochastic now oversold ({current_stoch:.1f})")
+                    weakening_count += 1
+        
+        # Determine overall status
+        if breaking_count >= 2:
+            status = 'broken'
+        elif breaking_count >= 1 or weakening_count >= 2:
+            status = 'weakening'
+        elif weakening_count >= 1:
+            status = 'weakening'
+        else:
+            status = 'intact'
+        
+        return {
+            'status': status,
+            'reasons': reasons,
+            'indicators_changed': indicators_changed,
+            'weakening_count': weakening_count,
+            'breaking_count': breaking_count
+        }
+    
+    async def check_stagnant_signals(self):
+        """
+        Check for stagnant signals that need indicator re-validation or timeout.
+        Returns list of events for signals that need updates.
+        
+        Timing:
+        - First re-check at 90 minutes if still < 30% progress
+        - Subsequent re-checks every 30 minutes
+        - Hard timeout at 3 hours
+        """
+        try:
+            active_signals = get_forex_signals(status='pending')
+            
+            if not active_signals:
+                return []
+            
+            now = datetime.utcnow()
+            revalidation_events = []
+            
+            for signal in active_signals:
+                signal_id = signal['id']
+                posted_at = signal.get('posted_at')
+                last_progress_zone = signal.get('last_progress_zone', 0)
+                last_caution_zone = signal.get('last_caution_zone', 0)
+                last_revalidation_at = signal.get('last_revalidation_at')
+                thesis_status = signal.get('thesis_status', 'intact')
+                timeout_notified = signal.get('timeout_notified', False)
+                
+                # Parse timestamps
+                if isinstance(posted_at, str):
+                    posted_at = datetime.fromisoformat(posted_at.replace('Z', '+00:00').replace('+00:00', ''))
+                if isinstance(last_revalidation_at, str):
+                    last_revalidation_at = datetime.fromisoformat(last_revalidation_at.replace('Z', '+00:00').replace('+00:00', ''))
+                
+                if not posted_at:
+                    continue
+                
+                minutes_elapsed = (now - posted_at).total_seconds() / 60
+                
+                # Check for hard timeout (3 hours = 180 minutes)
+                if minutes_elapsed >= self.hard_timeout_minutes and not timeout_notified:
+                    revalidation_events.append({
+                        'signal_id': signal_id,
+                        'event_type': 'timeout',
+                        'signal': signal,
+                        'minutes_elapsed': minutes_elapsed,
+                        'reason': f"Trade has been open for {minutes_elapsed/60:.1f} hours without resolution"
+                    })
+                    print(f"[REVALIDATION] Signal #{signal_id}: Hard timeout after {minutes_elapsed:.0f} minutes")
+                    continue
+                
+                # Only check stagnant trades (not yet hit 30% in either direction)
+                if last_progress_zone >= 30 or last_caution_zone >= 30:
+                    continue
+                
+                # Check if first revalidation is due (90 minutes)
+                if minutes_elapsed >= self.revalidation_first_check_minutes:
+                    # Determine if we should do a revalidation
+                    should_revalidate = False
+                    
+                    if last_revalidation_at is None:
+                        # First revalidation
+                        should_revalidate = True
+                    else:
+                        # Check if enough time has passed since last revalidation
+                        minutes_since_last = (now - last_revalidation_at).total_seconds() / 60
+                        if minutes_since_last >= self.revalidation_interval_minutes:
+                            should_revalidate = True
+                    
+                    if should_revalidate:
+                        revalidation_events.append({
+                            'signal_id': signal_id,
+                            'event_type': 'revalidation',
+                            'signal': signal,
+                            'minutes_elapsed': minutes_elapsed,
+                            'current_thesis_status': thesis_status,
+                            'reason': f"Stagnant trade at {minutes_elapsed:.0f} minutes, verifying thesis"
+                        })
+                        print(f"[REVALIDATION] Signal #{signal_id}: Scheduling revalidation at {minutes_elapsed:.0f} minutes")
+            
+            return revalidation_events
+            
+        except Exception as e:
+            print(f"[REVALIDATION] ❌ Error checking stagnant signals: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    async def perform_revalidation(self, signal):
+        """
+        Perform indicator re-validation for a stagnant signal.
+        
+        Args:
+            signal (dict): Signal data to revalidate
+        
+        Returns:
+            dict: Validation result with status, reasons, and current indicators
+        """
+        try:
+            signal_id = signal['id']
+            timeframe = signal.get('timeframe', '15min')
+            
+            print(f"[REVALIDATION] Fetching current indicators for signal #{signal_id}...")
+            
+            # Fetch current indicator values (with rate limiting)
+            rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
+            time.sleep(8)
+            macd_data = twelve_data_client.get_macd(self.symbol, timeframe)
+            time.sleep(8)
+            adx = twelve_data_client.get_adx(self.symbol, timeframe)
+            time.sleep(8)
+            stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
+            
+            if not all([rsi, macd_data, adx, stoch]):
+                print(f"[REVALIDATION] ⚠️ Could not fetch all indicators for signal #{signal_id}")
+                return None
+            
+            # Type assertions for type checker (we know these are not None after the check above)
+            assert macd_data is not None
+            assert stoch is not None
+            
+            current_indicators = {
+                'rsi': rsi,
+                'macd': macd_data['macd'],
+                'adx': adx,
+                'stoch_k': stoch['k']
+            }
+            
+            # Validate thesis
+            validation = self.validate_thesis(signal, current_indicators)
+            validation['current_indicators'] = current_indicators
+            validation['signal_id'] = signal_id
+            
+            print(f"[REVALIDATION] Signal #{signal_id}: Thesis is {validation['status'].upper()}")
+            if validation['reasons']:
+                print(f"[REVALIDATION] Reasons: {', '.join(validation['reasons'])}")
+            
+            return validation
+            
+        except Exception as e:
+            print(f"[REVALIDATION] ❌ Error performing revalidation: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
 forex_signal_engine = ForexSignalEngine()

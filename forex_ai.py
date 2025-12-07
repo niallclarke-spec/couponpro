@@ -251,3 +251,163 @@ def get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_pr
         return f"📉 Decision Point: Trade under pressure. Consider reducing position or holding with original SL."
     
     return "📊 Signal update: Monitoring position."
+
+def generate_revalidation_message(signal_id, signal_type, thesis_status, reasons, minutes_elapsed, current_price, entry_price, tp_price, sl_price):
+    """
+    Generate AI message for thesis re-validation updates on stagnant trades.
+    
+    Args:
+        signal_id: Database signal ID
+        signal_type: 'BUY' or 'SELL'
+        thesis_status: 'intact', 'weakening', or 'broken'
+        reasons: List of reasons for the status
+        minutes_elapsed: Minutes since signal was posted
+        current_price: Current market price
+        entry_price: Signal entry price
+        tp_price: Take profit price
+        sl_price: Stop loss price
+    
+    Returns:
+        str: AI-generated revalidation message
+    """
+    try:
+        hours_elapsed = minutes_elapsed / 60
+        reasons_text = "; ".join(reasons) if reasons else "Indicators remain supportive"
+        
+        status_context = {
+            'intact': f"After {hours_elapsed:.1f} hours, technical indicators still support the original trade thesis. The trade is consolidating but setup remains valid.",
+            'weakening': f"After {hours_elapsed:.1f} hours, some technical indicators are showing mixed signals. The original thesis may be weakening. Reasons: {reasons_text}",
+            'broken': f"After {hours_elapsed:.1f} hours, key technical indicators have reversed against the trade. The original thesis appears invalid. Reasons: {reasons_text}"
+        }
+        
+        action_guidance = {
+            'intact': "Provide a calm status update. Reassure traders that the setup is still valid and to hold positions.",
+            'weakening': "Advise traders to monitor closely and consider tightening stops or reducing position size.",
+            'broken': "Recommend closing the position or taking protective action immediately. Be direct but professional."
+        }
+        
+        prompt = f"""Generate a professional trade status message based on indicator re-validation.
+
+Trade Details:
+- Signal #{signal_id} - {signal_type} XAU/USD (Gold)
+- Entry: ${entry_price:.2f}
+- Current Price: ${current_price:.2f}
+- Take Profit: ${tp_price:.2f}
+- Stop Loss: ${sl_price:.2f}
+- Time in Trade: {hours_elapsed:.1f} hours
+- Thesis Status: {thesis_status.upper()}
+
+Context: {status_context.get(thesis_status, status_context['intact'])}
+
+Guidance: {action_guidance.get(thesis_status, action_guidance['intact'])}
+
+Style: 2-3 sentences max. Professional and analytical. Reference the indicator analysis. Use appropriate emoji at start based on status:
+- Intact: 📊 (neutral/informational)
+- Weakening: ⚠️ (caution)
+- Broken: 🚨 (alert/action needed)
+
+Generate the message:"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a professional forex analyst providing trade thesis updates. Be calm, data-focused, and provide clear actionable guidance based on technical analysis."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=150,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"❌ Error generating revalidation message: {e}")
+        return get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price)
+
+def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_price, entry_price, tp_price, sl_price):
+    """
+    Generate AI message for 3-hour trade timeout.
+    
+    Args:
+        signal_id: Database signal ID
+        signal_type: 'BUY' or 'SELL'
+        minutes_elapsed: Minutes since signal was posted
+        current_price: Current market price
+        entry_price: Signal entry price
+        tp_price: Take profit price
+        sl_price: Stop loss price
+    
+    Returns:
+        str: AI-generated timeout message
+    """
+    try:
+        hours_elapsed = minutes_elapsed / 60
+        
+        # Calculate P/L
+        if signal_type == 'BUY':
+            pips = round(current_price - entry_price, 2)
+        else:
+            pips = round(entry_price - current_price, 2)
+        
+        pips_status = f"+{pips}" if pips > 0 else str(pips)
+        
+        prompt = f"""Generate a professional trade expiration message.
+
+Trade Details:
+- Signal #{signal_id} - {signal_type} XAU/USD (Gold)
+- Entry: ${entry_price:.2f}
+- Current Price: ${current_price:.2f}
+- Take Profit: ${tp_price:.2f} (not reached)
+- Stop Loss: ${sl_price:.2f} (not reached)
+- Time in Trade: {hours_elapsed:.1f} hours
+- Current P/L: {pips_status} pips
+
+Context: This trade has reached the 3-hour time limit without hitting TP or SL. We are recommending to close the position to free capital for better opportunities.
+
+Style: 2-3 sentences max. Professional and matter-of-fact. Start with ⏰ emoji. Explain the timeout policy briefly and recommend closing at current price. Note the result (small gain, small loss, or breakeven).
+
+Generate the message:"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a professional forex analyst recommending trade closure due to time management policy. Be professional and focus on capital efficiency."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=120,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"❌ Error generating timeout message: {e}")
+        return get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price)
+
+def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price):
+    """Fallback template messages for revalidation when AI is unavailable"""
+    hours = minutes_elapsed / 60
+    reasons_text = "; ".join(reasons[:2]) if reasons else ""
+    
+    if thesis_status == 'intact':
+        return f"📊 Trade Status ({hours:.1f}h): Indicators still support {signal_type} thesis. Trade consolidating - setup remains valid. Hold position."
+    
+    elif thesis_status == 'weakening':
+        return f"⚠️ Trade Status ({hours:.1f}h): Some indicators showing mixed signals{': ' + reasons_text if reasons_text else ''}. Consider tightening stops or reducing position."
+    
+    elif thesis_status == 'broken':
+        return f"🚨 Trade Alert ({hours:.1f}h): Technical indicators have reversed{': ' + reasons_text if reasons_text else ''}. Original thesis invalidated - recommend closing position."
+    
+    return f"📊 Trade Status: Monitoring signal at {hours:.1f} hours."
+
+def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price):
+    """Fallback template message for timeout when AI is unavailable"""
+    hours = minutes_elapsed / 60
+    if signal_type == 'BUY':
+        pips = round(current_price - entry_price, 2)
+    else:
+        pips = round(entry_price - current_price, 2)
+    
+    pips_status = f"+{pips}" if pips > 0 else str(pips)
+    
+    return f"⏰ Trade Timeout ({hours:.1f}h): Signal has reached time limit without hitting TP/SL. Current result: {pips_status} pips. Recommend closing position to redeploy capital."

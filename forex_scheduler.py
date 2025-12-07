@@ -8,8 +8,9 @@ import asyncio
 from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
-from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance
-from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance
+from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance, generate_revalidation_message, generate_timeout_message
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified
+from forex_api import twelve_data_client
 
 class ForexScheduler:
     def __init__(self):
@@ -141,6 +142,104 @@ class ForexScheduler:
             import traceback
             traceback.print_exc()
     
+    async def run_stagnant_signal_checks(self):
+        """Check stagnant signals for re-validation and timeout"""
+        try:
+            revalidation_events = await forex_signal_engine.check_stagnant_signals()
+            
+            for event in revalidation_events:
+                signal_id = event['signal_id']
+                event_type = event['event_type']
+                signal = event['signal']
+                minutes_elapsed = event['minutes_elapsed']
+                
+                signal_type = signal['signal_type']
+                entry = float(signal['entry_price'])
+                tp = float(signal['take_profit'])
+                sl = float(signal['stop_loss'])
+                
+                # Fetch current price
+                current_price = twelve_data_client.get_price(forex_signal_engine.symbol)
+                if not current_price:
+                    print(f"[SCHEDULER] ⚠️ Could not fetch price for revalidation of signal #{signal_id}")
+                    continue
+                
+                if event_type == 'timeout':
+                    # 3-hour hard timeout
+                    ai_message = generate_timeout_message(
+                        signal_id=signal_id,
+                        signal_type=signal_type,
+                        minutes_elapsed=minutes_elapsed,
+                        current_price=current_price,
+                        entry_price=entry,
+                        tp_price=tp,
+                        sl_price=sl
+                    )
+                    
+                    success = await forex_telegram_bot.post_signal_timeout(
+                        signal_id=signal_id,
+                        message=ai_message,
+                        current_price=current_price,
+                        entry_price=entry
+                    )
+                    
+                    if success:
+                        update_signal_timeout_notified(signal_id)
+                        # Close the signal as expired
+                        if signal_type == 'BUY':
+                            pips = round(current_price - entry, 2)
+                        else:
+                            pips = round(entry - current_price, 2)
+                        update_forex_signal_status(signal_id, 'expired', pips)
+                        print(f"[SCHEDULER] ✅ Posted timeout for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
+                    
+                elif event_type == 'revalidation':
+                    # Perform indicator re-validation
+                    validation = await forex_signal_engine.perform_revalidation(signal)
+                    
+                    if validation:
+                        thesis_status = validation['status']
+                        reasons = validation['reasons']
+                        
+                        ai_message = generate_revalidation_message(
+                            signal_id=signal_id,
+                            signal_type=signal_type,
+                            thesis_status=thesis_status,
+                            reasons=reasons,
+                            minutes_elapsed=minutes_elapsed,
+                            current_price=current_price,
+                            entry_price=entry,
+                            tp_price=tp,
+                            sl_price=sl
+                        )
+                        
+                        success = await forex_telegram_bot.post_revalidation_update(
+                            signal_id=signal_id,
+                            thesis_status=thesis_status,
+                            message=ai_message,
+                            current_price=current_price,
+                            entry_price=entry
+                        )
+                        
+                        if success:
+                            update_signal_revalidation(signal_id, thesis_status, f"Revalidation: {ai_message[:100]}")
+                            print(f"[SCHEDULER] ✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+                            
+                            # If thesis is broken, recommend closing
+                            if thesis_status == 'broken':
+                                # Close the signal as expired with current P/L
+                                if signal_type == 'BUY':
+                                    pips = round(current_price - entry, 2)
+                                else:
+                                    pips = round(entry - current_price, 2)
+                                update_forex_signal_status(signal_id, 'expired', pips)
+                                print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
+                
+        except Exception as e:
+            print(f"[SCHEDULER] ❌ Error in stagnant signal checks: {e}")
+            import traceback
+            traceback.print_exc()
+    
     async def check_daily_recap(self):
         """Post daily recap at 11:59 PM GMT"""
         try:
@@ -188,6 +287,8 @@ class ForexScheduler:
         print(f"📊 Signal checks: Every 15 minutes (during 8AM-10PM GMT)")
         print(f"🔍 Price monitoring: Every 5 minutes")
         print(f"💡 Signal guidance: Every 5 minutes (with 10min cooldown)")
+        print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
+        print(f"⏰ Hard timeout: 3 hours")
         print(f"📅 Daily recap: 11:59 PM GMT")
         print(f"📅 Weekly recap: Sunday 11:59 PM GMT")
         print("="*60 + "\n")
@@ -203,6 +304,9 @@ class ForexScheduler:
                 await self.run_signal_monitoring()
                 
                 await self.run_signal_guidance()
+                
+                # Check for stagnant signals needing re-validation or timeout
+                await self.run_stagnant_signal_checks()
                 
                 await self.check_daily_recap()
                 await self.check_weekly_recap()

@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
-from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period
+from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators
 
 class ForexTelegramBot:
     def __init__(self):
@@ -82,6 +82,13 @@ class ForexTelegramBot:
                 macd_value=macd,
                 atr_value=atr
             )
+            
+            # Store original indicator values for re-validation
+            adx = signal_data.get('adx_value')
+            stoch_k = signal_data.get('stoch_k_value')
+            if signal_id and adx is not None:
+                update_signal_original_indicators(signal_id, rsi, macd, adx, stoch_k)
+                print(f"✅ Stored original indicators for signal #{signal_id}")
             
             print(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id
@@ -230,6 +237,83 @@ Signal closed after maximum hold time."""
             
         except Exception as e:
             print(f"❌ Failed to post signal guidance: {e}")
+            return False
+    
+    async def post_revalidation_update(self, signal_id, thesis_status, message, current_price, entry_price):
+        """
+        Post a thesis re-validation update for a stagnant signal.
+        
+        Args:
+            signal_id: Database signal ID
+            thesis_status: 'intact', 'weakening', or 'broken'
+            message: AI-generated revalidation message
+            current_price: Current market price
+            entry_price: Signal entry price
+        """
+        if not self.bot or not self.channel_id:
+            return False
+        
+        try:
+            status_headers = {
+                'intact': '📊 <b>Trade Status - Thesis Intact</b>',
+                'weakening': '⚠️ <b>Trade Status - Momentum Weakening</b>',
+                'broken': '🚨 <b>Trade Alert - Thesis Invalidated</b>'
+            }
+            
+            header = status_headers.get(thesis_status, '📊 <b>Trade Status</b>')
+            
+            full_message = f"""{header}
+<b>Signal #{signal_id}</b>
+
+{message}
+
+<b>Current:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}"""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=full_message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to post revalidation update: {e}")
+            return False
+    
+    async def post_signal_timeout(self, signal_id, message, current_price, entry_price):
+        """
+        Post a timeout notification when signal reaches 3-hour limit.
+        
+        Args:
+            signal_id: Database signal ID
+            message: AI-generated timeout message
+            current_price: Current market price
+            entry_price: Signal entry price
+        """
+        if not self.bot or not self.channel_id:
+            return False
+        
+        try:
+            full_message = f"""⏰ <b>Trade Timeout</b>
+<b>Signal #{signal_id}</b>
+
+{message}
+
+<b>Current:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}"""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=full_message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted timeout notification for signal #{signal_id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to post timeout notification: {e}")
             return False
     
     async def post_daily_recap(self, ai_recap=None):

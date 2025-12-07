@@ -368,6 +368,63 @@ class DatabasePool:
                 else:
                     print("[MIGRATION] notes column already exists, skipping")
                 
+                # Migration: Add indicator re-validation columns
+                print("[MIGRATION] Checking forex_signals for indicator re-validation columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name IN (
+                        'original_rsi', 'original_macd', 'original_adx', 'original_stoch_k',
+                        'last_revalidation_at', 'revalidation_count', 'thesis_status',
+                        'thesis_changed_at', 'timeout_notified'
+                    )
+                """)
+                existing_reval_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'original_rsi' not in existing_reval_columns:
+                    print("[MIGRATION] Adding original_rsi column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_rsi DECIMAL(5, 2)")
+                    print("[MIGRATION] ✅ original_rsi column added")
+                
+                if 'original_macd' not in existing_reval_columns:
+                    print("[MIGRATION] Adding original_macd column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_macd DECIMAL(10, 4)")
+                    print("[MIGRATION] ✅ original_macd column added")
+                
+                if 'original_adx' not in existing_reval_columns:
+                    print("[MIGRATION] Adding original_adx column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_adx DECIMAL(5, 2)")
+                    print("[MIGRATION] ✅ original_adx column added")
+                
+                if 'original_stoch_k' not in existing_reval_columns:
+                    print("[MIGRATION] Adding original_stoch_k column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_stoch_k DECIMAL(5, 2)")
+                    print("[MIGRATION] ✅ original_stoch_k column added")
+                
+                if 'last_revalidation_at' not in existing_reval_columns:
+                    print("[MIGRATION] Adding last_revalidation_at column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_revalidation_at TIMESTAMP")
+                    print("[MIGRATION] ✅ last_revalidation_at column added")
+                
+                if 'revalidation_count' not in existing_reval_columns:
+                    print("[MIGRATION] Adding revalidation_count column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN revalidation_count INTEGER DEFAULT 0")
+                    print("[MIGRATION] ✅ revalidation_count column added")
+                
+                if 'thesis_status' not in existing_reval_columns:
+                    print("[MIGRATION] Adding thesis_status column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN thesis_status VARCHAR(20) DEFAULT 'intact'")
+                    print("[MIGRATION] ✅ thesis_status column added")
+                
+                if 'thesis_changed_at' not in existing_reval_columns:
+                    print("[MIGRATION] Adding thesis_changed_at column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN thesis_changed_at TIMESTAMP")
+                    print("[MIGRATION] ✅ thesis_changed_at column added")
+                
+                if 'timeout_notified' not in existing_reval_columns:
+                    print("[MIGRATION] Adding timeout_notified column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN timeout_notified BOOLEAN DEFAULT FALSE")
+                    print("[MIGRATION] ✅ timeout_notified column added")
+                
                 # Create index on bot_type for filtering by bot type
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_forex_signals_bot_type 
@@ -1737,7 +1794,10 @@ def get_forex_signals(status=None, limit=100):
                            stop_loss, status, rsi_value, macd_value, atr_value, 
                            posted_at, closed_at, result_pips, bot_type,
                            breakeven_set, guidance_count, last_guidance_at,
-                           last_progress_zone, last_caution_zone
+                           last_progress_zone, last_caution_zone,
+                           original_rsi, original_macd, original_adx, original_stoch_k,
+                           last_revalidation_at, revalidation_count, thesis_status,
+                           thesis_changed_at, timeout_notified
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1749,7 +1809,10 @@ def get_forex_signals(status=None, limit=100):
                            stop_loss, status, rsi_value, macd_value, atr_value, 
                            posted_at, closed_at, result_pips, bot_type,
                            breakeven_set, guidance_count, last_guidance_at,
-                           last_progress_zone, last_caution_zone
+                           last_progress_zone, last_caution_zone,
+                           original_rsi, original_macd, original_adx, original_stoch_k,
+                           last_revalidation_at, revalidation_count, thesis_status,
+                           thesis_changed_at, timeout_notified
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -1777,7 +1840,16 @@ def get_forex_signals(status=None, limit=100):
                     'guidance_count': row[16] or 0,
                     'last_guidance_at': row[17].isoformat() if row[17] else None,
                     'last_progress_zone': row[18] or 0,
-                    'last_caution_zone': row[19] or 0
+                    'last_caution_zone': row[19] or 0,
+                    'original_rsi': float(row[20]) if row[20] else None,
+                    'original_macd': float(row[21]) if row[21] else None,
+                    'original_adx': float(row[22]) if row[22] else None,
+                    'original_stoch_k': float(row[23]) if row[23] else None,
+                    'last_revalidation_at': row[24].isoformat() if row[24] else None,
+                    'revalidation_count': row[25] or 0,
+                    'thesis_status': row[26] or 'intact',
+                    'thesis_changed_at': row[27].isoformat() if row[27] else None,
+                    'timeout_notified': row[28] or False
                 })
             return signals
     except Exception as e:
@@ -2526,6 +2598,109 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
             return cursor.rowcount > 0
     except Exception as e:
         print(f"Error updating signal guidance: {e}")
+        return False
+
+def update_signal_original_indicators(signal_id, rsi, macd, adx, stoch_k):
+    """
+    Store original indicator values when signal is created for later re-validation.
+    
+    Args:
+        signal_id (int): Signal ID
+        rsi (float): Original RSI value
+        macd (float): Original MACD value
+        adx (float): Original ADX value
+        stoch_k (float): Original Stochastic K value
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET original_rsi = %s,
+                    original_macd = %s,
+                    original_adx = %s,
+                    original_stoch_k = %s
+                WHERE id = %s
+            """, (rsi, macd, adx, stoch_k, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal original indicators: {e}")
+        return False
+
+def update_signal_revalidation(signal_id, thesis_status, notes=None):
+    """
+    Update revalidation data for a signal (for stagnant trade monitoring).
+    
+    Args:
+        signal_id (int): Signal ID
+        thesis_status (str): 'intact', 'weakening', or 'broken'
+        notes (str, optional): Notes about revalidation
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET last_revalidation_at = CURRENT_TIMESTAMP,
+                    revalidation_count = COALESCE(revalidation_count, 0) + 1,
+                    thesis_status = %s,
+                    thesis_changed_at = CASE 
+                        WHEN thesis_status != %s THEN CURRENT_TIMESTAMP 
+                        ELSE thesis_changed_at 
+                    END,
+                    notes = COALESCE(%s, notes)
+                WHERE id = %s
+            """, (thesis_status, thesis_status, notes, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal revalidation: {e}")
+        return False
+
+def update_signal_timeout_notified(signal_id):
+    """
+    Mark a signal as having received the timeout notification.
+    
+    Args:
+        signal_id (int): Signal ID
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET timeout_notified = TRUE
+                WHERE id = %s
+            """, (signal_id,))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal timeout notified: {e}")
         return False
 
 # ===== Telegram Subscriptions Functions =====
