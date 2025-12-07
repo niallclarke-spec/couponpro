@@ -50,7 +50,8 @@ Generate a unique analytical message now:"""
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else None
         
     except Exception as e:
         print(f"❌ Error generating AI celebration: {e}")
@@ -88,7 +89,7 @@ def generate_daily_recap():
         
         signal_list = "\n".join(signal_summaries)
         
-        stats = get_forex_stats_by_period(period='today')
+        stats = get_forex_stats_by_period(period='today') or {}
         total_pips = stats.get('total_pips', 0)
         won_signals = stats.get('won_signals', 0)
         total_signals = stats.get('total_signals', 0)
@@ -115,7 +116,8 @@ Generate the analytical recap commentary (don't repeat the numbers, focus on ins
             temperature=0.7
         )
         
-        commentary = response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        commentary = content.strip() if content else "Markets were active today."
         
         return f"\n<b>Today's Signals:</b>\n{signal_list}\n\n{commentary}"
         
@@ -165,7 +167,8 @@ Generate the analytical recap:"""
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else None
         
     except Exception as e:
         print(f"❌ Error generating weekly recap: {e}")
@@ -225,7 +228,8 @@ Generate the update:"""
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price)
         
     except Exception as e:
         print(f"❌ Error generating signal guidance: {e}")
@@ -318,7 +322,8 @@ Generate the message:"""
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price)
         
     except Exception as e:
         print(f"❌ Error generating revalidation message: {e}")
@@ -408,7 +413,8 @@ Generate the message:"""
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators)
         
     except Exception as e:
         print(f"❌ Error generating timeout message: {e}")

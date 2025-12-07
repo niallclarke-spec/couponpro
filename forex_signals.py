@@ -102,24 +102,16 @@ class ForexSignalEngine:
         try:
             print(f"\n[FOREX SIGNALS] Checking for signals on {self.symbol} {timeframe}...")
             
-            # Twelve Data free tier: 8 calls/minute limit
-            # We make 9 calls, so add 8-second delays to spread over 72 seconds (safe)
-            def rate_limited_fetch(func, *args, delay=8):
-                """Fetch with rate limiting to avoid exceeding 8 calls/minute"""
-                result = func(*args)
-                time.sleep(delay)
-                return result
-            
-            # Fetch all indicators with rate limiting
-            price = rate_limited_fetch(twelve_data_client.get_price, self.symbol)
-            rsi = rate_limited_fetch(twelve_data_client.get_rsi, self.symbol, timeframe)
-            macd_data = rate_limited_fetch(twelve_data_client.get_macd, self.symbol, timeframe)
-            atr = rate_limited_fetch(twelve_data_client.get_atr, self.symbol, timeframe)
-            adx = rate_limited_fetch(twelve_data_client.get_adx, self.symbol, timeframe)
-            bbands = rate_limited_fetch(twelve_data_client.get_bbands, self.symbol, timeframe)
-            stoch = rate_limited_fetch(twelve_data_client.get_stoch, self.symbol, timeframe)
-            ema50 = rate_limited_fetch(twelve_data_client.get_ema, self.symbol, '1h', 50)
-            ema200 = rate_limited_fetch(twelve_data_client.get_ema, self.symbol, '1h', 200, delay=0)
+            # Fetch all indicators (no rate limiting needed with unlimited API plan)
+            price = twelve_data_client.get_price(self.symbol)
+            rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
+            macd_data = twelve_data_client.get_macd(self.symbol, timeframe)
+            atr = twelve_data_client.get_atr(self.symbol, timeframe)
+            adx = twelve_data_client.get_adx(self.symbol, timeframe)
+            bbands = twelve_data_client.get_bbands(self.symbol, timeframe)
+            stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
+            ema50 = twelve_data_client.get_ema(self.symbol, '1h', 50)
+            ema200 = twelve_data_client.get_ema(self.symbol, '1h', 200)
             
             # Check if we have all required data
             if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
@@ -673,13 +665,10 @@ class ForexSignalEngine:
             
             print(f"[REVALIDATION] Fetching current indicators for signal #{signal_id}...")
             
-            # Fetch current indicator values (with rate limiting)
+            # Fetch current indicator values (no rate limiting needed with unlimited API plan)
             rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
-            time.sleep(8)
             macd_data = twelve_data_client.get_macd(self.symbol, timeframe)
-            time.sleep(8)
             adx = twelve_data_client.get_adx(self.symbol, timeframe)
-            time.sleep(8)
             stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
             
             if not all([rsi, macd_data, adx, stoch]):
