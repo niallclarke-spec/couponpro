@@ -453,6 +453,59 @@ class DatabasePool:
                     ON telegram_subscriptions(stripe_subscription_id)
                 """)
                 
+                # Migration: Add conversion tracking columns to telegram_subscriptions
+                print("[MIGRATION] Checking telegram_subscriptions for conversion tracking columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'telegram_subscriptions'
+                """)
+                existing_sub_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'free_signup_at' not in existing_sub_columns:
+                    print("[MIGRATION] Adding free_signup_at column...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN free_signup_at TIMESTAMP")
+                    print("[MIGRATION] ✅ free_signup_at column added")
+                else:
+                    print("[MIGRATION] free_signup_at column already exists, skipping")
+                
+                if 'is_converted' not in existing_sub_columns:
+                    print("[MIGRATION] Adding is_converted column...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN is_converted BOOLEAN DEFAULT FALSE")
+                    print("[MIGRATION] ✅ is_converted column added")
+                else:
+                    print("[MIGRATION] is_converted column already exists, skipping")
+                
+                if 'converted_at' not in existing_sub_columns:
+                    print("[MIGRATION] Adding converted_at column...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN converted_at TIMESTAMP")
+                    print("[MIGRATION] ✅ converted_at column added")
+                else:
+                    print("[MIGRATION] converted_at column already exists, skipping")
+                
+                if 'conversion_days' not in existing_sub_columns:
+                    print("[MIGRATION] Adding conversion_days column...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN conversion_days INTEGER")
+                    print("[MIGRATION] ✅ conversion_days column added")
+                else:
+                    print("[MIGRATION] conversion_days column already exists, skipping")
+                
+                if 'utm_source' not in existing_sub_columns:
+                    print("[MIGRATION] Adding UTM tracking columns...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_source VARCHAR(255)")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_medium VARCHAR(255)")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_campaign VARCHAR(255)")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_content VARCHAR(255)")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_term VARCHAR(255)")
+                    print("[MIGRATION] ✅ UTM columns added (utm_source, utm_medium, utm_campaign, utm_content, utm_term)")
+                else:
+                    print("[MIGRATION] UTM columns already exist, skipping")
+                
+                # Create index on is_converted for quick conversion queries
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_is_converted 
+                    ON telegram_subscriptions(is_converted)
+                """)
+                
                 # Create processed_webhook_events table for idempotency
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS processed_webhook_events (
@@ -2447,15 +2500,16 @@ def update_signal_guidance(signal_id, notes):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None):
+def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None):
     """
-    Create or update a telegram subscription record (UPSERT).
+    Create or update a telegram subscription record (UPSERT) with conversion tracking.
     
     Supports both paid (Stripe) and free users:
     - Paid users: Include stripeCustomerId and stripeSubscriptionId
     - Free users: Pass None for Stripe fields, set planType='Free Gold Signals' and amountPaid=0
     
-    If email already exists, updates the existing record.
+    If email already exists and was previously a free user upgrading to paid,
+    marks them as a conversion and calculates conversion_days.
     
     Args:
         email (str): Customer email (required)
@@ -2464,6 +2518,11 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         plan_type (str): Plan type (default: 'premium', use 'Free Gold Signals' for free users)
         amount_paid (float): Amount paid (default: 49.00, use 0 for free users)
         name (str): Customer name (optional)
+        utm_source (str): UTM source parameter (optional)
+        utm_medium (str): UTM medium parameter (optional)
+        utm_campaign (str): UTM campaign parameter (optional)
+        utm_content (str): UTM content parameter (optional)
+        utm_term (str): UTM term parameter (optional)
     
     Returns:
         tuple: (subscription_dict or None, error_message or None)
@@ -2480,25 +2539,101 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
         if stripe_subscription_id and str(stripe_subscription_id).lower().strip() in placeholders:
             stripe_subscription_id = None
         
-        print(f"[DB] Creating subscription: email={email}, stripe_sub_id={stripe_subscription_id}")
+        is_free_signup = amount_paid == 0 or 'free' in plan_type.lower() if plan_type else False
+        is_paid_signup = not is_free_signup and amount_paid > 0
+        
+        print(f"[DB] Creating subscription: email={email}, stripe_sub_id={stripe_subscription_id}, plan_type={plan_type}, is_free={is_free_signup}")
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            # UPSERT: Insert or update if email already exists
+            # Check if email already exists and was a free user (for conversion tracking)
+            existing_subscription = None
+            is_conversion = False
+            conversion_days = None
+            
             cursor.execute("""
-                INSERT INTO telegram_subscriptions 
-                (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, status, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (email) DO UPDATE SET
-                    name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
-                    stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, telegram_subscriptions.stripe_customer_id),
-                    stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, telegram_subscriptions.stripe_subscription_id),
-                    plan_type = EXCLUDED.plan_type,
-                    amount_paid = EXCLUDED.amount_paid,
-                    updated_at = CURRENT_TIMESTAMP
-                RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at
-            """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid))
+                SELECT id, plan_type, amount_paid, free_signup_at, created_at, is_converted
+                FROM telegram_subscriptions WHERE email = %s
+            """, (email,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                existing_id, existing_plan, existing_amount, existing_free_signup, existing_created, already_converted = existing
+                was_free = (existing_amount == 0 or existing_amount is None or 
+                           (existing_plan and 'free' in existing_plan.lower()))
+                
+                # Detect free-to-paid conversion
+                if was_free and is_paid_signup and not already_converted:
+                    is_conversion = True
+                    # Use existing free_signup_at or created_at as the free signup timestamp
+                    free_signup_date = existing_free_signup or existing_created
+                    if free_signup_date:
+                        from datetime import datetime
+                        now = datetime.utcnow()
+                        if isinstance(free_signup_date, str):
+                            free_signup_date = datetime.fromisoformat(free_signup_date.replace('Z', '+00:00'))
+                        conversion_days = (now - free_signup_date).days
+                        print(f"[DB] 🎉 Conversion detected! {email} upgraded from free to paid after {conversion_days} days")
+            
+            if is_free_signup:
+                # For free signups, set free_signup_at and UTM params
+                cursor.execute("""
+                    INSERT INTO telegram_subscriptions 
+                    (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
+                     status, created_at, updated_at, free_signup_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
+                    VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+                            CURRENT_TIMESTAMP, %s, %s, %s, %s, %s)
+                    ON CONFLICT (email) DO UPDATE SET
+                        name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
+                        plan_type = EXCLUDED.plan_type,
+                        amount_paid = EXCLUDED.amount_paid,
+                        updated_at = CURRENT_TIMESTAMP,
+                        free_signup_at = COALESCE(telegram_subscriptions.free_signup_at, CURRENT_TIMESTAMP),
+                        utm_source = COALESCE(telegram_subscriptions.utm_source, EXCLUDED.utm_source),
+                        utm_medium = COALESCE(telegram_subscriptions.utm_medium, EXCLUDED.utm_medium),
+                        utm_campaign = COALESCE(telegram_subscriptions.utm_campaign, EXCLUDED.utm_campaign),
+                        utm_content = COALESCE(telegram_subscriptions.utm_content, EXCLUDED.utm_content),
+                        utm_term = COALESCE(telegram_subscriptions.utm_term, EXCLUDED.utm_term)
+                    RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
+                """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                      utm_source, utm_medium, utm_campaign, utm_content, utm_term))
+            else:
+                # For paid signups, also handle conversion tracking
+                if is_conversion:
+                    cursor.execute("""
+                        UPDATE telegram_subscriptions SET
+                            name = COALESCE(%s, name),
+                            stripe_customer_id = COALESCE(%s, stripe_customer_id),
+                            stripe_subscription_id = COALESCE(%s, stripe_subscription_id),
+                            plan_type = %s,
+                            amount_paid = %s,
+                            status = 'pending',
+                            updated_at = CURRENT_TIMESTAMP,
+                            is_converted = TRUE,
+                            converted_at = CURRENT_TIMESTAMP,
+                            conversion_days = %s
+                        WHERE email = %s
+                        RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
+                    """, (name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                          conversion_days, email))
+                else:
+                    cursor.execute("""
+                        INSERT INTO telegram_subscriptions 
+                        (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
+                         status, created_at, updated_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
+                        VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+                                %s, %s, %s, %s, %s)
+                        ON CONFLICT (email) DO UPDATE SET
+                            name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
+                            stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, telegram_subscriptions.stripe_customer_id),
+                            stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, telegram_subscriptions.stripe_subscription_id),
+                            plan_type = EXCLUDED.plan_type,
+                            amount_paid = EXCLUDED.amount_paid,
+                            updated_at = CURRENT_TIMESTAMP
+                        RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
+                    """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
+                          utm_source, utm_medium, utm_campaign, utm_content, utm_term))
             
             result = cursor.fetchone()
             conn.commit()
@@ -2510,7 +2645,8 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
                     'stripe_customer_id': result[2],
                     'stripe_subscription_id': result[3],
                     'status': result[4],
-                    'created_at': result[5].isoformat() if result[5] else None
+                    'created_at': result[5].isoformat() if result[5] else None,
+                    'is_converted': result[6] if len(result) > 6 else False
                 }, None
             
             return None, "No result returned from database"
@@ -2954,6 +3090,146 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
         import traceback
         traceback.print_exc()
         return None
+
+# ===== Conversion Analytics Functions =====
+
+def get_conversion_analytics():
+    """
+    Get comprehensive conversion analytics for free-to-VIP tracking.
+    
+    Returns:
+        dict: Analytics data including conversion rate, top sources, etc.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Total free signups
+            cursor.execute("""
+                SELECT COUNT(*) FROM telegram_subscriptions 
+                WHERE free_signup_at IS NOT NULL
+            """)
+            total_free_signups = cursor.fetchone()[0] or 0
+            
+            # Total conversions
+            cursor.execute("""
+                SELECT COUNT(*) FROM telegram_subscriptions 
+                WHERE is_converted = TRUE
+            """)
+            total_conversions = cursor.fetchone()[0] or 0
+            
+            # Conversion rate
+            conversion_rate = (total_conversions / total_free_signups * 100) if total_free_signups > 0 else 0
+            
+            # Average conversion time
+            cursor.execute("""
+                SELECT AVG(conversion_days) FROM telegram_subscriptions 
+                WHERE is_converted = TRUE AND conversion_days IS NOT NULL
+            """)
+            avg_conversion_days = cursor.fetchone()[0] or 0
+            
+            # Total revenue from conversions
+            cursor.execute("""
+                SELECT SUM(amount_paid) FROM telegram_subscriptions 
+                WHERE is_converted = TRUE
+            """)
+            conversion_revenue = float(cursor.fetchone()[0] or 0)
+            
+            # Conversions by UTM source
+            cursor.execute("""
+                SELECT 
+                    COALESCE(utm_source, 'direct') as source,
+                    COUNT(*) as conversions,
+                    SUM(amount_paid) as revenue
+                FROM telegram_subscriptions 
+                WHERE is_converted = TRUE
+                GROUP BY utm_source
+                ORDER BY conversions DESC
+                LIMIT 10
+            """)
+            by_source = [{'source': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
+                         for row in cursor.fetchall()]
+            
+            # Conversions by UTM campaign
+            cursor.execute("""
+                SELECT 
+                    COALESCE(utm_campaign, 'none') as campaign,
+                    COUNT(*) as conversions,
+                    SUM(amount_paid) as revenue
+                FROM telegram_subscriptions 
+                WHERE is_converted = TRUE
+                GROUP BY utm_campaign
+                ORDER BY conversions DESC
+                LIMIT 10
+            """)
+            by_campaign = [{'campaign': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
+                           for row in cursor.fetchall()]
+            
+            # Free signups by source (for funnel analysis)
+            cursor.execute("""
+                SELECT 
+                    COALESCE(utm_source, 'direct') as source,
+                    COUNT(*) as signups,
+                    SUM(CASE WHEN is_converted = TRUE THEN 1 ELSE 0 END) as converted
+                FROM telegram_subscriptions 
+                WHERE free_signup_at IS NOT NULL
+                GROUP BY utm_source
+                ORDER BY signups DESC
+                LIMIT 10
+            """)
+            funnel_by_source = [
+                {
+                    'source': row[0], 
+                    'signups': row[1], 
+                    'converted': row[2],
+                    'conversion_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1)
+                } 
+                for row in cursor.fetchall()
+            ]
+            
+            # Recent conversions
+            cursor.execute("""
+                SELECT email, utm_source, utm_campaign, amount_paid, conversion_days, converted_at
+                FROM telegram_subscriptions 
+                WHERE is_converted = TRUE
+                ORDER BY converted_at DESC
+                LIMIT 10
+            """)
+            recent_conversions = [
+                {
+                    'email': row[0],
+                    'source': row[1] or 'direct',
+                    'campaign': row[2] or 'none',
+                    'amount': float(row[3] or 0),
+                    'days_to_convert': row[4],
+                    'converted_at': row[5].isoformat() if row[5] else None
+                }
+                for row in cursor.fetchall()
+            ]
+            
+            return {
+                'summary': {
+                    'total_free_signups': total_free_signups,
+                    'total_conversions': total_conversions,
+                    'conversion_rate': round(conversion_rate, 1),
+                    'avg_conversion_days': round(float(avg_conversion_days), 1),
+                    'conversion_revenue': round(conversion_revenue, 2)
+                },
+                'by_source': by_source,
+                'by_campaign': by_campaign,
+                'funnel_by_source': funnel_by_source,
+                'recent_conversions': recent_conversions
+            }
+            
+    except Exception as e:
+        print(f"Error getting conversion analytics: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 
 # ===== Webhook Idempotency Functions =====
 

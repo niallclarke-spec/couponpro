@@ -820,6 +820,37 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram/conversion-analytics':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                analytics = db.get_conversion_analytics()
+                
+                if analytics:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(analytics).encode())
+                else:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Failed to fetch conversion analytics'}).encode())
+                
+            except Exception as e:
+                print(f"[CONVERSIONS] Error getting analytics: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/telegram/billing/'):
             # Admin endpoint - Get billing info from Stripe for a subscription
             if not self.check_auth():
@@ -2265,6 +2296,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 name = data.get('name')
                 plan_type = data.get('planType', 'premium')
                 
+                # UTM tracking parameters for marketing attribution
+                utm_source = data.get('utmSource') or data.get('utm_source')
+                utm_medium = data.get('utmMedium') or data.get('utm_medium')
+                utm_campaign = data.get('utmCampaign') or data.get('utm_campaign')
+                utm_content = data.get('utmContent') or data.get('utm_content')
+                utm_term = data.get('utmTerm') or data.get('utm_term')
+                
                 # Smart default for amount: Free plans default to 0, Premium defaults to 49
                 raw_amount = data.get('amountPaid')
                 if raw_amount is not None:
@@ -2285,15 +2323,22 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print(f"[TELEGRAM-SUB] Grant access request for {email}")
                 print(f"[TELEGRAM-SUB] Data: plan={plan_type}, amount=${amount_paid}, free={is_free_user}")
                 print(f"[TELEGRAM-SUB] Stripe: customer_id={stripe_customer_id}, subscription_id={stripe_subscription_id}")
+                if utm_source or utm_campaign:
+                    print(f"[TELEGRAM-SUB] UTM: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
                 
-                # Create subscription record in database
+                # Create subscription record in database (with UTM tracking for conversions)
                 subscription, db_error = db.create_telegram_subscription(
                     email=email,
                     stripe_customer_id=stripe_customer_id,
                     stripe_subscription_id=stripe_subscription_id,
                     plan_type=plan_type,
                     amount_paid=amount_paid,
-                    name=name
+                    name=name,
+                    utm_source=utm_source,
+                    utm_medium=utm_medium,
+                    utm_campaign=utm_campaign,
+                    utm_content=utm_content,
+                    utm_term=utm_term
                 )
                 
                 if not subscription:
