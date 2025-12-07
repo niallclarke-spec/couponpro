@@ -7,6 +7,12 @@ import time
 from datetime import datetime, timedelta
 from forex_api import twelve_data_client
 from db import create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config
+from indicator_config import (
+    get_validation_indicators,
+    get_indicator_config,
+    validate_indicator_thesis,
+    get_indicator_display
+)
 import asyncio
 
 class ForexSignalEngine:
@@ -463,9 +469,12 @@ class ForexSignalEngine:
         """
         Compare current indicators against original to determine thesis status.
         
+        Uses the centralized indicator_config for validation rules, making it easy
+        to add/remove indicators by updating the config rather than this function.
+        
         Args:
             signal (dict): Signal data including original indicator values
-            current_indicators (dict): Current RSI, MACD, ADX, Stochastic values
+            current_indicators (dict): Current indicator values {'rsi': X, 'macd': Y, ...}
         
         Returns:
             dict: {
@@ -475,90 +484,57 @@ class ForexSignalEngine:
             }
         """
         signal_type = signal['signal_type']
-        original_rsi = signal.get('original_rsi') or signal.get('rsi_value')
-        original_macd = signal.get('original_macd') or signal.get('macd_value')
-        original_adx = signal.get('original_adx')
-        original_stoch = signal.get('original_stoch_k')
         
-        current_rsi = current_indicators.get('rsi')
-        current_macd = current_indicators.get('macd')
-        current_adx = current_indicators.get('adx')
-        current_stoch = current_indicators.get('stoch_k')
+        # Get original indicators - prefer JSON column, fall back to legacy columns
+        original_indicators = signal.get('original_indicators_json') or {}
+        if not original_indicators:
+            # Build from legacy columns for backward compatibility
+            if signal.get('original_rsi') or signal.get('rsi_value'):
+                original_indicators['rsi'] = signal.get('original_rsi') or signal.get('rsi_value')
+            if signal.get('original_macd') or signal.get('macd_value'):
+                original_indicators['macd'] = signal.get('original_macd') or signal.get('macd_value')
+            if signal.get('original_adx'):
+                original_indicators['adx'] = signal.get('original_adx')
+            if signal.get('original_stoch_k'):
+                original_indicators['stochastic'] = signal.get('original_stoch_k')
         
         reasons = []
         indicators_changed = {}
         weakening_count = 0
         breaking_count = 0
         
-        # RSI analysis
-        if original_rsi and current_rsi:
-            rsi_change = current_rsi - original_rsi
-            indicators_changed['rsi'] = {'original': original_rsi, 'current': current_rsi, 'change': rsi_change}
+        # Loop through all validation indicators from config
+        for indicator_key in get_validation_indicators():
+            original_val = original_indicators.get(indicator_key)
+            current_val = current_indicators.get(indicator_key)
             
-            if signal_type == 'BUY':
-                # For BUY: RSI should ideally stay supportive (not overbought)
-                if current_rsi > 70:  # Moved into overbought territory
-                    reasons.append(f"RSI now overbought ({current_rsi:.1f})")
-                    breaking_count += 1
-                elif current_rsi > 60 and original_rsi < 50:  # Moving toward overbought
-                    reasons.append(f"RSI rising to neutral ({current_rsi:.1f})")
-                    weakening_count += 1
-            else:  # SELL
-                # For SELL: RSI should ideally stay supportive (not oversold)
-                if current_rsi < 30:  # Moved into oversold territory
-                    reasons.append(f"RSI now oversold ({current_rsi:.1f})")
-                    breaking_count += 1
-                elif current_rsi < 40 and original_rsi > 50:  # Moving toward oversold
-                    reasons.append(f"RSI falling to neutral ({current_rsi:.1f})")
-                    weakening_count += 1
-        
-        # MACD analysis
-        if original_macd is not None and current_macd is not None:
-            macd_change = current_macd - original_macd
-            indicators_changed['macd'] = {'original': original_macd, 'current': current_macd, 'change': macd_change}
+            # Skip if we don't have both values
+            if original_val is None or current_val is None:
+                continue
             
-            if signal_type == 'BUY':
-                # For BUY: MACD crossing below zero or reversing direction is bad
-                if original_macd > 0 and current_macd < 0:
-                    reasons.append("MACD crossed below zero")
-                    breaking_count += 1
-                elif macd_change < -0.5:  # Significant negative change
-                    reasons.append(f"MACD momentum decreasing")
-                    weakening_count += 1
-            else:  # SELL
-                # For SELL: MACD crossing above zero or reversing direction is bad
-                if original_macd < 0 and current_macd > 0:
-                    reasons.append("MACD crossed above zero")
-                    breaking_count += 1
-                elif macd_change > 0.5:  # Significant positive change
-                    reasons.append(f"MACD momentum increasing")
-                    weakening_count += 1
-        
-        # ADX analysis (trend strength)
-        if original_adx and current_adx:
-            adx_change = current_adx - original_adx
-            indicators_changed['adx'] = {'original': original_adx, 'current': current_adx, 'change': adx_change}
+            # Record the change
+            change = current_val - original_val
+            indicators_changed[indicator_key] = {
+                'original': original_val,
+                'current': current_val,
+                'change': change
+            }
             
-            if current_adx < self.adx_threshold:
-                reasons.append(f"ADX below threshold ({current_adx:.1f} < {self.adx_threshold})")
+            # Use config-driven validation
+            status, description = validate_indicator_thesis(
+                indicator_key, current_val, original_val, signal_type
+            )
+            
+            if status == 'broken':
+                config = get_indicator_config(indicator_key)
+                indicator_name = config['name'] if config else indicator_key
+                reasons.append(f"{indicator_name}: {description or 'thesis broken'}")
+                breaking_count += 1
+            elif status == 'weakening':
+                config = get_indicator_config(indicator_key)
+                indicator_name = config['name'] if config else indicator_key
+                reasons.append(f"{indicator_name}: {description or 'showing weakness'}")
                 weakening_count += 1
-            elif adx_change < -10:  # Significant loss of trend strength
-                reasons.append(f"ADX momentum fading ({adx_change:.1f} decline)")
-                weakening_count += 1
-        
-        # Stochastic analysis
-        if original_stoch and current_stoch:
-            stoch_change = current_stoch - original_stoch
-            indicators_changed['stoch'] = {'original': original_stoch, 'current': current_stoch, 'change': stoch_change}
-            
-            if signal_type == 'BUY':
-                if current_stoch > 80 and original_stoch < 50:  # Moved to overbought
-                    reasons.append(f"Stochastic now overbought ({current_stoch:.1f})")
-                    weakening_count += 1
-            else:  # SELL
-                if current_stoch < 20 and original_stoch > 50:  # Moved to oversold
-                    reasons.append(f"Stochastic now oversold ({current_stoch:.1f})")
-                    weakening_count += 1
         
         # Determine overall status
         if breaking_count >= 2:

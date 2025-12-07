@@ -83,12 +83,20 @@ class ForexTelegramBot:
                 atr_value=atr
             )
             
-            # Store original indicator values for re-validation
-            adx = signal_data.get('adx_value')
-            stoch_k = signal_data.get('stoch_k_value')
-            if signal_id and adx is not None:
-                update_signal_original_indicators(signal_id, rsi, macd, adx, stoch_k)
-                print(f"✅ Stored original indicators for signal #{signal_id}")
+            # Store original indicator values for re-validation using config-driven approach
+            indicators_dict = {
+                'rsi': rsi,
+                'macd': macd,
+                'adx': signal_data.get('adx_value'),
+                'stochastic': signal_data.get('stoch_k_value'),
+                'atr': atr
+            }
+            # Remove None values
+            indicators_dict = {k: v for k, v in indicators_dict.items() if v is not None}
+            
+            if signal_id and indicators_dict:
+                update_signal_original_indicators(signal_id, indicators_dict=indicators_dict)
+                print(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
             
             print(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id

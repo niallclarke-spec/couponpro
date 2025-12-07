@@ -425,6 +425,18 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN timeout_notified BOOLEAN DEFAULT FALSE")
                     print("[MIGRATION] ✅ timeout_notified column added")
                 
+                # Migration: Add JSONB column for dynamic indicator storage
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name = 'original_indicators_json'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding original_indicators_json column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_indicators_json JSONB")
+                    print("[MIGRATION] ✅ original_indicators_json column added")
+                else:
+                    print("[MIGRATION] original_indicators_json column already exists, skipping")
+                
                 # Create index on bot_type for filtering by bot type
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_forex_signals_bot_type 
@@ -1797,7 +1809,7 @@ def get_forex_signals(status=None, limit=100):
                            last_progress_zone, last_caution_zone,
                            original_rsi, original_macd, original_adx, original_stoch_k,
                            last_revalidation_at, revalidation_count, thesis_status,
-                           thesis_changed_at, timeout_notified
+                           thesis_changed_at, timeout_notified, original_indicators_json
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1812,7 +1824,7 @@ def get_forex_signals(status=None, limit=100):
                            last_progress_zone, last_caution_zone,
                            original_rsi, original_macd, original_adx, original_stoch_k,
                            last_revalidation_at, revalidation_count, thesis_status,
-                           thesis_changed_at, timeout_notified
+                           thesis_changed_at, timeout_notified, original_indicators_json
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -1849,7 +1861,8 @@ def get_forex_signals(status=None, limit=100):
                     'revalidation_count': row[25] or 0,
                     'thesis_status': row[26] or 'intact',
                     'thesis_changed_at': row[27].isoformat() if row[27] else None,
-                    'timeout_notified': row[28] or False
+                    'timeout_notified': row[28] or False,
+                    'original_indicators_json': row[29] if row[29] else None
                 })
             return signals
     except Exception as e:
@@ -2600,20 +2613,26 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
         print(f"Error updating signal guidance: {e}")
         return False
 
-def update_signal_original_indicators(signal_id, rsi, macd, adx, stoch_k):
+def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):
     """
     Store original indicator values when signal is created for later re-validation.
     
+    Supports both legacy individual parameters and new dynamic indicators_dict.
+    The indicators_dict is the recommended approach for future-proof storage.
+    
     Args:
         signal_id (int): Signal ID
-        rsi (float): Original RSI value
-        macd (float): Original MACD value
-        adx (float): Original ADX value
-        stoch_k (float): Original Stochastic K value
+        rsi (float, optional): Original RSI value (legacy)
+        macd (float, optional): Original MACD value (legacy)
+        adx (float, optional): Original ADX value (legacy)
+        stoch_k (float, optional): Original Stochastic K value (legacy)
+        indicators_dict (dict, optional): Dictionary of all indicators {'rsi': 45.2, 'macd': 0.0012, ...}
     
     Returns:
         bool: True if successful
     """
+    import json
+    
     try:
         if not db_pool.connection_pool:
             return False
@@ -2621,14 +2640,38 @@ def update_signal_original_indicators(signal_id, rsi, macd, adx, stoch_k):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
+            # Build the full indicators dict from either source
+            all_indicators = {}
+            if indicators_dict:
+                all_indicators = indicators_dict.copy()
+            else:
+                # Build from individual params for backward compatibility
+                if rsi is not None:
+                    all_indicators['rsi'] = rsi
+                if macd is not None:
+                    all_indicators['macd'] = macd
+                if adx is not None:
+                    all_indicators['adx'] = adx
+                if stoch_k is not None:
+                    all_indicators['stochastic'] = stoch_k
+            
+            # Update both legacy columns and new JSON column
             cursor.execute("""
                 UPDATE forex_signals
                 SET original_rsi = %s,
                     original_macd = %s,
                     original_adx = %s,
-                    original_stoch_k = %s
+                    original_stoch_k = %s,
+                    original_indicators_json = %s
                 WHERE id = %s
-            """, (rsi, macd, adx, stoch_k, signal_id))
+            """, (
+                rsi or all_indicators.get('rsi'),
+                macd or all_indicators.get('macd'),
+                adx or all_indicators.get('adx'),
+                stoch_k or all_indicators.get('stochastic'),
+                json.dumps(all_indicators) if all_indicators else None,
+                signal_id
+            ))
             
             conn.commit()
             return cursor.rowcount > 0
