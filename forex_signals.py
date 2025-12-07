@@ -51,12 +51,14 @@ class ForexSignalEngine:
                 self.adx_threshold = config.get('adx_threshold', 15)
                 self.trading_start_hour = config.get('trading_start_hour', 8)
                 self.trading_end_hour = config.get('trading_end_hour', 22)
-                # Guardrail settings
-                self.daily_loss_cap_pips = config.get('daily_loss_cap_pips', 50.0)
-                self.back_to_back_throttle_minutes = config.get('back_to_back_throttle_minutes', 30)
-                self.session_filter_enabled = config.get('session_filter_enabled', True)
-                self.session_start_hour_utc = config.get('session_start_hour_utc', 8)
-                self.session_end_hour_utc = config.get('session_end_hour_utc', 21)
+                # Guardrail settings (convert from string to proper types)
+                self.daily_loss_cap_pips = float(config.get('daily_loss_cap_pips', 50.0))
+                self.back_to_back_throttle_minutes = int(config.get('back_to_back_throttle_minutes', 30))
+                session_filter = config.get('session_filter_enabled', 'true')
+                # Normalize case-insensitive: 'true', 'True', 'TRUE' all work
+                self.session_filter_enabled = str(session_filter).lower() == 'true' if isinstance(session_filter, str) else bool(session_filter)
+                self.session_start_hour_utc = int(config.get('session_start_hour_utc', 8))
+                self.session_end_hour_utc = int(config.get('session_end_hour_utc', 21))
                 print(f"[FOREX CONFIG] Loaded from database - RSI: {self.rsi_oversold}/{self.rsi_overbought}, ADX: {self.adx_threshold}, SL/TP: {self.atr_sl_multiplier}x/{self.atr_tp_multiplier}x")
                 print(f"[FOREX CONFIG] Guardrails - Loss cap: {self.daily_loss_cap_pips} pips, Throttle: {self.back_to_back_throttle_minutes}min, Session: {self.session_start_hour_utc}-{self.session_end_hour_utc} UTC (enabled={self.session_filter_enabled})")
             else:
@@ -110,9 +112,9 @@ class ForexSignalEngine:
             if not (self.session_start_hour_utc <= current_hour < self.session_end_hour_utc):
                 return False, f"Outside trading session ({self.session_start_hour_utc}:00-{self.session_end_hour_utc}:00 UTC)"
         
-        # 2. Check daily loss cap
+        # 2. Check daily loss cap (use <= to pause AT the threshold, not just past it)
         daily_pnl = get_daily_pnl()
-        if daily_pnl < -self.daily_loss_cap_pips:
+        if daily_pnl <= -self.daily_loss_cap_pips:
             return False, f"Daily loss cap reached ({daily_pnl:.1f} pips, cap: -{self.daily_loss_cap_pips})"
         
         # 3. Check back-to-back loss throttle
