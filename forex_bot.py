@@ -38,6 +38,15 @@ class ForexTelegramBot:
             return None
         
         try:
+            # CRITICAL: Double-check no pending signals exist right before posting
+            # This prevents race conditions where signals get created between scheduler check and post
+            pending_signals = get_forex_signals(status='pending')
+            if pending_signals and len(pending_signals) > 0:
+                existing = pending_signals[0]
+                print(f"❌ Cannot post new signal - signal #{existing['id']} is still pending")
+                print(f"   Entry: ${existing['entry_price']}, created at: {existing.get('posted_at')}")
+                return None
+            
             signal_type = signal_data['signal_type']
             pair = signal_data['pair']
             entry = signal_data['entry_price']

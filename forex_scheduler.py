@@ -200,40 +200,61 @@ class ForexScheduler:
                     if validation:
                         thesis_status = validation['status']
                         reasons = validation['reasons']
+                        previous_status = event.get('current_thesis_status', 'intact')
                         
-                        ai_message = generate_revalidation_message(
-                            signal_id=signal_id,
-                            signal_type=signal_type,
-                            thesis_status=thesis_status,
-                            reasons=reasons,
-                            minutes_elapsed=minutes_elapsed,
-                            current_price=current_price,
-                            entry_price=entry,
-                            tp_price=tp,
-                            sl_price=sl
-                        )
+                        # IMPORTANT: Only post if status has actually changed or worsened
+                        # Skip if already reported the same status
+                        should_post = False
+                        if thesis_status != previous_status:
+                            # Status changed - always post
+                            should_post = True
+                            print(f"[SCHEDULER] Thesis status changed: {previous_status} -> {thesis_status}")
+                        elif thesis_status == 'intact':
+                            # Back to healthy - no need to spam
+                            should_post = False
+                            print(f"[SCHEDULER] Signal #{signal_id} thesis still intact - no update needed")
+                        else:
+                            # Still weakening/broken - don't repeat the same message
+                            should_post = False
+                            print(f"[SCHEDULER] Signal #{signal_id} thesis still {thesis_status} - skipping duplicate message")
                         
-                        success = await forex_telegram_bot.post_revalidation_update(
-                            signal_id=signal_id,
-                            thesis_status=thesis_status,
-                            message=ai_message,
-                            current_price=current_price,
-                            entry_price=entry
-                        )
+                        # Always update the database timestamp (for tracking), but only post if status changed
+                        update_signal_revalidation(signal_id, thesis_status, f"Check: {thesis_status}")
                         
-                        if success:
-                            update_signal_revalidation(signal_id, thesis_status, f"Revalidation: {ai_message[:100]}")
-                            print(f"[SCHEDULER] ✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+                        if should_post:
+                            ai_message = generate_revalidation_message(
+                                signal_id=signal_id,
+                                signal_type=signal_type,
+                                thesis_status=thesis_status,
+                                reasons=reasons,
+                                minutes_elapsed=minutes_elapsed,
+                                current_price=current_price,
+                                entry_price=entry,
+                                tp_price=tp,
+                                sl_price=sl
+                            )
                             
-                            # If thesis is broken, recommend closing
-                            if thesis_status == 'broken':
-                                # Close the signal as expired with current P/L
-                                if signal_type == 'BUY':
-                                    pips = round(current_price - entry, 2)
-                                else:
-                                    pips = round(entry - current_price, 2)
-                                update_forex_signal_status(signal_id, 'expired', pips)
-                                print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
+                            success = await forex_telegram_bot.post_revalidation_update(
+                                signal_id=signal_id,
+                                thesis_status=thesis_status,
+                                message=ai_message,
+                                current_price=current_price,
+                                entry_price=entry
+                            )
+                            
+                            if success:
+                                update_signal_revalidation(signal_id, thesis_status, f"Revalidation: {ai_message[:100]}")
+                                print(f"[SCHEDULER] ✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+                                
+                                # If thesis is broken, recommend closing
+                                if thesis_status == 'broken':
+                                    # Close the signal as expired with current P/L
+                                    if signal_type == 'BUY':
+                                        pips = round(current_price - entry, 2)
+                                    else:
+                                        pips = round(entry - current_price, 2)
+                                    update_forex_signal_status(signal_id, 'expired', pips)
+                                    print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
                 
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in stagnant signal checks: {e}")
