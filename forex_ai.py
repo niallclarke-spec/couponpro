@@ -3,13 +3,120 @@ AI message generator for forex signals using OpenAI
 Creates motivational celebration messages and performance recaps
 """
 import os
+from datetime import datetime
 from openai import OpenAI
-from db import get_forex_signals_by_period, get_forex_stats_by_period
+from db import (
+    get_forex_signals_by_period, get_forex_stats_by_period,
+    get_recent_signal_streak, get_recent_phrases, add_recent_phrase
+)
 
 client = OpenAI(
     api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY'),
     base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL')
 )
+
+def get_trading_context():
+    """
+    Build context data for personalized AI prompts.
+    
+    Returns:
+        dict: Context with streak info, time of day, session info
+    """
+    now = datetime.utcnow()
+    hour = now.hour
+    
+    # Determine session
+    if 8 <= hour < 12:
+        session = "London session"
+    elif 12 <= hour < 17:
+        session = "London/NY overlap"
+    elif 17 <= hour < 21:
+        session = "NY session"
+    else:
+        session = "Asian session"
+    
+    # Get recent streak
+    streak = get_recent_signal_streak(limit=5)
+    
+    streak_context = ""
+    if streak['count'] >= 2:
+        if streak['type'] == 'win':
+            streak_context = f"Currently on a {streak['count']}-win streak. Stay humble but confident."
+        else:
+            streak_context = f"Coming off {streak['count']} losses. Keep messaging measured and professional, no hype."
+    
+    return {
+        'hour': hour,
+        'session': session,
+        'streak': streak,
+        'streak_context': streak_context,
+        'time_of_day': 'morning' if hour < 12 else 'afternoon' if hour < 18 else 'evening'
+    }
+
+def classify_guidance_type(indicator_deltas):
+    """
+    Classify guidance update based on what indicators have changed.
+    
+    Guidance types:
+    - momentum: RSI, MACD changes
+    - volatility: ATR, Bollinger Band changes  
+    - structure: Price level testing, EMA changes
+    - divergence: Indicator disagreement
+    - stagnant: No significant changes
+    
+    Args:
+        indicator_deltas: Dict of indicator name -> delta value
+    
+    Returns:
+        str: Classified guidance type
+    """
+    if not indicator_deltas:
+        return 'stagnant'
+    
+    # Check for significant moves in each category
+    rsi_delta = abs(indicator_deltas.get('rsi', 0))
+    macd_delta = abs(indicator_deltas.get('macd', 0))
+    atr_delta = abs(indicator_deltas.get('atr', 0))
+    adx_delta = abs(indicator_deltas.get('adx', 0))
+    stoch_delta = abs(indicator_deltas.get('stochastic', 0))
+    
+    # Momentum indicators moved significantly
+    if rsi_delta > 5 or macd_delta > 0.5:
+        return 'momentum'
+    
+    # Volatility change
+    if atr_delta > 1 or adx_delta > 5:
+        return 'volatility'
+    
+    # Check for divergence (indicators moving in opposite directions)
+    rsi_direction = indicator_deltas.get('rsi', 0)
+    macd_direction = indicator_deltas.get('macd', 0)
+    if (rsi_direction > 0 and macd_direction < 0) or (rsi_direction < 0 and macd_direction > 0):
+        return 'divergence'
+    
+    # Structure test (stochastic flip suggests level test)
+    if stoch_delta > 10:
+        return 'structure'
+    
+    return 'stagnant'
+
+def get_repetition_avoidance_instruction(phrase_type):
+    """
+    Get instruction for AI to avoid recently used phrases.
+    
+    Args:
+        phrase_type: Type of message being generated
+    
+    Returns:
+        str: Instruction for AI with phrases to avoid
+    """
+    recent = get_recent_phrases(phrase_type, limit=5)
+    
+    if not recent:
+        return ""
+    
+    phrases_to_avoid = ", ".join([f'"{p[:50]}..."' if len(p) > 50 else f'"{p}"' for p in recent[:3]])
+    return f"\n\nIMPORTANT: Avoid repeating these recently used phrases/patterns: {phrases_to_avoid}. Use different wording and structure."
 
 def generate_tp_celebration(signal_id, pips_profit, signal_type):
     """
@@ -24,12 +131,22 @@ def generate_tp_celebration(signal_id, pips_profit, signal_type):
         str: AI-generated celebration message
     """
     try:
+        # Get context for personalization
+        context = get_trading_context()
+        streak_context = context['streak_context']
+        session = context['session']
+        
+        # Get phrases to avoid
+        avoid_instruction = get_repetition_avoidance_instruction('celebration')
+        
         prompt = f"""Generate a professional, analytical message for a successful forex trade.
 
 The trade details:
 - Signal #{signal_id}
 - {signal_type} signal on XAU/USD (Gold)
 - Profit: +{pips_profit:.2f} pips
+- Trading during: {session}
+{f'- Context: {streak_context}' if streak_context else ''}
 
 Style: 1-2 sentences. Professional and data-focused. Reference the technical setup, price action, or strategy execution. No emojis. Sound like a professional analyst.
 
@@ -37,6 +154,7 @@ Examples of the tone we want:
 - "Signal #{signal_id} executed as planned - RSI divergence and MACD crossover delivered {pips_profit:.0f} pips on the {signal_type} setup."
 - "Technical indicators aligned perfectly on this {signal_type} entry, securing {pips_profit:.0f} pips before resistance tested the position."
 - "Price action confirmed our analysis - the {signal_type} signal captured {pips_profit:.0f} pips as predicted by the ATR volatility model."
+{avoid_instruction}
 
 Generate a unique analytical message now:"""
         
@@ -47,11 +165,17 @@ Generate a unique analytical message now:"""
                 {"role": "user", "content": prompt}
             ],
             max_tokens=100,
-            temperature=0.7
+            temperature=0.8
         )
         
         content = response.choices[0].message.content
-        return content.strip() if content else None
+        message = content.strip() if content else None
+        
+        # Save phrase for future repetition avoidance
+        if message:
+            add_recent_phrase('celebration', message)
+        
+        return message
         
     except Exception as e:
         print(f"❌ Error generating AI celebration: {e}")
@@ -174,9 +298,9 @@ Generate the analytical recap:"""
         print(f"❌ Error generating weekly recap: {e}")
         return None
 
-def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_type, current_price, entry_price, tp_price, sl_price):
+def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_type, current_price, entry_price, tp_price, sl_price, indicator_deltas=None, minutes_open=None):
     """
-    Generate AI guidance message for active signal updates.
+    Generate AI guidance message for active signal updates with context awareness.
     
     Args:
         signal_id: Database signal ID
@@ -187,13 +311,45 @@ def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_
         entry_price: Signal entry price
         tp_price: Take profit price
         sl_price: Stop loss price
+        indicator_deltas: Optional dict of indicator changes since entry
+        minutes_open: Optional minutes since signal opened
     
     Returns:
         str: AI-generated guidance message
     """
     try:
+        # Get trading context for personalization
+        context = get_trading_context()
+        streak_context = context['streak_context']
+        session = context['session']
+        
+        # Classify the type of guidance based on indicator changes
+        tiered_type = classify_guidance_type(indicator_deltas) if indicator_deltas else 'stagnant'
+        
+        # Get phrases to avoid
+        avoid_instruction = get_repetition_avoidance_instruction('guidance')
+        
         direction = "in profit" if progress_percent > 0 else "under pressure"
         abs_progress = abs(progress_percent)
+        
+        # Calculate trade duration context
+        duration_context = ""
+        if minutes_open:
+            if minutes_open < 30:
+                duration_context = "Trade is still young, early stage of development."
+            elif minutes_open < 90:
+                duration_context = "Trade has been open for over an hour, past initial volatility."
+            else:
+                duration_context = "Extended hold time, monitoring for thesis validity."
+        
+        # Tiered guidance context based on what indicators are doing
+        tiered_context = {
+            'momentum': "Focus on RSI/MACD momentum changes in your update.",
+            'volatility': "Note the volatility/ATR changes in market conditions.",
+            'structure': "Reference the price structure and level testing.",
+            'divergence': "Note the indicator divergence (conflicting signals).",
+            'stagnant': "Note the consolidation and low activity."
+        }
         
         context_map = {
             'progress': f"Signal is {abs_progress:.0f}% toward {'target' if progress_percent > 0 else 'stop loss'}. Provide a brief market update.",
@@ -211,10 +367,16 @@ Trade Details:
 - Take Profit: ${tp_price:.2f}
 - Stop Loss: ${sl_price:.2f}
 - Status: {direction}
+- Session: {session}
+{f'- Duration: {duration_context}' if duration_context else ''}
+{f'- Recent streak context: {streak_context}' if streak_context else ''}
+
+Update Focus: {tiered_context.get(tiered_type, '')}
 
 Context: {context_map.get(guidance_type, context_map['progress'])}
 
 Style: 2-3 sentences max. Professional and calm. Reference price levels and technical context. No excessive emojis (1-2 max at start). Sound like a professional analyst giving a brief update.
+{avoid_instruction}
 
 Generate the update:"""
 
@@ -225,11 +387,17 @@ Generate the update:"""
                 {"role": "user", "content": prompt}
             ],
             max_tokens=120,
-            temperature=0.7
+            temperature=0.8
         )
         
         content = response.choices[0].message.content
-        return content.strip() if content else get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price)
+        message = content.strip() if content else get_fallback_guidance(guidance_type, signal_type, progress_percent, entry_price)
+        
+        # Save phrase for future repetition avoidance
+        if message and content:
+            add_recent_phrase('guidance', message)
+        
+        return message
         
     except Exception as e:
         print(f"❌ Error generating signal guidance: {e}")

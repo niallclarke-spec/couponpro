@@ -6,7 +6,10 @@ import os
 import asyncio
 from datetime import datetime, timedelta
 from forex_api import twelve_data_client
-from db import create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config
+from db import (
+    create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config,
+    get_daily_pnl, get_last_completed_signal, add_signal_narrative
+)
 from indicator_config import (
     get_validation_indicators,
     get_indicator_config,
@@ -48,7 +51,14 @@ class ForexSignalEngine:
                 self.adx_threshold = config.get('adx_threshold', 15)
                 self.trading_start_hour = config.get('trading_start_hour', 8)
                 self.trading_end_hour = config.get('trading_end_hour', 22)
+                # Guardrail settings
+                self.daily_loss_cap_pips = config.get('daily_loss_cap_pips', 50.0)
+                self.back_to_back_throttle_minutes = config.get('back_to_back_throttle_minutes', 30)
+                self.session_filter_enabled = config.get('session_filter_enabled', True)
+                self.session_start_hour_utc = config.get('session_start_hour_utc', 8)
+                self.session_end_hour_utc = config.get('session_end_hour_utc', 21)
                 print(f"[FOREX CONFIG] Loaded from database - RSI: {self.rsi_oversold}/{self.rsi_overbought}, ADX: {self.adx_threshold}, SL/TP: {self.atr_sl_multiplier}x/{self.atr_tp_multiplier}x")
+                print(f"[FOREX CONFIG] Guardrails - Loss cap: {self.daily_loss_cap_pips} pips, Throttle: {self.back_to_back_throttle_minutes}min, Session: {self.session_start_hour_utc}-{self.session_end_hour_utc} UTC (enabled={self.session_filter_enabled})")
             else:
                 # Fallback to defaults
                 self.rsi_oversold = 40
@@ -58,6 +68,11 @@ class ForexSignalEngine:
                 self.adx_threshold = 15
                 self.trading_start_hour = 8
                 self.trading_end_hour = 22
+                self.daily_loss_cap_pips = 50.0
+                self.back_to_back_throttle_minutes = 30
+                self.session_filter_enabled = True
+                self.session_start_hour_utc = 8
+                self.session_end_hour_utc = 21
                 print("[FOREX CONFIG] Using default configuration")
         except Exception as e:
             # Fallback to defaults on error
@@ -68,12 +83,52 @@ class ForexSignalEngine:
             self.adx_threshold = 15
             self.trading_start_hour = 8
             self.trading_end_hour = 22
+            self.daily_loss_cap_pips = 50.0
+            self.back_to_back_throttle_minutes = 30
+            self.session_filter_enabled = True
+            self.session_start_hour_utc = 8
+            self.session_end_hour_utc = 21
             print(f"[FOREX CONFIG] Error loading config, using defaults: {e}")
     
     def reload_config(self):
         """Reload configuration from database"""
         print("[FOREX CONFIG] Reloading configuration...")
         self.load_config()
+    
+    def check_guardrails(self):
+        """
+        Check all guardrails before generating a new signal.
+        
+        Returns:
+            tuple: (can_generate: bool, reason: str or None)
+        """
+        now = datetime.utcnow()
+        
+        # 1. Check session window (3 AM - 4 PM EST = 8 AM - 9 PM UTC)
+        if self.session_filter_enabled:
+            current_hour = now.hour
+            if not (self.session_start_hour_utc <= current_hour < self.session_end_hour_utc):
+                return False, f"Outside trading session ({self.session_start_hour_utc}:00-{self.session_end_hour_utc}:00 UTC)"
+        
+        # 2. Check daily loss cap
+        daily_pnl = get_daily_pnl()
+        if daily_pnl < -self.daily_loss_cap_pips:
+            return False, f"Daily loss cap reached ({daily_pnl:.1f} pips, cap: -{self.daily_loss_cap_pips})"
+        
+        # 3. Check back-to-back loss throttle
+        last_signal = get_last_completed_signal()
+        if last_signal and last_signal['status'] == 'lost':
+            closed_at = last_signal['closed_at']
+            if closed_at:
+                # Handle both datetime and string
+                if isinstance(closed_at, str):
+                    closed_at = datetime.fromisoformat(closed_at.replace('Z', '+00:00').replace('+00:00', ''))
+                minutes_since_loss = (now - closed_at).total_seconds() / 60
+                if minutes_since_loss < self.back_to_back_throttle_minutes:
+                    remaining = int(self.back_to_back_throttle_minutes - minutes_since_loss)
+                    return False, f"Loss throttle active ({remaining}min remaining after previous loss)"
+        
+        return True, None
         
     def calculate_tp_sl(self, entry_price, atr_value, signal_type):
         """
@@ -111,6 +166,12 @@ class ForexSignalEngine:
         """
         try:
             print(f"\n[FOREX SIGNALS] Checking for signals on {self.symbol} {timeframe}...")
+            
+            # Check guardrails before fetching indicators (save API calls)
+            can_generate, guardrail_reason = self.check_guardrails()
+            if not can_generate:
+                print(f"[FOREX SIGNALS] ⏸️ Guardrail blocked: {guardrail_reason}")
+                return None
             
             # Fetch all indicators (no rate limiting needed with unlimited API plan)
             price = twelve_data_client.get_price(self.symbol)

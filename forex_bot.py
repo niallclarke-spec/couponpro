@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
-from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators
+from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative
 
 class ForexTelegramBot:
     def __init__(self):
@@ -110,6 +110,16 @@ class ForexTelegramBot:
             if signal_id and indicators_dict:
                 update_signal_original_indicators(signal_id, indicators_dict=indicators_dict)
                 print(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
+                
+                # Record entry narrative event
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='entry',
+                    current_price=entry,
+                    progress_percent=0,
+                    indicators=indicators_dict,
+                    notes=f"{signal_type} signal entry at ${entry:.2f}"
+                )
             
             print(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id
@@ -144,6 +154,14 @@ class ForexTelegramBot:
                 parse_mode='HTML'
             )
             
+            # Record TP hit narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='tp_hit',
+                progress_percent=100,
+                notes=f"Take profit hit: +{pips_profit:.2f} pips"
+            )
+            
             print(f"✅ Posted TP celebration for signal #{signal_id}")
             
         except Exception as e:
@@ -172,6 +190,14 @@ Risk was managed. Onwards to the next opportunity."""
                 chat_id=self.channel_id,
                 text=message,
                 parse_mode='HTML'
+            )
+            
+            # Record SL hit narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='sl_hit',
+                progress_percent=-100,
+                notes=f"Stop loss hit: {pips_loss:.2f} pips"
             )
             
             print(f"✅ Posted SL notification for signal #{signal_id}")
@@ -253,6 +279,24 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
+            # Calculate progress toward TP for narrative
+            progress = signal_data.get('progress_percent', 0)
+            current_indicators = signal_data.get('current_indicators', {})
+            indicator_deltas = signal_data.get('indicator_deltas', {})
+            
+            # Record guidance narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='guidance_sent',
+                current_price=current,
+                progress_percent=progress,
+                indicators=current_indicators if current_indicators else None,
+                indicator_deltas=indicator_deltas if indicator_deltas else None,
+                guidance_type=guidance_type,
+                message_sent=message[:500] if message else None,
+                notes=f"{guidance_type.title()} guidance at {progress:.1f}% progress"
+            )
+            
             print(f"✅ Posted {guidance_type} guidance for signal #{signal_id}")
             return True
             
@@ -296,6 +340,16 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
+            # Record thesis check narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='thesis_check',
+                current_price=current_price,
+                guidance_type=thesis_status,
+                message_sent=message[:500] if message else None,
+                notes=f"Thesis re-validation: {thesis_status}"
+            )
+            
             print(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
             return True
             
@@ -328,6 +382,15 @@ Signal closed after maximum hold time."""
                 chat_id=self.channel_id,
                 text=full_message,
                 parse_mode='HTML'
+            )
+            
+            # Record close advisory narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='close_advisory',
+                current_price=current_price,
+                message_sent=message[:500] if message else None,
+                notes="Signal closed due to timeout"
             )
             
             print(f"✅ Posted timeout notification for signal #{signal_id}")

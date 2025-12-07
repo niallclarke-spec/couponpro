@@ -479,6 +479,50 @@ class DatabasePool:
                     ON forex_config(setting_key)
                 """)
                 
+                # Create signal_narrative table for tracking indicator changes throughout trade lifecycle
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS signal_narrative (
+                        id SERIAL PRIMARY KEY,
+                        signal_id INTEGER REFERENCES forex_signals(id) ON DELETE CASCADE,
+                        event_type VARCHAR(50) NOT NULL,
+                        event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        current_price DECIMAL(10, 2),
+                        progress_percent DECIMAL(5, 2),
+                        indicators JSONB,
+                        indicator_deltas JSONB,
+                        guidance_type VARCHAR(50),
+                        message_sent TEXT,
+                        notes TEXT
+                    )
+                """)
+                
+                # Create indexes on signal_narrative
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_signal_narrative_signal_id 
+                    ON signal_narrative(signal_id)
+                """)
+                
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_signal_narrative_event_type 
+                    ON signal_narrative(event_type)
+                """)
+                
+                # Create recent_phrases table for AI repetition avoidance
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS recent_phrases (
+                        id SERIAL PRIMARY KEY,
+                        phrase_type VARCHAR(50) NOT NULL,
+                        phrase_text TEXT NOT NULL,
+                        used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Create index on recent_phrases
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_recent_phrases_type_time 
+                    ON recent_phrases(phrase_type, used_at DESC)
+                """)
+                
                 # Create telegram_subscriptions table for EntryLab integration
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS telegram_subscriptions (
@@ -2137,6 +2181,123 @@ def get_forex_stats_by_period(period='today'):
         print(f"Error getting forex stats by period: {e}")
         return None
 
+def get_daily_pnl():
+    """
+    Get today's profit/loss in pips for daily loss cap checking.
+    
+    Returns:
+        float: Total pips for today (negative = loss)
+    """
+    try:
+        if not db_pool.connection_pool:
+            return 0.0
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT COALESCE(SUM(result_pips), 0) as daily_pips
+                FROM forex_signals
+                WHERE posted_at >= CURRENT_DATE
+                AND status IN ('won', 'lost')
+            """)
+            
+            row = cursor.fetchone()
+            return float(row[0]) if row and row[0] else 0.0
+    except Exception as e:
+        print(f"Error getting daily P/L: {e}")
+        return 0.0
+
+def get_last_completed_signal():
+    """
+    Get the most recently closed signal for back-to-back throttle checking.
+    
+    Returns:
+        dict: Last completed signal with status and closed_at, or None
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, status, closed_at, result_pips
+                FROM forex_signals
+                WHERE status IN ('won', 'lost')
+                AND closed_at IS NOT NULL
+                ORDER BY closed_at DESC
+                LIMIT 1
+            """)
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'id': row[0],
+                    'status': row[1],
+                    'closed_at': row[2],
+                    'result_pips': float(row[3]) if row[3] else 0.0
+                }
+            return None
+    except Exception as e:
+        print(f"Error getting last completed signal: {e}")
+        return None
+
+def get_recent_signal_streak(limit=5):
+    """
+    Get the recent win/loss streak for context-aware AI prompts.
+    
+    Args:
+        limit: Number of recent signals to check
+    
+    Returns:
+        dict: Streak info with type ('win', 'loss', 'mixed'), count, and recent signals
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'type': 'mixed', 'count': 0, 'signals': []}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, status, result_pips, closed_at
+                FROM forex_signals
+                WHERE status IN ('won', 'lost')
+                ORDER BY closed_at DESC
+                LIMIT %s
+            """, (limit,))
+            
+            signals = []
+            for row in cursor.fetchall():
+                signals.append({
+                    'id': row[0],
+                    'status': row[1],
+                    'result_pips': float(row[2]) if row[2] else 0.0,
+                    'closed_at': row[3]
+                })
+            
+            if not signals:
+                return {'type': 'mixed', 'count': 0, 'signals': []}
+            
+            first_status = signals[0]['status']
+            streak_count = 0
+            for s in signals:
+                if s['status'] == first_status:
+                    streak_count += 1
+                else:
+                    break
+            
+            return {
+                'type': 'win' if first_status == 'won' else 'loss',
+                'count': streak_count,
+                'signals': signals
+            }
+    except Exception as e:
+        print(f"Error getting recent streak: {e}")
+        return {'type': 'mixed', 'count': 0, 'signals': []}
+
 # Forex configuration operations
 def initialize_default_forex_config():
     """
@@ -2154,7 +2315,12 @@ def initialize_default_forex_config():
             'atr_sl_multiplier': '2.0',
             'atr_tp_multiplier': '4.0',
             'trading_start_hour': '8',
-            'trading_end_hour': '22'
+            'trading_end_hour': '22',
+            'daily_loss_cap_pips': '50.0',
+            'back_to_back_throttle_minutes': '30',
+            'session_filter_enabled': 'true',
+            'session_start_hour_utc': '8',
+            'session_end_hour_utc': '21'
         }
         
         with db_pool.get_connection() as conn:
@@ -2744,6 +2910,216 @@ def update_signal_timeout_notified(signal_id):
             return cursor.rowcount > 0
     except Exception as e:
         print(f"Error updating signal timeout notified: {e}")
+        return False
+
+# ===== Signal Narrative Functions =====
+
+def add_signal_narrative(signal_id, event_type, current_price=None, progress_percent=None, 
+                         indicators=None, indicator_deltas=None, guidance_type=None, 
+                         message_sent=None, notes=None):
+    """
+    Add a narrative event to track indicator changes throughout trade lifecycle.
+    
+    Event types: 'entry', 'progress_update', 'breakeven', 'thesis_check', 
+                 'guidance_sent', 'close_advisory', 'tp_hit', 'sl_hit'
+    
+    Guidance types: 'momentum', 'volatility', 'structure', 'divergence', 'stagnant'
+    """
+    import json
+    
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO signal_narrative 
+                (signal_id, event_type, current_price, progress_percent, indicators, 
+                 indicator_deltas, guidance_type, message_sent, notes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                signal_id, 
+                event_type,
+                current_price,
+                progress_percent,
+                json.dumps(indicators) if indicators else None,
+                json.dumps(indicator_deltas) if indicator_deltas else None,
+                guidance_type,
+                message_sent,
+                notes
+            ))
+            
+            narrative_id = cursor.fetchone()[0]
+            conn.commit()
+            return narrative_id
+    except Exception as e:
+        print(f"Error adding signal narrative: {e}")
+        return None
+
+def get_signal_narrative(signal_id):
+    """
+    Get all narrative events for a signal in chronological order.
+    
+    Returns:
+        list: List of narrative events with timestamps and indicator changes
+    """
+    import json
+    
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, event_type, event_time, current_price, progress_percent,
+                       indicators, indicator_deltas, guidance_type, message_sent, notes
+                FROM signal_narrative
+                WHERE signal_id = %s
+                ORDER BY event_time ASC
+            """, (signal_id,))
+            
+            events = []
+            for row in cursor.fetchall():
+                events.append({
+                    'id': row[0],
+                    'event_type': row[1],
+                    'event_time': row[2],
+                    'current_price': float(row[3]) if row[3] else None,
+                    'progress_percent': float(row[4]) if row[4] else None,
+                    'indicators': json.loads(row[5]) if row[5] else None,
+                    'indicator_deltas': json.loads(row[6]) if row[6] else None,
+                    'guidance_type': row[7],
+                    'message_sent': row[8],
+                    'notes': row[9]
+                })
+            return events
+    except Exception as e:
+        print(f"Error getting signal narrative: {e}")
+        return []
+
+def get_latest_indicators_for_signal(signal_id):
+    """
+    Get the most recent indicator snapshot for a signal.
+    
+    Returns:
+        dict: Latest indicators and their values, or None
+    """
+    import json
+    
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT indicators, indicator_deltas, event_time
+                FROM signal_narrative
+                WHERE signal_id = %s AND indicators IS NOT NULL
+                ORDER BY event_time DESC
+                LIMIT 1
+            """, (signal_id,))
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'indicators': json.loads(row[0]) if row[0] else None,
+                    'indicator_deltas': json.loads(row[1]) if row[1] else None,
+                    'captured_at': row[2]
+                }
+            return None
+    except Exception as e:
+        print(f"Error getting latest indicators: {e}")
+        return None
+
+# ===== Recent Phrases Functions (Repetition Avoidance) =====
+
+def add_recent_phrase(phrase_type, phrase_text):
+    """
+    Record a phrase that was used in a message for repetition avoidance.
+    
+    Args:
+        phrase_type: Type of phrase ('greeting', 'closing', 'update', 'celebration', etc.)
+        phrase_text: The actual phrase used
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO recent_phrases (phrase_type, phrase_text, used_at)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+            """, (phrase_type, phrase_text))
+            
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"Error adding recent phrase: {e}")
+        return False
+
+def get_recent_phrases(phrase_type, limit=10):
+    """
+    Get recently used phrases of a specific type to avoid repetition.
+    
+    Args:
+        phrase_type: Type of phrase to retrieve
+        limit: Number of recent phrases to return (default 10)
+    
+    Returns:
+        list: List of recently used phrases
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT phrase_text, used_at
+                FROM recent_phrases
+                WHERE phrase_type = %s
+                ORDER BY used_at DESC
+                LIMIT %s
+            """, (phrase_type, limit))
+            
+            return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"Error getting recent phrases: {e}")
+        return []
+
+def cleanup_old_phrases(days_to_keep=7):
+    """
+    Remove phrases older than specified days to prevent unbounded growth.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM recent_phrases
+                WHERE used_at < CURRENT_TIMESTAMP - INTERVAL '%s days'
+            """, (days_to_keep,))
+            
+            deleted_count = cursor.rowcount
+            conn.commit()
+            if deleted_count > 0:
+                print(f"[DB] Cleaned up {deleted_count} old phrases")
+            return True
+    except Exception as e:
+        print(f"Error cleaning up old phrases: {e}")
         return False
 
 # ===== Telegram Subscriptions Functions =====

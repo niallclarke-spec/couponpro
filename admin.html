@@ -3008,6 +3008,67 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="card" style="grid-column: 1 / -1;">
+                            <h2 class="card-title">Signal Guardrails</h2>
+                            <p class="card-description">Configure risk management and session controls</p>
+                            
+                            <div id="guardrailError" class="alert alert-error" style="display: none;"></div>
+                            <div id="guardrailSuccess" class="alert alert-success" style="display: none;"></div>
+                            
+                            <div class="settings-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 15px;">
+                                <div class="form-group">
+                                    <label for="dailyLossCap">Daily Loss Cap (pips)</label>
+                                    <input type="number" id="dailyLossCap" value="50" min="10" max="200" step="5" class="form-control">
+                                    <small style="color: #a0aec0;">Stop generating signals after losing this many pips in a day</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="backToBackThrottle">Loss Throttle (minutes)</label>
+                                    <input type="number" id="backToBackThrottle" value="30" min="5" max="120" step="5" class="form-control">
+                                    <small style="color: #a0aec0;">Wait time after a losing signal before generating new ones</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="sessionFilterEnabled">Session Window</label>
+                                    <select id="sessionFilterEnabled" class="form-control">
+                                        <option value="true">Enabled (London/NY hours only)</option>
+                                        <option value="false">Disabled (24/5 trading)</option>
+                                    </select>
+                                    <small style="color: #a0aec0;">Trade only during high-liquidity sessions</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="sessionHours">Session Hours (UTC)</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="number" id="sessionStartHour" value="8" min="0" max="23" class="form-control" style="width: 80px;">
+                                        <span style="color: #a0aec0;">to</span>
+                                        <input type="number" id="sessionEndHour" value="21" min="0" max="23" class="form-control" style="width: 80px;">
+                                    </div>
+                                    <small style="color: #a0aec0;">Default: 8-21 UTC (London Open to NY Close)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="status-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <h4 style="color: #e2e8f0; margin-bottom: 10px;">Today's Status</h4>
+                                <div class="status-row">
+                                    <span class="status-label">Daily P/L:</span>
+                                    <span class="status-value" id="dailyPnlDisplay">Loading...</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Current Session:</span>
+                                    <span class="status-value" id="currentSessionDisplay">--</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Last Signal:</span>
+                                    <span class="status-value" id="lastSignalDisplay">--</span>
+                                </div>
+                            </div>
+                            
+                            <button id="saveGuardrailsBtn" class="btn-primary" onclick="saveGuardrails()" style="margin-top: 20px;">
+                                Save Guardrail Settings
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
