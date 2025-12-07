@@ -39,10 +39,10 @@ class SignalBotScheduler:
         self.last_weekly_recap = None
         
         self.bot = None
-        self.channel_id = os.environ.get('FOREX_CHANNEL_ID')
         
-        # Use appropriate bot token based on environment (test in dev, real in prod)
-        from forex_bot import get_forex_bot_token
+        # Use appropriate bot token and channel based on environment (test in dev, real in prod)
+        from forex_bot import get_forex_bot_token, get_forex_channel_id
+        self.channel_id = get_forex_channel_id()
         token = get_forex_bot_token()
         if token:
             self.bot = Bot(token=token)

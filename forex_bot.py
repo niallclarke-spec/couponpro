@@ -30,10 +30,28 @@ def get_forex_bot_token():
     # Prod: Use real bot
     return os.environ.get('FOREX_BOT_TOKEN')
 
+def get_forex_channel_id():
+    """
+    Get the appropriate channel ID based on environment.
+    - Dev (Replit): Uses test channel
+    - Prod: Uses real forex channel
+    """
+    # Check if running in Replit (dev environment)
+    is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
+    
+    if is_replit:
+        # Dev: Use test channel
+        test_channel = "-1003343226469"  # EntryLab test channel
+        print(f"[FOREX BOT] 🧪 Using test channel (dev mode)")
+        return test_channel
+    
+    # Prod: Use real channel
+    return os.environ.get('FOREX_CHANNEL_ID')
+
 class ForexTelegramBot:
     def __init__(self):
         self.token = get_forex_bot_token()
-        self.channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        self.channel_id = get_forex_channel_id()
         self.bot = None
         
         if self.token:
@@ -42,7 +60,7 @@ class ForexTelegramBot:
             print("⚠️  Forex bot token not set - forex bot will not work")
         
         if not self.channel_id:
-            print("⚠️  FOREX_CHANNEL_ID not set - forex bot will not work")
+            print("⚠️  Forex channel ID not set - forex bot will not work")
     
     async def post_signal(self, signal_data):
         """
