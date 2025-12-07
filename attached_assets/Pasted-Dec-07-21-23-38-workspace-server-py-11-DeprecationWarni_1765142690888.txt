@@ -1,0 +1,130 @@
+Dec 07 21:23:38  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Dec 07 21:23:11  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Dec 07 21:23:11    import cgi
+Dec 07 21:23:13  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 07 21:23:13  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 07 21:23:13  [MIGRATION] error_type column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 07 21:23:13  [MIGRATION] device_type column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 07 21:23:13  [MIGRATION] username column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] first_name column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] last_name column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 07 21:23:13  [MIGRATION] bot_type column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] breakeven_set column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] breakeven_price column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] guidance_count column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] indicators_used column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] notes column already exists, skipping
+Dec 07 21:23:38    import cgi
+Dec 07 21:23:40  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 07 21:23:40  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 07 21:23:40  [MIGRATION] error_type column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 07 21:23:40  [MIGRATION] device_type column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 07 21:23:40  [MIGRATION] username column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] first_name column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] last_name column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 07 21:23:40  [MIGRATION] bot_type column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] breakeven_set column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] breakeven_price column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] guidance_count column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] indicators_used column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] notes column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 07 21:23:40  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 07 21:23:13  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 07 21:23:13  [MIGRATION] Adding last_progress_zone column...
+Dec 07 21:23:13  [MIGRATION] ✅ last_progress_zone column added
+Dec 07 21:23:13  [MIGRATION] Adding last_caution_zone column...
+Dec 07 21:23:13  [MIGRATION] ✅ last_caution_zone column added
+Dec 07 21:23:13  [MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...
+Dec 07 21:23:13  [MIGRATION] No 'expired' signals found to update
+Dec 07 21:23:13  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 07 21:23:13  [MIGRATION] free_signup_at column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] is_converted column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] converted_at column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] conversion_days column already exists, skipping
+Dec 07 21:23:13  [MIGRATION] UTM columns already exist, skipping
+Dec 07 21:23:13  ✅ Database schema initialized
+Dec 07 21:23:13  ✅ Forex config initialized with defaults
+Dec 07 21:23:13  ✅ Bot config initialized with defaults
+Dec 07 21:23:13  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 07 21:23:13  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 07 21:23:14  [INFO] Forex scheduler not available: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+Dec 07 21:23:15  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 07 21:23:40  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 07 21:23:40  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...
+Dec 07 21:23:40  [MIGRATION] No 'expired' signals found to update
+Dec 07 21:23:40  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 07 21:23:40  [MIGRATION] free_signup_at column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] is_converted column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] converted_at column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] conversion_days column already exists, skipping
+Dec 07 21:23:40  [MIGRATION] UTM columns already exist, skipping
+Dec 07 21:23:40  ✅ Database schema initialized
+Dec 07 21:23:40  ✅ Forex config initialized with defaults
+Dec 07 21:23:40  ✅ Bot config initialized with defaults
+Dec 07 21:23:40  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 07 21:23:40  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 07 21:23:15  [INFO] Stripe client initialized
+Dec 07 21:23:15  [TELEGRAM] Initializing bot for webhook mode...
+Dec 07 21:23:15  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 07 21:23:15  [TELEGRAM] Webhook bot initialized and ready
+Dec 07 21:23:15  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:23:15  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:23:15  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 07 21:23:15  Server running at http://0.0.0.0:8080/
+Dec 07 21:23:15  Serving files from /workspace
+Dec 07 21:23:15  API endpoints:
+Dec 07 21:23:15    POST /api/validate-coupon
+Dec 07 21:23:15    POST /api/login
+Dec 07 21:23:15    POST /api/logout
+Dec 07 21:23:15    POST /api/upload-template (requires auth)
+Dec 07 21:23:15    POST /api/delete-template (requires auth)
+Dec 07 21:23:15    POST /api/regenerate-index
+Dec 07 21:23:15    POST /api/telegram-webhook
+Dec 07 21:23:15    POST /api/forex-telegram-webhook
+Dec 07 21:23:15    GET  /api/forex-signals (requires auth)
+Dec 07 21:23:15    GET  /api/forex-stats (requires auth)
+Dec 07 21:24:15  10.244.6.25 - - [07/Dec/2025 21:24:15] "GET / HTTP/1.1" 200 -
+Dec 07 21:24:15  10.244.5.120 - - [07/Dec/2025 21:24:15] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Dec 07 21:23:41  [INFO] Forex scheduler not available: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+Dec 07 21:23:41  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 07 21:23:41  [INFO] Stripe client initialized
+Dec 07 21:23:41  [TELEGRAM] Initializing bot for webhook mode...
+Dec 07 21:23:41  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 07 21:23:41  [TELEGRAM] Webhook bot initialized and ready
+Dec 07 21:23:41  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:23:41  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:23:41  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 07 21:23:41  Server running at http://0.0.0.0:8080/
+Dec 07 21:23:41  Serving files from /workspace
+Dec 07 21:23:41  API endpoints:
+Dec 07 21:23:41    POST /api/validate-coupon
+Dec 07 21:23:41    POST /api/login
+Dec 07 21:23:41    POST /api/logout
+Dec 07 21:23:41    POST /api/upload-template (requires auth)
+Dec 07 21:23:41    POST /api/delete-template (requires auth)
+Dec 07 21:23:41    POST /api/regenerate-index
+Dec 07 21:23:41    POST /api/telegram-webhook
+Dec 07 21:23:41    POST /api/forex-telegram-webhook
+Dec 07 21:23:41    GET  /api/forex-signals (requires auth)
+Dec 07 21:23:41    GET  /api/forex-stats (requires auth)
+Dec 07 21:24:15  [AUTH] Session token found, valid: True
+Dec 07 21:24:15  10.244.4.179 - - [07/Dec/2025 21:24:15] "GET /api/check-auth HTTP/1.1" 200 -
+Dec 07 21:24:15  [AUTH] Session token found, valid: True
+Dec 07 21:24:15  10.244.6.25 - - [07/Dec/2025 21:24:15] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 07 21:24:15  [AUTH] Session token found, valid: True
+Dec 07 21:24:15  10.244.4.179 - - [07/Dec/2025 21:24:15] "GET /api/signal-bot/status HTTP/1.1" 200 -
