@@ -3,7 +3,7 @@ Forex signal generation engine
 Combines RSI + MACD + ATR for XAU/USD trading signals
 """
 import os
-import time
+import asyncio
 from datetime import datetime, timedelta
 from forex_api import twelve_data_client
 from db import create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config
@@ -13,7 +13,17 @@ from indicator_config import (
     validate_indicator_thesis,
     get_indicator_display
 )
-import asyncio
+
+# Timing constants (in minutes)
+FIRST_REVALIDATION_MINUTES = 90   # First indicator recheck at 90 min
+REVALIDATION_INTERVAL_MINUTES = 30  # Subsequent rechecks every 30 min  
+HARD_TIMEOUT_MINUTES = 180        # 3-hour hard timeout
+
+# Guidance zone thresholds (percentage toward TP)
+PROGRESS_ZONE_THRESHOLD = 30      # 30% toward TP - progress update
+BREAKEVEN_ZONE_THRESHOLD = 60     # 60% toward TP - breakeven advisory
+DECISION_ZONE_THRESHOLD = 85      # 85% toward TP - final push update
+GUIDANCE_COOLDOWN_MINUTES = 10    # Minimum time between guidance messages
 
 class ForexSignalEngine:
     def __init__(self):
@@ -21,10 +31,10 @@ class ForexSignalEngine:
         # Load config from database
         self.load_config()
         
-        # Stagnant trade re-validation settings (configurable)
-        self.revalidation_first_check_minutes = 90  # First indicator recheck at 90 min
-        self.revalidation_interval_minutes = 30     # Subsequent rechecks every 30 min
-        self.hard_timeout_minutes = 180             # 3-hour hard timeout
+        # Stagnant trade re-validation settings (from constants)
+        self.revalidation_first_check_minutes = FIRST_REVALIDATION_MINUTES
+        self.revalidation_interval_minutes = REVALIDATION_INTERVAL_MINUTES
+        self.hard_timeout_minutes = HARD_TIMEOUT_MINUTES
     
     def load_config(self):
         """Load configuration from database or use defaults"""
@@ -366,10 +376,6 @@ class ForexSignalEngine:
             guidance_events = []
             now = datetime.utcnow()
             
-            COOLDOWN_MINUTES = 10
-            PROGRESS_ZONES = [30, 60, 85]
-            CAUTION_ZONES = [30, 60]
-            
             for signal in active_signals:
                 signal_id = signal['id']
                 signal_type = signal['signal_type']
@@ -385,7 +391,7 @@ class ForexSignalEngine:
                     if isinstance(last_guidance_at, str):
                         last_guidance_at = datetime.fromisoformat(last_guidance_at.replace('Z', '+00:00'))
                     minutes_since_guidance = (now - last_guidance_at).total_seconds() / 60
-                    if minutes_since_guidance < COOLDOWN_MINUTES:
+                    if minutes_since_guidance < GUIDANCE_COOLDOWN_MINUTES:
                         continue
                 
                 if signal_type == 'BUY':
@@ -425,25 +431,25 @@ class ForexSignalEngine:
                 zone_value = None
                 
                 if progress_toward == 'tp':
-                    if progress >= 60 and not breakeven_set:
+                    if progress >= BREAKEVEN_ZONE_THRESHOLD and not breakeven_set:
                         guidance_type = 'breakeven'
-                        zone_value = 60
-                    elif progress >= 85 and last_progress_zone < 85:
+                        zone_value = BREAKEVEN_ZONE_THRESHOLD
+                    elif progress >= DECISION_ZONE_THRESHOLD and last_progress_zone < DECISION_ZONE_THRESHOLD:
                         guidance_type = 'progress'
-                        zone_value = 85
-                    elif progress >= 60 and last_progress_zone < 60:
+                        zone_value = DECISION_ZONE_THRESHOLD
+                    elif progress >= BREAKEVEN_ZONE_THRESHOLD and last_progress_zone < BREAKEVEN_ZONE_THRESHOLD:
                         guidance_type = 'progress'
-                        zone_value = 60
-                    elif progress >= 30 and last_progress_zone < 30:
+                        zone_value = BREAKEVEN_ZONE_THRESHOLD
+                    elif progress >= PROGRESS_ZONE_THRESHOLD and last_progress_zone < PROGRESS_ZONE_THRESHOLD:
                         guidance_type = 'progress'
-                        zone_value = 30
+                        zone_value = PROGRESS_ZONE_THRESHOLD
                 else:
-                    if progress >= 60 and last_caution_zone < 60:
+                    if progress >= BREAKEVEN_ZONE_THRESHOLD and last_caution_zone < BREAKEVEN_ZONE_THRESHOLD:
                         guidance_type = 'decision'
-                        zone_value = 60
-                    elif progress >= 30 and last_caution_zone < 30:
+                        zone_value = BREAKEVEN_ZONE_THRESHOLD
+                    elif progress >= PROGRESS_ZONE_THRESHOLD and last_caution_zone < PROGRESS_ZONE_THRESHOLD:
                         guidance_type = 'caution'
-                        zone_value = 30
+                        zone_value = PROGRESS_ZONE_THRESHOLD
                 
                 if guidance_type:
                     progress_percent = progress if progress_toward == 'tp' else -progress
@@ -612,8 +618,8 @@ class ForexSignalEngine:
                     print(f"[REVALIDATION] Signal #{signal_id}: Hard timeout after {minutes_elapsed:.0f} minutes")
                     continue
                 
-                # Only check stagnant trades (not yet hit 30% in either direction)
-                if last_progress_zone >= 30 or last_caution_zone >= 30:
+                # Only check stagnant trades (not yet hit progress threshold in either direction)
+                if last_progress_zone >= PROGRESS_ZONE_THRESHOLD or last_caution_zone >= PROGRESS_ZONE_THRESHOLD:
                     continue
                 
                 # Check if first revalidation is due (90 minutes)
@@ -683,8 +689,7 @@ class ForexSignalEngine:
                 'rsi': rsi,
                 'macd': macd_data['macd'],
                 'adx': adx,
-                'stochastic': stoch['k'],
-                'stoch_k': stoch['k']  # Alias for backward compatibility
+                'stochastic': stoch['k']
             }
             
             # Validate thesis

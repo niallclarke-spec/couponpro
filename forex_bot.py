@@ -355,7 +355,7 @@ Signal closed after maximum hold time."""
             if not signals_today or len(signals_today) == 0:
                 message = "📊 <b>Daily Recap</b>\n\nNo signals posted today."
             else:
-                stats = get_forex_stats_by_period(period='today')
+                stats = get_forex_stats_by_period(period='today') or {}
                 total_pips = stats.get('total_pips', 0)
                 
                 # Build signal list
@@ -414,7 +414,7 @@ Signal closed after maximum hold time."""
             if not signals_week or len(signals_week) == 0:
                 message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
             else:
-                stats = get_forex_stats_by_period(period='week')
+                stats = get_forex_stats_by_period(period='week') or {}
                 total_pips = stats.get('total_pips', 0)
                 
                 # Group signals by day

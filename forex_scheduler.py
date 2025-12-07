@@ -12,10 +12,16 @@ from forex_ai import generate_tp_celebration, generate_daily_recap, generate_wee
 from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified
 from forex_api import twelve_data_client
 
+# Scheduler timing constants (in seconds)
+SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
+MONITOR_INTERVAL = 300           # 5 minutes - monitor active signals for TP/SL
+GUIDANCE_INTERVAL = 300          # 5 minutes - check for guidance updates
+STAGNANT_CHECK_INTERVAL = 300    # 5 minutes - check stagnant signals for revalidation
+
 class ForexScheduler:
     def __init__(self):
-        self.signal_check_interval = 900
-        self.monitor_interval = 300
+        self.signal_check_interval = SIGNAL_CHECK_INTERVAL
+        self.monitor_interval = MONITOR_INTERVAL
         self.last_daily_recap = None
         self.last_weekly_recap = None
     
