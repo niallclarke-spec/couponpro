@@ -1735,7 +1735,9 @@ def get_forex_signals(status=None, limit=100):
                 cursor.execute("""
                     SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
                            stop_loss, status, rsi_value, macd_value, atr_value, 
-                           posted_at, closed_at, result_pips, bot_type
+                           posted_at, closed_at, result_pips, bot_type,
+                           breakeven_set, guidance_count, last_guidance_at,
+                           last_progress_zone, last_caution_zone
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1745,7 +1747,9 @@ def get_forex_signals(status=None, limit=100):
                 cursor.execute("""
                     SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
                            stop_loss, status, rsi_value, macd_value, atr_value, 
-                           posted_at, closed_at, result_pips, bot_type
+                           posted_at, closed_at, result_pips, bot_type,
+                           breakeven_set, guidance_count, last_guidance_at,
+                           last_progress_zone, last_caution_zone
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -1768,7 +1772,12 @@ def get_forex_signals(status=None, limit=100):
                     'posted_at': row[11].isoformat() if row[11] else None,
                     'closed_at': row[12].isoformat() if row[12] else None,
                     'result_pips': float(row[13]) if row[13] else None,
-                    'bot_type': row[14] if row[14] else 'custom'
+                    'bot_type': row[14] if row[14] else 'custom',
+                    'breakeven_set': row[15] or False,
+                    'guidance_count': row[16] or 0,
+                    'last_guidance_at': row[17].isoformat() if row[17] else None,
+                    'last_progress_zone': row[18] or 0,
+                    'last_caution_zone': row[19] or 0
                 })
             return signals
     except Exception as e:
@@ -2465,14 +2474,16 @@ def update_signal_breakeven(signal_id, breakeven_price):
         print(f"Error updating signal breakeven: {e}")
         return False
 
-def update_signal_guidance(signal_id, notes):
+def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None):
     """
-    Update guidance information for a signal.
-    Increments guidance_count and updates last_guidance_at and notes.
+    Update guidance information for a signal with zone tracking.
+    Increments guidance_count and updates last_guidance_at, notes, and zone levels.
     
     Args:
         signal_id (int): Signal ID
         notes (str): AI guidance notes/reasons
+        progress_zone (int, optional): Progress zone reached (30, 60, 85)
+        caution_zone (int, optional): Caution zone reached (30, 60)
     
     Returns:
         bool: True if successful
@@ -2484,13 +2495,32 @@ def update_signal_guidance(signal_id, notes):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            cursor.execute("""
-                UPDATE forex_signals
-                SET guidance_count = COALESCE(guidance_count, 0) + 1,
-                    last_guidance_at = CURRENT_TIMESTAMP,
-                    notes = %s
-                WHERE id = %s
-            """, (notes, signal_id))
+            if progress_zone is not None:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET guidance_count = COALESCE(guidance_count, 0) + 1,
+                        last_guidance_at = CURRENT_TIMESTAMP,
+                        notes = %s,
+                        last_progress_zone = GREATEST(COALESCE(last_progress_zone, 0), %s)
+                    WHERE id = %s
+                """, (notes, progress_zone, signal_id))
+            elif caution_zone is not None:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET guidance_count = COALESCE(guidance_count, 0) + 1,
+                        last_guidance_at = CURRENT_TIMESTAMP,
+                        notes = %s,
+                        last_caution_zone = GREATEST(COALESCE(last_caution_zone, 0), %s)
+                    WHERE id = %s
+                """, (notes, caution_zone, signal_id))
+            else:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET guidance_count = COALESCE(guidance_count, 0) + 1,
+                        last_guidance_at = CURRENT_TIMESTAMP,
+                        notes = %s
+                    WHERE id = %s
+                """, (notes, signal_id))
             
             conn.commit()
             return cursor.rowcount > 0

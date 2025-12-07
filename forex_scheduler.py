@@ -2,13 +2,14 @@
 Forex signals scheduler
 Runs signal checks every 15 minutes and monitors active signals
 Handles daily/weekly recaps at scheduled times
+Includes real-time guidance updates for active signals
 """
 import asyncio
 from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
-from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap
-from db import update_forex_signal_status, get_forex_signals
+from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance
 
 class ForexScheduler:
     def __init__(self):
@@ -80,6 +81,66 @@ class ForexScheduler:
             import traceback
             traceback.print_exc()
     
+    async def run_signal_guidance(self):
+        """Check for and post guidance updates on active signals"""
+        try:
+            guidance_events = await forex_signal_engine.check_signal_guidance()
+            
+            for event in guidance_events:
+                signal_id = event['signal_id']
+                guidance_type = event['guidance_type']
+                signal_type = event['signal_type']
+                progress = event['progress_percent']
+                current_price = event['current_price']
+                entry = event['entry_price']
+                tp = event['take_profit']
+                sl = event['stop_loss']
+                
+                ai_message = generate_signal_guidance(
+                    signal_id=signal_id,
+                    signal_type=signal_type,
+                    progress_percent=progress,
+                    guidance_type=guidance_type,
+                    current_price=current_price,
+                    entry_price=entry,
+                    tp_price=tp,
+                    sl_price=sl
+                )
+                
+                signal_data = {
+                    'signal_type': signal_type,
+                    'entry_price': entry,
+                    'take_profit': tp,
+                    'stop_loss': sl,
+                    'current_price': current_price
+                }
+                
+                success = await forex_telegram_bot.post_signal_guidance(
+                    signal_id=signal_id,
+                    guidance_type=guidance_type,
+                    message=ai_message,
+                    signal_data=signal_data
+                )
+                
+                if success:
+                    zone_value = event.get('zone_value')
+                    progress_toward = event.get('progress_toward', 'tp')
+                    
+                    if progress_toward == 'tp':
+                        update_signal_guidance(signal_id, f"{guidance_type}: {ai_message[:100]}", progress_zone=zone_value)
+                    else:
+                        update_signal_guidance(signal_id, f"{guidance_type}: {ai_message[:100]}", caution_zone=zone_value)
+                    
+                    if guidance_type == 'breakeven':
+                        update_signal_breakeven(signal_id, entry)
+                    
+                    print(f"[SCHEDULER] ✅ Posted {guidance_type} guidance for signal #{signal_id} (zone {zone_value})")
+                
+        except Exception as e:
+            print(f"[SCHEDULER] ❌ Error in signal guidance: {e}")
+            import traceback
+            traceback.print_exc()
+    
     async def check_daily_recap(self):
         """Post daily recap at 11:59 PM GMT"""
         try:
@@ -126,6 +187,7 @@ class ForexScheduler:
         print("="*60)
         print(f"📊 Signal checks: Every 15 minutes (during 8AM-10PM GMT)")
         print(f"🔍 Price monitoring: Every 5 minutes")
+        print(f"💡 Signal guidance: Every 5 minutes (with 10min cooldown)")
         print(f"📅 Daily recap: 11:59 PM GMT")
         print(f"📅 Weekly recap: Sunday 11:59 PM GMT")
         print("="*60 + "\n")
@@ -139,6 +201,8 @@ class ForexScheduler:
                     await self.run_signal_check()
                 
                 await self.run_signal_monitoring()
+                
+                await self.run_signal_guidance()
                 
                 await self.check_daily_recap()
                 await self.check_weekly_recap()

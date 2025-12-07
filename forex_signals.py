@@ -318,5 +318,138 @@ class ForexSignalEngine:
         if self.trading_start_hour <= current_hour < self.trading_end_hour:
             return True
         return False
+    
+    async def check_signal_guidance(self):
+        """
+        Check active signals for progress-based guidance updates.
+        Returns list of guidance events to post.
+        
+        Progress zones (toward TP):
+        - 30%: First progress update
+        - 60%: Breakeven advisory  
+        - 85%: Strong momentum update
+        
+        Caution zones (toward SL):
+        - 30%: Early warning
+        - 60%: Decision point (consider early exit)
+        """
+        try:
+            active_signals = get_forex_signals(status='pending')
+            
+            if not active_signals:
+                return []
+            
+            current_price = twelve_data_client.get_price(self.symbol)
+            if not current_price:
+                return []
+            
+            guidance_events = []
+            now = datetime.utcnow()
+            
+            COOLDOWN_MINUTES = 10
+            PROGRESS_ZONES = [30, 60, 85]
+            CAUTION_ZONES = [30, 60]
+            
+            for signal in active_signals:
+                signal_id = signal['id']
+                signal_type = signal['signal_type']
+                entry = float(signal['entry_price'])
+                tp = float(signal['take_profit'])
+                sl = float(signal['stop_loss'])
+                breakeven_set = signal.get('breakeven_set', False)
+                last_guidance_at = signal.get('last_guidance_at')
+                last_progress_zone = signal.get('last_progress_zone', 0)
+                last_caution_zone = signal.get('last_caution_zone', 0)
+                
+                if last_guidance_at:
+                    if isinstance(last_guidance_at, str):
+                        last_guidance_at = datetime.fromisoformat(last_guidance_at.replace('Z', '+00:00'))
+                    minutes_since_guidance = (now - last_guidance_at).total_seconds() / 60
+                    if minutes_since_guidance < COOLDOWN_MINUTES:
+                        continue
+                
+                if signal_type == 'BUY':
+                    tp_distance = tp - entry
+                    sl_distance = entry - sl
+                    
+                    if tp_distance <= 0 or sl_distance <= 0:
+                        print(f"[GUIDANCE] ⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
+                        continue
+                    
+                    if current_price >= entry:
+                        progress = ((current_price - entry) / tp_distance) * 100
+                        progress_toward = 'tp'
+                    else:
+                        progress = ((entry - current_price) / sl_distance) * 100
+                        progress_toward = 'sl'
+                else:
+                    tp_distance = entry - tp
+                    sl_distance = sl - entry
+                    
+                    if tp_distance <= 0 or sl_distance <= 0:
+                        print(f"[GUIDANCE] ⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
+                        continue
+                    
+                    if current_price <= entry:
+                        progress = ((entry - current_price) / tp_distance) * 100
+                        progress_toward = 'tp'
+                    else:
+                        progress = ((current_price - entry) / sl_distance) * 100
+                        progress_toward = 'sl'
+                
+                print(f"[GUIDANCE] Signal #{signal_id}: {signal_type} @ {entry:.2f}, price={current_price:.2f}, {progress:.1f}% toward {progress_toward.upper()}")
+                
+                progress = min(progress, 100)
+                
+                guidance_type = None
+                zone_value = None
+                
+                if progress_toward == 'tp':
+                    if progress >= 60 and not breakeven_set:
+                        guidance_type = 'breakeven'
+                        zone_value = 60
+                    elif progress >= 85 and last_progress_zone < 85:
+                        guidance_type = 'progress'
+                        zone_value = 85
+                    elif progress >= 60 and last_progress_zone < 60:
+                        guidance_type = 'progress'
+                        zone_value = 60
+                    elif progress >= 30 and last_progress_zone < 30:
+                        guidance_type = 'progress'
+                        zone_value = 30
+                else:
+                    if progress >= 60 and last_caution_zone < 60:
+                        guidance_type = 'decision'
+                        zone_value = 60
+                    elif progress >= 30 and last_caution_zone < 30:
+                        guidance_type = 'caution'
+                        zone_value = 30
+                
+                if guidance_type:
+                    progress_percent = progress if progress_toward == 'tp' else -progress
+                    
+                    guidance_events.append({
+                        'signal_id': signal_id,
+                        'signal_type': signal_type,
+                        'guidance_type': guidance_type,
+                        'progress_percent': progress_percent,
+                        'current_price': current_price,
+                        'entry_price': entry,
+                        'take_profit': tp,
+                        'stop_loss': sl,
+                        'breakeven_set': breakeven_set,
+                        'progress_toward': progress_toward,
+                        'zone_value': zone_value
+                    })
+                    
+                    print(f"[GUIDANCE] Signal #{signal_id}: {guidance_type} event ({progress:.0f}% toward {progress_toward.upper()}, zone {zone_value})")
+            
+            return guidance_events
+            
+        except Exception as e:
+            print(f"[GUIDANCE] ❌ Error checking signal guidance: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
 
 forex_signal_engine = ForexSignalEngine()

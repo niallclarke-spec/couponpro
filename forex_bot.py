@@ -182,6 +182,56 @@ Signal closed after maximum hold time."""
         except Exception as e:
             print(f"❌ Failed to post expiry notification: {e}")
     
+    async def post_signal_guidance(self, signal_id, guidance_type, message, signal_data):
+        """
+        Post a guidance update for an active signal.
+        
+        Args:
+            signal_id: Database signal ID
+            guidance_type: 'progress', 'breakeven', 'caution', 'decision'
+            message: AI-generated or fallback guidance message
+            signal_data: Dict with current signal info (entry, tp, sl, current_price)
+        """
+        if not self.bot or not self.channel_id:
+            return False
+        
+        try:
+            entry = signal_data.get('entry_price', 0)
+            current = signal_data.get('current_price', 0)
+            tp = signal_data.get('take_profit', 0)
+            sl = signal_data.get('stop_loss', 0)
+            signal_type = signal_data.get('signal_type', 'BUY')
+            
+            type_headers = {
+                'progress': '📊 <b>Signal Update</b>',
+                'breakeven': '🔒 <b>Breakeven Advisory</b>',
+                'caution': '⚠️ <b>Position Alert</b>',
+                'decision': '📉 <b>Decision Point</b>'
+            }
+            
+            header = type_headers.get(guidance_type, '📊 <b>Signal Update</b>')
+            
+            full_message = f"""{header}
+<b>Signal #{signal_id}</b> | {signal_type}
+
+{message}
+
+<b>Current:</b> ${current:.2f}
+<b>Entry:</b> ${entry:.2f} | <b>TP:</b> ${tp:.2f} | <b>SL:</b> ${sl:.2f}"""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=full_message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted {guidance_type} guidance for signal #{signal_id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to post signal guidance: {e}")
+            return False
+    
     async def post_daily_recap(self, ai_recap=None):
         """
         Post daily performance recap at 11:59 PM GMT
