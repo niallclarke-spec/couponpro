@@ -8,7 +8,7 @@ from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
 from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap
-from db import update_forex_signal_status
+from db import update_forex_signal_status, get_forex_signals
 
 class ForexScheduler:
     def __init__(self):
@@ -22,6 +22,15 @@ class ForexScheduler:
         try:
             if not forex_signal_engine.is_trading_hours():
                 print("[SCHEDULER] Outside trading hours (8AM-10PM GMT), skipping signal check")
+                return
+            
+            # CRITICAL: Only allow ONE active signal at a time
+            # Check for any pending signals before generating new ones
+            pending_signals = get_forex_signals(status='pending')
+            if pending_signals and len(pending_signals) > 0:
+                signal = pending_signals[0]
+                print(f"[SCHEDULER] ⏸️ Active signal #{signal['id']} still pending - skipping new signal check")
+                print(f"[SCHEDULER] Entry: ${signal['entry_price']}, TP: ${signal['take_profit']}, SL: ${signal['stop_loss']}")
                 return
             
             signal_data = await forex_signal_engine.check_for_signals(timeframe='15min')
@@ -49,7 +58,6 @@ class ForexScheduler:
                 
                 update_forex_signal_status(signal_id, status, pips)
                 
-                from db import get_forex_signals
                 signals_data = get_forex_signals(status=None, limit=10)
                 matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
                 signal_type = matching_signal.get('signal_type', 'BUY') if matching_signal else 'BUY'
