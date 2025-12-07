@@ -2784,6 +2784,13 @@
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
+                        <div class="card-title">Leads by Source</div>
+                        <div id="leadsBySource" style="padding: 20px;">
+                            <div class="loading">Loading lead attribution...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-bottom: 20px;">
                         <div class="card-title">Revenue by Source</div>
                         <div id="revenueBySource" style="padding: 20px;">
                             <div class="loading">Loading attribution data...</div>
@@ -3434,6 +3441,9 @@
                 document.getElementById('avgConversionDays').textContent = summary.avg_conversion_days > 0 ? summary.avg_conversion_days.toFixed(1) : '--';
                 document.getElementById('conversionRevenue').textContent = `$${(summary.conversion_revenue || 0).toFixed(0)}`;
                 
+                // Render leads by source (free signups funnel)
+                renderLeadsBySource(data.funnel_by_source);
+                
                 // Render revenue by source
                 renderRevenueBySource(data.by_source);
                 
@@ -3447,6 +3457,34 @@
                 console.error('Error loading conversions:', error);
                 document.getElementById('revenueBySource').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
             }
+        }
+        
+        function renderLeadsBySource(leads) {
+            const container = document.getElementById('leadsBySource');
+            if (!leads || leads.length === 0) {
+                container.innerHTML = '<div style="color: #718096; text-align: center;">No leads yet. Free signups will appear here with their UTM attribution.</div>';
+                return;
+            }
+            
+            let html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
+            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Signups</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Converted</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conv. Rate</th>';
+            html += '</tr></thead><tbody>';
+            
+            leads.forEach(lead => {
+                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
+                html += `<td style="padding: 10px;">${lead.source || '(Direct)'}</td>`;
+                html += `<td style="padding: 10px; text-align: right;">${lead.signups}</td>`;
+                html += `<td style="padding: 10px; text-align: right;">${lead.converted}</td>`;
+                html += `<td style="padding: 10px; text-align: right; color: ${lead.conversion_rate > 0 ? '#48bb78' : '#718096'};">${lead.conversion_rate}%</td>`;
+                html += `</tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
         
         function renderRevenueBySource(sources) {
