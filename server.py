@@ -2175,6 +2175,60 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/forex-telegram-webhook':
+            import sys
+            import time
+            start_time = time.time()
+            print(f"[FOREX-WEBHOOK] ⚡ Forex webhook endpoint called!", flush=True)
+            sys.stdout.flush()
+            
+            if not TELEGRAM_BOT_AVAILABLE:
+                print(f"[FOREX-WEBHOOK] ❌ Telegram bot module not available", flush=True)
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Telegram bot not available'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+                
+                if not forex_bot_token:
+                    print(f"[FOREX-WEBHOOK] ❌ FOREX_BOT_TOKEN not configured", flush=True)
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Forex bot token not configured'}).encode())
+                    return
+                
+                webhook_data = json.loads(post_data.decode('utf-8'))
+                update_id = webhook_data.get('update_id', 'unknown')
+                print(f"[FOREX-WEBHOOK] Processing update_id: {update_id}", flush=True)
+                
+                result = telegram_bot.handle_forex_webhook(webhook_data, forex_bot_token)
+                
+                elapsed = time.time() - start_time
+                print(f"[FOREX-WEBHOOK] ✅ Completed update_id {update_id} in {elapsed:.2f}s, result: {result}", flush=True)
+                sys.stdout.flush()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+                
+            except Exception as e:
+                elapsed = time.time() - start_time
+                print(f"[FOREX-WEBHOOK] ❌ Webhook error after {elapsed:.2f}s: {str(e)}", flush=True)
+                import traceback
+                traceback.print_exc()
+                sys.stdout.flush()
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/telegram/grant-access':
             # EntryLab API - Grant access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
@@ -3037,24 +3091,21 @@ if __name__ == "__main__":
             import traceback
             traceback.print_exc()
     
-    # DISABLED: Join tracking uses polling mode which conflicts with production server
-    # The production server on DigitalOcean handles join tracking
-    # if TELEGRAM_BOT_AVAILABLE:
-    #     import threading
-    #     import asyncio
-    #     
-    #     def run_join_tracker():
-    #         loop = asyncio.new_event_loop()
-    #         asyncio.set_event_loop(loop)
-    #         try:
-    #             loop.run_until_complete(telegram_bot.start_join_tracking())
-    #         except Exception as e:
-    #             print(f"[JOIN_TRACKER] Join tracker error: {e}")
-    #     
-    #     join_tracker_thread = threading.Thread(target=run_join_tracker, daemon=True)
-    #     join_tracker_thread.start()
-    #     print("[JOIN_TRACKER] Telegram join tracking started in background thread")
-    print("[JOIN_TRACKER] Disabled in development (production handles join tracking)")
+    # Set up forex bot webhook for join tracking (replaces polling to avoid conflicts)
+    if TELEGRAM_BOT_AVAILABLE:
+        forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+        if forex_bot_token:
+            webhook_url = "https://dash.promostack.io/api/forex-telegram-webhook"
+            try:
+                success = telegram_bot.setup_forex_webhook(forex_bot_token, webhook_url)
+                if success:
+                    print("[JOIN_TRACKER] ✅ Forex bot webhook mode initialized")
+                else:
+                    print("[JOIN_TRACKER] ⚠️ Failed to set up webhook, join tracking may not work")
+            except Exception as e:
+                print(f"[JOIN_TRACKER] ❌ Error setting up webhook: {e}")
+        else:
+            print("[JOIN_TRACKER] ⚠️ FOREX_BOT_TOKEN not set, join tracking disabled")
     
     # Start Forex signals scheduler in background thread if available
     if FOREX_SCHEDULER_AVAILABLE:
@@ -3088,6 +3139,7 @@ if __name__ == "__main__":
         print(f"  POST /api/delete-template (requires auth)")
         print(f"  POST /api/regenerate-index")
         print(f"  POST /api/telegram-webhook")
+        print(f"  POST /api/forex-telegram-webhook")
         print(f"  GET  /api/forex-signals (requires auth)")
         print(f"  GET  /api/forex-stats (requires auth)")
         httpd.serve_forever()

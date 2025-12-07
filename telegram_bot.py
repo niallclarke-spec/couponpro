@@ -1206,6 +1206,128 @@ async def start_join_tracking():
             print(f"[JOIN_TRACKER] Error during cleanup: {cleanup_error}")
 
 
+def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
+    """
+    Handle incoming webhook updates for the forex bot (join tracking).
+    
+    This handles chat_member updates when users join/leave the forex signals channel.
+    Uses webhooks instead of polling to avoid conflicts with production server.
+    
+    Args:
+        webhook_data: The raw webhook data from Telegram
+        bot_token: The forex bot token
+        
+    Returns:
+        dict with success status
+    """
+    try:
+        # Check if this is a chat_member update
+        if 'chat_member' not in webhook_data:
+            return {'success': True, 'message': 'Not a chat_member update, ignored'}
+        
+        chat_member_data = webhook_data['chat_member']
+        
+        # Get channel ID
+        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        if not forex_channel_id:
+            return {'success': False, 'error': 'FOREX_CHANNEL_ID not configured'}
+        
+        try:
+            forex_channel_id = int(forex_channel_id)
+        except ValueError:
+            return {'success': False, 'error': f'Invalid FOREX_CHANNEL_ID: {forex_channel_id}'}
+        
+        # Check if this is for our channel
+        chat_id = chat_member_data.get('chat', {}).get('id')
+        if chat_id != forex_channel_id:
+            return {'success': True, 'message': f'Not our channel ({chat_id}), ignored'}
+        
+        # Extract old and new status
+        old_status = chat_member_data.get('old_chat_member', {}).get('status', 'left')
+        new_status = chat_member_data.get('new_chat_member', {}).get('status', 'left')
+        
+        # Check if this is a join event
+        is_join = (old_status in ['left', 'kicked', 'restricted']) and (new_status in ['member', 'administrator', 'creator'])
+        
+        if not is_join:
+            print(f"[JOIN_TRACKER] Status change: {old_status} -> {new_status} (not a join)")
+            return {'success': True, 'message': f'Status change {old_status} -> {new_status}, not a join'}
+        
+        # Extract user information
+        user_data = chat_member_data.get('new_chat_member', {}).get('user', {})
+        telegram_user_id = user_data.get('id')
+        telegram_username = user_data.get('username')
+        
+        # Extract invite link if available
+        invite_link = None
+        invite_link_data = chat_member_data.get('invite_link')
+        if invite_link_data:
+            invite_link = invite_link_data.get('invite_link')
+        
+        from datetime import datetime
+        joined_at = datetime.utcnow()
+        
+        print(f"[JOIN_TRACKER] User joined: {telegram_user_id} (@{telegram_username}), invite_link: {invite_link}")
+        
+        # Link to subscription in database
+        import db
+        result = db.link_subscription_to_telegram_user(
+            invite_link,
+            telegram_user_id,
+            telegram_username,
+            joined_at
+        )
+        
+        if result:
+            print(f"[JOIN_TRACKER] ✅ Successfully linked user {telegram_user_id} to subscription {result['email']}")
+            return {'success': True, 'message': f'Linked user {telegram_user_id} to {result["email"]}'}
+        else:
+            print(f"[JOIN_TRACKER] ⚠️ Could not link user {telegram_user_id} (@{telegram_username}) - no matching pending subscription")
+            return {'success': True, 'message': f'User {telegram_user_id} joined but no matching subscription found'}
+        
+    except Exception as e:
+        print(f"[JOIN_TRACKER] ❌ Error handling forex webhook: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
+
+def setup_forex_webhook(bot_token: str, webhook_url: str) -> bool:
+    """
+    Set up webhook for the forex bot to receive chat_member updates.
+    
+    Args:
+        bot_token: The forex bot token
+        webhook_url: The full URL for the webhook endpoint
+        
+    Returns:
+        bool: True if webhook was set successfully
+    """
+    import requests
+    
+    try:
+        # Set webhook via Telegram API
+        url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
+        params = {
+            'url': webhook_url,
+            'allowed_updates': ['chat_member']  # Only receive chat_member updates
+        }
+        
+        response = requests.post(url, json=params, timeout=10)
+        result = response.json()
+        
+        if result.get('ok'):
+            print(f"[JOIN_TRACKER] ✅ Webhook configured: {webhook_url}")
+            return True
+        else:
+            print(f"[JOIN_TRACKER] ❌ Failed to set webhook: {result.get('description')}")
+            return False
+            
+    except Exception as e:
+        print(f"[JOIN_TRACKER] ❌ Error setting up webhook: {e}")
+        return False
+
+
 def run_bot(bot_token):
     """
     Start the Telegram bot with polling.
