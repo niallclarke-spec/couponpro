@@ -4257,6 +4257,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Day</th>
                             <th>Date/Time</th>
                             <th>Bot</th>
                             <th>Type</th>
@@ -4269,7 +4270,9 @@
                     </thead>
                     <tbody>
                         ${signals.map(signal => {
-                            const date = new Date(signal.posted_at).toLocaleString('en-US', {
+                            const signalDate = new Date(signal.posted_at);
+                            const dayName = signalDate.toLocaleString('en-US', { weekday: 'short' });
+                            const date = signalDate.toLocaleString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 hour: '2-digit',
@@ -4281,6 +4284,7 @@
                             
                             return `
                                 <tr>
+                                    <td style="font-weight: 500; color: #a0aec0;">${dayName}</td>
                                     <td>${date}</td>
                                     <td><span class="badge badge-${botType}" style="text-transform: capitalize;">${botType}</span></td>
                                     <td><span class="badge badge-${signal.signal_type.toLowerCase()}">${signal.signal_type}</span></td>
