@@ -2224,10 +2224,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 content_length = int(self.headers.get('Content-Length', 0))
                 post_data = self.rfile.read(content_length)
-                forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+                
+                # Use appropriate bot token based on environment
+                from forex_bot import get_forex_bot_token
+                forex_bot_token = get_forex_bot_token()
                 
                 if not forex_bot_token:
-                    print(f"[FOREX-WEBHOOK] ❌ FOREX_BOT_TOKEN not configured", flush=True)
+                    print(f"[FOREX-WEBHOOK] ❌ Forex bot token not configured", flush=True)
                     self.send_response(500)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
@@ -3138,19 +3141,21 @@ if __name__ == "__main__":
     
     # Set up forex bot webhook for join tracking (replaces polling to avoid conflicts)
     if TELEGRAM_BOT_AVAILABLE:
-        forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+        from forex_bot import get_forex_bot_token
+        forex_bot_token = get_forex_bot_token()
         if forex_bot_token:
             webhook_url = "https://dash.promostack.io/api/forex-telegram-webhook"
             try:
                 success = telegram_bot.setup_forex_webhook(forex_bot_token, webhook_url)
                 if success:
+                    print("[JOIN_TRACKER] ✅ Webhook configured:", webhook_url)
                     print("[JOIN_TRACKER] ✅ Forex bot webhook mode initialized")
                 else:
                     print("[JOIN_TRACKER] ⚠️ Failed to set up webhook, join tracking may not work")
             except Exception as e:
                 print(f"[JOIN_TRACKER] ❌ Error setting up webhook: {e}")
         else:
-            print("[JOIN_TRACKER] ⚠️ FOREX_BOT_TOKEN not set, join tracking disabled")
+            print("[JOIN_TRACKER] ⚠️ Forex bot token not set, join tracking disabled")
     
     # Start Forex signals scheduler in background thread if available
     if FOREX_SCHEDULER_AVAILABLE:

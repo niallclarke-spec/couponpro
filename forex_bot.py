@@ -9,16 +9,37 @@ from telegram import Bot
 from telegram.error import TelegramError
 from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative
 
+def get_forex_bot_token():
+    """
+    Get the appropriate forex bot token based on environment.
+    - Dev (Replit): Uses ENTRYLAB_TEST_BOT for testing
+    - Prod: Uses FOREX_BOT_TOKEN for live signals
+    """
+    # Check if running in Replit (dev environment)
+    is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
+    
+    if is_replit:
+        # Dev: Use test bot
+        test_token = os.environ.get('ENTRYLAB_TEST_BOT')
+        if test_token:
+            print("[FOREX BOT] 🧪 Using ENTRYLAB_TEST_BOT (dev mode)")
+            return test_token
+        else:
+            print("[FOREX BOT] ⚠️ ENTRYLAB_TEST_BOT not set, falling back to FOREX_BOT_TOKEN")
+    
+    # Prod: Use real bot
+    return os.environ.get('FOREX_BOT_TOKEN')
+
 class ForexTelegramBot:
     def __init__(self):
-        self.token = os.environ.get('FOREX_BOT_TOKEN')
+        self.token = get_forex_bot_token()
         self.channel_id = os.environ.get('FOREX_CHANNEL_ID')
         self.bot = None
         
         if self.token:
             self.bot = Bot(token=self.token)
         else:
-            print("⚠️  FOREX_BOT_TOKEN not set - forex bot will not work")
+            print("⚠️  Forex bot token not set - forex bot will not work")
         
         if not self.channel_id:
             print("⚠️  FOREX_CHANNEL_ID not set - forex bot will not work")

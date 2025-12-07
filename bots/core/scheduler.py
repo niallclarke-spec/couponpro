@@ -41,11 +41,13 @@ class SignalBotScheduler:
         self.bot = None
         self.channel_id = os.environ.get('FOREX_CHANNEL_ID')
         
-        token = os.environ.get('FOREX_BOT_TOKEN')
+        # Use appropriate bot token based on environment (test in dev, real in prod)
+        from forex_bot import get_forex_bot_token
+        token = get_forex_bot_token()
         if token:
             self.bot = Bot(token=token)
         else:
-            print("[SCHEDULER] FOREX_BOT_TOKEN not set")
+            print("[SCHEDULER] Forex bot token not set")
     
     async def post_to_telegram(self, message: str, parse_mode: str = 'HTML') -> Optional[int]:
         """Post message to Telegram channel, return message ID"""

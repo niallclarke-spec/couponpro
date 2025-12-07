@@ -882,7 +882,7 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
 async def create_private_channel_invite_link(channel_id):
     """
     Create a unique invite link for the private Telegram channel.
-    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
+    Uses forex bot token (entrylab_bot in prod, test bot in dev).
     
     Args:
         channel_id (int|str): Telegram channel ID (e.g., -1003213499920)
@@ -891,10 +891,11 @@ async def create_private_channel_invite_link(channel_id):
         str: Invite link URL or None if error
     """
     try:
-        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
-        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        # Use appropriate bot token based on environment
+        from forex_bot import get_forex_bot_token
+        forex_token = get_forex_bot_token()
         if not forex_token:
-            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot create invite link")
+            print("[TELEGRAM] ERROR: Forex bot token not set, cannot create invite link")
             return None
         
         # Create a temporary bot instance for this operation
@@ -922,7 +923,7 @@ async def create_private_channel_invite_link(channel_id):
 async def kick_user_from_channel(channel_id, user_id):
     """
     Remove a user from the private Telegram channel.
-    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
+    Uses forex bot token (entrylab_bot in prod, test bot in dev).
     
     Args:
         channel_id (int|str): Telegram channel ID
@@ -932,10 +933,11 @@ async def kick_user_from_channel(channel_id, user_id):
         bool: True if successful, False otherwise
     """
     try:
-        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
-        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        # Use appropriate bot token based on environment
+        from forex_bot import get_forex_bot_token
+        forex_token = get_forex_bot_token()
         if not forex_token:
-            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot kick user")
+            print("[TELEGRAM] ERROR: Forex bot token not set, cannot kick user")
             return False
         
         # Create a temporary bot instance for this operation
@@ -967,7 +969,7 @@ async def kick_user_from_channel(channel_id, user_id):
 async def check_user_in_channel(channel_id, user_id):
     """
     Check if a user is a member of the channel.
-    Uses FOREX_BOT_TOKEN (entrylab_bot) which has admin access to the forex channel.
+    Uses forex bot token (entrylab_bot in prod, test bot in dev).
     
     Args:
         channel_id (int|str): Telegram channel ID
@@ -977,10 +979,11 @@ async def check_user_in_channel(channel_id, user_id):
         dict: {'is_member': bool, 'status': str} or None if error
     """
     try:
-        # Use FOREX_BOT_TOKEN for channel management (entrylab_bot)
-        forex_token = os.environ.get('FOREX_BOT_TOKEN')
+        # Use appropriate bot token based on environment
+        from forex_bot import get_forex_bot_token
+        forex_token = get_forex_bot_token()
         if not forex_token:
-            print("[TELEGRAM] ERROR: FOREX_BOT_TOKEN not set, cannot check user")
+            print("[TELEGRAM] ERROR: Forex bot token not set, cannot check user")
             return None
         
         # Create a temporary bot instance for this operation
