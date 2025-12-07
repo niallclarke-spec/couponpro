@@ -1,0 +1,231 @@
+Dec 07 21:31:11    import cgi
+Dec 07 21:31:14  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 07 21:31:14  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 07 21:31:14  [MIGRATION] error_type column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 07 21:31:48  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Dec 07 21:31:48    import cgi
+Dec 07 21:31:50  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 07 21:31:50  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 07 21:31:50  [MIGRATION] error_type column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 07 21:31:50  [MIGRATION] device_type column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 07 21:31:50  [MIGRATION] username column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] first_name column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] last_name column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 07 21:31:50  [MIGRATION] bot_type column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] breakeven_set column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] breakeven_price column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] guidance_count column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] indicators_used column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] notes column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 07 21:31:50  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 07 21:31:50  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...
+Dec 07 21:31:50  [MIGRATION] No 'expired' signals found to update
+Dec 07 21:31:50  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 07 21:31:50  [MIGRATION] free_signup_at column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] is_converted column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] converted_at column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] conversion_days column already exists, skipping
+Dec 07 21:31:50  [MIGRATION] UTM columns already exist, skipping
+Dec 07 21:31:50  ✅ Database schema initialized
+Dec 07 21:31:50  ✅ Forex config initialized with defaults
+Dec 07 21:31:50  ✅ Bot config initialized with defaults
+Dec 07 21:31:14  [MIGRATION] device_type column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 07 21:31:14  [MIGRATION] username column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] first_name column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] last_name column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 07 21:31:14  [MIGRATION] bot_type column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] breakeven_set column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] breakeven_price column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] guidance_count column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] indicators_used column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] notes column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 07 21:31:14  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 07 21:31:14  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...
+Dec 07 21:31:14  [MIGRATION] No 'expired' signals found to update
+Dec 07 21:31:14  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 07 21:31:14  [MIGRATION] free_signup_at column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] is_converted column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] converted_at column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] conversion_days column already exists, skipping
+Dec 07 21:31:14  [MIGRATION] UTM columns already exist, skipping
+Dec 07 21:31:14  ✅ Database schema initialized
+Dec 07 21:31:14  ✅ Forex config initialized with defaults
+Dec 07 21:31:14  ✅ Bot config initialized with defaults
+Dec 07 21:31:14  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 07 21:31:14  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 07 21:31:17  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 07 21:31:17  [INFO] Stripe client initialized
+Dec 07 21:31:17  [TELEGRAM] Initializing bot for webhook mode...
+Dec 07 21:31:18  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 07 21:31:18  [TELEGRAM] Webhook bot initialized and ready
+Dec 07 21:31:18  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:31:18  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:31:18  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 07 21:31:18  [FOREX] Signals scheduler started in background thread
+Dec 07 21:31:18  
+Dec 07 21:31:18  ============================================================Server running at http://0.0.0.0:8080/
+Dec 07 21:31:18  
+Dec 07 21:31:18  🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 07 21:31:18  Serving files from /workspace============================================================
+Dec 07 21:31:18  
+Dec 07 21:31:18  API endpoints:📊 Signal checks: Every 15 minutes (during 8AM-10PM GMT)
+Dec 07 21:31:18  
+Dec 07 21:31:18    POST /api/validate-coupon
+Dec 07 21:31:18  🔍 Price monitoring: Every 5 minutes
+Dec 07 21:31:18    POST /api/login
+Dec 07 21:31:18  💡 Signal guidance: Every 5 minutes (with 10min cooldown)
+Dec 07 21:31:18    POST /api/logout🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 07 21:31:18    POST /api/upload-template (requires auth)
+Dec 07 21:31:18  ⏰ Hard timeout: 3 hours
+Dec 07 21:31:18  📅 Daily recap: 11:59 PM GMT
+Dec 07 21:31:18  
+Dec 07 21:31:18  📅 Weekly recap: Sunday 11:59 PM GMT  POST /api/delete-template (requires auth)
+Dec 07 21:31:18  
+Dec 07 21:31:18  ============================================================
+Dec 07 21:31:18    POST /api/regenerate-index
+Dec 07 21:31:18  
+Dec 07 21:31:18    POST /api/telegram-webhook
+Dec 07 21:31:18    POST /api/forex-telegram-webhook
+Dec 07 21:31:18    GET  /api/forex-signals (requires auth)
+Dec 07 21:31:18    GET  /api/forex-stats (requires auth)
+Dec 07 21:31:18  
+Dec 07 21:31:18  [FOREX SIGNALS] Checking for signals on XAU/USD 15min...
+Dec 07 21:31:18  [FOREX SIGNALS] ⏸️ Guardrail blocked: Outside trading session (8:00-21:00 UTC)
+Dec 07 21:32:01  [AUTH] Session token found, valid: True
+Dec 07 21:32:01  10.244.4.179 - - [07/Dec/2025 21:32:01] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 07 21:32:03  [AUTH] Session token found, valid: True
+Dec 07 21:32:03  10.244.5.120 - - [07/Dec/2025 21:32:03] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Dec 07 21:32:04  [AUTH] Session token found, valid: True
+Dec 07 21:32:04  [DB] get_all_telegram_subscriptions: found 9 rows
+Dec 07 21:32:04  10.244.6.25 - - [07/Dec/2025 21:32:04] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Dec 07 21:32:04  [AUTH] Session token found, valid: True
+Dec 07 21:32:04  [DB] get_all_telegram_subscriptions: found 9 rows
+Dec 07 21:32:04  [REVENUE] Fetching metrics for 3 PromoStack subscriptions...
+Dec 07 21:32:04  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP')...
+Dec 07 21:32:04  [Stripe] Fetching all paid invoices...
+Dec 07 21:32:05  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:05  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:05  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:31:50  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 07 21:31:50  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 07 21:31:52  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 07 21:31:52  [INFO] Stripe client initialized
+Dec 07 21:31:52  [TELEGRAM] Initializing bot for webhook mode...
+Dec 07 21:31:52  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 07 21:31:52  [TELEGRAM] Webhook bot initialized and ready
+Dec 07 21:32:05  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:05  [Stripe] Total revenue from 4 VIP invoices: $5.46
+Dec 07 21:31:52  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:31:52  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 07 21:31:52  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 07 21:31:52  [FOREX] Signals scheduler started in background thread
+Dec 07 21:31:52  
+Dec 07 21:32:05  [Stripe] Found 0 subscription IDs from invoices
+Dec 07 21:32:05  [Stripe] Also fetching active subscriptions directly from Stripe...
+Dec 07 21:32:06  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:06  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:06  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:06  [Stripe] Total subscription IDs to check: 3
+Dec 07 21:32:06  [Stripe] Checking 3 subscriptions for rebill (month: 2025-12-01 to 2026-01-01)...
+Dec 07 21:31:52  ============================================================
+Dec 07 21:31:52  🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 07 21:31:52  ============================================================
+Dec 07 21:31:52  Server running at http://0.0.0.0:8080/📊 Signal checks: Every 15 minutes (during 8AM-10PM GMT)
+Dec 07 21:31:52  
+Dec 07 21:31:52  Serving files from /workspace
+Dec 07 21:31:52  🔍 Price monitoring: Every 5 minutesAPI endpoints:
+Dec 07 21:31:52    POST /api/validate-coupon
+Dec 07 21:31:52  
+Dec 07 21:31:52    POST /api/login
+Dec 07 21:31:52    POST /api/logout
+Dec 07 21:31:52    POST /api/upload-template (requires auth)
+Dec 07 21:31:52    POST /api/delete-template (requires auth)
+Dec 07 21:31:52    POST /api/regenerate-index💡 Signal guidance: Every 5 minutes (with 10min cooldown)
+Dec 07 21:31:52  
+Dec 07 21:31:52    POST /api/telegram-webhook🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 07 21:31:52  
+Dec 07 21:31:52    POST /api/forex-telegram-webhook⏰ Hard timeout: 3 hours
+Dec 07 21:31:52  
+Dec 07 21:31:52    GET  /api/forex-signals (requires auth)📅 Daily recap: 11:59 PM GMT
+Dec 07 21:31:52  
+Dec 07 21:31:52    GET  /api/forex-stats (requires auth)
+Dec 07 21:31:52  📅 Weekly recap: Sunday 11:59 PM GMT
+Dec 07 21:31:52  ============================================================
+Dec 07 21:31:52  
+Dec 07 21:31:52  
+Dec 07 21:31:52  [FOREX SIGNALS] Checking for signals on XAU/USD 15min...
+Dec 07 21:31:52  [FOREX SIGNALS] ⏸️ Guardrail blocked: Outside trading session (8:00-21:00 UTC)
+Dec 07 21:31:54  10.244.6.25 - - [07/Dec/2025 21:31:54] "GET / HTTP/1.1" 200 -
+Dec 07 21:31:55  [AUTH] Session token found, valid: True
+Dec 07 21:31:55  10.244.4.179 - - [07/Dec/2025 21:31:55] "GET /api/check-auth HTTP/1.1" 200 -
+Dec 07 21:31:55  [AUTH] Session token found, valid: True
+Dec 07 21:31:55  [DB] get_all_telegram_subscriptions: found 9 rows
+Dec 07 21:31:55  10.244.6.25 - - [07/Dec/2025 21:31:55] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Dec 07 21:32:04  [AUTH] Session token found, valid: True
+Dec 07 21:32:04  [DB] get_all_telegram_subscriptions: found 9 rows
+Dec 07 21:32:04  10.244.6.25 - - [07/Dec/2025 21:32:04] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Dec 07 21:32:08  [AUTH] Session token found, valid: True
+Dec 07 21:32:08  [DB] get_all_telegram_subscriptions: found 9 rows
+Dec 07 21:32:08  [REVENUE] Fetching metrics for 3 PromoStack subscriptions...
+Dec 07 21:32:08  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP')...
+Dec 07 21:32:08  [Stripe] Fetching all paid invoices...
+Dec 07 21:32:09  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:09  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:09  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:09  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 07 21:32:06  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:06  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:06  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:07  [Stripe] ✓ Rebill this month: $0.78 on 2025-12-10
+Dec 07 21:32:07  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:07  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:07  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:07  [Stripe] ✓ Rebill this month: $0.78 on 2025-12-10
+Dec 07 21:32:08  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:08  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:08  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:08  [Stripe] ✓ Rebill this month: $39.0 on 2025-12-08
+Dec 07 21:32:08  [Stripe] Active: 3, Rebill this month: $40.56
+Dec 07 21:32:08  [REVENUE] Stripe returned: revenue=$5.46, rebill=$40.56
+Dec 07 21:32:08  10.244.4.179 - - [07/Dec/2025 21:32:08] "GET /api/telegram/revenue-metrics HTTP/1.1" 200 -
+Dec 07 21:32:09  [Stripe] Total revenue from 4 VIP invoices: $5.46
+Dec 07 21:32:09  [Stripe] Found 0 subscription IDs from invoices
+Dec 07 21:32:09  [Stripe] Also fetching active subscriptions directly from Stripe...
+Dec 07 21:32:09  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:10  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:10  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Dec 07 21:32:10  [Stripe] Total subscription IDs to check: 3
+Dec 07 21:32:10  [Stripe] Checking 3 subscriptions for rebill (month: 2025-12-01 to 2026-01-01)...
+Dec 07 21:32:10  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:10  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:10  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:11  [Stripe] ✓ Rebill this month: $39.0 on 2025-12-08
+Dec 07 21:32:11  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:11  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:11  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:11  [Stripe] ✓ Rebill this month: $0.78 on 2025-12-10
+Dec 07 21:32:11  [Stripe] Sub keys: ['id', 'object', 'application', 'application_fee_percent', 'automatic_tax', 'billing_cycle_anchor', 'billing_cycle_anchor_config', 'billing_mode', 'billing_thresholds', 'cancel_at']...
+Dec 07 21:32:11  [Stripe] Direct access failed: 'current_period_end'
+Dec 07 21:32:11  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Dec 07 21:32:12  [Stripe] ✓ Rebill this month: $0.78 on 2025-12-10
+Dec 07 21:32:12  [Stripe] Active: 3, Rebill this month: $40.56
+Dec 07 21:32:12  [REVENUE] Stripe returned: revenue=$5.46, rebill=$40.56
+Dec 07 21:32:12  10.244.4.179 - - [07/Dec/2025 21:32:12] "GET /api/telegram/revenue-metrics HTTP/1.1" 200 -
