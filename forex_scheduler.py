@@ -165,7 +165,18 @@ class ForexScheduler:
                     continue
                 
                 if event_type == 'timeout':
-                    # 3-hour hard timeout
+                    # Fetch current indicators for technical justification
+                    current_indicators = None
+                    original_indicators = signal.get('original_indicators_json') or {}
+                    
+                    try:
+                        validation = await forex_signal_engine.perform_revalidation(signal)
+                        if validation:
+                            current_indicators = validation.get('current_indicators', {})
+                    except Exception as e:
+                        print(f"[SCHEDULER] Could not fetch current indicators for timeout: {e}")
+                    
+                    # Generate close recommendation with technical justification
                     ai_message = generate_timeout_message(
                         signal_id=signal_id,
                         signal_type=signal_type,
@@ -173,7 +184,9 @@ class ForexScheduler:
                         current_price=current_price,
                         entry_price=entry,
                         tp_price=tp,
-                        sl_price=sl
+                        sl_price=sl,
+                        current_indicators=current_indicators,
+                        original_indicators=original_indicators
                     )
                     
                     success = await forex_telegram_bot.post_signal_timeout(
@@ -191,7 +204,7 @@ class ForexScheduler:
                         else:
                             pips = round(entry - current_price, 2)
                         update_forex_signal_status(signal_id, 'expired', pips)
-                        print(f"[SCHEDULER] ✅ Posted timeout for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
+                        print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
                     
                 elif event_type == 'revalidation':
                     # Perform indicator re-validation

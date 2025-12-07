@@ -324,9 +324,9 @@ Generate the message:"""
         print(f"❌ Error generating revalidation message: {e}")
         return get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price)
 
-def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_price, entry_price, tp_price, sl_price):
+def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_price, entry_price, tp_price, sl_price, current_indicators=None, original_indicators=None):
     """
-    Generate AI message for 3-hour trade timeout.
+    Generate AI message recommending position closure with technical justification.
     
     Args:
         signal_id: Database signal ID
@@ -336,9 +336,11 @@ def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_pr
         entry_price: Signal entry price
         tp_price: Take profit price
         sl_price: Stop loss price
+        current_indicators: Current indicator values (optional)
+        original_indicators: Original indicator values at entry (optional)
     
     Returns:
-        str: AI-generated timeout message
+        str: AI-generated close recommendation with technical reasoning
     """
     try:
         hours_elapsed = minutes_elapsed / 60
@@ -351,7 +353,32 @@ def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_pr
         
         pips_status = f"+{pips}" if pips > 0 else str(pips)
         
-        prompt = f"""Generate a professional trade expiration message.
+        # Build technical analysis context
+        tech_context = ""
+        if current_indicators:
+            rsi = current_indicators.get('rsi')
+            macd = current_indicators.get('macd')
+            adx = current_indicators.get('adx')
+            stoch = current_indicators.get('stochastic')
+            
+            tech_context = f"""
+Current Technical Indicators:
+- RSI: {rsi:.2f if rsi else 'N/A'} {"(neutral zone)" if rsi and 40 < rsi < 60 else "(overbought)" if rsi and rsi > 70 else "(oversold)" if rsi and rsi < 30 else ""}
+- MACD: {macd:.4f if macd else 'N/A'} {"(bearish)" if macd and macd < 0 else "(bullish)" if macd and macd > 0 else ""}
+- ADX: {adx:.2f if adx else 'N/A'} {"(weak trend)" if adx and adx < 20 else "(moderate trend)" if adx and adx < 40 else "(strong trend)" if adx else ""}
+- Stochastic: {stoch:.2f if stoch else 'N/A'}"""
+            
+            # Compare to original if available
+            if original_indicators:
+                orig_rsi = original_indicators.get('rsi')
+                orig_macd = original_indicators.get('macd')
+                if orig_rsi and rsi:
+                    tech_context += f"\n- RSI change: {orig_rsi:.2f} → {rsi:.2f}"
+                if orig_macd and macd:
+                    macd_direction = "weakened" if abs(macd) < abs(orig_macd) else "strengthened"
+                    tech_context += f"\n- MACD momentum has {macd_direction}"
+        
+        prompt = f"""Generate a professional trade closure advisory with technical justification.
 
 Trade Details:
 - Signal #{signal_id} - {signal_type} XAU/USD (Gold)
@@ -361,20 +388,23 @@ Trade Details:
 - Stop Loss: ${sl_price:.2f} (not reached)
 - Time in Trade: {hours_elapsed:.1f} hours
 - Current P/L: {pips_status} pips
+{tech_context}
 
-Context: This trade has reached the 3-hour time limit without hitting TP or SL. We are recommending to close the position to free capital for better opportunities.
+Context: After {hours_elapsed:.1f} hours, price has consolidated without clear direction. The original momentum has dissipated.
 
-Style: 2-3 sentences max. Professional and matter-of-fact. Start with ⏰ emoji. Explain the timeout policy briefly and recommend closing at current price. Note the result (small gain, small loss, or breakeven).
+Your task: Recommend closing the position. Justify with technical analysis (momentum loss, neutral RSI, weak ADX, etc). Do NOT mention "timeout" or "time limit" - focus purely on technical reasons why the trade setup is no longer valid.
+
+Style: 2-3 sentences. Professional, analytical. Start with 🔔 emoji. Reference specific indicators. Clearly recommend closing at current price.
 
 Generate the message:"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional forex analyst recommending trade closure due to time management policy. Be professional and focus on capital efficiency."},
+                {"role": "system", "content": "You are a professional forex analyst. Provide clear trade closure recommendations based on technical analysis. Never mention time limits - only technical reasons."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=120,
+            max_tokens=150,
             temperature=0.7
         )
         
@@ -382,7 +412,7 @@ Generate the message:"""
         
     except Exception as e:
         print(f"❌ Error generating timeout message: {e}")
-        return get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price)
+        return get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators)
 
 def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, entry_price):
     """Fallback template messages for revalidation when AI is unavailable"""
@@ -400,7 +430,7 @@ def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reaso
     
     return f"📊 Trade Status: Monitoring signal at {hours:.1f} hours."
 
-def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price):
+def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators=None):
     """Fallback template message for timeout when AI is unavailable"""
     hours = minutes_elapsed / 60
     if signal_type == 'BUY':
@@ -410,4 +440,24 @@ def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_pric
     
     pips_status = f"+{pips}" if pips > 0 else str(pips)
     
-    return f"⏰ Trade Timeout ({hours:.1f}h): Signal has reached time limit without hitting TP/SL. Current result: {pips_status} pips. Recommend closing position to redeploy capital."
+    # Build technical reason
+    tech_reason = "momentum has dissipated and price is consolidating"
+    if current_indicators:
+        rsi = current_indicators.get('rsi')
+        adx = current_indicators.get('adx')
+        macd = current_indicators.get('macd')
+        
+        reasons = []
+        if rsi and 40 < rsi < 60:
+            reasons.append(f"RSI at {rsi:.1f} (neutral)")
+        if adx and adx < 20:
+            reasons.append(f"ADX at {adx:.1f} (weak trend)")
+        if macd:
+            direction = "bearish" if macd < 0 else "bullish"
+            if (signal_type == 'BUY' and macd < 0) or (signal_type == 'SELL' and macd > 0):
+                reasons.append(f"MACD now {direction}")
+        
+        if reasons:
+            tech_reason = ", ".join(reasons)
+    
+    return f"🔔 Trade Advisory: {tech_reason}. Original {signal_type} setup no longer supported by indicators. Recommend closing at ${current_price:.2f} ({pips_status} pips) to preserve capital."

@@ -694,7 +694,8 @@ class ForexSignalEngine:
                 'rsi': rsi,
                 'macd': macd_data['macd'],
                 'adx': adx,
-                'stoch_k': stoch['k']
+                'stochastic': stoch['k'],
+                'stoch_k': stoch['k']  # Alias for backward compatibility
             }
             
             # Validate thesis
