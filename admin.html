@@ -2815,6 +2815,13 @@
                             <div class="loading">Loading conversions...</div>
                         </div>
                     </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-title">All Leads</div>
+                        <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
+                            <div class="loading">Loading leads...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3459,6 +3466,9 @@
                 // Render recent conversions
                 renderRecentConversions(data.recent_conversions);
                 
+                // Render all leads table
+                renderAllLeads(data.all_leads);
+                
             } catch (error) {
                 console.error('Error loading conversions:', error);
                 document.getElementById('revenueBySource').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
@@ -3569,6 +3579,49 @@
                 html += `<td style="padding: 10px; text-align: right;">${conv.days_to_convert || '--'}</td>`;
                 html += `<td style="padding: 10px; text-align: right; color: #48bb78;">$${(conv.amount || 0).toFixed(0)}</td>`;
                 html += `<td style="padding: 10px;">${conv.source || '(Direct)'}</td>`;
+                html += `</tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function renderAllLeads(leads) {
+            const container = document.getElementById('allLeadsTable');
+            if (!leads || leads.length === 0) {
+                container.innerHTML = '<div style="color: #718096; text-align: center;">No leads yet. Sign ups will appear here.</div>';
+                return;
+            }
+            
+            let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
+            html += '<thead><tr style="border-bottom: 2px solid #2d3748; background: #1a202c;">';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Status</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Email</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Name</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Source</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Campaign</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Signup Date</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: #a0aec0;">Revenue</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Telegram</th>';
+            html += '</tr></thead><tbody>';
+            
+            leads.forEach(lead => {
+                const signupDate = lead.signup_date ? new Date(lead.signup_date).toLocaleDateString() : '--';
+                const statusTag = lead.is_converted 
+                    ? '<span style="background: #48bb78; color: #1a202c; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">SALE</span>'
+                    : '<span style="background: #4a5568; color: #e2e8f0; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
+                const revenue = lead.is_converted ? `<span style="color: #48bb78; font-weight: 600;">$${lead.amount.toFixed(0)}</span>` : '<span style="color: #718096;">--</span>';
+                const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: #718096;">--</span>';
+                
+                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
+                html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.name || '<span style="color: #718096;">--</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.source || '<span style="color: #718096;">direct</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.campaign || '<span style="color: #718096;">--</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${signupDate}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right;">${revenue}</td>`;
+                html += `<td style="padding: 12px 10px;">${telegram}</td>`;
                 html += `</tr>`;
             });
             

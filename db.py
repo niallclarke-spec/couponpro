@@ -3858,6 +3858,36 @@ def get_conversion_analytics():
                 for row in cursor.fetchall()
             ]
             
+            # All leads table (free signups with conversion status)
+            cursor.execute("""
+                SELECT 
+                    email, name, utm_source, utm_campaign, 
+                    free_signup_at, is_converted, converted_at, 
+                    amount_paid, plan_type, status, telegram_username
+                FROM telegram_subscriptions 
+                ORDER BY 
+                    CASE WHEN is_converted = TRUE THEN 0 ELSE 1 END,
+                    free_signup_at DESC NULLS LAST,
+                    created_at DESC
+                LIMIT 50
+            """)
+            all_leads = [
+                {
+                    'email': row[0],
+                    'name': row[1] or '',
+                    'source': row[2] or 'direct',
+                    'campaign': row[3] or '',
+                    'signup_date': row[4].isoformat() if row[4] else None,
+                    'is_converted': row[5] or False,
+                    'converted_at': row[6].isoformat() if row[6] else None,
+                    'amount': float(row[7] or 0),
+                    'plan_type': row[8] or 'Free',
+                    'status': row[9] or 'pending',
+                    'telegram': row[10] or ''
+                }
+                for row in cursor.fetchall()
+            ]
+            
             return {
                 'summary': {
                     'total_free_signups': total_free_signups,
@@ -3869,7 +3899,8 @@ def get_conversion_analytics():
                 'by_source': by_source,
                 'by_campaign': by_campaign,
                 'funnel_by_source': funnel_by_source,
-                'recent_conversions': recent_conversions
+                'recent_conversions': recent_conversions,
+                'all_leads': all_leads
             }
             
     except Exception as e:
