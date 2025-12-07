@@ -41,6 +41,26 @@ Set `'enabled': False` in the registry entry. Both signal generation and validat
 
 **Original indicators are stored** in the `original_indicators_json` JSONB column for dynamic future-proof storage.
 
+### Forex Bot Timing Configuration
+Timing constants are defined in `forex_signals.py` and `forex_scheduler.py` for easy configuration:
+
+**Scheduler Intervals (forex_scheduler.py):**
+- `SIGNAL_CHECK_INTERVAL`: 900s (15min) - Check for new signals
+- `MONITOR_INTERVAL`: 300s (5min) - Monitor for TP/SL hits
+- `GUIDANCE_INTERVAL`: 300s (5min) - Check guidance updates
+- `STAGNANT_CHECK_INTERVAL`: 300s (5min) - Check stagnant signals
+
+**Signal Lifecycle (forex_signals.py):**
+- `FIRST_REVALIDATION_MINUTES`: 90min - First thesis re-check
+- `REVALIDATION_INTERVAL_MINUTES`: 30min - Subsequent re-checks
+- `HARD_TIMEOUT_MINUTES`: 180min (3hr) - Close advisory
+
+**Guidance Zones (forex_signals.py):**
+- `PROGRESS_ZONE_THRESHOLD`: 30% - First progress update
+- `BREAKEVEN_ZONE_THRESHOLD`: 60% - Breakeven advisory
+- `DECISION_ZONE_THRESHOLD`: 85% - Final push update
+- `GUIDANCE_COOLDOWN_MINUTES`: 10min - Minimum between messages
+
 ### System Design Choices
 The system uses stateless HMAC-signed cookie authentication for ephemeral environments. Digital Ocean Spaces serves as the persistent storage for all template images, acting as the single source of truth. A hybrid storage model combines local `meta.json` files with object storage backups. The architecture is modular, configured via environment variables. Telegram image generation uses Pillow for high-quality rendering. Coupon validation is enforced at the API level. Production robustness for the Telegram bot includes `asyncio.to_thread()` for database calls, `AIORateLimiter` for Telegram API, and a single-process webhook architecture to maintain consistent state. Stripe API is the single source of truth for revenue metrics, using cached calls, subscription ID filtering, rebill calculations, and idempotent webhook handlers.
 
