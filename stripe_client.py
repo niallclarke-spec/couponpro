@@ -455,12 +455,53 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                         if next_payment_ts:
                             next_payment_date = datetime.fromtimestamp(next_payment_ts)
                             
-                            # Check if renews this month
-                            if month_start <= next_payment_date < month_end:
-                                monthly_rebill += rebill_amount
-                                print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                            # Get billing interval to calculate all renewals this month
+                            billing_interval = None
+                            billing_interval_count = 1
+                            try:
+                                items = getattr(sub, 'items', None)
+                                if items and hasattr(items, 'data') and items.data:
+                                    price = getattr(items.data[0], 'price', None)
+                                    if price:
+                                        recurring = getattr(price, 'recurring', None)
+                                        if recurring:
+                                            billing_interval = getattr(recurring, 'interval', None)
+                                            billing_interval_count = getattr(recurring, 'interval_count', 1) or 1
+                            except Exception as e:
+                                print(f"[Stripe] Error getting interval: {e}")
+                            
+                            # Calculate all renewals this month for weekly/daily subscriptions
+                            renewals_this_month = 0
+                            check_date = next_payment_date
+                            
+                            # Determine days between renewals
+                            if billing_interval == 'day':
+                                interval_days = billing_interval_count
+                            elif billing_interval == 'week':
+                                interval_days = 7 * billing_interval_count
                             else:
-                                print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                                interval_days = None  # Monthly or yearly - just count once
+                            
+                            if interval_days and interval_days < 30:
+                                # Count all renewals in this month
+                                while check_date < month_end:
+                                    if check_date >= month_start:
+                                        renewals_this_month += 1
+                                    check_date += timedelta(days=interval_days)
+                                
+                                if renewals_this_month > 0:
+                                    total_for_sub = rebill_amount * renewals_this_month
+                                    monthly_rebill += total_for_sub
+                                    print(f"[Stripe] ✓ {billing_interval}ly sub: ${rebill_amount} x {renewals_this_month} renewals = ${total_for_sub}")
+                                else:
+                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                            else:
+                                # Monthly/yearly - just check if next renewal is this month
+                                if month_start <= next_payment_date < month_end:
+                                    monthly_rebill += rebill_amount
+                                    print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                                else:
+                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
                         else:
                             # No date info - count it anyway
                             monthly_rebill += rebill_amount
