@@ -211,6 +211,20 @@ class ForexSignalEngine:
             # Calculate TP/SL
             take_profit, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
             
+            # Build dynamic indicators dict from all fetched indicators
+            all_indicators = {
+                'rsi': rsi,
+                'macd': macd_data['macd'],
+                'adx': adx,
+                'stochastic': stoch['k'],
+                'atr': atr,
+                'bollinger_middle': bbands['middle'],
+                'bollinger_upper': bbands['upper'],
+                'bollinger_lower': bbands['lower'],
+                'ema50': ema50,
+                'ema200': ema200
+            }
+            
             signal_data = {
                 'signal_type': signal_type,
                 'pair': self.symbol,
@@ -222,7 +236,8 @@ class ForexSignalEngine:
                 'macd_value': macd_data['macd'],
                 'atr_value': atr,
                 'adx_value': adx,
-                'stoch_k_value': stoch['k']
+                'stoch_k_value': stoch['k'],
+                'all_indicators': all_indicators
             }
             
             print(f"[FOREX SIGNALS] ✅ Signal generated: {signal_type} @ {price:.2f}, TP: {take_profit:.2f}, SL: {stop_loss:.2f}")

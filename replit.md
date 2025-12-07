@@ -24,6 +24,23 @@ The frontend uses pure HTML, CSS, and vanilla JavaScript. The backend, including
 - **Bot Analytics Dashboard**: Provides comprehensive admin analytics with smart chart switching (hourly/daily aggregation), tracking generations, unique users, success rates, top templates, and searchable coupon codes.
 - **Forex Signals Bot**: Automated XAU/USD (Gold) trading signals based on a multi-indicator strategy (EMA, ADX, RSI, MACD, Bollinger Bands, Stochastic Oscillator), posted to a private Telegram channel. Features ATR-based dynamic TP/SL, AI-powered celebration messages, and daily/weekly performance recaps.
 
+### Indicator Configuration (Forex Bot)
+The indicator system uses a centralized configuration in `indicator_config.py`. This ensures signal generation and thesis re-validation stay in sync when indicators change.
+
+**To add a new indicator:**
+1. Add an entry to `INDICATOR_REGISTRY` in `indicator_config.py` with:
+   - `enabled`: True/False to toggle
+   - `signal_logic`: Buy/sell conditions for signal generation
+   - `validation_logic`: Weakening/broken rules for thesis re-validation
+   - `display`: Formatting for messages
+2. The thesis validator (`validate_thesis()`) and indicator storage automatically use the new indicator
+3. AI messages automatically include the indicator in status updates via the reasons list
+
+**To remove/disable an indicator:**
+Set `'enabled': False` in the registry entry. Both signal generation and validation will skip it.
+
+**Original indicators are stored** in the `original_indicators_json` JSONB column for dynamic future-proof storage.
+
 ### System Design Choices
 The system uses stateless HMAC-signed cookie authentication for ephemeral environments. Digital Ocean Spaces serves as the persistent storage for all template images, acting as the single source of truth. A hybrid storage model combines local `meta.json` files with object storage backups. The architecture is modular, configured via environment variables. Telegram image generation uses Pillow for high-quality rendering. Coupon validation is enforced at the API level. Production robustness for the Telegram bot includes `asyncio.to_thread()` for database calls, `AIORateLimiter` for Telegram API, and a single-process webhook architecture to maintain consistent state. Stripe API is the single source of truth for revenue metrics, using cached calls, subscription ID filtering, rebill calculations, and idempotent webhook handlers.
 

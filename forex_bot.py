@@ -84,13 +84,17 @@ class ForexTelegramBot:
             )
             
             # Store original indicator values for re-validation using config-driven approach
-            indicators_dict = {
-                'rsi': rsi,
-                'macd': macd,
-                'adx': signal_data.get('adx_value'),
-                'stochastic': signal_data.get('stoch_k_value'),
-                'atr': atr
-            }
+            # Use the all_indicators dict from signal_data if available
+            indicators_dict = signal_data.get('all_indicators', {})
+            if not indicators_dict:
+                # Fallback to building from individual values
+                indicators_dict = {
+                    'rsi': rsi,
+                    'macd': macd,
+                    'adx': signal_data.get('adx_value'),
+                    'stochastic': signal_data.get('stoch_k_value'),
+                    'atr': atr
+                }
             # Remove None values
             indicators_dict = {k: v for k, v in indicators_dict.items() if v is not None}
             
