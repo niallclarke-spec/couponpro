@@ -437,6 +437,30 @@ class DatabasePool:
                 else:
                     print("[MIGRATION] original_indicators_json column already exists, skipping")
                 
+                # Migration: Add guidance zone tracking columns
+                print("[MIGRATION] Checking forex_signals for guidance zone columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name IN (
+                        'last_progress_zone', 'last_caution_zone'
+                    )
+                """)
+                existing_zone_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'last_progress_zone' not in existing_zone_columns:
+                    print("[MIGRATION] Adding last_progress_zone column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_progress_zone INTEGER DEFAULT 0")
+                    print("[MIGRATION] ✅ last_progress_zone column added")
+                else:
+                    print("[MIGRATION] last_progress_zone column already exists, skipping")
+                
+                if 'last_caution_zone' not in existing_zone_columns:
+                    print("[MIGRATION] Adding last_caution_zone column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_caution_zone INTEGER DEFAULT 0")
+                    print("[MIGRATION] ✅ last_caution_zone column added")
+                else:
+                    print("[MIGRATION] last_caution_zone column already exists, skipping")
+                
                 # Create index on bot_type for filtering by bot type
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_forex_signals_bot_type 
