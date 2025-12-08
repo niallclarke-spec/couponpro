@@ -14,8 +14,8 @@ from forex_api import twelve_data_client
 
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
-MONITOR_INTERVAL = 300           # 5 minutes - monitor active signals for TP/SL
-GUIDANCE_INTERVAL = 300          # 5 minutes - check for guidance updates
+MONITOR_INTERVAL = 60            # 1 minute - monitor active signals for TP/SL
+GUIDANCE_INTERVAL = 60           # 1 minute - check for guidance updates
 STAGNANT_CHECK_INTERVAL = 300    # 5 minutes - check stagnant signals for revalidation
 
 class ForexScheduler:
@@ -367,8 +367,8 @@ class ForexScheduler:
         print("="*60)
         print(f"📊 Signal checks: 15min timeframe every 15 minutes")
         print(f"📊 Signal checks: 1h timeframe every hour")
-        print(f"🔍 Price monitoring: Every 5 minutes")
-        print(f"💡 Signal guidance: Every 5 minutes (with 10min cooldown)")
+        print(f"🔍 Price monitoring: Every 1 minute")
+        print(f"💡 Signal guidance: Every 1 minute (with 10min cooldown)")
         print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
         print(f"⏰ Hard timeout: 3 hours")
         print(f"📅 Daily recap: 11:59 PM GMT")
