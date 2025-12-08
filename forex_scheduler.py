@@ -24,16 +24,16 @@ class ForexScheduler:
         self.monitor_interval = MONITOR_INTERVAL
         self.last_daily_recap = None
         self.last_weekly_recap = None
+        self.last_1h_check = None  # Track when we last checked 1h timeframe
     
     async def run_signal_check(self):
-        """Check for new signals and post to Telegram if found"""
+        """Check for new signals on both 15min and 1h timeframes"""
         try:
             if not forex_signal_engine.is_trading_hours():
                 print("[SCHEDULER] Outside trading hours (8AM-10PM GMT), skipping signal check")
                 return
             
             # CRITICAL: Only allow ONE active signal at a time
-            # Check for any pending signals before generating new ones
             pending_signals = get_forex_signals(status='pending')
             if pending_signals and len(pending_signals) > 0:
                 signal = pending_signals[0]
@@ -41,15 +41,42 @@ class ForexScheduler:
                 print(f"[SCHEDULER] Entry: ${signal['entry_price']}, TP: ${signal['take_profit']}, SL: ${signal['stop_loss']}")
                 return
             
+            # Determine if it's time to check 1h timeframe (every hour)
+            now = datetime.utcnow()
+            should_check_1h = False
+            
+            if self.last_1h_check is None:
+                should_check_1h = True
+            else:
+                minutes_since_1h = (now - self.last_1h_check).total_seconds() / 60
+                if minutes_since_1h >= 60:
+                    should_check_1h = True
+            
+            # Check 15-minute timeframe (every signal check)
             signal_data = await forex_signal_engine.check_for_signals(timeframe='15min')
             
             if signal_data:
                 signal_id = await forex_telegram_bot.post_signal(signal_data)
-                
                 if signal_id:
-                    print(f"[SCHEDULER] ✅ New signal #{signal_id} posted successfully")
-                else:
-                    print("[SCHEDULER] ❌ Failed to post signal to Telegram")
+                    print(f"[SCHEDULER] ✅ New 15min signal #{signal_id} posted successfully")
+                    # Update 1h timestamp even if we posted a 15min signal (prevent starvation)
+                    if should_check_1h:
+                        self.last_1h_check = now
+                        print("[SCHEDULER] ⏭️ Skipped 1h check (signal already active)")
+                    return
+            
+            # Check 1-hour timeframe if due
+            if should_check_1h:
+                print("[SCHEDULER] 📊 Checking 1-hour timeframe...")
+                signal_data_1h = await forex_signal_engine.check_for_signals(timeframe='1h')
+                self.last_1h_check = now
+                
+                if signal_data_1h:
+                    signal_id = await forex_telegram_bot.post_signal(signal_data_1h)
+                    if signal_id:
+                        print(f"[SCHEDULER] ✅ New 1h signal #{signal_id} posted successfully")
+                    else:
+                        print("[SCHEDULER] ❌ Failed to post 1h signal to Telegram")
             
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in signal check: {e}")
@@ -338,13 +365,15 @@ class ForexScheduler:
         print("\n" + "="*60)
         print("🚀 FOREX SIGNALS SCHEDULER STARTED")
         print("="*60)
-        print(f"📊 Signal checks: Every 15 minutes (during 8AM-10PM GMT)")
+        print(f"📊 Signal checks: 15min timeframe every 15 minutes")
+        print(f"📊 Signal checks: 1h timeframe every hour")
         print(f"🔍 Price monitoring: Every 5 minutes")
         print(f"💡 Signal guidance: Every 5 minutes (with 10min cooldown)")
         print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
         print(f"⏰ Hard timeout: 3 hours")
         print(f"📅 Daily recap: 11:59 PM GMT")
         print(f"📅 Weekly recap: Sunday 11:59 PM GMT")
+        print(f"⏰ Trading hours: 8AM-10PM GMT")
         print("="*60 + "\n")
         
         signal_check_counter = 0
