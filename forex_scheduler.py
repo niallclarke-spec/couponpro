@@ -9,7 +9,7 @@ from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
 from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance, generate_revalidation_message, generate_timeout_message
-from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date
 from forex_api import twelve_data_client
 
 # Scheduler timing constants (in seconds)
@@ -284,17 +284,24 @@ class ForexScheduler:
         """Post daily recap at 11:59 PM GMT"""
         try:
             now = datetime.utcnow()
-            current_date = now.date()
+            current_date_str = now.date().isoformat()
             
             if now.hour == 23 and now.minute >= 55:
-                if self.last_daily_recap != current_date:
+                # Check database for last posted date (survives server restarts)
+                last_posted = get_last_recap_date('daily')
+                
+                if last_posted != current_date_str:
                     print("[SCHEDULER] Generating daily recap...")
                     
                     ai_recap = generate_daily_recap()
                     await forex_telegram_bot.post_daily_recap(ai_recap)
                     
-                    self.last_daily_recap = current_date
+                    # Persist to database
+                    set_last_recap_date('daily', current_date_str)
+                    self.last_daily_recap = current_date_str
                     print("[SCHEDULER] ✅ Daily recap posted")
+                else:
+                    print("[SCHEDULER] Daily recap already posted today, skipping")
         
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error posting daily recap: {e}")
@@ -305,16 +312,23 @@ class ForexScheduler:
             now = datetime.utcnow()
             
             if now.weekday() == 6 and now.hour == 23 and now.minute >= 55:
-                week_number = now.isocalendar()[1]
+                week_number = str(now.isocalendar()[1])
                 
-                if self.last_weekly_recap != week_number:
+                # Check database for last posted week (survives server restarts)
+                last_posted = get_last_recap_date('weekly')
+                
+                if last_posted != week_number:
                     print("[SCHEDULER] Generating weekly recap...")
                     
                     ai_recap = generate_weekly_recap()
                     await forex_telegram_bot.post_weekly_recap(ai_recap)
                     
+                    # Persist to database
+                    set_last_recap_date('weekly', week_number)
                     self.last_weekly_recap = week_number
                     print("[SCHEDULER] ✅ Weekly recap posted")
+                else:
+                    print("[SCHEDULER] Weekly recap already posted this week, skipping")
         
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error posting weekly recap: {e}")

@@ -2465,6 +2465,69 @@ def update_forex_config(config_updates):
         print(f"Error updating forex config: {e}")
         raise
 
+
+def get_last_recap_date(recap_type):
+    """
+    Get the last date a recap was posted (persisted to survive restarts).
+    
+    Args:
+        recap_type: 'daily' or 'weekly'
+    
+    Returns:
+        str or None: Last recap date/week as string
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        key = f'last_{recap_type}_recap'
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT setting_value FROM forex_config 
+                WHERE setting_key = %s
+            """, (key,))
+            row = cursor.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        print(f"Error getting last {recap_type} recap: {e}")
+        return None
+
+
+def set_last_recap_date(recap_type, value):
+    """
+    Set the last date a recap was posted (persisted to survive restarts).
+    
+    Args:
+        recap_type: 'daily' or 'weekly'
+        value: Date string or week number
+    
+    Returns:
+        bool: Success
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        key = f'last_{recap_type}_recap'
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO forex_config (setting_key, setting_value, updated_at)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (setting_key) 
+                DO UPDATE SET 
+                    setting_value = EXCLUDED.setting_value,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (key, str(value)))
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"Error setting last {recap_type} recap: {e}")
+        return False
+
 # ===== Bot Config Functions =====
 
 def initialize_default_bot_config():
