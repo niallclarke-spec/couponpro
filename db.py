@@ -698,6 +698,19 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered_at TIMESTAMP")
                     print("[MIGRATION] ✅ breakeven_triggered columns added")
                 
+                # Migration: Add close_price column for tracking exit price
+                print("[MIGRATION] Checking forex_signals for close_price column...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name = 'close_price'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding close_price column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN close_price DECIMAL(10, 2)")
+                    print("[MIGRATION] ✅ close_price column added")
+                else:
+                    print("[MIGRATION] close_price column already exists, skipping")
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -1931,7 +1944,7 @@ def get_forex_signals(status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at
+                           breakeven_triggered, breakeven_triggered_at, close_price
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1951,7 +1964,7 @@ def get_forex_signals(status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at
+                           breakeven_triggered, breakeven_triggered_at, close_price
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -2002,14 +2015,15 @@ def get_forex_signals(status=None, limit=100):
                     'tp2_hit_at': row[39].isoformat() if row[39] else None,
                     'tp3_hit_at': row[40].isoformat() if row[40] else None,
                     'breakeven_triggered': row[41] or False,
-                    'breakeven_triggered_at': row[42].isoformat() if row[42] else None
+                    'breakeven_triggered_at': row[42].isoformat() if row[42] else None,
+                    'close_price': float(row[43]) if row[43] else None
                 })
             return signals
     except Exception as e:
         print(f"Error getting forex signals: {e}")
         return []
 
-def update_forex_signal_status(signal_id, status, result_pips=None):
+def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None):
     """
     Update forex signal status and optionally set result.
     
@@ -2017,6 +2031,7 @@ def update_forex_signal_status(signal_id, status, result_pips=None):
         signal_id (int): Signal ID to update
         status (str): New status ('pending', 'won', 'lost', 'expired')
         result_pips (float, optional): Result in pips (positive for profit, negative for loss)
+        close_price (float, optional): Price at which the signal closed
     
     Returns:
         bool: True if successful
@@ -2025,12 +2040,24 @@ def update_forex_signal_status(signal_id, status, result_pips=None):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            if result_pips is not None:
+            if result_pips is not None and close_price is not None:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET status = %s, result_pips = %s, close_price = %s, closed_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (status, result_pips, close_price, signal_id))
+            elif result_pips is not None:
                 cursor.execute("""
                     UPDATE forex_signals
                     SET status = %s, result_pips = %s, closed_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                 """, (status, result_pips, signal_id))
+            elif close_price is not None:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET status = %s, close_price = %s, closed_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (status, close_price, signal_id))
             else:
                 cursor.execute("""
                     UPDATE forex_signals

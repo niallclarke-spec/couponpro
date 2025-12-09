@@ -91,6 +91,7 @@ class ForexScheduler:
                 event = update.get('event')
                 status = update.get('status')
                 pips = update.get('pips', 0)
+                close_price = update.get('current_price')
                 
                 signals_data = get_forex_signals(status=None, limit=10)
                 matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
@@ -118,22 +119,22 @@ class ForexScheduler:
                     percentage = update.get('percentage', 20)
                     await forex_telegram_bot.post_tp_hit(signal_id, 3, pips, percentage, 0)
                     if status == 'won':
-                        update_forex_signal_status(signal_id, 'won', pips)
+                        update_forex_signal_status(signal_id, 'won', pips, close_price)
                         print(f"[SCHEDULER] ✅ Signal #{signal_id} completed - all TPs hit!")
                 
                 elif status == 'won':
-                    update_forex_signal_status(signal_id, status, pips)
+                    update_forex_signal_status(signal_id, status, pips, close_price)
                     ai_message = generate_tp_celebration(signal_id, pips, signal_type)
                     await forex_telegram_bot.post_tp_celebration(signal_id, pips, ai_message)
                     print(f"[SCHEDULER] ✅ Posted TP celebration for signal #{signal_id}")
                     
                 elif status == 'lost':
-                    update_forex_signal_status(signal_id, status, pips)
+                    update_forex_signal_status(signal_id, status, pips, close_price)
                     await forex_telegram_bot.post_sl_hit(signal_id, pips, signal_type)
                     print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
-                    update_forex_signal_status(signal_id, 'expired', pips)
+                    update_forex_signal_status(signal_id, 'expired', pips, close_price)
                     await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
                     print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id}")
                 
@@ -267,7 +268,7 @@ class ForexScheduler:
                             pips = round(current_price - entry, 2)
                         else:
                             pips = round(entry - current_price, 2)
-                        update_forex_signal_status(signal_id, 'expired', pips)
+                        update_forex_signal_status(signal_id, 'expired', pips, current_price)
                         forex_signal_engine.load_active_strategy()
                         print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
                     
@@ -331,7 +332,7 @@ class ForexScheduler:
                                         pips = round(current_price - entry, 2)
                                     else:
                                         pips = round(entry - current_price, 2)
-                                    update_forex_signal_status(signal_id, 'expired', pips)
+                                    update_forex_signal_status(signal_id, 'expired', pips, current_price)
                                     forex_signal_engine.load_active_strategy()
                                     print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
                 

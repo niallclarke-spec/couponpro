@@ -167,11 +167,11 @@ class PriceMonitor:
             print(f"[MONITOR] Error applying breakeven: {e}")
             return False
     
-    def close_signal(self, signal_id: int, status: str, pips: float) -> bool:
+    def close_signal(self, signal_id: int, status: str, pips: float, close_price: float = None) -> bool:
         """Close a signal with final status"""
         try:
-            update_forex_signal_status(signal_id, status, pips)
-            print(f"[MONITOR] Signal #{signal_id} closed as {status} with {pips:+.2f} pips")
+            update_forex_signal_status(signal_id, status, pips, close_price)
+            print(f"[MONITOR] Signal #{signal_id} closed as {status} with {pips:+.2f} pips at ${close_price:.2f}" if close_price else f"[MONITOR] Signal #{signal_id} closed as {status} with {pips:+.2f} pips")
             return True
         except Exception as e:
             print(f"[MONITOR] Error closing signal: {e}")

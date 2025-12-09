@@ -4949,6 +4949,7 @@
                             <th>TP</th>
                             <th>SL</th>
                             <th>Status</th>
+                            <th>Price</th>
                             <th>Pips</th>
                         </tr>
                     </thead>
@@ -4966,10 +4967,21 @@
                             let pips = signal.result_pips || 0;
                             let pipsDisplay = pips > 0 ? `+${pips.toFixed(2)}` : pips.toFixed(2);
                             
-                            if ((signal.status === 'pending' || signal.status === 'open') && botStatus?.current_pips !== null && botStatus?.current_pips !== undefined && botStatus?.open_signal?.id === signal.id) {
-                                pips = botStatus.current_pips;
+                            // Price display: live price for pending, close_price for closed
+                            let priceDisplay = '--';
+                            const isPending = (signal.status === 'pending' || signal.status === 'open');
+                            
+                            if (isPending && botStatus?.current_price && botStatus?.open_signal?.id === signal.id) {
+                                // Live price for active signal
+                                priceDisplay = `<span style="color: #667eea;" title="Live">$${botStatus.current_price.toFixed(2)}</span>`;
+                                pips = botStatus.current_pips || 0;
                                 const sign = pips >= 0 ? '+' : '';
                                 pipsDisplay = `<span title="Live">${sign}${pips.toFixed(1)}</span>`;
+                            } else if (!isPending && signal.close_price) {
+                                // Close price for completed signals
+                                priceDisplay = `$${signal.close_price.toFixed(2)}`;
+                            } else if (isPending) {
+                                priceDisplay = '<span style="color: #a0aec0;">--</span>';
                             }
                             
                             const botType = signal.bot_type || 'custom';
@@ -4984,6 +4996,7 @@
                                     <td>$${signal.take_profit ? signal.take_profit.toFixed(2) : '--'}</td>
                                     <td>$${signal.stop_loss ? signal.stop_loss.toFixed(2) : '--'}</td>
                                     <td><span class="badge badge-${signal.status}">${signal.status}</span></td>
+                                    <td>${priceDisplay}</td>
                                     <td style="color: ${pips >= 0 ? '#48bb78' : '#f56565'}; font-weight: 600;">${pipsDisplay}</td>
                                 </tr>
                             `;
