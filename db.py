@@ -2312,7 +2312,7 @@ def get_daily_pnl():
                 SELECT COALESCE(SUM(result_pips), 0) as daily_pips
                 FROM forex_signals
                 WHERE posted_at >= CURRENT_DATE
-                AND status IN ('won', 'lost')
+                AND status IN ('won', 'lost', 'expired')
             """)
             
             row = cursor.fetchone()

@@ -133,9 +133,13 @@ class ForexScheduler:
                     print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
-                    update_forex_signal_status(signal_id, 'lost', pips)
+                    update_forex_signal_status(signal_id, 'expired', pips)
                     await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
                     print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id}")
+                
+                if status in ('won', 'lost', 'expired'):
+                    forex_signal_engine.load_active_strategy()
+                    print(f"[SCHEDULER] Strategy reloaded after signal #{signal_id} closed")
                 
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in signal monitoring: {e}")
@@ -264,6 +268,7 @@ class ForexScheduler:
                         else:
                             pips = round(entry - current_price, 2)
                         update_forex_signal_status(signal_id, 'expired', pips)
+                        forex_signal_engine.load_active_strategy()
                         print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
                     
                 elif event_type == 'revalidation':
@@ -327,6 +332,7 @@ class ForexScheduler:
                                     else:
                                         pips = round(entry - current_price, 2)
                                     update_forex_signal_status(signal_id, 'expired', pips)
+                                    forex_signal_engine.load_active_strategy()
                                     print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
                 
         except Exception as e:
