@@ -10,7 +10,7 @@ from forex_api import twelve_data_client
 from db import (
     create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config,
     get_daily_pnl, get_last_completed_signal, add_signal_narrative, get_bot_config,
-    update_tp_hit, update_breakeven_triggered
+    update_tp_hit, update_breakeven_triggered, get_active_bot
 )
 from indicator_config import (
     get_validation_indicators,
@@ -48,22 +48,21 @@ class ForexSignalEngine:
         self.hard_timeout_minutes = HARD_TIMEOUT_MINUTES
     
     def load_active_strategy(self):
-        """Load the active strategy from database config"""
+        """Load the active strategy from bot_config table"""
         try:
-            config = get_bot_config()
-            if config:
-                self._active_bot_type = config.get('active_bot_type', 'aggressive')
-            else:
-                self._active_bot_type = 'aggressive'
+            # Use get_active_bot() which reads from bot_config table (set by admin UI)
+            self._active_bot_type = get_active_bot() or 'aggressive'
             
             self._active_strategy = get_active_strategy(self._active_bot_type)
             if self._active_strategy:
                 print(f"[FOREX ENGINE] Loaded strategy: {self._active_strategy.name} ({self._active_bot_type})")
             else:
                 print(f"[FOREX ENGINE] WARNING: Could not load strategy '{self._active_bot_type}', using aggressive")
+                self._active_bot_type = 'aggressive'
                 self._active_strategy = get_active_strategy('aggressive')
         except Exception as e:
             print(f"[FOREX ENGINE] Error loading strategy: {e}")
+            self._active_bot_type = 'aggressive'
             self._active_strategy = get_active_strategy('aggressive')
     
     def get_active_strategy(self):

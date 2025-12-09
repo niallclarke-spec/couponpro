@@ -3224,19 +3224,42 @@
                     <p>XAU/USD trading signals with live performance metrics</p>
                 </div>
                 <div class="content-body">
-                    <div id="activeSignalBanner" class="active-signal-banner" style="display: none;">
-                        <div class="active-signal-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="active-signal-info">
-                            <div class="active-signal-title">Active Signal</div>
-                            <div class="active-signal-details" id="activeSignalDetails">Loading...</div>
-                        </div>
-                        <div class="active-signal-meta">
-                            <div class="active-signal-time" id="activeSignalTime"></div>
-                            <div class="active-signal-breakeven" id="activeSignalBreakeven"></div>
+                    <div id="activeSignalBanner" class="active-signal-banner" style="display: none; background: linear-gradient(135deg, #1a1f2e 0%, #252b3d 100%); border: 1px solid #3d4663; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="active-signal-glow" style="position: relative;">
+                                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%; animation: pulse-glow 2s infinite;"></div>
+                                <style>
+                                    @keyframes pulse-glow {
+                                        0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+                                        50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+                                    }
+                                </style>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="color: #10b981; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">ACTIVE SIGNAL</span>
+                                    <span id="activeSignalId" style="color: #667eea; font-size: 12px;"></span>
+                                </div>
+                                <div id="activeSignalDetails" style="color: #e2e8f0; font-size: 15px; font-weight: 500;">Loading...</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="text-align: center;">
+                                    <div style="color: #a0aec0; font-size: 11px; text-transform: uppercase; margin-bottom: 2px;">Live Price</div>
+                                    <div id="activeSignalPrice" style="color: #667eea; font-size: 16px; font-weight: 600;">--</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #a0aec0; font-size: 11px; text-transform: uppercase; margin-bottom: 2px;">P/L</div>
+                                    <div id="activeSignalPnL" style="font-size: 16px; font-weight: 600;">--</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #a0aec0; font-size: 11px; text-transform: uppercase; margin-bottom: 2px;">TPs</div>
+                                    <div id="activeSignalTPs" style="font-size: 14px;">--</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right; min-width: 100px;">
+                                <div id="activeSignalTime" style="color: #a0aec0; font-size: 13px;"></div>
+                                <div id="activeSignalBreakeven" style="font-size: 12px; margin-top: 2px;"></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -3265,11 +3288,22 @@
                     
                     <div class="filters-row">
                         <div class="filter-group">
+                            <label>Date Range</label>
+                            <select id="filterDateRange">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
                             <label>Bot Type</label>
                             <select id="filterBotType">
                                 <option value="all">All Bots</option>
                                 <option value="aggressive">Aggressive</option>
                                 <option value="conservative">Conservative</option>
+                                <option value="raja_banks">Raja Banks</option>
                                 <option value="custom">Custom</option>
                                 <option value="legacy">Legacy</option>
                             </select>
@@ -3289,6 +3323,7 @@
                                 <option value="pending">Pending</option>
                                 <option value="won">Won</option>
                                 <option value="lost">Lost</option>
+                                <option value="expired">Expired</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -4891,10 +4926,47 @@
             
             if (botStatus?.open_signal) {
                 const signal = botStatus.open_signal;
-                banner.style.display = 'flex';
+                banner.style.display = 'block';
                 
+                // Signal ID
+                const signalIdEl = document.getElementById('activeSignalId');
+                if (signalIdEl) signalIdEl.textContent = `#${signal.id}`;
+                
+                // Signal details
                 document.getElementById('activeSignalDetails').innerHTML = 
                     `${signal.signal_type} @ $${signal.entry_price?.toFixed(2)} | TP: $${signal.take_profit?.toFixed(2)} | SL: $${signal.stop_loss?.toFixed(2)}`;
+                
+                // Live price
+                const priceEl = document.getElementById('activeSignalPrice');
+                if (priceEl && botStatus.current_price) {
+                    priceEl.textContent = `$${botStatus.current_price.toFixed(2)}`;
+                }
+                
+                // P/L display
+                const pnlEl = document.getElementById('activeSignalPnL');
+                if (pnlEl && botStatus.current_pips !== null) {
+                    const pips = botStatus.current_pips;
+                    const sign = pips >= 0 ? '+' : '';
+                    pnlEl.textContent = `${sign}${pips.toFixed(1)} pips`;
+                    pnlEl.style.color = pips >= 0 ? '#10b981' : '#f56565';
+                }
+                
+                // TP indicators
+                const tpsEl = document.getElementById('activeSignalTPs');
+                if (tpsEl) {
+                    const hasTP1 = signal.take_profit != null;
+                    const hasTP2 = signal.take_profit_2 != null;
+                    const hasTP3 = signal.take_profit_3 != null;
+                    const tp1Hit = signal.tp1_hit === true;
+                    const tp2Hit = signal.tp2_hit === true;
+                    const tp3Hit = signal.tp3_hit === true;
+                    
+                    let icons = '';
+                    if (hasTP1) icons += tp1Hit ? '<span style="color: #10b981;">●</span>' : '<span style="color: #4a5568;">○</span>';
+                    if (hasTP2) icons += tp2Hit ? '<span style="color: #10b981;">●</span>' : '<span style="color: #4a5568;">○</span>';
+                    if (hasTP3) icons += tp3Hit ? '<span style="color: #10b981;">●</span>' : '<span style="color: #4a5568;">○</span>';
+                    tpsEl.innerHTML = icons || '--';
+                }
                 
                 // Calculate time open
                 const postedAt = new Date(signal.posted_at);
@@ -4905,8 +4977,8 @@
                 
                 // Breakeven status
                 const breakevenEl = document.getElementById('activeSignalBreakeven');
-                if (signal.breakeven_set) {
-                    breakevenEl.textContent = 'Breakeven Protected';
+                if (signal.breakeven_triggered || signal.breakeven_set) {
+                    breakevenEl.textContent = 'BE Protected';
                     breakevenEl.style.color = '#10b981';
                 } else {
                     breakevenEl.textContent = '';
@@ -4920,15 +4992,36 @@
             const typeFilter = document.getElementById('filterType')?.value || 'all';
             const statusFilter = document.getElementById('filterStatus')?.value || 'all';
             const botTypeFilter = document.getElementById('filterBotType')?.value || 'all';
+            const dateRangeFilter = document.getElementById('filterDateRange')?.value || 'all';
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             
             let filtered = allSignals.filter(signal => {
                 if (typeFilter !== 'all' && signal.signal_type !== typeFilter) return false;
                 if (statusFilter !== 'all' && signal.status !== statusFilter) return false;
                 if (botTypeFilter !== 'all' && signal.bot_type !== botTypeFilter) return false;
+                
+                // Date range filter
+                if (dateRangeFilter !== 'all') {
+                    const signalDate = new Date(signal.posted_at);
+                    if (dateRangeFilter === 'today' && signalDate < today) return false;
+                    if (dateRangeFilter === 'yesterday' && (signalDate < yesterday || signalDate >= today)) return false;
+                    if (dateRangeFilter === '7days' && signalDate < sevenDaysAgo) return false;
+                    if (dateRangeFilter === '30days' && signalDate < thirtyDaysAgo) return false;
+                }
+                
                 return true;
             });
             
             renderSignalsTable(filtered);
+            updateForexMetrics(filtered);
         }
 
         function renderSignalsTable(signals) {
@@ -4953,6 +5046,7 @@
                             <th>Entry</th>
                             <th>TP</th>
                             <th>SL</th>
+                            <th>TPs</th>
                             <th>Status</th>
                             <th>Price</th>
                             <th>Pips</th>
@@ -4991,15 +5085,19 @@
                             
                             const botType = signal.bot_type || 'custom';
                             
+                            // TP icons - show green for hit, grey for pending
+                            const tpIcons = renderTPIcons(signal);
+                            
                             return `
                                 <tr>
                                     <td style="font-weight: 500; color: #a0aec0;">${dayName}</td>
                                     <td>${date}</td>
-                                    <td><span class="badge badge-${botType}" style="text-transform: capitalize;">${botType}</span></td>
+                                    <td><span class="badge badge-${botType}" style="text-transform: capitalize;">${botType.replace('_', ' ')}</span></td>
                                     <td><span class="badge badge-${signal.signal_type.toLowerCase()}">${signal.signal_type}</span></td>
                                     <td>$${signal.entry_price ? signal.entry_price.toFixed(2) : '--'}</td>
                                     <td>$${signal.take_profit ? signal.take_profit.toFixed(2) : '--'}</td>
                                     <td>$${signal.stop_loss ? signal.stop_loss.toFixed(2) : '--'}</td>
+                                    <td>${tpIcons}</td>
                                     <td><span class="badge badge-${signal.status}">${signal.status}</span></td>
                                     <td>${priceDisplay}</td>
                                     <td style="color: ${pips >= 0 ? '#48bb78' : '#f56565'}; font-weight: 600;">${pipsDisplay}</td>
@@ -5012,18 +5110,62 @@
 
             document.getElementById('signalsTableContent').innerHTML = html;
         }
+        
+        function renderTPIcons(signal) {
+            // Determine how many TPs this signal has (check if tp2/tp3 prices exist)
+            const hasTP1 = signal.take_profit != null;
+            const hasTP2 = signal.take_profit_2 != null;
+            const hasTP3 = signal.take_profit_3 != null;
+            
+            const totalTPs = (hasTP1 ? 1 : 0) + (hasTP2 ? 1 : 0) + (hasTP3 ? 1 : 0);
+            
+            if (totalTPs === 0) return '<span style="color: #a0aec0;">--</span>';
+            
+            // Check which TPs are hit
+            const tp1Hit = signal.tp1_hit === true;
+            const tp2Hit = signal.tp2_hit === true;
+            const tp3Hit = signal.tp3_hit === true;
+            
+            let icons = '';
+            
+            // TP1
+            if (hasTP1) {
+                icons += tp1Hit 
+                    ? '<span title="TP1 Hit" style="color: #10b981; margin-right: 3px;">●</span>'
+                    : '<span title="TP1 Pending" style="color: #4a5568; margin-right: 3px;">○</span>';
+            }
+            
+            // TP2
+            if (hasTP2) {
+                icons += tp2Hit 
+                    ? '<span title="TP2 Hit" style="color: #10b981; margin-right: 3px;">●</span>'
+                    : '<span title="TP2 Pending" style="color: #4a5568; margin-right: 3px;">○</span>';
+            }
+            
+            // TP3
+            if (hasTP3) {
+                icons += tp3Hit 
+                    ? '<span title="TP3 Hit" style="color: #10b981;">●</span>'
+                    : '<span title="TP3 Pending" style="color: #4a5568;">○</span>';
+            }
+            
+            return icons || '--';
+        }
 
-        function updateForexMetrics() {
-            const completed = allSignals.filter(s => s.status === 'won' || s.status === 'lost');
-            const won = allSignals.filter(s => s.status === 'won').length;
+        function updateForexMetrics(signals = null) {
+            // Use filtered signals if provided, otherwise use all signals
+            const targetSignals = signals || allSignals;
+            
+            const completed = targetSignals.filter(s => s.status === 'won' || s.status === 'lost');
+            const won = targetSignals.filter(s => s.status === 'won').length;
             const total = completed.length;
             const winRate = total > 0 ? ((won / total) * 100).toFixed(1) : 0;
-            const totalPips = allSignals.reduce((sum, s) => sum + (s.result_pips || 0), 0);
+            const totalPips = targetSignals.reduce((sum, s) => sum + (s.result_pips || 0), 0);
 
             document.getElementById('winRate').textContent = `${winRate}%`;
             document.getElementById('winRateSubtext').textContent = `${won} won / ${total} total`;
             document.getElementById('totalPips').textContent = totalPips.toFixed(2);
-            document.getElementById('totalSignals').textContent = allSignals.length;
+            document.getElementById('totalSignals').textContent = targetSignals.length;
             document.getElementById('signalsBreakdown').textContent = `${completed.length} completed`;
             
             // Apply color to total pips
@@ -5387,11 +5529,13 @@
             const filterStatus = document.getElementById('filterStatus');
             const filterLimit = document.getElementById('filterLimit');
             const filterBotType = document.getElementById('filterBotType');
+            const filterDateRange = document.getElementById('filterDateRange');
             
             if (filterType) filterType.addEventListener('change', applySignalFilters);
             if (filterStatus) filterStatus.addEventListener('change', applySignalFilters);
             if (filterLimit) filterLimit.addEventListener('change', loadForexSignals);
             if (filterBotType) filterBotType.addEventListener('change', applySignalFilters);
+            if (filterDateRange) filterDateRange.addEventListener('change', applySignalFilters);
         }, 1000);
 
         // ============================================

@@ -50,12 +50,40 @@ The forex signals bot uses a modular strategy architecture (`strategies/`) that 
 - TP3: 20% position close at final target
 - Breakeven alert at 70% progress toward TP1
 
-**To add a new strategy:**
-1. Create `strategies/your_strategy.py` extending `BaseStrategy`
-2. Implement required methods: `check_for_signals()`, `calculate_tp_sl()`, `validate_thesis()`
-3. Register in `STRATEGY_REGISTRY` in `strategy_loader.py`
+**To add a new strategy (2 files only):**
 
-**Active strategy** is stored in `bot_config` table as `active_bot`.
+1. **Create strategy file**: `strategies/your_strategy.py`
+   - Copy from `strategies/aggressive.py` as template
+   - Set unique `bot_type = "your_bot_name"` (this is the database key)
+   - Set `name` and `description` for admin UI display
+   - Implement required methods: `check_for_signals()`, `calculate_tp_sl()`
+   - Optional: `validate_thesis()`, `get_indicators_used()`
+
+2. **Register in loader**: `strategies/strategy_loader.py` (add 2 lines)
+   ```python
+   from strategies.your_strategy import YourStrategy
+   register_strategy(YourStrategy)
+   ```
+
+That's it! The admin UI automatically picks up new strategies from the registry.
+
+**Active strategy** is stored in `bot_config` table as `active_bot` (read via `get_active_bot()` in db.py).
+
+**IMPORTANT**: Strategy classes only control signal generation logic. All post-signal behavior is shared.
+
+### Shared Logic Files (Same for ALL Bots)
+These files handle shared functionality that works identically regardless of which bot generated the signal:
+
+| Feature | File | Notes |
+|---------|------|-------|
+| Daily Recap | `forex_bot.py` | `post_daily_recap()` - Morning recap of yesterday's signals |
+| Weekly Recap | `forex_bot.py` | `post_weekly_recap()` - Sunday performance summary |
+| TP Celebration | `forex_bot.py` | `post_tp_celebration()` - When all TPs hit |
+| SL Hit Message | `forex_bot.py` | `post_sl_hit()` - Stop loss notification |
+| Breakeven Alert | `forex_bot.py` | `post_breakeven_alert()` - 70% to TP1 advisory |
+| Price Monitoring | `bots/core/price_monitor.py` | TP/SL hit detection, 1-min checks |
+| Signal Scheduling | `forex_scheduler.py` | Signal lifecycle, closing, monitoring |
+| Guidance System | `forex_signals.py` | Progress updates, thesis validation |
 
 **Queued Bot Switching:**
 When a signal is active, users can queue a different bot strategy. The queued bot will automatically activate when the current signal closes (won/lost/expired). This allows planning ahead without waiting for signals to complete.
