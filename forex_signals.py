@@ -308,7 +308,9 @@ class ForexSignalEngine:
                     continue
                 
                 is_buy = signal_type == 'BUY'
-                has_multi_tp = tp2 > 0 and tp3 > 0
+                has_tp2 = tp2 > 0
+                has_tp3 = tp3 > 0
+                tp_count = 1 + (1 if has_tp2 else 0) + (1 if has_tp3 else 0)
                 
                 if is_buy:
                     tp_distance = abs(tp1 - entry)
@@ -327,7 +329,7 @@ class ForexSignalEngine:
                     
                     if not tp1_hit and current_price >= tp1:
                         pips = round(tp1 - entry, 2)
-                        remaining = tp2_pct + tp3_pct if has_multi_tp else 0
+                        remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
                         updates.append({
@@ -337,7 +339,7 @@ class ForexSignalEngine:
                             'percentage': tp1_pct,
                             'remaining': remaining
                         })
-                        if not has_multi_tp:
+                        if tp_count == 1:
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
@@ -345,9 +347,9 @@ class ForexSignalEngine:
                             })
                             continue
                     
-                    if has_multi_tp and tp1_hit and not tp2_hit and current_price >= tp2:
+                    if has_tp2 and tp1_hit and not tp2_hit and current_price >= tp2:
                         pips = round(tp2 - entry, 2)
-                        remaining = tp3_pct
+                        remaining = tp3_pct if has_tp3 else 0
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
                         updates.append({
@@ -357,8 +359,15 @@ class ForexSignalEngine:
                             'percentage': tp2_pct,
                             'remaining': remaining
                         })
+                        if tp_count == 2:
+                            updates.append({
+                                'id': signal_id,
+                                'status': 'won',
+                                'pips': pips
+                            })
+                            continue
                     
-                    if has_multi_tp and tp2_hit and not tp3_hit and current_price >= tp3:
+                    if has_tp3 and tp2_hit and not tp3_hit and current_price >= tp3:
                         pips = round(tp3 - entry, 2)
                         print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
@@ -397,7 +406,7 @@ class ForexSignalEngine:
                     
                     if not tp1_hit and current_price <= tp1:
                         pips = round(entry - tp1, 2)
-                        remaining = tp2_pct + tp3_pct if has_multi_tp else 0
+                        remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
                         updates.append({
@@ -407,7 +416,7 @@ class ForexSignalEngine:
                             'percentage': tp1_pct,
                             'remaining': remaining
                         })
-                        if not has_multi_tp:
+                        if tp_count == 1:
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
@@ -415,9 +424,9 @@ class ForexSignalEngine:
                             })
                             continue
                     
-                    if has_multi_tp and tp1_hit and not tp2_hit and current_price <= tp2:
+                    if has_tp2 and tp1_hit and not tp2_hit and current_price <= tp2:
                         pips = round(entry - tp2, 2)
-                        remaining = tp3_pct
+                        remaining = tp3_pct if has_tp3 else 0
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
                         updates.append({
@@ -427,8 +436,15 @@ class ForexSignalEngine:
                             'percentage': tp2_pct,
                             'remaining': remaining
                         })
+                        if tp_count == 2:
+                            updates.append({
+                                'id': signal_id,
+                                'status': 'won',
+                                'pips': pips
+                            })
+                            continue
                     
-                    if has_multi_tp and tp2_hit and not tp3_hit and current_price <= tp3:
+                    if has_tp3 and tp2_hit and not tp3_hit and current_price <= tp3:
                         pips = round(entry - tp3, 2)
                         print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
