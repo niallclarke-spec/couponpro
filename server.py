@@ -1447,7 +1447,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Validate config values
                 valid_keys = ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 
                              'atr_sl_multiplier', 'atr_tp_multiplier', 
-                             'trading_start_hour', 'trading_end_hour']
+                             'trading_start_hour', 'trading_end_hour',
+                             'daily_loss_cap_pips', 'back_to_back_throttle_minutes',
+                             'session_filter_enabled', 'session_start_hour_utc', 'session_end_hour_utc']
                 
                 config_updates = {}
                 errors = []
@@ -1456,11 +1458,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     if key in data:
                         value = data[key]
                         
-                        # Validate based on key type
+                        # Integer validations
                         if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour']:
                             try:
                                 int_value = int(value)
-                                # Additional validation
                                 if key == 'rsi_oversold' and not (0 <= int_value <= 100):
                                     errors.append(f'{key} must be between 0 and 100')
                                 elif key == 'rsi_overbought' and not (0 <= int_value <= 100):
@@ -1476,7 +1477,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             except ValueError:
                                 errors.append(f'{key} must be an integer')
                         
-                        elif key in ['atr_sl_multiplier', 'atr_tp_multiplier']:
+                        # Float validations
+                        elif key in ['atr_sl_multiplier', 'atr_tp_multiplier', 'daily_loss_cap_pips']:
                             try:
                                 float_value = float(value)
                                 if float_value <= 0:
@@ -1485,6 +1487,23 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                                     config_updates[key] = float_value
                             except ValueError:
                                 errors.append(f'{key} must be a number')
+                        
+                        # Session hour validations
+                        elif key in ['session_start_hour_utc', 'session_end_hour_utc', 'back_to_back_throttle_minutes']:
+                            try:
+                                int_value = int(value)
+                                if key in ['session_start_hour_utc', 'session_end_hour_utc'] and not (0 <= int_value <= 23):
+                                    errors.append(f'{key} must be between 0 and 23')
+                                elif key == 'back_to_back_throttle_minutes' and int_value < 0:
+                                    errors.append(f'{key} must be positive')
+                                else:
+                                    config_updates[key] = int_value
+                            except ValueError:
+                                errors.append(f'{key} must be an integer')
+                        
+                        # Boolean/string validations
+                        elif key == 'session_filter_enabled':
+                            config_updates[key] = str(value).lower() == 'true'
                 
                 # Cross-field validation
                 if 'trading_start_hour' in config_updates and 'trading_end_hour' in config_updates:
@@ -1498,6 +1517,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     end_hour = config_updates.get('trading_end_hour', current_config.get('trading_end_hour', 22))
                     if start_hour >= end_hour:
                         errors.append('trading_start_hour must be less than trading_end_hour')
+                
+                # Session hours validation - start must be less than end
+                if 'session_start_hour_utc' in config_updates and 'session_end_hour_utc' in config_updates:
+                    if config_updates['session_start_hour_utc'] >= config_updates['session_end_hour_utc']:
+                        errors.append('Session start hour must be less than end hour')
                 
                 # RSI validation - oversold must be less than overbought
                 if 'rsi_oversold' in config_updates and 'rsi_overbought' in config_updates:
