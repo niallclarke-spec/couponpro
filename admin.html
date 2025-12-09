@@ -4734,6 +4734,7 @@
         let allSignals = [];
         let botStatus = null;
         let selectedBotType = null;
+        let currentActiveBot = null;
 
         async function loadForexSignals() {
             try {
@@ -4766,6 +4767,7 @@
                 if (!response.ok) throw new Error('Failed to load bot status');
                 
                 botStatus = await response.json();
+                currentActiveBot = botStatus.active_bot || null;
                 updateBotStatusUI();
                 updateActiveSignalBanner();
             } catch (error) {
