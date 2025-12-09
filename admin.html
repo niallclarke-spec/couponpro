@@ -3490,7 +3490,7 @@
                                                 </svg>
                                                 Daily Loss Cap
                                             </label>
-                                            <input type="number" class="guardrail-input" id="dailyLossCap" value="50" min="10" max="200" step="5">
+                                            <input type="number" class="guardrail-input" id="dailyLossCap" min="10" max="200" step="5" placeholder="...">
                                             <div class="guardrail-hint">Stop signals after losing this many pips</div>
                                         </div>
                                         
@@ -3501,7 +3501,7 @@
                                                 </svg>
                                                 Loss Throttle
                                             </label>
-                                            <input type="number" class="guardrail-input" id="backToBackThrottle" value="30" min="5" max="120" step="5">
+                                            <input type="number" class="guardrail-input" id="backToBackThrottle" min="5" max="120" step="5" placeholder="...">
                                             <div class="guardrail-hint">Minutes to wait after a loss</div>
                                         </div>
                                         
@@ -3513,9 +3513,9 @@
                                                 Session Hours (UTC)
                                             </label>
                                             <div class="session-hours-row">
-                                                <input type="number" class="guardrail-input" id="sessionStartHour" value="8" min="0" max="23">
+                                                <input type="number" class="guardrail-input" id="sessionStartHour" min="0" max="23" placeholder="...">
                                                 <span>to</span>
-                                                <input type="number" class="guardrail-input" id="sessionEndHour" value="21" min="0" max="23">
+                                                <input type="number" class="guardrail-input" id="sessionEndHour" min="0" max="23" placeholder="...">
                                             </div>
                                             <div class="guardrail-hint">Default: 8-21 UTC</div>
                                         </div>
