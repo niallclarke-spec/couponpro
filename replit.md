@@ -55,7 +55,13 @@ The forex signals bot uses a modular strategy architecture (`strategies/`) that 
 2. Implement required methods: `check_for_signals()`, `calculate_tp_sl()`, `validate_thesis()`
 3. Register in `STRATEGY_REGISTRY` in `strategy_loader.py`
 
-**Active strategy** is stored in `forex_config` table as `bot_active_bot_type`.
+**Active strategy** is stored in `bot_config` table as `active_bot`.
+
+**Queued Bot Switching:**
+When a signal is active, users can queue a different bot strategy. The queued bot will automatically activate when the current signal closes (won/lost/expired). This allows planning ahead without waiting for signals to complete.
+- `queued_bot` stored in `bot_config` table
+- Admin UI shows queued status with cancel option
+- Automatic promotion triggers strategy reload in scheduler
 
 ### Indicator Configuration (Forex Bot)
 The indicator system uses a centralized configuration in `indicator_config.py`. This ensures signal generation and thesis re-validation stay in sync when indicators change.
