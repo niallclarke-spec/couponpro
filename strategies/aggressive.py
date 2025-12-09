@@ -86,6 +86,8 @@ class AggressiveStrategy(BaseStrategy):
         return True, None
     
     def calculate_tp_sl(self, entry_price: float, atr_value: float, signal_type: str) -> Tuple[List[TakeProfitLevel], float]:
+        tp1_pct, tp2_pct, tp3_pct, tp_count = self._get_tp_config()
+        
         if signal_type == 'BUY':
             stop_loss = round(entry_price - (atr_value * self.atr_sl_multiplier), 2)
             tp1 = round(entry_price + (atr_value * self.atr_tp_multiplier * 0.5), 2)
@@ -97,13 +99,30 @@ class AggressiveStrategy(BaseStrategy):
             tp2 = round(entry_price - (atr_value * self.atr_tp_multiplier * 0.75), 2)
             tp3 = round(entry_price - (atr_value * self.atr_tp_multiplier), 2)
         
-        take_profits = [
-            TakeProfitLevel(price=tp1, percentage=50),
-            TakeProfitLevel(price=tp2, percentage=30),
-            TakeProfitLevel(price=tp3, percentage=20)
-        ]
+        take_profits = [TakeProfitLevel(price=tp1, percentage=tp1_pct)]
+        
+        if tp_count >= 2 and tp2_pct > 0:
+            take_profits.append(TakeProfitLevel(price=tp2, percentage=tp2_pct))
+        
+        if tp_count >= 3 and tp3_pct > 0:
+            take_profits.append(TakeProfitLevel(price=tp3, percentage=tp3_pct))
         
         return take_profits, stop_loss
+    
+    def _get_tp_config(self) -> Tuple[int, int, int, int]:
+        """Get TP configuration from database"""
+        try:
+            config = get_forex_config()
+            if config:
+                tp_count = int(config.get('tp_count', 3))
+                tp1_pct = int(config.get('tp1_percentage', 50))
+                tp2_pct = int(config.get('tp2_percentage', 30))
+                tp3_pct = int(config.get('tp3_percentage', 20))
+                return tp1_pct, tp2_pct, tp3_pct, tp_count
+        except Exception as e:
+            print(f"[AGGRESSIVE] Error loading TP config: {e}")
+        
+        return 50, 30, 20, 3
     
     async def check_for_signals(self, timeframe: str = '15min') -> Optional[SignalData]:
         try:

@@ -680,6 +680,44 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/forex-tp-config':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import get_forex_config
+                config = get_forex_config() or {}
+                
+                tp_config = {
+                    'success': True,
+                    'tp_count': int(config.get('tp_count', 3)),
+                    'tp1_percentage': int(config.get('tp1_percentage', 50)),
+                    'tp2_percentage': int(config.get('tp2_percentage', 30)),
+                    'tp3_percentage': int(config.get('tp3_percentage', 20))
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(tp_config).encode())
+            except Exception as e:
+                print(f"[TP CONFIG] Error getting config: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/telegram/check-access/'):
             # EntryLab API - Check subscription access status by email
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
@@ -1555,6 +1593,70 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
             except Exception as e:
                 print(f"[SIGNAL BOT] Error setting active bot: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/forex-tp-config':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                tp_count = int(data.get('tp_count', 3))
+                tp1_pct = int(data.get('tp1_percentage', 50))
+                tp2_pct = int(data.get('tp2_percentage', 30))
+                tp3_pct = int(data.get('tp3_percentage', 20))
+                
+                if tp1_pct + tp2_pct + tp3_pct != 100:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'error': 'TP percentages must add up to 100%'
+                    }).encode())
+                    return
+                
+                from db import update_forex_config
+                update_forex_config({
+                    'tp_count': tp_count,
+                    'tp1_percentage': tp1_pct,
+                    'tp2_percentage': tp2_pct,
+                    'tp3_percentage': tp3_pct
+                })
+                
+                print(f"[TP CONFIG] Updated: {tp_count} TPs at {tp1_pct}/{tp2_pct}/{tp3_pct}%")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': 'TP configuration saved'
+                }).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
+            except Exception as e:
+                print(f"[TP CONFIG] Error saving config: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
