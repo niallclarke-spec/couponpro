@@ -5288,9 +5288,11 @@
         }
 
         async function loadForexSettings() {
-            await loadBotStatus();
-            await loadTpConfig();
-            await loadGuardrailSettings();
+            await Promise.all([
+                loadBotStatus(),
+                loadTpConfig(),
+                loadGuardrailSettings()
+            ]);
             updateStrategyCards();
         }
         
