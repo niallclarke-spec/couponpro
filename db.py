@@ -658,6 +658,57 @@ class DatabasePool:
                     ON processed_webhook_events(processed_at)
                 """)
                 
+                # Migration: Add multi-TP columns for modular strategy system
+                print("[MIGRATION] Checking forex_signals for multi-TP columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name IN (
+                        'take_profit_2', 'take_profit_3', 
+                        'tp1_percentage', 'tp2_percentage', 'tp3_percentage',
+                        'tp1_hit', 'tp2_hit', 'tp3_hit',
+                        'tp1_hit_at', 'tp2_hit_at', 'tp3_hit_at',
+                        'breakeven_triggered', 'breakeven_triggered_at'
+                    )
+                """)
+                existing_tp_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'take_profit_2' not in existing_tp_columns:
+                    print("[MIGRATION] Adding take_profit_2 column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN take_profit_2 DECIMAL(10, 2)")
+                    print("[MIGRATION] ✅ take_profit_2 column added")
+                
+                if 'take_profit_3' not in existing_tp_columns:
+                    print("[MIGRATION] Adding take_profit_3 column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN take_profit_3 DECIMAL(10, 2)")
+                    print("[MIGRATION] ✅ take_profit_3 column added")
+                
+                if 'tp1_percentage' not in existing_tp_columns:
+                    print("[MIGRATION] Adding TP percentage columns...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_percentage INTEGER DEFAULT 100")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_percentage INTEGER DEFAULT 0")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_percentage INTEGER DEFAULT 0")
+                    print("[MIGRATION] ✅ TP percentage columns added")
+                
+                if 'tp1_hit' not in existing_tp_columns:
+                    print("[MIGRATION] Adding TP hit tracking columns...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_hit BOOLEAN DEFAULT FALSE")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_hit BOOLEAN DEFAULT FALSE")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_hit BOOLEAN DEFAULT FALSE")
+                    print("[MIGRATION] ✅ TP hit columns added")
+                
+                if 'tp1_hit_at' not in existing_tp_columns:
+                    print("[MIGRATION] Adding TP hit timestamp columns...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_hit_at TIMESTAMP")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_hit_at TIMESTAMP")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_hit_at TIMESTAMP")
+                    print("[MIGRATION] ✅ TP hit timestamp columns added")
+                
+                if 'breakeven_triggered' not in existing_tp_columns:
+                    print("[MIGRATION] Adding breakeven_triggered columns...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered BOOLEAN DEFAULT FALSE")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered_at TIMESTAMP")
+                    print("[MIGRATION] ✅ breakeven_triggered columns added")
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -1814,23 +1865,30 @@ def get_recent_broadcast_jobs(limit=10):
 # Forex signals operations
 def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=None, 
                        stop_loss=None, rsi_value=None, macd_value=None, atr_value=None,
-                       bot_type='aggressive', indicators_used=None, notes=None):
+                       bot_type='aggressive', indicators_used=None, notes=None,
+                       take_profit_2=None, take_profit_3=None,
+                       tp1_percentage=100, tp2_percentage=0, tp3_percentage=0):
     """
-    Create a new forex signal.
+    Create a new forex signal with multi-TP support.
     
     Args:
         signal_type (str): 'BUY' or 'SELL'
         pair (str): Currency pair (e.g., 'XAU/USD', 'EUR/USD')
         timeframe (str): Timeframe (e.g., '15m', '30m', '1h')
         entry_price (float): Entry price for the signal
-        take_profit (float, optional): Take profit price
+        take_profit (float, optional): Take profit price (TP1)
         stop_loss (float, optional): Stop loss price
         rsi_value (float, optional): RSI indicator value
         macd_value (float, optional): MACD indicator value
         atr_value (float, optional): ATR indicator value
-        bot_type (str): 'aggressive', 'conservative', or 'custom'
+        bot_type (str): Bot type identifier
         indicators_used (str, optional): JSON string of indicators used
         notes (str, optional): Notes about the signal
+        take_profit_2 (float, optional): Second take profit price (TP2)
+        take_profit_3 (float, optional): Third take profit price (TP3)
+        tp1_percentage (int): Percentage to close at TP1 (default 100)
+        tp2_percentage (int): Percentage to close at TP2 (default 0)
+        tp3_percentage (int): Percentage to close at TP3 (default 0)
     
     Returns:
         int: Signal ID
@@ -1841,11 +1899,13 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
             cursor.execute("""
                 INSERT INTO forex_signals 
                 (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
-                 rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s::jsonb, %s)
+                 rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes,
+                 take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
-                  rsi_value, macd_value, atr_value, bot_type, indicators_used, notes))
+                  rsi_value, macd_value, atr_value, bot_type, indicators_used, notes,
+                  take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage))
             signal_id = cursor.fetchone()[0]
             conn.commit()
             return signal_id
@@ -1877,7 +1937,12 @@ def get_forex_signals(status=None, limit=100):
                            last_progress_zone, last_caution_zone,
                            original_rsi, original_macd, original_adx, original_stoch_k,
                            last_revalidation_at, revalidation_count, thesis_status,
-                           thesis_changed_at, timeout_notified, original_indicators_json
+                           thesis_changed_at, timeout_notified, original_indicators_json,
+                           take_profit_2, take_profit_3,
+                           tp1_percentage, tp2_percentage, tp3_percentage,
+                           tp1_hit, tp2_hit, tp3_hit,
+                           tp1_hit_at, tp2_hit_at, tp3_hit_at,
+                           breakeven_triggered, breakeven_triggered_at
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1892,7 +1957,12 @@ def get_forex_signals(status=None, limit=100):
                            last_progress_zone, last_caution_zone,
                            original_rsi, original_macd, original_adx, original_stoch_k,
                            last_revalidation_at, revalidation_count, thesis_status,
-                           thesis_changed_at, timeout_notified, original_indicators_json
+                           thesis_changed_at, timeout_notified, original_indicators_json,
+                           take_profit_2, take_profit_3,
+                           tp1_percentage, tp2_percentage, tp3_percentage,
+                           tp1_hit, tp2_hit, tp3_hit,
+                           tp1_hit_at, tp2_hit_at, tp3_hit_at,
+                           breakeven_triggered, breakeven_triggered_at
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -1930,7 +2000,20 @@ def get_forex_signals(status=None, limit=100):
                     'thesis_status': row[26] or 'intact',
                     'thesis_changed_at': row[27].isoformat() if row[27] else None,
                     'timeout_notified': row[28] or False,
-                    'original_indicators_json': row[29] if row[29] else None
+                    'original_indicators_json': row[29] if row[29] else None,
+                    'take_profit_2': float(row[30]) if row[30] else None,
+                    'take_profit_3': float(row[31]) if row[31] else None,
+                    'tp1_percentage': row[32] or 100,
+                    'tp2_percentage': row[33] or 0,
+                    'tp3_percentage': row[34] or 0,
+                    'tp1_hit': row[35] or False,
+                    'tp2_hit': row[36] or False,
+                    'tp3_hit': row[37] or False,
+                    'tp1_hit_at': row[38].isoformat() if row[38] else None,
+                    'tp2_hit_at': row[39].isoformat() if row[39] else None,
+                    'tp3_hit_at': row[40].isoformat() if row[40] else None,
+                    'breakeven_triggered': row[41] or False,
+                    'breakeven_triggered_at': row[42].isoformat() if row[42] else None
                 })
             return signals
     except Exception as e:
@@ -2466,6 +2549,129 @@ def update_forex_config(config_updates):
         raise
 
 
+def get_bot_config():
+    """
+    Get bot configuration from forex_config table.
+    Returns dict with active_bot_type and other bot settings.
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT setting_key, setting_value
+                FROM forex_config
+                WHERE setting_key LIKE 'bot_%'
+            """)
+            
+            config = {'active_bot_type': 'aggressive'}
+            for row in cursor.fetchall():
+                key = row[0].replace('bot_', '')
+                config[key] = row[1]
+            
+            return config
+    except Exception as e:
+        print(f"Error getting bot config: {e}")
+        return None
+
+def init_bot_config():
+    """Initialize default bot config settings"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO forex_config (setting_key, setting_value, updated_at)
+                VALUES ('bot_active_bot_type', 'aggressive', CURRENT_TIMESTAMP)
+                ON CONFLICT (setting_key) DO NOTHING
+            """)
+            conn.commit()
+            print("✅ Bot config initialized with defaults")
+            return True
+    except Exception as e:
+        print(f"Error initializing bot config: {e}")
+        return False
+
+def update_tp_hit(signal_id, tp_number, hit_price=None):
+    """
+    Record a TP hit for a signal.
+    
+    Args:
+        signal_id: The signal ID
+        tp_number: 1, 2, or 3 (which TP was hit)
+        hit_price: The price at which TP was hit
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if tp_number == 1:
+                cursor.execute("""
+                    UPDATE forex_signals 
+                    SET tp_hit_1 = TRUE, tp1_hit_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (signal_id,))
+            elif tp_number == 2:
+                cursor.execute("""
+                    UPDATE forex_signals 
+                    SET tp_hit_2 = TRUE, tp2_hit_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (signal_id,))
+            elif tp_number == 3:
+                cursor.execute("""
+                    UPDATE forex_signals 
+                    SET tp_hit_3 = TRUE, tp3_hit_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (signal_id,))
+            
+            conn.commit()
+            print(f"✅ Signal #{signal_id}: TP{tp_number} hit recorded")
+            return True
+    except Exception as e:
+        print(f"Error updating TP hit: {e}")
+        return False
+
+def update_breakeven_triggered(signal_id, breakeven_price):
+    """
+    Record that breakeven alert was triggered for a signal.
+    
+    Args:
+        signal_id: The signal ID
+        breakeven_price: The entry price (used for breakeven SL)
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE forex_signals 
+                SET breakeven_triggered = TRUE, 
+                    breakeven_triggered_at = CURRENT_TIMESTAMP,
+                    breakeven_price = %s
+                WHERE id = %s
+            """, (breakeven_price, signal_id))
+            conn.commit()
+            print(f"✅ Signal #{signal_id}: Breakeven triggered at ${breakeven_price:.2f}")
+            return True
+    except Exception as e:
+        print(f"Error updating breakeven triggered: {e}")
+        return False
+
 def get_last_recap_date(recap_type):
     """
     Get the last date a recap was posted (persisted to survive restarts).
@@ -2810,6 +3016,74 @@ def update_signal_breakeven(signal_id, breakeven_price):
             return cursor.rowcount > 0
     except Exception as e:
         print(f"Error updating signal breakeven: {e}")
+        return False
+
+def update_tp_hit(signal_id, tp_level):
+    """
+    Mark a specific TP level as hit.
+    
+    Args:
+        signal_id (int): Signal ID
+        tp_level (int): TP level (1, 2, or 3)
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        if tp_level not in [1, 2, 3]:
+            print(f"Invalid TP level: {tp_level}")
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            hit_column = f"tp{tp_level}_hit"
+            hit_at_column = f"tp{tp_level}_hit_at"
+            
+            cursor.execute(f"""
+                UPDATE forex_signals
+                SET {hit_column} = TRUE,
+                    {hit_at_column} = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (signal_id,))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating TP{tp_level} hit: {e}")
+        return False
+
+def update_breakeven_triggered(signal_id):
+    """
+    Mark breakeven as triggered (at 70% toward TP1).
+    
+    Args:
+        signal_id (int): Signal ID
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET breakeven_triggered = TRUE,
+                    breakeven_triggered_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (signal_id,))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating breakeven triggered: {e}")
         return False
 
 def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None):

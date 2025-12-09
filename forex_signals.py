@@ -1,14 +1,16 @@
 """
 Forex signal generation engine
-Combines RSI + MACD + ATR for XAU/USD trading signals
+Modular strategy system with shared monitoring and guidance logic
 """
 import os
 import asyncio
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 from forex_api import twelve_data_client
 from db import (
     create_forex_signal, get_forex_signals, update_forex_signal_status, get_forex_config,
-    get_daily_pnl, get_last_completed_signal, add_signal_narrative
+    get_daily_pnl, get_last_completed_signal, add_signal_narrative, get_bot_config,
+    update_tp_hit, update_breakeven_triggered
 )
 from indicator_config import (
     get_validation_indicators,
@@ -16,6 +18,8 @@ from indicator_config import (
     validate_indicator_thesis,
     get_indicator_display
 )
+from strategies import get_active_strategy, get_available_strategies, STRATEGY_REGISTRY
+from strategies.base_strategy import SignalData
 
 # Timing constants (in minutes)
 FIRST_REVALIDATION_MINUTES = 90   # First indicator recheck at 90 min
@@ -24,20 +28,69 @@ HARD_TIMEOUT_MINUTES = 180        # 3-hour hard timeout
 
 # Guidance zone thresholds (percentage toward TP)
 PROGRESS_ZONE_THRESHOLD = 30      # 30% toward TP - progress update
-BREAKEVEN_ZONE_THRESHOLD = 60     # 60% toward TP - breakeven advisory
+BREAKEVEN_ZONE_THRESHOLD = 70     # 70% toward TP - breakeven advisory (updated from 60)
 DECISION_ZONE_THRESHOLD = 85      # 85% toward TP - final push update
 GUIDANCE_COOLDOWN_MINUTES = 10    # Minimum time between guidance messages
 
 class ForexSignalEngine:
     def __init__(self):
         self.symbol = 'XAU/USD'
+        self._active_strategy = None
+        self._active_bot_type = 'aggressive'
+        
         # Load config from database
         self.load_config()
+        self.load_active_strategy()
         
         # Stagnant trade re-validation settings (from constants)
         self.revalidation_first_check_minutes = FIRST_REVALIDATION_MINUTES
         self.revalidation_interval_minutes = REVALIDATION_INTERVAL_MINUTES
         self.hard_timeout_minutes = HARD_TIMEOUT_MINUTES
+    
+    def load_active_strategy(self):
+        """Load the active strategy from database config"""
+        try:
+            config = get_bot_config()
+            if config:
+                self._active_bot_type = config.get('active_bot_type', 'aggressive')
+            else:
+                self._active_bot_type = 'aggressive'
+            
+            self._active_strategy = get_active_strategy(self._active_bot_type)
+            if self._active_strategy:
+                print(f"[FOREX ENGINE] Loaded strategy: {self._active_strategy.name} ({self._active_bot_type})")
+            else:
+                print(f"[FOREX ENGINE] WARNING: Could not load strategy '{self._active_bot_type}', using aggressive")
+                self._active_strategy = get_active_strategy('aggressive')
+        except Exception as e:
+            print(f"[FOREX ENGINE] Error loading strategy: {e}")
+            self._active_strategy = get_active_strategy('aggressive')
+    
+    def get_active_strategy(self):
+        """Get the currently active strategy instance"""
+        if not self._active_strategy:
+            self.load_active_strategy()
+        return self._active_strategy
+    
+    def switch_strategy(self, bot_type: str) -> bool:
+        """Switch to a different strategy"""
+        if bot_type not in STRATEGY_REGISTRY:
+            print(f"[FOREX ENGINE] Unknown strategy: {bot_type}")
+            return False
+        
+        pending_signals = get_forex_signals(status='pending')
+        if pending_signals and len(pending_signals) > 0:
+            print(f"[FOREX ENGINE] Cannot switch strategy while signal #{pending_signals[0]['id']} is active")
+            return False
+        
+        self._active_bot_type = bot_type
+        self._active_strategy = get_active_strategy(bot_type)
+        print(f"[FOREX ENGINE] Switched to strategy: {self._active_strategy.name}")
+        return True
+    
+    def get_available_strategies(self):
+        """Get list of available strategies"""
+        return get_available_strategies()
     
     def load_config(self):
         """Load configuration from database or use defaults"""
@@ -153,164 +206,43 @@ class ForexSignalEngine:
         
         return take_profit, stop_loss
     
-    async def check_for_signals(self, timeframe='15min'):
+    async def check_for_signals(self, timeframe='15min') -> Optional[Dict[str, Any]]:
         """
-        Check market conditions using multi-indicator strategy
-        
-        Strategy:
-        1. Trend bias: 1-hour EMA 50/200 crossover
-        2. Trend strength: ADX > 20
-        3. Entry conditions: RSI 40/60 + MACD histogram direction
-        4. Confirmation: Bollinger Bands touch + Stochastic extreme
+        Check market conditions using the active strategy.
+        Delegates to the modular strategy system.
         
         Returns:
             dict: Signal data or None if no signal
         """
         try:
-            print(f"\n[FOREX SIGNALS] Checking for signals on {self.symbol} {timeframe}...")
-            
-            # Check guardrails before fetching indicators (save API calls)
-            can_generate, guardrail_reason = self.check_guardrails()
-            if not can_generate:
-                print(f"[FOREX SIGNALS] ⏸️ Guardrail blocked: {guardrail_reason}")
+            strategy = self.get_active_strategy()
+            if not strategy:
+                print("[FOREX SIGNALS] ❌ No active strategy loaded")
                 return None
             
-            # Fetch all indicators (no rate limiting needed with unlimited API plan)
-            price = twelve_data_client.get_price(self.symbol)
-            rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
-            macd_data = twelve_data_client.get_macd(self.symbol, timeframe)
-            atr = twelve_data_client.get_atr(self.symbol, timeframe)
-            adx = twelve_data_client.get_adx(self.symbol, timeframe)
-            bbands = twelve_data_client.get_bbands(self.symbol, timeframe)
-            stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
-            ema50 = twelve_data_client.get_ema(self.symbol, '1h', 50)
-            ema200 = twelve_data_client.get_ema(self.symbol, '1h', 200)
+            print(f"\n[FOREX SIGNALS] Using strategy: {strategy.name} ({strategy.bot_type})")
             
-            # Check if we have all required data
-            if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
-                print("[FOREX SIGNALS] ❌ Missing indicator data, skipping signal check")
+            signal_data = await strategy.check_for_signals(timeframe)
+            
+            if not signal_data:
                 return None
             
-            # Type assertions for type checker (we know these are not None after the check above)
-            assert price is not None
-            assert rsi is not None
-            assert macd_data is not None
-            assert atr is not None
-            assert adx is not None
-            assert bbands is not None
-            assert stoch is not None
-            assert ema50 is not None
-            assert ema200 is not None
+            result = signal_data.to_dict()
             
-            print(f"[FOREX SIGNALS] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
-            print(f"[FOREX SIGNALS] Trend: EMA50={ema50:.2f}, EMA200={ema200:.2f}, Stoch K={stoch['k']:.2f}")
+            result['rsi_value'] = signal_data.indicators.get('rsi')
+            result['macd_value'] = signal_data.indicators.get('macd')
+            result['atr_value'] = signal_data.indicators.get('atr')
+            result['adx_value'] = signal_data.indicators.get('adx')
+            result['stoch_k_value'] = signal_data.indicators.get('stochastic')
             
-            # Step 1: Determine trend bias from 1-hour EMAs (for info only in testing mode)
-            trend_is_bullish = ema50 > ema200
-            trend_is_bearish = ema50 < ema200
-            trend_name = "Bullish" if trend_is_bullish else "Bearish" if trend_is_bearish else "Neutral"
+            print(f"[FOREX SIGNALS] ✅ Signal from {strategy.name}: {signal_data.signal_type} @ {signal_data.entry_price:.2f}")
             
-            # Step 2: Check trend strength with ADX
-            if adx < self.adx_threshold:
-                print(f"[FOREX SIGNALS] Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
-                return None
-            
-            # Step 3: Check MACD histogram slope (for info only in testing mode)
-            macd_histogram = macd_data['histogram']
-            macd_slope = macd_data['histogram_slope']
-            
-            print(f"[FOREX SIGNALS] MACD Histogram: {macd_histogram:.4f}, Slope: {macd_slope:.4f}")
-            
-            # Step 4: Check for signal conditions - TESTING MODE (RSI-based only)
-            signal_type = None
-            
-            # BUY signal: RSI oversold + at least 1 confirmation (ignore trend/MACD for testing)
-            if rsi < self.rsi_oversold:
-                # Check Bollinger Bands (price near lower band = oversold)
-                bb_distance = abs(price - bbands['lower'])
-                bb_touch = bb_distance < (atr * 0.5)
-                
-                # Check Stochastic (oversold)
-                stoch_oversold = stoch['is_oversold']
-                
-                # Require at least 1 confirmation (BB touch OR Stochastic)
-                if bb_touch or stoch_oversold:
-                    confirmations = []
-                    if bb_touch:
-                        confirmations.append("BB_touch")
-                    if stoch_oversold:
-                        confirmations.append("Stoch_oversold")
-                    
-                    signal_type = 'BUY'
-                    print(f"[FOREX SIGNALS] 🟢 BUY signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
-                else:
-                    print(f"[FOREX SIGNALS] BUY conditions partial - BB_touch={bb_touch}, Stoch_oversold={stoch_oversold}")
-            
-            # SELL signal: RSI overbought + at least 1 confirmation (ignore trend/MACD for testing)
-            elif rsi > self.rsi_overbought:
-                # Check Bollinger Bands (price near upper band = overbought)
-                bb_distance = abs(price - bbands['upper'])
-                bb_touch = bb_distance < (atr * 0.5)
-                
-                # Check Stochastic (overbought)
-                stoch_overbought = stoch['is_overbought']
-                
-                # Require at least 1 confirmation (BB touch OR Stochastic)
-                if bb_touch or stoch_overbought:
-                    confirmations = []
-                    if bb_touch:
-                        confirmations.append("BB_touch")
-                    if stoch_overbought:
-                        confirmations.append("Stoch_overbought")
-                    
-                    signal_type = 'SELL'
-                    print(f"[FOREX SIGNALS] 🔴 SELL signal - Trend=Bearish, RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
-                else:
-                    print(f"[FOREX SIGNALS] SELL conditions partial - BB_touch={bb_touch}, Stoch_overbought={stoch_overbought}")
-            
-            if not signal_type:
-                macd_momentum = 'Increasing_Bullish' if macd_slope > 0 and macd_histogram > 0 else 'Increasing_Bearish' if macd_slope < 0 and macd_histogram < 0 else 'Not_Increasing'
-                print(f"[FOREX SIGNALS] No signal - Trend={'Bullish' if trend_is_bullish else 'Bearish'}, RSI={rsi:.2f}, MACD_momentum={macd_momentum}")
-                return None
-            
-            # Calculate TP/SL
-            take_profit, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
-            
-            # Build dynamic indicators dict from all fetched indicators
-            all_indicators = {
-                'rsi': rsi,
-                'macd': macd_data['macd'],
-                'adx': adx,
-                'stochastic': stoch['k'],
-                'atr': atr,
-                'bollinger_middle': bbands['middle'],
-                'bollinger_upper': bbands['upper'],
-                'bollinger_lower': bbands['lower'],
-                'ema50': ema50,
-                'ema200': ema200
-            }
-            
-            signal_data = {
-                'signal_type': signal_type,
-                'pair': self.symbol,
-                'timeframe': timeframe,
-                'entry_price': price,
-                'take_profit': take_profit,
-                'stop_loss': stop_loss,
-                'rsi_value': rsi,
-                'macd_value': macd_data['macd'],
-                'atr_value': atr,
-                'adx_value': adx,
-                'stoch_k_value': stoch['k'],
-                'all_indicators': all_indicators
-            }
-            
-            print(f"[FOREX SIGNALS] ✅ Signal generated: {signal_type} @ {price:.2f}, TP: {take_profit:.2f}, SL: {stop_loss:.2f}")
-            
-            return signal_data
+            return result
             
         except Exception as e:
             print(f"[FOREX SIGNALS] ❌ Error checking for signals: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     async def monitor_active_signals(self):

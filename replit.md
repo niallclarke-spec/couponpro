@@ -24,6 +24,29 @@ The frontend uses pure HTML, CSS, and vanilla JavaScript. The backend, including
 - **Bot Analytics Dashboard**: Provides comprehensive admin analytics with smart chart switching (hourly/daily aggregation), tracking generations, unique users, success rates, top templates, and searchable coupon codes.
 - **Forex Signals Bot**: Automated XAU/USD (Gold) trading signals based on a multi-indicator strategy (EMA, ADX, RSI, MACD, Bollinger Bands, Stochastic Oscillator), posted to a private Telegram channel. Features ATR-based dynamic TP/SL, AI-powered celebration messages, and daily/weekly performance recaps.
 
+### Modular Strategy System (Forex Bot)
+The forex signals bot uses a modular strategy architecture (`strategies/`) that enables plug-and-play bot strategies:
+
+**Architecture:**
+- `strategies/base_strategy.py`: Abstract base class defining the strategy interface
+- `strategies/aggressive.py`: Aggressive strategy with wider RSI thresholds (40/60)
+- `strategies/conservative.py`: Conservative strategy with tighter thresholds (35/65)
+- `strategies/strategy_loader.py`: Registry and factory for loading strategies
+- `forex_signals.py`: Delegates to active strategy; owns shared monitoring/guidance logic
+
+**Multi-TP System:**
+- TP1: 50% position close at first target
+- TP2: 30% position close at second target  
+- TP3: 20% position close at final target
+- Breakeven alert at 70% progress toward TP1
+
+**To add a new strategy:**
+1. Create `strategies/your_strategy.py` extending `BaseStrategy`
+2. Implement required methods: `check_for_signals()`, `calculate_tp_sl()`, `validate_thesis()`
+3. Register in `STRATEGY_REGISTRY` in `strategy_loader.py`
+
+**Active strategy** is stored in `forex_config` table as `bot_active_bot_type`.
+
 ### Indicator Configuration (Forex Bot)
 The indicator system uses a centralized configuration in `indicator_config.py`. This ensures signal generation and thesis re-validation stay in sync when indicators change.
 
