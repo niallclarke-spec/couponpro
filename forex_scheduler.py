@@ -389,7 +389,7 @@ class ForexScheduler:
         try:
             now = datetime.utcnow()
             
-            if now.weekday() == 6 and now.hour == 23 and now.minute >= 55:
+            if now.weekday() == 6 and now.hour == 6 and 30 <= now.minute < 35:
                 week_number = str(now.isocalendar()[1])
                 
                 # Check database for last posted week (survives server restarts)
