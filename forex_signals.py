@@ -313,20 +313,6 @@ class ForexSignalEngine:
                 tp_count = 1 + (1 if has_tp2 else 0) + (1 if has_tp3 else 0)
                 
                 if is_buy:
-                    tp_distance = abs(tp1 - entry)
-                    current_profit = current_price - entry
-                    progress_to_tp1 = current_profit / tp_distance if tp_distance > 0 else 0
-                    
-                    if not breakeven_triggered and progress_to_tp1 >= 0.70 and current_profit > 0:
-                        print(f"[FOREX MONITOR] ⚡ Signal #{signal_id} at 70% toward TP1 - BREAKEVEN ALERT")
-                        update_breakeven_triggered(signal_id, entry)
-                        updates.append({
-                            'id': signal_id,
-                            'event': 'breakeven_alert',
-                            'entry_price': entry,
-                            'current_price': current_price
-                        })
-                    
                     if not tp1_hit and current_price >= tp1:
                         pips = round(tp1 - entry, 2)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
@@ -390,20 +376,6 @@ class ForexSignalEngine:
                         })
                     
                 else:
-                    tp_distance = abs(entry - tp1)
-                    current_profit = entry - current_price
-                    progress_to_tp1 = current_profit / tp_distance if tp_distance > 0 else 0
-                    
-                    if not breakeven_triggered and progress_to_tp1 >= 0.70 and current_profit > 0:
-                        print(f"[FOREX MONITOR] ⚡ Signal #{signal_id} at 70% toward TP1 - BREAKEVEN ALERT")
-                        update_breakeven_triggered(signal_id, entry)
-                        updates.append({
-                            'id': signal_id,
-                            'event': 'breakeven_alert',
-                            'entry_price': entry,
-                            'current_price': current_price
-                        })
-                    
                     if not tp1_hit and current_price <= tp1:
                         pips = round(entry - tp1, 2)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)

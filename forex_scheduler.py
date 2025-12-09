@@ -2,15 +2,16 @@
 Forex signals scheduler
 Runs signal checks every 15 minutes and monitors active signals
 Handles daily/weekly recaps at scheduled times
-Includes real-time guidance updates for active signals
+Includes milestone-based progress notifications for active signals
 """
 import asyncio
 from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
 from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance, generate_revalidation_message, generate_timeout_message
-from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent
 from forex_api import twelve_data_client
+from bots.core.milestone_tracker import milestone_tracker
 
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
@@ -98,39 +99,58 @@ class ForexScheduler:
                 signal_type = matching_signal.get('signal_type', 'BUY') if matching_signal else 'BUY'
                 
                 if event == 'breakeven_alert':
-                    entry_price = update.get('entry_price')
-                    current_price = update.get('current_price')
-                    await forex_telegram_bot.post_breakeven_alert(signal_id, entry_price, current_price)
-                    print(f"[SCHEDULER] ✅ Posted breakeven alert for signal #{signal_id}")
+                    pass
                 
                 elif event == 'tp1_hit':
-                    percentage = update.get('percentage', 50)
-                    remaining = update.get('remaining', 50)
-                    await forex_telegram_bot.post_tp_hit(signal_id, 1, pips, percentage, remaining)
-                    print(f"[SCHEDULER] ✅ Posted TP1 notification for signal #{signal_id}")
+                    remaining = update.get('remaining', 0)
+                    message = milestone_tracker.generate_tp1_celebration(signal_type, pips, remaining)
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
+                    print(f"[SCHEDULER] ✅ Posted TP1 celebration for signal #{signal_id}")
                 
                 elif event == 'tp2_hit':
-                    percentage = update.get('percentage', 30)
-                    remaining = update.get('remaining', 20)
-                    await forex_telegram_bot.post_tp_hit(signal_id, 2, pips, percentage, remaining)
-                    print(f"[SCHEDULER] ✅ Posted TP2 notification for signal #{signal_id}")
+                    remaining = update.get('remaining', 0)
+                    tp1_price = matching_signal.get('take_profit', 0) if matching_signal else 0
+                    message = milestone_tracker.generate_tp2_celebration(signal_type, pips, float(tp1_price), remaining)
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
+                    print(f"[SCHEDULER] ✅ Posted TP2 celebration for signal #{signal_id}")
                 
                 elif event == 'tp3_hit':
-                    percentage = update.get('percentage', 20)
-                    await forex_telegram_bot.post_tp_hit(signal_id, 3, pips, percentage, 0)
+                    message = milestone_tracker.generate_tp3_celebration(signal_type, pips)
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
                     if status == 'won':
                         update_forex_signal_status(signal_id, 'won', pips, close_price)
                         print(f"[SCHEDULER] ✅ Signal #{signal_id} completed - all TPs hit!")
                 
                 elif status == 'won':
                     update_forex_signal_status(signal_id, status, pips, close_price)
-                    ai_message = generate_tp_celebration(signal_id, pips, signal_type)
-                    await forex_telegram_bot.post_tp_celebration(signal_id, pips, ai_message)
+                    message = milestone_tracker.generate_tp1_celebration(signal_type, pips, 0)
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
                     print(f"[SCHEDULER] ✅ Posted TP celebration for signal #{signal_id}")
                     
                 elif status == 'lost':
                     update_forex_signal_status(signal_id, status, pips, close_price)
-                    await forex_telegram_bot.post_sl_hit(signal_id, pips, signal_type)
+                    message = milestone_tracker.generate_sl_hit_message(abs(pips))
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
                     print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
@@ -148,59 +168,55 @@ class ForexScheduler:
             traceback.print_exc()
     
     async def run_signal_guidance(self):
-        """Check for and post guidance updates on active signals"""
+        """
+        Check for milestone-based progress updates on active signals.
+        
+        Milestones:
+        - 40% toward TP1: AI motivational message
+        - 70% toward TP1: Breakeven alert + Move SL to entry
+        - 50% toward TP2: Small celebration (if multi-TP)
+        - 60% toward SL: Calm warning (one time)
+        
+        90-second cooldown between all messages.
+        """
         try:
-            guidance_events = await forex_signal_engine.check_signal_guidance()
+            active_signals = get_forex_signals(status='pending')
             
-            for event in guidance_events:
-                signal_id = event['signal_id']
-                guidance_type = event['guidance_type']
-                signal_type = event['signal_type']
-                progress = event['progress_percent']
-                current_price = event['current_price']
-                entry = event['entry_price']
-                tp = event['take_profit']
-                sl = event['stop_loss']
+            if not active_signals:
+                return
+            
+            current_price = twelve_data_client.get_price(forex_signal_engine.symbol)
+            if not current_price:
+                return
+            
+            for signal in active_signals:
+                signal_id = signal['id']
                 
-                ai_message = generate_signal_guidance(
-                    signal_id=signal_id,
-                    signal_type=signal_type,
-                    progress_percent=progress,
-                    guidance_type=guidance_type,
-                    current_price=current_price,
-                    entry_price=entry,
-                    tp_price=tp,
-                    sl_price=sl
-                )
+                milestone_event = milestone_tracker.check_milestones(signal, current_price)
                 
-                signal_data = {
-                    'signal_type': signal_type,
-                    'entry_price': entry,
-                    'take_profit': tp,
-                    'stop_loss': sl,
-                    'current_price': current_price
-                }
-                
-                success = await forex_telegram_bot.post_signal_guidance(
-                    signal_id=signal_id,
-                    guidance_type=guidance_type,
-                    message=ai_message,
-                    signal_data=signal_data
-                )
-                
-                if success:
-                    zone_value = event.get('zone_value')
-                    progress_toward = event.get('progress_toward', 'tp')
+                if milestone_event:
+                    milestone = milestone_event['milestone']
+                    milestone_key = milestone_event['milestone_key']
                     
-                    if progress_toward == 'tp':
-                        update_signal_guidance(signal_id, f"{guidance_type}: {ai_message[:100]}", progress_zone=zone_value)
-                    else:
-                        update_signal_guidance(signal_id, f"{guidance_type}: {ai_message[:100]}", caution_zone=zone_value)
+                    message = milestone_tracker.generate_milestone_message(milestone_event)
                     
-                    if guidance_type == 'breakeven':
-                        update_signal_breakeven(signal_id, entry)
-                    
-                    print(f"[SCHEDULER] ✅ Posted {guidance_type} guidance for signal #{signal_id} (zone {zone_value})")
+                    if message:
+                        try:
+                            await forex_telegram_bot.bot.send_message(
+                                chat_id=forex_telegram_bot.channel_id,
+                                text=message,
+                                parse_mode='HTML'
+                            )
+                            
+                            update_milestone_sent(signal_id, milestone_key)
+                            
+                            if milestone == 'tp1_70_breakeven':
+                                update_signal_breakeven(signal_id, milestone_event['entry_price'])
+                            
+                            print(f"[SCHEDULER] ✅ Posted {milestone} milestone for signal #{signal_id}")
+                            
+                        except Exception as e:
+                            print(f"[SCHEDULER] ❌ Failed to post milestone message: {e}")
                 
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in signal guidance: {e}")
