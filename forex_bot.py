@@ -246,15 +246,15 @@ class ForexTelegramBot:
             return
         
         try:
-            dollar_profit = abs(current_price - entry_price)
+            pips_profit = abs(current_price - entry_price)
             
             message = f"""⚡ <b>BREAKEVEN ALERT</b>
 
-Price at 70% toward TP1!
+📈 Price at 70% toward TP1!
 
-💰 Current profit: <b>+${dollar_profit:.2f}</b>
+💰 Current: <b>+{pips_profit:.1f} pips</b>
 
-Consider moving SL to entry (${entry_price:.2f}) to lock in gains."""
+🔒 Move SL to entry @ ${entry_price:.2f}"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
