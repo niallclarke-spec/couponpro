@@ -3485,20 +3485,6 @@
                                         <div class="guardrail-item">
                                             <label class="guardrail-label">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                                </svg>
-                                                Session Window
-                                            </label>
-                                            <select class="guardrail-input" id="sessionFilterEnabled">
-                                                <option value="true">London/NY Hours Only</option>
-                                                <option value="false">24/5 Trading</option>
-                                            </select>
-                                            <div class="guardrail-hint">High-liquidity session filter</div>
-                                        </div>
-                                        
-                                        <div class="guardrail-item">
-                                            <label class="guardrail-label">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                                 </svg>
                                                 Session Hours (UTC)
@@ -5297,7 +5283,7 @@
             try {
                 const dailyLossCap = document.getElementById('dailyLossCap').value;
                 const backToBackThrottle = document.getElementById('backToBackThrottle').value;
-                const sessionFilterEnabled = document.getElementById('sessionFilterEnabled').value;
+                const sessionFilterEnabled = 'true';
                 const sessionStartHour = document.getElementById('sessionStartHour').value;
                 const sessionEndHour = document.getElementById('sessionEndHour').value;
                 
@@ -5346,7 +5332,6 @@
                     const data = await response.json();
                     document.getElementById('dailyLossCap').value = data.daily_loss_cap_pips || 50;
                     document.getElementById('backToBackThrottle').value = data.back_to_back_throttle_minutes || 30;
-                    document.getElementById('sessionFilterEnabled').value = data.session_filter_enabled === 'true' || data.session_filter_enabled === true ? 'true' : 'false';
                     document.getElementById('sessionStartHour').value = data.session_start_hour_utc || 8;
                     document.getElementById('sessionEndHour').value = data.session_end_hour_utc || 21;
                     
