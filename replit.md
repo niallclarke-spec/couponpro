@@ -78,12 +78,34 @@ These files handle shared functionality that works identically regardless of whi
 |---------|------|-------|
 | Daily Recap | `forex_bot.py` | `post_daily_recap()` - Morning recap of yesterday's signals |
 | Weekly Recap | `forex_bot.py` | `post_weekly_recap()` - Sunday performance summary |
-| TP Celebration | `forex_bot.py` | `post_tp_celebration()` - When all TPs hit |
-| SL Hit Message | `forex_bot.py` | `post_sl_hit()` - Stop loss notification |
-| Breakeven Alert | `forex_bot.py` | `post_breakeven_alert()` - 70% to TP1 advisory |
+| Milestone Tracker | `bots/core/milestone_tracker.py` | Unified notification system for all signal milestones |
 | Price Monitoring | `bots/core/price_monitor.py` | TP/SL hit detection, 1-min checks |
 | Signal Scheduling | `forex_scheduler.py` | Signal lifecycle, closing, monitoring |
 | Guidance System | `forex_signals.py` | Progress updates, thesis validation |
+
+### Milestone Tracker System
+The unified milestone notification system (`bots/core/milestone_tracker.py`) handles all signal progress notifications:
+
+**Milestones (in order):**
+1. **40% toward TP1**: AI-generated motivational message
+2. **70% toward TP1**: Celebration + breakeven advice (move SL to entry)
+3. **TP1 Hit**: Celebration with pips gained, remaining position info
+4. **50% toward TP2**: Small encouragement (if multi-TP)
+5. **TP2 Hit**: Celebration + advice to move SL to TP1 (if 3-TP)
+6. **TP3 Hit**: BIG celebration with emojis for full exit
+7. **60% toward SL**: Calm warning message (one-time)
+8. **SL Hit**: Professional loss message with accountability
+
+**Key Features:**
+- 90-second global cooldown between all messages
+- AI-generated unique messages via Replit AI Integrations (gpt-5)
+- Fallback messages if AI unavailable
+- Database tracking via `milestones_sent` JSONB column
+- Prevents duplicate notifications
+
+**Database Columns (forex_signals):**
+- `last_milestone_at`: Timestamp of last milestone message sent
+- `milestones_sent`: JSONB tracking which milestones sent (40_percent, 70_percent, tp1_hit, etc.)
 
 **Queued Bot Switching:**
 When a signal is active, users can queue a different bot strategy. The queued bot will automatically activate when the current signal closes (won/lost/expired). This allows planning ahead without waiting for signals to complete.
