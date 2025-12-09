@@ -50,11 +50,9 @@ class ForexSignalEngine:
     def load_active_strategy(self):
         """Load the active strategy from database config"""
         try:
-            config = get_bot_config()
-            if config:
-                self._active_bot_type = config.get('active_bot_type', 'aggressive')
-            else:
-                self._active_bot_type = 'aggressive'
+            from db import get_active_bot
+            active_bot = get_active_bot()
+            self._active_bot_type = active_bot or 'aggressive'
             
             self._active_strategy = get_active_strategy(self._active_bot_type)
             if self._active_strategy:
