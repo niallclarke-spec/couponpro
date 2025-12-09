@@ -2851,7 +2851,7 @@ def get_open_signal():
                        breakeven_set, breakeven_price, guidance_count, last_guidance_at,
                        indicators_used, notes
                 FROM forex_signals
-                WHERE status = 'open'
+                WHERE status IN ('open', 'pending')
                 ORDER BY posted_at DESC
                 LIMIT 1
             """)
