@@ -19,9 +19,11 @@ def _load_strategies():
     """Load all available strategies into the registry"""
     from strategies.aggressive import AggressiveStrategy
     from strategies.conservative import ConservativeStrategy
+    from strategies.raja_banks import RajaBanksStrategy
     
     register_strategy(AggressiveStrategy)
     register_strategy(ConservativeStrategy)
+    register_strategy(RajaBanksStrategy)
 
 
 _load_strategies()

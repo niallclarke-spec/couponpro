@@ -12,7 +12,7 @@ Based on Roger Banks' trading methodology:
 from typing import Dict, List, Optional, Tuple
 from strategies.base_strategy import BaseStrategy, SignalData, TakeProfitLevel
 from forex_api import twelve_data_client
-from db import get_forex_config, get_daily_pnl
+from db import get_forex_config, get_daily_pnl, count_signals_today_by_bot, get_last_signal_time_by_bot
 from datetime import datetime, timedelta
 
 
@@ -38,9 +38,6 @@ class RajaBanksStrategy(BaseStrategy):
     
     def __init__(self):
         super().__init__()
-        self.last_signal_time = None
-        self.signals_today = 0
-        self.last_reset_date = None
         self.load_config()
     
     def load_config(self):
@@ -59,14 +56,6 @@ class RajaBanksStrategy(BaseStrategy):
         self.atr_sl_multiplier = 1.5
         self.daily_loss_cap_pips = 50.0
     
-    def _reset_daily_counter(self):
-        """Reset signal counter at start of new day"""
-        today = datetime.utcnow().date()
-        if self.last_reset_date != today:
-            self.signals_today = 0
-            self.last_reset_date = today
-            print(f"[RAJA_BANKS] Daily counter reset for {today}")
-    
     def is_in_session(self) -> Tuple[bool, str]:
         """Check if current time is within a trading session"""
         now = datetime.utcnow()
@@ -83,12 +72,17 @@ class RajaBanksStrategy(BaseStrategy):
         return False, "Off-hours"
     
     def check_cooldown(self) -> Tuple[bool, Optional[str]]:
-        """Check if enough time has passed since last signal"""
-        if self.last_signal_time is None:
+        """Check if enough time has passed since last signal (using database)"""
+        last_signal_time = get_last_signal_time_by_bot(self.bot_type)
+        
+        if last_signal_time is None:
             return True, None
         
         now = datetime.utcnow()
-        time_since_last = (now - self.last_signal_time).total_seconds() / 60
+        if last_signal_time.tzinfo:
+            last_signal_time = last_signal_time.replace(tzinfo=None)
+        
+        time_since_last = (now - last_signal_time).total_seconds() / 60
         
         if time_since_last < self.COOLDOWN_MINUTES:
             remaining = int(self.COOLDOWN_MINUTES - time_since_last)
@@ -97,11 +91,11 @@ class RajaBanksStrategy(BaseStrategy):
         return True, None
     
     def check_daily_limit(self) -> Tuple[bool, Optional[str]]:
-        """Check if daily signal limit has been reached"""
-        self._reset_daily_counter()
+        """Check if daily signal limit has been reached (using database)"""
+        signals_today = count_signals_today_by_bot(self.bot_type)
         
-        if self.signals_today >= self.MAX_SIGNALS_PER_DAY:
-            return False, f"Daily limit reached ({self.signals_today}/{self.MAX_SIGNALS_PER_DAY} signals)"
+        if signals_today >= self.MAX_SIGNALS_PER_DAY:
+            return False, f"Daily limit reached ({signals_today}/{self.MAX_SIGNALS_PER_DAY} signals)"
         
         return True, None
     
@@ -284,6 +278,10 @@ class RajaBanksStrategy(BaseStrategy):
                 print("[RAJA_BANKS] Missing indicator data")
                 return None
             
+            assert ema50 is not None
+            assert ema200 is not None
+            assert atr is not None
+            
             sr_data = twelve_data_client.get_support_resistance(self.symbol, '1h', 20)
             
             impulse = self.detect_impulse_break(candles)
@@ -338,15 +336,14 @@ class RajaBanksStrategy(BaseStrategy):
                 bot_type=self.bot_type
             )
             
-            self.last_signal_time = datetime.utcnow()
-            self.signals_today += 1
+            signals_today = count_signals_today_by_bot(self.bot_type)
             
             print(f"[RAJA_BANKS] Signal generated: {signal_type} @ {entry_price:.2f}")
             print(f"[RAJA_BANKS] TP1: {take_profits[0].price:.2f} ({take_profits[0].percentage}%)")
             if len(take_profits) > 1:
                 print(f"[RAJA_BANKS] TP2: {take_profits[1].price:.2f} ({take_profits[1].percentage}%)")
             print(f"[RAJA_BANKS] SL: {stop_loss:.2f} (tight candle-based)")
-            print(f"[RAJA_BANKS] Signals today: {self.signals_today}/{self.MAX_SIGNALS_PER_DAY}")
+            print(f"[RAJA_BANKS] Signals today: {signals_today + 1}/{self.MAX_SIGNALS_PER_DAY}")
             
             return signal_data
             
