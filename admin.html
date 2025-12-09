@@ -5350,14 +5350,6 @@
                     document.getElementById('sessionStartHour').value = data.session_start_hour_utc || 8;
                     document.getElementById('sessionEndHour').value = data.session_end_hour_utc || 21;
                     
-                    // Update daily P/L display
-                    const dailyPnl = data.daily_pnl || 0;
-                    const pnlDisplay = document.getElementById('dailyPnlDisplay');
-                    if (pnlDisplay) {
-                        pnlDisplay.textContent = dailyPnl >= 0 ? `+${dailyPnl.toFixed(1)} pips` : `${dailyPnl.toFixed(1)} pips`;
-                        pnlDisplay.className = 'status-item-value ' + (dailyPnl >= 0 ? 'positive' : 'negative');
-                    }
-                    
                     // Update session display
                     const sessionDisplay = document.getElementById('currentSessionDisplay');
                     if (sessionDisplay) {
