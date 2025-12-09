@@ -641,6 +641,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 custom_signals = get_signals_by_bot_type('custom', limit=10)
                 legacy_signals = get_signals_by_bot_type('legacy', limit=10)
                 
+                from db import get_daily_pnl
+                daily_pnl = get_daily_pnl() or 0
+                
                 status = {
                     'active_bot': active_bot or 'aggressive',
                     'available_bots': ['aggressive', 'conservative', 'custom', 'raja_banks'],
@@ -648,6 +651,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'current_price': current_price,
                     'current_pips': current_pips,
                     'current_dollars': current_dollars,
+                    'daily_pnl': daily_pnl,
                     'recent_signals': {
                         'aggressive': len(aggressive_signals),
                         'conservative': len(conservative_signals),

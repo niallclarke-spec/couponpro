@@ -4833,6 +4833,15 @@
                 }
             }
             
+            const dailyPnlDisplay = document.getElementById('dailyPnlDisplay');
+            if (dailyPnlDisplay) {
+                const dailyPnl = botStatus.daily_pnl || 0;
+                const isProfit = dailyPnl >= 0;
+                const color = isProfit ? '#10b981' : '#ef4444';
+                const sign = isProfit ? '+' : '';
+                dailyPnlDisplay.innerHTML = `<span style="color: ${color}; font-weight: 600;">${sign}${dailyPnl.toFixed(1)} pips</span>`;
+            }
+            
             // Update signal counts
             const aggressiveCount = document.getElementById('aggressiveCount');
             const conservativeCount = document.getElementById('conservativeCount');
