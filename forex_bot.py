@@ -253,6 +253,7 @@ class ForexTelegramBot:
 📈 Price at 70% toward TP1!
 
 💰 Current: <b>+{pips_profit:.1f} pips</b>
+🔄 100% still in play
 
 🔒 Move SL to entry @ ${entry_price:.2f}"""
             
