@@ -2525,7 +2525,7 @@ def get_forex_config():
                 updated_at = row[2]
                 
                 # Convert to appropriate type
-                if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour']:
+                if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour', 'session_start_hour_utc', 'session_end_hour_utc', 'back_to_back_throttle_minutes']:
                     config[key] = int(value) if value else 0
                 elif key in ['atr_sl_multiplier', 'atr_tp_multiplier']:
                     config[key] = float(value) if value else 0.0
