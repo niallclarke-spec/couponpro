@@ -302,5 +302,99 @@ class TwelveDataClient:
         except Exception as e:
             print(f"Error fetching Stochastic for {symbol}: {e}")
             return None
+    
+    def get_time_series(self, symbol='XAU/USD', interval='15min', outputsize=5):
+        """
+        Get OHLC candle data for impulse entry detection
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval (15min, 30min, 1h, etc.)
+            outputsize: Number of candles to fetch (default: 5)
+        
+        Returns:
+            list: List of candle dicts with {datetime, open, high, low, close} 
+                  ordered from most recent to oldest, or None if error
+        """
+        try:
+            data = self._make_request('time_series', {
+                'symbol': symbol,
+                'interval': interval,
+                'outputsize': outputsize
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                candles = []
+                for candle in data['values']:
+                    candles.append({
+                        'datetime': candle.get('datetime'),
+                        'open': float(candle.get('open', 0)),
+                        'high': float(candle.get('high', 0)),
+                        'low': float(candle.get('low', 0)),
+                        'close': float(candle.get('close', 0))
+                    })
+                return candles
+            return None
+        except Exception as e:
+            print(f"Error fetching time series for {symbol}: {e}")
+            return None
+    
+    def get_support_resistance(self, symbol='XAU/USD', interval='1h', lookback=20):
+        """
+        Calculate simple support/resistance levels from recent highs/lows
+        
+        Args:
+            symbol: Trading pair (default: XAU/USD)
+            interval: Time interval for S/R detection (default: 1h)
+            lookback: Number of candles to analyze (default: 20)
+        
+        Returns:
+            dict: {
+                'resistance': Nearest resistance level,
+                'support': Nearest support level,
+                'swing_highs': List of swing high prices,
+                'swing_lows': List of swing low prices
+            } or None if error
+        """
+        try:
+            candles = self.get_time_series(symbol, interval, lookback)
+            if not candles or len(candles) < 5:
+                return None
+            
+            current_price = float(candles[0]['close'])
+            swing_highs = []
+            swing_lows = []
+            
+            for i in range(1, len(candles) - 1):
+                prev_high = candles[i + 1]['high']
+                curr_high = candles[i]['high']
+                next_high = candles[i - 1]['high']
+                
+                if curr_high > prev_high and curr_high > next_high:
+                    swing_highs.append(curr_high)
+                
+                prev_low = candles[i + 1]['low']
+                curr_low = candles[i]['low']
+                next_low = candles[i - 1]['low']
+                
+                if curr_low < prev_low and curr_low < next_low:
+                    swing_lows.append(curr_low)
+            
+            resistance_levels = [h for h in swing_highs if h > current_price]
+            support_levels = [l for l in swing_lows if l < current_price]
+            
+            nearest_resistance = min(resistance_levels) if resistance_levels else None
+            nearest_support = max(support_levels) if support_levels else None
+            
+            return {
+                'resistance': nearest_resistance,
+                'support': nearest_support,
+                'swing_highs': sorted(swing_highs, reverse=True)[:5],
+                'swing_lows': sorted(swing_lows)[:5],
+                'current_price': current_price
+            }
+        except Exception as e:
+            print(f"Error calculating S/R for {symbol}: {e}")
+            return None
 
 twelve_data_client = TwelveDataClient()
