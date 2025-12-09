@@ -247,8 +247,15 @@ class ForexSignalEngine:
     
     async def monitor_active_signals(self):
         """
-        Monitor active signals for TP/SL hits and expiration
-        Returns list of signals that need updates
+        Monitor active signals for multi-TP hits, SL hits, breakeven trigger, and expiration.
+        
+        Multi-TP System:
+        - TP1: 50% position close
+        - TP2: 30% position close  
+        - TP3: 20% position close (full exit)
+        - Breakeven alert at 70% toward TP1
+        
+        Returns list of events that need updates/notifications
         """
         try:
             active_signals = get_forex_signals(status='pending')
@@ -272,11 +279,21 @@ class ForexSignalEngine:
                 signal_id = signal['id']
                 signal_type = signal['signal_type']
                 entry = float(signal['entry_price'])
-                tp = float(signal['take_profit'])
+                tp1 = float(signal['take_profit'])
+                tp2 = float(signal.get('take_profit_2') or 0)
+                tp3 = float(signal.get('take_profit_3') or 0)
                 sl = float(signal['stop_loss'])
                 posted_at = signal['posted_at']
                 
-                # Parse posted_at if it's a string
+                tp1_hit = signal.get('tp1_hit', False) or signal.get('tp_hit_1', False)
+                tp2_hit = signal.get('tp2_hit', False) or signal.get('tp_hit_2', False)
+                tp3_hit = signal.get('tp3_hit', False) or signal.get('tp_hit_3', False)
+                breakeven_triggered = signal.get('breakeven_triggered', False)
+                
+                tp1_pct = signal.get('tp1_percentage') or 50
+                tp2_pct = signal.get('tp2_percentage') or 30
+                tp3_pct = signal.get('tp3_percentage') or 20
+                
                 if isinstance(posted_at, str):
                     posted_at = datetime.fromisoformat(posted_at.replace('Z', '+00:00'))
                 
@@ -291,35 +308,143 @@ class ForexSignalEngine:
                     })
                     continue
                 
-                if signal_type == 'BUY':
-                    if current_price >= tp:
-                        pips = round(tp - entry, 2)
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP HIT! Profit: {pips} pips")
+                is_buy = signal_type == 'BUY'
+                has_multi_tp = tp2 > 0 and tp3 > 0
+                
+                if is_buy:
+                    tp_distance = abs(tp1 - entry)
+                    current_profit = current_price - entry
+                    progress_to_tp1 = current_profit / tp_distance if tp_distance > 0 else 0
+                    
+                    if not breakeven_triggered and progress_to_tp1 >= 0.70 and current_profit > 0:
+                        print(f"[FOREX MONITOR] ⚡ Signal #{signal_id} at 70% toward TP1 - BREAKEVEN ALERT")
+                        update_breakeven_triggered(signal_id, entry)
                         updates.append({
                             'id': signal_id,
-                            'status': 'won',
-                            'pips': pips
+                            'event': 'breakeven_alert',
+                            'entry_price': entry,
+                            'current_price': current_price
                         })
-                    elif current_price <= sl:
-                        pips = round(entry - sl, 2)
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: -{pips} pips")
+                    
+                    if not tp1_hit and current_price >= tp1:
+                        pips = round(tp1 - entry, 2)
+                        remaining = tp2_pct + tp3_pct if has_multi_tp else 0
+                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
+                        update_tp_hit(signal_id, 1)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp1_hit',
+                            'pips': pips,
+                            'percentage': tp1_pct,
+                            'remaining': remaining
+                        })
+                        if not has_multi_tp:
+                            updates.append({
+                                'id': signal_id,
+                                'status': 'won',
+                                'pips': pips
+                            })
+                            continue
+                    
+                    if has_multi_tp and tp1_hit and not tp2_hit and current_price >= tp2:
+                        pips = round(tp2 - entry, 2)
+                        remaining = tp3_pct
+                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
+                        update_tp_hit(signal_id, 2)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp2_hit',
+                            'pips': pips,
+                            'percentage': tp2_pct,
+                            'remaining': remaining
+                        })
+                    
+                    if has_multi_tp and tp2_hit and not tp3_hit and current_price >= tp3:
+                        pips = round(tp3 - entry, 2)
+                        print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
+                        update_tp_hit(signal_id, 3)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp3_hit',
+                            'status': 'won',
+                            'pips': pips,
+                            'percentage': tp3_pct
+                        })
+                        continue
+                    
+                    if current_price <= sl:
+                        pips = round(sl - entry, 2)
+                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
                             'status': 'lost',
-                            'pips': -pips
-                        })
-                else:
-                    if current_price <= tp:
-                        pips = round(entry - tp, 2)
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP HIT! Profit: {pips} pips")
-                        updates.append({
-                            'id': signal_id,
-                            'status': 'won',
                             'pips': pips
                         })
-                    elif current_price >= sl:
-                        pips = round(sl - entry, 2)
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: -{pips} pips")
+                    
+                else:
+                    tp_distance = abs(entry - tp1)
+                    current_profit = entry - current_price
+                    progress_to_tp1 = current_profit / tp_distance if tp_distance > 0 else 0
+                    
+                    if not breakeven_triggered and progress_to_tp1 >= 0.70 and current_profit > 0:
+                        print(f"[FOREX MONITOR] ⚡ Signal #{signal_id} at 70% toward TP1 - BREAKEVEN ALERT")
+                        update_breakeven_triggered(signal_id, entry)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'breakeven_alert',
+                            'entry_price': entry,
+                            'current_price': current_price
+                        })
+                    
+                    if not tp1_hit and current_price <= tp1:
+                        pips = round(entry - tp1, 2)
+                        remaining = tp2_pct + tp3_pct if has_multi_tp else 0
+                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
+                        update_tp_hit(signal_id, 1)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp1_hit',
+                            'pips': pips,
+                            'percentage': tp1_pct,
+                            'remaining': remaining
+                        })
+                        if not has_multi_tp:
+                            updates.append({
+                                'id': signal_id,
+                                'status': 'won',
+                                'pips': pips
+                            })
+                            continue
+                    
+                    if has_multi_tp and tp1_hit and not tp2_hit and current_price <= tp2:
+                        pips = round(entry - tp2, 2)
+                        remaining = tp3_pct
+                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
+                        update_tp_hit(signal_id, 2)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp2_hit',
+                            'pips': pips,
+                            'percentage': tp2_pct,
+                            'remaining': remaining
+                        })
+                    
+                    if has_multi_tp and tp2_hit and not tp3_hit and current_price <= tp3:
+                        pips = round(entry - tp3, 2)
+                        print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
+                        update_tp_hit(signal_id, 3)
+                        updates.append({
+                            'id': signal_id,
+                            'event': 'tp3_hit',
+                            'status': 'won',
+                            'pips': pips,
+                            'percentage': tp3_pct
+                        })
+                        continue
+                    
+                    if current_price >= sl:
+                        pips = round(entry - sl, 2)
+                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
                             'status': 'lost',
@@ -330,6 +455,8 @@ class ForexSignalEngine:
             
         except Exception as e:
             print(f"[FOREX MONITOR] ❌ Error monitoring signals: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def is_trading_hours(self):

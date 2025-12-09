@@ -64,10 +64,11 @@ class ForexTelegramBot:
     
     async def post_signal(self, signal_data):
         """
-        Post a trading signal to the Telegram channel
+        Post a trading signal to the Telegram channel with multi-TP support
         
         Args:
             signal_data: dict with signal_type, pair, entry_price, take_profit, stop_loss, etc.
+                        Supports take_profit_2, take_profit_3 for multi-TP
         
         Returns:
             int: Signal ID from database or None if failed
@@ -77,8 +78,6 @@ class ForexTelegramBot:
             return None
         
         try:
-            # CRITICAL: Double-check no pending signals exist right before posting
-            # This prevents race conditions where signals get created between scheduler check and post
             pending_signals = get_forex_signals(status='pending')
             if pending_signals and len(pending_signals) > 0:
                 existing = pending_signals[0]
@@ -89,14 +88,26 @@ class ForexTelegramBot:
             signal_type = signal_data['signal_type']
             pair = signal_data['pair']
             entry = signal_data['entry_price']
-            tp = signal_data['take_profit']
+            tp1 = signal_data['take_profit']
+            tp2 = signal_data.get('take_profit_2')
+            tp3 = signal_data.get('take_profit_3')
             sl = signal_data['stop_loss']
             rsi = signal_data['rsi_value']
             macd = signal_data['macd_value']
             atr = signal_data['atr_value']
             timeframe = signal_data.get('timeframe', '15min')
             
+            tp1_pct = signal_data.get('tp1_percentage', 50)
+            tp2_pct = signal_data.get('tp2_percentage', 30)
+            tp3_pct = signal_data.get('tp3_percentage', 20)
+            
             emoji = '🟢' if signal_type == 'BUY' else '🔴'
+            
+            tp_section = f"🎯 <b>TP1:</b> ${tp1:.2f} ({tp1_pct}%)"
+            if tp2:
+                tp_section += f"\n🎯 <b>TP2:</b> ${tp2:.2f} ({tp2_pct}%)"
+            if tp3:
+                tp_section += f"\n🎯 <b>TP3:</b> ${tp3:.2f} ({tp3_pct}%)"
             
             message = f"""{emoji} <b>{signal_type} SIGNAL</b> {emoji}
 
@@ -104,13 +115,12 @@ class ForexTelegramBot:
 <b>Timeframe:</b> {timeframe}
 
 💰 <b>Entry:</b> ${entry:.2f}
-🎯 <b>Take Profit:</b> ${tp:.2f}
+
+{tp_section}
+
 🛡️ <b>Stop Loss:</b> ${sl:.2f}
 
-<b>Technical Analysis:</b>
-📊 RSI: {rsi:.2f}
-📈 MACD: {macd:.4f}
-📉 ATR: {atr:.2f}
+📊 RSI: {rsi:.2f} | MACD: {macd:.4f}
 """
             
             sent_message = await self.bot.send_message(
@@ -124,11 +134,16 @@ class ForexTelegramBot:
                 pair=pair,
                 timeframe=timeframe,
                 entry_price=entry,
-                take_profit=tp,
+                take_profit=tp1,
                 stop_loss=sl,
                 rsi_value=rsi,
                 macd_value=macd,
-                atr_value=atr
+                atr_value=atr,
+                take_profit_2=tp2,
+                take_profit_3=tp3,
+                tp1_percentage=tp1_pct,
+                tp2_percentage=tp2_pct,
+                tp3_percentage=tp3_pct
             )
             
             # Store original indicator values for re-validation using config-driven approach
@@ -170,22 +185,36 @@ class ForexTelegramBot:
             print(f"❌ Unexpected error posting signal: {e}")
             return None
     
-    async def post_tp_celebration(self, signal_id, pips_profit, ai_message=None):
+    async def post_tp_hit(self, signal_id, tp_number, pips_profit, position_percentage, remaining_percentage=None):
         """
-        Post a celebration message when Take Profit is hit
+        Post notification when an individual TP is hit (multi-TP system)
         
         Args:
             signal_id: Database signal ID
-            pips_profit: Profit in pips
-            ai_message: Optional AI-generated motivational message (ignored)
+            tp_number: 1, 2, or 3
+            pips_profit: Profit in pips for this TP
+            position_percentage: Percentage of position closed at this TP
+            remaining_percentage: Percentage of position still open (optional)
         """
         if not self.bot or not self.channel_id:
             return
         
         try:
-            message = f"""Take Profit Hit 🎉
+            if tp_number == 1:
+                emoji = "✅"
+                status_msg = f"🔄 Remaining: {remaining_percentage}% still in play" if remaining_percentage else ""
+            elif tp_number == 2:
+                emoji = "✅✅"
+                status_msg = f"🔄 Remaining: {remaining_percentage}% riding to TP3" if remaining_percentage else ""
+            else:
+                emoji = "🎯🎉"
+                status_msg = "Full position closed!"
+            
+            message = f"""{emoji} <b>TP{tp_number} HIT!</b>
 
-<b>+{pips_profit:.2f} pips</b>"""
+<b>+{pips_profit:.2f} pips</b> ({position_percentage}% closed)
+
+{status_msg}"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
@@ -193,12 +222,86 @@ class ForexTelegramBot:
                 parse_mode='HTML'
             )
             
-            # Record TP hit narrative event
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type=f'tp{tp_number}_hit',
+                notes=f"TP{tp_number} hit: +{pips_profit:.2f} pips ({position_percentage}% closed)"
+            )
+            
+            print(f"✅ Posted TP{tp_number} notification for signal #{signal_id}")
+            
+        except Exception as e:
+            print(f"❌ Failed to post TP{tp_number} notification: {e}")
+    
+    async def post_breakeven_alert(self, signal_id, entry_price, current_price):
+        """
+        Post breakeven alert when price reaches 70% toward TP1
+        
+        Args:
+            signal_id: Database signal ID
+            entry_price: Original entry price
+            current_price: Current price
+        """
+        if not self.bot or not self.channel_id:
+            return
+        
+        try:
+            pips_profit = abs(current_price - entry_price)
+            
+            message = f"""⚡ <b>BREAKEVEN ALERT</b>
+
+Price at 70% toward TP1!
+
+💰 Current profit: <b>+{pips_profit:.2f} pips</b>
+
+Consider moving SL to entry (${entry_price:.2f}) to lock in gains."""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=message,
+                parse_mode='HTML'
+            )
+            
+            add_signal_narrative(
+                signal_id=signal_id,
+                event_type='breakeven_alert',
+                current_price=current_price,
+                notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.2f} pips"
+            )
+            
+            print(f"✅ Posted breakeven alert for signal #{signal_id}")
+            
+        except Exception as e:
+            print(f"❌ Failed to post breakeven alert: {e}")
+    
+    async def post_tp_celebration(self, signal_id, pips_profit, ai_message=None):
+        """
+        Post a celebration message when all Take Profits are hit (legacy support)
+        
+        Args:
+            signal_id: Database signal ID
+            pips_profit: Total profit in pips
+            ai_message: Optional AI-generated motivational message (ignored)
+        """
+        if not self.bot or not self.channel_id:
+            return
+        
+        try:
+            message = f"""🎉 <b>TRADE COMPLETE!</b> 🎉
+
+Total profit: <b>+{pips_profit:.2f} pips</b>"""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=message,
+                parse_mode='HTML'
+            )
+            
             add_signal_narrative(
                 signal_id=signal_id,
                 event_type='tp_hit',
                 progress_percent=100,
-                notes=f"Take profit hit: +{pips_profit:.2f} pips"
+                notes=f"Trade complete: +{pips_profit:.2f} pips"
             )
             
             print(f"✅ Posted TP celebration for signal #{signal_id}")

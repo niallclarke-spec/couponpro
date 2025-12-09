@@ -82,31 +82,58 @@ class ForexScheduler:
             print(f"[SCHEDULER] ❌ Error in signal check: {e}")
     
     async def run_signal_monitoring(self):
-        """Monitor active signals for TP/SL hits"""
+        """Monitor active signals for multi-TP hits, SL hits, and breakeven alerts"""
         try:
             updates = await forex_signal_engine.monitor_active_signals()
             
             for update in updates:
                 signal_id = update['id']
-                status = update['status']
-                pips = update['pips']
-                
-                update_forex_signal_status(signal_id, status, pips)
+                event = update.get('event')
+                status = update.get('status')
+                pips = update.get('pips', 0)
                 
                 signals_data = get_forex_signals(status=None, limit=10)
                 matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
                 signal_type = matching_signal.get('signal_type', 'BUY') if matching_signal else 'BUY'
                 
-                if status == 'won':
+                if event == 'breakeven_alert':
+                    entry_price = update.get('entry_price')
+                    current_price = update.get('current_price')
+                    await forex_telegram_bot.post_breakeven_alert(signal_id, entry_price, current_price)
+                    print(f"[SCHEDULER] ✅ Posted breakeven alert for signal #{signal_id}")
+                
+                elif event == 'tp1_hit':
+                    percentage = update.get('percentage', 50)
+                    remaining = update.get('remaining', 50)
+                    await forex_telegram_bot.post_tp_hit(signal_id, 1, pips, percentage, remaining)
+                    print(f"[SCHEDULER] ✅ Posted TP1 notification for signal #{signal_id}")
+                
+                elif event == 'tp2_hit':
+                    percentage = update.get('percentage', 30)
+                    remaining = update.get('remaining', 20)
+                    await forex_telegram_bot.post_tp_hit(signal_id, 2, pips, percentage, remaining)
+                    print(f"[SCHEDULER] ✅ Posted TP2 notification for signal #{signal_id}")
+                
+                elif event == 'tp3_hit':
+                    percentage = update.get('percentage', 20)
+                    await forex_telegram_bot.post_tp_hit(signal_id, 3, pips, percentage, 0)
+                    if status == 'won':
+                        update_forex_signal_status(signal_id, 'won', pips)
+                        print(f"[SCHEDULER] ✅ Signal #{signal_id} completed - all TPs hit!")
+                
+                elif status == 'won':
+                    update_forex_signal_status(signal_id, status, pips)
                     ai_message = generate_tp_celebration(signal_id, pips, signal_type)
                     await forex_telegram_bot.post_tp_celebration(signal_id, pips, ai_message)
                     print(f"[SCHEDULER] ✅ Posted TP celebration for signal #{signal_id}")
                     
                 elif status == 'lost':
+                    update_forex_signal_status(signal_id, status, pips)
                     await forex_telegram_bot.post_sl_hit(signal_id, pips, signal_type)
                     print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
+                    update_forex_signal_status(signal_id, 'lost', pips)
                     await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
                     print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id}")
                 
