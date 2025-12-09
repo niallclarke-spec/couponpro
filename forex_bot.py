@@ -647,7 +647,7 @@ Signal closed after maximum hold time."""
                 message = f"📊 <b>Daily Recap - {yesterday}</b>\n\nNo signals posted yesterday."
             else:
                 stats = get_forex_stats_by_period(period='yesterday') or {}
-                total_dollars = stats.get('total_pips', 0)
+                total_pips = stats.get('total_pips', 0)
                 
                 # Build signal list
                 signal_lines = []
@@ -657,11 +657,11 @@ Signal closed after maximum hold time."""
                     time_str = posted_at.strftime('%H:%M')
                     
                     if signal['status'] == 'won':
-                        dollars = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +${dollars:.2f}")
+                        pips = signal.get('result_pips', 0)
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.1f} pips")
                     elif signal['status'] == 'lost':
-                        dollars = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -${abs(dollars):.2f}")
+                        pips = signal.get('result_pips', 0)
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -{abs(pips):.1f} pips")
                     elif signal['status'] == 'pending':
                         signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                     elif signal['status'] == 'expired':
@@ -669,12 +669,12 @@ Signal closed after maximum hold time."""
                 
                 signal_list = "\n".join(signal_lines)
                 
-                total_display = f"+${total_dollars:.2f}" if total_dollars >= 0 else f"-${abs(total_dollars):.2f}"
+                total_display = f"+{total_pips:.1f}" if total_pips >= 0 else f"{total_pips:.1f}"
                 message = f"""📊 <b>Daily Recap - {yesterday}</b>
 
 {signal_list}
 
-<b>Total: {total_display}</b>"""
+<b>Total: {total_display} pips</b>"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
@@ -707,7 +707,7 @@ Signal closed after maximum hold time."""
                 message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
             else:
                 stats = get_forex_stats_by_period(period='week') or {}
-                total_dollars = stats.get('total_pips', 0)
+                total_pips = stats.get('total_pips', 0)
                 
                 # Group signals by day
                 signals_by_day = defaultdict(list)
@@ -729,11 +729,11 @@ Signal closed after maximum hold time."""
                         time_str = posted_at.strftime('%H:%M')
                         
                         if signal['status'] == 'won':
-                            dollars = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +${dollars:.2f}")
+                            pips = signal.get('result_pips', 0)
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.1f} pips")
                         elif signal['status'] == 'lost':
-                            dollars = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -${abs(dollars):.2f}")
+                            pips = signal.get('result_pips', 0)
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -{abs(pips):.1f} pips")
                         elif signal['status'] == 'pending':
                             message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                         elif signal['status'] == 'expired':
@@ -741,8 +741,8 @@ Signal closed after maximum hold time."""
                     
                     message_lines.append("")  # Blank line between days
                 
-                total_display = f"+${total_dollars:.2f}" if total_dollars >= 0 else f"-${abs(total_dollars):.2f}"
-                message_lines.append(f"<b>Weekly Total: {total_display}</b>")
+                total_display = f"+{total_pips:.1f}" if total_pips >= 0 else f"{total_pips:.1f}"
+                message_lines.append(f"<b>Weekly Total: {total_display} pips</b>")
                 message = "\n".join(message_lines)
             
             await self.bot.send_message(
