@@ -3228,36 +3228,6 @@ def update_tp_hit(signal_id, tp_level):
         print(f"Error updating TP{tp_level} hit: {e}")
         return False
 
-def update_breakeven_triggered(signal_id):
-    """
-    Mark breakeven as triggered (at 70% toward TP1).
-    
-    Args:
-        signal_id (int): Signal ID
-    
-    Returns:
-        bool: True if successful
-    """
-    try:
-        if not db_pool.connection_pool:
-            return False
-        
-        with db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                UPDATE forex_signals
-                SET breakeven_triggered = TRUE,
-                    breakeven_triggered_at = CURRENT_TIMESTAMP
-                WHERE id = %s
-            """, (signal_id,))
-            
-            conn.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        print(f"Error updating breakeven triggered: {e}")
-        return False
-
 def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None):
     """
     Update guidance information for a signal with zone tracking.
