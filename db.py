@@ -698,6 +698,25 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered_at TIMESTAMP")
                     print("[MIGRATION] ✅ breakeven_triggered columns added")
                 
+                print("[MIGRATION] Checking forex_signals for milestone tracking columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name IN (
+                        'last_milestone_at', 'milestones_sent'
+                    )
+                """)
+                existing_milestone_columns = {row[0] for row in cursor.fetchall()}
+                
+                if 'last_milestone_at' not in existing_milestone_columns:
+                    print("[MIGRATION] Adding last_milestone_at column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_milestone_at TIMESTAMP")
+                    print("[MIGRATION] ✅ last_milestone_at column added")
+                
+                if 'milestones_sent' not in existing_milestone_columns:
+                    print("[MIGRATION] Adding milestones_sent column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN milestones_sent TEXT DEFAULT ''")
+                    print("[MIGRATION] ✅ milestones_sent column added")
+                
                 # Migration: Add close_price column for tracking exit price
                 print("[MIGRATION] Checking forex_signals for close_price column...")
                 cursor.execute("""
@@ -3307,6 +3326,37 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
             return cursor.rowcount > 0
     except Exception as e:
         print(f"Error updating signal guidance: {e}")
+        return False
+
+def update_milestone_sent(signal_id, milestone_key):
+    """
+    Record that a milestone notification was sent.
+    
+    Args:
+        signal_id (int): Signal ID
+        milestone_key (str): Milestone key like 'tp1_40', 'tp1_70', 'tp2_50', 'sl_60'
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET last_milestone_at = CURRENT_TIMESTAMP,
+                    milestones_sent = COALESCE(milestones_sent, '') || %s || ','
+                WHERE id = %s
+            """, (milestone_key, signal_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating milestone sent: {e}")
         return False
 
 def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):
