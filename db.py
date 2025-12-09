@@ -2808,7 +2808,7 @@ def set_active_bot(bot_type):
         if not db_pool.connection_pool:
             return False
         
-        if bot_type not in ('aggressive', 'conservative', 'custom'):
+        if bot_type not in ('aggressive', 'conservative', 'custom', 'raja_banks'):
             raise ValueError(f"Invalid bot type: {bot_type}")
         
         with db_pool.get_connection() as conn:
@@ -2829,6 +2829,121 @@ def set_active_bot(bot_type):
     except Exception as e:
         print(f"Error setting active bot: {e}")
         raise
+
+
+def get_queued_bot():
+    """
+    Get the queued bot type (bot scheduled to activate after current signal closes).
+    
+    Returns:
+        str or None: Queued bot type, or None if no bot is queued
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT setting_value FROM bot_config
+                WHERE setting_key = 'queued_bot'
+            """)
+            
+            result = cursor.fetchone()
+            if result and result[0]:
+                return result[0]
+            return None
+    except Exception as e:
+        print(f"Error getting queued bot: {e}")
+        return None
+
+
+def set_queued_bot(bot_type):
+    """
+    Set a bot to be queued (will activate after current signal closes).
+    
+    Args:
+        bot_type (str): Bot type to queue
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        if bot_type not in ('aggressive', 'conservative', 'custom', 'raja_banks'):
+            raise ValueError(f"Invalid bot type: {bot_type}")
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO bot_config (setting_key, setting_value, updated_at)
+                VALUES ('queued_bot', %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (setting_key) 
+                DO UPDATE SET 
+                    setting_value = EXCLUDED.setting_value,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (bot_type,))
+            
+            conn.commit()
+            print(f"✅ Bot queued: {bot_type}")
+            return True
+    except Exception as e:
+        print(f"Error setting queued bot: {e}")
+        raise
+
+
+def clear_queued_bot():
+    """
+    Clear the queued bot (cancel pending bot switch).
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM bot_config
+                WHERE setting_key = 'queued_bot'
+            """)
+            
+            conn.commit()
+            print("✅ Queued bot cleared")
+            return True
+    except Exception as e:
+        print(f"Error clearing queued bot: {e}")
+        return False
+
+
+def promote_queued_bot():
+    """
+    Promote queued bot to active (called when signal closes).
+    
+    Returns:
+        str or None: The bot type that was promoted, or None if no queued bot
+    """
+    try:
+        queued = get_queued_bot()
+        if not queued:
+            return None
+        
+        set_active_bot(queued)
+        clear_queued_bot()
+        
+        print(f"✅ Promoted queued bot to active: {queued}")
+        return queued
+    except Exception as e:
+        print(f"Error promoting queued bot: {e}")
+        return None
+
 
 def get_open_signal():
     """
