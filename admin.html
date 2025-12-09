@@ -4780,6 +4780,11 @@
                 currentActiveBot = botStatus.active_bot || null;
                 updateBotStatusUI();
                 updateActiveSignalBanner();
+                
+                // Re-render table with live price data now available
+                if (allSignals.length > 0) {
+                    applySignalFilters();
+                }
             } catch (error) {
                 console.error('Error loading bot status:', error);
             }
