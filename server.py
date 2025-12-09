@@ -621,9 +621,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 if open_signal and open_signal.get('entry_price'):
                     try:
-                        price_data = twelve_data_client.get_price("XAU/USD")
-                        if price_data and 'price' in price_data:
-                            current_price = float(price_data['price'])
+                        price_result = twelve_data_client.get_price("XAU/USD")
+                        if price_result is not None:
+                            current_price = float(price_result)
                             entry_price = float(open_signal['entry_price'])
                             
                             if open_signal['signal_type'] == 'BUY':

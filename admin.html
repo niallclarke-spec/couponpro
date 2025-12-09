@@ -4935,8 +4935,16 @@
                                 hour: '2-digit',
                                 minute: '2-digit'
                             });
-                            const pips = signal.result_pips || 0;
-                            const pipsDisplay = pips > 0 ? `+${pips.toFixed(2)}` : pips.toFixed(2);
+                            
+                            let pips = signal.result_pips || 0;
+                            let pipsDisplay = pips > 0 ? `+${pips.toFixed(2)}` : pips.toFixed(2);
+                            
+                            if ((signal.status === 'pending' || signal.status === 'open') && botStatus?.current_pips !== null && botStatus?.current_pips !== undefined && botStatus?.open_signal?.id === signal.id) {
+                                pips = botStatus.current_pips;
+                                const sign = pips >= 0 ? '+' : '';
+                                pipsDisplay = `<span title="Live">${sign}${pips.toFixed(1)}</span>`;
+                            }
+                            
                             const botType = signal.bot_type || 'custom';
                             
                             return `
