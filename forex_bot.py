@@ -543,9 +543,91 @@ Signal closed after maximum hold time."""
             print(f"❌ Failed to post timeout notification: {e}")
             return False
     
+    async def post_morning_briefing(self):
+        """
+        Post morning briefing at 6:20 AM UTC with news and market levels
+        """
+        if not self.bot or not self.channel_id:
+            return
+        
+        try:
+            import os
+            import requests
+            from forex_api import twelve_data_client
+            
+            # Fetch current gold price and overnight range
+            current_price = twelve_data_client.get_current_price('XAU/USD')
+            
+            # Fetch news from Alpha Vantage
+            api_key = os.environ.get('ALPHA_NEWS_API')
+            news_items = []
+            
+            if api_key:
+                try:
+                    url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=economy_monetary&limit=10&apikey={api_key}'
+                    response = requests.get(url, timeout=10)
+                    data = response.json()
+                    
+                    if 'feed' in data:
+                        # Filter for gold/forex/fed relevant news
+                        keywords = ['gold', 'fed', 'dollar', 'rate', 'inflation', 'treasury', 'fomc', 'powell', 'monetary']
+                        for article in data['feed']:
+                            title = article.get('title', '').lower()
+                            if any(kw in title for kw in keywords):
+                                sentiment = article.get('overall_sentiment_label', 'Neutral')
+                                sentiment_emoji = '📈' if 'Bullish' in sentiment else '📉' if 'Bearish' in sentiment else '➡️'
+                                news_items.append({
+                                    'title': article.get('title', '')[:60],
+                                    'sentiment': sentiment,
+                                    'emoji': sentiment_emoji
+                                })
+                                if len(news_items) >= 2:
+                                    break
+                except Exception as e:
+                    print(f"[MORNING] Error fetching news: {e}")
+            
+            # Build message
+            date_str = datetime.utcnow().strftime('%b %d')
+            
+            # News section
+            if news_items:
+                news_lines = [f"{item['emoji']} {item['title']}" for item in news_items]
+                news_section = "\n".join(news_lines)
+            else:
+                news_section = "➡️ Markets quiet ahead of key data"
+            
+            # Use AI to generate a personalized summary
+            try:
+                from forex_ai import generate_morning_summary
+                ai_summary = generate_morning_summary(current_price, news_items)
+            except:
+                ai_summary = "Stay sharp out there."
+            
+            message = f"""☀️ <b>Good Morning, Gold Traders</b>
+
+📰 <b>What's Moving Gold:</b>
+{news_section}
+
+📍 <b>Gold Now:</b> ${current_price:.2f}
+
+{ai_summary} 🏆"""
+            
+            await self.bot.send_message(
+                chat_id=self.channel_id,
+                text=message,
+                parse_mode='HTML'
+            )
+            
+            print(f"✅ Posted morning briefing")
+            
+        except Exception as e:
+            print(f"❌ Failed to post morning briefing: {e}")
+            import traceback
+            traceback.print_exc()
+    
     async def post_daily_recap(self, ai_recap=None):
         """
-        Post daily performance recap at 11:59 PM GMT
+        Post daily performance recap at 6:30 AM UTC (yesterday's signals)
         
         Args:
             ai_recap: Optional AI-generated recap message (ignored)
@@ -556,17 +638,20 @@ Signal closed after maximum hold time."""
         try:
             from db import get_forex_signals_by_period
             
-            signals_today = get_forex_signals_by_period(period='today')
+            # Get YESTERDAY's signals for morning recap
+            from datetime import timedelta
+            yesterday = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d')
+            signals_yesterday = get_forex_signals_by_period(period='yesterday')
             
-            if not signals_today or len(signals_today) == 0:
-                message = "📊 <b>Daily Recap</b>\n\nNo signals posted today."
+            if not signals_yesterday or len(signals_yesterday) == 0:
+                message = f"📊 <b>Daily Recap - {yesterday}</b>\n\nNo signals posted yesterday."
             else:
-                stats = get_forex_stats_by_period(period='today') or {}
+                stats = get_forex_stats_by_period(period='yesterday') or {}
                 total_dollars = stats.get('total_pips', 0)
                 
                 # Build signal list
                 signal_lines = []
-                for signal in signals_today:
+                for signal in signals_yesterday:
                     entry = signal.get('entry_price', 0)
                     posted_at = datetime.fromisoformat(signal['posted_at'])
                     time_str = posted_at.strftime('%H:%M')
@@ -585,7 +670,7 @@ Signal closed after maximum hold time."""
                 signal_list = "\n".join(signal_lines)
                 
                 total_display = f"+${total_dollars:.2f}" if total_dollars >= 0 else f"-${abs(total_dollars):.2f}"
-                message = f"""📊 <b>Daily Recap - {datetime.utcnow().strftime('%b %d')}</b>
+                message = f"""📊 <b>Daily Recap - {yesterday}</b>
 
 {signal_list}
 

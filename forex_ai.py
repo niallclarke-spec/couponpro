@@ -260,6 +260,62 @@ Generate the analytical recap commentary (don't repeat the numbers, focus on ins
         print(f"❌ Error generating daily recap: {e}")
         return None
 
+def generate_morning_summary(current_price, news_items=None):
+    """
+    Generate a personalized morning summary for the trading day.
+    
+    Args:
+        current_price: Current gold price
+        news_items: List of news items with title and sentiment
+    
+    Returns:
+        str: Short, human-sounding summary (1-2 sentences)
+    """
+    try:
+        news_context = ""
+        if news_items:
+            news_context = "\n".join([f"- {item.get('title', '')} (Sentiment: {item.get('sentiment', 'Neutral')})" for item in news_items])
+        else:
+            news_context = "No major news this morning."
+        
+        prompt = f"""Write a short, personal morning message for gold traders. Sound like a friendly trading desk analyst, not a robot.
+
+Current Gold Price: ${current_price:.2f}
+Today's News:
+{news_context}
+
+Style:
+- 1-2 short sentences max
+- Friendly but professional
+- Reference the news/market briefly
+- End with encouragement
+- NO emojis (those are added separately)
+- Sound human, like you're talking to a colleague
+
+Examples of good tone:
+"Fed testimony today might bring volatility - stay nimble."
+"Dollar weakness overnight is supporting gold, watch for momentum."
+"Quiet session ahead, focus on clean setups."
+
+Generate the morning message:"""
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a friendly, experienced gold trading analyst giving morning updates to your team. Keep it brief, human, and actionable."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=60,
+            temperature=0.8
+        )
+        
+        content = response.choices[0].message.content
+        return content.strip().strip('"\'') if content else "Stay sharp out there."
+        
+    except Exception as e:
+        print(f"❌ Error generating morning summary: {e}")
+        return "Stay sharp out there."
+
 def generate_weekly_recap():
     """
     Generate AI recap of this week's trading performance

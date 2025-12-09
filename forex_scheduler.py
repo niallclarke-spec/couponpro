@@ -340,13 +340,31 @@ class ForexScheduler:
             import traceback
             traceback.print_exc()
     
-    async def check_daily_recap(self):
-        """Post daily recap at 11:59 PM GMT"""
+    async def check_morning_briefing(self):
+        """Post morning briefing at 6:20 AM UTC with news and market levels"""
         try:
             now = datetime.utcnow()
             current_date_str = now.date().isoformat()
             
-            if now.hour == 23 and now.minute >= 55:
+            if now.hour == 6 and 20 <= now.minute < 25:
+                last_posted = get_last_recap_date('morning_briefing')
+                
+                if last_posted != current_date_str:
+                    print("[SCHEDULER] Generating morning briefing...")
+                    await forex_telegram_bot.post_morning_briefing()
+                    set_last_recap_date('morning_briefing', current_date_str)
+                    print("[SCHEDULER] ✅ Morning briefing posted")
+        
+        except Exception as e:
+            print(f"[SCHEDULER] ❌ Error posting morning briefing: {e}")
+    
+    async def check_daily_recap(self):
+        """Post daily recap at 6:30 AM UTC (yesterday's signals)"""
+        try:
+            now = datetime.utcnow()
+            current_date_str = now.date().isoformat()
+            
+            if now.hour == 6 and 30 <= now.minute < 35:
                 # Check database for last posted date (survives server restarts)
                 last_posted = get_last_recap_date('daily')
                 
@@ -404,8 +422,9 @@ class ForexScheduler:
         print(f"💡 Signal guidance: Every 1 minute (with 10min cooldown)")
         print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
         print(f"⏰ Hard timeout: 3 hours")
-        print(f"📅 Daily recap: 11:59 PM GMT")
-        print(f"📅 Weekly recap: Sunday 11:59 PM GMT")
+        print(f"☀️ Morning briefing: 6:20 AM UTC")
+        print(f"📅 Daily recap: 6:30 AM UTC")
+        print(f"📅 Weekly recap: Sunday 6:30 AM UTC")
         print(f"⏰ Trading hours: 8AM-10PM GMT")
         print("="*60 + "\n")
         
@@ -424,6 +443,7 @@ class ForexScheduler:
                 # Check for stagnant signals needing re-validation or timeout
                 await self.run_stagnant_signal_checks()
                 
+                await self.check_morning_briefing()
                 await self.check_daily_recap()
                 await self.check_weekly_recap()
                 
