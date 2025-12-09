@@ -89,6 +89,12 @@ Timing constants are defined in `forex_signals.py` and `forex_scheduler.py` for 
 - `GUIDANCE_INTERVAL`: 300s (5min) - Check guidance updates
 - `STAGNANT_CHECK_INTERVAL`: 300s (5min) - Check stagnant signals
 
+**Morning Schedule (forex_scheduler.py):**
+- 6:20 AM UTC: Morning briefing with Alpha Vantage news and current gold price
+- 6:30 AM UTC: Daily recap (yesterday's signals)
+- 6:30 AM UTC Sunday: Weekly recap
+- 7:00 AM UTC: Trading session opens (first signal checks)
+
 **Signal Lifecycle (forex_signals.py):**
 - `FIRST_REVALIDATION_MINUTES`: 90min - First thesis re-check
 - `REVALIDATION_INTERVAL_MINUTES`: 30min - Subsequent re-checks
