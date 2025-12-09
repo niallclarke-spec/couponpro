@@ -467,17 +467,6 @@ class DatabasePool:
                     ON forex_signals(bot_type)
                 """)
                 
-                # Migration: Update 'expired' status to 'lost' if any exist
-                print("[MIGRATION] Updating any 'expired' forex signal statuses to 'lost'...")
-                cursor.execute("""
-                    UPDATE forex_signals SET status = 'lost' WHERE status = 'expired'
-                """)
-                updated_count = cursor.rowcount
-                if updated_count > 0:
-                    print(f"[MIGRATION] ✅ Updated {updated_count} signals from 'expired' to 'lost'")
-                else:
-                    print("[MIGRATION] No 'expired' signals found to update")
-                
                 # Create bot_config table for signal bot configuration
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS bot_config (
