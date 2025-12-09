@@ -308,9 +308,9 @@ class RajaBanksStrategy(BaseStrategy):
             )
             
             if signal_type == 'BUY':
-                stop_loss = min(candle_stop, calculated_sl)
-            else:
                 stop_loss = max(candle_stop, calculated_sl)
+            else:
+                stop_loss = min(candle_stop, calculated_sl)
             
             indicators = {
                 'ema50': ema50,
