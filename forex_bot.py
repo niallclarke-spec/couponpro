@@ -212,7 +212,7 @@ class ForexTelegramBot:
             
             message = f"""{emoji} <b>TP{tp_number} HIT!</b>
 
-<b>+{pips_profit:.2f} pips</b> ({position_percentage}% closed)
+<b>+${pips_profit:.2f}</b> ({position_percentage}% closed)
 
 {status_msg}"""
             
@@ -225,7 +225,7 @@ class ForexTelegramBot:
             add_signal_narrative(
                 signal_id=signal_id,
                 event_type=f'tp{tp_number}_hit',
-                notes=f"TP{tp_number} hit: +{pips_profit:.2f} pips ({position_percentage}% closed)"
+                notes=f"TP{tp_number} hit: +${pips_profit:.2f} ({position_percentage}% closed)"
             )
             
             print(f"✅ Posted TP{tp_number} notification for signal #{signal_id}")
@@ -246,13 +246,13 @@ class ForexTelegramBot:
             return
         
         try:
-            pips_profit = abs(current_price - entry_price)
+            dollar_profit = abs(current_price - entry_price)
             
             message = f"""⚡ <b>BREAKEVEN ALERT</b>
 
 Price at 70% toward TP1!
 
-💰 Current profit: <b>+{pips_profit:.2f} pips</b>
+💰 Current profit: <b>+${dollar_profit:.2f}</b>
 
 Consider moving SL to entry (${entry_price:.2f}) to lock in gains."""
             
@@ -266,7 +266,7 @@ Consider moving SL to entry (${entry_price:.2f}) to lock in gains."""
                 signal_id=signal_id,
                 event_type='breakeven_alert',
                 current_price=current_price,
-                notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.2f} pips"
+                notes=f"Breakeven alert at ${current_price:.2f}, +${dollar_profit:.2f}"
             )
             
             print(f"✅ Posted breakeven alert for signal #{signal_id}")
@@ -289,7 +289,7 @@ Consider moving SL to entry (${entry_price:.2f}) to lock in gains."""
         try:
             message = f"""🎉 <b>TRADE COMPLETE!</b> 🎉
 
-Total profit: <b>+{pips_profit:.2f} pips</b>"""
+Total profit: <b>+${pips_profit:.2f}</b>"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
@@ -301,7 +301,7 @@ Total profit: <b>+{pips_profit:.2f} pips</b>"""
                 signal_id=signal_id,
                 event_type='tp_hit',
                 progress_percent=100,
-                notes=f"Trade complete: +{pips_profit:.2f} pips"
+                notes=f"Trade complete: +${pips_profit:.2f}"
             )
             
             print(f"✅ Posted TP celebration for signal #{signal_id}")
@@ -324,7 +324,7 @@ Total profit: <b>+{pips_profit:.2f} pips</b>"""
         try:
             message = f"""Stop Loss Hit
 
-<b>{pips_loss:.2f} pips</b>
+<b>${abs(pips_loss):.2f} loss</b>
 
 Risk was managed. Onwards to the next opportunity."""
             
@@ -339,7 +339,7 @@ Risk was managed. Onwards to the next opportunity."""
                 signal_id=signal_id,
                 event_type='sl_hit',
                 progress_percent=-100,
-                notes=f"Stop loss hit: {pips_loss:.2f} pips"
+                notes=f"Stop loss hit: -${abs(pips_loss):.2f}"
             )
             
             print(f"✅ Posted SL notification for signal #{signal_id}")
@@ -361,9 +361,10 @@ Risk was managed. Onwards to the next opportunity."""
         
         try:
             result_text = "profit" if pips > 0 else "loss" if pips < 0 else "breakeven"
+            dollar_display = f"+${pips:.2f}" if pips > 0 else f"-${abs(pips):.2f}" if pips < 0 else "$0.00"
             message = f"""Trade Closed (Timeout)
 
-<b>{pips:+.2f} pips</b> {result_text}
+<b>{dollar_display}</b> {result_text}
 
 Signal closed after maximum hold time."""
             
@@ -561,7 +562,7 @@ Signal closed after maximum hold time."""
                 message = "📊 <b>Daily Recap</b>\n\nNo signals posted today."
             else:
                 stats = get_forex_stats_by_period(period='today') or {}
-                total_pips = stats.get('total_pips', 0)
+                total_dollars = stats.get('total_pips', 0)
                 
                 # Build signal list
                 signal_lines = []
@@ -571,11 +572,11 @@ Signal closed after maximum hold time."""
                     time_str = posted_at.strftime('%H:%M')
                     
                     if signal['status'] == 'won':
-                        pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.2f}")
+                        dollars = signal.get('result_pips', 0)
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +${dollars:.2f}")
                     elif signal['status'] == 'lost':
-                        pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ {pips:.2f}")
+                        dollars = signal.get('result_pips', 0)
+                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -${abs(dollars):.2f}")
                     elif signal['status'] == 'pending':
                         signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                     elif signal['status'] == 'expired':
@@ -583,11 +584,12 @@ Signal closed after maximum hold time."""
                 
                 signal_list = "\n".join(signal_lines)
                 
+                total_display = f"+${total_dollars:.2f}" if total_dollars >= 0 else f"-${abs(total_dollars):.2f}"
                 message = f"""📊 <b>Daily Recap - {datetime.utcnow().strftime('%b %d')}</b>
 
 {signal_list}
 
-<b>Total: {total_pips:+.2f} pips</b>"""
+<b>Total: {total_display}</b>"""
             
             await self.bot.send_message(
                 chat_id=self.channel_id,
@@ -620,7 +622,7 @@ Signal closed after maximum hold time."""
                 message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
             else:
                 stats = get_forex_stats_by_period(period='week') or {}
-                total_pips = stats.get('total_pips', 0)
+                total_dollars = stats.get('total_pips', 0)
                 
                 # Group signals by day
                 signals_by_day = defaultdict(list)
@@ -642,11 +644,11 @@ Signal closed after maximum hold time."""
                         time_str = posted_at.strftime('%H:%M')
                         
                         if signal['status'] == 'won':
-                            pips = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.2f}")
+                            dollars = signal.get('result_pips', 0)
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +${dollars:.2f}")
                         elif signal['status'] == 'lost':
-                            pips = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ {pips:.2f}")
+                            dollars = signal.get('result_pips', 0)
+                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -${abs(dollars):.2f}")
                         elif signal['status'] == 'pending':
                             message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
                         elif signal['status'] == 'expired':
@@ -654,7 +656,8 @@ Signal closed after maximum hold time."""
                     
                     message_lines.append("")  # Blank line between days
                 
-                message_lines.append(f"<b>Weekly Total: {total_pips:+.2f} pips</b>")
+                total_display = f"+${total_dollars:.2f}" if total_dollars >= 0 else f"-${abs(total_dollars):.2f}"
+                message_lines.append(f"<b>Weekly Total: {total_display}</b>")
                 message = "\n".join(message_lines)
             
             await self.bot.send_message(
