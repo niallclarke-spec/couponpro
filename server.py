@@ -610,9 +610,31 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 from db import get_active_bot, get_open_signal, get_signals_by_bot_type
+                from forex_api import twelve_data_client
                 
                 active_bot = get_active_bot()
                 open_signal = get_open_signal()
+                
+                current_price = None
+                current_pips = None
+                current_dollars = None
+                
+                if open_signal and open_signal.get('entry_price'):
+                    try:
+                        price_data = twelve_data_client.get_price("XAU/USD")
+                        if price_data and 'price' in price_data:
+                            current_price = float(price_data['price'])
+                            entry_price = float(open_signal['entry_price'])
+                            
+                            if open_signal['signal_type'] == 'BUY':
+                                price_diff = current_price - entry_price
+                            else:
+                                price_diff = entry_price - current_price
+                            
+                            current_pips = round(price_diff * 10, 1)
+                            current_dollars = round(price_diff, 2)
+                    except Exception as price_err:
+                        print(f"[BOT STATUS] Error fetching current price: {price_err}")
                 
                 aggressive_signals = get_signals_by_bot_type('aggressive', limit=10)
                 conservative_signals = get_signals_by_bot_type('conservative', limit=10)
@@ -621,8 +643,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 status = {
                     'active_bot': active_bot or 'aggressive',
-                    'available_bots': ['aggressive', 'conservative', 'custom'],
+                    'available_bots': ['aggressive', 'conservative', 'custom', 'raja_banks'],
                     'open_signal': open_signal,
+                    'current_price': current_price,
+                    'current_pips': current_pips,
+                    'current_dollars': current_dollars,
                     'recent_signals': {
                         'aggressive': len(aggressive_signals),
                         'conservative': len(conservative_signals),

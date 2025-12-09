@@ -3526,6 +3526,10 @@
                                         <div class="status-item-value" id="settingsOpenSignal">None</div>
                                     </div>
                                     <div class="status-item">
+                                        <div class="status-item-label">Live P/L</div>
+                                        <div class="status-item-value" id="livePnlDisplay">--</div>
+                                    </div>
+                                    <div class="status-item">
                                         <div class="status-item-label">Daily P/L</div>
                                         <div class="status-item-value" id="dailyPnlDisplay">--</div>
                                     </div>
@@ -4810,6 +4814,22 @@
                     settingsOpenSignal.innerHTML = `<span style="color: #667eea;">#${botStatus.open_signal.id} (${botStatus.open_signal.signal_type})</span>`;
                 } else {
                     settingsOpenSignal.textContent = 'None';
+                }
+            }
+            
+            const livePnlDisplay = document.getElementById('livePnlDisplay');
+            if (livePnlDisplay) {
+                if (botStatus.open_signal && botStatus.current_dollars !== null && botStatus.current_dollars !== undefined) {
+                    const pnl = botStatus.current_dollars;
+                    const pips = botStatus.current_pips;
+                    const isProfit = pnl >= 0;
+                    const color = isProfit ? '#10b981' : '#ef4444';
+                    const sign = isProfit ? '+' : '';
+                    livePnlDisplay.innerHTML = `<span style="color: ${color}; font-weight: 600;">${sign}$${pnl.toFixed(2)}</span> <span style="color: #94a3b8; font-size: 11px;">(${sign}${pips} pips)</span>`;
+                } else if (botStatus.open_signal) {
+                    livePnlDisplay.innerHTML = '<span style="color: #94a3b8;">Loading...</span>';
+                } else {
+                    livePnlDisplay.textContent = '--';
                 }
             }
             
