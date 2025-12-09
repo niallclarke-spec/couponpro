@@ -2050,6 +2050,12 @@ def update_forex_signal_status(signal_id, status, result_pips=None):
                 """, (status, signal_id))
             
             conn.commit()
+            
+            if status in ('won', 'lost', 'expired', 'cancelled'):
+                promoted = promote_queued_bot()
+                if promoted:
+                    print(f"[SIGNAL CLOSE] Automatically activated queued bot: {promoted}")
+            
             return True
     except Exception as e:
         print(f"Error updating forex signal status: {e}")

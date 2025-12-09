@@ -3382,6 +3382,12 @@
                                 <button id="switchBotBtn" class="btn-primary" onclick="switchActiveBot()" disabled style="margin-top: 16px;">
                                     <span id="switchBotBtnText">Select a strategy to switch</span>
                                 </button>
+                                <button id="cancelQueueBtn" class="btn-secondary" onclick="cancelQueuedBot()" style="margin-top: 8px; display: none;">
+                                    Cancel Queued Switch
+                                </button>
+                                <div id="queuedBotStatus" style="margin-top: 12px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.3); display: none;">
+                                    <span style="color: #667eea;">⏳</span> <span id="queuedBotText"></span>
+                                </div>
                             </div>
                             
                             <div class="settings-section">
@@ -4799,13 +4805,21 @@
             // Update signals page
             const activeBotEl = document.getElementById('activeBotType');
             if (activeBotEl) {
-                activeBotEl.textContent = botStatus.active_bot || '--';
+                let botText = botStatus.active_bot || '--';
+                if (botStatus.queued_bot) {
+                    botText += ` → ${botStatus.queued_bot} (queued)`;
+                }
+                activeBotEl.textContent = botText;
             }
             
             // Update settings page
             const settingsActiveBot = document.getElementById('settingsActiveBot');
             if (settingsActiveBot) {
-                settingsActiveBot.textContent = botStatus.active_bot || '--';
+                let botText = botStatus.active_bot || '--';
+                if (botStatus.queued_bot) {
+                    botText += ` → ${botStatus.queued_bot} (queued)`;
+                }
+                settingsActiveBot.textContent = botText;
             }
             
             const settingsOpenSignal = document.getElementById('settingsOpenSignal');
@@ -4860,6 +4874,24 @@
                     opt.classList.add('active');
                 }
             });
+            
+            // Update queued bot status display
+            const cancelQueueBtn = document.getElementById('cancelQueueBtn');
+            const queuedBotStatus = document.getElementById('queuedBotStatus');
+            const queuedBotText = document.getElementById('queuedBotText');
+            
+            if (botStatus.queued_bot && botStatus.open_signal) {
+                if (cancelQueueBtn) cancelQueueBtn.style.display = 'block';
+                if (queuedBotStatus) {
+                    queuedBotStatus.style.display = 'block';
+                    if (queuedBotText) {
+                        queuedBotText.textContent = `${botStatus.queued_bot} will activate after Signal #${botStatus.open_signal.id} closes`;
+                    }
+                }
+            } else {
+                if (cancelQueueBtn) cancelQueueBtn.style.display = 'none';
+                if (queuedBotStatus) queuedBotStatus.style.display = 'none';
+            }
         }
 
         function updateActiveSignalBanner() {
@@ -5003,10 +5035,6 @@
 
         // Bot Settings Functions
         function selectBot(botType) {
-            if (botStatus?.open_signal) {
-                return;
-            }
-            
             selectedBotType = botType;
             
             document.querySelectorAll('.bot-option').forEach(opt => {
@@ -5029,6 +5057,9 @@
             if (botType === botStatus?.active_bot) {
                 switchBtn.disabled = true;
                 switchBtnText.textContent = `${botType} is already active`;
+            } else if (botStatus?.open_signal) {
+                switchBtn.disabled = false;
+                switchBtnText.textContent = `Queue ${botType} (activates after signal closes)`;
             } else {
                 switchBtn.disabled = false;
                 switchBtnText.textContent = `Switch to ${botType}`;
@@ -5076,6 +5107,50 @@
                 errorEl.style.display = 'block';
                 switchBtnText.textContent = `Switch to ${selectedBotType}`;
                 switchBtn.disabled = false;
+            }
+        }
+
+        async function cancelQueuedBot() {
+            const cancelBtn = document.getElementById('cancelQueueBtn');
+            const errorEl = document.getElementById('botSwitchError');
+            const successEl = document.getElementById('botSwitchSuccess');
+            
+            if (cancelBtn) cancelBtn.disabled = true;
+            if (errorEl) errorEl.style.display = 'none';
+            if (successEl) successEl.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/signal-bot/cancel-queue', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (successEl) {
+                        successEl.textContent = result.message;
+                        successEl.style.display = 'block';
+                    }
+                    await loadBotStatus();
+                    updateStrategyCards();
+                    selectedBotType = null;
+                    const switchBtnText = document.getElementById('switchBotBtnText');
+                    if (switchBtnText) switchBtnText.textContent = 'Select a strategy to switch';
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = result.error;
+                        errorEl.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                if (errorEl) {
+                    errorEl.textContent = error.message;
+                    errorEl.style.display = 'block';
+                }
+            } finally {
+                if (cancelBtn) cancelBtn.disabled = false;
             }
         }
 

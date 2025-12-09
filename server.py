@@ -609,10 +609,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                from db import get_active_bot, get_open_signal, get_signals_by_bot_type
+                from db import get_active_bot, get_open_signal, get_signals_by_bot_type, get_queued_bot
                 from forex_api import twelve_data_client
                 
                 active_bot = get_active_bot()
+                queued_bot = get_queued_bot()
                 open_signal = get_open_signal()
                 
                 current_price = None
@@ -646,6 +647,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 status = {
                     'active_bot': active_bot or 'aggressive',
+                    'queued_bot': queued_bot,
                     'available_bots': ['aggressive', 'conservative', 'custom', 'raja_banks'],
                     'open_signal': open_signal,
                     'current_price': current_price,
@@ -1576,7 +1578,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({'error': 'bot_type is required'}).encode())
                     return
                 
-                valid_bots = ['aggressive', 'conservative', 'custom']
+                valid_bots = ['aggressive', 'conservative', 'custom', 'raja_banks']
                 if bot_type not in valid_bots:
                     self.send_response(400)
                     self.send_header('Content-type', 'application/json')
@@ -1586,18 +1588,39 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     }).encode())
                     return
                 
-                from db import set_active_bot, get_open_signal
+                from db import set_active_bot, get_open_signal, set_queued_bot, clear_queued_bot, get_active_bot
                 
                 open_signal = get_open_signal()
+                current_bot = get_active_bot()
+                
                 if open_signal:
-                    self.send_response(400)
+                    if bot_type == current_bot:
+                        clear_queued_bot()
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            'success': True,
+                            'active_bot': current_bot,
+                            'queued_bot': None,
+                            'message': f'{bot_type} is already active. Queue cleared.'
+                        }).encode())
+                        return
+                    
+                    set_queued_bot(bot_type)
+                    self.send_response(200)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({
-                        'error': f'Cannot switch bot while signal #{open_signal["id"]} is still open. Wait for it to close first.'
+                        'success': True,
+                        'active_bot': current_bot,
+                        'queued_bot': bot_type,
+                        'signal_id': open_signal['id'],
+                        'message': f'{bot_type} queued. Will activate after Signal #{open_signal["id"]} closes.'
                     }).encode())
                     return
                 
+                clear_queued_bot()
                 success = set_active_bot(bot_type)
                 
                 if success:
@@ -1607,6 +1630,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({
                         'success': True,
                         'active_bot': bot_type,
+                        'queued_bot': None,
                         'message': f'Switched to {bot_type} strategy'
                     }).encode())
                 else:
@@ -1622,6 +1646,43 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
             except Exception as e:
                 print(f"[SIGNAL BOT] Error setting active bot: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/api/signal-bot/cancel-queue':
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                from db import clear_queued_bot, get_active_bot
+                
+                clear_queued_bot()
+                active_bot = get_active_bot()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'active_bot': active_bot,
+                    'queued_bot': None,
+                    'message': 'Queued bot switch cancelled'
+                }).encode())
+            except Exception as e:
+                print(f"[SIGNAL BOT] Error cancelling queue: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
