@@ -31,8 +31,18 @@ The forex signals bot uses a modular strategy architecture (`strategies/`) that 
 - `strategies/base_strategy.py`: Abstract base class defining the strategy interface
 - `strategies/aggressive.py`: Aggressive strategy with wider RSI thresholds (40/60)
 - `strategies/conservative.py`: Conservative strategy with tighter thresholds (35/65)
+- `strategies/raja_banks.py`: Raja Banks Gold Start strategy with session-based impulse breakouts
 - `strategies/strategy_loader.py`: Registry and factory for loading strategies
 - `forex_signals.py`: Delegates to active strategy; owns shared monitoring/guidance logic
+
+**Raja Banks Gold Start Strategy:**
+- Session-based trading: London (07:00-10:00 UTC), New York (12:00-16:00 UTC), Overlap (13:00-16:00 UTC)
+- 15-minute impulse candle breakout detection
+- Maximum 4 signals per day with 15-minute cooldown between signals
+- Hybrid trend filter: Trades with EMA 50/200 trend, allows counter-trend at clear S/R zones
+- Tight stop-loss: Just below candle low (BUY) or above candle high (SELL)
+- Wick fill targeting: Primary TP at previous candle's wick, secondary TP at ATR extension
+- Uses database persistence for daily signal counts (survives server restarts)
 
 **Multi-TP System:**
 - TP1: 50% position close at first target
