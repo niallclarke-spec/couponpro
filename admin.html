@@ -2654,6 +2654,132 @@
             margin-bottom: 16px;
         }
 
+        .filters-modern {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .segment-control {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .segment-btn {
+            background: transparent;
+            border: none;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .segment-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .segment-btn.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .segment-btn.buy.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .segment-btn.sell.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .segment-btn.won.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .segment-btn.lost.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .segment-btn svg {
+            flex-shrink: 0;
+        }
+
+        .filter-select-modern {
+            appearance: none;
+            background: var(--bg-secondary);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 32px 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .filter-select-modern:hover {
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-select-modern:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        @media (max-width: 768px) {
+            .filters-modern {
+                gap: 16px;
+            }
+            
+            .filter-group {
+                flex: 1 1 45%;
+                min-width: 140px;
+            }
+            
+            .segment-control {
+                flex-wrap: wrap;
+            }
+            
+            .segment-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
+
         .price-widget-header {
             display: flex;
             align-items: center;
@@ -4244,43 +4370,53 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="filters-row-compact">
-                            <div class="filter-pill-compact">
-                                <select id="filterDateRange">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="yesterday">Yesterday</option>
-                                    <option value="7days">Last 7 Days</option>
-                                    <option value="30days">Last 30 Days</option>
-                                </select>
+                        <div class="filters-modern">
+                            <div class="filter-group">
+                                <div class="filter-label">Period</div>
+                                <div class="segment-control" id="dateRangeSegment">
+                                    <button class="segment-btn active" data-value="all">All</button>
+                                    <button class="segment-btn" data-value="today">Today</button>
+                                    <button class="segment-btn" data-value="7days">7D</button>
+                                    <button class="segment-btn" data-value="30days">30D</button>
+                                </div>
                             </div>
-                            <div class="filter-pill-compact">
-                                <select id="filterBotType">
-                                    <option value="all">All Bots</option>
+                            <div class="filter-group">
+                                <div class="filter-label">Direction</div>
+                                <div class="segment-control" id="typeSegment">
+                                    <button class="segment-btn active" data-value="all">All</button>
+                                    <button class="segment-btn buy" data-value="BUY">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                                        Buy
+                                    </button>
+                                    <button class="segment-btn sell" data-value="SELL">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                                        Sell
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <div class="filter-label">Status</div>
+                                <div class="segment-control" id="statusSegment">
+                                    <button class="segment-btn active" data-value="all">All</button>
+                                    <button class="segment-btn won" data-value="won">Won</button>
+                                    <button class="segment-btn lost" data-value="lost">Lost</button>
+                                    <button class="segment-btn" data-value="pending">Open</button>
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <div class="filter-label">Strategy</div>
+                                <select id="filterBotType" class="filter-select-modern">
+                                    <option value="all">All Strategies</option>
                                     <option value="aggressive">Aggressive</option>
                                     <option value="conservative">Conservative</option>
                                     <option value="raja_banks">Raja Banks</option>
                                     <option value="custom">Custom</option>
-                                    <option value="legacy">Legacy</option>
-                                </select>
-                            </div>
-                            <div class="filter-pill-compact">
-                                <select id="filterType">
-                                    <option value="all">All Signals</option>
-                                    <option value="BUY">BUY Only</option>
-                                    <option value="SELL">SELL Only</option>
-                                </select>
-                            </div>
-                            <div class="filter-pill-compact">
-                                <select id="filterStatus">
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="won">Won</option>
-                                    <option value="lost">Lost</option>
-                                    <option value="expired">Expired</option>
                                 </select>
                             </div>
                         </div>
+                        <input type="hidden" id="filterDateRange" value="all">
+                        <input type="hidden" id="filterType" value="all">
+                        <input type="hidden" id="filterStatus" value="all">
                         <div id="signalsTableContent">
                             <div class="loading">Loading signals...</div>
                         </div>
@@ -6291,10 +6427,17 @@
         }
         
         function getCurrentPeriodLabel() {
-            const filterDateRange = document.getElementById('filterDateRange');
-            if (!filterDateRange) return 'all time';
-            const selectedOption = filterDateRange.options[filterDateRange.selectedIndex];
-            return selectedOption ? selectedOption.text.toLowerCase() : 'all time';
+            const segment = document.getElementById('dateRangeSegment');
+            if (!segment) return 'all time';
+            const activeBtn = segment.querySelector('.segment-btn.active');
+            if (!activeBtn) return 'all time';
+            const value = activeBtn.dataset.value;
+            switch(value) {
+                case 'today': return 'today';
+                case '7days': return 'last 7 days';
+                case '30days': return 'last 30 days';
+                default: return 'all time';
+            }
         }
         
         function drawBuySellPieChart(buys, sells) {
@@ -6694,18 +6837,32 @@
 
         // Add event listeners for forex filters
         setTimeout(() => {
-            const filterType = document.getElementById('filterType');
-            const filterStatus = document.getElementById('filterStatus');
             const filterLimit = document.getElementById('filterLimit');
             const filterBotType = document.getElementById('filterBotType');
-            const filterDateRange = document.getElementById('filterDateRange');
             
-            if (filterType) filterType.addEventListener('change', applySignalFilters);
-            if (filterStatus) filterStatus.addEventListener('change', applySignalFilters);
             if (filterLimit) filterLimit.addEventListener('change', loadForexSignals);
             if (filterBotType) filterBotType.addEventListener('change', applySignalFilters);
-            if (filterDateRange) filterDateRange.addEventListener('change', applySignalFilters);
+            
+            // Initialize segment controls
+            initSegmentControl('dateRangeSegment', 'filterDateRange');
+            initSegmentControl('typeSegment', 'filterType');
+            initSegmentControl('statusSegment', 'filterStatus');
         }, 1000);
+        
+        function initSegmentControl(segmentId, hiddenInputId) {
+            const segment = document.getElementById(segmentId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            if (!segment || !hiddenInput) return;
+            
+            segment.querySelectorAll('.segment-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    segment.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    hiddenInput.value = btn.dataset.value;
+                    applySignalFilters();
+                });
+            });
+        }
 
         // ============================================
         // COUPON BOT FUNCTIONS (Template Manager, Campaigns, Broadcast, Analytics)
