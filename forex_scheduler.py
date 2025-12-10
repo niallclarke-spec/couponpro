@@ -92,7 +92,7 @@ class ForexScheduler:
                 event = update.get('event')
                 status = update.get('status')
                 pips = update.get('pips', 0)
-                close_price = update.get('current_price')
+                close_price = update.get('exit_price') or update.get('current_price')
                 
                 signals_data = get_forex_signals(status=None, limit=10)
                 matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
