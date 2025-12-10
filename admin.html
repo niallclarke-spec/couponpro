@@ -2514,6 +2514,78 @@
             margin: 0;
         }
 
+        .pie-chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            min-width: 160px;
+        }
+
+        .pie-chart-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        #buySellPieChart {
+            width: 70px;
+            height: 70px;
+        }
+
+        .pie-chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.buy {
+            background: #10b981;
+        }
+
+        .legend-dot.sell {
+            background: #ef4444;
+        }
+
+        .legend-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .price-widget-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
         .metric-card-compact {
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
@@ -4120,21 +4192,38 @@
                             <div class="metric-card-compact">
                                 <div class="metric-label">Avg Hold Time</div>
                                 <div class="metric-value" id="avgHoldTime">--</div>
-                                <div class="metric-subtext">per signal</div>
+                                <div class="metric-subtext" id="avgHoldSubtext">per signal</div>
                             </div>
                             <div class="metric-card-compact">
                                 <div class="metric-label">Avg Pips/Trade</div>
                                 <div class="metric-value" id="avgPipsPerTrade">--</div>
-                                <div class="metric-subtext">all time</div>
+                                <div class="metric-subtext" id="avgPipsSubtext">all time</div>
+                            </div>
+                        </div>
+                        <div class="pie-chart-card">
+                            <div class="pie-chart-label">Buy / Sell Ratio</div>
+                            <div class="pie-chart-container">
+                                <canvas id="buySellPieChart" width="80" height="80"></canvas>
+                                <div class="pie-chart-legend">
+                                    <div class="legend-item">
+                                        <span class="legend-dot buy"></span>
+                                        <span class="legend-text" id="buyCount">0 Buys</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-dot sell"></span>
+                                        <span class="legend-text" id="sellCount">0 Sells</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="price-widget-card">
+                            <div class="price-widget-title">XAU/USD</div>
                             <div class="price-widget-header">
                                 <div class="price-widget-left">
                                     <span class="price-widget-price" id="liveGoldPrice">--</span>
                                 </div>
                                 <div class="price-widget-right">
-                                    <span class="price-widget-label">XAU/USD Live</span>
+                                    <span class="price-widget-label">Live</span>
                                     <span class="price-widget-change" id="liveGoldChange">--</span>
                                 </div>
                             </div>
@@ -6187,6 +6276,80 @@
                 if (avgHoldEl) avgHoldEl.textContent = '--';
                 if (avgPipsEl) avgPipsEl.textContent = '--';
             }
+            
+            // Update Buy/Sell pie chart
+            const buys = targetSignals.filter(s => s.signal_type === 'BUY').length;
+            const sells = targetSignals.filter(s => s.signal_type === 'SELL').length;
+            drawBuySellPieChart(buys, sells);
+            
+            // Update subtexts based on selected period
+            const periodLabel = getCurrentPeriodLabel();
+            const avgHoldSubtext = document.getElementById('avgHoldSubtext');
+            const avgPipsSubtext = document.getElementById('avgPipsSubtext');
+            if (avgHoldSubtext) avgHoldSubtext.textContent = periodLabel;
+            if (avgPipsSubtext) avgPipsSubtext.textContent = periodLabel;
+        }
+        
+        function getCurrentPeriodLabel() {
+            const filterDateRange = document.getElementById('filterDateRange');
+            if (!filterDateRange) return 'all time';
+            const value = filterDateRange.value;
+            switch(value) {
+                case 'today': return 'today';
+                case 'yesterday': return 'yesterday';
+                case '7days': return 'last 7 days';
+                case '30days': return 'last 30 days';
+                default: return 'all time';
+            }
+        }
+        
+        function drawBuySellPieChart(buys, sells) {
+            const canvas = document.getElementById('buySellPieChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const total = buys + sells;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 2;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (total === 0) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = '#374151';
+                ctx.fill();
+            } else {
+                const buyAngle = (buys / total) * 2 * Math.PI;
+                const sellAngle = (sells / total) * 2 * Math.PI;
+                
+                // Draw buy slice (green)
+                if (buys > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + buyAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = '#10b981';
+                    ctx.fill();
+                }
+                
+                // Draw sell slice (red)
+                if (sells > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, -Math.PI/2 + buyAngle, -Math.PI/2 + buyAngle + sellAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fill();
+                }
+            }
+            
+            // Update legend counts
+            const buyCountEl = document.getElementById('buyCount');
+            const sellCountEl = document.getElementById('sellCount');
+            if (buyCountEl) buyCountEl.textContent = `${buys} Buy${buys !== 1 ? 's' : ''}`;
+            if (sellCountEl) sellCountEl.textContent = `${sells} Sell${sells !== 1 ? 's' : ''}`;
         }
 
         // Bot Settings Functions
