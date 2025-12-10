@@ -2116,20 +2116,19 @@
         /* Filter and Price Widget - 60/40 split layout */
         .filters-price-row {
             display: grid;
-            grid-template-columns: 1fr 320px;
+            grid-template-columns: 60% 40%;
             gap: 16px;
             margin-bottom: 24px;
         }
 
         .filters-card {
             background: var(--bg-card);
-            padding: 14px 16px;
+            padding: 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
         .filter-pill {
@@ -2143,13 +2142,13 @@
             background: var(--bg-secondary);
             border: 1px solid transparent;
             border-radius: 20px;
-            padding: 8px 32px 8px 14px;
+            padding: 10px 36px 10px 16px;
             font-size: 13px;
             font-weight: 500;
             color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 110px;
+            width: 100%;
         }
 
         .filter-pill select:hover {
@@ -2166,7 +2165,7 @@
         .filter-pill::after {
             content: '';
             position: absolute;
-            right: 12px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
             width: 0;
@@ -2179,7 +2178,7 @@
 
         .price-widget-card {
             background: var(--bg-card);
-            padding: 14px 20px;
+            padding: 16px 20px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
             display: flex;
@@ -2191,7 +2190,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .price-widget-left {
@@ -2201,7 +2200,7 @@
         }
 
         .price-widget-price {
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.5px;
@@ -2224,7 +2223,7 @@
         .price-widget-change {
             font-size: 12px;
             font-weight: 600;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
         }
 
@@ -2240,7 +2239,24 @@
 
         .price-sparkline-wrap {
             width: 100%;
-            height: 50px;
+            height: 60px;
+        }
+
+        /* Trading Signals Header with Limit Filter */
+        .signals-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .signals-header .card-title {
+            margin-bottom: 0;
+        }
+
+        .signals-header .filter-pill select {
+            padding: 8px 32px 8px 14px;
+            font-size: 12px;
         }
 
         @media (max-width: 1024px) {
@@ -2251,11 +2267,11 @@
 
         @media (max-width: 640px) {
             .filters-card {
-                gap: 8px;
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
             .filter-pill select {
-                min-width: 100px;
-                padding: 6px 28px 6px 12px;
+                padding: 8px 32px 8px 14px;
                 font-size: 12px;
             }
         }
@@ -3740,13 +3756,6 @@
                                     <option value="expired">Expired</option>
                                 </select>
                             </div>
-                            <div class="filter-pill">
-                                <select id="filterLimit">
-                                    <option value="50">Last 50</option>
-                                    <option value="100" selected>Last 100</option>
-                                    <option value="200">Last 200</option>
-                                </select>
-                            </div>
                         </div>
                         <div class="price-widget-card">
                             <div class="price-widget-header">
@@ -3765,7 +3774,16 @@
                     </div>
 
                     <div class="card">
-                        <h2 class="card-title">Trading Signals</h2>
+                        <div class="signals-header">
+                            <h2 class="card-title">Trading Signals</h2>
+                            <div class="filter-pill">
+                                <select id="filterLimit">
+                                    <option value="50">Last 50</option>
+                                    <option value="100" selected>Last 100</option>
+                                    <option value="200">Last 200</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="signalsTableContent">
                             <div class="loading">Loading signals...</div>
                         </div>
