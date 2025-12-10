@@ -1,0 +1,362 @@
+Dec 10 18:07:40    import cgi
+Dec 10 18:07:43  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 10 18:08:17    import cgi
+Dec 10 18:08:19  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 10 18:08:19  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 10 18:08:19  [MIGRATION] error_type column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 10 18:08:19  [MIGRATION] device_type column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 10 18:08:19  [MIGRATION] username column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] first_name column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] last_name column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 10 18:08:19  [MIGRATION] bot_type column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] breakeven_set column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] breakeven_price column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] guidance_count column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] indicators_used column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] notes column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 10 18:08:19  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 10 18:08:19  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 10 18:08:19  [MIGRATION] free_signup_at column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] is_converted column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] converted_at column already exists, skipping
+Dec 10 18:08:19  [MIGRATION] conversion_days column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 10 18:07:43  [MIGRATION] error_type column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 10 18:07:43  [MIGRATION] device_type column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 10 18:07:43  [MIGRATION] username column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] first_name column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] last_name column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 10 18:07:43  [MIGRATION] bot_type column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] breakeven_set column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] breakeven_price column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] guidance_count column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] indicators_used column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] notes column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 10 18:07:43  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 10 18:07:43  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 10 18:07:43  [MIGRATION] free_signup_at column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] is_converted column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] converted_at column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] conversion_days column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] UTM columns already exist, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for multi-TP columns...
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for milestone tracking columns...
+Dec 10 18:08:19  [MIGRATION] UTM columns already exist, skipping
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for multi-TP columns...
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for milestone tracking columns...
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for close_price column...
+Dec 10 18:08:19  [MIGRATION] close_price column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for close_price column...
+Dec 10 18:07:43  [MIGRATION] close_price column already exists, skipping
+Dec 10 18:07:43  [MIGRATION] Checking forex_signals for effective_sl column...
+Dec 10 18:07:43  [MIGRATION] effective_sl column already exists, skipping
+Dec 10 18:07:43  ✅ Database schema initialized
+Dec 10 18:07:43  ✅ Forex config initialized with defaults
+Dec 10 18:07:43  ✅ Bot config initialized with defaults
+Dec 10 18:07:43  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 10 18:07:43  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 10 18:07:43  [FOREX ENGINE] Loaded strategy: Aggressive (aggressive)
+Dec 10 18:07:46  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 10 18:07:46  [INFO] Stripe client initialized
+Dec 10 18:07:46  [TELEGRAM] Initializing bot for webhook mode...
+Dec 10 18:07:46  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 10 18:07:46  [TELEGRAM] Webhook bot initialized and ready
+Dec 10 18:07:46  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 18:07:46  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 18:07:46  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 10 18:07:46  [FOREX] Signals scheduler started in background thread
+Dec 10 18:07:46  Server running at http://0.0.0.0:8080/
+Dec 10 18:07:46  ============================================================
+Dec 10 18:07:46  
+Dec 10 18:08:19  [MIGRATION] Checking forex_signals for effective_sl column...
+Dec 10 18:08:19  [MIGRATION] effective_sl column already exists, skipping
+Dec 10 18:08:19  ✅ Database schema initialized
+Dec 10 18:08:19  ✅ Forex config initialized with defaults
+Dec 10 18:08:19  ✅ Bot config initialized with defaults
+Dec 10 18:08:19  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 10 18:08:19  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 10 18:08:19  [FOREX ENGINE] Loaded strategy: Aggressive (aggressive)
+Dec 10 18:08:21  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 10 18:08:21  [INFO] Stripe client initialized
+Dec 10 18:08:21  [TELEGRAM] Initializing bot for webhook mode...
+Dec 10 18:08:22  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 10 18:08:22  [TELEGRAM] Webhook bot initialized and ready
+Dec 10 18:08:22  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 18:08:22  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 18:08:22  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 10 18:08:22  [FOREX] Signals scheduler started in background thread
+Dec 10 18:08:22  
+Dec 10 18:08:22  ============================================================Server running at http://0.0.0.0:8080/
+Dec 10 18:08:22  
+Dec 10 18:08:22  🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 10 18:08:22  Serving files from /workspace============================================================
+Dec 10 18:08:22  
+Dec 10 18:08:22  API endpoints:📊 Signal checks: 15min timeframe every 15 minutes
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/validate-coupon📊 Signal checks: 1h timeframe every 30 minutes
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/login🔍 Price monitoring: Every 1 minute
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/logout💡 Signal guidance: Every 1 minute (with 10min cooldown)
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/upload-template (requires auth)🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/delete-template (requires auth)⏰ Hard timeout: 3 hours
+Dec 10 18:08:22  
+Dec 10 18:07:46  Serving files from /workspace🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 10 18:07:46  
+Dec 10 18:07:46  ============================================================API endpoints:
+Dec 10 18:07:46  
+Dec 10 18:07:46  📊 Signal checks: 15min timeframe every 15 minutes  POST /api/validate-coupon
+Dec 10 18:07:46  
+Dec 10 18:07:46  📊 Signal checks: 1h timeframe every 30 minutes  POST /api/login
+Dec 10 18:07:46  
+Dec 10 18:07:46  🔍 Price monitoring: Every 1 minute  POST /api/logout
+Dec 10 18:07:46  
+Dec 10 18:07:46  💡 Signal guidance: Every 1 minute (with 10min cooldown)  POST /api/upload-template (requires auth)
+Dec 10 18:07:46  
+Dec 10 18:07:46    POST /api/delete-template (requires auth)🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 10 18:07:46  
+Dec 10 18:07:46  ⏰ Hard timeout: 3 hours  POST /api/regenerate-index
+Dec 10 18:07:46  
+Dec 10 18:07:46  ☀️ Morning briefing: 6:20 AM UTC  POST /api/telegram-webhook
+Dec 10 18:07:46  
+Dec 10 18:07:46    POST /api/forex-telegram-webhook📅 Daily recap: 6:30 AM UTC
+Dec 10 18:07:46  
+Dec 10 18:07:46    GET  /api/forex-signals (requires auth)
+Dec 10 18:07:46  📅 Weekly recap: Sunday 6:30 AM UTC  GET  /api/forex-stats (requires auth)
+Dec 10 18:07:46  ⏰ Trading hours: 8AM-10PM GMT
+Dec 10 18:07:46  
+Dec 10 18:07:46  ============================================================
+Dec 10 18:07:46  
+Dec 10 18:07:46  
+Dec 10 18:07:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:07:46  
+Dec 10 18:07:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:07:48  [AGGRESSIVE] Price: 4199.94, RSI: 51.63, MACD: 0.3799, ADX: 14.44
+Dec 10 18:07:48  [AGGRESSIVE] Weak trend - ADX 14.44 < 15
+Dec 10 18:07:48  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 18:07:48  
+Dec 10 18:07:48  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:08:22    POST /api/regenerate-index☀️ Morning briefing: 6:20 AM UTC
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/telegram-webhook📅 Daily recap: 6:30 AM UTC
+Dec 10 18:08:22  
+Dec 10 18:08:22    POST /api/forex-telegram-webhook📅 Weekly recap: Sunday 6:30 AM UTC
+Dec 10 18:08:22  
+Dec 10 18:08:22  ⏰ Trading hours: 8AM-10PM GMT  GET  /api/forex-signals (requires auth)
+Dec 10 18:08:22  ============================================================
+Dec 10 18:08:22  
+Dec 10 18:08:22  
+Dec 10 18:08:22    GET  /api/forex-stats (requires auth)
+Dec 10 18:08:22  
+Dec 10 18:07:48  
+Dec 10 18:07:48  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 18:07:50  [AGGRESSIVE] Price: 4199.94, RSI: 48.68, MACD: -1.4468, ADX: 11.34
+Dec 10 18:07:50  [AGGRESSIVE] Weak trend - ADX 11.34 < 15
+Dec 10 18:09:30  [AUTH] Session token found, valid: True
+Dec 10 18:09:30  10.244.6.25 - - [10/Dec/2025 18:09:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:15:30  [AUTH] Session token found, valid: True
+Dec 10 18:15:30  10.244.6.25 - - [10/Dec/2025 18:15:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:16:30  [AUTH] Session token found, valid: True
+Dec 10 18:16:30  10.244.6.25 - - [10/Dec/2025 18:16:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:18:30  [AUTH] Session token found, valid: True
+Dec 10 18:18:30  10.244.6.25 - - [10/Dec/2025 18:18:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:19:30  [AUTH] Session token found, valid: True
+Dec 10 18:19:30  10.244.6.25 - - [10/Dec/2025 18:19:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:21:30  [AUTH] Session token found, valid: True
+Dec 10 18:21:30  10.244.6.25 - - [10/Dec/2025 18:21:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:22:30  [AUTH] Session token found, valid: True
+Dec 10 18:22:30  10.244.6.25 - - [10/Dec/2025 18:22:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:22:51  
+Dec 10 18:22:51  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:22:51  
+Dec 10 18:22:51  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:22:53  [AGGRESSIVE] Price: 4197.94, RSI: 48.13, MACD: 0.2220, ADX: 14.43
+Dec 10 18:22:53  [AGGRESSIVE] Weak trend - ADX 14.43 < 15
+Dec 10 18:23:30  [AUTH] Session token found, valid: True
+Dec 10 18:23:30  10.244.6.25 - - [10/Dec/2025 18:23:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:26:30  [AUTH] Session token found, valid: True
+Dec 10 18:26:30  10.244.6.25 - - [10/Dec/2025 18:26:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:27:30  [AUTH] Session token found, valid: True
+Dec 10 18:27:30  10.244.6.25 - - [10/Dec/2025 18:27:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:30:30  [AUTH] Session token found, valid: True
+Dec 10 18:30:30  10.244.6.25 - - [10/Dec/2025 18:30:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:33:30  [AUTH] Session token found, valid: True
+Dec 10 18:08:22  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:08:22  
+Dec 10 18:08:22  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:08:24  [AGGRESSIVE] Price: 4199.94, RSI: 51.63, MACD: 0.3799, ADX: 14.44
+Dec 10 18:08:24  [AGGRESSIVE] Weak trend - ADX 14.44 < 15
+Dec 10 18:08:24  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 18:08:24  
+Dec 10 18:08:24  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:08:24  
+Dec 10 18:08:24  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 18:08:25  [AGGRESSIVE] Price: 4199.80, RSI: 48.56, MACD: -1.4575, ADX: 11.34
+Dec 10 18:08:25  [AGGRESSIVE] Weak trend - ADX 11.34 < 15
+Dec 10 18:10:30  [AUTH] Session token found, valid: True
+Dec 10 18:10:30  10.244.6.25 - - [10/Dec/2025 18:10:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:11:30  [AUTH] Session token found, valid: True
+Dec 10 18:11:30  10.244.6.25 - - [10/Dec/2025 18:11:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:12:30  [AUTH] Session token found, valid: True
+Dec 10 18:12:30  10.244.6.25 - - [10/Dec/2025 18:12:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:13:30  [AUTH] Session token found, valid: True
+Dec 10 18:13:30  10.244.6.25 - - [10/Dec/2025 18:13:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:14:30  [AUTH] Session token found, valid: True
+Dec 10 18:14:30  10.244.6.25 - - [10/Dec/2025 18:14:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:17:30  [AUTH] Session token found, valid: True
+Dec 10 18:17:30  10.244.6.25 - - [10/Dec/2025 18:17:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:20:30  [AUTH] Session token found, valid: True
+Dec 10 18:20:30  10.244.6.25 - - [10/Dec/2025 18:20:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:23:26  
+Dec 10 18:23:26  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:23:26  
+Dec 10 18:23:26  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:23:27  [AGGRESSIVE] Price: 4197.32, RSI: 47.11, MACD: 0.1723, ADX: 14.55
+Dec 10 18:23:27  [AGGRESSIVE] Weak trend - ADX 14.55 < 15
+Dec 10 18:24:30  [AUTH] Session token found, valid: True
+Dec 10 18:24:30  10.244.6.25 - - [10/Dec/2025 18:24:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:25:30  [AUTH] Session token found, valid: True
+Dec 10 18:25:30  10.244.6.25 - - [10/Dec/2025 18:25:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:28:30  [AUTH] Session token found, valid: True
+Dec 10 18:28:30  10.244.6.25 - - [10/Dec/2025 18:28:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:31:30  [AUTH] Session token found, valid: True
+Dec 10 18:31:30  10.244.6.25 - - [10/Dec/2025 18:31:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:32:30  [AUTH] Session token found, valid: True
+Dec 10 18:32:30  10.244.6.25 - - [10/Dec/2025 18:32:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:34:30  [AUTH] Session token found, valid: True
+Dec 10 18:34:30  10.244.6.25 - - [10/Dec/2025 18:34:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:35:30  [AUTH] Session token found, valid: True
+Dec 10 18:35:30  10.244.6.25 - - [10/Dec/2025 18:35:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:38:27  
+Dec 10 18:38:27  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:38:27  
+Dec 10 18:38:27  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:38:29  [AGGRESSIVE] Price: 4195.44, RSI: 44.21, MACD: -0.1822, ADX: 16.22
+Dec 10 18:38:29  [AGGRESSIVE] No signal - RSI=44.21 (thresholds: 40/60)
+Dec 10 18:38:29  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 18:38:29  
+Dec 10 18:38:29  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:38:29  
+Dec 10 18:38:29  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 18:38:31  [AGGRESSIVE] Price: 4195.44, RSI: 45.19, MACD: -1.8053, ADX: 11.93
+Dec 10 18:38:31  [AGGRESSIVE] Weak trend - ADX 11.93 < 15
+Dec 10 18:39:30  [AUTH] Session token found, valid: True
+Dec 10 18:39:30  10.244.6.25 - - [10/Dec/2025 18:39:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:43:30  [AUTH] Session token found, valid: True
+Dec 10 18:43:30  10.244.6.25 - - [10/Dec/2025 18:43:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:46:30  [AUTH] Session token found, valid: True
+Dec 10 18:46:30  10.244.6.25 - - [10/Dec/2025 18:46:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:49:30  [AUTH] Session token found, valid: True
+Dec 10 18:49:30  10.244.6.25 - - [10/Dec/2025 18:49:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:50:30  [AUTH] Session token found, valid: True
+Dec 10 18:50:30  10.244.6.25 - - [10/Dec/2025 18:50:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:51:30  [AUTH] Session token found, valid: True
+Dec 10 18:51:30  10.244.6.25 - - [10/Dec/2025 18:51:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:53:31  
+Dec 10 18:53:31  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:53:31  
+Dec 10 18:33:30  10.244.6.25 - - [10/Dec/2025 18:33:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:36:30  [AUTH] Session token found, valid: True
+Dec 10 18:36:30  10.244.6.25 - - [10/Dec/2025 18:36:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:37:30  [AUTH] Session token found, valid: True
+Dec 10 18:37:30  10.244.6.25 - - [10/Dec/2025 18:37:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:37:53  
+Dec 10 18:37:53  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:37:53  
+Dec 10 18:37:53  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:37:55  [AGGRESSIVE] Price: 4195.68, RSI: 44.57, MACD: -0.1631, ADX: 16.22
+Dec 10 18:37:55  [AGGRESSIVE] No signal - RSI=44.57 (thresholds: 40/60)
+Dec 10 18:37:55  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 18:37:55  
+Dec 10 18:37:55  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:37:55  
+Dec 10 18:37:55  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 18:37:57  [AGGRESSIVE] Price: 4195.68, RSI: 45.36, MACD: -1.7862, ADX: 11.93
+Dec 10 18:37:57  [AGGRESSIVE] Weak trend - ADX 11.93 < 15
+Dec 10 18:38:30  [AUTH] Session token found, valid: True
+Dec 10 18:38:30  10.244.6.25 - - [10/Dec/2025 18:38:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:40:30  [AUTH] Session token found, valid: True
+Dec 10 18:40:30  10.244.6.25 - - [10/Dec/2025 18:40:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:41:30  [AUTH] Session token found, valid: True
+Dec 10 18:41:30  10.244.6.25 - - [10/Dec/2025 18:41:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:42:30  [AUTH] Session token found, valid: True
+Dec 10 18:42:30  10.244.6.25 - - [10/Dec/2025 18:42:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:44:30  [AUTH] Session token found, valid: True
+Dec 10 18:44:30  10.244.6.25 - - [10/Dec/2025 18:44:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:45:30  [AUTH] Session token found, valid: True
+Dec 10 18:45:30  10.244.6.25 - - [10/Dec/2025 18:45:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:47:30  [AUTH] Session token found, valid: True
+Dec 10 18:47:30  10.244.6.25 - - [10/Dec/2025 18:47:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:48:30  [AUTH] Session token found, valid: True
+Dec 10 18:48:30  10.244.6.25 - - [10/Dec/2025 18:48:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:52:30  [AUTH] Session token found, valid: True
+Dec 10 18:52:30  10.244.6.25 - - [10/Dec/2025 18:52:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:52:58  
+Dec 10 18:52:58  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 18:52:58  
+Dec 10 18:52:58  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:53:00  [AGGRESSIVE] Price: 4194.30, RSI: 42.59, MACD: -0.5688, ADX: 17.27
+Dec 10 18:53:00  [AGGRESSIVE] No signal - RSI=42.59 (thresholds: 40/60)
+Dec 10 18:53:30  [AUTH] Session token found, valid: True
+Dec 10 18:53:30  10.244.6.25 - - [10/Dec/2025 18:53:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:54:30  [AUTH] Session token found, valid: True
+Dec 10 18:54:30  10.244.6.25 - - [10/Dec/2025 18:54:30] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:55:22  10.244.4.179 - - [10/Dec/2025 18:55:22] "GET / HTTP/1.1" 200 -
+Dec 10 18:55:22  [AUTH] Session token found, valid: True
+Dec 10 18:55:22  10.244.6.25 - - [10/Dec/2025 18:55:22] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:55:22  [AUTH] Session token found, valid: True
+Dec 10 18:55:22  10.244.6.25 - - [10/Dec/2025 18:55:22] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.6.25 - - [10/Dec/2025 18:55:32] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.6.25 - - [10/Dec/2025 18:55:32] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.6.25 - - [10/Dec/2025 18:55:32] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 18:55:37  [AUTH] Session token found, valid: True
+Dec 10 18:55:37  10.244.5.120 - - [10/Dec/2025 18:55:37] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 18:55:37  [AUTH] Session token found, valid: True
+Dec 10 18:53:31  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 18:53:33  [AGGRESSIVE] Price: 4195.60, RSI: 45.11, MACD: -0.4648, ADX: 17.27
+Dec 10 18:53:33  [AGGRESSIVE] No signal - RSI=45.11 (thresholds: 40/60)
+Dec 10 18:55:22  10.244.6.25 - - [10/Dec/2025 18:55:22] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Dec 10 18:55:22  [AUTH] Session token found, valid: True
+Dec 10 18:55:22  10.244.4.179 - - [10/Dec/2025 18:55:22] "GET /api/check-auth HTTP/1.1" 200 -
+Dec 10 18:55:22  [AUTH] Session token found, valid: True
+Dec 10 18:55:22  10.244.5.120 - - [10/Dec/2025 18:55:22] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.6.25 - - [10/Dec/2025 18:55:32] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.4.179 - - [10/Dec/2025 18:55:32] "GET /api/forex-config HTTP/1.1" 200 -
+Dec 10 18:55:32  [AUTH] Session token found, valid: True
+Dec 10 18:55:32  10.244.4.179 - - [10/Dec/2025 18:55:32] "GET /api/forex-config HTTP/1.1" 200 -
+Dec 10 18:55:37  [AUTH] Session token found, valid: True
+Dec 10 18:55:38  10.244.6.25 - - [10/Dec/2025 18:55:38] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:55:37  10.244.5.120 - - [10/Dec/2025 18:55:37] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 18:55:37  [AUTH] Session token found, valid: True
+Dec 10 18:55:37  10.244.6.25 - - [10/Dec/2025 18:55:37] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 18:55:37  [AUTH] Session token found, valid: True
+Dec 10 18:55:38  10.244.6.25 - - [10/Dec/2025 18:55:38] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 18:55:38  [AUTH] Session token found, valid: True
+Dec 10 18:55:38  10.244.6.25 - - [10/Dec/2025 18:55:38] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 18:56:38  [AUTH] Session token found, valid: True
+Dec 10 18:56:38  10.244.6.25 - - [10/Dec/2025 18:56:38] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
