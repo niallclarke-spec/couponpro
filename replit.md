@@ -106,6 +106,17 @@ The unified milestone notification system (`bots/core/milestone_tracker.py`) han
 **Database Columns (forex_signals):**
 - `last_milestone_at`: Timestamp of last milestone message sent
 - `milestones_sent`: JSONB tracking which milestones sent (40_percent, 70_percent, tp1_hit, etc.)
+- `effective_sl`: Tracks the guided stop-loss position (null until first guidance). Updated to:
+  - Entry price at 70% breakeven milestone (locking in breakeven)
+  - TP1 price when TP1 is hit (locking in TP1 profit for remaining position)
+  - TP2 price when TP2 is hit (locking in TP2 profit for remaining position)
+
+**P&L Tracking:**
+The system tracks what would actually happen if a trader followed guidance exactly:
+- `effective_sl` is used for SL hit detection (when set) instead of original `stop_loss`
+- If effective_sl is hit with 0 or positive pips → status = 'won' (breakeven or locked profit)
+- If effective_sl is hit with negative pips → status = 'lost' (actual loss)
+- Original `stop_loss` remains unchanged for reference
 
 **Queued Bot Switching:**
 When a signal is active, users can queue a different bot strategy. The queued bot will automatically activate when the current signal closes (won/lost/expired). This allows planning ahead without waiting for signals to complete.
