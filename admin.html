@@ -4234,35 +4234,51 @@
             ]
         };
 
+        // Mobile layout enforcement for filters/price widget
+        function setupMobileFiltersLayout() {
+            const container = document.querySelector('.filters-price-row');
+            if (!container) return;
+            
+            const ensureMobileOrder = () => {
+                const priceCard = container.querySelector('.price-widget-card');
+                const filterCard = container.querySelector('.filters-card');
+                if (!priceCard || !filterCard) return;
+                
+                const isMobile = window.matchMedia('(max-width: 768px)').matches;
+                if (isMobile) {
+                    // On mobile: price widget should be first
+                    if (container.firstElementChild !== priceCard) {
+                        container.insertBefore(priceCard, filterCard);
+                    }
+                } else {
+                    // On desktop: filters should be first (grid handles visual order)
+                    if (container.firstElementChild !== filterCard) {
+                        container.insertBefore(filterCard, priceCard);
+                    }
+                }
+            };
+            
+            // Run immediately
+            ensureMobileOrder();
+            
+            // Watch for DOM changes and re-apply order
+            const observer = new MutationObserver(() => {
+                ensureMobileOrder();
+            });
+            observer.observe(container, { childList: true, subtree: true });
+            
+            // Also handle window resize
+            window.removeEventListener('resize', ensureMobileOrder);
+            window.addEventListener('resize', ensureMobileOrder);
+        }
+
         // Initialize app on load
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
             checkAuth();
             
-            // Force correct mobile layout for filters/price widget
-            const container = document.querySelector('.filters-price-row');
-            const priceCard = container?.querySelector('.price-widget-card');
-            const filterCard = container?.querySelector('.filters-card');
-            
-            if (container && priceCard && filterCard) {
-                const ensureMobileOrder = () => {
-                    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-                    if (isMobile) {
-                        // On mobile: price widget should be first
-                        if (container.firstElementChild !== priceCard) {
-                            container.insertBefore(priceCard, filterCard);
-                        }
-                    } else {
-                        // On desktop: filters should be first (grid handles visual order)
-                        if (container.firstElementChild !== filterCard) {
-                            container.insertBefore(filterCard, priceCard);
-                        }
-                    }
-                };
-                
-                ensureMobileOrder();
-                window.addEventListener('resize', ensureMobileOrder);
-            }
+            // Setup mobile layout observer
+            setupMobileFiltersLayout();
         });
 
         async function checkAuth() {
@@ -4430,6 +4446,8 @@
                 } else if (viewId === 'forex-signals') {
                     loadForexSignals();
                     startSparklinePolling();
+                    // Re-setup mobile layout after view becomes active
+                    setTimeout(() => setupMobileFiltersLayout(), 100);
                 } else if (viewId === 'forex-settings') {
                     loadForexSettings();
                 }
@@ -5493,6 +5511,9 @@
                 applySignalFilters();
                 updateForexMetrics();
                 loadBotStatus();
+                
+                // Ensure mobile layout after data loads
+                setupMobileFiltersLayout();
             } catch (error) {
                 console.error('Error loading signals:', error);
                 document.getElementById('signalsTableContent').innerHTML = `
@@ -5520,6 +5541,9 @@
                 if (allSignals.length > 0) {
                     applySignalFilters();
                 }
+                
+                // Ensure mobile layout after bot status updates
+                setupMobileFiltersLayout();
             } catch (error) {
                 console.error('Error loading bot status:', error);
             }
