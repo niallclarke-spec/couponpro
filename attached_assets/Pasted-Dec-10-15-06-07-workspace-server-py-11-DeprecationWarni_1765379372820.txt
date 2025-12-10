@@ -1,0 +1,252 @@
+Dec 10 15:06:07  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Dec 10 15:06:07    import cgi
+Dec 10 15:06:09  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 10 15:06:09  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 10 15:06:09  [MIGRATION] error_type column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 10 15:06:09  [MIGRATION] device_type column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 10 15:06:09  [MIGRATION] username column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] first_name column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] last_name column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 10 15:06:09  [MIGRATION] bot_type column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] breakeven_set column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] breakeven_price column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] guidance_count column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] indicators_used column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] notes column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 10 15:06:09  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 10 15:06:09  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 10 15:06:09  [MIGRATION] free_signup_at column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] is_converted column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] converted_at column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] conversion_days column already exists, skipping
+Dec 10 15:06:09  [MIGRATION] UTM columns already exist, skipping
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for multi-TP columns...
+Dec 10 15:06:09  [MIGRATION] Adding take_profit_2 column...
+Dec 10 15:06:09  [MIGRATION] ✅ take_profit_2 column added
+Dec 10 15:06:09  [MIGRATION] Adding take_profit_3 column...
+Dec 10 15:06:09  [MIGRATION] ✅ take_profit_3 column added
+Dec 10 15:06:09  [MIGRATION] Adding TP percentage columns...
+Dec 10 15:06:09  [MIGRATION] ✅ TP percentage columns added
+Dec 10 15:06:09  [MIGRATION] Adding TP hit tracking columns...
+Dec 10 15:06:09  [MIGRATION] ✅ TP hit columns added
+Dec 10 15:06:09  [MIGRATION] Adding TP hit timestamp columns...
+Dec 10 15:06:09  [MIGRATION] ✅ TP hit timestamp columns added
+Dec 10 15:06:09  [MIGRATION] Adding breakeven_triggered columns...
+Dec 10 15:06:09  [MIGRATION] ✅ breakeven_triggered columns added
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for milestone tracking columns...
+Dec 10 15:06:09  [MIGRATION] Adding last_milestone_at column...
+Dec 10 15:06:09  [MIGRATION] ✅ last_milestone_at column added
+Dec 10 15:06:09  [MIGRATION] Adding milestones_sent column...
+Dec 10 15:06:09  [MIGRATION] ✅ milestones_sent column added
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for close_price column...
+Dec 10 15:06:09  [MIGRATION] Adding close_price column...
+Dec 10 15:06:09  [MIGRATION] ✅ close_price column added
+Dec 10 15:06:09  [MIGRATION] Checking forex_signals for effective_sl column...
+Dec 10 15:06:09  [MIGRATION] Adding effective_sl column...
+Dec 10 15:06:09  [MIGRATION] ✅ effective_sl column added
+Dec 10 15:06:09  ✅ Database schema initialized
+Dec 10 15:06:09  ✅ Forex config initialized with defaults
+Dec 10 15:06:09  ✅ Bot config initialized with defaults
+Dec 10 15:06:09  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 10 15:06:09  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 10 15:06:09  [FOREX ENGINE] Loaded strategy: Aggressive (aggressive)
+Dec 10 15:06:11  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 10 15:06:11  [INFO] Stripe client initialized
+Dec 10 15:06:11  [TELEGRAM] Initializing bot for webhook mode...
+Dec 10 15:06:12  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 10 15:06:12  [TELEGRAM] Webhook bot initialized and ready
+Dec 10 15:06:12  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 15:06:12  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 15:06:12  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 10 15:06:12  [FOREX] Signals scheduler started in background thread
+Dec 10 15:06:12  
+Dec 10 15:06:12  ============================================================Server running at http://0.0.0.0:8080/
+Dec 10 15:06:12  
+Dec 10 15:06:12  🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 10 15:06:12  Serving files from /workspace
+Dec 10 15:06:12  ============================================================API endpoints:
+Dec 10 15:06:12  
+Dec 10 15:06:12    POST /api/validate-coupon📊 Signal checks: 15min timeframe every 15 minutes
+Dec 10 15:06:12  
+Dec 10 15:06:12    POST /api/login📊 Signal checks: 1h timeframe every 30 minutes
+Dec 10 15:06:12    POST /api/logout
+Dec 10 15:06:12    POST /api/upload-template (requires auth)
+Dec 10 15:06:12    POST /api/delete-template (requires auth)
+Dec 10 15:06:12    POST /api/regenerate-index
+Dec 10 15:06:12    POST /api/telegram-webhook
+Dec 10 15:06:12    POST /api/forex-telegram-webhook
+Dec 10 15:06:12    GET  /api/forex-signals (requires auth)
+Dec 10 15:06:12  
+Dec 10 15:06:12    GET  /api/forex-stats (requires auth)
+Dec 10 15:06:12  🔍 Price monitoring: Every 1 minute
+Dec 10 15:06:12  💡 Signal guidance: Every 1 minute (with 10min cooldown)
+Dec 10 15:06:12  🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 10 15:06:12  ⏰ Hard timeout: 3 hours
+Dec 10 15:06:12  ☀️ Morning briefing: 6:20 AM UTC
+Dec 10 15:06:12  📅 Daily recap: 6:30 AM UTC
+Dec 10 15:06:12  📅 Weekly recap: Sunday 6:30 AM UTC
+Dec 10 15:06:12  ⏰ Trading hours: 8AM-10PM GMT
+Dec 10 15:06:12  ============================================================
+Dec 10 15:06:12  
+Dec 10 15:06:12  
+Dec 10 15:06:12  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 15:06:12  
+Dec 10 15:06:12  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 15:06:14  [AGGRESSIVE] Price: 4200.15, RSI: 51.68, MACD: -0.6978, ADX: 18.96
+Dec 10 15:06:14  [AGGRESSIVE] No signal - RSI=51.68 (thresholds: 40/60)
+Dec 10 15:06:14  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 15:06:14  
+Dec 10 15:06:14  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 15:06:14  
+Dec 10 15:06:14  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 15:06:15  [AGGRESSIVE] Price: 4200.15, RSI: 48.37, MACD: -1.6940, ADX: 11.97
+Dec 10 15:06:15  [AGGRESSIVE] Weak trend - ADX 11.97 < 15
+Dec 10 15:07:20  [AUTH] Session token found, valid: True
+Dec 10 15:07:20  10.244.5.120 - - [10/Dec/2025 15:07:20] "GET /api/check-auth HTTP/1.1" 200 -
+Dec 10 15:07:20  [AUTH] Session token found, valid: True
+Dec 10 15:07:20  10.244.7.234 - - [10/Dec/2025 15:07:20] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.6.25 - - [10/Dec/2025 15:07:27] "GET /api/forex-config HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.4.179 - - [10/Dec/2025 15:07:27] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.4.179 - - [10/Dec/2025 15:07:27] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.4.179 - - [10/Dec/2025 15:07:27] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:47  10.244.5.120 - - [10/Dec/2025 15:07:47] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:47  10.244.7.234 - - [10/Dec/2025 15:07:47] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:47  10.244.5.120 - - [10/Dec/2025 15:07:47] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:47  10.244.4.179 - - [10/Dec/2025 15:07:47] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.6.25 - - [10/Dec/2025 15:08:36] "GET /api/forex-config HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.4.179 - - [10/Dec/2025 15:08:36] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.4.179 - - [10/Dec/2025 15:08:36] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.4.179 - - [10/Dec/2025 15:08:36] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:06:41  /workspace/server.py:11: DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+Dec 10 15:06:41    import cgi
+Dec 10 15:06:43  ✅ Database connection pool initialized (using DB_HOST, timeout=10s)
+Dec 10 15:06:43  [MIGRATION] Checking if bot_usage.error_type column exists...
+Dec 10 15:06:43  [MIGRATION] error_type column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking if bot_usage.device_type column exists...
+Dec 10 15:06:43  [MIGRATION] device_type column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking if bot_users user profile columns exist...
+Dec 10 15:06:43  [MIGRATION] username column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] first_name column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] last_name column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals table for new signal bot columns...
+Dec 10 15:06:43  [MIGRATION] bot_type column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] telegram_message_id column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] breakeven_set column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] breakeven_price column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] guidance_count column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] last_guidance_at column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] indicators_used column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] notes column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for indicator re-validation columns...
+Dec 10 15:06:43  [MIGRATION] original_indicators_json column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for guidance zone columns...
+Dec 10 15:06:43  [MIGRATION] last_progress_zone column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] last_caution_zone column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking telegram_subscriptions for conversion tracking columns...
+Dec 10 15:06:43  [MIGRATION] free_signup_at column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] is_converted column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] converted_at column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] conversion_days column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] UTM columns already exist, skipping
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for multi-TP columns...
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for milestone tracking columns...
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for close_price column...
+Dec 10 15:06:43  [MIGRATION] close_price column already exists, skipping
+Dec 10 15:06:43  [MIGRATION] Checking forex_signals for effective_sl column...
+Dec 10 15:06:43  [MIGRATION] effective_sl column already exists, skipping
+Dec 10 15:06:43  ✅ Database schema initialized
+Dec 10 15:06:43  ✅ Forex config initialized with defaults
+Dec 10 15:06:43  ✅ Bot config initialized with defaults
+Dec 10 15:06:43  [FOREX CONFIG] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 10 15:06:43  [FOREX CONFIG] Guardrails - Loss cap: 50.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 10 15:06:43  [FOREX ENGINE] Loaded strategy: Aggressive (aggressive)
+Dec 10 15:06:46  [STRIPE] Using manual environment variables (LIVE mode)
+Dec 10 15:06:46  [INFO] Stripe client initialized
+Dec 10 15:06:46  [TELEGRAM] Initializing bot for webhook mode...
+Dec 10 15:06:46  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 10 15:06:46  [TELEGRAM] Webhook bot initialized and ready
+Dec 10 15:06:46  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 15:06:46  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 10 15:06:46  [JOIN_TRACKER] ✅ Forex bot webhook mode initialized
+Dec 10 15:06:46  [FOREX] Signals scheduler started in background thread
+Dec 10 15:06:46  
+Dec 10 15:06:46  ============================================================Server running at http://0.0.0.0:8080/
+Dec 10 15:06:46  
+Dec 10 15:06:46  🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 10 15:06:46  Serving files from /workspace============================================================
+Dec 10 15:06:46  
+Dec 10 15:06:46  📊 Signal checks: 15min timeframe every 15 minutesAPI endpoints:
+Dec 10 15:06:46    POST /api/validate-coupon
+Dec 10 15:06:46  📊 Signal checks: 1h timeframe every 30 minutes
+Dec 10 15:06:46    POST /api/login
+Dec 10 15:06:46    POST /api/logout
+Dec 10 15:06:46  
+Dec 10 15:06:46    POST /api/upload-template (requires auth)🔍 Price monitoring: Every 1 minute
+Dec 10 15:06:46  
+Dec 10 15:06:46    POST /api/delete-template (requires auth)💡 Signal guidance: Every 1 minute (with 10min cooldown)
+Dec 10 15:06:46  
+Dec 10 15:06:46    POST /api/regenerate-index🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 10 15:06:46  
+Dec 10 15:06:46    POST /api/telegram-webhook⏰ Hard timeout: 3 hours
+Dec 10 15:06:46  
+Dec 10 15:06:46    POST /api/forex-telegram-webhook☀️ Morning briefing: 6:20 AM UTC
+Dec 10 15:06:46  
+Dec 10 15:06:46    GET  /api/forex-signals (requires auth)📅 Daily recap: 6:30 AM UTC
+Dec 10 15:06:46  
+Dec 10 15:06:46    GET  /api/forex-stats (requires auth)📅 Weekly recap: Sunday 6:30 AM UTC
+Dec 10 15:06:46  
+Dec 10 15:06:46  ⏰ Trading hours: 8AM-10PM GMT
+Dec 10 15:06:46  ============================================================
+Dec 10 15:06:46  
+Dec 10 15:06:46  
+Dec 10 15:06:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 15:06:46  
+Dec 10 15:06:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 10 15:06:49  [AGGRESSIVE] Price: 4199.93, RSI: 51.36, MACD: -0.7159, ADX: 18.96
+Dec 10 15:06:49  [AGGRESSIVE] No signal - RSI=51.36 (thresholds: 40/60)
+Dec 10 15:06:49  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 10 15:06:49  
+Dec 10 15:06:49  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 10 15:06:49  
+Dec 10 15:06:49  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 10 15:06:50  [AGGRESSIVE] Price: 4199.93, RSI: 48.17, MACD: -1.7121, ADX: 11.97
+Dec 10 15:06:50  [AGGRESSIVE] Weak trend - ADX 11.97 < 15
+Dec 10 15:07:20  10.244.4.179 - - [10/Dec/2025 15:07:20] "GET / HTTP/1.1" 200 -
+Dec 10 15:07:20  10.244.5.120 - - [10/Dec/2025 15:07:20] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Dec 10 15:07:20  [AUTH] Session token found, valid: True
+Dec 10 15:07:20  10.244.5.120 - - [10/Dec/2025 15:07:20] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 10 15:07:20  [AUTH] Session token found, valid: True
+Dec 10 15:07:20  10.244.4.179 - - [10/Dec/2025 15:07:20] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.4.179 - - [10/Dec/2025 15:07:27] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:07:27  [AUTH] Session token found, valid: True
+Dec 10 15:07:27  10.244.6.25 - - [10/Dec/2025 15:07:27] "GET /api/forex-config HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:47  10.244.4.179 - - [10/Dec/2025 15:07:47] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 10 15:07:47  [AUTH] Session token found, valid: True
+Dec 10 15:07:48  10.244.7.234 - - [10/Dec/2025 15:07:48] "GET /api/forex/xauusd-sparkline HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.4.179 - - [10/Dec/2025 15:08:36] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Dec 10 15:08:36  [AUTH] Session token found, valid: True
+Dec 10 15:08:36  10.244.6.25 - - [10/Dec/2025 15:08:36] "GET /api/forex-config HTTP/1.1" 200 -
