@@ -4238,6 +4238,31 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
             checkAuth();
+            
+            // Force correct mobile layout for filters/price widget
+            const container = document.querySelector('.filters-price-row');
+            const priceCard = container?.querySelector('.price-widget-card');
+            const filterCard = container?.querySelector('.filters-card');
+            
+            if (container && priceCard && filterCard) {
+                const ensureMobileOrder = () => {
+                    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+                    if (isMobile) {
+                        // On mobile: price widget should be first
+                        if (container.firstElementChild !== priceCard) {
+                            container.insertBefore(priceCard, filterCard);
+                        }
+                    } else {
+                        // On desktop: filters should be first (grid handles visual order)
+                        if (container.firstElementChild !== filterCard) {
+                            container.insertBefore(filterCard, priceCard);
+                        }
+                    }
+                };
+                
+                ensureMobileOrder();
+                window.addEventListener('resize', ensureMobileOrder);
+            }
         });
 
         async function checkAuth() {
