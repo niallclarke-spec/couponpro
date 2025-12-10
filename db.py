@@ -2651,51 +2651,6 @@ def init_bot_config():
         print(f"Error initializing bot config: {e}")
         return False
 
-def update_tp_hit(signal_id, tp_number, hit_price=None):
-    """
-    Record a TP hit for a signal.
-    
-    Args:
-        signal_id: The signal ID
-        tp_number: 1, 2, or 3 (which TP was hit)
-        hit_price: The price at which TP was hit
-    
-    Returns:
-        bool: True if successful
-    """
-    try:
-        if not db_pool.connection_pool:
-            return False
-        
-        with db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            if tp_number == 1:
-                cursor.execute("""
-                    UPDATE forex_signals 
-                    SET tp_hit_1 = TRUE, tp1_hit_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (signal_id,))
-            elif tp_number == 2:
-                cursor.execute("""
-                    UPDATE forex_signals 
-                    SET tp_hit_2 = TRUE, tp2_hit_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (signal_id,))
-            elif tp_number == 3:
-                cursor.execute("""
-                    UPDATE forex_signals 
-                    SET tp_hit_3 = TRUE, tp3_hit_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (signal_id,))
-            
-            conn.commit()
-            print(f"✅ Signal #{signal_id}: TP{tp_number} hit recorded")
-            return True
-    except Exception as e:
-        print(f"Error updating TP hit: {e}")
-        return False
-
 def update_breakeven_triggered(signal_id, breakeven_price):
     """
     Record that breakeven alert was triggered for a signal.
