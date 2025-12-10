@@ -2517,12 +2517,8 @@
         .price-widget-card.tradingview-container {
             padding: 0;
             min-height: 100px;
-            max-width: 200px;
+            flex: 1;
             overflow: hidden;
-        }
-
-        .price-widget-card.tradingview-container.price-widget-compact {
-            flex: 0 0 auto;
         }
 
         .price-widget-card.tradingview-container .tradingview-widget-container,
@@ -2540,8 +2536,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 220px;
-            flex: 1;
+            min-width: 180px;
         }
 
         .day-chart-label {
@@ -4399,10 +4394,10 @@
                         <div class="day-chart-card">
                             <div class="day-chart-label">Signals by Day</div>
                             <div class="day-chart-container">
-                                <canvas id="dayBarChart" width="220" height="100"></canvas>
+                                <canvas id="dayBarChart" width="160" height="90"></canvas>
                             </div>
                         </div>
-                        <div class="price-widget-card tradingview-container price-widget-compact">
+                        <div class="price-widget-card tradingview-container">
                             <!-- TradingView Widget BEGIN -->
                             <div class="tradingview-widget-container">
                               <div class="tradingview-widget-container__widget"></div>
@@ -6495,9 +6490,9 @@
             });
             
             const maxCount = Math.max(...dayCounts, 1);
-            const barWidth = 32;
-            const barGap = 12;
-            const chartHeight = 70;
+            const barWidth = 24;
+            const barGap = 8;
+            const chartHeight = 60;
             const labelHeight = 20;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
