@@ -2495,11 +2495,11 @@
         }
 
         .metrics-price-row {
-            display: grid;
-            grid-template-columns: auto 1fr;
+            display: flex;
             gap: 16px;
             margin-bottom: 24px;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: stretch;
         }
 
         .metrics-stack {
@@ -2507,6 +2507,11 @@
             flex-direction: column;
             gap: 12px;
             min-width: 160px;
+        }
+
+        .metrics-price-row .price-widget-card {
+            flex: 1;
+            margin: 0;
         }
 
         .metric-card-compact {
@@ -2559,7 +2564,7 @@
             }
 
             .metrics-price-row {
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 gap: 12px;
             }
             
