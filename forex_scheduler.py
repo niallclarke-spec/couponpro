@@ -141,6 +141,36 @@ class ForexScheduler:
                         update_forex_signal_status(signal_id, 'won', pips, close_price)
                         print(f"[SCHEDULER] ✅ Signal #{signal_id} completed - all TPs hit!")
                 
+                elif event == 'sl_hit_profit_locked':
+                    update_forex_signal_status(signal_id, 'won', pips, close_price)
+                    message = milestone_tracker.generate_profit_locked_message(pips)
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
+                    print(f"[SCHEDULER] 🔒 Posted profit-locked SL notification for signal #{signal_id}")
+                
+                elif event == 'sl_hit_breakeven':
+                    update_forex_signal_status(signal_id, 'won', pips, close_price)
+                    message = milestone_tracker.generate_breakeven_exit_message()
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
+                    print(f"[SCHEDULER] 🔒 Posted breakeven exit notification for signal #{signal_id}")
+                
+                elif event == 'sl_hit':
+                    update_forex_signal_status(signal_id, status, pips, close_price)
+                    message = milestone_tracker.generate_sl_hit_message(abs(pips))
+                    await forex_telegram_bot.bot.send_message(
+                        chat_id=forex_telegram_bot.channel_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
+                    print(f"[SCHEDULER] ❌ Posted SL notification for signal #{signal_id}")
+                
                 elif status == 'won':
                     update_forex_signal_status(signal_id, status, pips, close_price)
                     message = milestone_tracker.generate_tp1_celebration(signal_type, pips, 0)
@@ -159,7 +189,7 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
+                    print(f"[SCHEDULER] ❌ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
                     # If signal expires with positive pips, it's still a win

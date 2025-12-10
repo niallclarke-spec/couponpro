@@ -372,17 +372,24 @@ class ForexSignalEngine:
                     if current_price <= sl:
                         pips = round((sl - entry) * 100, 1)
                         sl_type = "effective" if effective_sl else "original"
-                        if pips >= 0:
+                        if pips > 0:
                             status = 'won'
-                            emoji = "🔒" if pips == 0 else "✅"
-                            print(f"[FOREX MONITOR] {emoji} Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                            event = 'sl_hit_profit_locked'
+                            print(f"[FOREX MONITOR] ✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                        elif pips == 0:
+                            status = 'won'
+                            event = 'sl_hit_breakeven'
+                            print(f"[FOREX MONITOR] 🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
                         else:
                             status = 'lost'
+                            event = 'sl_hit'
                             print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
+                            'event': event,
                             'status': status,
-                            'pips': pips
+                            'pips': pips,
+                            'exit_price': current_price
                         })
                     
                 else:
@@ -443,17 +450,24 @@ class ForexSignalEngine:
                     if current_price >= sl:
                         pips = round((entry - sl) * 100, 1)
                         sl_type = "effective" if effective_sl else "original"
-                        if pips >= 0:
+                        if pips > 0:
                             status = 'won'
-                            emoji = "🔒" if pips == 0 else "✅"
-                            print(f"[FOREX MONITOR] {emoji} Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                            event = 'sl_hit_profit_locked'
+                            print(f"[FOREX MONITOR] ✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                        elif pips == 0:
+                            status = 'won'
+                            event = 'sl_hit_breakeven'
+                            print(f"[FOREX MONITOR] 🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
                         else:
                             status = 'lost'
+                            event = 'sl_hit'
                             print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
+                            'event': event,
                             'status': status,
-                            'pips': pips
+                            'pips': pips,
+                            'exit_price': current_price
                         })
             
             return updates

@@ -320,6 +320,24 @@ Congratulations to everyone who held!
 Risk was managed. 
 
 Onwards to the next opportunity. 💪"""
+    
+    def generate_profit_locked_message(self, pips: float) -> str:
+        """Generate message when effective SL is hit at profit-locked level"""
+        return f"""🔒 <b>PROFIT LOCKED!</b>
+
++{pips:.2f} pips secured! 💰
+
+Price retraced but your gains are protected.
+
+Smart risk management wins again! 🏆"""
+    
+    def generate_breakeven_exit_message(self) -> str:
+        """Generate message when trade closes at breakeven"""
+        return """🔒 <b>BREAKEVEN EXIT</b>
+
+No loss, no gain. Risk managed.
+
+Capital preserved for the next opportunity. 💪"""
 
 
 milestone_tracker = MilestoneTracker()
