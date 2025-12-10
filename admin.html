@@ -2114,29 +2114,28 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout */
+        /* Filter and Price Widget Layout - 60/40 split */
         .filters-price-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
             gap: 16px;
             margin-bottom: 24px;
+            align-items: stretch;
         }
 
         .filters-card {
-            flex: 1;
             background: var(--bg-card);
             padding: 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            align-content: center;
         }
 
         .filter-pill {
             position: relative;
-            flex: 1 1 auto;
-            min-width: 120px;
         }
 
         .filter-pill select {
@@ -2179,7 +2178,6 @@
         }
 
         .price-widget-card {
-            flex: 0 0 280px;
             background: var(--bg-card);
             padding: 16px 20px;
             border-radius: var(--radius-lg);
@@ -2187,6 +2185,8 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            width: 100%;
+            min-width: 0;
         }
 
         .price-widget-header {
@@ -2241,7 +2241,7 @@
 
         .price-sparkline-wrap {
             width: 100%;
-            height: 45px;
+            height: 50px;
         }
 
         /* Trading Signals Header with Limit Filter */
@@ -2257,60 +2257,30 @@
             margin-bottom: 0;
         }
 
-        .signals-header .filter-pill {
-            flex: 0 0 auto;
-            min-width: 100px;
-        }
-
         .signals-header .filter-pill select {
             padding: 8px 28px 8px 12px;
             font-size: 12px;
         }
 
-        /* Tablet */
-        @media (max-width: 900px) {
+        /* Mobile - Single column everything */
+        @media (max-width: 768px) {
             .filters-price-row {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
             .price-widget-card {
-                flex: 1 1 auto;
                 order: -1;
             }
             .filters-card {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .filter-pill {
-                min-width: 0;
-            }
-        }
-
-        /* Mobile */
-        @media (max-width: 600px) {
-            .filters-card {
                 grid-template-columns: 1fr;
-                padding: 14px;
             }
             .filter-pill select {
-                padding: 12px 32px 12px 16px;
+                padding: 12px 36px 12px 16px;
                 font-size: 14px;
-            }
-            .price-widget-card {
-                padding: 14px 16px;
-            }
-            .price-widget-header {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .price-widget-price {
-                font-size: 22px;
             }
             .signals-header {
                 flex-direction: column;
                 align-items: stretch;
-            }
-            .signals-header .filter-pill {
-                width: 100%;
+                gap: 12px;
             }
         }
 
