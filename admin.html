@@ -1997,7 +1997,16 @@
                 grid-template-columns: 1fr;
             }
 
+            .product-switcher {
+                display: none;
+            }
+
             .feature-sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
                 transform: translateX(-100%);
             }
 
@@ -2008,6 +2017,7 @@
             .main-content {
                 margin-left: 0;
                 padding-top: 60px;
+                grid-column: 1;
             }
 
             .mobile-menu-btn {
@@ -2019,11 +2029,32 @@
             }
 
             .content-header h1 {
-                font-size: 22px;
+                font-size: 20px;
             }
 
             .content-body {
                 padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 22px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
             }
         }
 
