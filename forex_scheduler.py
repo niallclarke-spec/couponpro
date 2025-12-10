@@ -162,9 +162,11 @@ class ForexScheduler:
                     print(f"[SCHEDULER] ✅ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
-                    update_forex_signal_status(signal_id, 'expired', pips, close_price)
+                    # If signal expires with positive pips, it's still a win
+                    final_status = 'won' if pips > 0 else 'expired'
+                    update_forex_signal_status(signal_id, final_status, pips, close_price)
                     await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
-                    print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id}")
+                    print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id} (status: {final_status})")
                 
                 if status in ('won', 'lost', 'expired'):
                     forex_signal_engine.load_active_strategy()
@@ -289,14 +291,15 @@ class ForexScheduler:
                     
                     if success:
                         update_signal_timeout_notified(signal_id)
-                        # Close the signal as expired
+                        # Close the signal - mark as won if positive pips, otherwise expired
                         if signal_type == 'BUY':
                             pips = round(current_price - entry, 2)
                         else:
                             pips = round(entry - current_price, 2)
-                        update_forex_signal_status(signal_id, 'expired', pips, current_price)
+                        final_status = 'won' if pips > 0 else 'expired'
+                        update_forex_signal_status(signal_id, final_status, pips, current_price)
                         forex_signal_engine.load_active_strategy()
-                        print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h")
+                        print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h (status: {final_status})")
                     
                 elif event_type == 'revalidation':
                     # Perform indicator re-validation
@@ -353,14 +356,15 @@ class ForexScheduler:
                                 
                                 # If thesis is broken, recommend closing
                                 if thesis_status == 'broken':
-                                    # Close the signal as expired with current P/L
+                                    # Close the signal - mark as won if positive pips, otherwise expired
                                     if signal_type == 'BUY':
                                         pips = round(current_price - entry, 2)
                                     else:
                                         pips = round(entry - current_price, 2)
-                                    update_forex_signal_status(signal_id, 'expired', pips, current_price)
+                                    final_status = 'won' if pips > 0 else 'expired'
+                                    update_forex_signal_status(signal_id, final_status, pips, current_price)
                                     forex_signal_engine.load_active_strategy()
-                                    print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis")
+                                    print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis (status: {final_status})")
                 
         except Exception as e:
             print(f"[SCHEDULER] ❌ Error in stagnant signal checks: {e}")
