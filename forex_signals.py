@@ -281,7 +281,9 @@ class ForexSignalEngine:
                 tp1 = float(signal['take_profit'])
                 tp2 = float(signal.get('take_profit_2') or 0)
                 tp3 = float(signal.get('take_profit_3') or 0)
-                sl = float(signal['stop_loss'])
+                original_sl = float(signal['stop_loss'])
+                effective_sl = signal.get('effective_sl')
+                sl = float(effective_sl) if effective_sl else original_sl
                 posted_at = signal['posted_at']
                 
                 tp1_hit = signal.get('tp1_hit', False) or signal.get('tp_hit_1', False)
@@ -368,7 +370,8 @@ class ForexSignalEngine:
                     
                     if current_price <= sl:
                         pips = round(sl - entry, 2)
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: {pips} pips")
+                        sl_type = "effective" if effective_sl else "original"
+                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Result: {pips} pips")
                         updates.append({
                             'id': signal_id,
                             'status': 'lost',
@@ -431,7 +434,8 @@ class ForexSignalEngine:
                     
                     if current_price >= sl:
                         pips = round(entry - sl, 2)
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL HIT! Loss: {pips} pips")
+                        sl_type = "effective" if effective_sl else "original"
+                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Result: {-pips} pips")
                         updates.append({
                             'id': signal_id,
                             'status': 'lost',

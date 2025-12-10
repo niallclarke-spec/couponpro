@@ -730,6 +730,19 @@ class DatabasePool:
                 else:
                     print("[MIGRATION] close_price column already exists, skipping")
                 
+                # Migration: Add effective_sl column for tracking guided stop loss
+                print("[MIGRATION] Checking forex_signals for effective_sl column...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name = 'effective_sl'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding effective_sl column...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN effective_sl DECIMAL(10, 2)")
+                    print("[MIGRATION] ✅ effective_sl column added")
+                else:
+                    print("[MIGRATION] effective_sl column already exists, skipping")
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -1963,7 +1976,7 @@ def get_forex_signals(status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at, close_price
+                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
                     FROM forex_signals
                     WHERE status = %s
                     ORDER BY posted_at DESC
@@ -1983,7 +1996,7 @@ def get_forex_signals(status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at, close_price
+                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
                     FROM forex_signals
                     ORDER BY posted_at DESC
                     LIMIT %s
@@ -2035,7 +2048,8 @@ def get_forex_signals(status=None, limit=100):
                     'tp3_hit_at': row[40].isoformat() if row[40] else None,
                     'breakeven_triggered': row[41] or False,
                     'breakeven_triggered_at': row[42].isoformat() if row[42] else None,
-                    'close_price': float(row[43]) if row[43] else None
+                    'close_price': float(row[43]) if row[43] else None,
+                    'effective_sl': float(row[44]) if row[44] else None
                 })
             return signals
     except Exception as e:
@@ -3005,7 +3019,7 @@ def get_open_signal():
                        stop_loss, status, rsi_value, macd_value, atr_value, 
                        posted_at, closed_at, result_pips, bot_type, telegram_message_id,
                        breakeven_set, breakeven_price, guidance_count, last_guidance_at,
-                       indicators_used, notes
+                       indicators_used, notes, effective_sl
                 FROM forex_signals
                 WHERE status IN ('open', 'pending')
                 ORDER BY posted_at DESC
@@ -3036,7 +3050,8 @@ def get_open_signal():
                     'guidance_count': row[18] or 0,
                     'last_guidance_at': row[19].isoformat() if row[19] else None,
                     'indicators_used': row[20],
-                    'notes': row[21]
+                    'notes': row[21],
+                    'effective_sl': float(row[22]) if row[22] else None
                 }
             return None
     except Exception as e:
@@ -3357,6 +3372,46 @@ def update_milestone_sent(signal_id, milestone_key):
             return cursor.rowcount > 0
     except Exception as e:
         print(f"Error updating milestone sent: {e}")
+        return False
+
+def update_effective_sl(signal_id, new_sl_price):
+    """
+    Update the effective stop loss for a signal.
+    
+    This is called when we advise traders to move their SL:
+    - At 70% toward TP1: set to entry price (breakeven)
+    - At TP1 hit: set to TP1 price (lock profit)
+    - At TP2 hit: set to TP2 price (lock more profit)
+    
+    The effective_sl is used for:
+    - SL hit detection in price monitoring
+    - Pips calculations in daily/weekly recaps
+    
+    Args:
+        signal_id (int): Signal ID
+        new_sl_price (float): New effective stop loss price
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE forex_signals
+                SET effective_sl = %s
+                WHERE id = %s
+            """, (new_sl_price, signal_id))
+            
+            conn.commit()
+            print(f"[EFFECTIVE_SL] Updated signal {signal_id} effective_sl to {new_sl_price}")
+            return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating effective SL: {e}")
         return False
 
 def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):

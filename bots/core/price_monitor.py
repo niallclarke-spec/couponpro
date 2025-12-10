@@ -64,7 +64,9 @@ class PriceMonitor:
         signal_type = signal['signal_type']
         entry = float(signal['entry_price'])
         tp = float(signal['take_profit'])
-        sl = float(signal['stop_loss'])
+        original_sl = float(signal['stop_loss'])
+        effective_sl = signal.get('effective_sl')
+        sl = float(effective_sl) if effective_sl else original_sl
         posted_at = signal['posted_at']
         breakeven_set = signal.get('breakeven_set', False)
         guidance_count = signal.get('guidance_count', 0)
@@ -75,7 +77,8 @@ class PriceMonitor:
         now = datetime.utcnow()
         hours_elapsed = (now - posted_at).total_seconds() / 3600
         
-        print(f"[MONITOR] Signal #{signal_id}: {signal_type} @ {entry:.2f}, Current: {current_price:.2f}, Hours: {hours_elapsed:.2f}")
+        sl_note = f"(effective: ${sl:.2f})" if effective_sl else f"(original: ${sl:.2f})"
+        print(f"[MONITOR] Signal #{signal_id}: {signal_type} @ {entry:.2f}, Current: {current_price:.2f}, SL {sl_note}, Hours: {hours_elapsed:.2f}")
         
         if self._check_tp_hit(signal_type, current_price, tp):
             pips = self.calculate_pips(signal_type, entry, tp)

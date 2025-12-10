@@ -9,7 +9,7 @@ from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
 from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance, generate_revalidation_message, generate_timeout_message
-from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent, update_effective_sl
 from forex_api import twelve_data_client
 from bots.core.milestone_tracker import milestone_tracker
 
@@ -109,17 +109,25 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
+                    if remaining > 0 and matching_signal:
+                        tp1_price = float(matching_signal.get('take_profit', 0))
+                        update_effective_sl(signal_id, tp1_price)
+                        print(f"[SCHEDULER] 🔒 Set effective_sl to TP1 (${tp1_price:.2f}) for signal #{signal_id}")
                     print(f"[SCHEDULER] ✅ Posted TP1 celebration for signal #{signal_id}")
                 
                 elif event == 'tp2_hit':
                     remaining = update.get('remaining', 0)
                     tp1_price = matching_signal.get('take_profit', 0) if matching_signal else 0
+                    tp2_price = matching_signal.get('take_profit_2', 0) if matching_signal else 0
                     message = milestone_tracker.generate_tp2_celebration(signal_type, pips, float(tp1_price), remaining)
                     await forex_telegram_bot.bot.send_message(
                         chat_id=forex_telegram_bot.channel_id,
                         text=message,
                         parse_mode='HTML'
                     )
+                    if remaining > 0 and tp2_price:
+                        update_effective_sl(signal_id, float(tp2_price))
+                        print(f"[SCHEDULER] 🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
                     print(f"[SCHEDULER] ✅ Posted TP2 celebration for signal #{signal_id}")
                 
                 elif event == 'tp3_hit':
@@ -212,6 +220,8 @@ class ForexScheduler:
                             
                             if milestone == 'tp1_70_breakeven':
                                 update_signal_breakeven(signal_id, milestone_event['entry_price'])
+                                update_effective_sl(signal_id, milestone_event['entry_price'])
+                                print(f"[SCHEDULER] 🔒 Set effective_sl to entry (breakeven) for signal #{signal_id}")
                             
                             print(f"[SCHEDULER] ✅ Posted {milestone} milestone for signal #{signal_id}")
                             
