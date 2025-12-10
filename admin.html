@@ -2760,6 +2760,13 @@
             border-color: var(--accent-primary);
         }
 
+        .period-indicator {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent-primary);
+            margin-left: 8px;
+        }
+
         @media (max-width: 768px) {
             .filters-modern {
                 gap: 16px;
@@ -4361,7 +4368,7 @@
 
                     <div class="card">
                         <div class="signals-header">
-                            <h2 class="card-title">Trading Signals</h2>
+                            <h2 class="card-title">Trading Signals <span id="periodIndicator" class="period-indicator"></span></h2>
                             <div class="filter-pill">
                                 <select id="filterLimit">
                                     <option value="50">Last 50</option>
@@ -6424,6 +6431,27 @@
             const avgPipsSubtext = document.getElementById('avgPipsSubtext');
             if (avgHoldSubtext) avgHoldSubtext.textContent = periodLabel;
             if (avgPipsSubtext) avgPipsSubtext.textContent = periodLabel;
+            
+            // Update period indicator in title
+            const periodIndicator = document.getElementById('periodIndicator');
+            if (periodIndicator) {
+                const indicatorText = getPeriodIndicatorText();
+                periodIndicator.textContent = indicatorText ? `- ${indicatorText}` : '';
+            }
+        }
+        
+        function getPeriodIndicatorText() {
+            const segment = document.getElementById('dateRangeSegment');
+            if (!segment) return '';
+            const activeBtn = segment.querySelector('.segment-btn.active');
+            if (!activeBtn) return '';
+            const value = activeBtn.dataset.value;
+            switch(value) {
+                case 'today': return 'Today';
+                case '7days': return 'Past 7D';
+                case '30days': return 'Past 30D';
+                default: return '';
+            }
         }
         
         function getCurrentPeriodLabel() {
