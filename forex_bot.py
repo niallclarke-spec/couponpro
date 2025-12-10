@@ -92,9 +92,9 @@ class ForexTelegramBot:
             tp2 = signal_data.get('take_profit_2')
             tp3 = signal_data.get('take_profit_3')
             sl = signal_data['stop_loss']
-            rsi = signal_data['rsi_value']
-            macd = signal_data['macd_value']
-            atr = signal_data['atr_value']
+            rsi = signal_data.get('rsi_value')
+            macd = signal_data.get('macd_value')
+            atr = signal_data.get('atr_value')
             timeframe = signal_data.get('timeframe', '15min')
             
             tp1_pct = signal_data.get('tp1_percentage', 50)
@@ -109,6 +109,16 @@ class ForexTelegramBot:
             if tp3:
                 tp_section += f"\n🎯 <b>TP3:</b> ${tp3:.2f} ({tp3_pct}%)"
             
+            # Build indicator line only for available indicators
+            indicator_parts = []
+            if rsi is not None:
+                indicator_parts.append(f"RSI: {rsi:.2f}")
+            if macd is not None:
+                indicator_parts.append(f"MACD: {macd:.4f}")
+            if atr is not None:
+                indicator_parts.append(f"ATR: {atr:.2f}")
+            indicator_line = f"\n📊 {' | '.join(indicator_parts)}" if indicator_parts else ""
+            
             message = f"""{emoji} <b>{signal_type} SIGNAL</b> {emoji}
 
 <b>Pair:</b> {pair}
@@ -119,8 +129,7 @@ class ForexTelegramBot:
 {tp_section}
 
 🛡️ <b>Stop Loss:</b> ${sl:.2f}
-
-📊 RSI: {rsi:.2f} | MACD: {macd:.4f}
+{indicator_line}
 """
             
             sent_message = await self.bot.send_message(
