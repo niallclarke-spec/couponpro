@@ -2540,7 +2540,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 180px;
+            min-width: 220px;
+            flex: 1;
         }
 
         .day-chart-label {
@@ -4398,7 +4399,7 @@
                         <div class="day-chart-card">
                             <div class="day-chart-label">Signals by Day</div>
                             <div class="day-chart-container">
-                                <canvas id="dayBarChart" width="160" height="100"></canvas>
+                                <canvas id="dayBarChart" width="220" height="100"></canvas>
                             </div>
                         </div>
                         <div class="price-widget-card tradingview-container price-widget-compact">
@@ -6483,9 +6484,10 @@
             const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
             const dayCounts = [0, 0, 0, 0, 0];
             
-            // Count signals per day (0=Mon, 4=Fri)
+            // Count signals per day (0=Mon, 4=Fri) using posted_at field
             signals.forEach(sig => {
-                const date = new Date(sig.created_at);
+                if (!sig.posted_at) return;
+                const date = new Date(sig.posted_at);
                 const dayIndex = date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
                 if (dayIndex >= 1 && dayIndex <= 5) {
                     dayCounts[dayIndex - 1]++;
@@ -6493,8 +6495,8 @@
             });
             
             const maxCount = Math.max(...dayCounts, 1);
-            const barWidth = 24;
-            const barGap = 8;
+            const barWidth = 32;
+            const barGap = 12;
             const chartHeight = 70;
             const labelHeight = 20;
             
