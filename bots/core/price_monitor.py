@@ -94,14 +94,20 @@ class PriceMonitor:
         
         if self._check_sl_hit(signal_type, current_price, sl):
             pips = self.calculate_pips(signal_type, entry, sl)
+            if pips >= 0:
+                status = 'won'
+                action = 'sl_hit_profit_locked'
+            else:
+                status = 'lost'
+                action = 'sl_hit'
             return {
-                'action': 'sl_hit',
+                'action': action,
                 'signal_id': signal_id,
                 'signal_type': signal_type,
                 'entry': entry,
                 'exit_price': sl,
                 'pips': pips,
-                'status': 'lost'
+                'status': status
             }
         
         if hours_elapsed >= self.max_hours:

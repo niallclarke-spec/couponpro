@@ -371,10 +371,16 @@ class ForexSignalEngine:
                     if current_price <= sl:
                         pips = round(sl - entry, 2)
                         sl_type = "effective" if effective_sl else "original"
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Result: {pips} pips")
+                        if pips >= 0:
+                            status = 'won'
+                            emoji = "🔒" if pips == 0 else "✅"
+                            print(f"[FOREX MONITOR] {emoji} Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                        else:
+                            status = 'lost'
+                            print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
-                            'status': 'lost',
+                            'status': status,
                             'pips': pips
                         })
                     
@@ -435,11 +441,17 @@ class ForexSignalEngine:
                     if current_price >= sl:
                         pips = round(entry - sl, 2)
                         sl_type = "effective" if effective_sl else "original"
-                        print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Result: {-pips} pips")
+                        if pips >= 0:
+                            status = 'won'
+                            emoji = "🔒" if pips == 0 else "✅"
+                            print(f"[FOREX MONITOR] {emoji} Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                        else:
+                            status = 'lost'
+                            print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
-                            'status': 'lost',
-                            'pips': -pips
+                            'status': status,
+                            'pips': pips
                         })
             
             return updates
