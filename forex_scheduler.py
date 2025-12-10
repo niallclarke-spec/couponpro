@@ -42,7 +42,7 @@ class ForexScheduler:
                 print(f"[SCHEDULER] Entry: ${signal['entry_price']}, TP: ${signal['take_profit']}, SL: ${signal['stop_loss']}")
                 return
             
-            # Determine if it's time to check 1h timeframe (every hour)
+            # Determine if it's time to check 1h timeframe (every 30 minutes)
             now = datetime.utcnow()
             should_check_1h = False
             
@@ -50,7 +50,7 @@ class ForexScheduler:
                 should_check_1h = True
             else:
                 minutes_since_1h = (now - self.last_1h_check).total_seconds() / 60
-                if minutes_since_1h >= 60:
+                if minutes_since_1h >= 30:
                     should_check_1h = True
             
             # Check 15-minute timeframe (every signal check)
@@ -444,7 +444,7 @@ class ForexScheduler:
         print("🚀 FOREX SIGNALS SCHEDULER STARTED")
         print("="*60)
         print(f"📊 Signal checks: 15min timeframe every 15 minutes")
-        print(f"📊 Signal checks: 1h timeframe every hour")
+        print(f"📊 Signal checks: 1h timeframe every 30 minutes")
         print(f"🔍 Price monitoring: Every 1 minute")
         print(f"💡 Signal guidance: Every 1 minute (with 10min cooldown)")
         print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
