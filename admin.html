@@ -2113,92 +2113,112 @@
             background: #dc2626;
         }
 
-        /* Filter row - 2 column layout with price chart */
-        .filters-row {
+        /* Filter and Price Widget - 60/40 split layout */
+        .filters-price-row {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .filters-card {
             background: var(--bg-card);
-            padding: 20px;
+            padding: 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            margin-bottom: 24px;
+        }
+
+        .filters-grid {
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 24px;
-            align-items: center;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
-        .filters-left {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: flex-end;
+        .filters-grid .filter-group {
+            min-width: 0;
         }
 
-        .filters-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding-left: 24px;
-            border-left: 1px solid var(--border-primary);
+        .filters-grid .filter-group label {
+            font-size: 11px;
+            margin-bottom: 4px;
         }
 
-        .price-chart-container {
+        .filters-grid .filter-group select {
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .price-widget-card {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-primary);
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
+            justify-content: center;
         }
 
-        .price-chart-header {
+        .price-widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .price-widget-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .price-widget-values {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .price-chart-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .price-chart-value {
-            font-size: 20px;
+        .price-widget-price {
+            font-size: 28px;
             font-weight: 700;
             color: var(--text-primary);
         }
 
-        .price-chart-change {
-            font-size: 12px;
+        .price-widget-change {
+            font-size: 13px;
             font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
-        .price-chart-change.positive {
+        .price-widget-change.positive {
             color: var(--status-online);
             background: var(--status-online-bg);
         }
 
-        .price-chart-change.negative {
+        .price-widget-change.negative {
             color: var(--status-error);
             background: var(--status-error-bg);
         }
 
         .price-sparkline-wrap {
-            width: 200px;
-            height: 50px;
+            width: 100%;
+            height: 60px;
         }
 
         @media (max-width: 1024px) {
-            .filters-row {
+            .filters-price-row {
                 grid-template-columns: 1fr;
             }
-            .filters-right {
-                border-left: none;
-                border-top: 1px solid var(--border-primary);
-                padding-left: 0;
-                padding-top: 16px;
-                justify-content: center;
+            .filters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -3645,66 +3665,68 @@
                         </div>
                     </div>
                     
-                    <div class="filters-row">
-                        <div class="filters-left">
-                            <div class="filter-group">
-                                <label>Date Range</label>
-                                <select id="filterDateRange">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="yesterday">Yesterday</option>
-                                    <option value="7days">Last 7 Days</option>
-                                    <option value="30days">Last 30 Days</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Bot Type</label>
-                                <select id="filterBotType">
-                                    <option value="all">All Bots</option>
-                                    <option value="aggressive">Aggressive</option>
-                                    <option value="conservative">Conservative</option>
-                                    <option value="raja_banks">Raja Banks</option>
-                                    <option value="custom">Custom</option>
-                                    <option value="legacy">Legacy</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Signal Type</label>
-                                <select id="filterType">
-                                    <option value="all">All Signals</option>
-                                    <option value="BUY">BUY Only</option>
-                                    <option value="SELL">SELL Only</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Status</label>
-                                <select id="filterStatus">
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="won">Won</option>
-                                    <option value="lost">Lost</option>
-                                    <option value="expired">Expired</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Limit</label>
-                                <select id="filterLimit">
-                                    <option value="50">Last 50</option>
-                                    <option value="100" selected>Last 100</option>
-                                    <option value="200">Last 200</option>
-                                </select>
+                    <div class="filters-price-row">
+                        <div class="filters-card">
+                            <div class="filters-grid">
+                                <div class="filter-group">
+                                    <label>Date Range</label>
+                                    <select id="filterDateRange">
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="7days">Last 7 Days</option>
+                                        <option value="30days">Last 30 Days</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Bot Type</label>
+                                    <select id="filterBotType">
+                                        <option value="all">All Bots</option>
+                                        <option value="aggressive">Aggressive</option>
+                                        <option value="conservative">Conservative</option>
+                                        <option value="raja_banks">Raja Banks</option>
+                                        <option value="custom">Custom</option>
+                                        <option value="legacy">Legacy</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Signal Type</label>
+                                    <select id="filterType">
+                                        <option value="all">All Signals</option>
+                                        <option value="BUY">BUY Only</option>
+                                        <option value="SELL">SELL Only</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Status</label>
+                                    <select id="filterStatus">
+                                        <option value="all">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="won">Won</option>
+                                        <option value="lost">Lost</option>
+                                        <option value="expired">Expired</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Limit</label>
+                                    <select id="filterLimit">
+                                        <option value="50">Last 50</option>
+                                        <option value="100" selected>Last 100</option>
+                                        <option value="200">Last 200</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="filters-right">
-                            <div class="price-chart-container">
-                                <div class="price-chart-header">
-                                    <span class="price-chart-label">XAU/USD</span>
-                                    <span class="price-chart-value" id="liveGoldPrice">--</span>
-                                    <span class="price-chart-change" id="liveGoldChange">--</span>
+                        <div class="price-widget-card">
+                            <div class="price-widget-header">
+                                <span class="price-widget-label">XAU/USD Live</span>
+                                <div class="price-widget-values">
+                                    <span class="price-widget-price" id="liveGoldPrice">--</span>
+                                    <span class="price-widget-change" id="liveGoldChange">--</span>
                                 </div>
-                                <div class="price-sparkline-wrap">
-                                    <canvas id="goldSparkline"></canvas>
-                                </div>
+                            </div>
+                            <div class="price-sparkline-wrap">
+                                <canvas id="goldSparkline"></canvas>
                             </div>
                         </div>
                     </div>
@@ -5176,7 +5198,7 @@
                     if (changeEl) {
                         const isPositive = data.change_pct >= 0;
                         changeEl.textContent = `${isPositive ? '+' : ''}${data.change_pct.toFixed(2)}%`;
-                        changeEl.className = `price-chart-change ${isPositive ? 'positive' : 'negative'}`;
+                        changeEl.className = `price-widget-change ${isPositive ? 'positive' : 'negative'}`;
                     }
                     
                     renderGoldSparkline(data.prices, data.change_pct >= 0);
