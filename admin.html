@@ -3184,6 +3184,15 @@
             font-size: 12px;
             font-weight: 500;
         }
+
+        /* CRITICAL: Mobile layout override - MUST be last in cascade */
+        @media screen and (max-width: 768px) {
+            .filters-price-row {
+                display: flex !important;
+                flex-direction: column-reverse !important;
+                gap: 16px !important;
+            }
+        }
     </style>
 </head>
 <body>
