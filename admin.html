@@ -2496,8 +2496,8 @@
 
         .metrics-price-row {
             display: grid;
-            grid-template-columns: 1fr auto auto;
-            gap: 12px;
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: 16px;
             margin-bottom: 24px;
         }
 
@@ -2509,7 +2509,6 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-width: 120px;
         }
 
         .metric-label {
@@ -2552,13 +2551,17 @@
             }
 
             .metrics-price-row {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
                 gap: 12px;
             }
             
-            .metric-card-compact {
-                min-width: 100%;
+            .metrics-price-row .price-widget-card {
+                grid-column: span 2;
             }
+        }
+        
+        .filters-row-compact {
+            margin-bottom: 16px;
         }
 
         .price-widget-header {
@@ -4094,45 +4097,17 @@
                         </div>
                     </div>
                     
-                    <div class="filters-row-compact">
-                        <div class="filter-pill-compact">
-                            <select id="filterDateRange">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="yesterday">Yesterday</option>
-                                <option value="7days">Last 7 Days</option>
-                                <option value="30days">Last 30 Days</option>
-                            </select>
-                        </div>
-                        <div class="filter-pill-compact">
-                            <select id="filterBotType">
-                                <option value="all">All Bots</option>
-                                <option value="aggressive">Aggressive</option>
-                                <option value="conservative">Conservative</option>
-                                <option value="raja_banks">Raja Banks</option>
-                                <option value="custom">Custom</option>
-                                <option value="legacy">Legacy</option>
-                            </select>
-                        </div>
-                        <div class="filter-pill-compact">
-                            <select id="filterType">
-                                <option value="all">All Signals</option>
-                                <option value="BUY">BUY Only</option>
-                                <option value="SELL">SELL Only</option>
-                            </select>
-                        </div>
-                        <div class="filter-pill-compact">
-                            <select id="filterStatus">
-                                <option value="all">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="won">Won</option>
-                                <option value="lost">Lost</option>
-                                <option value="expired">Expired</option>
-                            </select>
-                        </div>
-                    </div>
-                    
                     <div class="metrics-price-row">
+                        <div class="metric-card-compact">
+                            <div class="metric-label">Avg Hold Time</div>
+                            <div class="metric-value" id="avgHoldTime">--</div>
+                            <div class="metric-subtext">per signal</div>
+                        </div>
+                        <div class="metric-card-compact">
+                            <div class="metric-label">Avg Pips/Trade</div>
+                            <div class="metric-value" id="avgPipsPerTrade">--</div>
+                            <div class="metric-subtext">all time</div>
+                        </div>
                         <div class="price-widget-card">
                             <div class="price-widget-header">
                                 <div class="price-widget-left">
@@ -4147,16 +4122,6 @@
                                 <canvas id="goldSparkline"></canvas>
                             </div>
                         </div>
-                        <div class="metric-card-compact">
-                            <div class="metric-label">Avg Hold Time</div>
-                            <div class="metric-value" id="avgHoldTime">--</div>
-                            <div class="metric-subtext">per signal</div>
-                        </div>
-                        <div class="metric-card-compact">
-                            <div class="metric-label">Avg Pips/Trade</div>
-                            <div class="metric-value" id="avgPipsPerTrade">--</div>
-                            <div class="metric-subtext">all time</div>
-                        </div>
                     </div>
 
                     <div class="card">
@@ -4167,6 +4132,43 @@
                                     <option value="50">Last 50</option>
                                     <option value="100" selected>Last 100</option>
                                     <option value="200">Last 200</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filters-row-compact">
+                            <div class="filter-pill-compact">
+                                <select id="filterDateRange">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days">Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill-compact">
+                                <select id="filterBotType">
+                                    <option value="all">All Bots</option>
+                                    <option value="aggressive">Aggressive</option>
+                                    <option value="conservative">Conservative</option>
+                                    <option value="raja_banks">Raja Banks</option>
+                                    <option value="custom">Custom</option>
+                                    <option value="legacy">Legacy</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill-compact">
+                                <select id="filterType">
+                                    <option value="all">All Signals</option>
+                                    <option value="BUY">BUY Only</option>
+                                    <option value="SELL">SELL Only</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill-compact">
+                                <select id="filterStatus">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="won">Won</option>
+                                    <option value="lost">Lost</option>
+                                    <option value="expired">Expired</option>
                                 </select>
                             </div>
                         </div>
