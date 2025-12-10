@@ -2113,22 +2113,98 @@
             background: #dc2626;
         }
 
-        /* Filter row */
+        /* Filter row - 2 column layout with price chart */
         .filters-row {
             background: var(--bg-card);
             padding: 20px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
             margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .filters-left {
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
             align-items: flex-end;
         }
 
+        .filters-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-left: 24px;
+            border-left: 1px solid var(--border-primary);
+        }
+
+        .price-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .price-chart-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .price-chart-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .price-chart-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .price-chart-change {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .price-chart-change.positive {
+            color: var(--status-online);
+            background: var(--status-online-bg);
+        }
+
+        .price-chart-change.negative {
+            color: var(--status-error);
+            background: var(--status-error-bg);
+        }
+
+        .price-sparkline-wrap {
+            width: 200px;
+            height: 50px;
+        }
+
+        @media (max-width: 1024px) {
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+            .filters-right {
+                border-left: none;
+                border-top: 1px solid var(--border-primary);
+                padding-left: 0;
+                padding-top: 16px;
+                justify-content: center;
+            }
+        }
+
         .filter-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 140px;
         }
 
         /* Template Manager Styles */
@@ -3570,52 +3646,66 @@
                     </div>
                     
                     <div class="filters-row">
-                        <div class="filter-group">
-                            <label>Date Range</label>
-                            <select id="filterDateRange">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="yesterday">Yesterday</option>
-                                <option value="7days">Last 7 Days</option>
-                                <option value="30days">Last 30 Days</option>
-                            </select>
+                        <div class="filters-left">
+                            <div class="filter-group">
+                                <label>Date Range</label>
+                                <select id="filterDateRange">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days">Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Bot Type</label>
+                                <select id="filterBotType">
+                                    <option value="all">All Bots</option>
+                                    <option value="aggressive">Aggressive</option>
+                                    <option value="conservative">Conservative</option>
+                                    <option value="raja_banks">Raja Banks</option>
+                                    <option value="custom">Custom</option>
+                                    <option value="legacy">Legacy</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Signal Type</label>
+                                <select id="filterType">
+                                    <option value="all">All Signals</option>
+                                    <option value="BUY">BUY Only</option>
+                                    <option value="SELL">SELL Only</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Status</label>
+                                <select id="filterStatus">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="won">Won</option>
+                                    <option value="lost">Lost</option>
+                                    <option value="expired">Expired</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Limit</label>
+                                <select id="filterLimit">
+                                    <option value="50">Last 50</option>
+                                    <option value="100" selected>Last 100</option>
+                                    <option value="200">Last 200</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="filter-group">
-                            <label>Bot Type</label>
-                            <select id="filterBotType">
-                                <option value="all">All Bots</option>
-                                <option value="aggressive">Aggressive</option>
-                                <option value="conservative">Conservative</option>
-                                <option value="raja_banks">Raja Banks</option>
-                                <option value="custom">Custom</option>
-                                <option value="legacy">Legacy</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Signal Type</label>
-                            <select id="filterType">
-                                <option value="all">All Signals</option>
-                                <option value="BUY">BUY Only</option>
-                                <option value="SELL">SELL Only</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Status</label>
-                            <select id="filterStatus">
-                                <option value="all">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="won">Won</option>
-                                <option value="lost">Lost</option>
-                                <option value="expired">Expired</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Limit</label>
-                            <select id="filterLimit">
-                                <option value="50">Last 50</option>
-                                <option value="100" selected>Last 100</option>
-                                <option value="200">Last 200</option>
-                            </select>
+                        <div class="filters-right">
+                            <div class="price-chart-container">
+                                <div class="price-chart-header">
+                                    <span class="price-chart-label">XAU/USD</span>
+                                    <span class="price-chart-value" id="liveGoldPrice">--</span>
+                                    <span class="price-chart-change" id="liveGoldChange">--</span>
+                                </div>
+                                <div class="price-sparkline-wrap">
+                                    <canvas id="goldSparkline"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
