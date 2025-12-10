@@ -2074,18 +2074,10 @@
                 font-size: 14px;
             }
 
-            /* MOBILE: Price widget on top, filters below */
+            /* MOBILE: Price widget on top, filters below (column-reverse puts 2nd child first) */
             .filters-price-row {
                 display: flex !important;
-                flex-direction: column !important;
-            }
-
-            .price-widget-card {
-                order: -1 !important;
-            }
-
-            .filters-card {
-                order: 0 !important;
+                flex-direction: column-reverse !important;
             }
 
             .table-container {
@@ -2256,7 +2248,6 @@
             justify-content: center;
             width: 100%;
             min-width: 0;
-            order: -1;
         }
 
         /* Desktop: 60/40 grid split */
@@ -2271,10 +2262,6 @@
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 align-content: center;
-            }
-
-            .price-widget-card {
-                order: 0;
             }
         }
 
