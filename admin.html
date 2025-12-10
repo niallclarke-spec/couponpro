@@ -2074,6 +2074,20 @@
                 font-size: 14px;
             }
 
+            /* MOBILE: Price widget on top, filters below */
+            .filters-price-row {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .price-widget-card {
+                order: -1 !important;
+            }
+
+            .filters-card {
+                order: 0 !important;
+            }
+
             .table-container {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
