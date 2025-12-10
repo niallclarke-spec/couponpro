@@ -2117,7 +2117,7 @@
         /* Filter and Price Widget - 60/40 split layout */
         .filters-price-row {
             display: grid;
-            grid-template-columns: 60% 40%;
+            grid-template-columns: 3fr 2fr;
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -2209,11 +2209,11 @@
         .price-widget-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .price-widget-label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -2221,9 +2221,9 @@
         }
 
         .price-widget-change {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 4px;
         }
 
@@ -2239,7 +2239,7 @@
 
         .price-sparkline-wrap {
             width: 100%;
-            height: 60px;
+            height: 50px;
         }
 
         /* Trading Signals Header with Limit Filter */
@@ -2263,16 +2263,46 @@
             .filters-price-row {
                 grid-template-columns: 1fr;
             }
+            .price-widget-card {
+                order: -1;
+            }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             .filters-card {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
                 gap: 10px;
             }
             .filter-pill select {
-                padding: 8px 32px 8px 14px;
+                padding: 8px 30px 8px 12px;
                 font-size: 12px;
+            }
+            .price-widget-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .price-widget-right {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filters-card {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .filter-pill select {
+                padding: 10px 32px 10px 14px;
+                font-size: 13px;
+            }
+            .signals-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .signals-header .filter-pill {
+                width: 100%;
             }
         }
 
