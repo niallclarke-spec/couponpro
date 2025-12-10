@@ -64,6 +64,11 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg-primary);
@@ -2034,6 +2039,8 @@
 
             .content-body {
                 padding: 16px;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .stats-grid {
@@ -2043,10 +2050,37 @@
 
             .stat-card {
                 padding: 16px;
+                max-width: 100%;
             }
 
             .stat-value {
                 font-size: 22px;
+            }
+
+            .filters-price-container {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+            }
+
+            .price-widget-card,
+            .filters-card {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .signals-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+                max-width: 100%;
             }
 
             table {
