@@ -2496,16 +2496,23 @@
 
         .metrics-price-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 2fr;
+            grid-template-columns: auto 1fr;
             gap: 16px;
             margin-bottom: 24px;
+        }
+
+        .metrics-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 160px;
         }
 
         .metric-card-compact {
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 16px 20px;
+            padding: 14px 18px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -2551,12 +2558,17 @@
             }
 
             .metrics-price-row {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
                 gap: 12px;
             }
             
-            .metrics-price-row .price-widget-card {
-                grid-column: span 2;
+            .metrics-stack {
+                flex-direction: row;
+                min-width: auto;
+            }
+            
+            .metrics-stack .metric-card-compact {
+                flex: 1;
             }
         }
         
@@ -4098,15 +4110,17 @@
                     </div>
                     
                     <div class="metrics-price-row">
-                        <div class="metric-card-compact">
-                            <div class="metric-label">Avg Hold Time</div>
-                            <div class="metric-value" id="avgHoldTime">--</div>
-                            <div class="metric-subtext">per signal</div>
-                        </div>
-                        <div class="metric-card-compact">
-                            <div class="metric-label">Avg Pips/Trade</div>
-                            <div class="metric-value" id="avgPipsPerTrade">--</div>
-                            <div class="metric-subtext">all time</div>
+                        <div class="metrics-stack">
+                            <div class="metric-card-compact">
+                                <div class="metric-label">Avg Hold Time</div>
+                                <div class="metric-value" id="avgHoldTime">--</div>
+                                <div class="metric-subtext">per signal</div>
+                            </div>
+                            <div class="metric-card-compact">
+                                <div class="metric-label">Avg Pips/Trade</div>
+                                <div class="metric-value" id="avgPipsPerTrade">--</div>
+                                <div class="metric-subtext">all time</div>
+                            </div>
                         </div>
                         <div class="price-widget-card">
                             <div class="price-widget-header">
