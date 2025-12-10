@@ -1996,6 +1996,11 @@
             color: var(--text-secondary);
         }
 
+        /* Mobile product switcher - hidden on desktop, shown on mobile */
+        .mobile-product-switcher {
+            display: none;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .app-container {
@@ -2054,58 +2059,24 @@
                 font-size: 22px;
             }
 
-            .filters-price-row {
-                display: flex !important;
-                flex-direction: column !important;
-                grid-template-columns: none !important;
-                gap: 16px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-
-            .price-widget-card {
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 0 !important;
-                margin: 0 !important;
-                order: -1 !important;
-            }
-
-            .filters-card {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                grid-template-columns: none !important;
-                gap: 10px !important;
-            }
-
             .filter-pill {
-                width: 100% !important;
+                width: 100%;
             }
 
             .signals-header {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 12px !important;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
             }
 
             .filter-pill select {
-                padding: 12px 36px 12px 16px !important;
-                font-size: 14px !important;
-                width: 100% !important;
-            }
-
-            .content-body {
-                max-width: 100vw !important;
-                overflow-x: hidden !important;
+                padding: 12px 36px 12px 16px;
+                font-size: 14px;
             }
 
             .table-container {
-                overflow-x: auto !important;
+                overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-                max-width: 100% !important;
             }
 
             table {
@@ -2116,6 +2087,43 @@
             th, td {
                 padding: 10px 8px;
                 white-space: nowrap;
+            }
+
+            /* Mobile Product Switcher */
+            .mobile-product-switcher {
+                display: flex;
+                gap: 8px;
+                padding: 12px 16px;
+                background: var(--bg-secondary);
+                border-bottom: 1px solid var(--border-primary);
+            }
+
+            .mobile-product-btn {
+                flex: 1;
+                padding: 10px 16px;
+                border: 1px solid var(--border-primary);
+                border-radius: var(--radius-md);
+                background: var(--bg-card);
+                color: var(--text-secondary);
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .mobile-product-btn.active {
+                background: var(--accent-primary);
+                border-color: var(--accent-primary);
+                color: white;
+            }
+
+            .mobile-product-btn svg {
+                width: 16px;
+                height: 16px;
             }
         }
 
@@ -2206,13 +2214,12 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout - 60/40 split */
+        /* Filter and Price Widget Layout - Mobile first, then desktop override */
         .filters-price-row {
-            display: grid;
-            grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+            display: flex;
+            flex-direction: column;
             gap: 16px;
             margin-bottom: 24px;
-            align-items: stretch;
         }
 
         .filters-card {
@@ -2220,10 +2227,32 @@
             padding: 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            align-content: center;
+        }
+
+        .price-widget-card {
+            order: -1;
+        }
+
+        /* Desktop: 60/40 grid split */
+        @media (min-width: 769px) {
+            .filters-price-row {
+                display: grid;
+                grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+                align-items: stretch;
+            }
+
+            .filters-card {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                align-content: center;
+            }
+
+            .price-widget-card {
+                order: 0;
+            }
         }
 
         .filter-pill {
@@ -3226,6 +3255,22 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Mobile Product Switcher (visible only on mobile) -->
+            <div class="mobile-product-switcher" id="mobileProductSwitcher">
+                <button class="mobile-product-btn active" data-product="coupon" onclick="switchProduct('coupon')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                    </svg>
+                    Coupon
+                </button>
+                <button class="mobile-product-btn" data-product="forex" onclick="switchProduct('forex')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    </svg>
+                    Signals
+                </button>
+            </div>
+
             <!-- Coupon Bot Views -->
             <div id="coupon-templates" class="view-container active">
                 <div class="content-header">
@@ -4278,11 +4323,26 @@
             appState.activeProduct = product;
             appState.activeView = productNavigation[product][0].id;
             
-            // Update product icons
+            // Update desktop product icons
             document.querySelectorAll('.product-icon').forEach(icon => {
                 icon.classList.remove('active');
+                if (icon.dataset.tooltip?.toLowerCase().includes(product)) {
+                    icon.classList.add('active');
+                }
             });
-            event.target.closest('.product-icon').classList.add('active');
+            // Also try to activate the clicked icon directly
+            if (event && event.target) {
+                const clickedIcon = event.target.closest('.product-icon');
+                if (clickedIcon) clickedIcon.classList.add('active');
+            }
+            
+            // Update mobile product switcher buttons
+            document.querySelectorAll('.mobile-product-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.product === product) {
+                    btn.classList.add('active');
+                }
+            });
             
             // Update product name
             document.getElementById('productName').textContent = product === 'coupon' ? 'Coupon Bot' : 'Forex Signals Bot';
