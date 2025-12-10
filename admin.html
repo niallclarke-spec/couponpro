@@ -2214,54 +2214,53 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout - Mobile first (price widget is first in HTML) */
+        /* Filter and Price Widget Layout - Always 2 columns with grid-template-areas */
         .filters-price-row {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas: "filters price";
+            gap: 12px;
             margin-bottom: 24px;
         }
 
         .filters-card {
+            grid-area: filters;
             background: var(--bg-card);
-            padding: 16px;
+            padding: 12px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
         }
 
         .price-widget-card {
+            grid-area: price;
             background: var(--bg-card);
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 100%;
             min-width: 0;
         }
 
-        /* Desktop: Grid with areas to swap visual order (filters left, price right) */
+        /* Desktop: Wider layout with 60/40 split and 2x2 filters */
         @media (min-width: 769px) {
             .filters-price-row {
-                display: grid;
                 grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
-                grid-template-areas: "filters price";
-                align-items: stretch;
+                gap: 16px;
             }
 
             .filters-card {
-                grid-area: filters;
-                display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                align-content: center;
+                padding: 16px;
+                gap: 12px;
             }
 
             .price-widget-card {
-                grid-area: price;
+                padding: 16px 20px;
             }
         }
 
