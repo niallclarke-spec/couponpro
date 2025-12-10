@@ -2442,6 +2442,125 @@
             pointer-events: none;
         }
 
+        .filters-row-compact {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill-compact {
+            position: relative;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .filter-pill-compact select {
+            appearance: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 8px 28px 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .filter-pill-compact select:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-pill-compact select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-pill-compact::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid var(--text-muted);
+            pointer-events: none;
+        }
+
+        .metrics-price-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card-compact {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 120px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-value.positive {
+            color: #10b981;
+        }
+
+        .metric-value.negative {
+            color: #ef4444;
+        }
+
+        .metric-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .filters-row-compact {
+                flex-wrap: wrap;
+            }
+            
+            .filter-pill-compact {
+                flex: 1 1 45%;
+                min-width: 100px;
+            }
+
+            .metrics-price-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .metric-card-compact {
+                min-width: 100%;
+            }
+        }
+
         .price-widget-header {
             display: flex;
             align-items: center;
@@ -3975,7 +4094,45 @@
                         </div>
                     </div>
                     
-                    <div class="filters-price-row">
+                    <div class="filters-row-compact">
+                        <div class="filter-pill-compact">
+                            <select id="filterDateRange">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="filter-pill-compact">
+                            <select id="filterBotType">
+                                <option value="all">All Bots</option>
+                                <option value="aggressive">Aggressive</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="raja_banks">Raja Banks</option>
+                                <option value="custom">Custom</option>
+                                <option value="legacy">Legacy</option>
+                            </select>
+                        </div>
+                        <div class="filter-pill-compact">
+                            <select id="filterType">
+                                <option value="all">All Signals</option>
+                                <option value="BUY">BUY Only</option>
+                                <option value="SELL">SELL Only</option>
+                            </select>
+                        </div>
+                        <div class="filter-pill-compact">
+                            <select id="filterStatus">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="won">Won</option>
+                                <option value="lost">Lost</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-price-row">
                         <div class="price-widget-card">
                             <div class="price-widget-header">
                                 <div class="price-widget-left">
@@ -3990,42 +4147,15 @@
                                 <canvas id="goldSparkline"></canvas>
                             </div>
                         </div>
-                        <div class="filters-card">
-                            <div class="filter-pill">
-                                <select id="filterDateRange">
-                                    <option value="all">All Time</option>
-                                    <option value="today">Today</option>
-                                    <option value="yesterday">Yesterday</option>
-                                    <option value="7days">Last 7 Days</option>
-                                    <option value="30days">Last 30 Days</option>
-                                </select>
-                            </div>
-                            <div class="filter-pill">
-                                <select id="filterBotType">
-                                    <option value="all">All Bots</option>
-                                    <option value="aggressive">Aggressive</option>
-                                    <option value="conservative">Conservative</option>
-                                    <option value="raja_banks">Raja Banks</option>
-                                    <option value="custom">Custom</option>
-                                    <option value="legacy">Legacy</option>
-                                </select>
-                            </div>
-                            <div class="filter-pill">
-                                <select id="filterType">
-                                    <option value="all">All Signals</option>
-                                    <option value="BUY">BUY Only</option>
-                                    <option value="SELL">SELL Only</option>
-                                </select>
-                            </div>
-                            <div class="filter-pill">
-                                <select id="filterStatus">
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="won">Won</option>
-                                    <option value="lost">Lost</option>
-                                    <option value="expired">Expired</option>
-                                </select>
-                            </div>
+                        <div class="metric-card-compact">
+                            <div class="metric-label">Avg Hold Time</div>
+                            <div class="metric-value" id="avgHoldTime">--</div>
+                            <div class="metric-subtext">per signal</div>
+                        </div>
+                        <div class="metric-card-compact">
+                            <div class="metric-label">Avg Pips/Trade</div>
+                            <div class="metric-value" id="avgPipsPerTrade">--</div>
+                            <div class="metric-subtext">all time</div>
                         </div>
                     </div>
 
@@ -5987,6 +6117,53 @@
             } else {
                 pipsEl.classList.add('negative');
                 pipsEl.classList.remove('positive');
+            }
+            
+            // Calculate and display avg hold time and avg pips per trade from completed signals
+            if (completed.length > 0) {
+                let totalHoldMinutes = 0;
+                let validHoldCount = 0;
+                
+                completed.forEach(s => {
+                    if (s.posted_at && s.closed_at) {
+                        const posted = new Date(s.posted_at);
+                        const closed = new Date(s.closed_at);
+                        const holdMinutes = (closed - posted) / (1000 * 60);
+                        if (holdMinutes > 0 && holdMinutes < 10000) {
+                            totalHoldMinutes += holdMinutes;
+                            validHoldCount++;
+                        }
+                    }
+                });
+                
+                const avgHoldMinutes = validHoldCount > 0 ? totalHoldMinutes / validHoldCount : 0;
+                const avgPips = totalPips / completed.length;
+                
+                // Format hold time
+                const avgHoldEl = document.getElementById('avgHoldTime');
+                if (avgHoldEl) {
+                    if (avgHoldMinutes >= 60) {
+                        const hours = Math.floor(avgHoldMinutes / 60);
+                        const mins = Math.round(avgHoldMinutes % 60);
+                        avgHoldEl.textContent = `${hours}h ${mins}m`;
+                    } else {
+                        avgHoldEl.textContent = `${Math.round(avgHoldMinutes)}m`;
+                    }
+                }
+                
+                // Format avg pips
+                const avgPipsEl = document.getElementById('avgPipsPerTrade');
+                if (avgPipsEl) {
+                    const sign = avgPips >= 0 ? '+' : '';
+                    avgPipsEl.textContent = `${sign}${avgPips.toFixed(1)}`;
+                    avgPipsEl.classList.toggle('positive', avgPips >= 0);
+                    avgPipsEl.classList.toggle('negative', avgPips < 0);
+                }
+            } else {
+                const avgHoldEl = document.getElementById('avgHoldTime');
+                const avgPipsEl = document.getElementById('avgPipsPerTrade');
+                if (avgHoldEl) avgHoldEl.textContent = '--';
+                if (avgPipsEl) avgPipsEl.textContent = '--';
             }
         }
 

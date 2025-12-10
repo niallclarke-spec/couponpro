@@ -561,13 +561,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                from db import get_forex_stats
+                from db import get_forex_stats, get_signal_metrics
                 query_params = parse_qs(parsed_path.query)
                 days = int(query_params.get('days', [7])[0])
                 
                 stats = get_forex_stats(days=days)
+                metrics = get_signal_metrics()
                 
                 if stats:
+                    stats['avg_hold_time_minutes'] = metrics.get('avg_hold_time_minutes', 0)
+                    stats['avg_pips_per_trade'] = metrics.get('avg_pips_per_trade', 0)
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
@@ -584,7 +587,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         'win_rate': 0,
                         'total_pips': 0,
                         'signals_by_pair': [],
-                        'daily_signals': []
+                        'daily_signals': [],
+                        'avg_hold_time_minutes': 0,
+                        'avg_pips_per_trade': 0
                     }).encode())
             except Exception as e:
                 print(f"[FOREX] Error getting stats: {e}")

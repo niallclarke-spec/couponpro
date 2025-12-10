@@ -2370,6 +2370,43 @@ def get_daily_pnl():
         print(f"Error getting daily P/L: {e}")
         return 0.0
 
+def get_signal_metrics():
+    """
+    Get advanced signal metrics: avg hold time and avg pips per trade.
+    
+    Returns:
+        dict: {avg_hold_time_minutes, avg_pips_per_trade, total_completed}
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    AVG(EXTRACT(EPOCH FROM (closed_at - posted_at)) / 60) as avg_hold_minutes,
+                    AVG(result_pips) as avg_pips,
+                    COUNT(*) as total_completed
+                FROM forex_signals
+                WHERE status IN ('won', 'lost')
+                AND closed_at IS NOT NULL
+                AND posted_at IS NOT NULL
+            """)
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'avg_hold_time_minutes': float(row[0]) if row[0] else 0,
+                    'avg_pips_per_trade': float(row[1]) if row[1] else 0,
+                    'total_completed': int(row[2]) if row[2] else 0
+                }
+            return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
+    except Exception as e:
+        print(f"Error getting signal metrics: {e}")
+        return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
+
 def get_last_completed_signal():
     """
     Get the most recently closed signal for back-to-back throttle checking.
