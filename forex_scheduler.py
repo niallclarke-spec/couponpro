@@ -208,6 +208,14 @@ class ForexScheduler:
                     milestone = milestone_event['milestone']
                     milestone_key = milestone_event['milestone_key']
                     
+                    # ATOMIC CLAIM: Try to claim this milestone in DB first
+                    # update_milestone_sent uses WHERE NOT LIKE to prevent race conditions
+                    claimed = update_milestone_sent(signal_id, milestone_key)
+                    
+                    if not claimed:
+                        print(f"[SCHEDULER] ⏭️ Milestone {milestone_key} already claimed by another worker for signal #{signal_id}")
+                        continue
+                    
                     message = milestone_tracker.generate_milestone_message(milestone_event)
                     
                     if message:
@@ -217,8 +225,6 @@ class ForexScheduler:
                                 text=message,
                                 parse_mode='HTML'
                             )
-                            
-                            update_milestone_sent(signal_id, milestone_key)
                             
                             if milestone == 'tp1_70_breakeven':
                                 update_signal_breakeven(signal_id, milestone_event['entry_price'])

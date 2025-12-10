@@ -3298,16 +3298,48 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
         print(f"Error updating signal guidance: {e}")
         return False
 
-def update_milestone_sent(signal_id, milestone_key):
+def is_milestone_already_sent(signal_id, milestone_key):
     """
-    Record that a milestone notification was sent.
+    Check if a milestone has already been sent for a signal.
+    Used for race condition prevention with multiple workers.
     
     Args:
         signal_id (int): Signal ID
         milestone_key (str): Milestone key like 'tp1_40', 'tp1_70', 'tp2_50', 'sl_60'
     
     Returns:
-        bool: True if successful
+        bool: True if milestone was already sent
+    """
+    try:
+        if not db_pool.connection_pool:
+            return True  # Fail safe - assume sent if can't check
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT milestones_sent FROM forex_signals WHERE id = %s
+            """, (signal_id,))
+            
+            row = cursor.fetchone()
+            if row and row[0]:
+                return milestone_key in row[0]
+            return False
+    except Exception as e:
+        print(f"Error checking milestone sent: {e}")
+        return True  # Fail safe
+
+def update_milestone_sent(signal_id, milestone_key):
+    """
+    Record that a milestone notification was sent.
+    Uses atomic UPDATE with WHERE NOT LIKE to prevent race conditions.
+    
+    Args:
+        signal_id (int): Signal ID
+        milestone_key (str): Milestone key like 'tp1_40', 'tp1_70', 'tp2_50', 'sl_60'
+    
+    Returns:
+        bool: True if successfully claimed (was not already sent)
     """
     try:
         if not db_pool.connection_pool:
@@ -3316,15 +3348,17 @@ def update_milestone_sent(signal_id, milestone_key):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
+            # Atomic update - only succeeds if milestone wasn't already sent
             cursor.execute("""
                 UPDATE forex_signals
                 SET last_milestone_at = CURRENT_TIMESTAMP,
                     milestones_sent = COALESCE(milestones_sent, '') || %s || ','
-                WHERE id = %s
-            """, (milestone_key, signal_id))
+                WHERE id = %s 
+                  AND (milestones_sent IS NULL OR milestones_sent NOT LIKE %s)
+            """, (milestone_key, signal_id, f'%{milestone_key}%'))
             
             conn.commit()
-            return cursor.rowcount > 0
+            return cursor.rowcount > 0  # True only if we successfully claimed it
     except Exception as e:
         print(f"Error updating milestone sent: {e}")
         return False
