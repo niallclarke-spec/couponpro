@@ -3697,6 +3697,13 @@
             renderFeatureNav();
         }
 
+        function formatBotName(botType) {
+            if (!botType) return '--';
+            return botType.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            ).join(' ');
+        }
+
         function initializeRouting() {
             // Load route from hash on page load
             loadRouteFromHash();
@@ -4818,9 +4825,9 @@
             // Update signals page
             const activeBotEl = document.getElementById('activeBotType');
             if (activeBotEl) {
-                let botText = botStatus.active_bot || '--';
+                let botText = formatBotName(botStatus.active_bot);
                 if (botStatus.queued_bot) {
-                    botText += ` → ${botStatus.queued_bot} (queued)`;
+                    botText += ` → ${formatBotName(botStatus.queued_bot)} (queued)`;
                 }
                 activeBotEl.textContent = botText;
             }
@@ -4828,9 +4835,9 @@
             // Update settings page
             const settingsActiveBot = document.getElementById('settingsActiveBot');
             if (settingsActiveBot) {
-                let botText = botStatus.active_bot || '--';
+                let botText = formatBotName(botStatus.active_bot);
                 if (botStatus.queued_bot) {
-                    botText += ` → ${botStatus.queued_bot} (queued)`;
+                    botText += ` → ${formatBotName(botStatus.queued_bot)} (queued)`;
                 }
                 settingsActiveBot.textContent = botText;
             }
