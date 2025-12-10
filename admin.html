@@ -2039,8 +2039,6 @@
 
             .content-body {
                 padding: 16px;
-                max-width: 100%;
-                overflow-x: hidden;
             }
 
             .stats-grid {
@@ -2050,7 +2048,6 @@
 
             .stat-card {
                 padding: 16px;
-                max-width: 100%;
             }
 
             .stat-value {
@@ -2058,18 +2055,21 @@
             }
 
             .filters-price-container {
-                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column;
                 gap: 16px;
             }
 
             .price-widget-card,
             .filters-card {
-                max-width: 100%;
                 width: 100%;
+                margin: 0;
             }
 
             .filters-grid {
-                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column;
+                gap: 10px;
             }
 
             .signals-header-row {
@@ -2078,17 +2078,19 @@
                 gap: 12px;
             }
 
-            .table-wrapper {
+            .table-container {
                 overflow-x: auto;
-                max-width: 100%;
+                -webkit-overflow-scrolling: touch;
             }
 
             table {
                 font-size: 12px;
+                min-width: 600px;
             }
 
             th, td {
                 padding: 10px 8px;
+                white-space: nowrap;
             }
         }
 
@@ -5647,6 +5649,7 @@
             }
             
             const html = `
+                <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -5717,6 +5720,7 @@
                         }).join('')}
                     </tbody>
                 </table>
+                </div>
             `;
 
             document.getElementById('signalsTableContent').innerHTML = html;
