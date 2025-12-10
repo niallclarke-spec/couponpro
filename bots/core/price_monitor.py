@@ -38,11 +38,13 @@ class PriceMonitor:
             return None
     
     def calculate_pips(self, signal_type: str, entry: float, current_or_target: float) -> float:
-        """Calculate pips for a trade"""
+        """Calculate pips for XAU/USD trade (1 pip = $0.01, so $1 = 100 pips)"""
         if signal_type == 'BUY':
-            return round(current_or_target - entry, 2)
+            dollar_diff = current_or_target - entry
         else:
-            return round(entry - current_or_target, 2)
+            dollar_diff = entry - current_or_target
+        # XAU/USD: 1 pip = $0.01, multiply by 100 to convert dollars to pips
+        return round(dollar_diff * 100, 1)
     
     async def check_signal_status(self) -> Optional[Dict[str, Any]]:
         """

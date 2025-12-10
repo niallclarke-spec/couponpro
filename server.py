@@ -632,7 +632,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             else:
                                 price_diff = entry_price - current_price
                             
-                            current_pips = round(price_diff * 10, 1)
+                            # XAU/USD: 1 pip = $0.01, multiply by 100
+                            current_pips = round(price_diff * 100, 1)
                             current_dollars = round(price_diff, 2)
                     except Exception as price_err:
                         print(f"[BOT STATUS] Error fetching current price: {price_err}")

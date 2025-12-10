@@ -298,10 +298,11 @@ class ForexScheduler:
                     if success:
                         update_signal_timeout_notified(signal_id)
                         # Close the signal - mark as won if positive pips, otherwise expired
+                        # XAU/USD: 1 pip = $0.01, so multiply by 100
                         if signal_type == 'BUY':
-                            pips = round(current_price - entry, 2)
+                            pips = round((current_price - entry) * 100, 1)
                         else:
-                            pips = round(entry - current_price, 2)
+                            pips = round((entry - current_price) * 100, 1)
                         final_status = 'won' if pips > 0 else 'expired'
                         update_forex_signal_status(signal_id, final_status, pips, current_price)
                         forex_signal_engine.load_active_strategy()
@@ -363,10 +364,11 @@ class ForexScheduler:
                                 # If thesis is broken, recommend closing
                                 if thesis_status == 'broken':
                                     # Close the signal - mark as won if positive pips, otherwise expired
+                                    # XAU/USD: 1 pip = $0.01, so multiply by 100
                                     if signal_type == 'BUY':
-                                        pips = round(current_price - entry, 2)
+                                        pips = round((current_price - entry) * 100, 1)
                                     else:
-                                        pips = round(entry - current_price, 2)
+                                        pips = round((entry - current_price) * 100, 1)
                                     final_status = 'won' if pips > 0 else 'expired'
                                     update_forex_signal_status(signal_id, final_status, pips, current_price)
                                     forex_signal_engine.load_active_strategy()

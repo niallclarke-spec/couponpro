@@ -114,11 +114,11 @@ class MilestoneTracker:
         progress_tp = min(max(progress_tp, 0), 100)
         progress_sl = min(max(progress_sl, 0), 100)
         
-        current_pips = abs(current_price - entry)
+        # XAU/USD: 1 pip = $0.01, multiply by 100
         if is_buy:
-            current_pips = current_price - entry
+            current_pips = (current_price - entry) * 100
         else:
-            current_pips = entry - current_price
+            current_pips = (entry - current_price) * 100
         
         milestone = None
         milestone_key = None

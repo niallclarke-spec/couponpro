@@ -315,8 +315,9 @@ class ForexSignalEngine:
                 tp_count = 1 + (1 if has_tp2 else 0) + (1 if has_tp3 else 0)
                 
                 if is_buy:
+                    # XAU/USD: 1 pip = $0.01, multiply by 100
                     if not tp1_hit and current_price >= tp1:
-                        pips = round(tp1 - entry, 2)
+                        pips = round((tp1 - entry) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
@@ -336,7 +337,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp2 and tp1_hit and not tp2_hit and current_price >= tp2:
-                        pips = round(tp2 - entry, 2)
+                        pips = round((tp2 - entry) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
@@ -356,7 +357,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price >= tp3:
-                        pips = round(tp3 - entry, 2)
+                        pips = round((tp3 - entry) * 100, 1)
                         print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
                         updates.append({
@@ -369,7 +370,7 @@ class ForexSignalEngine:
                         continue
                     
                     if current_price <= sl:
-                        pips = round(sl - entry, 2)
+                        pips = round((sl - entry) * 100, 1)
                         sl_type = "effective" if effective_sl else "original"
                         if pips >= 0:
                             status = 'won'
@@ -385,8 +386,9 @@ class ForexSignalEngine:
                         })
                     
                 else:
+                    # XAU/USD: 1 pip = $0.01, multiply by 100
                     if not tp1_hit and current_price <= tp1:
-                        pips = round(entry - tp1, 2)
+                        pips = round((entry - tp1) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
@@ -406,7 +408,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp2 and tp1_hit and not tp2_hit and current_price <= tp2:
-                        pips = round(entry - tp2, 2)
+                        pips = round((entry - tp2) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
@@ -426,7 +428,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price <= tp3:
-                        pips = round(entry - tp3, 2)
+                        pips = round((entry - tp3) * 100, 1)
                         print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
                         updates.append({
@@ -439,7 +441,7 @@ class ForexSignalEngine:
                         continue
                     
                     if current_price >= sl:
-                        pips = round(entry - sl, 2)
+                        pips = round((entry - sl) * 100, 1)
                         sl_type = "effective" if effective_sl else "original"
                         if pips >= 0:
                             status = 'won'

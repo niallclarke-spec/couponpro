@@ -392,7 +392,8 @@ def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_
         
         abs_progress = abs(progress_percent)
         direction = "LONG" if signal_type == "BUY" else "SHORT"
-        pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
+        # XAU/USD: 1 pip = $0.01, multiply by 100
+        pips_move = round((current_price - entry_price) * 100, 1) if signal_type == "BUY" else round((entry_price - current_price) * 100, 1)
         
         # Determine emoji and header based on guidance type
         if 'progress' in guidance_type or 'breakeven' in guidance_type:
@@ -474,7 +475,8 @@ def get_fallback_guidance(guidance_type, signal_type, progress_percent, current_
     """Fallback template messages when AI is unavailable"""
     abs_progress = abs(progress_percent)
     direction = "LONG" if signal_type == "BUY" else "SHORT"
-    pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
+    # XAU/USD: 1 pip = $0.01, multiply by 100
+    pips_move = round((current_price - entry_price) * 100, 1) if signal_type == "BUY" else round((entry_price - current_price) * 100, 1)
     
     if 'breakeven' in guidance_type:
         return f"""📈 XAUUSD {direction}
@@ -520,7 +522,8 @@ def generate_revalidation_message(signal_id, signal_type, thesis_status, reasons
     try:
         direction = "LONG" if signal_type == "BUY" else "SHORT"
         hours_elapsed = minutes_elapsed / 60
-        pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
+        # XAU/USD: 1 pip = $0.01, multiply by 100
+        pips_move = round((current_price - entry_price) * 100, 1) if signal_type == "BUY" else round((entry_price - current_price) * 100, 1)
         
         # Determine header based on status
         if thesis_status == 'intact':
@@ -609,11 +612,11 @@ def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_pr
     try:
         hours_elapsed = minutes_elapsed / 60
         
-        # Calculate P/L
+        # Calculate P/L - XAU/USD: 1 pip = $0.01, multiply by 100
         if signal_type == 'BUY':
-            pips = round(current_price - entry_price, 2)
+            pips = round((current_price - entry_price) * 100, 1)
         else:
-            pips = round(entry_price - current_price, 2)
+            pips = round((entry_price - current_price) * 100, 1)
         
         pips_status = f"+{pips}" if pips > 0 else str(pips)
         
@@ -683,7 +686,8 @@ def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reaso
     """Fallback template messages for revalidation when AI is unavailable"""
     hours = minutes_elapsed / 60
     direction = "LONG" if signal_type == "BUY" else "SHORT"
-    pips_move = round(current_price - entry_price, 2) if signal_type == "BUY" else round(entry_price - current_price, 2)
+    # XAU/USD: 1 pip = $0.01, multiply by 100
+    pips_move = round((current_price - entry_price) * 100, 1) if signal_type == "BUY" else round((entry_price - current_price) * 100, 1)
     short_reason = reasons[0][:50] if reasons else "Mixed signals"
     
     if thesis_status == 'intact':
@@ -731,10 +735,11 @@ Monitoring the setup"""
 def get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators=None):
     """Fallback template message for timeout when AI is unavailable"""
     hours = minutes_elapsed / 60
+    # XAU/USD: 1 pip = $0.01, multiply by 100
     if signal_type == 'BUY':
-        pips = round(current_price - entry_price, 2)
+        pips = round((current_price - entry_price) * 100, 1)
     else:
-        pips = round(entry_price - current_price, 2)
+        pips = round((entry_price - current_price) * 100, 1)
     
     pips_status = f"+{pips}" if pips > 0 else str(pips)
     

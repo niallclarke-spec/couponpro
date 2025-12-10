@@ -5,12 +5,12 @@ Simulates different scenarios to verify correct status classification.
 """
 
 def calculate_pips_buy(entry, exit_price):
-    """For BUY: profit when price goes UP"""
-    return round(exit_price - entry, 2)
+    """For BUY: profit when price goes UP. XAU/USD: 1 pip = $0.01"""
+    return round((exit_price - entry) * 100, 1)
 
 def calculate_pips_sell(entry, exit_price):
-    """For SELL: profit when price goes DOWN"""
-    return round(entry - exit_price, 2)
+    """For SELL: profit when price goes DOWN. XAU/USD: 1 pip = $0.01"""
+    return round((entry - exit_price) * 100, 1)
 
 def determine_status(pips):
     """Determine win/loss based on pips"""
@@ -31,13 +31,14 @@ def test_buy_scenarios():
     
     print(f"\nSetup: Entry=${entry}, Original SL=${original_sl}, TP1=${tp1}, TP2=${tp2}")
     
+    # Expected pips: XAU/USD 1 pip = $0.01, so $10 difference = 1000 pips
     scenarios = [
         {
             'name': 'Original SL Hit (No Guidance)',
             'effective_sl': None,
             'exit_price': original_sl,
             'expected_status': 'lost',
-            'expected_pips': -10.0
+            'expected_pips': -1000.0
         },
         {
             'name': 'Breakeven SL Hit (70% milestone)',
@@ -51,14 +52,14 @@ def test_buy_scenarios():
             'effective_sl': tp1,
             'exit_price': tp1,
             'expected_status': 'won',
-            'expected_pips': 10.0
+            'expected_pips': 1000.0
         },
         {
             'name': 'Locked Profit at TP2 (TP2 hit, price reversed)',
             'effective_sl': tp2,
             'exit_price': tp2,
             'expected_status': 'won',
-            'expected_pips': 20.0
+            'expected_pips': 2000.0
         },
     ]
     

@@ -255,13 +255,14 @@ class ForexTelegramBot:
             return
         
         try:
-            pips_profit = abs(current_price - entry_price)
+            # XAU/USD: 1 pip = $0.01, multiply by 100
+            pips_profit = abs(current_price - entry_price) * 100
             
             message = f"""⚡ <b>BREAKEVEN ALERT</b>
 
 📈 Price at 70% toward TP1!
 
-💰 Current: <b>+{pips_profit:.1f} pips</b>
+💰 Current: <b>+{pips_profit:.0f} pips</b>
 
 🔒 Move SL to entry @ ${entry_price:.2f}"""
             
@@ -271,11 +272,12 @@ class ForexTelegramBot:
                 parse_mode='HTML'
             )
             
+            dollar_profit = abs(current_price - entry_price)
             add_signal_narrative(
                 signal_id=signal_id,
                 event_type='breakeven_alert',
                 current_price=current_price,
-                notes=f"Breakeven alert at ${current_price:.2f}, +${dollar_profit:.2f}"
+                notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.0f} pips (${dollar_profit:.2f})"
             )
             
             print(f"✅ Posted breakeven alert for signal #{signal_id}")
