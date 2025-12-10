@@ -2214,47 +2214,48 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout - Always 2 columns with grid-template-areas */
+        /* Filter and Price Widget Layout - Always 2 columns side by side */
         .filters-price-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-areas: "filters price";
-            gap: 12px;
-            margin-bottom: 24px;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-template-areas: "filters price" !important;
+            gap: 12px !important;
+            margin-bottom: 24px !important;
         }
 
         .filters-card {
-            grid-area: filters;
+            grid-area: filters !important;
             background: var(--bg-card);
             padding: 12px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex !important;
+            flex-direction: column !important;
             gap: 8px;
         }
 
         .price-widget-card {
-            grid-area: price;
+            grid-area: price !important;
             background: var(--bg-card);
             padding: 12px 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
-            display: flex;
-            flex-direction: column;
+            display: flex !important;
+            flex-direction: column !important;
             justify-content: center;
             min-width: 0;
         }
 
-        /* Desktop: Wider layout with 60/40 split and 2x2 filters */
+        /* Desktop: Wider layout with 60/40 split and 2x2 filters grid */
         @media (min-width: 769px) {
             .filters-price-row {
-                grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
-                gap: 16px;
+                grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr) !important;
+                gap: 16px !important;
             }
 
             .filters-card {
-                grid-template-columns: repeat(2, 1fr);
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
                 padding: 16px;
                 gap: 12px;
             }
@@ -3840,8 +3841,8 @@
                         </div>
                     </div>
                     
-                    <div class="filters-price-row">
-                        <div class="price-widget-card">
+                    <div class="filters-price-row" style="display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: 'filters price'; gap: 12px;">
+                        <div class="price-widget-card" style="grid-area: price;">
                             <div class="price-widget-header">
                                 <div class="price-widget-left">
                                     <span class="price-widget-price" id="liveGoldPrice">--</span>
@@ -3855,7 +3856,7 @@
                                 <canvas id="goldSparkline"></canvas>
                             </div>
                         </div>
-                        <div class="filters-card">
+                        <div class="filters-card" style="grid-area: filters;">
                             <div class="filter-pill">
                                 <select id="filterDateRange">
                                     <option value="all">All Time</option>
