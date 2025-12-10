@@ -4266,16 +4266,16 @@
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Revenue by Source</div>
-                        <div id="revenueBySource" style="padding: 20px;">
-                            <div class="loading">Loading attribution data...</div>
+                        <div class="card-title">Sales by Source</div>
+                        <div id="salesBySource" style="padding: 20px;">
+                            <div class="loading">Loading sales data...</div>
                         </div>
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Revenue by Campaign</div>
-                        <div id="revenueByCampaign" style="padding: 20px;">
-                            <div class="loading">Loading campaign data...</div>
+                        <div class="card-title">Best Converting Sources</div>
+                        <div id="bestConvertingSources" style="padding: 20px;">
+                            <div class="loading">Loading conversion data...</div>
                         </div>
                     </div>
                     
@@ -5110,11 +5110,11 @@
                 // Render leads by source (free signups funnel)
                 renderLeadsBySource(data.funnel_by_source);
                 
-                // Render revenue by source
-                renderRevenueBySource(data.by_source);
+                // Render sales by source
+                renderSalesBySource(data.by_source);
                 
-                // Render revenue by campaign
-                renderRevenueByCampaign(data.by_campaign);
+                // Render best converting sources
+                renderBestConvertingSources(data.funnel_by_source);
                 
                 // Render recent conversions
                 renderRecentConversions(data.recent_conversions);
@@ -5124,7 +5124,7 @@
                 
             } catch (error) {
                 console.error('Error loading conversions:', error);
-                document.getElementById('revenueBySource').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+                document.getElementById('salesBySource').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
             }
         }
         
@@ -5156,17 +5156,17 @@
             container.innerHTML = html;
         }
         
-        function renderRevenueBySource(sources) {
-            const container = document.getElementById('revenueBySource');
+        function renderSalesBySource(sources) {
+            const container = document.getElementById('salesBySource');
             if (!sources || sources.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No attribution data yet. UTM parameters will be tracked when users sign up.</div>';
+                container.innerHTML = '<div style="color: #718096; text-align: center;">No sales data yet. Sales will be tracked when users convert.</div>';
                 return;
             }
             
             let html = '<table style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
             html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conversions</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Sales</th>';
             html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Revenue</th>';
             html += '</tr></thead><tbody>';
             
@@ -5182,25 +5182,31 @@
             container.innerHTML = html;
         }
         
-        function renderRevenueByCampaign(campaigns) {
-            const container = document.getElementById('revenueByCampaign');
-            if (!campaigns || campaigns.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No campaign data yet. Add utm_campaign parameters to track campaigns.</div>';
+        function renderBestConvertingSources(sources) {
+            const container = document.getElementById('bestConvertingSources');
+            if (!sources || sources.length === 0) {
+                container.innerHTML = '<div style="color: #718096; text-align: center;">No conversion data yet. Sources will be ranked by conversion rate.</div>';
                 return;
             }
             
+            // Sort by conversion rate descending
+            const sorted = [...sources].sort((a, b) => (b.conversion_rate || 0) - (a.conversion_rate || 0));
+            
             let html = '<table style="width: 100%; border-collapse: collapse;">';
             html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Campaign</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conversions</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Revenue</th>';
+            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Leads</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Converted</th>';
+            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conv. Rate</th>';
             html += '</tr></thead><tbody>';
             
-            campaigns.forEach(campaign => {
+            sorted.forEach(source => {
+                const rateColor = source.conversion_rate >= 20 ? '#10b981' : source.conversion_rate >= 10 ? '#f59e0b' : '#718096';
                 html += `<tr style="border-bottom: 1px solid #2d3748;">`;
-                html += `<td style="padding: 10px;">${campaign.campaign || '(None)'}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${campaign.conversions}</td>`;
-                html += `<td style="padding: 10px; text-align: right; color: #48bb78;">$${campaign.revenue.toFixed(0)}</td>`;
+                html += `<td style="padding: 10px;">${source.source || '(Direct)'}</td>`;
+                html += `<td style="padding: 10px; text-align: right;">${source.signups || 0}</td>`;
+                html += `<td style="padding: 10px; text-align: right;">${source.converted || 0}</td>`;
+                html += `<td style="padding: 10px; text-align: right; color: ${rateColor}; font-weight: 600;">${source.conversion_rate || 0}%</td>`;
                 html += `</tr>`;
             });
             
