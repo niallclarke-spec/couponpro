@@ -2074,12 +2074,6 @@
                 font-size: 14px;
             }
 
-            /* MOBILE: Price widget on top, filters below (column-reverse puts 2nd child first) */
-            .filters-price-row {
-                display: flex !important;
-                flex-direction: column-reverse !important;
-            }
-
             .table-container {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
@@ -2220,7 +2214,7 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout - Mobile first, then desktop override */
+        /* Filter and Price Widget Layout - Mobile first (price widget is first in HTML) */
         .filters-price-row {
             display: flex;
             flex-direction: column;
@@ -2250,18 +2244,24 @@
             min-width: 0;
         }
 
-        /* Desktop: 60/40 grid split */
+        /* Desktop: Grid with areas to swap visual order (filters left, price right) */
         @media (min-width: 769px) {
             .filters-price-row {
                 display: grid;
                 grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+                grid-template-areas: "filters price";
                 align-items: stretch;
             }
 
             .filters-card {
+                grid-area: filters;
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 align-content: center;
+            }
+
+            .price-widget-card {
+                grid-area: price;
             }
         }
 
@@ -3185,14 +3185,6 @@
             font-weight: 500;
         }
 
-        /* CRITICAL: Mobile layout override - MUST be last in cascade */
-        @media screen and (max-width: 768px) {
-            .filters-price-row {
-                display: flex !important;
-                flex-direction: column-reverse !important;
-                gap: 16px !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -3850,6 +3842,20 @@
                     </div>
                     
                     <div class="filters-price-row">
+                        <div class="price-widget-card">
+                            <div class="price-widget-header">
+                                <div class="price-widget-left">
+                                    <span class="price-widget-price" id="liveGoldPrice">--</span>
+                                </div>
+                                <div class="price-widget-right">
+                                    <span class="price-widget-label">XAU/USD Live</span>
+                                    <span class="price-widget-change" id="liveGoldChange">--</span>
+                                </div>
+                            </div>
+                            <div class="price-sparkline-wrap">
+                                <canvas id="goldSparkline"></canvas>
+                            </div>
+                        </div>
                         <div class="filters-card">
                             <div class="filter-pill">
                                 <select id="filterDateRange">
@@ -3885,20 +3891,6 @@
                                     <option value="lost">Lost</option>
                                     <option value="expired">Expired</option>
                                 </select>
-                            </div>
-                        </div>
-                        <div class="price-widget-card">
-                            <div class="price-widget-header">
-                                <div class="price-widget-left">
-                                    <span class="price-widget-price" id="liveGoldPrice">--</span>
-                                </div>
-                                <div class="price-widget-right">
-                                    <span class="price-widget-label">XAU/USD Live</span>
-                                    <span class="price-widget-change" id="liveGoldChange">--</span>
-                                </div>
-                            </div>
-                            <div class="price-sparkline-wrap">
-                                <canvas id="goldSparkline"></canvas>
                             </div>
                         </div>
                     </div>
