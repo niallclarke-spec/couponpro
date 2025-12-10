@@ -2214,54 +2214,71 @@
             background: #dc2626;
         }
 
-        /* Filter and Price Widget Layout - Always 2 columns side by side */
-        .filters-price-row {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            grid-template-areas: "filters price" !important;
-            gap: 12px !important;
-            margin-bottom: 24px !important;
+        /* Filter and Price Widget Layout - MOBILE: Stack vertically with price on top */
+        @media (max-width: 768px) {
+            .filters-price-row {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .price-widget-card {
+                display: flex !important;
+                flex-direction: column !important;
+                order: -1 !important;
+                width: 100% !important;
+                min-height: 80px !important;
+                background: var(--bg-card) !important;
+                padding: 12px 16px !important;
+                border-radius: var(--radius-lg) !important;
+                border: 1px solid var(--border-primary) !important;
+            }
+            
+            .filters-card {
+                display: flex !important;
+                flex-direction: column !important;
+                order: 1 !important;
+                width: 100% !important;
+                background: var(--bg-card) !important;
+                padding: 12px !important;
+                border-radius: var(--radius-lg) !important;
+                border: 1px solid var(--border-primary) !important;
+                gap: 8px !important;
+            }
         }
 
-        .filters-card {
-            grid-area: filters !important;
-            background: var(--bg-card);
-            padding: 12px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-primary);
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 8px;
-        }
-
-        .price-widget-card {
-            grid-area: price !important;
-            background: var(--bg-card);
-            padding: 12px 16px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-primary);
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center;
-            min-width: 0;
-        }
-
-        /* Desktop: Wider layout with 60/40 split and 2x2 filters grid */
+        /* DESKTOP: 60/40 grid layout */
         @media (min-width: 769px) {
             .filters-price-row {
+                display: grid !important;
                 grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr) !important;
+                grid-template-areas: "filters price" !important;
                 gap: 16px !important;
+                margin-bottom: 24px !important;
             }
 
             .filters-card {
+                grid-area: filters !important;
                 display: grid !important;
                 grid-template-columns: repeat(2, 1fr) !important;
+                background: var(--bg-card);
                 padding: 16px;
+                border-radius: var(--radius-lg);
+                border: 1px solid var(--border-primary);
                 gap: 12px;
             }
 
             .price-widget-card {
+                grid-area: price !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: var(--bg-card);
                 padding: 16px 20px;
+                border-radius: var(--radius-lg);
+                border: 1px solid var(--border-primary);
+                justify-content: center;
+                min-width: 0;
             }
         }
 
