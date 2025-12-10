@@ -628,14 +628,15 @@
         }
 
         .btn-secondary {
-            background: var(--bg-card);
+            background: transparent;
             color: var(--text-secondary);
-            border: 1px solid var(--border-primary);
+            border: 1.5px solid var(--accent-primary);
         }
 
         .btn-secondary:hover {
-            background: var(--bg-card-hover);
+            background: rgba(203, 60, 255, 0.1);
             color: var(--text-primary);
+            border-color: var(--accent-primary);
             box-shadow: none;
             transform: none;
         }
@@ -7806,7 +7807,7 @@
                                         <td>${u.unique_coupons || 0}</td>
                                         <td>${u.first_used ? new Date(u.first_used).toLocaleDateString() : 'N/A'}</td>
                                         <td>${u.last_used ? new Date(u.last_used).toLocaleDateString() : 'N/A'}</td>
-                                        <td><button class="view-details-btn" style="padding: 6px 12px; font-size: 12px; border: 2px solid #7c3aed; color: #7c3aed; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;" onclick="showUserDetails(${u.chat_id})">View Details</button></td>
+                                        <td><button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="showUserDetails(${u.chat_id})">View Details</button></td>
                                     </tr>
                                 `;
                             }).join('')}
