@@ -749,6 +749,69 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/forex/xauusd-sparkline':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                import time
+                global _sparkline_cache
+                
+                if '_sparkline_cache' not in globals():
+                    _sparkline_cache = {'data': None, 'timestamp': 0}
+                
+                current_time = time.time()
+                if _sparkline_cache['data'] and (current_time - _sparkline_cache['timestamp']) < 60:
+                    response_data = _sparkline_cache['data']
+                else:
+                    from forex_api import twelve_data_client
+                    
+                    candles = twelve_data_client.get_time_series(
+                        symbol='XAU/USD',
+                        interval='1min',
+                        outputsize=30
+                    )
+                    
+                    if candles and len(candles) > 0:
+                        candles.reverse()
+                        prices = [c['close'] for c in candles]
+                        current_price = prices[-1] if prices else 0
+                        open_price = prices[0] if prices else 0
+                        
+                        if open_price > 0:
+                            change_pct = ((current_price - open_price) / open_price) * 100
+                        else:
+                            change_pct = 0
+                        
+                        response_data = {
+                            'success': True,
+                            'prices': prices,
+                            'current': current_price,
+                            'change_pct': round(change_pct, 2),
+                            'timestamp': current_time
+                        }
+                        _sparkline_cache = {'data': response_data, 'timestamp': current_time}
+                    else:
+                        response_data = {
+                            'success': False,
+                            'error': 'Unable to fetch price data'
+                        }
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(response_data).encode())
+            except Exception as e:
+                print(f"[SPARKLINE] Error: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path.startswith('/api/telegram/check-access/'):
             # EntryLab API - Check subscription access status by email
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
