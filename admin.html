@@ -11,11 +11,11 @@
            ======================================== */
         :root {
             /* Background Colors */
-            --bg-primary: #0D0F14;
-            --bg-secondary: #131620;
-            --bg-card: #1a1f2e;
-            --bg-card-hover: #212738;
-            --bg-input: #1a1f2e;
+            --bg-primary: #0a0c10;
+            --bg-secondary: #0f1218;
+            --bg-card: #13161d;
+            --bg-card-hover: #1a1e28;
+            --bg-input: #13161d;
             
             /* Accent Colors */
             --accent-primary: #6366f1;
@@ -534,10 +534,10 @@
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 20px;
+            padding: 20px 24px;
             display: flex;
-            align-items: center;
-            gap: 16px;
+            flex-direction: column;
+            gap: 12px;
             transition: all 0.2s;
         }
 
@@ -1705,7 +1705,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 24px;
+            padding: 20px 24px;
             color: var(--text-primary);
             transition: all 0.2s ease;
         }
@@ -1714,13 +1714,62 @@
             border-color: var(--border-secondary);
         }
 
+        /* Horizontal stat card layout (like Win Rate) */
+        .analytics-stat-card.horizontal {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .analytics-stat-card.horizontal .analytics-stat-label {
+            margin-bottom: 0;
+            min-width: 60px;
+        }
+
+        .analytics-stat-card.horizontal .stat-details {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
         .analytics-stat-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Percentage badge for stats */
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-badge.positive {
+            background: var(--status-online-bg);
+            color: var(--status-online);
+        }
+
+        .stat-badge.negative {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .stat-badge.neutral {
+            background: var(--status-offline-bg);
+            color: var(--text-secondary);
+        }
+
+        .stat-secondary-text {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         .analytics-stat-value {
