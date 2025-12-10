@@ -2116,41 +2116,70 @@
         /* Filter and Price Widget - 60/40 split layout */
         .filters-price-row {
             display: grid;
-            grid-template-columns: 60% 40%;
+            grid-template-columns: 1fr 320px;
             gap: 16px;
             margin-bottom: 24px;
         }
 
         .filters-card {
             background: var(--bg-card);
-            padding: 16px;
+            padding: 14px 16px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+        .filter-pill {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
         }
 
-        .filters-grid .filter-group {
-            min-width: 0;
-        }
-
-        .filters-grid .filter-group label {
-            font-size: 11px;
-            margin-bottom: 4px;
-        }
-
-        .filters-grid .filter-group select {
-            padding: 8px 10px;
+        .filter-pill select {
+            appearance: none;
+            background: var(--bg-secondary);
+            border: 1px solid transparent;
+            border-radius: 20px;
+            padding: 8px 32px 8px 14px;
             font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 110px;
+        }
+
+        .filter-pill select:hover {
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-pill select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-pill::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid var(--text-muted);
+            pointer-events: none;
         }
 
         .price-widget-card {
             background: var(--bg-card);
-            padding: 16px 20px;
+            padding: 14px 20px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-primary);
             display: flex;
@@ -2162,7 +2191,26 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+        }
+
+        .price-widget-left {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .price-widget-price {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .price-widget-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .price-widget-label {
@@ -2173,23 +2221,11 @@
             font-weight: 600;
         }
 
-        .price-widget-values {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .price-widget-price {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
         .price-widget-change {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
         }
 
         .price-widget-change.positive {
@@ -2204,21 +2240,23 @@
 
         .price-sparkline-wrap {
             width: 100%;
-            height: 60px;
+            height: 50px;
         }
 
         @media (max-width: 1024px) {
             .filters-price-row {
                 grid-template-columns: 1fr;
             }
-            .filters-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         @media (max-width: 640px) {
-            .filters-grid {
-                grid-template-columns: 1fr;
+            .filters-card {
+                gap: 8px;
+            }
+            .filter-pill select {
+                min-width: 100px;
+                padding: 6px 28px 6px 12px;
+                font-size: 12px;
             }
         }
 
@@ -3667,61 +3705,56 @@
                     
                     <div class="filters-price-row">
                         <div class="filters-card">
-                            <div class="filters-grid">
-                                <div class="filter-group">
-                                    <label>Date Range</label>
-                                    <select id="filterDateRange">
-                                        <option value="all">All Time</option>
-                                        <option value="today">Today</option>
-                                        <option value="yesterday">Yesterday</option>
-                                        <option value="7days">Last 7 Days</option>
-                                        <option value="30days">Last 30 Days</option>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label>Bot Type</label>
-                                    <select id="filterBotType">
-                                        <option value="all">All Bots</option>
-                                        <option value="aggressive">Aggressive</option>
-                                        <option value="conservative">Conservative</option>
-                                        <option value="raja_banks">Raja Banks</option>
-                                        <option value="custom">Custom</option>
-                                        <option value="legacy">Legacy</option>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label>Signal Type</label>
-                                    <select id="filterType">
-                                        <option value="all">All Signals</option>
-                                        <option value="BUY">BUY Only</option>
-                                        <option value="SELL">SELL Only</option>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label>Status</label>
-                                    <select id="filterStatus">
-                                        <option value="all">All Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="won">Won</option>
-                                        <option value="lost">Lost</option>
-                                        <option value="expired">Expired</option>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label>Limit</label>
-                                    <select id="filterLimit">
-                                        <option value="50">Last 50</option>
-                                        <option value="100" selected>Last 100</option>
-                                        <option value="200">Last 200</option>
-                                    </select>
-                                </div>
+                            <div class="filter-pill">
+                                <select id="filterDateRange">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days">Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill">
+                                <select id="filterBotType">
+                                    <option value="all">All Bots</option>
+                                    <option value="aggressive">Aggressive</option>
+                                    <option value="conservative">Conservative</option>
+                                    <option value="raja_banks">Raja Banks</option>
+                                    <option value="custom">Custom</option>
+                                    <option value="legacy">Legacy</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill">
+                                <select id="filterType">
+                                    <option value="all">All Signals</option>
+                                    <option value="BUY">BUY Only</option>
+                                    <option value="SELL">SELL Only</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill">
+                                <select id="filterStatus">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="won">Won</option>
+                                    <option value="lost">Lost</option>
+                                    <option value="expired">Expired</option>
+                                </select>
+                            </div>
+                            <div class="filter-pill">
+                                <select id="filterLimit">
+                                    <option value="50">Last 50</option>
+                                    <option value="100" selected>Last 100</option>
+                                    <option value="200">Last 200</option>
+                                </select>
                             </div>
                         </div>
                         <div class="price-widget-card">
                             <div class="price-widget-header">
-                                <span class="price-widget-label">XAU/USD Live</span>
-                                <div class="price-widget-values">
+                                <div class="price-widget-left">
                                     <span class="price-widget-price" id="liveGoldPrice">--</span>
+                                </div>
+                                <div class="price-widget-right">
+                                    <span class="price-widget-label">XAU/USD Live</span>
                                     <span class="price-widget-change" id="liveGoldChange">--</span>
                                 </div>
                             </div>
