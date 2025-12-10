@@ -126,6 +126,8 @@ class ConservativeStrategy(BaseStrategy):
     
     async def check_for_signals(self, timeframe: str = '15min') -> Optional[SignalData]:
         try:
+            self.load_config()
+            
             print(f"\n[CONSERVATIVE] Checking for signals on {self.symbol} {timeframe}...")
             
             can_generate, guardrail_reason = self.check_guardrails()
