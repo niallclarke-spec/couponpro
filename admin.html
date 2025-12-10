@@ -6293,14 +6293,8 @@
         function getCurrentPeriodLabel() {
             const filterDateRange = document.getElementById('filterDateRange');
             if (!filterDateRange) return 'all time';
-            const value = filterDateRange.value;
-            switch(value) {
-                case 'today': return 'today';
-                case 'yesterday': return 'yesterday';
-                case '7days': return 'last 7 days';
-                case '30days': return 'last 30 days';
-                default: return 'all time';
-            }
+            const selectedOption = filterDateRange.options[filterDateRange.selectedIndex];
+            return selectedOption ? selectedOption.text.toLowerCase() : 'all time';
         }
         
         function drawBuySellPieChart(buys, sells) {
