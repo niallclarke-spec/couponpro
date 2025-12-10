@@ -9,7 +9,21 @@ I prefer clear, concise communication. When suggesting changes or explaining con
 ## System Architecture
 
 ### UI/UX Decisions
-The platform employs a consistent dark theme. The unified admin dashboard features a dual-sidebar layout: a 60px product switcher with custom SVG icons and a 240px feature navigation sidebar. Hash-based routing provides smooth, in-page navigation. Mobile responsiveness is achieved through collapsible overlay sidebars. The admin interface emphasizes intuitive workflows with real-time visual feedback, live previews, and a drag-to-draw interface for text areas on coupons, supporting high-DPI rendering and color pickers.
+The platform employs a consistent dark navy theme based on modern dashboard design principles. The unified admin dashboard features a dual-sidebar layout: a 60px product switcher with custom SVG icons and a 240px feature navigation sidebar. Hash-based routing provides smooth, in-page navigation. Mobile responsiveness is achieved through collapsible overlay sidebars. The admin interface emphasizes intuitive workflows with real-time visual feedback, live previews, and a drag-to-draw interface for text areas on coupons, supporting high-DPI rendering and color pickers.
+
+**Design System (CSS Variables):**
+- `--bg-primary`: #0D1117 (main background)
+- `--bg-secondary`: #161b22 (sidebar/secondary areas)
+- `--bg-card`: #1a1f2e (card backgrounds)
+- `--text-primary`: #e6edf3 (main text)
+- `--text-secondary`: #8b949e (secondary text)
+- `--accent-primary`: #6366f1 (indigo/purple accent)
+- `--accent-gradient`: linear-gradient(135deg, #6366f1, #8b5cf6) (primary buttons)
+- `--status-online`: #10b981 (green success)
+- `--status-error`: #ef4444 (red error)
+- `--border-primary`: #30363d (subtle borders)
+- `--radius-sm/md/lg`: 4px/8px/12px (consistent border radius)
+- `--shadow-sm/md/lg`: Subtle elevation shadows
 
 ### Technical Implementations
 The frontend uses pure HTML, CSS, and vanilla JavaScript. The backend, including the admin panel and API, is a Python HTTP server (`server.py`). Client-side image generation is handled via canvas manipulation for the web app, while the Telegram bot utilizes server-side Python/Pillow for rendering. Authentication relies on HMAC-signed cookie authentication for stateless sessions. Persistent storage for template images and `meta.json` backups is managed by Digital Ocean Spaces (S3-compatible object storage) with CDN, accessed using `boto3`.
