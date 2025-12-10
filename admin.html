@@ -120,7 +120,7 @@
         /* Product Switcher Sidebar (60px) */
         .product-switcher {
             width: 60px;
-            background: var(--bg-secondary);
+            background: var(--bg-primary);
             position: fixed;
             left: 0;
             top: 0;
@@ -182,7 +182,7 @@
         /* Main Sidebar */
         .feature-sidebar {
             width: var(--sidebar-width);
-            background: var(--bg-secondary);
+            background: var(--bg-primary);
             color: var(--text-secondary);
             position: fixed;
             left: 60px;
@@ -269,19 +269,20 @@
             text-decoration: none;
             transition: all 0.2s;
             cursor: pointer;
-            border-radius: 0;
-            margin: 2px 12px;
-            border-radius: var(--radius-md);
+            margin: 2px 0;
+            border-left: 3px solid transparent;
+            position: relative;
         }
 
         .nav-item:hover {
-            background: var(--bg-card);
             color: var(--text-primary);
+            background: transparent;
         }
 
         .nav-item.active {
-            background: var(--bg-card);
-            color: var(--accent-primary);
+            color: var(--text-primary);
+            border-left-color: var(--accent-primary);
+            background: transparent;
         }
 
         .nav-item-icon {
