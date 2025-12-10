@@ -2532,15 +2532,29 @@
             pointer-events: none;
         }
 
-        .technical-analysis-card.tradingview-container {
+        .day-chart-card {
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 0;
-            width: 180px;
-            height: 160px;
-            overflow: hidden;
-            flex-shrink: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 180px;
+        }
+
+        .day-chart-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .day-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .pie-chart-card {
@@ -4381,23 +4395,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="technical-analysis-card tradingview-container">
-                            <!-- TradingView Technical Analysis Widget -->
-                            <div class="tradingview-widget-container">
-                              <div class="tradingview-widget-container__widget"></div>
-                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-                              {
-                                "colorTheme": "dark",
-                                "displayMode": "single",
-                                "isTransparent": true,
-                                "locale": "en",
-                                "interval": "1m",
-                                "symbol": "OANDA:XAUUSD",
-                                "showIntervalTabs": true,
-                                "width": "100%",
-                                "height": "100%"
-                              }
-                              </script>
+                        <div class="day-chart-card">
+                            <div class="day-chart-label">Signals by Day</div>
+                            <div class="day-chart-container">
+                                <canvas id="dayBarChart" width="160" height="100"></canvas>
                             </div>
                         </div>
                         <div class="price-widget-card tradingview-container price-widget-compact">
@@ -6379,6 +6380,9 @@
             const sells = targetSignals.filter(s => s.signal_type === 'SELL').length;
             drawBuySellPieChart(buys, sells);
             
+            // Update signals by day bar chart
+            drawDayBarChart(targetSignals);
+            
             // Update subtexts based on selected period
             const periodLabel = getCurrentPeriodLabel();
             const avgHoldSubtext = document.getElementById('avgHoldSubtext');
@@ -6469,6 +6473,53 @@
             const sellCountEl = document.getElementById('sellCount');
             if (buyCountEl) buyCountEl.textContent = `${buys} Buy${buys !== 1 ? 's' : ''}`;
             if (sellCountEl) sellCountEl.textContent = `${sells} Sell${sells !== 1 ? 's' : ''}`;
+        }
+
+        function drawDayBarChart(signals) {
+            const canvas = document.getElementById('dayBarChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const dayCounts = [0, 0, 0, 0, 0];
+            
+            // Count signals per day (0=Mon, 4=Fri)
+            signals.forEach(sig => {
+                const date = new Date(sig.created_at);
+                const dayIndex = date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+                if (dayIndex >= 1 && dayIndex <= 5) {
+                    dayCounts[dayIndex - 1]++;
+                }
+            });
+            
+            const maxCount = Math.max(...dayCounts, 1);
+            const barWidth = 24;
+            const barGap = 8;
+            const chartHeight = 70;
+            const labelHeight = 20;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Brand colors gradient
+            const colors = ['#CB3CFF', '#A855F7', '#8B5CF6', '#7C3AED', '#6D28D9'];
+            
+            days.forEach((day, i) => {
+                const x = i * (barWidth + barGap);
+                const barHeight = (dayCounts[i] / maxCount) * chartHeight;
+                const y = chartHeight - barHeight;
+                
+                // Draw bar
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight || 2, 3);
+                ctx.fill();
+                
+                // Draw day label
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(day, x + barWidth / 2, chartHeight + 14);
+            });
         }
 
         // Bot Settings Functions
