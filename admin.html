@@ -4178,6 +4178,11 @@
             if (activeView) {
                 activeView.classList.add('active');
                 
+                // Stop sparkline polling when leaving forex-signals
+                if (typeof stopSparklinePolling === 'function') {
+                    stopSparklinePolling();
+                }
+                
                 // Load data for specific views
                 if (viewId === 'coupon-templates') {
                     loadAssets();
@@ -4189,6 +4194,7 @@
                     loadConversions();
                 } else if (viewId === 'forex-signals') {
                     loadForexSignals();
+                    startSparklinePolling();
                 } else if (viewId === 'forex-settings') {
                     loadForexSettings();
                 }
@@ -5147,6 +5153,98 @@
         let botStatus = null;
         let selectedBotType = null;
         let currentActiveBot = null;
+        let goldSparklineChart = null;
+        let sparklineInterval = null;
+
+        async function loadGoldSparkline() {
+            try {
+                const response = await fetch('/api/forex/xauusd-sparkline', {
+                    credentials: 'include'
+                });
+                if (!response.ok) throw new Error('Failed to load price data');
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const priceEl = document.getElementById('liveGoldPrice');
+                    const changeEl = document.getElementById('liveGoldChange');
+                    
+                    if (priceEl) {
+                        priceEl.textContent = data.current.toFixed(2);
+                    }
+                    
+                    if (changeEl) {
+                        const isPositive = data.change_pct >= 0;
+                        changeEl.textContent = `${isPositive ? '+' : ''}${data.change_pct.toFixed(2)}%`;
+                        changeEl.className = `price-chart-change ${isPositive ? 'positive' : 'negative'}`;
+                    }
+                    
+                    renderGoldSparkline(data.prices, data.change_pct >= 0);
+                }
+            } catch (error) {
+                console.error('Error loading gold sparkline:', error);
+            }
+        }
+
+        function renderGoldSparkline(prices, isPositive) {
+            const canvas = document.getElementById('goldSparkline');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (goldSparklineChart) {
+                goldSparklineChart.destroy();
+            }
+            
+            const lineColor = isPositive ? '#10b981' : '#ef4444';
+            const gradientColor = isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            
+            goldSparklineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: prices.map((_, i) => i),
+                    datasets: [{
+                        data: prices,
+                        borderColor: lineColor,
+                        borderWidth: 2,
+                        fill: true,
+                        backgroundColor: gradientColor,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    interaction: { enabled: false },
+                    animation: { duration: 300 }
+                }
+            });
+        }
+
+        function startSparklinePolling() {
+            if (sparklineInterval) {
+                clearInterval(sparklineInterval);
+            }
+            loadGoldSparkline();
+            sparklineInterval = setInterval(loadGoldSparkline, 60000);
+        }
+
+        function stopSparklinePolling() {
+            if (sparklineInterval) {
+                clearInterval(sparklineInterval);
+                sparklineInterval = null;
+            }
+        }
 
         async function loadForexSignals() {
             try {
