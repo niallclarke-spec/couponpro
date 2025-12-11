@@ -4415,6 +4415,16 @@
                             <button class="btn btn-secondary" data-status="revoked" onclick="filterSubscriptions('revoked')">Revoked</button>
                         </div>
                     </div>
+                    <div class="controls" style="margin-bottom: 16px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="color: var(--text-secondary); font-size: 14px; margin-right: 8px;">Metrics Period:</span>
+                            <button class="btn active" data-period="all" onclick="setMetricsPeriod('all')">All Time</button>
+                            <button class="btn btn-secondary" data-period="30d" onclick="setMetricsPeriod('30d')">30d</button>
+                            <button class="btn btn-secondary" data-period="7d" onclick="setMetricsPeriod('7d')">7d</button>
+                            <button class="btn btn-secondary" data-period="yesterday" onclick="setMetricsPeriod('yesterday')">Yesterday</button>
+                            <button class="btn btn-secondary" data-period="today" onclick="setMetricsPeriod('today')">Today</button>
+                        </div>
+                    </div>
                     <div class="stats-grid" style="margin-bottom: 24px;">
                         <div class="stat-card">
                             <div class="stat-icon" style="background: rgba(79, 70, 229, 0.15); color: #6366f1;">
@@ -4441,15 +4451,15 @@
                             </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                                 </svg>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-label">Free Plan</div>
-                                <div class="stat-value" id="freePlanSubscribers">--</div>
-                                <div class="stat-subtext">Email captured</div>
+                                <div class="stat-label" id="churnRateLabel">Churn Rate</div>
+                                <div class="stat-value" id="churnRate">--%</div>
+                                <div class="stat-subtext" id="churnRateSubtext">All time</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -4471,9 +4481,9 @@
                                 </svg>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-label">Rebill This Month</div>
+                                <div class="stat-label">Total Upcoming Rebill</div>
                                 <div class="stat-value" id="monthlyRebill">$--</div>
-                                <div class="stat-subtext">Expected renewals</div>
+                                <div class="stat-subtext">All upcoming</div>
                             </div>
                         </div>
                     </div>
@@ -5664,6 +5674,25 @@
         // Subscriptions Functions
         let allSubscriptions = [];
         let currentFilter = 'all';
+        let currentMetricsPeriod = 'all';
+
+        function setMetricsPeriod(period) {
+            currentMetricsPeriod = period;
+            
+            // Update button active states
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                if (btn.dataset.period === period) {
+                    btn.classList.add('active');
+                    btn.classList.remove('btn-secondary');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('btn-secondary');
+                }
+            });
+            
+            // Fetch new metrics
+            fetchRevenueMetrics(period);
+        }
 
         function getDisplayStatus(sub) {
             if (sub.status === 'revoked') return 'revoked';
@@ -5711,9 +5740,9 @@
             fetchRevenueMetrics();
         }
         
-        async function fetchRevenueMetrics() {
+        async function fetchRevenueMetrics(period = 'all') {
             try {
-                const response = await fetch('/api/telegram/revenue-metrics', {
+                const response = await fetch(`/api/telegram/revenue-metrics?period=${period}`, {
                     credentials: 'include'
                 });
                 
@@ -5724,11 +5753,34 @@
                 document.getElementById('netRevenue').textContent = `$${metrics.total_revenue.toFixed(0)}`;
                 document.getElementById('monthlyRebill').textContent = `$${metrics.monthly_rebill.toFixed(0)}`;
                 
-                if (metrics.source === 'database_fallback') {
-                    document.getElementById('netRevenueSubtext').textContent = 'From database';
-                } else {
-                    document.getElementById('netRevenueSubtext').textContent = 'All time (net)';
+                // Update churn rate
+                const churnRate = metrics.churn_rate !== undefined ? metrics.churn_rate : 0;
+                document.getElementById('churnRate').textContent = `${churnRate.toFixed(1)}%`;
+                
+                // Update labels based on period
+                const periodLabels = {
+                    'all': { revenue: 'All time (net)', rebill: 'All upcoming', churn: 'All time' },
+                    '30d': { revenue: 'Last 30 days', rebill: 'Due in 30 days', churn: 'Last 30 days' },
+                    '7d': { revenue: 'Last 7 days', rebill: 'Due in 7 days', churn: 'Last 7 days' },
+                    'yesterday': { revenue: 'Yesterday', rebill: 'Due today', churn: 'Yesterday' },
+                    'today': { revenue: 'Today', rebill: 'Due tomorrow', churn: 'Today' }
+                };
+                
+                const labels = periodLabels[period] || periodLabels['all'];
+                document.getElementById('netRevenueSubtext').textContent = labels.revenue;
+                
+                // Update rebill label
+                const rebillLabel = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-label');
+                if (rebillLabel) {
+                    rebillLabel.textContent = period === 'all' ? 'Total Upcoming Rebill' : 'Expected Rebill';
                 }
+                const rebillSubtext = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-subtext');
+                if (rebillSubtext) {
+                    rebillSubtext.textContent = labels.rebill;
+                }
+                
+                // Update churn rate subtext
+                document.getElementById('churnRateSubtext').textContent = labels.churn;
                 
             } catch (error) {
                 console.error('Error fetching revenue metrics:', error);
@@ -5738,6 +5790,7 @@
                 document.getElementById('netRevenue').textContent = `$${totalFromDb.toFixed(0)}`;
                 document.getElementById('monthlyRebill').textContent = '$--';
                 document.getElementById('netRevenueSubtext').textContent = 'From database';
+                document.getElementById('churnRate').textContent = '--%';
             }
         }
 

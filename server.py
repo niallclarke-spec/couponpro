@@ -998,14 +998,22 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not STRIPE_AVAILABLE:
                     raise Exception("Stripe not configured")
                 
+                # Parse period query param (default 'all')
+                query_params = parse_qs(parsed_path.query)
+                period = query_params.get('period', ['all'])[0]
+                # Validate period
+                valid_periods = ['all', '30d', '7d', 'yesterday', 'today']
+                if period not in valid_periods:
+                    period = 'all'
+                
                 # Get subscription IDs from our database to filter Stripe data
                 subscriptions = db.get_all_telegram_subscriptions()
                 stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
                 
                 from stripe_client import get_stripe_metrics
                 
-                print(f"[REVENUE] Fetching metrics for {len(stripe_sub_ids)} PromoStack subscriptions...")
-                metrics = get_stripe_metrics(subscription_ids=stripe_sub_ids)
+                print(f"[REVENUE] Fetching metrics for {len(stripe_sub_ids)} PromoStack subscriptions (period: {period})...")
+                metrics = get_stripe_metrics(subscription_ids=stripe_sub_ids, period=period)
                 
                 if metrics:
                     print(f"[REVENUE] Stripe returned: revenue=${metrics.get('total_revenue')}, rebill=${metrics.get('monthly_rebill')}")

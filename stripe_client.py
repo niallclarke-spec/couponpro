@@ -279,14 +279,70 @@ def get_customer_billing_info(stripe_customer_id):
         print(f"[Stripe] Error fetching customer {stripe_customer_id}: {e}")
         return None
 
-# Revenue metrics cache with TTL
-_metrics_cache = {
-    'data': None,
-    'expires_at': None
-}
+# Revenue metrics cache with TTL - keyed by period
+_metrics_cache = {}
 METRICS_CACHE_TTL_SECONDS = 30  # 30 seconds cache for fresh data
 
-def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
+def get_period_date_range(period):
+    """
+    Calculate date ranges for a given period.
+    
+    Args:
+        period: 'all', '30d', '7d', 'yesterday', 'today'
+    
+    Returns:
+        tuple (start_timestamp, end_timestamp) or (None, None) for 'all'
+    """
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day)
+    tomorrow_start = today_start + timedelta(days=1)
+    
+    if period == 'today':
+        return (int(today_start.timestamp()), int(tomorrow_start.timestamp()))
+    elif period == 'yesterday':
+        yesterday_start = today_start - timedelta(days=1)
+        return (int(yesterday_start.timestamp()), int(today_start.timestamp()))
+    elif period == '7d':
+        start = today_start - timedelta(days=7)
+        return (int(start.timestamp()), int(now.timestamp()))
+    elif period == '30d':
+        start = today_start - timedelta(days=30)
+        return (int(start.timestamp()), int(now.timestamp()))
+    else:  # 'all'
+        return (None, None)
+
+def get_rebill_date_range(period):
+    """
+    Calculate forward-looking date ranges for rebill calculations.
+    
+    Args:
+        period: 'all', '30d', '7d', 'yesterday', 'today'
+    
+    Returns:
+        tuple (start_date, end_date) as datetime objects
+    """
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day)
+    tomorrow_start = today_start + timedelta(days=1)
+    
+    if period == 'today':
+        # Today filter -> rebills due tomorrow only
+        return (tomorrow_start, tomorrow_start + timedelta(days=1))
+    elif period == 'yesterday':
+        # Yesterday filter -> rebills due today only
+        return (today_start, tomorrow_start)
+    elif period == '7d':
+        # 7d filter -> rebills due in next 7 days
+        return (now, now + timedelta(days=7))
+    elif period == '30d':
+        # 30d filter -> rebills due in next 30 days
+        return (now, now + timedelta(days=30))
+    else:  # 'all'
+        # All -> show all upcoming rebills (far-future sentinel)
+        far_future = datetime(now.year + 2, 12, 31)  # 2+ years out
+        return (now, far_future)
+
+def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP", period="all"):
     """
     Fetch revenue metrics directly from Stripe API.
     
@@ -294,19 +350,31 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
     1. Get ALL paid invoices from Stripe
     2. Filter by line item description containing "VIP"
     3. Sum the amounts paid (respects discounts)
+    4. Filter by period for time-based metrics
+    
+    Args:
+        subscription_ids: List of subscription IDs to filter (optional)
+        product_name_filter: Product name to filter (default "VIP")
+        period: Time period - 'all', '30d', '7d', 'yesterday', 'today'
     
     Returns:
-        dict with total_revenue, monthly_rebill, subscription_count, currency
+        dict with total_revenue, monthly_rebill, subscription_count, churn_rate, currency
     """
-    # Check cache first
+    # Check cache first - keyed by period
     now = datetime.now()
-    if (_metrics_cache['data'] and 
-        _metrics_cache['expires_at'] and 
-        _metrics_cache['expires_at'] > now):
-        print(f"[Stripe] Returning cached metrics")
-        return _metrics_cache['data']
+    cache_key = period or 'all'
+    if (cache_key in _metrics_cache and 
+        _metrics_cache[cache_key].get('data') and 
+        _metrics_cache[cache_key].get('expires_at') and 
+        _metrics_cache[cache_key]['expires_at'] > now):
+        print(f"[Stripe] Returning cached metrics for period: {cache_key}")
+        return _metrics_cache[cache_key]['data']
     
-    print(f"[Stripe] Fetching revenue metrics from Stripe (filter: '{product_name_filter}')...")
+    print(f"[Stripe] Fetching revenue metrics from Stripe (filter: '{product_name_filter}', period: '{period}')...")
+    
+    # Get date range for filtering
+    revenue_start_ts, revenue_end_ts = get_period_date_range(period)
+    rebill_start, rebill_end = get_rebill_date_range(period)
     
     try:
         client = get_stripe_client()
@@ -315,9 +383,15 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         active_sub_ids = set()
         invoice_count = 0
         
-        # ========== REVENUE: Get ALL paid invoices ==========
-        print(f"[Stripe] Fetching all paid invoices...")
-        for invoice in client.Invoice.list(status='paid', limit=100, expand=['data.lines.data', 'data.subscription']).auto_paging_iter():
+        # ========== REVENUE: Get paid invoices (filtered by period) ==========
+        invoice_params = {'status': 'paid', 'limit': 100, 'expand': ['data.lines.data', 'data.subscription']}
+        if revenue_start_ts and revenue_end_ts:
+            invoice_params['created'] = {'gte': revenue_start_ts, 'lt': revenue_end_ts}
+            print(f"[Stripe] Fetching paid invoices from {datetime.fromtimestamp(revenue_start_ts)} to {datetime.fromtimestamp(revenue_end_ts)}...")
+        else:
+            print(f"[Stripe] Fetching all paid invoices...")
+        
+        for invoice in client.Invoice.list(**invoice_params).auto_paging_iter():
             # Check each line item for VIP products
             if invoice.lines and invoice.lines.data:
                 for line in invoice.lines.data:
@@ -379,10 +453,8 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
         # ========== REBILL: Check active subscriptions ==========
         monthly_rebill = 0
         active_count = 0
-        month_start = datetime(now.year, now.month, 1)
-        month_end = datetime(now.year + 1, 1, 1) if now.month == 12 else datetime(now.year, now.month + 1, 1)
         
-        print(f"[Stripe] Checking {len(active_sub_ids)} subscriptions for rebill (month: {month_start.date()} to {month_end.date()})...")
+        print(f"[Stripe] Checking {len(active_sub_ids)} subscriptions for rebill (period: {rebill_start.date()} to {rebill_end.date()})...")
         
         # Check subscriptions we found from invoices
         for sub_id in active_sub_ids:
@@ -487,8 +559,8 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                             except Exception as e:
                                 print(f"[Stripe] Error getting interval: {e}")
                             
-                            # Calculate all renewals this month for weekly/daily subscriptions
-                            renewals_this_month = 0
+                            # Calculate all renewals in the period for weekly/daily subscriptions
+                            renewals_in_period = 0
                             check_date = next_payment_date
                             
                             # Determine days between renewals
@@ -500,25 +572,25 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                                 interval_days = None  # Monthly or yearly - just count once
                             
                             if interval_days and interval_days < 30:
-                                # Count all renewals in this month
-                                while check_date < month_end:
-                                    if check_date >= month_start:
-                                        renewals_this_month += 1
+                                # Count all renewals in the period
+                                while check_date < rebill_end:
+                                    if check_date >= rebill_start:
+                                        renewals_in_period += 1
                                     check_date += timedelta(days=interval_days)
                                 
-                                if renewals_this_month > 0:
-                                    total_for_sub = rebill_amount * renewals_this_month
+                                if renewals_in_period > 0:
+                                    total_for_sub = rebill_amount * renewals_in_period
                                     monthly_rebill += total_for_sub
-                                    print(f"[Stripe] ✓ {billing_interval}ly sub: ${rebill_amount} x {renewals_this_month} renewals = ${total_for_sub}")
+                                    print(f"[Stripe] ✓ {billing_interval}ly sub: ${rebill_amount} x {renewals_in_period} renewals = ${total_for_sub}")
                                 else:
-                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
                             else:
-                                # Monthly/yearly - just check if next renewal is this month
-                                if month_start <= next_payment_date < month_end:
+                                # Monthly/yearly - just check if next renewal is in period
+                                if rebill_start <= next_payment_date < rebill_end:
                                     monthly_rebill += rebill_amount
-                                    print(f"[Stripe] ✓ Rebill this month: ${rebill_amount} on {next_payment_date.date()}")
+                                    print(f"[Stripe] ✓ Rebill in period: ${rebill_amount} on {next_payment_date.date()}")
                                 else:
-                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not this month)")
+                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
                         else:
                             # No date info - count it anyway
                             monthly_rebill += rebill_amount
@@ -533,18 +605,78 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP"):
                 import traceback
                 traceback.print_exc()
         
-        print(f"[Stripe] Active: {active_count}, Rebill this month: ${monthly_rebill}")
+        print(f"[Stripe] Active: {active_count}, Rebill in period: ${monthly_rebill}")
+        
+        # ========== CHURN RATE: Calculate based on cancelled/revoked subscriptions ==========
+        churn_rate = 0.0
+        cancelled_count = 0
+        total_at_start = 0
+        
+        try:
+            # Get cancelled subscriptions in the period
+            cancel_params = {'status': 'canceled', 'limit': 100}
+            
+            for sub in client.Subscription.list(**cancel_params).auto_paging_iter():
+                # Check if this is a VIP subscription
+                items_data = sub.get('items', {})
+                is_vip = False
+                if items_data and hasattr(items_data, 'data'):
+                    for item in items_data.data:
+                        product_name = ''
+                        price = item.get('price', {}) if isinstance(item, dict) else getattr(item, 'price', None)
+                        if price:
+                            product_id = price.get('product') if isinstance(price, dict) else getattr(price, 'product', None)
+                            if product_id:
+                                if isinstance(product_id, str):
+                                    try:
+                                        prod_obj = client.Product.retrieve(product_id)
+                                        product_name = prod_obj.name or ''
+                                    except:
+                                        product_name = price.get('nickname', '') if isinstance(price, dict) else getattr(price, 'nickname', '') or ''
+                                elif hasattr(product_id, 'name'):
+                                    product_name = product_id.name
+                        
+                        if product_name and product_name_filter.lower() in product_name.lower():
+                            is_vip = True
+                            break
+                
+                if not is_vip:
+                    continue
+                
+                # Check if canceled_at is within the period
+                canceled_at_ts = getattr(sub, 'canceled_at', None)
+                if canceled_at_ts and revenue_start_ts and revenue_end_ts:
+                    if revenue_start_ts <= canceled_at_ts < revenue_end_ts:
+                        cancelled_count += 1
+                elif canceled_at_ts and not revenue_start_ts:
+                    # 'all' period - count all cancelled
+                    cancelled_count += 1
+            
+            # Estimate total subscribers at period start
+            # For simplicity: active + cancelled = approx total at start
+            total_at_start = active_count + cancelled_count
+            
+            if total_at_start > 0:
+                churn_rate = round((cancelled_count / total_at_start) * 100, 1)
+            
+            print(f"[Stripe] Churn: {cancelled_count} cancelled out of ~{total_at_start} = {churn_rate}%")
+        except Exception as e:
+            print(f"[Stripe] Churn calculation error: {e}")
         
         result = {
             'total_revenue': round(total_revenue, 2),
             'monthly_rebill': round(monthly_rebill, 2),
             'subscription_count': active_count,
-            'currency': 'USD'
+            'churn_rate': churn_rate,
+            'currency': 'USD',
+            'period': period
         }
         
-        # Update cache
-        _metrics_cache['data'] = result
-        _metrics_cache['expires_at'] = now + timedelta(seconds=METRICS_CACHE_TTL_SECONDS)
+        # Update cache - keyed by period
+        _metrics_cache[cache_key] = {
+            'data': result,
+            'expires_at': now + timedelta(seconds=METRICS_CACHE_TTL_SECONDS)
+        }
         
         return result
         
