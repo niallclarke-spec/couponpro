@@ -3258,6 +3258,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
                                 print(f"[STRIPE WEBHOOK] Kicked user {telegram_user_id}: {kicked}")
                 
+                elif event_type == 'customer.deleted':
+                    # Customer deleted from Stripe - delete from our database too
+                    customer_id = event_data.get('id') if isinstance(event_data, dict) else event_data.id
+                    customer_email = event_data.get('email') if isinstance(event_data, dict) else getattr(event_data, 'email', None)
+                    print(f"[STRIPE WEBHOOK] customer.deleted: {customer_id}, email={customer_email}")
+                    
+                    # Try to find and delete by customer ID first, then by email
+                    deleted = False
+                    if customer_id:
+                        deleted = db.delete_subscription_by_stripe_customer(customer_id)
+                    if not deleted and customer_email:
+                        deleted = db.delete_subscription_by_email(customer_email)
+                    
+                    if deleted:
+                        print(f"[STRIPE WEBHOOK] ✅ Deleted subscription record for customer {customer_id or customer_email}")
+                    else:
+                        print(f"[STRIPE WEBHOOK] No matching subscription found for customer {customer_id or customer_email}")
+                
                 elif event_type == 'invoice.paid':
                     # Invoice paid - update amount_paid for renewals
                     subscription_id = event_data.get('subscription') if isinstance(event_data, dict) else getattr(event_data, 'subscription', None)

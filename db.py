@@ -4201,6 +4201,60 @@ def revoke_telegram_subscription(email, reason='subscription_canceled'):
         print(f"Error revoking telegram subscription: {e}")
         return None
 
+def delete_subscription_by_stripe_customer(stripe_customer_id):
+    """Delete subscription record by Stripe customer ID"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM telegram_subscriptions
+                WHERE stripe_customer_id = %s
+                RETURNING email
+            """, (stripe_customer_id,))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                print(f"[DB] Deleted subscription for customer {stripe_customer_id}: {result[0]}")
+                return True
+            return False
+    except Exception as e:
+        print(f"Error deleting subscription by customer ID: {e}")
+        return False
+
+
+def delete_subscription_by_email(email):
+    """Delete subscription record by email"""
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                DELETE FROM telegram_subscriptions
+                WHERE email = %s
+                RETURNING id
+            """, (email,))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                print(f"[DB] Deleted subscription for email {email}")
+                return True
+            return False
+    except Exception as e:
+        print(f"Error deleting subscription by email: {e}")
+        return False
+
+
 def clear_all_telegram_subscriptions():
     """Delete all telegram subscriptions (for testing/cleanup)"""
     try:
