@@ -2677,61 +2677,95 @@
             margin-top: 2px;
         }
 
-        /* Buy/Sell Ratio card with pie chart */
-        .metric-card-stacked .pie-content {
+        /* Unified metric card body */
+        .metric-card-stacked .metric-main {
             display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
-        .metric-card-stacked #buySellPieChart {
-            width: 50px;
-            height: 50px;
+        .metric-card-stacked .metric-main .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
         }
 
-        .metric-card-stacked .pie-legend {
+        .metric-card-stacked .metric-main .value.buy {
+            color: #10b981;
+        }
+
+        .metric-card-stacked .metric-main .value.sell {
+            color: #ef4444;
+        }
+
+        .metric-card-stacked .metric-main .separator {
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .metric-card-stacked .metric-main .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Horizontal split bar for all cards */
+        .metric-card-stacked .split-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
-            gap: 4px;
         }
 
-        .metric-card-stacked .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .metric-card-stacked .split-bar .bar-segment {
+            height: 100%;
+            transition: width 0.3s ease;
         }
 
-        .metric-card-stacked .legend-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .metric-card-stacked .legend-dot.buy {
+        .metric-card-stacked .split-bar .bar-segment.buy {
             background: #10b981;
         }
 
-        .metric-card-stacked .legend-dot.sell {
+        .metric-card-stacked .split-bar .bar-segment.sell {
             background: #ef4444;
         }
 
-        .metric-card-stacked .legend-text {
-            font-size: 13px;
-            color: var(--text-primary);
-            font-weight: 600;
+        .metric-card-stacked .split-bar .bar-segment.primary {
+            background: linear-gradient(90deg, #667eea, #8b5cf6);
         }
 
-        /* Signals by Day card */
-        .metric-card-stacked .day-chart-content {
+        /* Day bars inline */
+        .metric-card-stacked .day-bars {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            flex: 1;
+            align-items: flex-end;
+            gap: 4px;
+            height: 32px;
+            margin-top: 4px;
         }
 
-        .metric-card-stacked .day-chart-content canvas {
-            max-width: 100%;
+        .metric-card-stacked .day-bars .day-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .metric-card-stacked .day-bars .bar {
+            width: 100%;
+            min-height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #8b5cf6, #667eea);
+            transition: height 0.3s ease;
+        }
+
+        .metric-card-stacked .day-bars .day-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         /* Legacy support */
@@ -4567,18 +4601,15 @@
                                     </div>
                                     <div class="metric-label">Buy / Sell Ratio</div>
                                 </div>
-                                <div class="pie-content">
-                                    <canvas id="buySellPieChart" width="50" height="50"></canvas>
-                                    <div class="pie-legend">
-                                        <div class="legend-item">
-                                            <span class="legend-dot buy"></span>
-                                            <span class="legend-text" id="buyCount">0 Buys</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <span class="legend-dot sell"></span>
-                                            <span class="legend-text" id="sellCount">0 Sells</span>
-                                        </div>
-                                    </div>
+                                <div class="metric-main">
+                                    <span class="value buy" id="buyCount">0</span>
+                                    <span class="separator">:</span>
+                                    <span class="value sell" id="sellCount">0</span>
+                                    <span class="label">buys vs sells</span>
+                                </div>
+                                <div class="split-bar" id="buySellBar">
+                                    <div class="bar-segment buy" id="buyBarSegment" style="width: 50%"></div>
+                                    <div class="bar-segment sell" id="sellBarSegment" style="width: 50%"></div>
                                 </div>
                             </div>
                             <div class="metric-card-stacked">
@@ -4590,10 +4621,13 @@
                                     </div>
                                     <div class="metric-label">Avg Hold Time</div>
                                 </div>
-                                <div class="metric-body">
-                                    <div class="metric-value" id="avgHoldTime">--</div>
+                                <div class="metric-main">
+                                    <span class="value" id="avgHoldTime">--</span>
+                                    <span class="label" id="avgHoldSubtext">per signal</span>
                                 </div>
-                                <div class="metric-subtext" id="avgHoldSubtext">per signal</div>
+                                <div class="split-bar">
+                                    <div class="bar-segment primary" id="holdTimeBar" style="width: 0%"></div>
+                                </div>
                             </div>
                             <div class="metric-card-stacked">
                                 <div class="metric-header">
@@ -4604,8 +4638,18 @@
                                     </div>
                                     <div class="metric-label">Signals by Day</div>
                                 </div>
-                                <div class="day-chart-content">
-                                    <canvas id="dayBarChart" width="180" height="60"></canvas>
+                                <div class="metric-main">
+                                    <span class="value" id="totalSignalsDays">0</span>
+                                    <span class="label">this week</span>
+                                </div>
+                                <div class="day-bars" id="dayBarsContainer">
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">M</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">T</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">W</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">T</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">F</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">S</span></div>
+                                    <div class="day-bar"><div class="bar" style="height: 4px"></div><span class="day-label">S</span></div>
                                 </div>
                             </div>
                         </div>
@@ -6550,6 +6594,7 @@
                 
                 // Format hold time
                 const avgHoldEl = document.getElementById('avgHoldTime');
+                const holdTimeBar = document.getElementById('holdTimeBar');
                 if (avgHoldEl) {
                     if (avgHoldMinutes >= 60) {
                         const hours = Math.floor(avgHoldMinutes / 60);
@@ -6558,6 +6603,11 @@
                     } else {
                         avgHoldEl.textContent = `${Math.round(avgHoldMinutes)}m`;
                     }
+                }
+                // Update hold time bar (max 8 hours = 480 mins = 100%)
+                if (holdTimeBar) {
+                    const pct = Math.min(100, (avgHoldMinutes / 480) * 100);
+                    holdTimeBar.style.width = pct + '%';
                 }
                 
                 // Format avg pips
@@ -6571,8 +6621,10 @@
             } else {
                 const avgHoldEl = document.getElementById('avgHoldTime');
                 const avgPipsEl = document.getElementById('avgPipsPerTrade');
+                const holdTimeBar = document.getElementById('holdTimeBar');
                 if (avgHoldEl) avgHoldEl.textContent = '--';
                 if (avgPipsEl) avgPipsEl.textContent = '--';
+                if (holdTimeBar) holdTimeBar.style.width = '0%';
             }
             
             // Update Buy/Sell pie chart
@@ -6627,99 +6679,50 @@
         }
         
         function drawBuySellPieChart(buys, sells) {
-            const canvas = document.getElementById('buySellPieChart');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
             const total = buys + sells;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 2;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (total === 0) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = '#374151';
-                ctx.fill();
-            } else {
-                const buyAngle = (buys / total) * 2 * Math.PI;
-                const sellAngle = (sells / total) * 2 * Math.PI;
-                
-                // Draw buy slice (green)
-                if (buys > 0) {
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY);
-                    ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + buyAngle);
-                    ctx.closePath();
-                    ctx.fillStyle = '#10b981';
-                    ctx.fill();
-                }
-                
-                // Draw sell slice (red)
-                if (sells > 0) {
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY);
-                    ctx.arc(centerX, centerY, radius, -Math.PI/2 + buyAngle, -Math.PI/2 + buyAngle + sellAngle);
-                    ctx.closePath();
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fill();
-                }
-            }
-            
-            // Update legend counts
             const buyCountEl = document.getElementById('buyCount');
             const sellCountEl = document.getElementById('sellCount');
-            if (buyCountEl) buyCountEl.textContent = `${buys} Buy${buys !== 1 ? 's' : ''}`;
-            if (sellCountEl) sellCountEl.textContent = `${sells} Sell${sells !== 1 ? 's' : ''}`;
+            const buyBarEl = document.getElementById('buyBarSegment');
+            const sellBarEl = document.getElementById('sellBarSegment');
+            
+            if (buyCountEl) buyCountEl.textContent = buys;
+            if (sellCountEl) sellCountEl.textContent = sells;
+            
+            if (total > 0 && buyBarEl && sellBarEl) {
+                const buyPct = (buys / total) * 100;
+                const sellPct = (sells / total) * 100;
+                buyBarEl.style.width = buyPct + '%';
+                sellBarEl.style.width = sellPct + '%';
+            } else if (buyBarEl && sellBarEl) {
+                buyBarEl.style.width = '50%';
+                sellBarEl.style.width = '50%';
+            }
         }
 
         function drawDayBarChart(signals) {
-            const canvas = document.getElementById('dayBarChart');
-            if (!canvas) return;
+            const container = document.getElementById('dayBarsContainer');
+            const totalEl = document.getElementById('totalSignalsDays');
+            if (!container) return;
             
-            const ctx = canvas.getContext('2d');
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-            const dayCounts = [0, 0, 0, 0, 0];
+            const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
             
-            // Count signals per day (0=Mon, 4=Fri) using posted_at field
             signals.forEach(sig => {
                 if (!sig.posted_at) return;
                 const date = new Date(sig.posted_at);
-                const dayIndex = date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-                if (dayIndex >= 1 && dayIndex <= 5) {
-                    dayCounts[dayIndex - 1]++;
-                }
+                const dayIndex = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+                const mappedIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Convert to Mon=0, Sun=6
+                dayCounts[mappedIndex]++;
             });
             
+            const total = dayCounts.reduce((a, b) => a + b, 0);
             const maxCount = Math.max(...dayCounts, 1);
-            const barWidth = 24;
-            const barGap = 8;
-            const chartHeight = 60;
-            const labelHeight = 20;
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (totalEl) totalEl.textContent = total;
             
-            // Brand colors gradient
-            const colors = ['#CB3CFF', '#A855F7', '#8B5CF6', '#7C3AED', '#6D28D9'];
-            
-            days.forEach((day, i) => {
-                const x = i * (barWidth + barGap);
-                const barHeight = (dayCounts[i] / maxCount) * chartHeight;
-                const y = chartHeight - barHeight;
-                
-                // Draw bar
-                ctx.fillStyle = colors[i];
-                ctx.beginPath();
-                ctx.roundRect(x, y, barWidth, barHeight || 2, 3);
-                ctx.fill();
-                
-                // Draw day label
-                ctx.fillStyle = '#9ca3af';
-                ctx.font = '10px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(day, x + barWidth / 2, chartHeight + 14);
+            const bars = container.querySelectorAll('.day-bar .bar');
+            bars.forEach((bar, i) => {
+                const height = Math.max(4, (dayCounts[i] / maxCount) * 28);
+                bar.style.height = height + 'px';
             });
         }
 
