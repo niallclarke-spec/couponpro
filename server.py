@@ -3085,7 +3085,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 payload = self.rfile.read(content_length)
                 sig_header = self.headers.get('Stripe-Signature')
                 
-                webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+                # Use test webhook secret in dev mode, live secret in production
+                is_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+                if is_production:
+                    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+                else:
+                    webhook_secret = os.environ.get('TEST_STRIPE_WEBHOOK_SECRET') or os.environ.get('STRIPE_WEBHOOK_SECRET')
                 
                 if not STRIPE_AVAILABLE:
                     print("[STRIPE WEBHOOK] Stripe not available")
