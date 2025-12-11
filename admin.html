@@ -6200,6 +6200,7 @@
                             <th>SL</th>
                             <th>TPs</th>
                             <th>Status</th>
+                            <th>Closed At</th>
                             <th>Price</th>
                             <th>Pips</th>
                         </tr>
@@ -6251,6 +6252,7 @@
                                     <td>$${signal.stop_loss ? signal.stop_loss.toFixed(2) : '--'}</td>
                                     <td>${tpIcons}</td>
                                     <td><span class="badge badge-${signal.status}">${signal.status}</span></td>
+                                    <td>${signal.closed_at ? new Date(signal.closed_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '<span style="color: #a0aec0;">--</span>'}</td>
                                     <td>${priceDisplay}</td>
                                     <td style="color: ${pips >= 0 ? '#48bb78' : '#f56565'}; font-weight: 600;">${pipsDisplay}</td>
                                 </tr>
