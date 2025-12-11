@@ -2526,14 +2526,23 @@
         .chart-card-large .tradingview-widget-container {
             flex: 1;
             min-height: 350px;
+            overflow: hidden;
+            border-radius: var(--radius-lg);
+            margin: -2px;
+            padding: 2px;
         }
 
         .chart-card-large .tradingview-widget-container iframe {
             border: none !important;
+            margin: -1px;
+            width: calc(100% + 2px) !important;
+            height: calc(100% + 2px) !important;
         }
 
         .chart-card-large .tradingview-widget-container__widget {
             border: none !important;
+            overflow: hidden;
+            border-radius: var(--radius-lg);
         }
 
         .chart-card-large .tradingview-widget-copyright {
