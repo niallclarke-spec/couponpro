@@ -542,9 +542,57 @@
             border-radius: var(--radius-lg);
             padding: 14px 20px;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            flex-direction: row;
+            align-items: center;
+            gap: 14px;
             transition: all 0.2s;
+        }
+
+        .stat-card .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-card .stat-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .stat-card .stat-icon.win-rate {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .stat-card .stat-icon.total-pips {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .stat-card .stat-icon.total-pips.positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .stat-card .stat-icon.total-signals {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+        }
+
+        .stat-card .stat-icon.active-bot {
+            background: rgba(203, 60, 255, 0.15);
+            color: #CB3CFF;
+        }
+
+        .stat-card .stat-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
         }
 
         .stat-card:hover {
@@ -2564,27 +2612,61 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
         }
 
         .metric-card-stacked .metric-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-card-stacked .metric-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .metric-card-stacked .metric-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .metric-card-stacked .metric-icon.ratio {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+        }
+
+        .metric-card-stacked .metric-icon.time {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .metric-card-stacked .metric-icon.calendar {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
         }
 
         .metric-card-stacked .metric-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 12px;
+            color: var(--text-secondary);
             font-weight: 600;
             margin-bottom: 0;
         }
 
+        .metric-card-stacked .metric-body {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
         .metric-card-stacked .metric-value {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-primary);
         }
@@ -2592,7 +2674,7 @@
         .metric-card-stacked .metric-subtext {
             font-size: 11px;
             color: var(--text-muted);
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         /* Buy/Sell Ratio card with pie chart */
@@ -2600,17 +2682,18 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            flex: 1;
         }
 
         .metric-card-stacked #buySellPieChart {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
         }
 
         .metric-card-stacked .pie-legend {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         .metric-card-stacked .legend-item {
@@ -2634,16 +2717,16 @@
         }
 
         .metric-card-stacked .legend-text {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 600;
         }
 
         /* Signals by Day card */
         .metric-card-stacked .day-chart-content {
             display: flex;
             justify-content: center;
-            align-items: flex-end;
+            align-items: center;
             flex: 1;
         }
 
@@ -4387,24 +4470,52 @@
                     
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-label">Win Rate</div>
-                            <div class="stat-value" id="winRate">--%</div>
-                            <div class="stat-subtext" id="winRateSubtext">Loading...</div>
+                            <div class="stat-icon win-rate">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Win Rate</div>
+                                <div class="stat-value" id="winRate">--%</div>
+                                <div class="stat-subtext" id="winRateSubtext">Loading...</div>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Total Pips</div>
-                            <div class="stat-value" id="totalPips">--</div>
-                            <div class="stat-subtext">Net profit/loss</div>
+                            <div class="stat-icon total-pips" id="totalPipsIcon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Pips</div>
+                                <div class="stat-value" id="totalPips">--</div>
+                                <div class="stat-subtext">Net profit/loss</div>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Total Signals</div>
-                            <div class="stat-value" id="totalSignals">--</div>
-                            <div class="stat-subtext" id="signalsBreakdown">Loading...</div>
+                            <div class="stat-icon total-signals">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Signals</div>
+                                <div class="stat-value" id="totalSignals">--</div>
+                                <div class="stat-subtext" id="signalsBreakdown">Loading...</div>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Active Bot</div>
-                            <div class="stat-value" id="activeBotType" style="text-transform: capitalize;">--</div>
-                            <div class="stat-subtext" id="activeBotSubtext">Strategy mode</div>
+                            <div class="stat-icon active-bot">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Active Bot</div>
+                                <div class="stat-value" id="activeBotType" style="text-transform: capitalize;">--</div>
+                                <div class="stat-subtext" id="activeBotSubtext">Strategy mode</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -4448,9 +4559,16 @@
                         </div>
                         <div class="metrics-stack-vertical">
                             <div class="metric-card-stacked">
-                                <div class="metric-label">Buy / Sell Ratio</div>
+                                <div class="metric-header">
+                                    <div class="metric-icon ratio">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                        </svg>
+                                    </div>
+                                    <div class="metric-label">Buy / Sell Ratio</div>
+                                </div>
                                 <div class="pie-content">
-                                    <canvas id="buySellPieChart" width="60" height="60"></canvas>
+                                    <canvas id="buySellPieChart" width="50" height="50"></canvas>
                                     <div class="pie-legend">
                                         <div class="legend-item">
                                             <span class="legend-dot buy"></span>
@@ -4464,14 +4582,30 @@
                                 </div>
                             </div>
                             <div class="metric-card-stacked">
-                                <div class="metric-label">Avg Hold Time</div>
-                                <div class="metric-value" id="avgHoldTime">--</div>
+                                <div class="metric-header">
+                                    <div class="metric-icon time">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="metric-label">Avg Hold Time</div>
+                                </div>
+                                <div class="metric-body">
+                                    <div class="metric-value" id="avgHoldTime">--</div>
+                                </div>
                                 <div class="metric-subtext" id="avgHoldSubtext">per signal</div>
                             </div>
                             <div class="metric-card-stacked">
-                                <div class="metric-label">Signals by Day</div>
+                                <div class="metric-header">
+                                    <div class="metric-icon calendar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
+                                    </div>
+                                    <div class="metric-label">Signals by Day</div>
+                                </div>
                                 <div class="day-chart-content">
-                                    <canvas id="dayBarChart" width="180" height="80"></canvas>
+                                    <canvas id="dayBarChart" width="180" height="60"></canvas>
                                 </div>
                             </div>
                         </div>
