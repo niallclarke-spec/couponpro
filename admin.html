@@ -2494,139 +2494,147 @@
             pointer-events: none;
         }
 
-        .metrics-price-row {
+        /* New chart-metrics layout */
+        .chart-metrics-layout {
             display: flex;
             gap: 16px;
             margin-bottom: 24px;
-            justify-content: flex-start;
-            align-items: stretch;
         }
 
-        .metrics-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-width: 160px;
-        }
-
-        .metrics-price-row .price-widget-card {
-            flex: 1;
-            margin: 0;
-        }
-
-        .price-widget-card.tradingview-container {
-            padding: 0;
-            min-height: 100px;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .price-widget-card.tradingview-container .tradingview-widget-container {
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            pointer-events: none;
-            transform: scale(0.85);
-            transform-origin: top left;
-        }
-
-        .day-chart-card {
+        .chart-card-large {
+            flex: 7;
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
             padding: 16px;
+            min-height: 400px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-width: 180px;
         }
 
-        .day-chart-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .chart-card-large .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 12px;
         }
 
-        .day-chart-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
+        .chart-card-large .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .pie-chart-card {
+        .chart-card-large .tradingview-widget-container {
+            flex: 1;
+            min-height: 350px;
+        }
+
+        .metrics-stack-vertical {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-card-stacked {
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 14px 18px;
+            padding: 16px 18px;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            min-width: 160px;
+            justify-content: center;
         }
-        
-        .pie-chart-label {
+
+        .metric-card-stacked .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .metric-card-stacked .metric-label {
             font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 0;
         }
 
-        .pie-chart-container {
+        .metric-card-stacked .metric-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-card-stacked .metric-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Buy/Sell Ratio card with pie chart */
+        .metric-card-stacked .pie-content {
             display: flex;
             align-items: center;
-            gap: 14px;
-            flex: 1;
-            margin-top: auto;
-            margin-bottom: auto;
+            gap: 16px;
         }
 
-        #buySellPieChart {
-            width: 70px;
-            height: 70px;
+        .metric-card-stacked #buySellPieChart {
+            width: 60px;
+            height: 60px;
         }
 
-        .pie-chart-legend {
+        .metric-card-stacked .pie-legend {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .legend-item {
+        .metric-card-stacked .legend-item {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .legend-dot {
-            width: 10px;
-            height: 10px;
+        .metric-card-stacked .legend-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
         }
 
-        .legend-dot.buy {
+        .metric-card-stacked .legend-dot.buy {
             background: #10b981;
         }
 
-        .legend-dot.sell {
+        .metric-card-stacked .legend-dot.sell {
             background: #ef4444;
         }
 
-        .legend-text {
-            font-size: 13px;
+        .metric-card-stacked .legend-text {
+            font-size: 12px;
             color: var(--text-secondary);
             font-weight: 500;
         }
 
-        .price-widget-title {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        /* Signals by Day card */
+        .metric-card-stacked .day-chart-content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            flex: 1;
+        }
+
+        .metric-card-stacked .day-chart-content canvas {
+            max-width: 100%;
+        }
+
+        /* Legacy support */
+        .metrics-price-row {
+            display: none;
         }
 
         .metric-card-compact {
@@ -2668,6 +2676,26 @@
             margin-top: 2px;
         }
 
+        @media (max-width: 1024px) {
+            .chart-metrics-layout {
+                flex-direction: column;
+            }
+
+            .chart-card-large {
+                min-height: 350px;
+            }
+
+            .metrics-stack-vertical {
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .metric-card-stacked {
+                flex: 1;
+                min-width: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .filters-row-compact {
                 flex-wrap: wrap;
@@ -2678,18 +2706,16 @@
                 min-width: 100px;
             }
 
-            .metrics-price-row {
+            .chart-card-large {
+                min-height: 280px;
+            }
+
+            .metrics-stack-vertical {
                 flex-direction: column;
-                gap: 12px;
             }
-            
-            .metrics-stack {
-                flex-direction: row;
-                min-width: auto;
-            }
-            
-            .metrics-stack .metric-card-compact {
-                flex: 1;
+
+            .metric-card-stacked {
+                flex: none;
             }
         }
         
@@ -4363,56 +4389,72 @@
                         </div>
                     </div>
                     
-                    <div class="metrics-price-row">
-                        <div class="metrics-stack">
-                            <div class="metric-card-compact">
-                                <div class="metric-label">Avg Hold Time</div>
-                                <div class="metric-value" id="avgHoldTime">--</div>
-                                <div class="metric-subtext" id="avgHoldSubtext">per signal</div>
+                    <div class="chart-metrics-layout">
+                        <div class="chart-card-large">
+                            <div class="chart-header">
+                                <span class="chart-title">XAU/USD Live Chart</span>
                             </div>
-                            <div class="metric-card-compact">
-                                <div class="metric-label">Avg Pips/Trade</div>
-                                <div class="metric-value" id="avgPipsPerTrade">--</div>
-                                <div class="metric-subtext" id="avgPipsSubtext">all time</div>
-                            </div>
-                        </div>
-                        <div class="pie-chart-card">
-                            <div class="pie-chart-label">Buy / Sell Ratio</div>
-                            <div class="pie-chart-container">
-                                <canvas id="buySellPieChart" width="80" height="80"></canvas>
-                                <div class="pie-chart-legend">
-                                    <div class="legend-item">
-                                        <span class="legend-dot buy"></span>
-                                        <span class="legend-text" id="buyCount">0 Buys</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-dot sell"></span>
-                                        <span class="legend-text" id="sellCount">0 Sells</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="day-chart-card">
-                            <div class="day-chart-label">Signals by Day</div>
-                            <div class="day-chart-container">
-                                <canvas id="dayBarChart" width="160" height="90"></canvas>
-                            </div>
-                        </div>
-                        <div class="price-widget-card tradingview-container">
                             <!-- TradingView Widget BEGIN -->
-                            <div class="tradingview-widget-container">
-                              <div class="tradingview-widget-container__widget"></div>
-                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+                            <div class="tradingview-widget-container" style="height:100%;width:100%">
+                              <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                              <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA" rel="noopener nofollow" target="_blank"><span class="blue-text">XAUUSD chart</span></a><span class="trademark"> by TradingView</span></div>
+                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
                               {
-                                "symbol": "OANDA:XAUUSD",
-                                "colorTheme": "dark",
-                                "isTransparent": true,
-                                "locale": "en",
-                                "width": "100%"
+                              "allow_symbol_change": true,
+                              "calendar": false,
+                              "details": false,
+                              "hide_side_toolbar": true,
+                              "hide_top_toolbar": true,
+                              "hide_legend": false,
+                              "hide_volume": true,
+                              "hotlist": false,
+                              "interval": "15",
+                              "locale": "en",
+                              "save_image": true,
+                              "style": "1",
+                              "symbol": "OANDA:XAUUSD",
+                              "theme": "dark",
+                              "timezone": "Etc/UTC",
+                              "backgroundColor": "#0B1739",
+                              "gridColor": "rgba(66, 189, 168, 0.06)",
+                              "watchlist": [],
+                              "withdateranges": false,
+                              "compareSymbols": [],
+                              "studies": [],
+                              "autosize": true
                               }
                               </script>
                             </div>
                             <!-- TradingView Widget END -->
+                        </div>
+                        <div class="metrics-stack-vertical">
+                            <div class="metric-card-stacked">
+                                <div class="metric-label">Buy / Sell Ratio</div>
+                                <div class="pie-content">
+                                    <canvas id="buySellPieChart" width="60" height="60"></canvas>
+                                    <div class="pie-legend">
+                                        <div class="legend-item">
+                                            <span class="legend-dot buy"></span>
+                                            <span class="legend-text" id="buyCount">0 Buys</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <span class="legend-dot sell"></span>
+                                            <span class="legend-text" id="sellCount">0 Sells</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-card-stacked">
+                                <div class="metric-label">Avg Hold Time</div>
+                                <div class="metric-value" id="avgHoldTime">--</div>
+                                <div class="metric-subtext" id="avgHoldSubtext">per signal</div>
+                            </div>
+                            <div class="metric-card-stacked">
+                                <div class="metric-label">Signals by Day</div>
+                                <div class="day-chart-content">
+                                    <canvas id="dayBarChart" width="180" height="80"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
