@@ -4125,6 +4125,56 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
         print(f"Error updating telegram subscription user joined: {e}")
         return False
 
+def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None):
+    """
+    Update subscription status based on email or stripe_subscription_id.
+    
+    Args:
+        email: Customer email (optional if stripe_subscription_id provided)
+        stripe_subscription_id: Stripe subscription ID (optional if email provided)
+        status: New status (e.g., 'payment_failed', 'past_due', 'active')
+        reason: Optional reason for the status change
+    
+    Returns:
+        tuple: (success: bool, email: str or None, telegram_user_id: int or None)
+    """
+    try:
+        if not db_pool.connection_pool:
+            return False, None, None
+        
+        if not email and not stripe_subscription_id:
+            return False, None, None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if stripe_subscription_id:
+                cursor.execute("""
+                    UPDATE telegram_subscriptions
+                    SET status = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE stripe_subscription_id = %s
+                    RETURNING email, telegram_user_id
+                """, (status, stripe_subscription_id))
+            else:
+                cursor.execute("""
+                    UPDATE telegram_subscriptions
+                    SET status = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE email = %s
+                    RETURNING email, telegram_user_id
+                """, (status, email))
+            
+            result = cursor.fetchone()
+            conn.commit()
+            
+            if result:
+                print(f"[DB] Subscription status updated: {result[0]} -> {status} (reason: {reason})")
+                return True, result[0], result[1]
+            return False, None, None
+    except Exception as e:
+        print(f"Error updating subscription status: {e}")
+        return False, None, None
+
+
 def revoke_telegram_subscription(email, reason='subscription_canceled'):
     """Revoke telegram subscription access"""
     try:

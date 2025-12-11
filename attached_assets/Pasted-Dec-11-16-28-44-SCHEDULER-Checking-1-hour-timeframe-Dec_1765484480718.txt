@@ -1,0 +1,135 @@
+Dec 11 16:28:44  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 16:28:44  
+Dec 11 16:28:44  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 16:28:44  
+Dec 11 16:28:44  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 16:28:44  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 16:43:44  
+Dec 11 16:43:44  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 16:43:44  
+Dec 11 16:43:44  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 16:43:44  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 16:58:44  
+Dec 11 16:58:44  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 16:58:44  
+Dec 11 16:58:44  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 16:58:44  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 16:58:44  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 16:58:44  
+Dec 11 16:58:44  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 16:58:44  
+Dec 11 16:58:44  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 16:58:44  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:11:29  10.244.6.25 - - [11/Dec/2025 17:11:29] code 404, message File not found
+Dec 11 17:11:29  10.244.6.25 - - [11/Dec/2025 17:11:29] "GET /.env HTTP/1.1" 404 -
+Dec 11 17:11:29  10.244.6.25 - - [11/Dec/2025 17:11:29] code 404, message File not found
+Dec 11 17:11:29  10.244.6.25 - - [11/Dec/2025 17:11:29] "GET /cacti/cmd_realtime.php?1+1&&cat+~/.aws/credentials+1+1+1 HTTP/1.1" 404 -
+Dec 11 17:13:45  
+Dec 11 17:13:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:13:45  
+Dec 11 17:13:45  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 17:13:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:28:45  
+Dec 11 17:28:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:28:45  
+Dec 11 17:28:45  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 17:28:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:28:45  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 17:28:45  
+Dec 11 17:28:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:28:45  
+Dec 11 17:28:45  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 17:28:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:43:45  
+Dec 11 17:43:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:43:45  
+Dec 11 17:43:45  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 17:43:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:55:54  10.244.4.179 - - [11/Dec/2025 17:55:54] code 404, message File not found
+Dec 11 17:55:54  10.244.4.179 - - [11/Dec/2025 17:55:54] "GET /robots.txt HTTP/1.1" 404 -
+Dec 11 17:58:45  
+Dec 11 17:58:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:58:45  
+Dec 11 17:58:45  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 17:58:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 17:58:45  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 17:58:45  
+Dec 11 17:58:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 17:58:45  
+Dec 11 17:58:45  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 17:58:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:13:45  
+Dec 11 18:13:45  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:13:45  
+Dec 11 18:13:45  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 18:13:45  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:27:35  10.244.4.179 - - [11/Dec/2025 18:27:35] "GET /.git/config HTTP/1.1" 200 -
+Dec 11 18:28:46  
+Dec 11 18:28:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:28:46  
+Dec 11 18:28:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 18:28:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:28:46  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 18:28:46  
+Dec 11 18:28:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:28:46  
+Dec 11 18:28:46  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 18:28:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:43:46  
+Dec 11 18:43:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:43:46  
+Dec 11 18:43:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 18:43:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:58:46  
+Dec 11 18:58:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:58:46  
+Dec 11 18:58:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 18:58:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 18:58:46  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 18:58:46  
+Dec 11 18:58:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 18:58:46  
+Dec 11 18:58:46  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 18:58:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:13:46  
+Dec 11 19:13:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:13:46  
+Dec 11 19:13:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 19:13:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:28:46  
+Dec 11 19:28:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:28:46  
+Dec 11 19:28:46  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 19:28:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:28:46  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 19:28:46  
+Dec 11 19:28:46  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:28:46  
+Dec 11 19:28:46  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 19:28:46  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:43:47  
+Dec 11 19:43:47  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:43:47  
+Dec 11 19:43:47  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 19:43:47  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:58:47  
+Dec 11 19:58:47  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:58:47  
+Dec 11 19:58:47  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 19:58:47  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 19:58:47  [SCHEDULER] 📊 Checking 1-hour timeframe...
+Dec 11 19:58:47  
+Dec 11 19:58:47  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 19:58:47  
+Dec 11 19:58:47  [AGGRESSIVE] Checking for signals on XAU/USD 1h...
+Dec 11 19:58:47  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 20:13:47  
+Dec 11 20:13:47  [FOREX SIGNALS] Using strategy: Aggressive (aggressive)
+Dec 11 20:13:47  
+Dec 11 20:13:47  [AGGRESSIVE] Checking for signals on XAU/USD 15min...
+Dec 11 20:13:47  [AGGRESSIVE] Guardrail blocked: Daily loss cap reached (-416.0 pips, cap: -50.0)
+Dec 11 20:18:21  [AUTH] Session token found, valid: True
+Dec 11 20:18:21  [DB] get_all_telegram_subscriptions: found 11 rows
+Dec 11 20:18:21  10.244.5.120 - - [11/Dec/2025 20:18:21] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Dec 11 20:18:30  [AUTH] Session token found, valid: True
+Dec 11 20:18:31  10.244.5.120 - - [11/Dec/2025 20:18:31] "GET /api/telegram/billing/27 HTTP/1.1" 200 -
