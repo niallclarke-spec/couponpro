@@ -640,72 +640,119 @@
         }
 
         /* Telegram Channel Badges */
-        .channel-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
+        .channels-section {
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.3) 0%, rgba(79, 70, 229, 0.15) 50%, rgba(124, 58, 237, 0.1) 100%);
+            border: 1px solid rgba(79, 70, 229, 0.3);
             border-radius: var(--radius-lg);
-            padding: 10px 14px;
-            min-width: 180px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
         }
 
-        .channel-badge .telegram-icon {
-            width: 28px;
-            height: 28px;
+        .channels-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .channels-section-title svg {
+            width: 16px;
+            height: 16px;
+            color: #6366f1;
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .channel-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .channel-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .channel-card .channel-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
         }
 
-        .channel-badge.free .telegram-icon {
-            color: #3b82f6;
+        .channel-card .channel-icon svg {
+            width: 28px;
+            height: 28px;
         }
 
-        .channel-badge.vip .telegram-icon {
-            color: #f59e0b;
+        .channel-card.free .channel-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
+            color: #60a5fa;
         }
 
-        .channel-badge .channel-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
+        .channel-card.vip .channel-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.15) 100%);
+            color: #fbbf24;
+        }
+
+        .channel-card .channel-details {
             flex: 1;
             min-width: 0;
         }
 
-        .channel-badge .channel-name {
-            font-size: 13px;
+        .channel-card .channel-name {
+            font-size: 15px;
             font-weight: 600;
             color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-bottom: 2px;
         }
 
-        .channel-badge .channel-type {
-            font-size: 11px;
+        .channel-card .channel-type {
+            font-size: 12px;
             color: var(--text-muted);
         }
 
-        .channel-badge .channel-count {
-            font-size: 16px;
+        .channel-card .channel-members {
+            text-align: right;
+        }
+
+        .channel-card .member-count {
+            font-size: 24px;
             font-weight: 700;
-            color: var(--text-primary);
-            background: rgba(255,255,255,0.05);
-            padding: 4px 10px;
-            border-radius: 6px;
-            min-width: 40px;
-            text-align: center;
+            line-height: 1.1;
         }
 
-        .channel-badge.free .channel-count {
-            background: rgba(59, 130, 246, 0.15);
-            color: #3b82f6;
+        .channel-card.free .member-count {
+            color: #60a5fa;
         }
 
-        .channel-badge.vip .channel-count {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
+        .channel-card.vip .member-count {
+            color: #fbbf24;
+        }
+
+        .channel-card .member-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .stat-info {
@@ -4405,35 +4452,53 @@
 
             <!-- Forex Bot Views -->
             <div id="forex-subscriptions" class="view-container">
-                <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-                    <div>
-                        <h1>Telegram Subscriptions</h1>
-                        <p>Manage EntryLab subscriber access to private channel</p>
-                    </div>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <div class="channel-badge free">
-                            <svg class="telegram-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                            </svg>
-                            <div class="channel-info">
-                                <span class="channel-name" id="freeChannelName">@entrylabs</span>
-                                <span class="channel-type">Free Channel</span>
-                            </div>
-                            <div class="channel-count" id="freeChannelCount">--</div>
-                        </div>
-                        <div class="channel-badge vip">
-                            <svg class="telegram-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                            </svg>
-                            <div class="channel-info">
-                                <span class="channel-name" id="vipChannelName">VIP Signals</span>
-                                <span class="channel-type">Premium Channel</span>
-                            </div>
-                            <div class="channel-count" id="vipChannelCount">--</div>
-                        </div>
-                    </div>
+                <div class="content-header">
+                    <h1>Telegram Subscriptions</h1>
+                    <p>Manage EntryLab subscriber access to private channel</p>
                 </div>
                 <div class="content-body">
+                    <!-- Telegram Channels Section -->
+                    <div class="channels-section">
+                        <div class="channels-section-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                            </svg>
+                            Telegram Channels
+                        </div>
+                        <div class="channels-grid">
+                            <div class="channel-card free">
+                                <div class="channel-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                    </svg>
+                                </div>
+                                <div class="channel-details">
+                                    <div class="channel-name" id="freeChannelName">@entrylabs</div>
+                                    <div class="channel-type">Free Channel</div>
+                                </div>
+                                <div class="channel-members">
+                                    <div class="member-count" id="freeChannelCount">--</div>
+                                    <div class="member-label">Members</div>
+                                </div>
+                            </div>
+                            <div class="channel-card vip">
+                                <div class="channel-icon">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                    </svg>
+                                </div>
+                                <div class="channel-details">
+                                    <div class="channel-name" id="vipChannelName">VIP Signals</div>
+                                    <div class="channel-type">Premium Channel</div>
+                                </div>
+                                <div class="channel-members">
+                                    <div class="member-count" id="vipChannelCount">--</div>
+                                    <div class="member-label">Members</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="controls" style="margin-bottom: 20px;">
                         <div style="flex: 1; min-width: 300px;">
                             <input type="text" id="subscriptionSearchInput" placeholder="Search by email, name, or Stripe ID..." style="width: 100%;" oninput="searchSubscriptions(this.value)">
