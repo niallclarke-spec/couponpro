@@ -148,6 +148,7 @@ class ForexTelegramBot:
                 rsi_value=rsi,
                 macd_value=macd,
                 atr_value=atr,
+                bot_type=signal_data.get('bot_type', 'aggressive'),
                 take_profit_2=tp2,
                 take_profit_3=tp3,
                 tp1_percentage=tp1_pct,
