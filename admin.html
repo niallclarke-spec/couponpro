@@ -639,120 +639,46 @@
             color: var(--status-error);
         }
 
-        /* Telegram Channel Badges */
-        .channels-section {
-            background: linear-gradient(135deg, rgba(30, 58, 95, 0.3) 0%, rgba(79, 70, 229, 0.15) 50%, rgba(124, 58, 237, 0.1) 100%);
-            border: 1px solid rgba(79, 70, 229, 0.3);
-            border-radius: var(--radius-lg);
-            padding: 20px 24px;
-            margin-bottom: 24px;
+        /* Telegram Channel Inline Display */
+        .channels-row {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-primary);
         }
 
-        .channels-section-title {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
+        .channel-item {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .channels-section-title svg {
-            width: 16px;
-            height: 16px;
-            color: #6366f1;
-        }
-
-        .channels-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-        }
-
-        .channel-card {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: var(--radius-md);
-            padding: 16px 20px;
-            transition: border-color 0.2s, transform 0.2s;
-        }
-
-        .channel-card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .channel-card .channel-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .channel-item .tg-icon {
+            width: 20px;
+            height: 20px;
+            color: #229ED9;
             flex-shrink: 0;
         }
 
-        .channel-card .channel-icon svg {
-            width: 28px;
-            height: 28px;
-        }
-
-        .channel-card.free .channel-icon {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
-            color: #60a5fa;
-        }
-
-        .channel-card.vip .channel-icon {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.15) 100%);
-            color: #fbbf24;
-        }
-
-        .channel-card .channel-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .channel-card .channel-name {
-            font-size: 15px;
-            font-weight: 600;
+        .channel-item .channel-name {
+            font-size: 14px;
+            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 2px;
         }
 
-        .channel-card .channel-type {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .channel-card .channel-members {
-            text-align: right;
-        }
-
-        .channel-card .member-count {
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1.1;
-        }
-
-        .channel-card.free .member-count {
-            color: #60a5fa;
-        }
-
-        .channel-card.vip .member-count {
+        .channel-item .paid-badge {
+            width: 14px;
+            height: 14px;
             color: #fbbf24;
+            margin-left: 2px;
         }
 
-        .channel-card .member-label {
-            font-size: 11px;
+        .channel-item .member-count {
+            font-size: 13px;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            margin-left: 4px;
         }
 
         .stat-info {
@@ -4457,45 +4383,24 @@
                     <p>Manage EntryLab subscriber access to private channel</p>
                 </div>
                 <div class="content-body">
-                    <!-- Telegram Channels Section -->
-                    <div class="channels-section">
-                        <div class="channels-section-title">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                    <!-- Telegram Channels Row -->
+                    <div class="channels-row">
+                        <div class="channel-item">
+                            <svg class="tg-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                             </svg>
-                            Telegram Channels
+                            <span class="channel-name" id="freeChannelName">@entrylabs</span>
+                            <span class="member-count">(<span id="freeChannelCount">--</span> members)</span>
                         </div>
-                        <div class="channels-grid">
-                            <div class="channel-card free">
-                                <div class="channel-icon">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                                    </svg>
-                                </div>
-                                <div class="channel-details">
-                                    <div class="channel-name" id="freeChannelName">@entrylabs</div>
-                                    <div class="channel-type">Free Channel</div>
-                                </div>
-                                <div class="channel-members">
-                                    <div class="member-count" id="freeChannelCount">--</div>
-                                    <div class="member-label">Members</div>
-                                </div>
-                            </div>
-                            <div class="channel-card vip">
-                                <div class="channel-icon">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                                    </svg>
-                                </div>
-                                <div class="channel-details">
-                                    <div class="channel-name" id="vipChannelName">VIP Signals</div>
-                                    <div class="channel-type">Premium Channel</div>
-                                </div>
-                                <div class="channel-members">
-                                    <div class="member-count" id="vipChannelCount">--</div>
-                                    <div class="member-label">Members</div>
-                                </div>
-                            </div>
+                        <div class="channel-item">
+                            <svg class="tg-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            </svg>
+                            <span class="channel-name" id="vipChannelName">VIP Signals</span>
+                            <svg class="paid-badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="member-count">(<span id="vipChannelCount">--</span> members)</span>
                         </div>
                     </div>
 
