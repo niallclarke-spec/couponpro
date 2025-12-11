@@ -862,40 +862,60 @@ def get_subscription_details(subscription_id):
             expand=['customer', 'latest_invoice']
         )
         
-        # Get customer email
-        customer = subscription.customer
-        email = customer.email if hasattr(customer, 'email') else None
-        name = customer.name if hasattr(customer, 'name') else None
+        # Safe access helper
+        def safe_get(obj, key, default=None):
+            if isinstance(obj, dict):
+                return obj.get(key, default)
+            return getattr(obj, key, default)
+        
+        # Get customer - could be dict or object
+        customer = safe_get(subscription, 'customer')
+        email = safe_get(customer, 'email') if customer else None
+        name = safe_get(customer, 'name') if customer else None
+        customer_id = safe_get(customer, 'id') if customer else safe_get(subscription, 'customer')
         
         # Get amount from latest invoice
         amount_paid = 0
-        if subscription.latest_invoice and hasattr(subscription.latest_invoice, 'amount_paid'):
-            amount_paid = subscription.latest_invoice.amount_paid / 100
+        latest_invoice = safe_get(subscription, 'latest_invoice')
+        if latest_invoice:
+            inv_amount = safe_get(latest_invoice, 'amount_paid', 0)
+            if inv_amount:
+                amount_paid = inv_amount / 100
         
-        # Get plan info
+        # Get plan info - items could be dict or object
         plan_name = None
-        if subscription.items and subscription.items.data:
-            item = subscription.items.data[0]
-            if item.price and item.price.product:
-                # Product might be an ID or expanded object
-                product = item.price.product
-                if hasattr(product, 'name'):
-                    plan_name = product.name
+        items = safe_get(subscription, 'items')
+        items_data = None
+        if items:
+            if isinstance(items, dict):
+                items_data = items.get('data', [])
+            elif hasattr(items, 'data'):
+                items_data = items.data
+        
+        if items_data and len(items_data) > 0:
+            item = items_data[0]
+            price = safe_get(item, 'price')
+            if price:
+                product = safe_get(price, 'product')
+                if product:
+                    plan_name = safe_get(product, 'name')
         
         return {
-            'subscription_id': subscription.id,
-            'customer_id': customer.id if hasattr(customer, 'id') else subscription.customer,
+            'subscription_id': safe_get(subscription, 'id'),
+            'customer_id': customer_id,
             'email': email,
             'name': name,
-            'status': subscription.status,
+            'status': safe_get(subscription, 'status'),
             'plan_name': plan_name,
             'amount_paid': amount_paid,
-            'current_period_start': subscription.current_period_start,
-            'current_period_end': subscription.current_period_end,
-            'cancel_at_period_end': subscription.cancel_at_period_end
+            'current_period_start': safe_get(subscription, 'current_period_start'),
+            'current_period_end': safe_get(subscription, 'current_period_end'),
+            'cancel_at_period_end': safe_get(subscription, 'cancel_at_period_end', False)
         }
     except Exception as e:
         print(f"[Stripe] Error fetching subscription {subscription_id}: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
