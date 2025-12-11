@@ -145,9 +145,21 @@ class ForexSignalEngine:
             print(f"[FOREX CONFIG] Error loading config, using defaults: {e}")
     
     def reload_config(self):
-        """Reload configuration from database"""
+        """Reload configuration and active strategy from database (hot-reload)"""
         print("[FOREX CONFIG] Reloading configuration...")
         self.load_config()
+        
+        new_bot_type = get_active_bot() or 'aggressive'
+        if new_bot_type != self._active_bot_type:
+            print(f"[FOREX CONFIG] Strategy changed: {self._active_bot_type} -> {new_bot_type}")
+            self._active_bot_type = new_bot_type
+            self._active_strategy = get_active_strategy(new_bot_type)
+            if self._active_strategy:
+                print(f"[FOREX CONFIG] Hot-reloaded strategy: {self._active_strategy.name}")
+            else:
+                print(f"[FOREX CONFIG] WARNING: Could not load strategy '{new_bot_type}'")
+        else:
+            print(f"[FOREX CONFIG] Strategy unchanged: {self._active_bot_type}")
     
     def check_guardrails(self):
         """

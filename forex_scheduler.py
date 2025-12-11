@@ -9,7 +9,7 @@ from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
 from forex_ai import generate_tp_celebration, generate_daily_recap, generate_weekly_recap, generate_signal_guidance, generate_revalidation_message, generate_timeout_message
-from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent, update_effective_sl
+from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent, update_effective_sl, db_pool
 from forex_api import twelve_data_client
 from bots.core.milestone_tracker import milestone_tracker
 
@@ -26,10 +26,58 @@ class ForexScheduler:
         self.last_daily_recap = None
         self.last_weekly_recap = None
         self.last_1h_check = None  # Track when we last checked 1h timeframe
+        self.last_bot_config_updated_at = None  # Track bot_config changes for hot-reload
+        self.last_forex_config_updated_at = None  # Track forex_config changes for hot-reload
+    
+    def _check_config_update(self):
+        """Check if bot_config or forex_config has been updated and trigger hot-reload if needed"""
+        try:
+            if not db_pool.connection_pool:
+                return
+            
+            with db_pool.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT updated_at FROM bot_config WHERE setting_key = 'active_bot'
+                """)
+                bot_row = cursor.fetchone()
+                current_bot_updated_at = bot_row[0] if bot_row and bot_row[0] else None
+                
+                cursor.execute("""
+                    SELECT MAX(updated_at) FROM forex_config
+                """)
+                forex_row = cursor.fetchone()
+                current_forex_updated_at = forex_row[0] if forex_row and forex_row[0] else None
+                
+                should_reload = False
+                
+                if self.last_bot_config_updated_at is None:
+                    self.last_bot_config_updated_at = current_bot_updated_at
+                elif current_bot_updated_at and current_bot_updated_at != self.last_bot_config_updated_at:
+                    print(f"[SCHEDULER] 🔄 bot_config change detected")
+                    should_reload = True
+                    self.last_bot_config_updated_at = current_bot_updated_at
+                
+                if self.last_forex_config_updated_at is None:
+                    self.last_forex_config_updated_at = current_forex_updated_at
+                elif current_forex_updated_at and current_forex_updated_at != self.last_forex_config_updated_at:
+                    print(f"[SCHEDULER] 🔄 forex_config change detected (guardrails/indicators)")
+                    should_reload = True
+                    self.last_forex_config_updated_at = current_forex_updated_at
+                
+                if should_reload:
+                    print(f"[SCHEDULER] 🔄 Reloading config...")
+                    forex_signal_engine.reload_config()
+                    print(f"[SCHEDULER] ✅ Config hot-reloaded successfully")
+        except Exception as e:
+            print(f"[SCHEDULER] ⚠️ Error checking config update: {e}")
     
     async def run_signal_check(self):
         """Check for new signals on both 15min and 1h timeframes"""
         try:
+            self._check_config_update()
+            
             if not forex_signal_engine.is_trading_hours():
                 print("[SCHEDULER] Outside trading hours (8AM-10PM GMT), skipping signal check")
                 return

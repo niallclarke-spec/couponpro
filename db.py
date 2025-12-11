@@ -1901,7 +1901,8 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
                        stop_loss=None, rsi_value=None, macd_value=None, atr_value=None,
                        bot_type='aggressive', indicators_used=None, notes=None,
                        take_profit_2=None, take_profit_3=None,
-                       tp1_percentage=100, tp2_percentage=0, tp3_percentage=0):
+                       tp1_percentage=100, tp2_percentage=0, tp3_percentage=0,
+                       status='draft'):
     """
     Create a new forex signal with multi-TP support.
     
@@ -1923,6 +1924,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         tp1_percentage (int): Percentage to close at TP1 (default 100)
         tp2_percentage (int): Percentage to close at TP2 (default 0)
         tp3_percentage (int): Percentage to close at TP3 (default 0)
+        status (str): Initial status ('draft', 'pending', etc.) - default 'draft'
     
     Returns:
         int: Signal ID
@@ -1935,10 +1937,10 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
                 (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
                  rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes,
                  take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
-                  rsi_value, macd_value, atr_value, bot_type, indicators_used, notes,
+                  rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes,
                   take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage))
             signal_id = cursor.fetchone()[0]
             conn.commit()
@@ -1946,6 +1948,51 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
     except Exception as e:
         print(f"Error creating forex signal: {e}")
         raise
+
+def update_signal_status(signal_id, new_status, telegram_message_id=None):
+    """
+    Update a signal's status (e.g., from 'draft' to 'pending' or 'broadcast_failed').
+    
+    Args:
+        signal_id (int): The signal ID to update
+        new_status (str): New status ('pending', 'broadcast_failed', etc.)
+        telegram_message_id (int, optional): Telegram message ID if broadcast succeeded
+    
+    Returns:
+        bool: True if update succeeded, False otherwise
+    """
+    conn = None
+    try:
+        conn = db_pool.connection_pool.getconn()
+        cursor = conn.cursor()
+        if telegram_message_id is not None:
+            cursor.execute("""
+                UPDATE forex_signals 
+                SET status = %s, telegram_message_id = %s
+                WHERE id = %s
+            """, (new_status, telegram_message_id, signal_id))
+        else:
+            cursor.execute("""
+                UPDATE forex_signals 
+                SET status = %s
+                WHERE id = %s
+            """, (new_status, signal_id))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating signal status: {e}")
+        if conn:
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                print(f"Rollback failed: {rollback_error}")
+        return False
+    finally:
+        if conn:
+            try:
+                db_pool.connection_pool.putconn(conn)
+            except Exception as cleanup_error:
+                print(f"Connection cleanup error: {cleanup_error}")
 
 def get_forex_signals(status=None, limit=100):
     """
@@ -1998,6 +2045,7 @@ def get_forex_signals(status=None, limit=100):
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
                            breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
                     FROM forex_signals
+                    WHERE status NOT IN ('draft', 'broadcast_failed')
                     ORDER BY posted_at DESC
                     LIMIT %s
                 """, (limit,))
@@ -3142,6 +3190,7 @@ def count_signals_today_by_bot(bot_type):
                 SELECT COUNT(*) FROM forex_signals
                 WHERE bot_type = %s 
                 AND DATE(posted_at) = CURRENT_DATE
+                AND status NOT IN ('draft', 'broadcast_failed')
             """, (bot_type,))
             
             row = cursor.fetchone()

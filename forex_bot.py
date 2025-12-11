@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
-from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot
+from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status
 
 def get_forex_bot_token():
     """
@@ -132,12 +132,6 @@ class ForexTelegramBot:
 {indicator_line}
 """
             
-            sent_message = await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
-            
             signal_id = create_forex_signal(
                 signal_type=signal_type,
                 pair=pair,
@@ -153,14 +147,43 @@ class ForexTelegramBot:
                 take_profit_3=tp3,
                 tp1_percentage=tp1_pct,
                 tp2_percentage=tp2_pct,
-                tp3_percentage=tp3_pct
+                tp3_percentage=tp3_pct,
+                status='draft'
             )
             
-            # Store original indicator values for re-validation using config-driven approach
-            # Use the all_indicators dict from signal_data if available
+            if not signal_id:
+                print("❌ Failed to create draft signal in database")
+                return None
+            
+            print(f"📝 Created draft signal #{signal_id}, posting to Telegram...")
+            
+            try:
+                sent_message = await self.bot.send_message(
+                    chat_id=self.channel_id,
+                    text=message,
+                    parse_mode='HTML'
+                )
+                
+                if update_signal_status(signal_id, 'pending', telegram_message_id=sent_message.message_id):
+                    print(f"✅ Signal #{signal_id} status updated to pending (Telegram msg: {sent_message.message_id})")
+                else:
+                    print(f"❌ Failed to update signal #{signal_id} status to pending after Telegram broadcast")
+                    print(f"⚠️ Ghost signal detected: Telegram message sent but DB update failed")
+                    fallback_success = update_signal_status(signal_id, 'broadcast_failed')
+                    if fallback_success:
+                        print(f"📝 Signal #{signal_id} marked as broadcast_failed (fallback)")
+                    else:
+                        print(f"🚨 CRITICAL: Could not mark signal #{signal_id} as broadcast_failed - manual cleanup required")
+                    return None
+                    
+            except TelegramError as e:
+                print(f"❌ Failed to post signal to Telegram: {e}")
+                update_signal_status(signal_id, 'broadcast_failed')
+                print(f"📝 Signal #{signal_id} marked as broadcast_failed")
+                return None
+            
             indicators_dict = signal_data.get('all_indicators', {})
             if not indicators_dict:
-                # Fallback to building from individual values
                 indicators_dict = {
                     'rsi': rsi,
                     'macd': macd,
@@ -168,14 +191,12 @@ class ForexTelegramBot:
                     'stochastic': signal_data.get('stoch_k_value'),
                     'atr': atr
                 }
-            # Remove None values
             indicators_dict = {k: v for k, v in indicators_dict.items() if v is not None}
             
             if signal_id and indicators_dict:
                 update_signal_original_indicators(signal_id, indicators_dict=indicators_dict)
                 print(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
                 
-                # Record entry narrative event
                 add_signal_narrative(
                     signal_id=signal_id,
                     event_type='entry',
@@ -188,9 +209,6 @@ class ForexTelegramBot:
             print(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id
             
-        except TelegramError as e:
-            print(f"❌ Failed to post signal to Telegram: {e}")
-            return None
         except Exception as e:
             print(f"❌ Unexpected error posting signal: {e}")
             return None
