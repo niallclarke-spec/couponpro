@@ -598,6 +598,73 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         
+        elif parsed_path.path == '/api/telegram-channel-stats':
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                import asyncio
+                from telegram import Bot
+                
+                free_channel = "@entrylabs"
+                vip_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                bot_token = os.environ.get('FOREX_BOT_TOKEN') or os.environ.get('ENTRYLAB_TEST_BOT')
+                
+                result = {
+                    'free_channel': {
+                        'name': free_channel,
+                        'member_count': None
+                    },
+                    'vip_channel': {
+                        'name': 'VIP Signals',
+                        'member_count': None
+                    }
+                }
+                
+                if bot_token:
+                    bot = Bot(token=bot_token)
+                    
+                    async def get_channel_counts():
+                        counts = {'free': None, 'vip': None}
+                        try:
+                            free_chat = await bot.get_chat(free_channel)
+                            counts['free'] = await bot.get_chat_member_count(free_channel)
+                        except Exception as e:
+                            print(f"[TELEGRAM] Error getting free channel count: {e}")
+                        
+                        if vip_channel_id:
+                            try:
+                                vip_chat = await bot.get_chat(vip_channel_id)
+                                counts['vip'] = await bot.get_chat_member_count(vip_channel_id)
+                                result['vip_channel']['name'] = vip_chat.title or 'VIP Signals'
+                            except Exception as e:
+                                print(f"[TELEGRAM] Error getting VIP channel count: {e}")
+                        
+                        return counts
+                    
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    counts = loop.run_until_complete(get_channel_counts())
+                    loop.close()
+                    
+                    result['free_channel']['member_count'] = counts.get('free')
+                    result['vip_channel']['member_count'] = counts.get('vip')
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
+            except Exception as e:
+                print(f"[TELEGRAM] Error getting channel stats: {e}")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        
         elif parsed_path.path == '/api/signal-bot/status':
             if not DATABASE_AVAILABLE:
                 self.send_response(503)

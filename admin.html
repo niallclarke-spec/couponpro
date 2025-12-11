@@ -639,6 +639,75 @@
             color: var(--status-error);
         }
 
+        /* Telegram Channel Badges */
+        .channel-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 10px 14px;
+            min-width: 180px;
+        }
+
+        .channel-badge .telegram-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .channel-badge.free .telegram-icon {
+            color: #3b82f6;
+        }
+
+        .channel-badge.vip .telegram-icon {
+            color: #f59e0b;
+        }
+
+        .channel-badge .channel-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .channel-badge .channel-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .channel-badge .channel-type {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .channel-badge .channel-count {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .channel-badge.free .channel-count {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .channel-badge.vip .channel-count {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
         .stat-info {
             flex: 1;
         }
@@ -4336,9 +4405,33 @@
 
             <!-- Forex Bot Views -->
             <div id="forex-subscriptions" class="view-container">
-                <div class="content-header">
-                    <h1>Telegram Subscriptions</h1>
-                    <p>Manage EntryLab subscriber access to private channel</p>
+                <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h1>Telegram Subscriptions</h1>
+                        <p>Manage EntryLab subscriber access to private channel</p>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <div class="channel-badge free">
+                            <svg class="telegram-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            </svg>
+                            <div class="channel-info">
+                                <span class="channel-name" id="freeChannelName">@entrylabs</span>
+                                <span class="channel-type">Free Channel</span>
+                            </div>
+                            <div class="channel-count" id="freeChannelCount">--</div>
+                        </div>
+                        <div class="channel-badge vip">
+                            <svg class="telegram-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            </svg>
+                            <div class="channel-info">
+                                <span class="channel-name" id="vipChannelName">VIP Signals</span>
+                                <span class="channel-type">Premium Channel</span>
+                            </div>
+                            <div class="channel-count" id="vipChannelCount">--</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="content-body">
                     <div class="controls" style="margin-bottom: 20px;">
@@ -5620,6 +5713,7 @@
                 allSubscriptions = data.subscriptions || [];
                 updateSubscriptionStats();
                 renderSubscriptions();
+                loadTelegramChannelStats();
             } catch (error) {
                 console.error('Error loading subscriptions:', error);
                 document.getElementById('subscriptionsContent').innerHTML = `
@@ -5674,6 +5768,33 @@
                 document.getElementById('netRevenue').textContent = `$${totalFromDb.toFixed(0)}`;
                 document.getElementById('monthlyRebill').textContent = '$--';
                 document.getElementById('netRevenueSubtext').textContent = 'From database';
+            }
+        }
+
+        async function loadTelegramChannelStats() {
+            try {
+                const response = await fetch('/api/telegram-channel-stats', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch channel stats');
+                
+                const data = await response.json();
+                
+                if (data.free_channel) {
+                    document.getElementById('freeChannelName').textContent = data.free_channel.name || '@entrylabs';
+                    document.getElementById('freeChannelCount').textContent = 
+                        data.free_channel.member_count !== null ? data.free_channel.member_count : '--';
+                }
+                
+                if (data.vip_channel) {
+                    document.getElementById('vipChannelName').textContent = data.vip_channel.name || 'VIP Signals';
+                    document.getElementById('vipChannelCount').textContent = 
+                        data.vip_channel.member_count !== null ? data.vip_channel.member_count : '--';
+                }
+                
+            } catch (error) {
+                console.error('Error loading channel stats:', error);
             }
         }
 
