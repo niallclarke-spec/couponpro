@@ -540,10 +540,10 @@
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 20px 24px;
+            padding: 14px 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
             transition: all 0.2s;
         }
 
@@ -2504,19 +2504,17 @@
         .chart-card-large {
             flex: 7;
             background: var(--bg-card);
-            border: 1px solid var(--border-primary);
+            border: none;
             border-radius: var(--radius-lg);
-            padding: 16px;
+            padding: 0;
             min-height: 400px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .chart-card-large .chart-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            display: none;
         }
 
         .chart-card-large .chart-title {
