@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
-from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative
+from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot
 
 def get_forex_bot_token():
     """
@@ -148,7 +148,7 @@ class ForexTelegramBot:
                 rsi_value=rsi,
                 macd_value=macd,
                 atr_value=atr,
-                bot_type=signal_data.get('bot_type', 'aggressive'),
+                bot_type=get_active_bot(),
                 take_profit_2=tp2,
                 take_profit_3=tp3,
                 tp1_percentage=tp1_pct,
