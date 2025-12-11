@@ -11,25 +11,42 @@ _stripe_credentials = None
 
 def get_stripe_credentials():
     """
-    Fetch Stripe credentials - prioritizes manual env vars (live keys), then Replit connector
+    Fetch Stripe credentials based on environment:
+    - Dev mode: Uses TEST_STRIPE_SECRET and TEST_STRIPE_PUBLISHABLE_KEY (sandbox)
+    - Production: Uses STRIPE_SECRET and STRIPE_PUBLISHABLE_KEY (live)
     
-    Supports:
-    1. Manual env vars: STRIPE_SECRET_KEY/STRIPE_SECRET (preferred - allows using live keys in dev)
-    2. Replit Stripe Connector (fallback)
+    Falls back to Replit Stripe Connector if env vars not found.
     """
     global _stripe_credentials
     
     if _stripe_credentials:
         return _stripe_credentials
     
-    # First, check for manual environment variables (preferred - allows live keys in dev)
-    manual_secret = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
-    manual_publishable = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    # Check if we're in production (deployed) or dev mode
+    is_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    
+    if is_production:
+        # Production: Use live keys
+        manual_secret = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
+        manual_publishable = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+        key_mode = 'LIVE'
+    else:
+        # Dev mode: Prefer test keys, fall back to live if test not available
+        test_secret = os.environ.get('TEST_STRIPE_SECRET')
+        test_publishable = os.environ.get('TEST_STRIPE_PUBLISHABLE_KEY')
+        
+        if test_secret:
+            manual_secret = test_secret
+            manual_publishable = test_publishable
+            key_mode = 'TEST (sandbox)'
+        else:
+            # Fall back to live keys if test keys not set
+            manual_secret = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
+            manual_publishable = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+            key_mode = 'LIVE (no test keys found)'
     
     if manual_secret:
-        # Detect if it's a live or test key
-        key_type = 'LIVE' if 'live' in manual_secret else 'TEST'
-        print(f"[STRIPE] Using manual environment variables ({key_type} mode)")
+        print(f"[STRIPE] Using {key_mode} mode")
         _stripe_credentials = {
             'publishable_key': manual_publishable or '',
             'secret_key': manual_secret
