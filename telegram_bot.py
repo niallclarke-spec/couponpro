@@ -1059,6 +1059,47 @@ def sync_check_user_in_channel(channel_id, user_id):
         return None
 
 
+async def send_message_to_user(user_id, message, parse_mode='Markdown'):
+    """Send a direct message to a user via the Forex/EntryLab bot"""
+    try:
+        from forex_bot import get_forex_bot_token
+        bot_token = get_forex_bot_token()
+        if not bot_token:
+            print("[TELEGRAM] ERROR: No forex bot token available")
+            return False
+        
+        from telegram import Bot
+        bot = Bot(token=bot_token)
+        
+        await bot.send_message(
+            chat_id=user_id,
+            text=message,
+            parse_mode=parse_mode
+        )
+        print(f"[TELEGRAM] Sent message to user {user_id}")
+        return True
+    except Exception as e:
+        print(f"[TELEGRAM] Error sending message to user {user_id}: {e}")
+        return False
+
+
+def sync_send_message(user_id, message, parse_mode='Markdown'):
+    """Synchronous wrapper for sending messages (for use in HTTP handlers)"""
+    if _bot_loop is None:
+        print("[TELEGRAM] ERROR: Bot loop not initialized")
+        return False
+    
+    try:
+        future = asyncio.run_coroutine_threadsafe(
+            send_message_to_user(user_id, message, parse_mode),
+            _bot_loop
+        )
+        return future.result(timeout=10)
+    except Exception as e:
+        print(f"[TELEGRAM] Error in sync_send_message: {e}")
+        return False
+
+
 async def handle_chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle chat member updates (joins, leaves, etc.) in the forex signals channel.
@@ -1211,9 +1252,11 @@ async def start_join_tracking():
 
 def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
     """
-    Handle incoming webhook updates for the forex bot (join tracking).
+    Handle incoming webhook updates for the forex bot (join tracking and user messages).
     
-    This handles chat_member updates when users join/leave the forex signals channel.
+    This handles:
+    - chat_member updates when users join/leave the forex signals channel
+    - message updates when users send messages to the bot (responds with support email)
     Uses webhooks instead of polling to avoid conflicts with production server.
     
     Args:
@@ -1224,6 +1267,41 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         dict with success status
     """
     try:
+        # Handle user messages - respond with support email
+        if 'message' in webhook_data:
+            message_data = webhook_data['message']
+            chat_id = message_data.get('chat', {}).get('id')
+            chat_type = message_data.get('chat', {}).get('type', 'private')
+            
+            # Only respond to private messages (not group/channel messages)
+            if chat_type == 'private' and chat_id:
+                try:
+                    import requests
+                    support_message = (
+                        "👋 *Hello!*\n\n"
+                        "For subscription support, billing questions, or cancellation requests, "
+                        "please email us at:\n\n"
+                        "📧 *members@entrylab.io*\n\n"
+                        "Our team will get back to you within 24 hours."
+                    )
+                    
+                    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    response = requests.post(url, json={
+                        'chat_id': chat_id,
+                        'text': support_message,
+                        'parse_mode': 'Markdown'
+                    }, timeout=10)
+                    
+                    if response.json().get('ok'):
+                        print(f"[FOREX_BOT] Sent support email response to user {chat_id}")
+                        return {'success': True, 'message': f'Sent support response to {chat_id}'}
+                    else:
+                        print(f"[FOREX_BOT] Failed to send response: {response.json()}")
+                except Exception as msg_error:
+                    print(f"[FOREX_BOT] Error sending support response: {msg_error}")
+            
+            return {'success': True, 'message': 'Message handled'}
+        
         # Check if this is a chat_member update
         if 'chat_member' not in webhook_data:
             return {'success': True, 'message': 'Not a chat_member update, ignored'}
@@ -1313,7 +1391,7 @@ def setup_forex_webhook(bot_token: str, webhook_url: str) -> bool:
         url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
         params = {
             'url': webhook_url,
-            'allowed_updates': ['chat_member']  # Only receive chat_member updates
+            'allowed_updates': ['chat_member', 'message']  # Receive chat_member and message updates
         }
         
         response = requests.post(url, json=params, timeout=10)
