@@ -3712,6 +3712,45 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
+        /* Table Filter Bar - subtle in-table filters */
+        .table-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .table-filter-label {
+            font-size: 12px;
+            color: #718096;
+            margin-right: 4px;
+        }
+
+        .table-filter-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #718096;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .table-filter-btn:hover {
+            color: #a0aec0;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .table-filter-btn.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
         /* Subscription Detail Modal - Dark Theme */
         .subscription-detail-modal {
             background: #1a1d29;
@@ -4466,20 +4505,11 @@
                         </div>
                     </div>
 
+                    <!-- Search + Period Filters Row -->
                     <div class="controls" style="margin-bottom: 20px;">
-                        <div style="flex: 1; min-width: 300px;">
+                        <div style="flex: 1; min-width: 280px;">
                             <input type="text" id="subscriptionSearchInput" placeholder="Search by email, name, or Stripe ID..." style="width: 100%;" oninput="searchSubscriptions(this.value)">
                         </div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button class="btn active" data-status="all" onclick="filterSubscriptions('all')">All</button>
-                            <button class="btn btn-secondary" data-status="active" onclick="filterSubscriptions('active')">Active</button>
-                            <button class="btn btn-secondary" data-status="free_plan" onclick="filterSubscriptions('free_plan')">Free Plan</button>
-                            <button class="btn btn-secondary" data-status="revoked" onclick="filterSubscriptions('revoked')">Revoked</button>
-                        </div>
-                    </div>
-                    <!-- Period Filter Pills - above stats -->
-                    <div class="metrics-period-header">
-                        <span class="metrics-period-label">Metrics Period</span>
                         <div class="period-pills">
                             <button class="period-pill active" data-period="all" onclick="setMetricsPeriod('all')">All Time</button>
                             <button class="period-pill" data-period="30d" onclick="setMetricsPeriod('30d')">30d</button>
@@ -4551,6 +4581,13 @@
                         </div>
                     </div>
                     <div class="card">
+                        <!-- Table Status Filters -->
+                        <div class="table-filter-bar">
+                            <span class="table-filter-label">Show:</span>
+                            <button class="table-filter-btn active" data-status="all" onclick="filterSubscriptions('all')">All</button>
+                            <button class="table-filter-btn" data-status="active" onclick="filterSubscriptions('active')">Active</button>
+                            <button class="table-filter-btn" data-status="revoked" onclick="filterSubscriptions('revoked')">Revoked</button>
+                        </div>
                         <div id="subscriptionsContent">
                             <div class="loading">Loading subscriptions...</div>
                         </div>
@@ -5886,12 +5923,11 @@
         function filterSubscriptions(status) {
             currentFilter = status;
             
-            document.querySelectorAll('[data-status]').forEach(btn => {
-                if (btn.getAttribute('data-status') === status) {
-                    btn.classList.remove('btn-secondary');
+            // Update table filter button states
+            document.querySelectorAll('.table-filter-btn').forEach(btn => {
+                if (btn.dataset.status === status) {
                     btn.classList.add('active');
                 } else {
-                    btn.classList.add('btn-secondary');
                     btn.classList.remove('active');
                 }
             });
