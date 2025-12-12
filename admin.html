@@ -5728,13 +5728,9 @@
             const paidSubs = allSubscriptions.filter(s => s.amount_paid > 0 && s.status !== 'revoked');
             const paidCount = paidSubs.length;
             const activePaid = paidSubs.filter(s => s.status === 'active').length;
-            const freePlanSubs = allSubscriptions.filter(s => 
-                (s.amount_paid === 0 || s.amount_paid === null) && s.status !== 'revoked'
-            ).length;
             
             document.getElementById('paidSubscribers').textContent = paidCount;
             document.getElementById('activeSubscribers').textContent = activePaid;
-            document.getElementById('freePlanSubscribers').textContent = freePlanSubs;
             
             // Fetch revenue metrics from Stripe
             fetchRevenueMetrics();
