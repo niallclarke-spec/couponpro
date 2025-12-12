@@ -1,19 +1,26 @@
 """
 AI message generator for forex signals using OpenAI
 Creates motivational celebration messages and performance recaps
+
+NOTE: This module now uses integrations.openai.client for the OpenAI client.
+All functions remain here for backward compatibility.
 """
-import os
 from datetime import datetime
-from openai import OpenAI
+from integrations.openai.client import get_openai_client
 from db import (
     get_forex_signals_by_period, get_forex_stats_by_period,
     get_recent_signal_streak, get_recent_phrases, add_recent_phrase
 )
 
-client = OpenAI(
-    api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY'),
-    base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL')
-)
+
+def _get_client():
+    """Get OpenAI client, raising if not available"""
+    client = get_openai_client()
+    if client is None:
+        raise RuntimeError("OpenAI client not configured")
+    return client
+
+
 
 def get_trading_context():
     """
@@ -152,7 +159,7 @@ Style: Short, punchy, celebratory. Like "Another profitable trade!" or "Gold del
 
 Generate just the short line, no emojis:"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write ultra-short celebratory trading messages. Max 8 words. Punchy and fun."},
@@ -241,7 +248,7 @@ Style: 2-3 sentences max. Analytical and professional. Reference market conditio
 
 Generate the analytical recap commentary (don't repeat the numbers, focus on insights):"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical daily recaps. Focus on market conditions, technical analysis, and strategy performance metrics."},
@@ -299,7 +306,7 @@ Examples of good tone:
 
 Generate the morning message:"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a friendly, experienced gold trading analyst giving morning updates to your team. Keep it brief, human, and actionable."},
@@ -348,7 +355,7 @@ Style: 3-4 sentences. Professional and data-focused. Analyze strategy effectiven
 
 Generate the analytical recap:"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a professional, data-driven forex analyst who provides analytical weekly performance recaps. Focus on strategy metrics, market conditions, and technical analysis patterns."},
@@ -423,7 +430,7 @@ Style: Short, informative. Like "Momentum building, watching $4200 level" or "RS
 
 Generate just the short line:"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write ultra-short trading updates. Max 12 words. Informative and calm."},
@@ -555,7 +562,7 @@ Style based on status:
 
 Generate just the short line:"""
         
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write ultra-short trading updates. Max 10 words."},
@@ -665,7 +672,7 @@ Style: 2-3 sentences. Professional, analytical. Start with 🔔 emoji. Reference
 
 Generate the message:"""
 
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a professional forex analyst. Provide clear trade closure recommendations based on technical analysis. Never mention time limits - only technical reasons."},
