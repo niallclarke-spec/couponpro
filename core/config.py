@@ -56,3 +56,71 @@ class Config:
     @staticmethod
     def get_test_stripe_webhook_secret():
         return os.environ.get('TEST_STRIPE_WEBHOOK_SECRET') or os.environ.get('STRIPE_WEBHOOK_SECRET')
+    
+    @staticmethod
+    def get_database_url():
+        return os.environ.get('DATABASE_URL')
+    
+    @staticmethod
+    def get_db_host():
+        return os.environ.get('DB_HOST')
+    
+    @staticmethod
+    def get_db_port():
+        return os.environ.get('DB_PORT')
+    
+    @staticmethod
+    def get_db_name():
+        return os.environ.get('DB_NAME')
+    
+    @staticmethod
+    def get_db_user():
+        return os.environ.get('DB_USER')
+    
+    @staticmethod
+    def get_db_password():
+        return os.environ.get('DB_PASSWORD')
+    
+    @staticmethod
+    def get_stripe_secret_key():
+        return os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
+    
+    @staticmethod
+    def get_stripe_publishable_key():
+        return os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    
+    @staticmethod
+    def get_test_stripe_secret():
+        return os.environ.get('TEST_STRIPE_SECRET')
+    
+    @staticmethod
+    def get_test_stripe_publishable_key():
+        return os.environ.get('TEST_STRIPE_PUBLISHABLE_KEY')
+    
+    @staticmethod
+    def get_spaces_access_key():
+        return os.environ.get('SPACES_ACCESS_KEY')
+    
+    @staticmethod
+    def get_spaces_secret_key():
+        return os.environ.get('SPACES_SECRET_KEY')
+    
+    @staticmethod
+    def get_twelve_data_api_key():
+        return os.environ.get('TWELVE_DATA_API_KEY')
+    
+    @staticmethod
+    def get_funderpro_product_id():
+        return os.environ.get('FUNDERPRO_PRODUCT_ID')
+    
+    @staticmethod
+    def get_replit_connectors_hostname():
+        return os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
+    
+    @staticmethod
+    def get_repl_identity():
+        return os.environ.get('REPL_IDENTITY')
+    
+    @staticmethod
+    def get_web_repl_renewal():
+        return os.environ.get('WEB_REPL_RENEWAL')
