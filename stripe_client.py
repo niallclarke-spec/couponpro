@@ -281,7 +281,7 @@ def get_customer_billing_info(stripe_customer_id):
 
 # Revenue metrics cache with TTL - keyed by period
 _metrics_cache = {}
-METRICS_CACHE_TTL_SECONDS = 30  # 30 seconds cache for fresh data
+METRICS_CACHE_TTL_SECONDS = 120  # 2 minutes cache for dashboard performance
 
 def get_period_date_range(period):
     """
