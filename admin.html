@@ -3661,6 +3661,57 @@
             flex-wrap: wrap;
         }
 
+        /* Metrics Period Header & Pills */
+        .metrics-period-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .metrics-period-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .period-pills {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .period-pill {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #a0aec0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .period-pill:hover {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .period-pill.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
         /* Subscription Detail Modal - Dark Theme */
         .subscription-detail-modal {
             background: #1a1d29;
@@ -4426,14 +4477,15 @@
                             <button class="btn btn-secondary" data-status="revoked" onclick="filterSubscriptions('revoked')">Revoked</button>
                         </div>
                     </div>
-                    <div class="controls" style="margin-bottom: 16px;">
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <span style="color: var(--text-secondary); font-size: 14px; margin-right: 8px;">Metrics Period:</span>
-                            <button class="btn active" data-period="all" onclick="setMetricsPeriod('all')">All Time</button>
-                            <button class="btn btn-secondary" data-period="30d" onclick="setMetricsPeriod('30d')">30d</button>
-                            <button class="btn btn-secondary" data-period="7d" onclick="setMetricsPeriod('7d')">7d</button>
-                            <button class="btn btn-secondary" data-period="yesterday" onclick="setMetricsPeriod('yesterday')">Yesterday</button>
-                            <button class="btn btn-secondary" data-period="today" onclick="setMetricsPeriod('today')">Today</button>
+                    <!-- Period Filter Pills - above stats -->
+                    <div class="metrics-period-header">
+                        <span class="metrics-period-label">Metrics Period</span>
+                        <div class="period-pills">
+                            <button class="period-pill active" data-period="all" onclick="setMetricsPeriod('all')">All Time</button>
+                            <button class="period-pill" data-period="30d" onclick="setMetricsPeriod('30d')">30d</button>
+                            <button class="period-pill" data-period="7d" onclick="setMetricsPeriod('7d')">7d</button>
+                            <button class="period-pill" data-period="yesterday" onclick="setMetricsPeriod('yesterday')">Yesterday</button>
+                            <button class="period-pill" data-period="today" onclick="setMetricsPeriod('today')">Today</button>
                         </div>
                     </div>
                     <div class="stats-grid" style="margin-bottom: 24px;">
@@ -5690,14 +5742,12 @@
         function setMetricsPeriod(period) {
             currentMetricsPeriod = period;
             
-            // Update button active states
-            document.querySelectorAll('[data-period]').forEach(btn => {
+            // Update pill active states
+            document.querySelectorAll('.period-pill').forEach(btn => {
                 if (btn.dataset.period === period) {
                     btn.classList.add('active');
-                    btn.classList.remove('btn-secondary');
                 } else {
                     btn.classList.remove('active');
-                    btn.classList.add('btn-secondary');
                 }
             });
             
