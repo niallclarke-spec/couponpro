@@ -5334,7 +5334,7 @@
         function loadRouteFromHash() {
             const hash = window.location.hash.substring(1); // Remove #
             if (!hash) {
-                navigateTo('coupon', 'templates', false);
+                navigateTo('forex', 'subscriptions', false);
                 return;
             }
 
@@ -5342,7 +5342,7 @@
             if (product && view) {
                 navigateTo(product, view, false);
             } else {
-                navigateTo('coupon', 'templates', false);
+                navigateTo('forex', 'subscriptions', false);
             }
         }
 
@@ -5418,10 +5418,10 @@
             // Update product name
             document.getElementById('productName').textContent = product === 'coupon' ? 'Coupon Bot' : 'Forex Signals Bot';
             
-            // Update active product icon
+            // Update active product icon (index 0 = forex, index 1 = coupon)
             const productIcons = document.querySelectorAll('.product-icon');
             productIcons.forEach((icon, index) => {
-                if ((index === 0 && product === 'coupon') || (index === 1 && product === 'forex')) {
+                if ((index === 0 && product === 'forex') || (index === 1 && product === 'coupon')) {
                     icon.classList.add('active');
                 } else {
                     icon.classList.remove('active');
