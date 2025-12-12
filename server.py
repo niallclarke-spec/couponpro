@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+from core.config import Config
+
 # Try to import object storage (only available on Replit)
 try:
     from object_storage import ObjectStorageService
@@ -71,14 +73,14 @@ except Exception as e:
     print(f"[INFO] Stripe not available: {e}")
     STRIPE_AVAILABLE = False
 
-PORT = int(os.environ.get('PORT', 5000))
+PORT = Config.get_port()
 DIRECTORY = "."
 SESSION_TTL = 86400  # 24 hours in seconds
 
 def create_signed_session():
     """Create a cryptographically signed session token that doesn't need server storage"""
     expiry = int(time.time()) + SESSION_TTL
-    secret = os.environ.get('ADMIN_PASSWORD')
+    secret = Config.get_admin_password()
     if not secret:
         raise ValueError("ADMIN_PASSWORD environment variable must be set")
     
@@ -111,7 +113,7 @@ def verify_signed_session(token):
             return False
         
         # Verify signature
-        secret = os.environ.get('ADMIN_PASSWORD')
+        secret = Config.get_admin_password()
         if not secret:
             print(f"[AUTH] ADMIN_PASSWORD not configured")
             return False
@@ -611,8 +613,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 from telegram import Bot
                 
                 free_channel = "@entrylabs"
-                vip_channel_id = os.environ.get('FOREX_CHANNEL_ID')
-                bot_token = os.environ.get('FOREX_BOT_TOKEN') or os.environ.get('ENTRYLAB_TEST_BOT')
+                vip_channel_id = Config.get_forex_channel_id()
+                bot_token = Config.get_forex_bot_token()
                 
                 result = {
                     'free_channel': {
@@ -888,7 +890,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path.startswith('/api/telegram/check-access/'):
             # EntryLab API - Check subscription access status by email
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
-            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            expected_key = Config.get_entrylab_api_key()
             
             if not api_key or api_key != expected_key or not expected_key:
                 self.send_response(401)
@@ -1529,13 +1531,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 password = data.get('password', '')
-                admin_password = os.environ.get('ADMIN_PASSWORD', '')
+                admin_password = Config.get_admin_password() or ''
                 
                 if password == admin_password and admin_password:
                     session_token = create_signed_session()
                     
                     # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
-                    is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
+                    is_production = PORT == 8080 or Config.get_app_url().startswith('https')
                     secure_flag = '; Secure' if is_production else ''
                     
                     self.send_response(200)
@@ -1559,7 +1561,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             # Just clear the cookie on the client side
             
             # Add Secure flag for HTTPS (Digital Ocean runs on port 8080 with HTTPS)
-            is_production = PORT == 8080 or os.environ.get('APP_URL', '').startswith('https')
+            is_production = PORT == 8080 or Config.get_app_url().startswith('https')
             secure_flag = '; Secure' if is_production else ''
             
             self.send_response(200)
@@ -2035,8 +2037,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 if not is_existing_template and OBJECT_STORAGE_AVAILABLE:
                     try:
                         import urllib.request
-                        spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
-                        spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                        spaces_bucket = Config.get_spaces_bucket()
+                        spaces_region = Config.get_spaces_region()
                         cdn_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
                         req = urllib.request.Request(cdn_url, method='HEAD')
                         urllib.request.urlopen(req, timeout=5)
@@ -2122,8 +2124,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     if not existing_meta and OBJECT_STORAGE_AVAILABLE:
                         try:
                             import urllib.request
-                            spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
-                            spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                            spaces_bucket = Config.get_spaces_bucket()
+                            spaces_region = Config.get_spaces_region()
                             meta_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
                             response = urllib.request.urlopen(meta_url, timeout=5)
                             existing_meta = json.loads(response.read().decode('utf-8'))
@@ -2361,8 +2363,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Download existing meta.json from Spaces
                 import urllib.request
-                spaces_bucket = os.environ.get('SPACES_BUCKET', 'couponpro-templates')
-                spaces_region = os.environ.get('SPACES_REGION', 'lon1')
+                spaces_bucket = Config.get_spaces_bucket()
+                spaces_region = Config.get_spaces_region()
                 meta_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
                 
                 try:
@@ -2526,7 +2528,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 content_length = int(self.headers.get('Content-Length', 0))
                 post_data = self.rfile.read(content_length)
                 print(f"[WEBHOOK-ENDPOINT] Received {content_length} bytes", flush=True)
-                bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+                bot_token = Config.get_telegram_bot_token()
                 
                 if not bot_token:
                     print(f"[WEBHOOK-ENDPOINT] ❌ Bot token not configured", flush=True)
@@ -2626,7 +2628,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/telegram/grant-access':
             # EntryLab API - Grant access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
-            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            expected_key = Config.get_entrylab_api_key()
             
             if not api_key or api_key != expected_key or not expected_key:
                 self.send_response(401)
@@ -2729,7 +2731,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     return
                 
                 # PREMIUM USERS: Generate unique invite link for private channel
-                private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                private_channel_id = Config.get_forex_channel_id()
                 if not private_channel_id:
                     self.send_response(500)
                     self.send_header('Content-type', 'application/json')
@@ -2778,7 +2780,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/telegram/clear-all':
             # Admin API - Clear all telegram subscriptions (for testing)
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
-            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            expected_key = Config.get_entrylab_api_key()
             
             if not api_key or api_key != expected_key or not expected_key:
                 self.send_response(401)
@@ -2892,7 +2894,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         
                         # Kick user from Telegram channel if they have joined
                         if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
-                            private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                            private_channel_id = Config.get_forex_channel_id()
                             if private_channel_id:
                                 from telegram_bot import sync_kick_user_from_channel
                                 kicked_from_telegram = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
@@ -2960,7 +2962,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 # Kick from Telegram if they have a telegram_user_id
                 kicked = False
                 if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
-                    private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                    private_channel_id = Config.get_forex_channel_id()
                     if private_channel_id:
                         from telegram_bot import sync_kick_user_from_channel
                         kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
@@ -3002,7 +3004,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/telegram/revoke-access':
             # EntryLab API - Revoke access to private Telegram channel
             api_key = self.headers.get('X-API-Key') or self.headers.get('Authorization', '').replace('Bearer ', '')
-            expected_key = os.environ.get('ENTRYLAB_API_KEY', '')
+            expected_key = Config.get_entrylab_api_key()
             
             if not api_key or api_key != expected_key or not expected_key:
                 self.send_response(401)
@@ -3050,7 +3052,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Kick user from channel if they've joined
                 if telegram_user_id:
-                    private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                    private_channel_id = Config.get_forex_channel_id()
                     if not private_channel_id:
                         print("[TELEGRAM-SUB] ⚠️ FOREX_CHANNEL_ID not configured, cannot kick user")
                     else:
@@ -3094,11 +3096,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 sig_header = self.headers.get('Stripe-Signature')
                 
                 # Use test webhook secret in dev mode, live secret in production
-                is_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+                is_production = Config.is_replit_deployment()
                 if is_production:
-                    webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+                    webhook_secret = Config.get_stripe_webhook_secret()
                 else:
-                    webhook_secret = os.environ.get('TEST_STRIPE_WEBHOOK_SECRET') or os.environ.get('STRIPE_WEBHOOK_SECRET')
+                    webhook_secret = Config.get_test_stripe_webhook_secret()
                 
                 if not STRIPE_AVAILABLE:
                     print("[STRIPE WEBHOOK] Stripe not available")
@@ -3222,7 +3224,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             
                             # Kick user from Telegram channel
                             if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
-                                private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                                private_channel_id = Config.get_forex_channel_id()
                                 if private_channel_id:
                                     try:
                                         from telegram_bot import sync_kick_user_from_channel
@@ -3260,7 +3262,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         
                         # Kick from Telegram if configured
                         if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
-                            private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                            private_channel_id = Config.get_forex_channel_id()
                             if private_channel_id:
                                 from telegram_bot import sync_kick_user_from_channel
                                 kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
@@ -3321,7 +3323,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             
                             # Kick user from Telegram channel on payment failure
                             if telegram_user_id and TELEGRAM_BOT_AVAILABLE:
-                                private_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+                                private_channel_id = Config.get_forex_channel_id()
                                 if private_channel_id:
                                     try:
                                         from telegram_bot import sync_kick_user_from_channel

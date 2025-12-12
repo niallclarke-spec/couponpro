@@ -1,0 +1,144 @@
+You are refactoring an EXISTING, WORKING Python 3.11 application.
+This is an EXTRACT-ONLY refactor. You are NOT allowed to change behavior.
+
+════════════════════════════════════════
+CRITICAL CONTEXT (READ CAREFULLY)
+════════════════════════════════════════
+- Runtime: Python 3.11
+- Framework: NONE (custom http.server.BaseHTTPRequestHandler)
+- Entrypoint: server.py
+- Start command: python3 server.py
+- Production: Hostinger VPS
+- Database: DigitalOcean Managed PostgreSQL via DATABASE_URL
+  - psycopg2 ThreadedConnectionPool (sync, thread-safe)
+- Dev environment: Replit
+
+Telegram:
+- Two separate bots, two tokens, two Application instances
+- Webhooks are set on EVERY startup and MUST remain unchanged:
+  - Coupon bot: /api/telegram-webhook
+  - Forex bot:  /api/forex-telegram-webhook
+- These paths MUST NOT change.
+
+Stripe:
+- Single Stripe account
+- Webhook idempotency via processed_webhook_events table
+- This logic MUST remain correct (no double processing).
+
+Filesystem:
+- assets/templates/** path is HARD-CODED and MUST NOT change.
+- Templates sync with DigitalOcean Spaces bucket `couponpro-templates`
+- Do NOT move assets/, rename it, or change static file serving behavior.
+
+════════════════════════════════════════
+ABSOLUTE HARD NOs
+════════════════════════════════════════
+- Do NOT rename or change any endpoints or webhook URLs.
+- Do NOT rename server.py or change how it is started.
+- Do NOT move or rename assets/templates/.
+- Do NOT move .do/app.yaml.
+- Do NOT introduce Flask, FastAPI, Django, or similar frameworks.
+- Do NOT change DB schema.
+- Do NOT change business logic.
+- Do NOT delete “unused” code unless explicitly approved.
+- Do NOT start background threads or webhooks at import time.
+
+════════════════════════════════════════
+GOAL
+════════════════════════════════════════
+- Reduce a 3,000+ line server.py into a clean, maintainable structure.
+- Introduce an AppContext object created at startup and passed into handlers.
+- Remove reliance on module-level globals.
+- Prepare the codebase to support multi-tenancy later
+  (NO tenant_id implementation yet).
+
+════════════════════════════════════════
+TARGET STRUCTURE (MUST FOLLOW)
+════════════════════════════════════════
+server.py                    # thin entry only
+core/
+  config.py
+  logging.py
+  auth.py
+  database.py
+  app_context.py
+  request_context.py
+  bootstrap.py
+integrations/
+  stripe/client.py
+  stripe/webhooks.py
+  telegram/client.py
+  telegram/webhooks.py
+  openai/client.py
+  market_data/twelve_data.py
+domains/
+  coupons/{models.py, service.py, repository.py, handlers.py}
+  forex/{models.py, service.py, repository.py, handlers.py, strategies/*}
+  subscriptions/{models.py, service.py, repository.py, handlers.py}
+workers/
+  scheduler.py
+  price_monitor.py
+  milestone_tracker.py
+api/
+  routes.py
+  middleware.py
+utils/
+  response.py
+
+════════════════════════════════════════
+DESIGN RULES (VERY IMPORTANT)
+════════════════════════════════════════
+1) NO side effects at import time.
+   - No scheduler start
+   - No webhook registration
+   - No migrations
+2) Route handlers MUST NOT import server.py.
+3) server.py builds AppContext and passes it into handlers.
+4) Background jobs start ONLY via bootstrap.start_workers().
+5) Risky internals are WRAPPED FIRST, refactored LAST.
+
+════════════════════════════════════════
+KNOWN HIGH-RISK ZONES (LEAVE INTERNALS UNTIL FINAL PHASE)
+════════════════════════════════════════
+- Forex scheduler + background loops
+- Stripe webhook handler internals (idempotency)
+- price_monitor + milestone_tracker shared state
+
+════════════════════════════════════════
+SAFE EXTRACTION ORDER (START HERE)
+════════════════════════════════════════
+1) core/config.py
+2) core/logging.py
+3) utils/response.py
+4) integrations/openai/client.py
+5) integrations/market_data/twelve_data.py
+6) integrations/stripe/client.py
+
+ONLY AFTER THESE:
+7) Introduce app_context.py + bootstrap.py (wrap existing globals)
+8) Extract route handlers into domains/*/handlers.py
+9) Make server.py thin (<300 lines)
+10) Wrap scheduler + monitors (NO internal logic changes)
+
+════════════════════════════════════════
+SMOKE TESTS (RUN AFTER EACH STEP)
+════════════════════════════════════════
+- python3 server.py starts with no errors
+- GET /api/check-auth returns expected JSON
+- GET /api/signal-bot/status returns price or error
+- Stripe webhook remains idempotent
+- Scheduler logs “[SCHEDULER] started” immediately
+
+════════════════════════════════════════
+WORKFLOW RULES
+════════════════════════════════════════
+- FIRST: output an 8–12 step refactor plan ONLY.
+- Each step must list:
+  • files changed
+  • what moved
+  • smoke test to run
+- DO NOT modify code until the plan is printed.
+- Perform ONE step at a time, then STOP.
+
+Begin by repeating back the HARD NOs and webhook URLs to confirm understanding.
+Then output ONLY the step-by-step plan.
