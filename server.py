@@ -3689,6 +3689,9 @@ if __name__ == "__main__":
     ctx = create_app_context()
     start_app(ctx)
     
+    import sys
+    sys.modules['server'] = sys.modules[__name__]
+    
     import db as db_module
     import telegram_bot as tb_module
     import coupon_validator as cv_module
@@ -3700,6 +3703,7 @@ if __name__ == "__main__":
     COUPON_VALIDATOR_AVAILABLE = ctx.coupon_validator_available
     FOREX_SCHEDULER_AVAILABLE = ctx.forex_scheduler_available
     STRIPE_AVAILABLE = ctx.stripe_available
+    OBJECT_STORAGE_AVAILABLE = ctx.object_storage_available
     
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:

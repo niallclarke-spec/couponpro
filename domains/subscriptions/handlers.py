@@ -77,20 +77,6 @@ def handle_telegram_subscriptions(handler):
     import server
     parsed_path = urlparse(handler.path)
     
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         query_params = parse_qs(parsed_path.query)
         status_filter = query_params.get('status', [None])[0]
@@ -115,13 +101,6 @@ def handle_telegram_revenue_metrics(handler):
     """GET /api/telegram/revenue-metrics"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         if not server.STRIPE_AVAILABLE:
@@ -163,13 +142,6 @@ def handle_telegram_conversion_analytics(handler):
     """GET /api/telegram/conversion-analytics"""
     import server
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         analytics = server.db.get_conversion_analytics()
         
@@ -197,13 +169,6 @@ def handle_telegram_billing(handler):
     """GET /api/telegram/billing/<subscription_id>"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         subscription_id = parsed_path.path.split('/api/telegram/billing/')[1]
@@ -487,13 +452,6 @@ def handle_telegram_cleanup_test_data(handler):
     """POST /api/telegram/cleanup-test-data"""
     import server
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         deleted_info = server.db.cleanup_test_telegram_subscriptions()
         
@@ -520,13 +478,6 @@ def handle_telegram_cleanup_test_data(handler):
 def handle_telegram_cancel_subscription(handler):
     """POST /api/telegram/cancel-subscription"""
     import server
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
     
     try:
         content_length = int(handler.headers['Content-Length'])

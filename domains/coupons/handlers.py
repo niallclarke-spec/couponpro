@@ -18,13 +18,6 @@ def handle_campaigns_list(handler):
     """GET /api/campaigns"""
     import server
     
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
     try:
         server.db.update_campaign_statuses()
         campaigns = server.db.get_all_campaigns()
@@ -44,13 +37,6 @@ def handle_campaign_by_id(handler):
     """GET /api/campaigns/<id>"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
     
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
@@ -84,20 +70,6 @@ def handle_campaign_submissions(handler):
     import server
     parsed_path = urlparse(handler.path)
     
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
         submissions = server.db.get_campaign_submissions(campaign_id)
@@ -117,20 +89,6 @@ def handle_bot_stats(handler):
     """GET /api/bot-stats"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         query_params = parse_qs(parsed_path.query)
@@ -179,20 +137,6 @@ def handle_bot_users(handler):
     import server
     parsed_path = urlparse(handler.path)
     
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         query_params = parse_qs(parsed_path.query)
         limit = int(query_params.get('limit', ['100'])[0])
@@ -216,20 +160,6 @@ def handle_broadcast_status(handler):
     """GET /api/broadcast-status/<id>"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         job_id = int(parsed_path.path.split('/')[-1])
@@ -257,20 +187,6 @@ def handle_broadcast_jobs(handler):
     """GET /api/broadcast-jobs"""
     import server
     
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         jobs = server.db.get_recent_broadcast_jobs(limit=20)
         user_count = server.db.get_bot_user_count(days=30)
@@ -294,20 +210,6 @@ def handle_user_activity(handler):
     """GET /api/user-activity/<id>"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         chat_id = int(parsed_path.path.split('/')[-1])
@@ -334,20 +236,6 @@ def handle_invalid_coupons(handler):
     """GET /api/invalid-coupons"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
-        return
     
     try:
         query_params = parse_qs(parsed_path.query)
@@ -445,20 +333,6 @@ def handle_campaigns_create(handler):
     """POST /api/campaigns"""
     import server
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Database not available'}).encode())
-        return
-    
     try:
         content_length = int(handler.headers['Content-Length'])
         post_data = handler.rfile.read(content_length)
@@ -483,13 +357,6 @@ def handle_campaign_submit(handler):
     """POST /api/campaigns/<id>/submit"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Database not available'}).encode())
-        return
     
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
@@ -516,20 +383,6 @@ def handle_campaign_update(handler):
     """POST /api/campaigns/<id>/update"""
     import server
     parsed_path = urlparse(handler.path)
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Database not available'}).encode())
-        return
     
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
@@ -563,20 +416,6 @@ def handle_campaign_delete(handler):
     import server
     parsed_path = urlparse(handler.path)
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Database not available'}).encode())
-        return
-    
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
         
@@ -604,23 +443,6 @@ def handle_campaign_delete(handler):
 def handle_broadcast(handler):
     """POST /api/broadcast"""
     import server
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
-    if not server.DATABASE_AVAILABLE:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({
-            'success': False,
-            'error': 'Database not available'
-        }).encode())
-        return
     
     if not server.TELEGRAM_BOT_AVAILABLE:
         handler.send_response(503)
@@ -697,13 +519,6 @@ def handle_upload_overlay(handler):
     import server
     from object_storage import ObjectStorageService
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
     if not server.OBJECT_STORAGE_AVAILABLE:
         handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
@@ -765,13 +580,6 @@ def handle_upload_template(handler):
     import re
     import urllib.request
     import urllib.error
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
     
     try:
         content_type = handler.headers['Content-Type']
@@ -997,14 +805,6 @@ def handle_delete_template(handler):
     import shutil
     
     print(f"[DELETE] Delete request received")
-    if not handler.check_auth():
-        print(f"[DELETE] Authentication failed - returning 401")
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized - please login again'}).encode())
-        return
-    
     try:
         content_length = int(handler.headers['Content-Length'])
         post_data = handler.rfile.read(content_length)
@@ -1088,13 +888,6 @@ def handle_toggle_telegram_template(handler):
     """POST /api/toggle-telegram-template"""
     import server
     import urllib.request
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
     
     try:
         content_length = int(handler.headers['Content-Length'])
@@ -1182,13 +975,6 @@ def handle_toggle_telegram_template(handler):
 def handle_clear_telegram_cache(handler):
     """POST /api/clear-telegram-cache"""
     import server
-    
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
     
     try:
         if server.TELEGRAM_BOT_AVAILABLE:
