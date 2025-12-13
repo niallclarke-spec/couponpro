@@ -563,13 +563,6 @@ def handle_telegram_delete_subscription(handler):
     """POST /api/telegram/delete-subscription"""
     import server
     
-    if not handler.check_auth():
-        handler.send_response(401)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'success': False, 'error': 'Unauthorized'}).encode())
-        return
-    
     try:
         content_length = int(handler.headers['Content-Length'])
         post_data = handler.rfile.read(content_length)
