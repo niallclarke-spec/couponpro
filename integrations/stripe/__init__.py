@@ -1,8 +1,5 @@
 """
-Stripe Client - Compatibility shim
-
-This file re-exports all functions from integrations/stripe/client.py
-to maintain backward compatibility with existing imports.
+Stripe integration module.
 """
 from integrations.stripe.client import (
     get_stripe_credentials,
@@ -20,9 +17,6 @@ from integrations.stripe.client import (
     fetch_active_subscriptions,
     METRICS_CACHE_TTL_SECONDS,
     REVENUE_CACHE_TTL_SECONDS,
-    _metrics_cache,
-    _revenue_cache,
-    _stripe_credentials,
 )
 
 __all__ = [
@@ -41,7 +35,4 @@ __all__ = [
     'fetch_active_subscriptions',
     'METRICS_CACHE_TTL_SECONDS',
     'REVENUE_CACHE_TTL_SECONDS',
-    '_metrics_cache',
-    '_revenue_cache',
-    '_stripe_credentials',
 ]
