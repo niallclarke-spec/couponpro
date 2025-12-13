@@ -1,0 +1,50 @@
+Proceed, but stay strictly within scope.
+
+GOALS
+1) Implement the multi-tenancy DB migrations exactly as per the “Revised Migration Plan (Step 5 + db.py Fixes)” we discussed.
+2) Apply the ONE required SQL fix in cleanup_old_webhook_events() to avoid invalid interval parameterization.
+3) Update only the one Stripe webhook caller to match the new db.py signature.
+4) Zero behavior changes outside the idempotency table + new tenant tables/columns.
+
+CRITICAL SQL FIX (must be applied exactly)
+In db.py cleanup_old_webhook_events(hours=24, tenant_id='entrylab'), replace the delete query with:
+
+DELETE FROM processed_webhook_events
+WHERE tenant_id = %s
+AND processed_at < (CURRENT_TIMESTAMP - (%s * INTERVAL '1 hour'))
+
+Params must be (tenant_id, hours).
+Do NOT use: INTERVAL '%s hours' (this is invalid with psycopg2).
+
+MIGRATIONS
+- Add tables: tenants, tenant_users, tenant_integrations (seed 'entrylab').
+- Add tenant_id columns + indexes to the 9 tables with DEFAULT 'entrylab' (idempotent).
+- Migrate processed_webhook_events → v2 using the schema-tolerant copy (event_type optional), then swap tables once.
+
+DB HELPERS (backward compatible)
+Update these in db.py:
+- is_webhook_event_processed(event_id, tenant_id='entrylab')
+- record_webhook_event_processed(event_id, event_source='stripe', tenant_id='entrylab')
+- cleanup_old_webhook_events(hours=24, tenant_id='entrylab')  (with the SQL fix above)
+
+CALLER UPDATE (only one)
+In integrations/stripe/webhooks.py:
+- db_module.record_webhook_event_processed(event_id, event_type)
++ db_module.record_webhook_event_processed(event_id, event_source=event_type)
+
+DO NOT
+- Do not change any endpoint paths
+- Do not change business logic in handlers
+- Do not add tenant resolution logic yet (still default tenant_id='entrylab' everywhere)
+- Do not modify any coupon-domain behavior
+
+SMOKE TESTS (run + paste outputs)
+1) python3 -c "import server; print('server import ok')"
+2) restart server, confirm exactly ONE scheduler start
+3) curl -s http://localhost:5000/api/check-auth
+4) python3 - <<'PY'
+from db import record_webhook_event_processed, is_webhook_event_processed
+print(record_webhook_event_processed("evt_test_123", event_source="stripe"))
+print(record_webhook_event_processed("evt_test_123", event_source="stripe"))  # should not duplicate
+print(is_webhook_event_processed("evt_test_123"))
+PY

@@ -1,0 +1,56 @@
+Implement multi-tenancy migrations safely (CODE + SQL), with zero behavior changes.
+
+Critical rule:
+- EntryLab (tenant_id='entrylab') must continue using the CURRENT env-based credentials exactly as today (Stripe keys, Telegram bot tokens, webhook secrets, etc.).
+- New tenants will later store/connect their own credentials in the database via a setup flow (NOT implemented in this step).
+
+This step is MIGRATIONS ONLY.
+
+1) Create migrations that add:
+   - tenants table (seed 'entrylab')
+   - tenant_users table (maps Clerk user → tenant)
+   - tenant_id columns (DEFAULT 'entrylab') + indexes on agreed tables
+
+2) Add a new table for future tenant credential storage (do NOT wire it into runtime yet):
+   - tenant_integrations (tenant_id FK, provider, config_json, created_at, updated_at)
+   - Keep it generic so it can store Stripe + Telegram + others later.
+   - No secrets logging. No runtime reads yet.
+
+Example:
+CREATE TABLE tenant_integrations (
+  id SERIAL PRIMARY KEY,
+  tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+  provider VARCHAR(50) NOT NULL,          -- 'stripe', 'telegram', etc.
+  config_json JSONB NOT NULL,             -- will contain tenant keys later
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (tenant_id, provider)
+);
+
+3) processed_webhook_events migration approach:
+   - Create processed_webhook_events_v2 with:
+       id SERIAL PK
+       tenant_id FK DEFAULT 'entrylab'
+       event_id NOT NULL
+       event_source NOT NULL DEFAULT 'stripe'
+       processed_at timestamp
+       UNIQUE (tenant_id, event_id)
+   - Copy existing rows from old table into v2 as tenant_id='entrylab'
+   - Swap tables (rename old to _old, v2 to processed_webhook_events)
+   - Keep backup.
+
+4) Add/extend migration runner:
+   - Idempotent (safe to run twice)
+   - Logs actions (no secrets)
+   - Runs in startup the same way migrations already do
+
+Deliverables:
+- SQL migration files + runner code
+- Checklist to run locally + on DigitalOcean
+- Smoke tests:
+   - server starts
+   - /api/check-auth works
+   - /api/stripe/webhook still verifies signature + idempotency still works
+Do NOT implement tenant filtering in queries yet.
+Do NOT implement setup wizard yet.
+Do NOT change existing endpoints.
