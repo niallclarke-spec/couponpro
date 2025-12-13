@@ -281,7 +281,7 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
         
         # Record this event as processed to prevent duplicate handling
         if event_id:
-            db_module.record_webhook_event_processed(event_id, event_type)
+            db_module.record_webhook_event_processed(event_id, event_source='stripe')
             print(f"[STRIPE WEBHOOK] ✅ Event {event_id} recorded as processed")
         
         # Periodically cleanup old events (every ~100 requests)

@@ -647,6 +647,246 @@ class DatabasePool:
                     ON processed_webhook_events(processed_at)
                 """)
                 
+                # ============================================================
+                # Multi-tenancy: Create tenants table
+                # ============================================================
+                print("[MIGRATION] Checking for tenants table...")
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenants (
+                        id VARCHAR(50) PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT TRUE
+                    )
+                """)
+                cursor.execute("""
+                    INSERT INTO tenants (id, name) VALUES ('entrylab', 'EntryLab')
+                    ON CONFLICT (id) DO NOTHING
+                """)
+                print("[MIGRATION] tenants table ready, 'entrylab' tenant seeded")
+                
+                # Create tenant_users table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_users (
+                        id SERIAL PRIMARY KEY,
+                        clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
+                        tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+                        email VARCHAR(255),
+                        role VARCHAR(50) DEFAULT 'member',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_users_tenant_id ON tenant_users(tenant_id)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_users_email ON tenant_users(email)")
+                print("[MIGRATION] tenant_users table ready")
+                
+                # Create tenant_integrations table (future credential storage)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_integrations (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+                        provider VARCHAR(50) NOT NULL,
+                        config_json JSONB NOT NULL DEFAULT '{}',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (tenant_id, provider)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_integrations_tenant_id ON tenant_integrations(tenant_id)")
+                print("[MIGRATION] tenant_integrations table ready")
+                
+                # ============================================================
+                # Add tenant_id to existing tables
+                # ============================================================
+                
+                # Add tenant_id to forex_signals
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='forex_signals' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to forex_signals...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to forex_signals")
+                else:
+                    print("[MIGRATION] tenant_id already exists on forex_signals, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_forex_signals_tenant_id ON forex_signals(tenant_id)")
+                
+                # Add tenant_id to forex_config
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='forex_config' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to forex_config...")
+                    cursor.execute("ALTER TABLE forex_config ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to forex_config")
+                else:
+                    print("[MIGRATION] tenant_id already exists on forex_config, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_forex_config_tenant_id ON forex_config(tenant_id)")
+                
+                # Add tenant_id to telegram_subscriptions
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='telegram_subscriptions' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to telegram_subscriptions...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to telegram_subscriptions")
+                else:
+                    print("[MIGRATION] tenant_id already exists on telegram_subscriptions, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_tenant_id ON telegram_subscriptions(tenant_id)")
+                
+                # Add tenant_id to recent_phrases
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='recent_phrases' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to recent_phrases...")
+                    cursor.execute("ALTER TABLE recent_phrases ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to recent_phrases")
+                else:
+                    print("[MIGRATION] tenant_id already exists on recent_phrases, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_recent_phrases_tenant_id ON recent_phrases(tenant_id)")
+                
+                # Add tenant_id to campaigns
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='campaigns' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to campaigns...")
+                    cursor.execute("ALTER TABLE campaigns ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to campaigns")
+                else:
+                    print("[MIGRATION] tenant_id already exists on campaigns, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_campaigns_tenant_id ON campaigns(tenant_id)")
+                
+                # Add tenant_id to bot_usage
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='bot_usage' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to bot_usage...")
+                    cursor.execute("ALTER TABLE bot_usage ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to bot_usage")
+                else:
+                    print("[MIGRATION] tenant_id already exists on bot_usage, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_usage_tenant_id ON bot_usage(tenant_id)")
+                
+                # Add tenant_id to bot_users
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='bot_users' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to bot_users...")
+                    cursor.execute("ALTER TABLE bot_users ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to bot_users")
+                else:
+                    print("[MIGRATION] tenant_id already exists on bot_users, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_users_tenant_id ON bot_users(tenant_id)")
+                
+                # Add tenant_id to broadcast_jobs
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='broadcast_jobs' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to broadcast_jobs...")
+                    cursor.execute("ALTER TABLE broadcast_jobs ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to broadcast_jobs")
+                else:
+                    print("[MIGRATION] tenant_id already exists on broadcast_jobs, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_broadcast_jobs_tenant_id ON broadcast_jobs(tenant_id)")
+                
+                # Add tenant_id to bot_config
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='bot_config' AND column_name='tenant_id'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding tenant_id to bot_config...")
+                    cursor.execute("ALTER TABLE bot_config ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
+                    print("[MIGRATION] ✅ tenant_id added to bot_config")
+                else:
+                    print("[MIGRATION] tenant_id already exists on bot_config, skipping")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_config_tenant_id ON bot_config(tenant_id)")
+                
+                # ============================================================
+                # Migrate processed_webhook_events to v2 with tenant_id
+                # ============================================================
+                print("[MIGRATION] Checking processed_webhook_events migration...")
+                
+                # Create v2 table if not exists
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS processed_webhook_events_v2 (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(50) NOT NULL DEFAULT 'entrylab',
+                        event_id VARCHAR(255) NOT NULL,
+                        event_source VARCHAR(50) NOT NULL DEFAULT 'stripe',
+                        processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (tenant_id, event_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_processed_webhook_events_v2_tenant_id ON processed_webhook_events_v2(tenant_id)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_processed_webhook_events_v2_processed_at ON processed_webhook_events_v2(processed_at)")
+                
+                # Check if old table exists and v2 is empty (need to copy)
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_schema='public' AND table_name='processed_webhook_events'
+                    )
+                """)
+                old_exists = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM processed_webhook_events_v2")
+                v2_count = cursor.fetchone()[0]
+                
+                if old_exists and v2_count == 0:
+                    # Check if old table has event_type column
+                    cursor.execute("""
+                        SELECT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_schema='public' AND table_name='processed_webhook_events' AND column_name='event_type'
+                        )
+                    """)
+                    has_event_type = cursor.fetchone()[0]
+                    
+                    if has_event_type:
+                        cursor.execute("""
+                            INSERT INTO processed_webhook_events_v2 (tenant_id, event_id, event_source, processed_at)
+                            SELECT 'entrylab', event_id, COALESCE(event_type, 'stripe'), processed_at
+                            FROM processed_webhook_events
+                        """)
+                    else:
+                        cursor.execute("""
+                            INSERT INTO processed_webhook_events_v2 (tenant_id, event_id, event_source, processed_at)
+                            SELECT 'entrylab', event_id, 'stripe', processed_at
+                            FROM processed_webhook_events
+                        """)
+                    print(f"[MIGRATION] Copied {cursor.rowcount} rows to processed_webhook_events_v2")
+                
+                # Swap tables if old exists and _old doesn't exist yet
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_schema='public' AND table_name='processed_webhook_events_old'
+                    )
+                """)
+                old_backup_exists = cursor.fetchone()[0]
+                
+                if old_exists and not old_backup_exists:
+                    cursor.execute("ALTER TABLE processed_webhook_events RENAME TO processed_webhook_events_old")
+                    cursor.execute("ALTER TABLE processed_webhook_events_v2 RENAME TO processed_webhook_events")
+                    print("[MIGRATION] ✅ Swapped processed_webhook_events tables")
+                else:
+                    print("[MIGRATION] processed_webhook_events swap already done or skipped")
+                
                 # Migration: Add multi-TP columns for modular strategy system
                 print("[MIGRATION] Checking forex_signals for multi-TP columns...")
                 cursor.execute("""
@@ -4702,13 +4942,14 @@ def get_conversion_analytics():
 
 # ===== Webhook Idempotency Functions =====
 
-def is_webhook_event_processed(event_id):
+def is_webhook_event_processed(event_id, tenant_id='entrylab'):
     """
     Check if a webhook event has already been processed.
     Used to prevent duplicate processing of Stripe webhook events.
     
     Args:
         event_id (str): The Stripe event ID (e.g., 'evt_xxx')
+        tenant_id (str): The tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if event was already processed, False otherwise
@@ -4720,20 +4961,22 @@ def is_webhook_event_processed(event_id):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT 1 FROM processed_webhook_events WHERE event_id = %s
-            """, (event_id,))
+                SELECT 1 FROM processed_webhook_events 
+                WHERE event_id = %s AND tenant_id = %s
+            """, (event_id, tenant_id))
             return cursor.fetchone() is not None
     except Exception as e:
         print(f"[IDEMPOTENCY] Error checking webhook event: {e}")
         return False
 
-def record_webhook_event_processed(event_id, event_type):
+def record_webhook_event_processed(event_id, event_source='stripe', tenant_id='entrylab'):
     """
     Record that a webhook event has been processed.
     
     Args:
         event_id (str): The Stripe event ID
-        event_type (str): The event type (e.g., 'checkout.session.completed')
+        event_source (str): The event source (e.g., 'stripe', 'telegram')
+        tenant_id (str): The tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if recorded successfully
@@ -4745,23 +4988,24 @@ def record_webhook_event_processed(event_id, event_type):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO processed_webhook_events (event_id, event_type, processed_at)
-                VALUES (%s, %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (event_id) DO NOTHING
-            """, (event_id, event_type))
+                INSERT INTO processed_webhook_events (tenant_id, event_id, event_source, processed_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, event_id) DO NOTHING
+            """, (tenant_id, event_id, event_source))
             conn.commit()
             return True
     except Exception as e:
         print(f"[IDEMPOTENCY] Error recording webhook event: {e}")
         return False
 
-def cleanup_old_webhook_events(hours=24):
+def cleanup_old_webhook_events(hours=24, tenant_id='entrylab'):
     """
     Clean up old processed webhook events to prevent table growth.
     Events older than specified hours are deleted.
     
     Args:
         hours (int): Delete events older than this many hours
+        tenant_id (str): The tenant ID (default: 'entrylab')
     
     Returns:
         int: Number of events deleted
@@ -4774,8 +5018,9 @@ def cleanup_old_webhook_events(hours=24):
             cursor = conn.cursor()
             cursor.execute("""
                 DELETE FROM processed_webhook_events 
-                WHERE processed_at < CURRENT_TIMESTAMP - INTERVAL '%s hours'
-            """, (hours,))
+                WHERE tenant_id = %s 
+                AND processed_at < (CURRENT_TIMESTAMP - (%s * INTERVAL '1 hour'))
+            """, (tenant_id, hours))
             deleted = cursor.rowcount
             conn.commit()
             if deleted > 0:
