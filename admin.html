@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | PromoStack</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <style>
         /* ========================================
            DESIGN SYSTEM - Dark Theme (Dashdark X)
@@ -4072,6 +4073,10 @@
             </nav>
 
             <div class="sidebar-footer">
+                <a id="clerk-login-link" href="/login" class="logout-btn" style="display: none; text-decoration: none; text-align: center;">
+                    <span>🔐</span>
+                    <span>Login with Google</span>
+                </a>
                 <button class="logout-btn" onclick="handleLogout()">
                     <span>🚪</span>
                     <span>Logout</span>
@@ -5314,6 +5319,15 @@
 
         function initializeApp() {
             renderFeatureNav();
+            updateClerkLoginLink();
+        }
+
+        function updateClerkLoginLink() {
+            const loginLink = document.getElementById('clerk-login-link');
+            if (loginLink) {
+                const token = sessionStorage.getItem('clerk_session_token');
+                loginLink.style.display = token ? 'none' : 'flex';
+            }
         }
 
         function formatBotName(botType) {
@@ -5575,7 +5589,7 @@
         // Conversion Analytics Functions
         async function loadConversions() {
             try {
-                const response = await fetch('/api/telegram/conversion-analytics', {
+                const response = await authedFetch('/api/telegram/conversion-analytics', {
                     credentials: 'include'
                 });
                 if (!response.ok) throw new Error('Failed to load conversions');
@@ -6487,7 +6501,7 @@
         async function loadForexSignals() {
             try {
                 const limit = document.getElementById('filterLimit')?.value || 100;
-                const response = await fetch(`/api/forex-signals?limit=${limit}`, {
+                const response = await authedFetch(`/api/forex-signals?limit=${limit}`, {
                     credentials: 'include'
                 });
                 if (!response.ok) throw new Error('Failed to load signals');
@@ -6509,7 +6523,7 @@
 
         async function loadBotStatus() {
             try {
-                const response = await fetch('/api/signal-bot/status', {
+                const response = await authedFetch('/api/signal-bot/status', {
                     credentials: 'include'
                 });
                 if (!response.ok) throw new Error('Failed to load bot status');

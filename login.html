@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | PromoStack</title>
+    <style>
+        :root {
+            --bg-primary: #091128;
+            --bg-card: #0B1739;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent-primary: #4f46e5;
+            --accent-primary-hover: #6366f1;
+            --border-primary: rgba(255, 255, 255, 0.06);
+            --radius-lg: 14px;
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo img {
+            width: 220px;
+            height: auto;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-primary);
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        #clerk-signin {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info.show {
+            display: flex;
+        }
+
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .user-status {
+            color: #10b981;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-links {
+            margin-top: 24px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-logo">
+        <img src="/assets/promostack-logo.png" alt="PromoStack" />
+    </div>
+
+    <div class="login-card">
+        <h1 class="login-title">Sign In</h1>
+        
+        <div id="clerk-signin">
+            <span class="loading-text">Loading sign-in...</span>
+        </div>
+
+        <div id="user-info" class="user-info">
+            <span class="user-status">✓ Signed in successfully</span>
+            <span id="user-email" class="user-email"></span>
+            <button id="signout-btn" class="btn btn-secondary">Sign Out</button>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <div class="nav-links">
+            <a href="/admin">Admin Dashboard</a>
+            <a href="/">Home</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script>
+        const CLERK_PUBLISHABLE_KEY = '{{CLERK_PUBLISHABLE_KEY}}';
+        
+        let clerkInstance = null;
+
+        async function initClerk() {
+            const errorEl = document.getElementById('error-message');
+            const signinEl = document.getElementById('clerk-signin');
+            const userInfoEl = document.getElementById('user-info');
+            const userEmailEl = document.getElementById('user-email');
+            const signoutBtn = document.getElementById('signout-btn');
+
+            if (!CLERK_PUBLISHABLE_KEY || CLERK_PUBLISHABLE_KEY === '{{CLERK_PUBLISHABLE_KEY}}') {
+                errorEl.textContent = 'Clerk is not configured. Please set CLERK_PUBLISHABLE_KEY environment variable.';
+                errorEl.classList.add('show');
+                signinEl.innerHTML = '';
+                return;
+            }
+
+            try {
+                clerkInstance = new Clerk(CLERK_PUBLISHABLE_KEY);
+                await clerkInstance.load();
+
+                if (clerkInstance.user) {
+                    handleSignedIn(clerkInstance.user);
+                } else {
+                    clerkInstance.mountSignIn(signinEl, {
+                        appearance: {
+                            baseTheme: undefined,
+                            variables: {
+                                colorPrimary: '#4f46e5',
+                                colorBackground: '#0B1739',
+                                colorInputBackground: '#091128',
+                                colorInputText: '#ffffff',
+                                colorText: '#ffffff',
+                                colorTextSecondary: '#94a3b8'
+                            }
+                        }
+                    });
+
+                    clerkInstance.addListener((event) => {
+                        if (clerkInstance.user) {
+                            handleSignedIn(clerkInstance.user);
+                        }
+                    });
+                }
+
+                signoutBtn.addEventListener('click', async () => {
+                    sessionStorage.removeItem('clerk_session_token');
+                    sessionStorage.removeItem('clerk_user_email');
+                    await clerkInstance.signOut();
+                    window.location.reload();
+                });
+
+            } catch (err) {
+                console.error('Clerk initialization error:', err);
+                errorEl.textContent = 'Failed to initialize authentication. Please try again later.';
+                errorEl.classList.add('show');
+                signinEl.innerHTML = '';
+            }
+        }
+
+        async function handleSignedIn(user) {
+            const signinEl = document.getElementById('clerk-signin');
+            const userInfoEl = document.getElementById('user-info');
+            const userEmailEl = document.getElementById('user-email');
+
+            signinEl.style.display = 'none';
+            userInfoEl.classList.add('show');
+            
+            const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || 'Unknown';
+            userEmailEl.textContent = email;
+
+            try {
+                const token = await clerkInstance.session.getToken();
+                if (token) {
+                    sessionStorage.setItem('clerk_session_token', token);
+                    sessionStorage.setItem('clerk_user_email', email);
+                }
+            } catch (err) {
+                console.error('Failed to get session token:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initClerk);
+    </script>
+</body>
+</html>

@@ -280,6 +280,21 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
+        elif parsed_path.path == '/login':
+            try:
+                with open('login.html', 'r') as f:
+                    content = f.read()
+                clerk_key = Config.get_clerk_publishable_key()
+                content = content.replace('{{CLERK_PUBLISHABLE_KEY}}', clerk_key)
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_error(404, "Login page not found")
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+        
         elif parsed_path.path.startswith('/campaign/'):
             try:
                 with open('campaign.html', 'r') as f:

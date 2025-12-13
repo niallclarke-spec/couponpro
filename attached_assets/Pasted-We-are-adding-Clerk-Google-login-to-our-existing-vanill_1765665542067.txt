@@ -1,0 +1,53 @@
+We are adding Clerk (Google login) to our existing vanilla HTML + Python http.server app.
+
+Constraints:
+- Do NOT add Flask/FastAPI/Django or any new web framework.
+- Do NOT rename server.py, start command, or change existing API endpoints.
+- Do NOT change existing business logic. This step is additive and frontend-focused.
+- Keep the existing cookie-based auth system intact; do NOT modify backend auth in this step.
+- Do NOT implement JWT verification in this step. (That will be Prompt 2.)
+
+Goal for THIS step (Prompt 1 only):
+- Add a new login page that uses ClerkJS (script tag / CDN) and supports “Sign in with Google”.
+- After sign-in, obtain a Clerk session token on the frontend and store it in sessionStorage under `clerk_session_token`.
+- Add a tiny frontend helper used by admin pages that automatically attaches the token to API requests as:
+  `Authorization: Bearer <token>`
+- Ensure GET /login serves the new login page (routing only; no backend auth logic changes).
+
+Tasks:
+1) core/config.py additions (no behavior change elsewhere)
+- Add methods to core/config.py:
+  - get_clerk_publishable_key(): reads CLERK_PUBLISHABLE_KEY from env
+- Do not hardcode keys in source.
+
+2) Create login page (static HTML)
+- Create web/login.html (or whatever folder your static HTML pages live in; match existing structure).
+- Add ClerkJS via a <script> tag (no bundlers).
+- Render a Clerk SignIn component into a <div id="clerk-signin"></div>.
+- When user is signed in, store:
+  - sessionStorage.setItem('clerk_session_token', <token>)
+  - sessionStorage.setItem('clerk_user_email', <email>)  (display only)
+- Also include a “Sign out” button that clears these sessionStorage entries.
+
+3) Add a small JS helper for API calls
+- Create web/assets/js/auth.js (or an equivalent existing assets/js path).
+- Implement:
+  - getClerkToken()
+  - authedFetch(url, opts)  // adds Authorization header if token exists
+- Update admin.html API calls to use authedFetch() where feasible.
+  - Minimal edits: only change fetch(...) → authedFetch(...).
+  - Do NOT change endpoints or request bodies.
+
+4) Routing / serving
+- Ensure GET /login serves the new login page.
+- Add a “Login” link in /admin (or wherever appropriate) if no token is present.
+
+Smoke tests:
+- Visiting /login loads Clerk sign-in UI.
+- After signing in, sessionStorage contains `clerk_session_token`.
+- Admin page API calls include Authorization header (confirm in browser devtools Network tab).
+
+Important:
+- Do NOT attempt to validate the token on the backend in this step.
+- Do NOT change /api/check-auth behavior in this step.
+Deliver only the login page + auth.js helper + minimal routing to serve /login.

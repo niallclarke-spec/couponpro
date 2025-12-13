@@ -124,3 +124,7 @@ class Config:
     @staticmethod
     def get_web_repl_renewal():
         return os.environ.get('WEB_REPL_RENEWAL')
+    
+    @staticmethod
+    def get_clerk_publishable_key() -> str:
+        return os.environ.get('CLERK_PUBLISHABLE_KEY', '')
