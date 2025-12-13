@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.config import Config
+from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
+from api.middleware import apply_route_checks
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -168,6 +170,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
                 return
+        
+        # Apply middleware checks via routing table (auth/db requirements)
+        route = match_route('GET', parsed_path.path, GET_ROUTES + PAGE_ROUTES)
+        if route:
+            if not apply_route_checks(route, self, DATABASE_AVAILABLE):
+                return  # Middleware sent 401/503 response
         
         # Legacy /admin path support - redirect to admin.promostack.io
         if parsed_path.path == '/admin/':
@@ -1342,6 +1350,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_POST(self):
         parsed_path = urlparse(self.path)
+        
+        # Apply middleware checks via routing table (auth/db requirements)
+        route = match_route('POST', parsed_path.path, POST_ROUTES)
+        if route:
+            if not apply_route_checks(route, self, DATABASE_AVAILABLE):
+                return  # Middleware sent 401/503 response
         
         if parsed_path.path == '/api/validate-coupon':
             if not COUPON_VALIDATOR_AVAILABLE:
@@ -3560,6 +3574,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
+    # Note: validate_routes(MyHTTPRequestHandler) will be called in Step 9
+    # after handlers are extracted to methods
+    
     from core.app_context import create_app_context
     from core.bootstrap import start_app
     
