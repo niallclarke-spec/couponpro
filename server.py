@@ -23,6 +23,7 @@ from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
+from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -1499,6 +1500,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/signal-bot/cancel-queue':
             forex_handlers.handle_signal_bot_cancel_queue(self)
+            return
+        
+        # Dispatch to telegram webhook handlers
+        if parsed_path.path == '/api/telegram-webhook':
+            handle_coupon_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
+            return
+        elif parsed_path.path == '/api/forex-telegram-webhook':
+            handle_forex_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
             return
         
         if parsed_path.path == '/api/validate-coupon':
