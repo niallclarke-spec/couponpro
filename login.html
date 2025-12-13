@@ -199,7 +199,7 @@
             const signoutBtn = document.getElementById('signout-btn');
 
             if (!CLERK_PUBLISHABLE_KEY || CLERK_PUBLISHABLE_KEY === '{{CLERK_PUBLISHABLE_KEY}}') {
-                errorEl.textContent = 'Clerk is not configured. Please set CLERK_PUBLISHABLE_KEY environment variable.';
+                errorEl.textContent = 'Clerk is not configured. Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.';
                 errorEl.classList.add('show');
                 signinEl.innerHTML = '';
                 return;
