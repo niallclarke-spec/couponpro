@@ -1,201 +1,345 @@
-# PromoStack/EntryLab - Complete Project Documentation
+# PromoStack/EntryLab - Project Documentation
 
-> **Purpose**: This document provides a comprehensive overview of the PromoStack platform for developers, AI assistants, and stakeholders who need to understand the codebase structure, features, and architecture.
+> **Purpose**: Technical documentation for developers and AI assistants working with this codebase.
 
 ---
 
 ## Table of Contents
-1. [Project Overview](#1-project-overview)
-2. [Tech Stack](#2-tech-stack)
-3. [File Structure & Responsibilities](#3-file-structure--responsibilities)
-4. [Database Schema](#4-database-schema)
-5. [Key Features](#5-key-features)
-6. [API Endpoints](#6-api-endpoints)
-7. [Environment Variables](#7-environment-variables)
-8. [Forex Signals System Deep Dive](#8-forex-signals-system-deep-dive)
-9. [Subscription & Billing System](#9-subscription--billing-system)
-10. [Admin Dashboard](#10-admin-dashboard)
-11. [Architectural Health & Technical Debt](#11-architectural-health--technical-debt)
-12. [Deployment](#12-deployment)
+1. [Architecture Overview (Current)](#1-architecture-overview-current)
+2. [Startup & Side Effects](#2-startup--side-effects)
+3. [Current Directory Layout](#3-current-directory-layout)
+4. [API Surface](#4-api-surface)
+5. [Data Model](#5-data-model)
+6. [Domain Modules](#6-domain-modules)
+7. [Integrations](#7-integrations)
+8. [Workers & Background Jobs](#8-workers--background-jobs)
+9. [Configuration & Secrets](#9-configuration--secrets)
+10. [Known Limitations / Single-Tenant Reality](#10-known-limitations--single-tenant-reality)
+11. [Frontend](#11-frontend)
+12. [What Changed Since Last Version](#12-what-changed-since-last-version)
+13. [Smoke Tests & Invariants Checklist](#13-smoke-tests--invariants-checklist)
 
 ---
 
-## 1. Project Overview
+## 1. Architecture Overview (Current)
 
-**PromoStack** is a multi-product platform consisting of two main products:
+PromoStack is a **single-process Python 3.11 application** combining:
+- **Coupon Bot**: Telegram bot for promotional image generation
+- **Forex Signals Bot**: Automated XAU/USD trading signals
+- **Subscription Billing**: Stripe-powered VIP access management
+- **Admin Dashboard**: Unified management interface
 
-### Product 1: Coupon Bot
-A promotional image generator for creating branded coupons and marketing assets for social media and messaging platforms.
+### Architecture Characteristics (Post-Refactor)
 
-- **Web App**: Public-facing coupon generator at `dash.promostack.io`
-- **Telegram Bot**: @promostack_bot for generating coupons via chat
-- **Admin Panel**: Template management, analytics, broadcast messaging
+| Component | Lines | Purpose |
+|-----------|-------|---------|
+| `server.py` | **766** | Thin HTTP entrypoint: domain routing + static serving + startup |
+| `api/routes.py` | ~100 | Route definitions with metadata (auth, db requirements) |
+| `api/middleware.py` | ~50 | Request gating (auth checks, db availability) |
+| `domains/*` | ~1,200 | Extracted handler functions by business domain |
+| `integrations/*` | ~300 | External service handlers (Stripe, Telegram) |
+| `workers/*` | ~30 | Wrapper namespace for background jobs |
+| `core/*` | ~200 | App context and bootstrap (side-effect control) |
 
-### Product 2: Forex Signals Bot (EntryLab)
-An automated XAU/USD (Gold) trading signals service with freemium subscription model.
+### Key Design Decisions
 
-- **Free Channel**: Public Telegram channel with delayed signals
-- **VIP Channel**: Private channel with real-time signals for paid subscribers
-- **Subscription**: Stripe-powered weekly ($34.99) and monthly ($49) plans
-- **Automation**: AI-powered signal generation, milestone tracking, performance recaps
+1. **server.py is thin**: No longer a monolith. Contains only:
+   - HTTP server class with request routing
+   - Static file serving
+   - Domain dispatch logic
+   - Startup orchestration
 
-### Access Points
-| Platform | URL/Handle | Purpose |
-|----------|------------|---------|
-| Web Dashboard | `dash.promostack.io` | Admin panel for both products |
-| Coupon Bot | @promostack_bot | Telegram bot for coupon generation |
-| Forex Bot | @entrylabs | Telegram bot for trading signals |
-| Landing Page | EntryLab frontend (separate repo) | Subscription checkout |
+2. **api/routes.py + api/middleware.py**: Declarative routing model
+   - Routes defined as dataclasses with `path`, `method`, `auth_required`, `db_required`
+   - Middleware applies checks before dispatch
+
+3. **domains/* contains extracted handlers**: Business logic separated by domain
+   - `domains/subscriptions/handlers.py` - Telegram subscription management
+   - `domains/coupons/handlers.py` - Campaign/coupon logic
+   - `domains/forex/handlers.py` - Trading signal management
+
+4. **integrations/* contains external service handlers**:
+   - `integrations/telegram/webhooks.py` - Both bot webhooks
+   - `integrations/stripe/webhooks.py` - Payment webhooks
+
+5. **workers/* is wrapper namespace**: Thin re-exports around background jobs
+   - Does not contain implementation logic
+   - Provides clean import paths for bootstrap
+
+6. **core/app_context.py + core/bootstrap.py controls side effects**:
+   - `create_app_context()` - Pure function, no side effects
+   - `start_app(ctx)` - All side effects happen here
 
 ---
 
-## 2. Tech Stack
+## 2. Startup & Side Effects
 
-| Layer | Technology | Notes |
-|-------|------------|-------|
-| **Backend** | Python 3.11 | Custom HTTP server (no framework like Flask/Django) |
-| **Frontend** | HTML/CSS/JavaScript | Vanilla JS, no React/Vue - single-page app with hash routing |
-| **Database** | PostgreSQL | Digital Ocean managed database |
-| **Object Storage** | Digital Ocean Spaces | S3-compatible, used for template images |
-| **Payments** | Stripe | Subscriptions, webhooks, revenue tracking |
-| **Messaging** | Telegram Bot API | python-telegram-bot library with rate limiting |
-| **AI** | OpenAI GPT | Signal messages, guidance, recaps via Replit AI integration |
-| **Market Data** | Twelve Data API | Real-time XAU/USD price feed |
-| **Image Generation** | Pillow (PIL) | Server-side coupon image rendering |
-| **Deployment** | Digital Ocean App Platform | Production hosting |
-| **Dev Environment** | Replit | Development and staging |
+### Critical Invariant
+
+**Importing `server.py` must NOT start any side effects.**
+
+This is enforced by the two-phase startup:
+
+### Phase 1: Context Creation (Pure)
+
+```python
+# In server.py at startup:
+from core.app_context import create_app_context
+
+ctx = create_app_context()  # No side effects - just reads env vars
+```
+
+`create_app_context()` returns an `AppContext` object with:
+- Feature flags (database_available, telegram_bot_available, etc.)
+- Bot tokens (read from environment)
+- No imports of side-effect modules
+
+### Phase 2: Bootstrap (Side Effects)
+
+```python
+from core.bootstrap import start_app
+
+start_app(ctx)  # ALL side effects happen here
+```
+
+`start_app(ctx)` performs:
+1. Database module import and schema initialization
+2. Telegram webhook registration (both bots)
+3. Forex scheduler startup in background thread
+4. Stripe client initialization
+
+### Scheduler Startup Guarantee
+
+**The scheduler starts exactly once.** Enforced by:
+- `_started` flag in `core/bootstrap.py`
+- Idempotent `start_app()` - calling twice has no effect
+- Single background thread with daemon=True
+
+### Webhooks Register Only in `start_app(ctx)`
+
+No webhook registration happens at import time. Both Telegram bots and Stripe webhooks are configured only when `start_app(ctx)` is called.
 
 ---
 
-## 3. File Structure & Responsibilities
+## 3. Current Directory Layout
 
-### Directory Structure
 ```
 promostack/
-├── server.py              # Main HTTP server (3,663 lines)
-├── db.py                  # Database operations (4,786 lines)
-├── stripe_client.py       # Stripe API wrapper (1,109 lines)
-├── admin.html             # Admin dashboard SPA (9,290 lines)
-├── index.html             # Public coupon generator
-├── campaign.html          # Campaign submission page
+├── server.py                    # HTTP server entrypoint (766 lines)
+├── db.py                        # Database operations + migrations
+├── stripe_client.py             # Stripe API wrapper
 │
-├── telegram_bot.py        # Coupon bot logic
-├── telegram_image_gen.py  # Pillow image generation
+├── core/                        # Application lifecycle
+│   ├── __init__.py
+│   ├── app_context.py           # Pure context creation
+│   ├── bootstrap.py             # Side-effect startup
+│   └── config.py                # Environment configuration
 │
-├── forex_bot.py           # Forex bot initialization
-├── forex_signals.py       # Signal generation logic
-├── forex_scheduler.py     # Background task scheduler
-├── forex_ai.py            # AI message generation
-├── forex_api.py           # Market data fetching
-├── indicator_config.py    # Indicator settings
+├── api/                         # Routing layer
+│   ├── __init__.py
+│   ├── routes.py                # Route definitions
+│   └── middleware.py            # Auth/DB checks
 │
-├── strategies/            # Modular trading strategies
-│   ├── base_strategy.py   # Abstract base class
-│   ├── raja_banks.py      # Primary strategy
-│   ├── aggressive.py      # High risk variant
-│   ├── conservative.py    # Low risk variant
-│   └── strategy_loader.py # Dynamic loading
+├── domains/                     # Business logic by domain
+│   ├── subscriptions/
+│   │   ├── __init__.py
+│   │   └── handlers.py          # Telegram subscription handlers
+│   ├── coupons/
+│   │   ├── __init__.py
+│   │   └── handlers.py          # Campaign/coupon handlers
+│   └── forex/
+│       ├── __init__.py
+│       └── handlers.py          # Forex signal handlers
 │
-├── bots/core/             # Shared bot modules
-│   ├── milestone_tracker.py  # TP/SL notifications
-│   ├── price_monitor.py      # Real-time monitoring
-│   ├── scheduler.py          # Async scheduler
-│   └── ai_guidance.py        # Guidance messages
+├── integrations/                # External service handlers
+│   ├── telegram/
+│   │   ├── __init__.py
+│   │   └── webhooks.py          # Both bot webhooks
+│   └── stripe/
+│       ├── __init__.py
+│       └── webhooks.py          # Payment webhooks
 │
-├── coupon_validator.py    # FunderPro API integration
-├── object_storage.py      # DO Spaces wrapper
-├── requirements.txt       # Python dependencies
-└── .do/app.yaml          # DO deployment config
+├── workers/                     # Background job wrappers
+│   ├── __init__.py              # Exports all workers
+│   ├── scheduler.py             # Re-exports start_forex_scheduler
+│   ├── price_monitor.py         # Re-exports price_monitor singleton
+│   └── milestone_tracker.py     # Re-exports milestone_tracker singleton
+│
+├── bots/                        # Bot implementation
+│   ├── __init__.py
+│   ├── core/
+│   │   ├── scheduler.py         # SignalBotScheduler class
+│   │   ├── price_monitor.py     # PriceMonitor class
+│   │   ├── milestone_tracker.py # MilestoneTracker class
+│   │   ├── ai_guidance.py       # AI message generation
+│   │   ├── signal_generator.py  # Signal generation logic
+│   │   └── bot_manager.py       # Bot/strategy management
+│   └── strategies/
+│       ├── base.py              # Abstract base strategy
+│       ├── raja_banks.py        # Primary strategy
+│       ├── aggressive.py        # High risk variant
+│       └── conservative.py      # Low risk variant
+│
+├── forex_scheduler.py           # Async scheduler loop
+├── forex_bot.py                 # Forex bot initialization
+├── forex_signals.py             # Signal generation
+├── forex_api.py                 # Twelve Data client
+├── forex_ai.py                  # AI message generation
+├── indicator_config.py          # Technical indicator settings
+│
+├── telegram_bot.py              # Coupon bot logic
+├── telegram_image_gen.py        # Pillow image generation
+├── coupon_validator.py          # FunderPro API
+├── object_storage.py            # DO Spaces wrapper
+│
+├── admin.html                   # Admin dashboard SPA (9,290 lines)
+├── index.html                   # Public coupon generator
+├── campaign.html                # Campaign submission page
+│
+├── ARCHITECTURE.md              # Detailed technical architecture
+├── PROJECT_DOCUMENTATION.md     # This file
+├── replit.md                    # User preferences + decisions
+└── requirements.txt             # Python dependencies
 ```
-
-### Core Files Explained
-
-#### `server.py` (3,663 lines)
-The monolithic HTTP server handling:
-- URL routing and request handling
-- HMAC-signed cookie authentication
-- Stripe webhook processing
-- Telegram webhook endpoints
-- Bot initialization and startup
-- All API endpoints
-
-#### `db.py` (4,786 lines)
-Database layer including:
-- Connection pooling with psycopg2
-- Schema initialization (CREATE TABLE statements)
-- Ad-hoc migrations at startup
-- All CRUD operations as functions
-- No ORM - raw SQL queries
-
-#### `stripe_client.py` (1,109 lines)
-Stripe integration:
-- Revenue metrics calculation
-- Subscription management
-- Rebill forecasting
-- Response caching (2-minute TTL)
-- Churn rate calculation
-
-#### `admin.html` (9,290 lines)
-Single-page admin dashboard:
-- HTML structure
-- CSS styles (dark navy theme)
-- JavaScript application logic
-- Hash-based routing (#product/view)
-- All admin UI components
 
 ---
 
-## 4. Database Schema
+## 4. API Surface
 
-### Tables Overview
+### Route Matching Order
 
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `campaigns` | Marketing campaigns | id, name, slug, overlay_image, active |
-| `submissions` | User campaign submissions | id, campaign_id, image_url, social_url |
-| `bot_usage` | Telegram analytics | id, user_id, template, success, error_type |
-| `bot_users` | Telegram user profiles | id, telegram_id, username, first_name |
-| `broadcast_jobs` | Admin message queue | id, message, status, sent_count |
-| `forex_signals` | Trading signals | id, direction, entry, TP1/2/3, SL, status |
-| `bot_config` | Bot settings | key, value (JSON) |
-| `forex_config` | Strategy parameters | key, value (thresholds, multipliers) |
-| `signal_narrative` | AI narratives | signal_id, narrative_text |
-| `recent_phrases` | AI deduplication | phrase, created_at |
-| `telegram_subscriptions` | VIP subscribers | id, email, stripe_id, telegram_username |
-| `processed_webhook_events` | Webhook idempotency | event_id, processed_at |
+1. Domain-based routing (admin.promostack.io, dash.promostack.io)
+2. Middleware checks (auth_required, db_required)
+3. Domain handler dispatch
+4. Static page serving (/admin, /campaign/)
+5. Inline handlers (check-auth, day-of-week-stats, retention-rates)
+6. Static file serving (default)
 
-### forex_signals Table (Critical)
+### Endpoints by Domain
+
+#### Authentication (Inline in server.py)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET | `/api/check-auth` | No | Verify session |
+| POST | `/api/login` | No | Admin login |
+| POST | `/api/logout` | No | Clear session |
+
+#### Subscriptions Domain (`domains/subscriptions/handlers.py`)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET | `/api/telegram-subscriptions` | Yes | List VIP subscribers |
+| GET | `/api/telegram/revenue-metrics` | Yes | Stripe revenue data |
+| GET | `/api/telegram/conversion-analytics` | Yes | Conversion funnel |
+| GET | `/api/telegram/billing/{id}` | Yes | Subscriber billing history |
+| GET | `/api/telegram/check-access/{username}` | No | Check VIP access |
+| POST | `/api/telegram/grant-access` | Yes | Grant VIP access |
+| POST | `/api/telegram/revoke-access` | Yes | Revoke VIP access |
+| POST | `/api/telegram/cancel-subscription` | Yes | Cancel subscription |
+| POST | `/api/telegram/delete-subscription` | Yes | Delete subscription |
+| POST | `/api/telegram/clear-all` | Yes | Clear all subscriptions |
+| POST | `/api/telegram/cleanup-test-data` | Yes | Remove test data |
+
+#### Coupons Domain (`domains/coupons/handlers.py`)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET | `/api/campaigns` | No | List campaigns |
+| GET | `/api/campaigns/{id}` | No | Get campaign |
+| GET | `/api/campaigns/{id}/submissions` | Yes | Campaign submissions |
+| GET | `/api/bot-stats` | Yes | Bot usage analytics |
+| GET | `/api/bot-users` | Yes | Bot user list |
+| GET | `/api/broadcast-status/{id}` | Yes | Broadcast job status |
+| GET | `/api/broadcast-jobs` | Yes | List broadcast jobs |
+| GET | `/api/user-activity/{id}` | Yes | User activity history |
+| GET | `/api/invalid-coupons` | Yes | Invalid coupon log |
+| POST | `/api/validate-coupon` | No | FunderPro validation |
+| POST | `/api/broadcast` | Yes | Send broadcast message |
+| POST | `/api/upload-template` | Yes | Upload template |
+| POST | `/api/upload-overlay` | Yes | Upload overlay |
+| POST | `/api/delete-template` | Yes | Delete template |
+| POST | `/api/toggle-telegram-template` | Yes | Toggle template visibility |
+| POST | `/api/clear-telegram-cache` | Yes | Clear template cache |
+| POST | `/api/regenerate-index` | Yes | Regenerate template index |
+
+#### Forex Domain (`domains/forex/handlers.py`)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET | `/api/forex-signals` | Yes | List signals |
+| GET | `/api/forex-stats` | Yes | Performance stats |
+| GET | `/api/forex-config` | Yes | Strategy config |
+| GET | `/api/signal-bot/status` | Yes | Bot status |
+| GET | `/api/signal-bot/signals` | Yes | Active signals |
+| GET | `/api/forex-tp-config` | Yes | TP configuration |
+| GET | `/api/forex/xauusd-sparkline` | Yes | Price sparkline |
+| POST | `/api/forex-config` | Yes | Update config |
+| POST | `/api/forex-tp-config` | Yes | Update TP config |
+| POST | `/api/signal-bot/set-active` | Yes | Set active strategy |
+| POST | `/api/signal-bot/cancel-queue` | Yes | Cancel queued signals |
+
+#### Webhooks (`integrations/*/webhooks.py`)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| POST | `/api/telegram-webhook` | No | Coupon bot webhook |
+| POST | `/api/forex-telegram-webhook` | No | Forex bot webhook |
+| POST | `/api/stripe/webhook` | No | Stripe payment webhook |
+
+#### Analytics (Inline in server.py)
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET | `/api/day-of-week-stats` | Yes | Day-of-week analytics |
+| GET | `/api/retention-rates` | Yes | User retention data |
+| GET | `/api/telegram-channel-stats` | Yes | Channel statistics |
+
+---
+
+## 5. Data Model
+
+### Table Ownership by Domain
+
+| Table | Owner Domain | Purpose |
+|-------|--------------|---------|
+| `campaigns` | Coupons | Marketing campaigns |
+| `submissions` | Coupons | Campaign submissions |
+| `bot_usage` | Coupons | Coupon bot analytics |
+| `bot_users` | Coupons | Telegram user profiles |
+| `broadcast_jobs` | Coupons | Admin message queue |
+| `forex_signals` | Forex | Trading signals |
+| `forex_config` | Forex | Strategy parameters |
+| `bot_config` | Shared | General bot settings |
+| `signal_narrative` | Forex | AI narratives |
+| `recent_phrases` | Forex | AI deduplication |
+| `telegram_subscriptions` | Subscriptions | VIP subscribers |
+| `processed_webhook_events` | Integrations | Webhook idempotency |
+
+### Key Schema: forex_signals
 ```sql
 CREATE TABLE forex_signals (
     id SERIAL PRIMARY KEY,
     direction VARCHAR(4),           -- 'BUY' or 'SELL'
     entry_price DECIMAL(10,5),
     stop_loss DECIMAL(10,5),
-    take_profit_1 DECIMAL(10,5),
-    take_profit_2 DECIMAL(10,5),
-    take_profit_3 DECIMAL(10,5),
+    take_profit DECIMAL(10,5),      -- TP1
+    take_profit_2 DECIMAL(10,5),    -- TP2
+    take_profit_3 DECIMAL(10,5),    -- TP3
     status VARCHAR(20),             -- active, tp1_hit, tp2_hit, closed_tp, closed_sl, expired
     effective_sl DECIMAL(10,5),     -- Actual SL for P&L (moves with breakeven)
     breakeven_set BOOLEAN,
-    breakeven_price DECIMAL(10,5),
-    guidance_count INTEGER,
-    last_guidance_at TIMESTAMP,
-    indicators_used TEXT,           -- JSON of indicators that triggered
-    notes TEXT,
-    bot_type VARCHAR(50),
-    telegram_message_id BIGINT,
+    tp1_hit BOOLEAN,
+    tp2_hit BOOLEAN,
+    tp3_hit BOOLEAN,
+    milestones_sent TEXT,           -- Comma-separated milestone IDs
+    last_milestone_at TIMESTAMP,
+    indicators_used TEXT,           -- JSON of triggering indicators
     created_at TIMESTAMP,
     closed_at TIMESTAMP,
     close_price DECIMAL(10,5)
 );
 ```
 
-### telegram_subscriptions Table
+### Key Schema: telegram_subscriptions
 ```sql
 CREATE TABLE telegram_subscriptions (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255),
-    name VARCHAR(255),
     stripe_customer_id VARCHAR(255),
     stripe_subscription_id VARCHAR(255),
     plan_type VARCHAR(50),
@@ -217,290 +361,351 @@ CREATE TABLE telegram_subscriptions (
 
 ---
 
-## 5. Key Features
+## 6. Domain Modules
 
-### Coupon Bot Features
-- **Template Management**: Upload/manage promotional templates
-- **Dynamic Text Positioning**: Drag-to-draw coupon code placement
-- **Auto-Fit Text**: Automatic text sizing for coupon codes
-- **Logo Overlays**: Brand logo placement
-- **FunderPro Validation**: Real-time coupon code validation
-- **Telegram Generation**: Generate coupons via bot commands
-- **Broadcast System**: Send messages to all bot users
+### domains/subscriptions/handlers.py
 
-### Forex Signals Bot Features
+Handles Telegram VIP subscription management:
+- Subscriber CRUD operations
+- Revenue metrics (delegates to Stripe client)
+- Conversion analytics
+- Access grant/revoke
+- Billing history
 
-#### Signal Generation
-- **Multi-Indicator Strategy**: EMA, ADX, RSI, MACD, Bollinger Bands, Stochastic
-- **Session-Based Trading**: 8AM-10PM GMT trading hours
-- **Impulse Candle Detection**: Raja Banks breakout strategy
-- **Max 4 Signals/Day**: Rate limiting per strategy
+**Dependencies**: `db.py`, `stripe_client.py`
 
-#### Position Management
-- **Multi-TP System**:
-  - TP1: 50% of position
-  - TP2: 30% of position
-  - TP3: 20% of position
-- **70% Breakeven Trigger**: Auto-move SL to entry at 70% toward TP1
-- **3-Hour Hard Timeout**: Auto-expire stale signals
+### domains/coupons/handlers.py
 
-#### Monitoring & Notifications
-- **1-Minute Price Monitoring**: Real-time TP/SL detection
-- **Milestone Notifications**: Progress updates at 40%, 70%, TP hits
-- **90-Second Cooldown**: Prevent notification spam
-- **AI-Generated Messages**: GPT-powered announcements
+Handles coupon bot and campaign operations:
+- Campaign management
+- Template upload/delete
+- Bot analytics
+- Broadcast messaging
+- Coupon validation (FunderPro)
 
-#### Recaps & Briefings
-- **Morning Briefing**: 6:20 AM UTC market outlook
-- **Daily Recap**: 6:30 AM UTC performance summary
-- **Weekly Recap**: Sunday performance summary
-- **P&L Tracking**: Using effective_sl for accurate calculations
+**Dependencies**: `db.py`, `object_storage.py`, `coupon_validator.py`
+
+### domains/forex/handlers.py
+
+Handles forex signal management:
+- Signal listing and stats
+- Strategy configuration
+- Bot status monitoring
+- TP configuration
+
+**Dependencies**: `db.py`, `forex_scheduler.py`, `bots/core/*`
 
 ---
 
-## 6. API Endpoints
+## 7. Integrations
 
-### Authentication
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/login` | Admin login (password) |
-| POST | `/api/logout` | Clear session |
-| GET | `/api/check-auth` | Verify session |
+### Stripe (`integrations/stripe/webhooks.py`)
 
-### Coupon Bot
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/validate-coupon` | FunderPro validation |
-| POST | `/api/upload-template` | Upload template (auth) |
-| POST | `/api/delete-template` | Delete template (auth) |
-| GET | `/api/campaigns` | List campaigns |
-| POST | `/api/telegram-webhook` | Bot webhook |
+Handles Stripe webhook events:
+- `checkout.session.completed` - New subscription
+- `customer.subscription.updated` - Plan changes
+- `customer.subscription.deleted` - Cancellation
+- `invoice.payment_failed` - Failed payment
 
-### Forex Bot
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/forex-signals` | List signals (auth) |
-| GET | `/api/forex-stats` | Performance stats (auth) |
-| GET | `/api/forex-config` | Strategy config (auth) |
-| POST | `/api/forex-config` | Update config (auth) |
-| GET | `/api/signal-bot/status` | Bot status (auth) |
-| POST | `/api/forex-telegram-webhook` | Bot webhook |
+**Idempotency**: Uses `processed_webhook_events` table to prevent duplicate processing.
 
-### Subscriptions
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/telegram-subscriptions` | List subscribers (auth) |
-| POST | `/api/telegram/revoke-access` | Revoke VIP access (auth) |
-| GET | `/api/telegram/revenue-metrics` | Stripe metrics (auth) |
-| GET | `/api/telegram/billing/{id}` | Billing history (auth) |
-| GET | `/api/telegram/conversion-analytics` | Conversion data (auth) |
-| POST | `/api/stripe/webhook` | Stripe webhook |
+### Telegram (`integrations/telegram/webhooks.py`)
+
+Two separate webhook handlers:
+- `handle_coupon_telegram_webhook()` - Coupon bot interactions
+- `handle_forex_telegram_webhook()` - Forex bot join tracking
+
+**Both return 200 immediately** to prevent Telegram retry storms.
+
+### OpenAI
+
+Used via Replit AI integration for:
+- Signal announcement messages
+- Milestone celebration messages
+- Morning briefings and recaps
+
+**Client**: `OpenAI` from `openai` package with Replit base URL.
+
+### Twelve Data (forex_api.py)
+
+Market data provider for XAU/USD prices:
+- Real-time price quotes
+- OHLC candle data
+- Technical indicator calculations
 
 ---
 
-## 7. Environment Variables
+## 8. Workers & Background Jobs
 
-### Required for Production
-```bash
-# Database
-DATABASE_URL=postgresql://user:pass@host:port/db
+### Worker Package Structure
 
-# Telegram
-TELEGRAM_BOT_TOKEN=xxx          # Coupon bot
-FOREX_BOT_TOKEN=xxx             # Forex bot (production)
-
-# Stripe
-STRIPE_SECRET_KEY=sk_live_xxx   # Live key for production
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-
-# Admin
-ADMIN_PASSWORD=xxx
-
-# Storage
-SPACES_ACCESS_KEY=xxx
-SPACES_SECRET_KEY=xxx
-SPACES_BUCKET=couponpro-templates
-SPACES_REGION=nyc3
-
-# Market Data
-TWELVE_DATA_API_KEY=xxx
-
-# Coupon Validation
-FUNDERPRO_PRODUCT_ID=xxx
+```
+workers/
+├── __init__.py              # Exports: start_forex_scheduler, price_monitor, milestone_tracker
+├── scheduler.py             # Re-exports from forex_scheduler
+├── price_monitor.py         # Re-exports from bots/core/price_monitor
+└── milestone_tracker.py     # Re-exports from bots/core/milestone_tracker
 ```
 
-### Development/Test
-```bash
-ENTRYLAB_TEST_BOT=xxx           # Test bot token (dev)
-# Stripe test keys automatically detected by sk_test_ prefix
-```
+### Why Wrappers?
+
+The `workers/` package provides:
+1. **Clean import paths** for bootstrap
+2. **Single namespace** for all background workers
+3. **No internal logic modification** - just re-exports
+4. **Future extensibility** for new workers
+
+### How Workers Start
+
+1. `start_app(ctx)` is called in `server.py`
+2. Bootstrap imports `from workers.scheduler import start_forex_scheduler`
+3. Scheduler runs in background thread with `daemon=True`
+4. Price monitor and milestone tracker are singletons used by scheduler
+
+### Scheduler Intervals
+
+| Task | Interval | Purpose |
+|------|----------|---------|
+| Signal check (15m) | 15 min | Generate new signals |
+| Signal check (1h) | 30 min | Higher timeframe check |
+| Price monitoring | 1 min | TP/SL detection |
+| Signal guidance | 1 min | Milestone notifications |
+| Stagnant re-validation | 90 min initial, 30 min after | Check indicator validity |
 
 ---
 
-## 8. Forex Signals System Deep Dive
+## 9. Configuration & Secrets
 
-### Signal Lifecycle
-```
-1. GENERATE → Check indicators, create signal
-2. ACTIVE → Monitor price every 1 minute
-3. GUIDANCE → Send progress updates (40%, 70%)
-4. BREAKEVEN → Move SL to entry at 70%
-5. TP1_HIT → First target hit, 50% closed
-6. TP2_HIT → Second target hit, 30% closed
-7. CLOSED_TP/SL/EXPIRED → Final state
-```
+### core/config.py
 
-### Strategy Architecture
+Centralized configuration class:
+
 ```python
-# base_strategy.py
-class BaseStrategy:
-    def should_generate_signal(self, market_data) -> bool
-    def calculate_entry(self, market_data) -> float
-    def calculate_tp_levels(self, entry, direction) -> tuple
-    def calculate_stop_loss(self, entry, direction) -> float
-
-# raja_banks.py (Primary Strategy)
-class RajaBanksStrategy(BaseStrategy):
-    # Session-based: 8AM-10PM GMT
-    # 15-minute impulse candle breakout
-    # Max 4 signals per day
-    # Hybrid trend filter (EMA + ADX)
-    # ATR-based TP/SL calculation
+class Config:
+    @staticmethod
+    def get_port() -> int
+    
+    @staticmethod
+    def get_admin_password() -> str
+    
+    @staticmethod
+    def get_database_url() -> str
+    
+    @staticmethod
+    def is_development() -> bool
 ```
 
-### Timing Configuration
-```python
-SIGNAL_CHECK_INTERVAL = 15      # minutes (15m timeframe)
-HOURLY_CHECK_INTERVAL = 30      # minutes (1h timeframe)
-PRICE_MONITOR_INTERVAL = 1      # minute
-GUIDANCE_INTERVAL = 1           # minute (with 10min cooldown)
-HARD_TIMEOUT_MINUTES = 180      # 3 hours
-TRADING_START_HOUR = 8          # GMT
-TRADING_END_HOUR = 22           # GMT
-MORNING_BRIEFING = "06:20"      # UTC
-DAILY_RECAP = "06:30"           # UTC
-```
+### Environment Variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `DATABASE_URL` | Yes | PostgreSQL connection |
+| `ADMIN_PASSWORD` | Yes | Admin authentication |
+| `TELEGRAM_BOT_TOKEN` | Yes | Coupon bot |
+| `FOREX_BOT_TOKEN` | Prod | Forex bot (production) |
+| `ENTRYLAB_TEST_BOT` | Dev | Forex bot (development) |
+| `STRIPE_SECRET_KEY` | Yes | Stripe API |
+| `STRIPE_WEBHOOK_SECRET` | Prod | Webhook signature verification |
+| `TWELVE_DATA_API_KEY` | Yes | Market data |
+| `SPACES_ACCESS_KEY` | Yes | DO Spaces |
+| `SPACES_SECRET_KEY` | Yes | DO Spaces |
+| `SPACES_BUCKET` | Yes | Template storage bucket |
+| `SPACES_REGION` | Yes | DO region |
+| `FUNDERPRO_PRODUCT_ID` | Yes | Coupon validation |
+| `AI_INTEGRATIONS_OPENAI_API_KEY` | Auto | Replit AI integration |
+| `AI_INTEGRATIONS_OPENAI_BASE_URL` | Auto | Replit AI integration |
+
+### Platform Config vs Runtime State
+
+| Type | Location | Example |
+|------|----------|---------|
+| Platform config | Environment variables | `DATABASE_URL`, `ADMIN_PASSWORD` |
+| Runtime state | `AppContext` | `database_available`, `forex_scheduler_available` |
+| Feature config | Database tables | `forex_config`, `bot_config` |
 
 ---
 
-## 9. Subscription & Billing System
+## 10. Known Limitations / Single-Tenant Reality
 
-### Plans
-| Plan | Price | Billing |
-|------|-------|---------|
-| 7-Day VIP | $34.99 | Weekly recurring |
-| Monthly VIP | $49.00 | Monthly recurring |
+### Single-Tenant Design
 
-### Flow
-```
-1. User visits EntryLab landing page
-2. Selects plan, redirected to Stripe Checkout
-3. Payment processed, webhook fires
-4. telegram_subscriptions record created
-5. User receives Telegram invite link
-6. User joins VIP channel, verified via bot
-7. Recurring billing via Stripe
-8. Failed payment → access revoked
-```
+**Tenant isolation is NOT implemented.** Current assumptions:
 
-### Conversion Tracking
-- UTM parameters captured at signup
-- Free signup timestamp tracked
-- Conversion = free user becomes VIP
-- Conversion days calculated automatically
+1. **Global bots**: One coupon bot, one forex bot for entire platform
+2. **Global scheduler**: Single scheduler instance for all signals
+3. **Shared database**: All data in one PostgreSQL database
+4. **Shared object storage**: One Spaces bucket for all templates
+5. **Single admin**: One admin password for entire system
 
----
+### No Per-Tenant Isolation
 
-## 10. Admin Dashboard
+- No tenant_id columns in database
+- No request-scoped tenant context
+- No multi-bot support per tenant
+- No per-tenant configuration
 
-### Navigation Structure
-```
-Coupon Bot:
-├── Templates (upload/manage)
-├── Analytics (usage stats)
-├── Broadcast (message users)
-├── Campaigns (promo campaigns)
-└── Settings (bot config)
+### Process Restart Behavior
 
-Forex Bot:
-├── Subscriptions (VIP members)
-├── Conversions (analytics)
-├── Signals Monitor (active signals)
-└── Settings (strategy config)
-```
+- Server restart = scheduler restart
+- No scheduler persistence across restarts
+- Active signals continue from database state
+- No distributed locking
 
-### UI Features
-- **Dark Navy Theme**: #081028 background
-- **Dual Sidebar**: Product switcher (60px) + Feature nav (240px)
-- **Hash Routing**: #product/view for navigation
-- **Real-time Metrics**: Stripe data with caching
-- **Responsive**: Mobile-friendly with collapsible sidebars
+### Horizontal Scaling
+
+**Not supported.** Running multiple instances would cause:
+- Multiple scheduler threads
+- Duplicate signal generation
+- Webhook race conditions
 
 ---
 
-## 11. Architectural Health & Technical Debt
+## 11. Frontend
 
-### Current Rating: 4/10
+### admin.html (9,290 lines)
 
-### Critical Issues
-1. **Monolithic server.py** (3,663 lines)
-   - All routing, auth, webhooks, bot logic in one file
-   - Hard to test, maintain, or extend
-   
-2. **No Automated Tests**
-   - Changes can break production silently
-   - No regression protection
-   
-3. **No Database Migrations**
-   - Schema changes are ad-hoc ALTER statements
-   - No version control for schema
-   
-4. **Global State Coupling**
-   - Modules depend on globals initialized in server.py
-   - Hidden dependencies make refactoring risky
-   
-5. **Print-Based Logging**
-   - No structured logging
-   - No alerting on errors
+Single-file SPA containing:
+- HTML structure
+- CSS styles (dark navy theme)
+- JavaScript application logic
+- Hash-based routing (#product/view)
+- All admin UI components
 
-### What Works Well
-1. **Modular Strategy System** - Clean plug-and-play design
-2. **Separated Bot Core** - milestone_tracker, price_monitor are clean
-3. **Environment Config** - Dev/prod switching works
-4. **replit.md Documentation** - Architecture decisions recorded
+### Structure (Current, Not Proposed Rewrite)
 
-### Recommended Improvements
-1. Split server.py into modules (auth, stripe, forex, telegram)
-2. Add database migration tool (Alembic)
-3. Add smoke tests for critical paths
-4. Replace globals with dependency injection
-5. Implement structured logging
+```html
+<!-- HTML: ~500 lines -->
+<div id="app">
+  <nav id="product-switcher">...</nav>
+  <nav id="main-nav">...</nav>
+  <main id="content">...</main>
+</div>
+
+<!-- CSS: ~2,000 lines -->
+<style>
+  :root { --bg-primary: #081028; ... }
+  /* Component styles */
+</style>
+
+<!-- JavaScript: ~6,500 lines -->
+<script>
+  // Router, API client, view controllers
+  // All product views (templates, analytics, signals, subscriptions)
+</script>
+```
+
+### Design System
+
+- **Background**: #081028 (dark navy)
+- **Accent**: #CB3CFF (purple)
+- **Sidebar**: 60px product switcher + 240px feature nav
+- **Responsive**: Collapsible sidebars on mobile
+
+### index.html / campaign.html
+
+Smaller public-facing pages:
+- `index.html`: Public coupon generator
+- `campaign.html`: Campaign submission form
 
 ---
 
-## 12. Deployment
+## 12. What Changed Since Last Version
 
-### Production (Digital Ocean)
-- **Platform**: Digital Ocean App Platform
-- **Config**: `.do/app.yaml`
-- **Database**: DO Managed PostgreSQL
-- **Storage**: DO Spaces
+### Major Refactoring (December 2025)
 
-### Development (Replit)
-- **URL**: Replit dev URL
-- **Database**: Same or separate PostgreSQL
-- **Mode Detection**: Automatic via environment variables
+| Before | After |
+|--------|-------|
+| server.py: 3,686 lines | server.py: 766 lines (79% reduction) |
+| All handlers inline | Handlers extracted to domains/* |
+| Direct module imports | workers/* wrapper namespace |
+| Side effects at import | Two-phase startup (context + bootstrap) |
+| No routing metadata | api/routes.py with auth/db flags |
+| Ad-hoc auth checks | api/middleware.py centralized |
 
-### Webhook Configuration
+### New Packages Added
+
+- `core/` - App context and bootstrap
+- `api/` - Routes and middleware
+- `domains/` - Business logic handlers
+- `integrations/` - External service handlers
+- `workers/` - Background job wrappers
+
+### Files Deleted
+
+- ~2,920 lines of duplicate inline handlers removed from server.py
+
+### Invariants Introduced
+
+1. Import-time purity: importing server.py starts nothing
+2. Single scheduler: exactly one scheduler thread
+3. Bootstrap-only webhooks: no webhook registration at import
+4. Middleware gate: all auth/db checks in one place
+
+---
+
+## 13. Smoke Tests & Invariants Checklist
+
+Run after any refactoring to verify system integrity:
+
+### A) Import Invariant
+
+```bash
+python3 -c "import server; print('server import ok')"
 ```
-Telegram (Coupon): https://dash.promostack.io/api/telegram-webhook
-Telegram (Forex): https://dash.promostack.io/api/forex-telegram-webhook
-Stripe: https://dash.promostack.io/api/stripe/webhook
+**Expected**: Prints "server import ok" with no scheduler/webhook logs.
+
+### B) Scheduler Count
+
+```bash
+python3 server.py &
+sleep 3
+grep -c "FOREX SIGNALS SCHEDULER STARTED" /tmp/logs/Server_*.log | tail -1
 ```
+**Expected**: Exactly `1`.
+
+### C) Core Pages
+
+```bash
+curl -s http://localhost:5000/admin | head -2
+curl -s -o /dev/null -w "%{http_code} %{content_type}\n" http://localhost:5000/assets/promostack-logo.png
+```
+**Expected**: HTML for admin, `200 image/png` for asset.
+
+### D) Auth Endpoint
+
+```bash
+curl -s http://localhost:5000/api/check-auth
+```
+**Expected**: `{"authenticated": false}` (when not logged in).
+
+### E) Webhooks Return 200
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:5000/api/telegram-webhook
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:5000/api/forex-telegram-webhook
+curl -s -o /dev/null -w "%{http_code}\n" -X POST -d '{}' http://localhost:5000/api/stripe/webhook
+```
+**Expected**: All return `200`.
+
+### F) Domain Endpoints (Unauthorized)
+
+```bash
+curl -s http://localhost:5000/api/telegram-subscriptions
+curl -s http://localhost:5000/api/forex-config
+curl -s http://localhost:5000/api/bot-stats
+```
+**Expected**: All return `{"error": "Unauthorized"}`.
+
+### G) Line Count Check
+
+```bash
+wc -l server.py
+```
+**Expected**: ~766 lines (not thousands).
 
 ---
 
 ## Document Version
 - **Created**: December 12, 2025
-- **Last Updated**: December 12, 2025
-- **Author**: Generated from codebase analysis
+- **Last Updated**: December 13, 2025
+- **Architecture Version**: Post-refactor (Step 10 complete)
