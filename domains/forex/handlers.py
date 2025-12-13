@@ -460,3 +460,114 @@ def handle_signal_bot_cancel_queue(handler):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_forex_tp_config_get(handler):
+    """GET /api/forex-tp-config"""
+    from db import get_forex_config
+    
+    try:
+        config = get_forex_config() or {}
+        
+        tp_config = {
+            'success': True,
+            'tp_count': int(config.get('tp_count', 3)),
+            'tp1_percentage': int(config.get('tp1_percentage', 50)),
+            'tp2_percentage': int(config.get('tp2_percentage', 30)),
+            'tp3_percentage': int(config.get('tp3_percentage', 20))
+        }
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(tp_config).encode())
+    except Exception as e:
+        print(f"[TP CONFIG] Error getting config: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+_sparkline_cache = {'data': None, 'timestamp': 0}
+
+def handle_xauusd_sparkline(handler):
+    """GET /api/forex/xauusd-sparkline"""
+    import time
+    from forex_api import twelve_data_client
+    global _sparkline_cache
+    
+    try:
+        current_time = time.time()
+        if _sparkline_cache['data'] and (current_time - _sparkline_cache['timestamp']) < 60:
+            response_data = _sparkline_cache['data']
+        else:
+            candles = twelve_data_client.get_time_series(
+                symbol='XAU/USD',
+                interval='1min',
+                outputsize=30
+            )
+            
+            if candles and len(candles) > 0:
+                candles.reverse()
+                prices = [c['close'] for c in candles]
+                current_price = prices[-1] if prices else 0
+                open_price = prices[0] if prices else 0
+                
+                if open_price > 0:
+                    change_pct = ((current_price - open_price) / open_price) * 100
+                else:
+                    change_pct = 0
+                
+                response_data = {
+                    'success': True,
+                    'prices': prices,
+                    'current': current_price,
+                    'change_pct': round(change_pct, 2),
+                    'timestamp': current_time
+                }
+                _sparkline_cache = {'data': response_data, 'timestamp': current_time}
+            else:
+                response_data = {
+                    'success': False,
+                    'error': 'Unable to fetch price data'
+                }
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(response_data).encode())
+    except Exception as e:
+        print(f"[SPARKLINE] Error: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_signal_bot_signals(handler):
+    """GET /api/signal-bot/signals"""
+    from db import get_signals_by_bot_type, get_forex_signals
+    parsed_path = urlparse(handler.path)
+    
+    try:
+        query_params = parse_qs(parsed_path.query)
+        bot_type = query_params.get('bot_type', [None])[0]
+        status_filter = query_params.get('status', [None])[0]
+        limit = int(query_params.get('limit', [50])[0])
+        
+        if bot_type:
+            signals = get_signals_by_bot_type(bot_type, status=status_filter, limit=limit)
+        else:
+            signals = get_forex_signals(status=status_filter, limit=limit)
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(signals).encode())
+    except Exception as e:
+        print(f"[SIGNAL BOT] Error getting signals: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())

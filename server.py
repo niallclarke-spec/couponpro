@@ -239,6 +239,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/signal-bot/status':
             forex_handlers.handle_signal_bot_status(self)
             return
+        elif parsed_path.path == '/api/forex-tp-config':
+            forex_handlers.handle_forex_tp_config_get(self)
+            return
+        elif parsed_path.path == '/api/forex/xauusd-sparkline':
+            forex_handlers.handle_xauusd_sparkline(self)
+            return
+        elif parsed_path.path == '/api/signal-bot/signals':
+            forex_handlers.handle_signal_bot_signals(self)
+            return
         
         # Legacy /admin path support - redirect to admin.promostack.io
         if parsed_path.path == '/admin/':
