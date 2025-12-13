@@ -1,0 +1,41 @@
+Proceed with Step 10: Organize background workers (scheduler + monitors) into workers/ without changing internal logic.
+
+Scope:
+- Create workers/ package and add wrapper modules ONLY:
+  - workers/__init__.py
+  - workers/scheduler.py
+  - workers/price_monitor.py
+  - workers/milestone_tracker.py
+
+Rules:
+- NO changes to scheduler/monitor internal logic, timing, or behavior.
+- Do NOT refactor loops, conditions, or shared state.
+- Do NOT introduce new dependencies.
+- Keep exactly ONE scheduler start at runtime.
+- Maintain Step 7 invariant: importing server must NOT start workers.
+- server startup must still call bootstrap.start_app(ctx) (or equivalent) as the only place workers start.
+
+Implementation:
+1) In workers/*.py, create thin wrappers that import and call existing implementations.
+   Example pattern:
+   - workers/scheduler.py exposes start_forex_scheduler() by importing the existing start function and re-exporting it.
+   - workers/price_monitor.py re-exports the existing price_monitor singleton or start function.
+   - workers/milestone_tracker.py re-exports the existing milestone_tracker singleton or start function.
+   Do not move internal code yet—just provide a clean workers namespace.
+
+2) Update ONLY the place where workers are started (bootstrap/start_app) to call through workers/ wrappers.
+   No other behavior changes.
+
+After Step 10 STOP and paste:
+A) python3 -c "import server; print('server import ok')" (no scheduler/webhooks)
+B) python3 server.py (exactly one scheduler start)
+C) Confirm scheduler log cadence still appears as before
+D) curl -s http://localhost:5000/api/check-auth
+E) curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:5000/api/telegram-webhook
+F) curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:5000/api/stripe/webhook
+
+Then report:
+- which wrappers were created
+- where bootstrap/server now calls into workers/
+- confirmation that no internal worker code was modified
+Do not proceed beyond Step 10 without approval.
