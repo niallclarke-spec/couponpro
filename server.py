@@ -24,6 +24,7 @@ from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
 from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
+from integrations.stripe.webhooks import handle_stripe_webhook
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -1508,6 +1509,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/forex-telegram-webhook':
             handle_forex_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
+            return
+        
+        # Dispatch to stripe webhook handler
+        if parsed_path.path == '/api/stripe/webhook':
+            handle_stripe_webhook(self, STRIPE_AVAILABLE, TELEGRAM_BOT_AVAILABLE, db)
             return
         
         if parsed_path.path == '/api/validate-coupon':

@@ -18,6 +18,7 @@ from integrations.stripe.client import (
     METRICS_CACHE_TTL_SECONDS,
     REVENUE_CACHE_TTL_SECONDS,
 )
+from integrations.stripe.webhooks import handle_stripe_webhook
 
 __all__ = [
     'get_stripe_credentials',
@@ -35,4 +36,5 @@ __all__ = [
     'fetch_active_subscriptions',
     'METRICS_CACHE_TTL_SECONDS',
     'REVENUE_CACHE_TTL_SECONDS',
+    'handle_stripe_webhook',
 ]
