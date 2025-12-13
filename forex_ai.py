@@ -14,11 +14,8 @@ from db import (
 
 
 def _get_client():
-    """Get OpenAI client, raising if not available"""
-    client = get_openai_client()
-    if client is None:
-        raise RuntimeError("OpenAI client not configured")
-    return client
+    """Get OpenAI client (matches original module-level client behavior)"""
+    return get_openai_client()
 
 
 
