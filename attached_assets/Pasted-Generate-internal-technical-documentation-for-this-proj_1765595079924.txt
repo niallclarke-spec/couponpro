@@ -1,0 +1,73 @@
+Generate internal technical documentation for this project.
+
+Audience:
+- A senior developer joining the project
+- Assumes Python knowledge, but no prior knowledge of this codebase
+
+Goals:
+- Explain how the system is structured today (not future plans)
+- Explain startup flow, routing, workers, and integrations
+- Clearly document where configuration and secrets live
+- Document what is single-tenant today and what is NOT tenant-aware yet
+- No marketing language, no assumptions about future features
+
+Required sections:
+
+1. High-Level Overview
+   - What this application does (coupon system, forex signals, Telegram bots, Stripe billing)
+   - Single-process architecture
+   - Custom http.server-based backend
+
+2. Startup & Lifecycle
+   - server.py as entrypoint
+   - create_app_context() vs start_app()
+   - What runs at import time vs runtime
+   - Scheduler startup guarantees (exactly one scheduler)
+
+3. Routing & Request Flow
+   - api/routes.py
+   - api/middleware.py
+   - How requests are matched, gated (auth/db), and dispatched
+   - Static file serving vs API routing
+
+4. Domain Modules
+   - domains/subscriptions
+   - domains/coupons
+   - domains/forex
+   - What logic lives in handlers vs what still lives elsewhere
+
+5. Integrations
+   - Stripe (integrations/stripe)
+   - Telegram bots + webhooks (integrations/telegram)
+   - OpenAI client (integrations/openai)
+   - Market data (Twelve Data)
+
+6. Workers & Background Jobs
+   - workers/scheduler
+   - workers/price_monitor
+   - workers/milestone_tracker
+   - How workers are started and why they are wrapped
+
+7. Configuration & Secrets
+   - core/config.py
+   - Environment variables used
+   - Difference between platform-wide config vs runtime state
+   - Where API keys are loaded (but not their values)
+
+8. Current Limitations
+   - Single-tenant design
+   - Global bots, scheduler, and shared DB
+   - No per-tenant isolation yet
+
+9. Safety Invariants
+   - Importing server.py must not start side effects
+   - Webhooks only registered in bootstrap
+   - Scheduler must start exactly once
+   - Middleware is the only auth/db gate
+
+10. Glossary
+   - Key terms used in the codebase (handler, domain, worker, middleware, integration)
+
+Tone:
+- Precise, technical, honest
+- No future promises unless explicitly labeled as “Not yet implemented”
