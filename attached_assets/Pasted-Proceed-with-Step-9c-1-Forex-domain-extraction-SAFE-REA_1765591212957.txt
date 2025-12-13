@@ -1,0 +1,41 @@
+Proceed with Step 9c-1 (Forex domain extraction — SAFE READ-ONLY endpoints only). Do NOT touch scheduler internals, price_monitor, milestone_tracker, or Telegram bot initialization.
+
+Scope (move ONLY these handlers out of server.py):
+GET endpoints:
+1) /api/signal-bot/status
+2) /api/forex-config
+3) /api/forex-signals   (the signals list endpoint, if present)
+4) /api/forex-stats     (if present)
+
+Rules (non-negotiable):
+- Extract-only: copy/paste logic exactly. No behavior changes.
+- Middleware remains the ONLY auth/db gate. Do NOT add check_auth(), verify_session(), or DATABASE_AVAILABLE checks inside handlers.
+- Keep api/routes.py unchanged (route metadata only).
+- Keep server.py static file serving unchanged.
+- Handlers may keep `import server` if needed for `server.db.*` or existing globals.
+- Do NOT move any POST forex endpoints yet.
+
+Implementation details:
+1) Create:
+   - domains/forex/__init__.py (package marker)
+   - domains/forex/handlers.py (new file containing ONLY the moved handlers)
+
+2) Modify server.py:
+   - Import the new forex handlers once (module-level import, no per-request imports)
+   - After route match + apply_route_checks passes, dispatch to the forex domain handlers ONLY for the endpoints listed above.
+   - All other routes fall through unchanged.
+
+After implementation, STOP and run/paste these tests:
+A) python3 -c "import server; print('server import ok')" 
+   (must NOT start scheduler or register webhooks)
+B) python3 server.py
+   (confirm exactly ONE scheduler start log line)
+C) curl -s http://localhost:5000/api/check-auth
+D) curl -s http://localhost:5000/admin | head -2
+E) curl -s http://localhost:5000/api/signal-bot/status
+   (expect same auth behavior + same JSON shape as before)
+F) If /api/forex-config existed before: curl -s http://localhost:5000/api/forex-config
+   (expect same auth behavior + same JSON shape as before)
+
+Print a short summary of files changed + which endpoints are now dispatched to domains/forex/handlers.py.
+Do not proceed to Phase 9c-2 until I approve.

@@ -22,6 +22,7 @@ from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, valida
 from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
+from domains.forex import handlers as forex_handlers
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -223,6 +224,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/invalid-coupons':
             coupon_handlers.handle_invalid_coupons(self)
+            return
+        
+        # Dispatch to forex domain handlers
+        if parsed_path.path == '/api/forex-signals':
+            forex_handlers.handle_forex_signals(self)
+            return
+        elif parsed_path.path == '/api/forex-config':
+            forex_handlers.handle_forex_config(self)
+            return
+        elif parsed_path.path == '/api/forex-stats':
+            forex_handlers.handle_forex_stats(self)
+            return
+        elif parsed_path.path == '/api/signal-bot/status':
+            forex_handlers.handle_signal_bot_status(self)
             return
         
         # Legacy /admin path support - redirect to admin.promostack.io
