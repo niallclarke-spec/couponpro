@@ -85,7 +85,7 @@ def start_app(ctx: AppContext) -> None:
     
     if ctx.forex_scheduler_available:
         try:
-            from forex_scheduler import start_forex_scheduler
+            from workers.scheduler import start_forex_scheduler
             
             def run_forex_scheduler():
                 loop = asyncio.new_event_loop()
