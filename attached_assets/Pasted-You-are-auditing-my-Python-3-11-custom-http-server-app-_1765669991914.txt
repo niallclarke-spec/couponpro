@@ -1,0 +1,58 @@
+You are auditing my Python 3.11 custom http.server app before I push to GitHub (auto-deploys to DigitalOcean).
+We recently refactored server.py from ~3,600 lines to ~766 and extracted domains/, integrations/, core/, api/, workers/. We also added Clerk login and multi-tenancy migrations (tenants, tenant_users, tenant_integrations, tenant_id columns, processed_webhook_events migrated with tenant_id/event_source, old table preserved as processed_webhook_events_old).
+
+Goal: produce a deploy-ready checklist + evidence that nothing will break on DigitalOcean.
+Do NOT change code unless you find a concrete bug; if you do change code, list exact file/lines and rerun all checks.
+
+A) Hard invariants to verify (must PASS)
+	1.	python3 -c "import server; print('import ok')" prints “import ok” and does not start scheduler/webhooks.
+	2.	python3 server.py starts and scheduler starts exactly once.
+	3.	Webhook URLs unchanged and routed correctly:
+	•	POST /api/telegram-webhook → 200 on empty/invalid body
+	•	POST /api/forex-telegram-webhook → 200 on empty/invalid body
+	•	POST /api/stripe/webhook → should respond (likely 4xx/5xx with empty body is acceptable), but route must exist and no crash loop
+	4.	Static + admin routes still work:
+	•	GET /admin returns HTML
+	•	GET /assets/... returns 200 for an existing file
+	5.	Auth route works: GET /api/check-auth returns JSON.
+
+B) Packaging / GitHub / DO safety checks
+	1.	Confirm all new packages have __init__.py where needed and imports work on a clean machine.
+	2.	Confirm no reliance on Replit-only env vars for production behavior (except dev detection).
+	3.	Identify all required env vars for prod boot (DO) and list them clearly. Include:
+	•	DATABASE_URL
+	•	Telegram tokens (coupon + forex)
+	•	Stripe secrets + webhook secret
+	•	Twelve Data key
+	•	OpenAI key/base URL (if used)
+	•	DO Spaces keys/bucket/region
+	•	NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+	4.	Confirm any filesystem assumptions still match DO (working directory, relative paths, especially assets/templates).
+
+C) Database + migrations verification
+
+Run a small script (or add scripts/verify_deploy.py) that connects using DATABASE_URL and checks:
+	•	tenants / tenant_users / tenant_integrations exist
+	•	tenants has seed id=‘entrylab’
+	•	tenant_id columns exist on the 9 tables and default to ‘entrylab’
+	•	processed_webhook_events has columns (tenant_id, event_id, event_source, processed_at)
+	•	processed_webhook_events has UNIQUE on (tenant_id, event_id)
+	•	processed_webhook_events_old exists
+Print PASS/FAIL for each check.
+
+D) Runtime API smoke test script
+
+Provide a single bash script I can run locally and against prod URL that does:
+	•	GET /api/check-auth
+	•	GET /admin
+	•	GET one static asset
+	•	POST /api/telegram-webhook with {}
+	•	POST /api/forex-telegram-webhook with {}
+	•	POST /api/stripe/webhook with {}
+And prints ✅/❌ for each.
+
+Output format
+	1.	A “Pre-Deploy PASS/FAIL Summary” table.
+	2.	A list of exact env vars required in DO and what feature breaks if missing.
+	3.	The deploy smoke test script(s) ready to copy/paste.
+	4.	If anything fails, give the smallest possible code fix + rerun the full audit.
