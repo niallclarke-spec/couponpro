@@ -20,6 +20,7 @@ load_dotenv()
 from core.config import Config
 from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
 from api.middleware import apply_route_checks
+from domains.subscriptions import handlers as subscription_handlers
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -176,6 +177,23 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if route:
             if not apply_route_checks(route, self, DATABASE_AVAILABLE):
                 return  # Middleware sent 401/503 response
+        
+        # Dispatch to subscription domain handlers
+        if parsed_path.path.startswith('/api/telegram/check-access/'):
+            subscription_handlers.handle_telegram_check_access(self)
+            return
+        elif parsed_path.path == '/api/telegram-subscriptions':
+            subscription_handlers.handle_telegram_subscriptions(self)
+            return
+        elif parsed_path.path == '/api/telegram/revenue-metrics':
+            subscription_handlers.handle_telegram_revenue_metrics(self)
+            return
+        elif parsed_path.path == '/api/telegram/conversion-analytics':
+            subscription_handlers.handle_telegram_conversion_analytics(self)
+            return
+        elif parsed_path.path.startswith('/api/telegram/billing/'):
+            subscription_handlers.handle_telegram_billing(self)
+            return
         
         # Legacy /admin path support - redirect to admin.promostack.io
         if parsed_path.path == '/admin/':
@@ -1356,6 +1374,26 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if route:
             if not apply_route_checks(route, self, DATABASE_AVAILABLE):
                 return  # Middleware sent 401/503 response
+        
+        # Dispatch to subscription domain handlers
+        if parsed_path.path == '/api/telegram/grant-access':
+            subscription_handlers.handle_telegram_grant_access(self)
+            return
+        elif parsed_path.path == '/api/telegram/clear-all':
+            subscription_handlers.handle_telegram_clear_all(self)
+            return
+        elif parsed_path.path == '/api/telegram/cleanup-test-data':
+            subscription_handlers.handle_telegram_cleanup_test_data(self)
+            return
+        elif parsed_path.path == '/api/telegram/cancel-subscription':
+            subscription_handlers.handle_telegram_cancel_subscription(self)
+            return
+        elif parsed_path.path == '/api/telegram/delete-subscription':
+            subscription_handlers.handle_telegram_delete_subscription(self)
+            return
+        elif parsed_path.path == '/api/telegram/revoke-access':
+            subscription_handlers.handle_telegram_revoke_access(self)
+            return
         
         if parsed_path.path == '/api/validate-coupon':
             if not COUPON_VALIDATOR_AVAILABLE:
