@@ -1478,6 +1478,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             coupon_handlers.handle_regenerate_index(self)
             return
         
+        # Dispatch to forex domain handlers
+        if parsed_path.path == '/api/forex-config':
+            forex_handlers.handle_forex_config_post(self)
+            return
+        elif parsed_path.path == '/api/forex-tp-config':
+            forex_handlers.handle_forex_tp_config_post(self)
+            return
+        elif parsed_path.path == '/api/signal-bot/set-active':
+            forex_handlers.handle_signal_bot_set_active(self)
+            return
+        elif parsed_path.path == '/api/signal-bot/cancel-queue':
+            forex_handlers.handle_signal_bot_cancel_queue(self)
+            return
+        
         if parsed_path.path == '/api/validate-coupon':
             if not COUPON_VALIDATOR_AVAILABLE:
                 self.send_response(503)
