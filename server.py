@@ -21,6 +21,7 @@ from core.config import Config
 from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
 from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
+from domains.coupons import handlers as coupon_handlers
 
 OBJECT_STORAGE_AVAILABLE = False
 TELEGRAM_BOT_AVAILABLE = False
@@ -193,6 +194,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path.startswith('/api/telegram/billing/'):
             subscription_handlers.handle_telegram_billing(self)
+            return
+        
+        # Dispatch to coupon domain handlers
+        if parsed_path.path.startswith('/api/campaigns/') and '/submissions' in parsed_path.path:
+            coupon_handlers.handle_campaign_submissions(self)
+            return
+        elif parsed_path.path.startswith('/api/campaigns/') and not parsed_path.path.endswith('/campaigns'):
+            coupon_handlers.handle_campaign_by_id(self)
+            return
+        elif parsed_path.path == '/api/campaigns':
+            coupon_handlers.handle_campaigns_list(self)
+            return
+        elif parsed_path.path == '/api/bot-stats':
+            coupon_handlers.handle_bot_stats(self)
+            return
+        elif parsed_path.path == '/api/bot-users':
+            coupon_handlers.handle_bot_users(self)
+            return
+        elif parsed_path.path.startswith('/api/broadcast-status/'):
+            coupon_handlers.handle_broadcast_status(self)
+            return
+        elif parsed_path.path == '/api/broadcast-jobs':
+            coupon_handlers.handle_broadcast_jobs(self)
+            return
+        elif parsed_path.path.startswith('/api/user-activity/'):
+            coupon_handlers.handle_user_activity(self)
+            return
+        elif parsed_path.path == '/api/invalid-coupons':
+            coupon_handlers.handle_invalid_coupons(self)
             return
         
         # Legacy /admin path support - redirect to admin.promostack.io
@@ -1393,6 +1423,44 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/telegram/revoke-access':
             subscription_handlers.handle_telegram_revoke_access(self)
+            return
+        
+        # Dispatch to coupon domain handlers
+        if parsed_path.path == '/api/validate-coupon':
+            coupon_handlers.handle_validate_coupon(self)
+            return
+        elif parsed_path.path.startswith('/api/campaigns/') and '/submit' in parsed_path.path:
+            coupon_handlers.handle_campaign_submit(self)
+            return
+        elif parsed_path.path.startswith('/api/campaigns/') and '/update' in parsed_path.path:
+            coupon_handlers.handle_campaign_update(self)
+            return
+        elif parsed_path.path.startswith('/api/campaigns/') and '/delete' in parsed_path.path:
+            coupon_handlers.handle_campaign_delete(self)
+            return
+        elif parsed_path.path == '/api/campaigns':
+            coupon_handlers.handle_campaigns_create(self)
+            return
+        elif parsed_path.path == '/api/broadcast':
+            coupon_handlers.handle_broadcast(self)
+            return
+        elif parsed_path.path == '/api/upload-overlay':
+            coupon_handlers.handle_upload_overlay(self)
+            return
+        elif parsed_path.path == '/api/upload-template':
+            coupon_handlers.handle_upload_template(self)
+            return
+        elif parsed_path.path == '/api/delete-template':
+            coupon_handlers.handle_delete_template(self)
+            return
+        elif parsed_path.path == '/api/toggle-telegram-template':
+            coupon_handlers.handle_toggle_telegram_template(self)
+            return
+        elif parsed_path.path == '/api/clear-telegram-cache':
+            coupon_handlers.handle_clear_telegram_cache(self)
+            return
+        elif parsed_path.path == '/api/regenerate-index':
+            coupon_handlers.handle_regenerate_index(self)
             return
         
         if parsed_path.path == '/api/validate-coupon':
