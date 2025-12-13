@@ -1,0 +1,98 @@
+Goal: Create a single verification script that proves the migration is correct in DEV (Replit DB), and outputs a “Prod checklist” (SQL + curl tests) for DigitalOcean.
+
+Requirements
+	1.	Do not change application logic. Verification only.
+	2.	Add a new file: scripts/verify_migrations.py
+	3.	The script must:
+
+	•	Connect to Postgres using the existing DATABASE_URL env var (same way db.py does).
+	•	Run schema checks and print PASS/FAIL with clear reasons.
+	•	Exit with non-zero code if any check fails.
+
+Checks to implement (must be exact)
+
+A) New tables exist
+
+Verify these tables exist:
+	•	tenants
+	•	tenant_users
+	•	tenant_integrations
+
+B) EntryLab seed exists
+
+Verify row exists:
+	•	tenants.id = 'entrylab'
+
+C) tenant_id columns exist + default is entrylab
+
+For each table below, verify column tenant_id exists and default includes 'entrylab':
+	•	forex_signals
+	•	forex_config
+	•	telegram_subscriptions
+	•	recent_phrases
+	•	campaigns
+	•	bot_usage
+	•	bot_users
+	•	broadcast_jobs
+	•	bot_config
+
+Also verify an index exists on tenant_id for each table (idx_*_tenant_id).
+
+D) processed_webhook_events migration correctness
+	1.	Verify processed_webhook_events exists.
+	2.	Verify processed_webhook_events_old exists (backup preserved).
+	3.	Verify active table has columns:
+	•	tenant_id
+	•	event_id
+	•	event_source
+	•	processed_at
+	4.	Verify there is a UNIQUE constraint on (tenant_id, event_id).
+
+E) Verify db.py helper functions match schema
+
+In code, confirm that:
+	•	is_webhook_event_processed() queries include tenant_id AND event_id
+	•	record_webhook_event_processed() inserts tenant_id, event_id, event_source
+	•	cleanup_old_webhook_events() does NOT use INTERVAL '%s hours' (unsafe). It should use a safe parameter pattern like:
+processed_at < (CURRENT_TIMESTAMP - (%s * INTERVAL '1 hour'))
+Print PASS/FAIL for each, based on searching db.py text (simple string checks OK).
+
+F) Verify Stripe webhook caller updated
+
+Confirm integrations/stripe/webhooks.py calls:
+	•	record_webhook_event_processed(event_id, event_source=...)
+(or equivalent named arg event_source)
+Print PASS/FAIL based on searching file text.
+
+Output formatting
+	•	Print a clear summary table at end: check name → PASS/FAIL.
+	•	Print any failing SQL query results or missing objects.
+	•	If all PASS: print “✅ MIGRATION VERIFIED”.
+
+Bonus (must do)
+
+After verification, print a “DigitalOcean Prod Post-Deploy Checklist” section containing:
+	1.	SQL snippets (same as your checks) that I can run in DO console.
+	2.	Curl tests I can run:
+
+	•	/api/check-auth
+	•	POST /api/stripe/webhook (empty) expecting error but server responds
+	•	POST telegram webhooks returning 200
+
+How to run
+
+Also create/update a short scripts/README.md describing:
+	•	python3 scripts/verify_migrations.py
+
+Now implement this script and run it locally in Replit. Paste the full output into the chat. Do NOT proceed with any other refactors.
+
+⸻
+
+Why this prompt works
+
+It forces Replit to:
+	•	Actually query the DB, not “assume”
+	•	Actually confirm the code patterns match the new schema
+	•	Give you a deploy checklist for DO
+
+Once you paste the output back here, I’ll sanity-check it and tell you if you’re safe to deploy.
