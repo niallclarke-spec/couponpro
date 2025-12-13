@@ -284,7 +284,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 with open('login.html', 'r') as f:
                     content = f.read()
-                clerk_key = Config.get_clerk_publishable_key()
+                clerk_key = Config.get_clerk_publishable_key() or ''
                 content = content.replace('{{CLERK_PUBLISHABLE_KEY}}', clerk_key)
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')

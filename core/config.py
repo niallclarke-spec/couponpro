@@ -126,5 +126,6 @@ class Config:
         return os.environ.get('WEB_REPL_RENEWAL')
     
     @staticmethod
-    def get_clerk_publishable_key() -> str:
-        return os.environ.get('CLERK_PUBLISHABLE_KEY', '')
+    def get_clerk_publishable_key():
+        """Matches DigitalOcean + Clerk naming convention (NEXT_PUBLIC_ prefix)."""
+        return os.environ.get('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
