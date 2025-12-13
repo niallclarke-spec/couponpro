@@ -15,63 +15,26 @@ import hmac
 import hashlib
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 from core.config import Config
 
-# Try to import object storage (only available on Replit)
+OBJECT_STORAGE_AVAILABLE = False
+TELEGRAM_BOT_AVAILABLE = False
+DATABASE_AVAILABLE = False
+COUPON_VALIDATOR_AVAILABLE = False
+FOREX_SCHEDULER_AVAILABLE = False
+STRIPE_AVAILABLE = False
+
+db = None
+coupon_validator = None
+telegram_bot = None
+
 try:
     from object_storage import ObjectStorageService
     OBJECT_STORAGE_AVAILABLE = True
 except Exception as e:
-    print(f"[INFO] Object storage not available (running outside Replit): {e}")
-    OBJECT_STORAGE_AVAILABLE = False
-
-# Import Telegram bot handler
-try:
-    import telegram_bot
-    TELEGRAM_BOT_AVAILABLE = True
-except Exception as e:
-    print(f"[INFO] Telegram bot not available: {e}")
-    TELEGRAM_BOT_AVAILABLE = False
-
-# Import database module for campaigns
-try:
-    import db
-    schema_initialized = db.db_pool.initialize_schema()
-    DATABASE_AVAILABLE = schema_initialized
-    if not DATABASE_AVAILABLE:
-        print(f"[INFO] Database not available - campaigns feature disabled")
-except Exception as e:
-    print(f"[INFO] Database not available: {e}")
-    DATABASE_AVAILABLE = False
-
-# Import coupon validator for FunderPro integration
-try:
-    import coupon_validator
-    COUPON_VALIDATOR_AVAILABLE = True
-except Exception as e:
-    print(f"[INFO] Coupon validator not available: {e}")
-    COUPON_VALIDATOR_AVAILABLE = False
-
-# Import forex signals scheduler
-try:
-    from forex_scheduler import start_forex_scheduler
-    FOREX_SCHEDULER_AVAILABLE = True
-except Exception as e:
-    print(f"[INFO] Forex scheduler not available: {e}")
-    FOREX_SCHEDULER_AVAILABLE = False
-
-# Import Stripe client for revenue metrics
-try:
-    from stripe_client import get_stripe_client
-    get_stripe_client()  # Test that credentials are available
-    STRIPE_AVAILABLE = True
-    print("[INFO] Stripe client initialized")
-except Exception as e:
-    print(f"[INFO] Stripe not available: {e}")
-    STRIPE_AVAILABLE = False
+    print(f"[INFO] Object storage not available: {e}")
 
 PORT = Config.get_port()
 DIRECTORY = "."
@@ -3597,55 +3560,23 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
 if __name__ == "__main__":
-    # Initialize Telegram bot in webhook mode if token is available
-    if TELEGRAM_BOT_AVAILABLE:
-        try:
-            bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
-            if bot_token:
-                print("[TELEGRAM] Initializing bot for webhook mode...")
-                telegram_bot.start_webhook_bot(bot_token)
-        except Exception as e:
-            print(f"[TELEGRAM] Failed to start bot: {e}")
-            import traceback
-            traceback.print_exc()
+    from core.app_context import create_app_context
+    from core.bootstrap import start_app
     
-    # Set up forex bot webhook for join tracking (replaces polling to avoid conflicts)
-    if TELEGRAM_BOT_AVAILABLE:
-        from forex_bot import get_forex_bot_token
-        forex_bot_token = get_forex_bot_token()
-        if forex_bot_token:
-            webhook_url = "https://dash.promostack.io/api/forex-telegram-webhook"
-            try:
-                success = telegram_bot.setup_forex_webhook(forex_bot_token, webhook_url)
-                if success:
-                    print("[JOIN_TRACKER] ✅ Webhook configured:", webhook_url)
-                    print("[JOIN_TRACKER] ✅ Forex bot webhook mode initialized")
-                else:
-                    print("[JOIN_TRACKER] ⚠️ Failed to set up webhook, join tracking may not work")
-            except Exception as e:
-                print(f"[JOIN_TRACKER] ❌ Error setting up webhook: {e}")
-        else:
-            print("[JOIN_TRACKER] ⚠️ Forex bot token not set, join tracking disabled")
+    ctx = create_app_context()
+    start_app(ctx)
     
-    # Start Forex signals scheduler in background thread if available
-    if FOREX_SCHEDULER_AVAILABLE:
-        import threading
-        import asyncio
-        
-        def run_forex_scheduler():
-            """Run the forex scheduler in a separate thread"""
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(start_forex_scheduler())
-            except Exception as e:
-                print(f"[FOREX] Scheduler error: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
-        scheduler_thread.start()
-        print("[FOREX] Signals scheduler started in background thread")
+    import db as db_module
+    import telegram_bot as tb_module
+    import coupon_validator as cv_module
+    db = db_module
+    telegram_bot = tb_module
+    coupon_validator = cv_module
+    DATABASE_AVAILABLE = ctx.database_available
+    TELEGRAM_BOT_AVAILABLE = ctx.telegram_bot_available
+    COUPON_VALIDATOR_AVAILABLE = ctx.coupon_validator_available
+    FOREX_SCHEDULER_AVAILABLE = ctx.forex_scheduler_available
+    STRIPE_AVAILABLE = ctx.stripe_available
     
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:

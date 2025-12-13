@@ -415,6 +415,3 @@ def get_twelve_data_client() -> TwelveDataClient:
 def get_current_price(symbol: str = 'XAU/USD') -> float | None:
     """Convenience function to get current price"""
     return get_twelve_data_client().get_price(symbol)
-
-
-twelve_data_client = get_twelve_data_client()

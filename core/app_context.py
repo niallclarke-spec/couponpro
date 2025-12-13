@@ -1,23 +1,29 @@
 """
-Application Context - Centralized container for all application-level singletons and state.
+Application Context - Centralized container for application state and availability flags.
 
-This module provides an AppContext class that wraps all global state, availability flags,
-and service references used throughout the application.
+This module provides AppContext and create_app_context(), which are PURE:
+- NO side effects at import time
+- NO network calls
+- NO webhook registration
+- NO background threads
+- NO database migrations
+
+All side effects happen in bootstrap.start_app(ctx).
 """
-from dataclasses import dataclass, field
-from typing import Any, Optional
+import os
+from dataclasses import dataclass
+from typing import Optional
+
+from core.config import Config
 
 
 @dataclass
 class AppContext:
     """
-    Centralized application context holding all singletons and availability flags.
+    Centralized application context holding availability flags and tokens.
     
-    Usage:
-        from core.app_context import get_app_context
-        ctx = get_app_context()
-        if ctx.database_available:
-            # use ctx.db_pool
+    Services are accessed via their existing module singletons.
+    This context ensures server.py uses ctx fields instead of module globals.
     """
     object_storage_available: bool = False
     telegram_bot_available: bool = False
@@ -26,51 +32,58 @@ class AppContext:
     forex_scheduler_available: bool = False
     stripe_available: bool = False
     
-    db_pool: Optional[Any] = None
-    telegram_bot_module: Optional[Any] = None
-    object_storage_service: Optional[Any] = None
-    coupon_validator_module: Optional[Any] = None
-    forex_scheduler_module: Optional[Any] = None
-    stripe_client: Optional[Any] = None
+    coupon_bot_token: Optional[str] = None
+    forex_bot_token: Optional[str] = None
     
-    def is_ready(self) -> bool:
-        """Check if the application context has been initialized."""
-        return True
+    config: Optional[Config] = None
 
 
-_app_context: Optional[AppContext] = None
-
-
-def get_app_context() -> AppContext:
+def create_app_context() -> AppContext:
     """
-    Get the global application context singleton.
+    Create the application context with availability flags and tokens.
+    
+    This is a PURE function:
+    - NO imports of side-effect modules (telegram_bot, forex_scheduler, db, etc.)
+    - NO network calls
+    - NO webhook registration
+    - NO background threads
+    - NO database migrations
+    
+    All side effects are deferred to bootstrap.start_app(ctx).
     
     Returns:
-        AppContext: The initialized application context.
-        
-    Raises:
-        RuntimeError: If the context has not been initialized via bootstrap.
+        AppContext with availability flags set based on environment.
     """
-    global _app_context
-    if _app_context is None:
-        raise RuntimeError(
-            "AppContext not initialized. Call core.bootstrap.initialize_app() first."
-        )
-    return _app_context
-
-
-def set_app_context(ctx: AppContext) -> None:
-    """
-    Set the global application context. Called by bootstrap.initialize_app().
+    ctx = AppContext()
     
-    Args:
-        ctx: The AppContext instance to set as global.
-    """
-    global _app_context
-    _app_context = ctx
-
-
-def reset_app_context() -> None:
-    """Reset the global application context. Primarily for testing."""
-    global _app_context
-    _app_context = None
+    ctx.coupon_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN_TEST')
+    
+    is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
+    if is_replit:
+        ctx.forex_bot_token = os.environ.get('ENTRYLAB_TEST_BOT')
+    if not ctx.forex_bot_token:
+        ctx.forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
+    
+    ctx.object_storage_available = bool(
+        os.environ.get('SPACES_ACCESS_KEY') and os.environ.get('SPACES_SECRET_KEY')
+    )
+    
+    ctx.telegram_bot_available = bool(ctx.coupon_bot_token)
+    
+    ctx.database_available = bool(
+        os.environ.get('DATABASE_URL') or os.environ.get('DB_HOST')
+    )
+    
+    ctx.coupon_validator_available = ctx.database_available
+    
+    ctx.forex_scheduler_available = bool(ctx.forex_bot_token) and ctx.database_available
+    
+    stripe_available = bool(
+        os.environ.get('STRIPE_SECRET_KEY') or 
+        os.environ.get('STRIPE_SECRET') or
+        os.environ.get('TEST_STRIPE_SECRET') or
+        os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
+    )
+    ctx.stripe_available = stripe_available
+    
+    return ctx
