@@ -465,17 +465,22 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP", period=
                 if hasattr(sub, 'keys'):
                     print(f"[Stripe] Sub keys: {list(sub.keys())[:10]}...")
                 
-                # Use attribute access for Stripe objects (not dict .get())
+                # Use safe attribute access for Stripe objects (Python 3.13 compatible)
                 status = getattr(sub, 'status', 'unknown')
                 cancel_at_period_end = getattr(sub, 'cancel_at_period_end', False)
                 customer_id = getattr(sub, 'customer', None)
                 
-                # Try direct dict-style access which works for Stripe objects
-                try:
-                    period_end_direct = sub['current_period_end']
-                    print(f"[Stripe] Direct access period_end: {period_end_direct}")
-                except Exception as e:
-                    print(f"[Stripe] Direct access failed: {e}")
+                # Safe access for current_period_end - works across Stripe API versions
+                period_end = None
+                if hasattr(sub, 'get'):
+                    period_end = sub.get('current_period_end')
+                if period_end is None:
+                    period_end = getattr(sub, 'current_period_end', None)
+                
+                # If still None, subscription object may be incomplete - skip rebill for this sub
+                if period_end is None:
+                    print(f"[Stripe] Sub {sub_id[:15]}... missing current_period_end, skipping rebill calc")
+                    continue
                 
                 print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_end={cancel_at_period_end}")
                 
