@@ -1,0 +1,52 @@
+GOAL: Fix Stripe rebill calculation so it works even when subscription.current_period_end is missing. Keep behavior identical otherwise. Do NOT change any existing endpoint routes.
+
+CONTEXT:
+- Production logs show: "[Stripe] Sub ... missing current_period_end, skipping rebill calc"
+- This makes active=0 and rebill=$0 in /api/telegram/revenue-metrics.
+- We already removed the KeyError; now we need correct rebill logic.
+
+REQUIREMENTS:
+1) In integrations/stripe/client.py, in the function that calculates rebills for a list of active subscriptions:
+   - Continue counting “active subscriptions” from the Stripe Subscription list result.
+   - For each subscription, determine the “next billing timestamp” and “next billing amount”.
+2) Implement a helper function:
+
+   def _get_next_rebill_from_subscription(stripe_client, sub) -> Optional[Tuple[int, int]]:
+       """
+       Returns (next_charge_unix_ts, amount_due_cents) or None if cannot determine.
+       """
+       Strategy:
+       A) Try to read current_period_end:
+          - Support both StripeObject and dict-style access:
+            - getattr(sub, "current_period_end", None)
+            - sub.get("current_period_end") if available
+          - If found, compute amount_due_cents from subscription items (price.unit_amount * quantity),
+            OR if that’s messy, fallback to calling Invoice.upcoming for amount only.
+       B) If current_period_end is missing OR amount cannot be confidently computed:
+          - Call stripe.Invoice.upcoming(subscription=sub.id)
+          - Use upcoming.period_end or upcoming.lines.data[0].period.end (whichever exists)
+          - Use upcoming.amount_due (or upcoming.total as fallback) as the amount in cents.
+          - Return (timestamp, amount_cents).
+
+3) Add caching for upcoming invoice calls:
+   - Cache per subscription id for 5 minutes in-memory (simple dict with timestamps is fine).
+   - This endpoint is called repeatedly from the admin UI; don’t spam Stripe.
+
+4) Logging:
+   - Remove noisy "Sub keys: [...]" logs (they add noise and leak schema details).
+   - Replace with a single compact debug line per subscription ONLY when fallback happens:
+     "[Stripe] Sub {id} missing current_period_end, using Invoice.upcoming()"
+   - Do NOT log full Stripe objects or any secrets.
+
+5) Ensure existing output format of revenue metrics does not change.
+   - Only the computed values should improve (active count and rebill should be accurate again).
+
+6) Add a tiny self-test script at scripts/test_stripe_rebill.py that:
+   - Imports the rebill calculator function
+   - Mocks a subscription object missing current_period_end
+   - Mocks Invoice.upcoming response and verifies it returns a timestamp+amount
+
+DELIVERABLES:
+- Updated integrations/stripe/client.py with robust rebill logic + caching + clean logs
+- New scripts/test_stripe_rebill.py
+- Smoke test instructions in a short comment at top of the script
