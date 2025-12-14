@@ -247,3 +247,109 @@ class TestForexSchedulerIntegration:
         assert runner.messenger is not None
         assert runner.generator is not None
         assert runner.monitor is not None
+
+
+class TestStrategyRegistry:
+    """Test strategy registry functionality."""
+    
+    def test_strategy_registry_list_strategies(self):
+        """Strategy registry should return list of available strategies."""
+        from strategies import STRATEGY_REGISTRY, get_available_strategies
+        
+        assert 'aggressive' in STRATEGY_REGISTRY
+        assert 'conservative' in STRATEGY_REGISTRY
+        assert 'raja_banks' in STRATEGY_REGISTRY
+    
+    def test_strategy_registry_get_strategy(self):
+        """Strategy registry should return strategy by name."""
+        from strategies import get_active_strategy
+        
+        strategy = get_active_strategy('aggressive', tenant_id='test')
+        assert strategy is not None
+        assert strategy.bot_type == 'aggressive'
+        
+        strategy = get_active_strategy('conservative', tenant_id='test')
+        assert strategy is not None
+        assert strategy.bot_type == 'conservative'
+    
+    def test_strategy_registry_fallback(self):
+        """Unknown strategy should fall back to aggressive."""
+        from strategies import get_active_strategy
+        
+        strategy = get_active_strategy('unknown-strategy', tenant_id='test')
+        assert strategy is not None
+        assert strategy.bot_type == 'aggressive'
+
+
+class TestAlertsModule:
+    """Test core/alerts.py functionality."""
+    
+    def test_notify_error_exists(self):
+        """core/alerts.py should have notify_error function."""
+        from core.alerts import notify_error
+        assert callable(notify_error)
+    
+    def test_notify_error_logs_warning(self):
+        """notify_error should log at WARNING level."""
+        from core.alerts import notify_error
+        import logging
+        
+        with patch('core.alerts.logger') as mock_logger:
+            notify_error("Test error", tenant_id="test-tenant", context={"key": "value"})
+            mock_logger.warning.assert_called_once()
+            call_args = mock_logger.warning.call_args[0][0]
+            assert "ALERT" in call_args
+            assert "test-tenant" in call_args
+            assert "Test error" in call_args
+    
+    def test_notify_tenant_failure(self):
+        """notify_tenant_failure should wrap notify_error."""
+        from core.alerts import notify_tenant_failure
+        
+        with patch('core.alerts.logger') as mock_logger:
+            notify_tenant_failure("tenant-123", "Database connection failed")
+            mock_logger.warning.assert_called_once()
+            call_args = mock_logger.warning.call_args[0][0]
+            assert "tenant-123" in call_args
+
+
+class TestArchitectureRequirements:
+    """Test architecture requirements are met."""
+    
+    def test_scheduler_creates_fresh_runtime_per_tenant(self):
+        """Each tenant run should create a fresh TenantRuntime (no shared state)."""
+        from core.runtime import TenantRuntime
+        
+        runtime1 = TenantRuntime(tenant_id='tenant-a')
+        runtime2 = TenantRuntime(tenant_id='tenant-b')
+        
+        assert runtime1 is not runtime2
+        assert runtime1.tenant_id != runtime2.tenant_id
+        assert runtime1.state is not runtime2.state
+    
+    def test_tenant_runtime_holds_required_components(self):
+        """TenantRuntime should hold all required components."""
+        from core.runtime import TenantRuntime
+        
+        runtime = TenantRuntime(tenant_id='component-test')
+        
+        assert hasattr(runtime, 'tenant_id')
+        assert hasattr(runtime, 'db')
+        assert hasattr(runtime, 'get_signal_engine')
+        assert hasattr(runtime, 'get_telegram_bot')
+        assert hasattr(runtime, 'get_forex_config')
+        assert hasattr(runtime, 'state')
+    
+    def test_core_alerts_import(self):
+        """core/alerts.py should be importable."""
+        from core.alerts import notify_error, notify_tenant_failure
+        assert notify_error is not None
+        assert notify_tenant_failure is not None
+    
+    def test_forex_scheduler_uses_notify_error(self):
+        """forex_scheduler.py should import and use notify_error."""
+        with open('forex_scheduler.py', 'r') as f:
+            content = f.read()
+        
+        assert 'from core.alerts import notify_error' in content
+        assert 'notify_error(' in content

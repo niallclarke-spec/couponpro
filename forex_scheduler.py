@@ -11,6 +11,7 @@ from datetime import datetime
 
 from core.logging import get_logger
 from core.runtime import require_tenant_runtime, TenantRuntime
+from core.alerts import notify_error
 from scheduler import SignalGenerator, SignalMonitor, Messenger
 from forex_ai import generate_daily_recap, generate_weekly_recap
 
@@ -244,9 +245,19 @@ async def run_tenant_with_timeout(tenant_id: str, once: bool) -> dict:
     except asyncio.TimeoutError:
         result['error'] = f"Timeout after {TENANT_TIMEOUT_SECONDS}s"
         logger.warning(f"Tenant {tenant_id} timed out after {TENANT_TIMEOUT_SECONDS}s")
+        notify_error(
+            f"Scheduler timeout after {TENANT_TIMEOUT_SECONDS}s",
+            tenant_id=tenant_id,
+            context={"error_type": "timeout", "duration_s": TENANT_TIMEOUT_SECONDS}
+        )
     except Exception as e:
         result['error'] = str(e)
         logger.exception(f"Tenant {tenant_id} failed: {e}")
+        notify_error(
+            f"Scheduler failed: {e}",
+            tenant_id=tenant_id,
+            context={"error_type": "exception", "exception_class": type(e).__name__}
+        )
     
     return result
 
