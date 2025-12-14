@@ -11,3 +11,5 @@ aiolimiter
 openai
 stripe
 PyJWT>=2.8.0
+pytest
+telegram
