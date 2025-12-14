@@ -1,0 +1,99 @@
+Implement the following enhancements to the existing POST /api/tenants/map-user endpoint.
+
+Context:
+- This is a single-tenant-per-user system (1 Clerk user → 1 tenant).
+- UNIQUE(clerk_user_id) already exists on tenant_users.
+- Index on tenant_id already exists.
+- EntryLab must remain protected and unchanged.
+
+GOAL
+Enhance the existing endpoint to:
+1) Validate tenant existence
+2) Correctly detect and report mapping actions:
+   - created
+   - updated (same tenant, role change)
+   - moved (different tenant)
+3) Do this atomically and safely (no race conditions, no 500s)
+
+REQUIREMENTS
+
+1. Database Safety
+- Assume UNIQUE(clerk_user_id) already exists.
+- Do NOT change schema.
+- Do NOT allow mapping to tenant_id = 'entrylab'.
+
+2. Endpoint
+POST /api/tenants/map-user
+- EntryLab-admin-only (use existing ENTRYLAB_ONLY_ROUTES guard)
+- auth_required = True
+- db_required = True
+
+Request JSON:
+{
+  "tenant_id": "tenant_x",
+  "clerk_user_id": "user_123",
+  "role": "admin" | "member" (optional, default admin)
+}
+
+3. Validation (400)
+- tenant_id required, non-empty after strip()
+- clerk_user_id required, non-empty after strip()
+- tenant_id != 'entrylab'
+- role must be 'admin' or 'member'
+- tenant_id must exist in tenants table
+
+4. Atomic Upsert Logic (IMPORTANT)
+Implement as a SINGLE atomic SQL operation that:
+
+- Reads any existing mapping for clerk_user_id
+- Inserts or updates tenant_users
+- Returns:
+  - previous_tenant_id
+  - previous_role
+  - new tenant_id
+  - new role
+
+Do NOT rely only on xmax.
+Use previous values to determine action.
+
+Action Rules:
+- created → no previous row
+- updated → same tenant_id, role changed
+- moved → previous_tenant_id != new tenant_id
+
+5. Response (200)
+{
+  "success": true,
+  "action": "created | updated | moved",
+  "tenant_id": "tenant_x",
+  "previous_tenant_id": "tenant_y | null",
+  "clerk_user_id": "user_123",
+  "role": "admin | member"
+}
+
+6. Error Handling
+- 400 for validation errors
+- 409 for constraint conflicts
+- No uncaught exceptions
+- No 500s for user input
+
+7. Logging
+Log exactly once per request:
+[TENANT] User mapping {action}: user=<clerk_user_id>, tenant=<tenant_id>
+
+8. Files To Modify ONLY
+- api/middleware.py (guards already exist — do not change behavior)
+- api/routes.py (route registration)
+- server.py (POST dispatch)
+- domains/tenant/handlers.py (handler implementation)
+
+Do NOT:
+- Change auth flow
+- Change Clerk logic
+- Add auto-tenant creation
+- Touch EntryLab credentials
+- Add frontend/UI
+
+After implementation:
+- Server must start cleanly
+- Provide curl examples for created / updated / moved
