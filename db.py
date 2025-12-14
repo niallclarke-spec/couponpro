@@ -1751,12 +1751,15 @@ def get_bot_user_count(days=30, tenant_id='entrylab'):
         print(f"Error getting bot user count: {e}")
         return 0
 
-def get_retention_rates():
+def get_retention_rates(tenant_id='entrylab'):
     """
     Calculate Day 1, Day 7, and Day 30 retention rates.
     
     Retention is calculated as the percentage of users who returned to use the bot
     after their first usage.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: {
@@ -1778,6 +1781,7 @@ def get_retention_rates():
                     SELECT chat_id, first_used
                     FROM bot_users
                     WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '2 days'
+                    AND tenant_id = %s
                 ),
                 returned AS (
                     SELECT DISTINCT c.chat_id
@@ -1786,13 +1790,14 @@ def get_retention_rates():
                     WHERE b.created_at >= c.first_used + INTERVAL '1 day'
                     AND b.created_at < c.first_used + INTERVAL '2 days'
                     AND b.success = true
+                    AND b.tenant_id = %s
                 )
                 SELECT 
                     COUNT(DISTINCT c.chat_id) as cohort_size,
                     COUNT(DISTINCT r.chat_id) as returned_count
                 FROM cohort c
                 LEFT JOIN returned r ON c.chat_id = r.chat_id
-            """)
+            """, (tenant_id, tenant_id))
             row = cursor.fetchone()
             day1_cohort = row[0] or 0
             day1_returned = row[1] or 0
@@ -1804,6 +1809,7 @@ def get_retention_rates():
                     SELECT chat_id, first_used
                     FROM bot_users
                     WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '14 days'
+                    AND tenant_id = %s
                 ),
                 returned AS (
                     SELECT DISTINCT c.chat_id
@@ -1812,13 +1818,14 @@ def get_retention_rates():
                     WHERE b.created_at >= c.first_used + INTERVAL '7 days'
                     AND b.created_at < c.first_used + INTERVAL '14 days'
                     AND b.success = true
+                    AND b.tenant_id = %s
                 )
                 SELECT 
                     COUNT(DISTINCT c.chat_id) as cohort_size,
                     COUNT(DISTINCT r.chat_id) as returned_count
                 FROM cohort c
                 LEFT JOIN returned r ON c.chat_id = r.chat_id
-            """)
+            """, (tenant_id, tenant_id))
             row = cursor.fetchone()
             day7_cohort = row[0] or 0
             day7_returned = row[1] or 0
@@ -1830,6 +1837,7 @@ def get_retention_rates():
                     SELECT chat_id, first_used
                     FROM bot_users
                     WHERE first_used < CURRENT_TIMESTAMP - INTERVAL '60 days'
+                    AND tenant_id = %s
                 ),
                 returned AS (
                     SELECT DISTINCT c.chat_id
@@ -1838,13 +1846,14 @@ def get_retention_rates():
                     WHERE b.created_at >= c.first_used + INTERVAL '30 days'
                     AND b.created_at < c.first_used + INTERVAL '60 days'
                     AND b.success = true
+                    AND b.tenant_id = %s
                 )
                 SELECT 
                     COUNT(DISTINCT c.chat_id) as cohort_size,
                     COUNT(DISTINCT r.chat_id) as returned_count
                 FROM cohort c
                 LEFT JOIN returned r ON c.chat_id = r.chat_id
-            """)
+            """, (tenant_id, tenant_id))
             row = cursor.fetchone()
             day30_cohort = row[0] or 0
             day30_returned = row[1] or 0
@@ -1859,13 +1868,14 @@ def get_retention_rates():
         print(f"Error calculating retention rates: {e}")
         return {'day1': 0, 'day7': 0, 'day30': 0}
 
-def get_all_bot_users(limit=100, offset=0):
+def get_all_bot_users(limit=100, offset=0, tenant_id='entrylab'):
     """
     Get all bot users with their activity stats.
     
     Args:
         limit (int): Number of users to return
         offset (int): Offset for pagination
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: {
@@ -1881,7 +1891,7 @@ def get_all_bot_users(limit=100, offset=0):
             cursor = conn.cursor()
             
             # Get total count
-            cursor.execute("SELECT COUNT(*) FROM bot_users")
+            cursor.execute("SELECT COUNT(*) FROM bot_users WHERE tenant_id = %s", (tenant_id,))
             total = cursor.fetchone()[0]
             
             # Get users with stats (count only successful generations)
@@ -1896,11 +1906,12 @@ def get_all_bot_users(limit=100, offset=0):
                     COUNT(b.id) FILTER (WHERE b.success = true) as total_generations,
                     COUNT(DISTINCT b.coupon_code) FILTER (WHERE b.success = true) as unique_coupons
                 FROM bot_users u
-                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id
+                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id AND b.tenant_id = %s
+                WHERE u.tenant_id = %s
                 GROUP BY u.chat_id, u.username, u.first_name, u.last_name, u.first_used, u.last_used
                 ORDER BY COALESCE(COUNT(b.id) FILTER (WHERE b.success = true), 0) DESC, u.last_used DESC NULLS LAST
                 LIMIT %s OFFSET %s
-            """, (limit, offset))
+            """, (tenant_id, tenant_id, limit, offset))
             
             users = []
             for row in cursor.fetchall():
@@ -1920,13 +1931,14 @@ def get_all_bot_users(limit=100, offset=0):
         print(f"Error getting all bot users: {e}")
         return {'users': [], 'total': 0}
 
-def get_user_activity_history(chat_id, limit=100):
+def get_user_activity_history(chat_id, limit=100, tenant_id='entrylab'):
     """
     Get complete activity history for a specific user.
     
     Args:
         chat_id (int): Telegram chat ID
         limit (int): Max number of records to return
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of activity records for the user
@@ -1945,10 +1957,10 @@ def get_user_activity_history(chat_id, limit=100):
                     success,
                     error_type
                 FROM bot_usage
-                WHERE chat_id = %s
+                WHERE chat_id = %s AND tenant_id = %s
                 ORDER BY created_at DESC
                 LIMIT %s
-            """, (chat_id, limit))
+            """, (chat_id, tenant_id, limit))
             
             history = []
             for row in cursor.fetchall():
@@ -2522,62 +2534,62 @@ def get_forex_stats(days=7, tenant_id='entrylab'):
             # Closed signals (won + lost)
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 AND status IN ('won', 'lost')
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             closed_signals = cursor.fetchone()[0]
             
             # Won signals
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 AND status = 'won'
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             won_signals = cursor.fetchone()[0]
             
             # Lost signals
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 AND status = 'lost'
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             lost_signals = cursor.fetchone()[0]
             
             # Pending signals
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 AND status = 'pending'
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             pending_signals = cursor.fetchone()[0]
             
             # Total pips (profit/loss)
             cursor.execute("""
                 SELECT COALESCE(SUM(result_pips), 0) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 AND result_pips IS NOT NULL
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             total_pips = float(cursor.fetchone()[0])
             
             # Signals by pair
             cursor.execute("""
                 SELECT pair, COUNT(*) as count
                 FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 GROUP BY pair
                 ORDER BY count DESC
                 LIMIT 10
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             signals_by_pair = [{'pair': row[0], 'count': row[1]} for row in cursor.fetchall()]
             
             # Daily signal count
             cursor.execute("""
                 SELECT DATE(posted_at) as date, COUNT(*) as count
                 FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
                 GROUP BY DATE(posted_at)
                 ORDER BY date DESC
-            """, (f"{days} days",))
+            """, (tenant_id, f"{days} days"))
             daily_signals = [{'date': row[0].isoformat(), 'count': row[1]} for row in cursor.fetchall()]
             
             # Calculate win rate
@@ -2802,9 +2814,12 @@ def get_signal_metrics(tenant_id='entrylab'):
         print(f"Error getting signal metrics: {e}")
         return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
 
-def get_last_completed_signal():
+def get_last_completed_signal(tenant_id='entrylab'):
     """
     Get the most recently closed signal for back-to-back throttle checking.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Last completed signal with status and closed_at, or None
@@ -2819,11 +2834,11 @@ def get_last_completed_signal():
             cursor.execute("""
                 SELECT id, status, closed_at, result_pips
                 FROM forex_signals
-                WHERE status IN ('won', 'lost')
+                WHERE tenant_id = %s AND status IN ('won', 'lost')
                 AND closed_at IS NOT NULL
                 ORDER BY closed_at DESC
                 LIMIT 1
-            """)
+            """, (tenant_id,))
             
             row = cursor.fetchone()
             if row:
@@ -2838,12 +2853,13 @@ def get_last_completed_signal():
         print(f"Error getting last completed signal: {e}")
         return None
 
-def get_recent_signal_streak(limit=5):
+def get_recent_signal_streak(limit=5, tenant_id='entrylab'):
     """
     Get the recent win/loss streak for context-aware AI prompts.
     
     Args:
         limit: Number of recent signals to check
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Streak info with type ('win', 'loss', 'mixed'), count, and recent signals
@@ -2858,10 +2874,10 @@ def get_recent_signal_streak(limit=5):
             cursor.execute("""
                 SELECT id, status, result_pips, closed_at
                 FROM forex_signals
-                WHERE status IN ('won', 'lost')
+                WHERE tenant_id = %s AND status IN ('won', 'lost')
                 ORDER BY closed_at DESC
                 LIMIT %s
-            """, (limit,))
+            """, (tenant_id, limit))
             
             signals = []
             for row in cursor.fetchall():
@@ -3755,7 +3771,7 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
         print(f"Error updating signal guidance: {e}")
         return False
 
-def is_milestone_already_sent(signal_id, milestone_key):
+def is_milestone_already_sent(signal_id, milestone_key, tenant_id='entrylab'):
     """
     Check if a milestone has already been sent for a signal.
     Used for race condition prevention with multiple workers.
@@ -3763,6 +3779,7 @@ def is_milestone_already_sent(signal_id, milestone_key):
     Args:
         signal_id (int): Signal ID
         milestone_key (str): Milestone key like 'tp1_40', 'tp1_70', 'tp2_50', 'sl_60'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if milestone was already sent
@@ -3775,8 +3792,8 @@ def is_milestone_already_sent(signal_id, milestone_key):
             cursor = conn.cursor()
             
             cursor.execute("""
-                SELECT milestones_sent FROM forex_signals WHERE id = %s
-            """, (signal_id,))
+                SELECT milestones_sent FROM forex_signals WHERE id = %s AND tenant_id = %s
+            """, (signal_id, tenant_id))
             
             row = cursor.fetchone()
             if row and row[0]:
@@ -3786,7 +3803,7 @@ def is_milestone_already_sent(signal_id, milestone_key):
         print(f"Error checking milestone sent: {e}")
         return True  # Fail safe
 
-def update_milestone_sent(signal_id, milestone_key):
+def update_milestone_sent(signal_id, milestone_key, tenant_id='entrylab'):
     """
     Record that a milestone notification was sent.
     Uses atomic UPDATE with WHERE NOT LIKE to prevent race conditions.
@@ -3794,6 +3811,7 @@ def update_milestone_sent(signal_id, milestone_key):
     Args:
         signal_id (int): Signal ID
         milestone_key (str): Milestone key like 'tp1_40', 'tp1_70', 'tp2_50', 'sl_60'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successfully claimed (was not already sent)
@@ -3810,9 +3828,9 @@ def update_milestone_sent(signal_id, milestone_key):
                 UPDATE forex_signals
                 SET last_milestone_at = CURRENT_TIMESTAMP,
                     milestones_sent = COALESCE(milestones_sent, '') || %s || ','
-                WHERE id = %s 
+                WHERE id = %s AND tenant_id = %s
                   AND (milestones_sent IS NULL OR milestones_sent NOT LIKE %s)
-            """, (milestone_key, signal_id, f'%{milestone_key}%'))
+            """, (milestone_key, signal_id, tenant_id, f'%{milestone_key}%'))
             
             conn.commit()
             return cursor.rowcount > 0  # True only if we successfully claimed it
@@ -4212,7 +4230,7 @@ def cleanup_old_phrases(days_to_keep=7, tenant_id='entrylab'):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None):
+def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None, tenant_id='entrylab'):
     """
     Create or update a telegram subscription record (UPSERT) with conversion tracking.
     
@@ -4266,8 +4284,8 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
             
             cursor.execute("""
                 SELECT id, plan_type, amount_paid, free_signup_at, created_at, is_converted
-                FROM telegram_subscriptions WHERE email = %s
-            """, (email,))
+                FROM telegram_subscriptions WHERE email = %s AND tenant_id = %s
+            """, (email, tenant_id))
             existing = cursor.fetchone()
             
             if existing:
@@ -4634,7 +4652,7 @@ def delete_subscription_by_email(email, tenant_id='entrylab'):
         return False
 
 
-def clear_all_telegram_subscriptions():
+def clear_all_telegram_subscriptions(tenant_id='entrylab'):
     """Delete all telegram subscriptions (for testing/cleanup)"""
     try:
         if not db_pool.connection_pool:
@@ -4643,7 +4661,7 @@ def clear_all_telegram_subscriptions():
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            cursor.execute("DELETE FROM telegram_subscriptions")
+            cursor.execute("DELETE FROM telegram_subscriptions WHERE tenant_id = %s", (tenant_id,))
             deleted_count = cursor.rowcount
             
             # Reset the ID sequence
@@ -4656,7 +4674,7 @@ def clear_all_telegram_subscriptions():
         print(f"Error clearing telegram subscriptions: {e}")
         raise
 
-def cleanup_test_telegram_subscriptions():
+def cleanup_test_telegram_subscriptions(tenant_id='entrylab'):
     """Delete test telegram subscriptions (fake paid records with test emails)"""
     try:
         if not db_pool.connection_pool:
@@ -4669,13 +4687,14 @@ def cleanup_test_telegram_subscriptions():
             cursor.execute("""
                 DELETE FROM telegram_subscriptions 
                 WHERE amount_paid > 0 
+                AND tenant_id = %s
                 AND (
                     email LIKE 'test%@%' OR 
                     email LIKE 'demo%@%' OR
                     email LIKE '%@example.com'
                 )
                 RETURNING id, email, amount_paid
-            """)
+            """, (tenant_id,))
             
             deleted_records = cursor.fetchall()
             conn.commit()
@@ -4816,7 +4835,7 @@ def update_telegram_subscription_last_seen(telegram_user_id, tenant_id='entrylab
         print(f"Error updating telegram subscription last seen: {e}")
         return False
 
-def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at):
+def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at, tenant_id='entrylab'):
     """
     Auto-link a Telegram user ID to a subscription record when they join the channel.
     
@@ -4828,6 +4847,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
         telegram_user_id (int): Telegram user ID
         telegram_username (str): Telegram username (may be None)
         joined_at (datetime): Timestamp when user joined
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Updated subscription record or None if no match found
@@ -4845,9 +4865,9 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
             if invite_link:
                 cursor.execute("""
                     SELECT id, email FROM telegram_subscriptions
-                    WHERE invite_link = %s AND status = 'pending'
+                    WHERE invite_link = %s AND status = 'pending' AND tenant_id = %s
                     LIMIT 1
-                """, (invite_link,))
+                """, (invite_link, tenant_id))
                 result = cursor.fetchone()
                 if result:
                     subscription_id = result[0]
@@ -4858,10 +4878,10 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
             if not subscription_id:
                 cursor.execute("""
                     SELECT id, email FROM telegram_subscriptions
-                    WHERE status = 'pending' AND telegram_user_id IS NULL
+                    WHERE status = 'pending' AND telegram_user_id IS NULL AND tenant_id = %s
                     ORDER BY created_at DESC
                     LIMIT 1
-                """)
+                """, (tenant_id,))
                 result = cursor.fetchone()
                 if result:
                     subscription_id = result[0]
