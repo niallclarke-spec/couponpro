@@ -205,5 +205,20 @@ async def main():
         await scheduler.run_forever()
 
 
+def start_forex_scheduler(tenant_id: str = None):
+    """
+    Start the forex scheduler - backwards compatibility wrapper.
+    
+    This function is kept for compatibility with workers/scheduler.py.
+    It wraps the async main() function.
+    
+    Args:
+        tenant_id: Optional tenant ID (can also be set via TENANT_ID env var)
+    """
+    if tenant_id:
+        os.environ['TENANT_ID'] = tenant_id
+    asyncio.run(main())
+
+
 if __name__ == '__main__':
     asyncio.run(main())
