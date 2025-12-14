@@ -7,6 +7,9 @@ from strategies.base_strategy import BaseStrategy, SignalData, TakeProfitLevel
 from forex_api import twelve_data_client
 from db import get_forex_config, get_daily_pnl, get_last_completed_signal
 from datetime import datetime
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class AggressiveStrategy(BaseStrategy):
@@ -43,7 +46,7 @@ class AggressiveStrategy(BaseStrategy):
             else:
                 self._set_defaults()
         except Exception as e:
-            print(f"[AGGRESSIVE] Error loading config: {e}")
+            logger.error(f"Error loading config: {e}")
             self._set_defaults()
     
     def _set_defaults(self):
@@ -120,7 +123,7 @@ class AggressiveStrategy(BaseStrategy):
                 tp3_pct = int(config.get('tp3_percentage', 20))
                 return tp1_pct, tp2_pct, tp3_pct, tp_count
         except Exception as e:
-            print(f"[AGGRESSIVE] Error loading TP config: {e}")
+            logger.error(f"Error loading TP config: {e}")
         
         return 50, 30, 20, 3
     
@@ -128,11 +131,11 @@ class AggressiveStrategy(BaseStrategy):
         try:
             self.load_config()
             
-            print(f"\n[AGGRESSIVE] Checking for signals on {self.symbol} {timeframe}...")
+            logger.info(f"Checking for signals on {self.symbol} {timeframe}...")
             
             can_generate, guardrail_reason = self.check_guardrails()
             if not can_generate:
-                print(f"[AGGRESSIVE] Guardrail blocked: {guardrail_reason}")
+                logger.info(f"Guardrail blocked: {guardrail_reason}")
                 return None
             
             price = twelve_data_client.get_price(self.symbol)
@@ -146,7 +149,7 @@ class AggressiveStrategy(BaseStrategy):
             ema200 = twelve_data_client.get_ema(self.symbol, '1h', 200)
             
             if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
-                print("[AGGRESSIVE] Missing indicator data, skipping signal check")
+                logger.warning("Missing indicator data, skipping signal check")
                 return None
             
             assert price is not None
@@ -159,13 +162,13 @@ class AggressiveStrategy(BaseStrategy):
             assert ema50 is not None
             assert ema200 is not None
             
-            print(f"[AGGRESSIVE] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
+            logger.info(f"Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
             
             trend_is_bullish = ema50 > ema200
             trend_name = "Bullish" if trend_is_bullish else "Bearish"
             
             if adx < self.adx_threshold:
-                print(f"[AGGRESSIVE] Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
+                logger.info(f"Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
                 return None
             
             signal_type = None
@@ -177,7 +180,7 @@ class AggressiveStrategy(BaseStrategy):
                 
                 if bb_touch or stoch_oversold:
                     signal_type = 'BUY'
-                    print(f"[AGGRESSIVE] BUY signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}")
+                    logger.info(f"📈 BUY signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}")
             
             elif rsi > self.rsi_overbought:
                 bb_distance = abs(price - bbands['upper'])
@@ -186,10 +189,10 @@ class AggressiveStrategy(BaseStrategy):
                 
                 if bb_touch or stoch_overbought:
                     signal_type = 'SELL'
-                    print(f"[AGGRESSIVE] SELL signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}")
+                    logger.info(f"📉 SELL signal - Trend={trend_name}, RSI={rsi:.2f}, ADX={adx:.2f}")
             
             if not signal_type:
-                print(f"[AGGRESSIVE] No signal - RSI={rsi:.2f} (thresholds: {self.rsi_oversold}/{self.rsi_overbought})")
+                logger.info(f"No signal - RSI={rsi:.2f} (thresholds: {self.rsi_oversold}/{self.rsi_overbought})")
                 return None
             
             take_profits, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
@@ -218,16 +221,14 @@ class AggressiveStrategy(BaseStrategy):
                 bot_type=self.bot_type
             )
             
-            print(f"[AGGRESSIVE] Signal generated: {signal_type} @ {price:.2f}")
-            print(f"[AGGRESSIVE] TP1: {take_profits[0].price:.2f} (50%), TP2: {take_profits[1].price:.2f} (30%), TP3: {take_profits[2].price:.2f} (20%)")
-            print(f"[AGGRESSIVE] SL: {stop_loss:.2f}")
+            logger.info(f"🎯 Signal generated: {signal_type} @ {price:.2f}")
+            logger.info(f"📊 TP1: {take_profits[0].price:.2f} (50%), TP2: {take_profits[1].price:.2f} (30%), TP3: {take_profits[2].price:.2f} (20%)")
+            logger.info(f"🛑 SL: {stop_loss:.2f}")
             
             return signal_data
             
         except Exception as e:
-            print(f"[AGGRESSIVE] Error checking for signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error checking for signals: {e}")
             return None
     
     def get_indicators_used(self) -> List[str]:

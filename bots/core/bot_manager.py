@@ -4,6 +4,9 @@ Only one bot can be active at any time
 """
 from typing import Optional, Dict, Any
 from db import get_active_bot, set_active_bot, get_open_signal
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class BotManager:
@@ -51,7 +54,7 @@ class BotManager:
             True if successful
         """
         if bot_type not in self._strategies:
-            print(f"[BOT MANAGER] Invalid bot type: {bot_type}")
+            logger.warning(f"Invalid bot type: {bot_type}")
             return False
         
         return set_active_bot(bot_type)
@@ -67,7 +70,7 @@ class BotManager:
         """
         open_signal = get_open_signal()
         if open_signal:
-            print(f"[BOT MANAGER] Cannot generate new signal - Signal #{open_signal['id']} is still open")
+            logger.info(f"Cannot generate new signal - Signal #{open_signal['id']} is still open")
             return False
         return True
     
@@ -79,7 +82,7 @@ class BotManager:
         """Reload configuration for all strategies"""
         for strategy in self._strategies.values():
             strategy.reload_config()
-        print("[BOT MANAGER] All strategy configs reloaded")
+        logger.info("All strategy configs reloaded")
 
 
 bot_manager = BotManager()

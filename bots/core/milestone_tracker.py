@@ -24,6 +24,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 COOLDOWN_SECONDS = 90
 
@@ -42,7 +45,7 @@ class MilestoneTracker:
             if api_key and base_url:
                 self.openai_client = OpenAI(api_key=api_key, base_url=base_url)
         except Exception as e:
-            print(f"[MILESTONE] OpenAI client init failed: {e}")
+            logger.error(f"OpenAI client init failed: {e}")
     
     def check_milestones(self, signal: Dict, current_price: float) -> Optional[Dict[str, Any]]:
         """
@@ -211,7 +214,7 @@ class MilestoneTracker:
                 )
                 ai_message = response.choices[0].message.content.strip()
             except Exception as e:
-                print(f"[MILESTONE] AI message failed: {e}")
+                logger.warning(f"AI message failed: {e}")
                 ai_message = "Trade progressing nicely. Stay focused."
         else:
             ai_message = "Trade progressing nicely. Stay focused."

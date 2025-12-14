@@ -6,6 +6,9 @@ from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 from bots.core.indicator_utils import indicator_utils
 from db import get_forex_config
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class BaseStrategy(ABC):
@@ -34,7 +37,7 @@ class BaseStrategy(ABC):
                 self.atr_sl_multiplier = 2.0
                 self.atr_tp_multiplier = 4.0
         except Exception as e:
-            print(f"[{self.name.upper()}] Config load error: {e}")
+            logger.error(f"[{self.name.upper()}] Config load error: {e}")
             self.trading_start_hour = 8
             self.trading_end_hour = 22
             self.atr_sl_multiplier = 2.0
@@ -85,14 +88,14 @@ class BaseStrategy(ABC):
         """
         try:
             if not self.is_trading_hours():
-                print(f"[{self.name.upper()}] Outside trading hours")
+                logger.info(f"[{self.name.upper()}] Outside trading hours")
                 return None
             
-            print(f"\n[{self.name.upper()}] Checking for signals on {self.symbol} {self.timeframe}...")
+            logger.info(f"[{self.name.upper()}] Checking for signals on {self.symbol} {self.timeframe}...")
             
             indicators = await self.indicators.get_all_indicators(self.timeframe)
             if not indicators:
-                print(f"[{self.name.upper()}] Failed to fetch indicators")
+                logger.warning(f"[{self.name.upper()}] Failed to fetch indicators")
                 return None
             
             price = indicators['price']
@@ -101,7 +104,7 @@ class BaseStrategy(ABC):
             adx = indicators['adx']
             atr = indicators['atr']
             
-            print(f"[{self.name.upper()}] Price: {price:.2f}, RSI: {rsi:.2f}, ADX: {adx:.2f}")
+            logger.info(f"[{self.name.upper()}] Price: {price:.2f}, RSI: {rsi:.2f}, ADX: {adx:.2f}")
             
             buy_result = self.check_buy_conditions(indicators)
             if buy_result:
@@ -125,7 +128,7 @@ class BaseStrategy(ABC):
                     'notes': buy_result.get('reason', '')
                 }
                 
-                print(f"[{self.name.upper()}] BUY signal @ {price:.2f}, TP: {tp:.2f}, SL: {sl:.2f}")
+                logger.info(f"[{self.name.upper()}] 📈 BUY signal @ {price:.2f}, TP: {tp:.2f}, SL: {sl:.2f}")
                 return signal_data
             
             sell_result = self.check_sell_conditions(indicators)
@@ -150,12 +153,12 @@ class BaseStrategy(ABC):
                     'notes': sell_result.get('reason', '')
                 }
                 
-                print(f"[{self.name.upper()}] SELL signal @ {price:.2f}, TP: {tp:.2f}, SL: {sl:.2f}")
+                logger.info(f"[{self.name.upper()}] 📉 SELL signal @ {price:.2f}, TP: {tp:.2f}, SL: {sl:.2f}")
                 return signal_data
             
-            print(f"[{self.name.upper()}] No signal conditions met")
+            logger.info(f"[{self.name.upper()}] No signal conditions met")
             return None
             
         except Exception as e:
-            print(f"[{self.name.upper()}] Error checking for signal: {e}")
+            logger.exception(f"[{self.name.upper()}] Error checking for signal: {e}")
             return None

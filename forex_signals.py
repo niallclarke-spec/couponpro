@@ -20,6 +20,9 @@ from indicator_config import (
 )
 from strategies import get_active_strategy, get_available_strategies, STRATEGY_REGISTRY
 from strategies.base_strategy import SignalData
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 # Timing constants (in minutes)
 FIRST_REVALIDATION_MINUTES = 90   # First indicator recheck at 90 min
@@ -62,13 +65,13 @@ class ForexSignalEngine:
             
             self._active_strategy = get_active_strategy(self._active_bot_type)
             if self._active_strategy:
-                print(f"[FOREX ENGINE] Loaded strategy: {self._active_strategy.name} ({self._active_bot_type})")
+                logger.info(f"Loaded strategy: {self._active_strategy.name} ({self._active_bot_type})")
             else:
-                print(f"[FOREX ENGINE] WARNING: Could not load strategy '{self._active_bot_type}', using aggressive")
+                logger.warning(f"Could not load strategy '{self._active_bot_type}', using aggressive")
                 self._active_bot_type = 'aggressive'
                 self._active_strategy = get_active_strategy('aggressive')
         except Exception as e:
-            print(f"[FOREX ENGINE] Error loading strategy: {e}")
+            logger.error(f"Error loading strategy: {e}")
             self._active_bot_type = 'aggressive'
             self._active_strategy = get_active_strategy('aggressive')
     
@@ -81,17 +84,17 @@ class ForexSignalEngine:
     def switch_strategy(self, bot_type: str) -> bool:
         """Switch to a different strategy"""
         if bot_type not in STRATEGY_REGISTRY:
-            print(f"[FOREX ENGINE] Unknown strategy: {bot_type}")
+            logger.warning(f"Unknown strategy: {bot_type}")
             return False
         
         pending_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
         if pending_signals and len(pending_signals) > 0:
-            print(f"[FOREX ENGINE] Cannot switch strategy while signal #{pending_signals[0]['id']} is active")
+            logger.warning(f"Cannot switch strategy while signal #{pending_signals[0]['id']} is active")
             return False
         
         self._active_bot_type = bot_type
         self._active_strategy = get_active_strategy(bot_type)
-        print(f"[FOREX ENGINE] Switched to strategy: {self._active_strategy.name}")
+        logger.info(f"Switched to strategy: {self._active_strategy.name}")
         return True
     
     def get_available_strategies(self):
@@ -118,8 +121,8 @@ class ForexSignalEngine:
                 self.session_filter_enabled = str(session_filter).lower() == 'true' if isinstance(session_filter, str) else bool(session_filter)
                 self.session_start_hour_utc = int(config.get('session_start_hour_utc', 8))
                 self.session_end_hour_utc = int(config.get('session_end_hour_utc', 21))
-                print(f"[FOREX CONFIG] Loaded from database - RSI: {self.rsi_oversold}/{self.rsi_overbought}, ADX: {self.adx_threshold}, SL/TP: {self.atr_sl_multiplier}x/{self.atr_tp_multiplier}x")
-                print(f"[FOREX CONFIG] Guardrails - Loss cap: {self.daily_loss_cap_pips} pips, Throttle: {self.back_to_back_throttle_minutes}min, Session: {self.session_start_hour_utc}-{self.session_end_hour_utc} UTC (enabled={self.session_filter_enabled})")
+                logger.info(f"Loaded from database - RSI: {self.rsi_oversold}/{self.rsi_overbought}, ADX: {self.adx_threshold}, SL/TP: {self.atr_sl_multiplier}x/{self.atr_tp_multiplier}x")
+                logger.info(f"Guardrails - Loss cap: {self.daily_loss_cap_pips} pips, Throttle: {self.back_to_back_throttle_minutes}min, Session: {self.session_start_hour_utc}-{self.session_end_hour_utc} UTC (enabled={self.session_filter_enabled})")
             else:
                 # Fallback to defaults
                 self.rsi_oversold = 40
@@ -134,7 +137,7 @@ class ForexSignalEngine:
                 self.session_filter_enabled = True
                 self.session_start_hour_utc = 8
                 self.session_end_hour_utc = 21
-                print("[FOREX CONFIG] Using default configuration")
+                logger.info("Using default configuration")
         except Exception as e:
             # Fallback to defaults on error
             self.rsi_oversold = 40
@@ -149,24 +152,24 @@ class ForexSignalEngine:
             self.session_filter_enabled = True
             self.session_start_hour_utc = 8
             self.session_end_hour_utc = 21
-            print(f"[FOREX CONFIG] Error loading config, using defaults: {e}")
+            logger.error(f"Error loading config, using defaults: {e}")
     
     def reload_config(self):
         """Reload configuration and active strategy from database (hot-reload)"""
-        print("[FOREX CONFIG] Reloading configuration...")
+        logger.info("Reloading configuration...")
         self.load_config()
         
         new_bot_type = get_active_bot(tenant_id=self.tenant_id) or 'aggressive'
         if new_bot_type != self._active_bot_type:
-            print(f"[FOREX CONFIG] Strategy changed: {self._active_bot_type} -> {new_bot_type}")
+            logger.info(f"Strategy changed: {self._active_bot_type} -> {new_bot_type}")
             self._active_bot_type = new_bot_type
             self._active_strategy = get_active_strategy(new_bot_type)
             if self._active_strategy:
-                print(f"[FOREX CONFIG] Hot-reloaded strategy: {self._active_strategy.name}")
+                logger.info(f"Hot-reloaded strategy: {self._active_strategy.name}")
             else:
-                print(f"[FOREX CONFIG] WARNING: Could not load strategy '{new_bot_type}'")
+                logger.warning(f"Could not load strategy '{new_bot_type}'")
         else:
-            print(f"[FOREX CONFIG] Strategy unchanged: {self._active_bot_type}")
+            logger.info(f"Strategy unchanged: {self._active_bot_type}")
     
     def check_guardrails(self):
         """
@@ -235,10 +238,10 @@ class ForexSignalEngine:
         try:
             strategy = self.get_active_strategy()
             if not strategy:
-                print("[FOREX SIGNALS] ❌ No active strategy loaded")
+                logger.error("❌ No active strategy loaded")
                 return None
             
-            print(f"\n[FOREX SIGNALS] Using strategy: {strategy.name} ({strategy.bot_type})")
+            logger.info(f"Using strategy: {strategy.name} ({strategy.bot_type})")
             
             signal_data = await strategy.check_for_signals(timeframe)
             
@@ -253,14 +256,12 @@ class ForexSignalEngine:
             result['adx_value'] = signal_data.indicators.get('adx')
             result['stoch_k_value'] = signal_data.indicators.get('stochastic')
             
-            print(f"[FOREX SIGNALS] ✅ Signal from {strategy.name}: {signal_data.signal_type} @ {signal_data.entry_price:.2f}")
+            logger.info(f"✅ Signal from {strategy.name}: {signal_data.signal_type} @ {signal_data.entry_price:.2f}")
             
             return result
             
         except Exception as e:
-            print(f"[FOREX SIGNALS] ❌ Error checking for signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"❌ Error checking for signals: {e}")
             return None
     
     async def monitor_active_signals(self):
@@ -281,14 +282,14 @@ class ForexSignalEngine:
             if not active_signals:
                 return []
             
-            print(f"\n[FOREX MONITOR] Checking {len(active_signals)} active signals...")
+            logger.info(f"Checking {len(active_signals)} active signals...")
             
             current_price = twelve_data_client.get_price(self.symbol)
             if not current_price:
-                print("[FOREX MONITOR] ❌ Could not fetch current price")
+                logger.error("❌ Could not fetch current price")
                 return []
             
-            print(f"[FOREX MONITOR] Current {self.symbol} price: {current_price:.2f}")
+            logger.info(f"Current {self.symbol} price: {current_price:.2f}")
             
             updates = []
             now = datetime.utcnow()
@@ -320,7 +321,7 @@ class ForexSignalEngine:
                 hours_elapsed = (now - posted_at).total_seconds() / 3600
                 
                 if hours_elapsed >= 4:
-                    print(f"[FOREX MONITOR] ⏱️  Signal #{signal_id} expired after 4 hours")
+                    logger.info(f"⏱️  Signal #{signal_id} expired after 4 hours")
                     updates.append({
                         'id': signal_id,
                         'status': 'expired',
@@ -338,7 +339,7 @@ class ForexSignalEngine:
                     if not tp1_hit and current_price >= tp1:
                         pips = round((tp1 - entry) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
+                        logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
                         updates.append({
                             'id': signal_id,
@@ -358,7 +359,7 @@ class ForexSignalEngine:
                     if has_tp2 and tp1_hit and not tp2_hit and current_price >= tp2:
                         pips = round((tp2 - entry) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
+                        logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
                         updates.append({
                             'id': signal_id,
@@ -377,7 +378,7 @@ class ForexSignalEngine:
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price >= tp3:
                         pips = round((tp3 - entry) * 100, 1)
-                        print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
+                        logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
                         updates.append({
                             'id': signal_id,
@@ -394,15 +395,15 @@ class ForexSignalEngine:
                         if pips > 0:
                             status = 'won'
                             event = 'sl_hit_profit_locked'
-                            print(f"[FOREX MONITOR] ✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                            logger.info(f"✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
                         elif pips == 0:
                             status = 'won'
                             event = 'sl_hit_breakeven'
-                            print(f"[FOREX MONITOR] 🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
+                            logger.info(f"🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
                         else:
                             status = 'lost'
                             event = 'sl_hit'
-                            print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
+                            logger.error(f"❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
                             'event': event,
@@ -416,7 +417,7 @@ class ForexSignalEngine:
                     if not tp1_hit and current_price <= tp1:
                         pips = round((entry - tp1) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
+                        logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1)
                         updates.append({
                             'id': signal_id,
@@ -436,7 +437,7 @@ class ForexSignalEngine:
                     if has_tp2 and tp1_hit and not tp2_hit and current_price <= tp2:
                         pips = round((entry - tp2) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
-                        print(f"[FOREX MONITOR] ✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
+                        logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2)
                         updates.append({
                             'id': signal_id,
@@ -455,7 +456,7 @@ class ForexSignalEngine:
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price <= tp3:
                         pips = round((entry - tp3) * 100, 1)
-                        print(f"[FOREX MONITOR] 🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
+                        logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3)
                         updates.append({
                             'id': signal_id,
@@ -472,15 +473,15 @@ class ForexSignalEngine:
                         if pips > 0:
                             status = 'won'
                             event = 'sl_hit_profit_locked'
-                            print(f"[FOREX MONITOR] ✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
+                            logger.info(f"✅ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Locked profit: +{pips} pips")
                         elif pips == 0:
                             status = 'won'
                             event = 'sl_hit_breakeven'
-                            print(f"[FOREX MONITOR] 🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
+                            logger.info(f"🔒 Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Breakeven exit")
                         else:
                             status = 'lost'
                             event = 'sl_hit'
-                            print(f"[FOREX MONITOR] ❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
+                            logger.error(f"❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
                         updates.append({
                             'id': signal_id,
                             'event': event,
@@ -492,9 +493,7 @@ class ForexSignalEngine:
             return updates
             
         except Exception as e:
-            print(f"[FOREX MONITOR] ❌ Error monitoring signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error monitoring signals")
             return []
     
     def is_trading_hours(self):
@@ -559,7 +558,7 @@ class ForexSignalEngine:
                     sl_distance = entry - sl
                     
                     if tp_distance <= 0 or sl_distance <= 0:
-                        print(f"[GUIDANCE] ⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
+                        logger.warning(f"⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
                         continue
                     
                     if current_price >= entry:
@@ -573,7 +572,7 @@ class ForexSignalEngine:
                     sl_distance = sl - entry
                     
                     if tp_distance <= 0 or sl_distance <= 0:
-                        print(f"[GUIDANCE] ⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
+                        logger.warning(f"⚠️ Signal #{signal_id}: Invalid distances (TP:{tp_distance}, SL:{sl_distance}), skipping")
                         continue
                     
                     if current_price <= entry:
@@ -583,7 +582,7 @@ class ForexSignalEngine:
                         progress = ((current_price - entry) / sl_distance) * 100
                         progress_toward = 'sl'
                 
-                print(f"[GUIDANCE] Signal #{signal_id}: {signal_type} @ {entry:.2f}, price={current_price:.2f}, {progress:.1f}% toward {progress_toward.upper()}")
+                logger.info(f"Signal #{signal_id}: {signal_type} @ {entry:.2f}, price={current_price:.2f}, {progress:.1f}% toward {progress_toward.upper()}")
                 
                 progress = min(progress, 100)
                 
@@ -628,14 +627,12 @@ class ForexSignalEngine:
                         'zone_value': zone_value
                     })
                     
-                    print(f"[GUIDANCE] Signal #{signal_id}: {guidance_type} event ({progress:.0f}% toward {progress_toward.upper()}, zone {zone_value})")
+                    logger.info(f"Signal #{signal_id}: {guidance_type} event ({progress:.0f}% toward {progress_toward.upper()}, zone {zone_value})")
             
             return guidance_events
             
         except Exception as e:
-            print(f"[GUIDANCE] ❌ Error checking signal guidance: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error checking signal guidance")
             return []
     
     def validate_thesis(self, signal, current_indicators):
@@ -775,7 +772,7 @@ class ForexSignalEngine:
                         'minutes_elapsed': minutes_elapsed,
                         'reason': f"Trade has been open for {minutes_elapsed/60:.1f} hours without resolution"
                     })
-                    print(f"[REVALIDATION] Signal #{signal_id}: Hard timeout after {minutes_elapsed:.0f} minutes")
+                    logger.info(f"Signal #{signal_id}: Hard timeout after {minutes_elapsed:.0f} minutes")
                     continue
                 
                 # Only check stagnant trades (not yet hit progress threshold in either direction)
@@ -805,14 +802,12 @@ class ForexSignalEngine:
                             'current_thesis_status': thesis_status,
                             'reason': f"Stagnant trade at {minutes_elapsed:.0f} minutes, verifying thesis"
                         })
-                        print(f"[REVALIDATION] Signal #{signal_id}: Scheduling revalidation at {minutes_elapsed:.0f} minutes")
+                        logger.info(f"Signal #{signal_id}: Scheduling revalidation at {minutes_elapsed:.0f} minutes")
             
             return revalidation_events
             
         except Exception as e:
-            print(f"[REVALIDATION] ❌ Error checking stagnant signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error checking stagnant signals")
             return []
     
     async def perform_revalidation(self, signal):
@@ -829,7 +824,7 @@ class ForexSignalEngine:
             signal_id = signal['id']
             timeframe = signal.get('timeframe', '15min')
             
-            print(f"[REVALIDATION] Fetching current indicators for signal #{signal_id}...")
+            logger.info(f"Fetching current indicators for signal #{signal_id}...")
             
             # Fetch current indicator values (no rate limiting needed with unlimited API plan)
             rsi = twelve_data_client.get_rsi(self.symbol, timeframe)
@@ -838,7 +833,7 @@ class ForexSignalEngine:
             stoch = twelve_data_client.get_stoch(self.symbol, timeframe)
             
             if not all([rsi, macd_data, adx, stoch]):
-                print(f"[REVALIDATION] ⚠️ Could not fetch all indicators for signal #{signal_id}")
+                logger.warning(f"⚠️ Could not fetch all indicators for signal #{signal_id}")
                 return None
             
             # Type assertions for type checker (we know these are not None after the check above)
@@ -857,16 +852,14 @@ class ForexSignalEngine:
             validation['current_indicators'] = current_indicators
             validation['signal_id'] = signal_id
             
-            print(f"[REVALIDATION] Signal #{signal_id}: Thesis is {validation['status'].upper()}")
+            logger.info(f"Signal #{signal_id}: Thesis is {validation['status'].upper()}")
             if validation['reasons']:
-                print(f"[REVALIDATION] Reasons: {', '.join(validation['reasons'])}")
+                logger.info(f"Reasons: {', '.join(validation['reasons'])}")
             
             return validation
             
         except Exception as e:
-            print(f"[REVALIDATION] ❌ Error performing revalidation: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error performing revalidation")
             return None
 
 forex_signal_engine = ForexSignalEngine()

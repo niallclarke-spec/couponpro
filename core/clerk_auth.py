@@ -5,6 +5,9 @@ Fetches public keys from Clerk's JWKS endpoint to verify JWTs.
 import jwt
 from jwt import PyJWKClient
 from core.config import Config
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 _jwks_client = None
 
@@ -35,13 +38,13 @@ def verify_clerk_jwt(token: str) -> dict | None:
     """
     jwks_url = Config.get_clerk_jwks_url()
     if not jwks_url:
-        print("[CLERK] CLERK_JWKS_URL not configured - Clerk auth disabled")
+        logger.warning("CLERK_JWKS_URL not configured - Clerk auth disabled")
         return None
     
     try:
         client = _get_jwks_client()
         if not client:
-            print("[CLERK] Failed to create JWKS client")
+            logger.error("Failed to create JWKS client")
             return None
         
         signing_key = client.get_signing_key_from_jwt(token)
@@ -61,11 +64,11 @@ def verify_clerk_jwt(token: str) -> dict | None:
             'email': claims.get('email')
         }
     except jwt.ExpiredSignatureError:
-        print("[CLERK] Token expired")
+        logger.warning("Token expired")
         return None
     except jwt.InvalidTokenError as e:
-        print(f"[CLERK] Invalid token: {e}")
+        logger.warning(f"Invalid token: {e}")
         return None
     except Exception as e:
-        print(f"[CLERK] Unexpected error verifying JWT: {e}")
+        logger.exception("Unexpected error verifying JWT")
         return None

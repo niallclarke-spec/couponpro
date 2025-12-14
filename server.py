@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from core.logging import get_logger, set_request_context, clear_request_context
+logger = get_logger(__name__)
+
 from core.config import Config
 from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
 from api.middleware import apply_route_checks
@@ -41,7 +44,7 @@ try:
     from object_storage import ObjectStorageService
     OBJECT_STORAGE_AVAILABLE = True
 except Exception as e:
-    print(f"[INFO] Object storage not available: {e}")
+    logger.info(f"Object storage not available: {e}")
 
 PORT = Config.get_port()
 DIRECTORY = "."
@@ -79,13 +82,13 @@ def verify_signed_session(token):
         
         # Check if expired
         if time.time() > expiry:
-            print(f"[AUTH] Token expired: {expiry} < {time.time()}")
+            logger.warning(f"Token expired: {expiry} < {time.time()}")
             return False
         
         # Verify signature
         secret = Config.get_admin_password()
         if not secret:
-            print(f"[AUTH] ADMIN_PASSWORD not configured")
+            logger.warning("ADMIN_PASSWORD not configured")
             return False
         
         expected_signature = hmac.new(
@@ -98,11 +101,11 @@ def verify_signed_session(token):
         is_valid = hmac.compare_digest(signature, expected_signature)
         
         if not is_valid:
-            print(f"[AUTH] Invalid signature")
+            logger.warning("Invalid signature")
         
         return is_valid
     except Exception as e:
-        print(f"[AUTH] Token verification error: {e}")
+        logger.exception("Token verification error")
         return False
 
 def log_tenant_context(tenant_id, request_path, request_id=None):
@@ -114,9 +117,9 @@ def log_tenant_context(tenant_id, request_path, request_id=None):
     
     if any(request_path.startswith(p) for p in TENANT_REQUIRED_PATHS):
         if not tenant_id:
-            print(f"[TRIPWIRE] ❌ Missing tenant_id on {request_path} (req={req_id})")
+            logger.error(f"Missing tenant_id on {request_path} (req={req_id})")
             raise ValueError(f"Tenant context required for {request_path}")
-        print(f"[TRIPWIRE] ✓ tenant={tenant_id} path={request_path} req={req_id}")
+        logger.info(f"tenant={tenant_id} path={request_path} req={req_id}")
 
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
@@ -135,7 +138,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def check_auth(self):
         cookie_header = self.headers.get('Cookie')
         if not cookie_header:
-            print(f"[AUTH] No cookie header found")
+            logger.debug("No cookie header found")
             return False
         
         c = cookies.SimpleCookie()
@@ -144,15 +147,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if 'admin_session' in c:
             token = c['admin_session'].value
             is_valid = verify_signed_session(token)
-            print(f"[AUTH] Session token found, valid: {is_valid}")
+            logger.debug(f"Session token found, valid: {is_valid}")
             return is_valid
         
-        print(f"[AUTH] No admin_session cookie found in: {cookie_header}")
+        logger.debug(f"No admin_session cookie found in: {cookie_header}")
         return False
     
     def do_GET(self):
         parsed_path = urlparse(self.path)
         host = self.headers.get('Host', '').lower()
+        set_request_context(request_id=None)
         
         # Domain-based routing for custom domains
         if 'admin.promostack.io' in host and parsed_path.path == '/':
@@ -267,6 +271,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Dispatch to tenant domain handlers
         if parsed_path.path == '/api/tenant/setup-status':
             tenant_id = getattr(self, 'tenant_id', 'entrylab')
+            set_request_context(tenant_id=tenant_id)
             tenant_handlers.handle_tenant_setup_status(self, tenant_id)
             return
         
@@ -367,6 +372,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     days = int(days_param)
                 
                 tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id)
                 result = db.get_day_of_week_stats(days, tenant_id=tenant_id)
                 
                 self.send_response(200)
@@ -374,7 +380,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps(result).encode())
             except Exception as e:
-                print(f"[API] Error getting day-of-week stats: {e}")
+                logger.exception("Error getting day-of-week stats")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -397,6 +403,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id)
                 retention = db.get_retention_rates(tenant_id=tenant_id)
                 
                 self.send_response(200)
@@ -404,7 +411,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps(retention).encode())
             except Exception as e:
-                print(f"[API] Error getting retention rates: {e}")
+                logger.exception("Error getting retention rates")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -445,7 +452,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                             free_chat = await bot.get_chat(free_channel)
                             counts['free'] = await bot.get_chat_member_count(free_channel)
                         except Exception as e:
-                            print(f"[TELEGRAM] Error getting free channel count: {e}")
+                            logger.warning(f"Error getting free channel count: {e}")
                         
                         if vip_channel_id:
                             try:
@@ -453,7 +460,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 counts['vip'] = await bot.get_chat_member_count(vip_channel_id)
                                 result['vip_channel']['name'] = vip_chat.title or 'VIP Signals'
                             except Exception as e:
-                                print(f"[TELEGRAM] Error getting VIP channel count: {e}")
+                                logger.warning(f"Error getting VIP channel count: {e}")
                         
                         return counts
                     
@@ -470,14 +477,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps(result).encode())
             except Exception as e:
-                print(f"[TELEGRAM] Error getting channel stats: {e}")
+                logger.exception("Error getting channel stats")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
         else:
             super().do_GET()
+        clear_request_context()
     def do_POST(self):
         parsed_path = urlparse(self.path)
+        set_request_context(request_id=None)
         
         # Apply middleware checks via routing table (auth/db requirements)
         route = match_route('POST', parsed_path.path, POST_ROUTES)
@@ -560,6 +569,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Dispatch to tenant domain handlers
         if parsed_path.path == '/api/tenant/integrations':
             tenant_id = getattr(self, 'tenant_id', 'entrylab')
+            set_request_context(tenant_id=tenant_id)
             tenant_handlers.handle_tenant_integrations(self, tenant_id)
             return
         elif parsed_path.path == '/api/tenants/map-user':
@@ -643,13 +653,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 from stripe_client import fetch_active_subscriptions
                 
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id)
+                
                 subscriptions = fetch_active_subscriptions()
                 synced = 0
                 errors = []
                 
                 for sub in subscriptions:
                     if sub.get('email'):
-                        tenant_id = getattr(self, 'tenant_id', 'entrylab')
                         result, error = db.create_or_update_telegram_subscription(
                             email=sub['email'],
                             stripe_customer_id=sub.get('customer_id'),
@@ -661,10 +673,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         )
                         if result:
                             synced += 1
-                            print(f"[STRIPE SYNC] Synced: {sub['email']}")
+                            logger.info(f"Synced: {sub['email']}")
                         else:
                             errors.append(f"{sub['email']}: {error}")
-                            print(f"[STRIPE SYNC] Failed: {sub['email']} - {error}")
+                            logger.warning(f"Failed: {sub['email']} - {error}")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -677,17 +689,17 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 }).encode())
                 
             except Exception as e:
-                print(f"[STRIPE SYNC] Error: {e}")
-                import traceback
-                traceback.print_exc()
+                logger.exception("Stripe sync error")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         else:
             self.send_error(404, "Not Found")
+        clear_request_context()
     def do_PUT(self):
         parsed_path = urlparse(self.path)
+        set_request_context(request_id=None)
         
         if parsed_path.path.startswith('/api/campaigns/'):
             if not DATABASE_AVAILABLE:
@@ -711,6 +723,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 
                 tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id)
                 db.update_campaign(
                     campaign_id=campaign_id,
                     title=data['title'],
@@ -728,16 +741,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': True}).encode())
             except Exception as e:
-                print(f"[CAMPAIGNS] Error updating campaign: {e}")
+                logger.exception("Error updating campaign")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         else:
             self.send_error(404, "Not Found")
+        clear_request_context()
     
     def do_DELETE(self):
         parsed_path = urlparse(self.path)
+        set_request_context(request_id=None)
         
         if parsed_path.path.startswith('/api/campaigns/'):
             if not DATABASE_AVAILABLE:
@@ -757,6 +772,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 campaign_id = int(parsed_path.path.split('/')[3])
                 tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id)
                 db.delete_campaign(campaign_id, tenant_id=tenant_id)
                 
                 self.send_response(200)
@@ -764,13 +780,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': True}).encode())
             except Exception as e:
-                print(f"[CAMPAIGNS] Error deleting campaign: {e}")
+                logger.exception("Error deleting campaign")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         else:
             self.send_error(404, "Not Found")
+        clear_request_context()
 
 if __name__ == "__main__":
     # Note: validate_routes(MyHTTPRequestHandler) will be called in Step 9

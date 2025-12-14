@@ -6,6 +6,9 @@ Extracted from server.py - these handle forex signals, config, stats, and signal
 import json
 from urllib.parse import urlparse, parse_qs
 
+from core.logging import get_logger
+logger = get_logger(__name__)
+
 
 def handle_forex_signals(handler):
     """GET /api/forex-signals"""
@@ -24,7 +27,7 @@ def handle_forex_signals(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(signals).encode())
     except Exception as e:
-        print(f"[FOREX] Error getting signals: {e}")
+        logger.exception("Error getting signals")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -49,7 +52,7 @@ def handle_forex_config(handler):
             handler.end_headers()
             handler.wfile.write(json.dumps({'error': 'Failed to load config'}).encode())
     except Exception as e:
-        print(f"[FOREX] Error getting config: {e}")
+        logger.exception("Error getting config")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -92,7 +95,7 @@ def handle_forex_stats(handler):
                 'avg_pips_per_trade': 0
             }).encode())
     except Exception as e:
-        print(f"[FOREX] Error getting stats: {e}")
+        logger.exception("Error getting stats")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -129,7 +132,7 @@ def handle_signal_bot_status(handler):
                     current_pips = round(price_diff * 100, 1)
                     current_dollars = round(price_diff, 2)
             except Exception as price_err:
-                print(f"[BOT STATUS] Error fetching current price: {price_err}")
+                logger.exception("Error fetching current price")
         
         aggressive_signals = get_signals_by_bot_type('aggressive', limit=10, tenant_id=handler.tenant_id)
         conservative_signals = get_signals_by_bot_type('conservative', limit=10, tenant_id=handler.tenant_id)
@@ -160,7 +163,7 @@ def handle_signal_bot_status(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(status).encode())
     except Exception as e:
-        print(f"[SIGNAL BOT] Error getting status: {e}")
+        logger.exception("Error getting status")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -286,9 +289,7 @@ def handle_forex_config_post(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': 'Invalid request format'}).encode())
     except Exception as e:
-        print(f"[FOREX] Error updating config: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.exception("Error updating config")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -324,7 +325,7 @@ def handle_forex_tp_config_post(handler):
             'tp3_percentage': tp3_pct
         }, tenant_id=handler.tenant_id)
         
-        print(f"[TP CONFIG] Updated: {tp_count} TPs at {tp1_pct}/{tp2_pct}/{tp3_pct}%")
+        logger.info(f"Updated: {tp_count} TPs at {tp1_pct}/{tp2_pct}/{tp3_pct}%")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -340,7 +341,7 @@ def handle_forex_tp_config_post(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
     except Exception as e:
-        print(f"[TP CONFIG] Error saving config: {e}")
+        logger.exception("Error saving config")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -430,7 +431,7 @@ def handle_signal_bot_set_active(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
     except Exception as e:
-        print(f"[SIGNAL BOT] Error setting active bot: {e}")
+        logger.exception("Error setting active bot")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -455,7 +456,7 @@ def handle_signal_bot_cancel_queue(handler):
             'message': 'Queued bot switch cancelled'
         }).encode())
     except Exception as e:
-        print(f"[SIGNAL BOT] Error cancelling queue: {e}")
+        logger.exception("Error cancelling queue")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -482,7 +483,7 @@ def handle_forex_tp_config_get(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(tp_config).encode())
     except Exception as e:
-        print(f"[TP CONFIG] Error getting config: {e}")
+        logger.exception("Error getting config")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -538,7 +539,7 @@ def handle_xauusd_sparkline(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(response_data).encode())
     except Exception as e:
-        print(f"[SPARKLINE] Error: {e}")
+        logger.exception("Error fetching sparkline")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -553,20 +554,19 @@ def handle_signal_bot_signals(handler):
     try:
         query_params = parse_qs(parsed_path.query)
         bot_type = query_params.get('bot_type', [None])[0]
-        status_filter = query_params.get('status', [None])[0]
         limit = int(query_params.get('limit', [50])[0])
         
         if bot_type:
-            signals = get_signals_by_bot_type(bot_type, status=status_filter, limit=limit, tenant_id=handler.tenant_id)
+            signals = get_signals_by_bot_type(bot_type, limit=limit, tenant_id=handler.tenant_id)
         else:
-            signals = get_forex_signals(status=status_filter, limit=limit, tenant_id=handler.tenant_id)
+            signals = get_forex_signals(limit=limit, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps(signals).encode())
+        handler.wfile.write(json.dumps({'signals': signals}).encode())
     except Exception as e:
-        print(f"[SIGNAL BOT] Error getting signals: {e}")
+        logger.exception("Error getting signals")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()

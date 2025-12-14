@@ -6,6 +6,9 @@ Allows building custom rules from multiple indicators
 from typing import Optional, Dict, Any, List
 from bots.strategies.base import BaseStrategy
 from db import get_forex_config, db_pool
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class CustomStrategy(BaseStrategy):
@@ -58,7 +61,7 @@ class CustomStrategy(BaseStrategy):
                 self.adx_threshold = self.custom_config['adx_threshold']
                 
         except Exception as e:
-            print(f"[CUSTOM] Config error: {e}")
+            logger.error(f"Config error: {e}")
             self.active_indicators = ['rsi', 'macd', 'bb', 'stoch']
             self.required_confirmations = 2
             self.require_trend_alignment = False
@@ -78,7 +81,7 @@ class CustomStrategy(BaseStrategy):
                     return json.loads(row[0])
                 return {}
         except Exception as e:
-            print(f"[CUSTOM] Error loading custom config: {e}")
+            logger.error(f"Error loading custom config: {e}")
             return {}
     
     def save_custom_config(self, config: Dict[str, Any]) -> bool:
@@ -101,7 +104,7 @@ class CustomStrategy(BaseStrategy):
             self.load_strategy_config()
             return True
         except Exception as e:
-            print(f"[CUSTOM] Error saving config: {e}")
+            logger.error(f"Error saving config: {e}")
             return False
     
     def _check_rsi(self, rsi: float, direction: str) -> Optional[str]:
@@ -171,7 +174,7 @@ class CustomStrategy(BaseStrategy):
     def check_buy_conditions(self, indicators: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Check custom BUY conditions based on active indicators"""
         if not self._check_adx(indicators['adx']):
-            print(f"[CUSTOM] ADX {indicators['adx']:.2f} < {self.adx_threshold}")
+            logger.info(f"ADX {indicators['adx']:.2f} < {self.adx_threshold}")
             return None
         
         if not self._check_trend(indicators, 'BUY'):

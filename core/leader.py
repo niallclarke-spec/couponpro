@@ -14,6 +14,9 @@ import psycopg2
 import threading
 import time
 from core.config import Config
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 SCHEDULER_LOCK_ID = 8237461823746182
 RETRY_INTERVAL_SECONDS = 10
@@ -77,7 +80,7 @@ def _get_or_create_connection():
             _leader_connection.cursor().execute("SELECT 1")
             return _leader_connection
         except Exception:
-            print("[SCHEDULER] Connection dropped, reconnecting...")
+            logger.warning("Connection dropped, reconnecting...")
             try:
                 _leader_connection.close()
             except Exception:
@@ -87,19 +90,19 @@ def _get_or_create_connection():
     db_url = Config.get_database_url()
     if db_url:
         _connection_mode = "DATABASE_URL"
-        print("[SCHEDULER] Leader lock using DATABASE_URL")
+        logger.info("Leader lock using DATABASE_URL")
         _leader_connection = psycopg2.connect(db_url)
         _leader_connection.autocommit = True
-        print("[SCHEDULER] Database connection established")
+        logger.info("Database connection established")
         return _leader_connection
     
     dsn, missing = _build_dsn_from_db_vars()
     if dsn:
         _connection_mode = "DB_* vars"
-        print("[SCHEDULER] Leader lock using DB_HOST/DB_* vars")
+        logger.info("Leader lock using DB_HOST/DB_* vars")
         _leader_connection = psycopg2.connect(dsn)
         _leader_connection.autocommit = True
-        print("[SCHEDULER] Database connection established")
+        logger.info("Database connection established")
         return _leader_connection
     
     _connection_mode = None
@@ -126,8 +129,8 @@ def acquire_scheduler_leader_lock() -> bool:
     try:
         conn = _get_or_create_connection()
         if conn is None:
-            print("[SCHEDULER] ⚠️  WARNING: No database credentials available (need DATABASE_URL or DB_HOST/DB_* vars)")
-            print("[SCHEDULER] ⚠️  Scheduler will NOT start - cannot ensure single instance")
+            logger.warning("No database credentials available (need DATABASE_URL or DB_HOST/DB_* vars)")
+            logger.warning("Scheduler will NOT start - cannot ensure single instance")
             return False
         
         cursor = conn.cursor()
@@ -138,12 +141,12 @@ def acquire_scheduler_leader_lock() -> bool:
             _is_leader = True
             return True
         else:
-            print("[SCHEDULER] Leader lock not acquired, another instance is leader (standby mode)")
+            logger.info("Leader lock not acquired, another instance is leader (standby mode)")
             return False
         
     except Exception as e:
-        print(f"[SCHEDULER] ⚠️  WARNING: Failed to acquire leader lock: {e}")
-        print("[SCHEDULER] ⚠️  Scheduler will NOT start - cannot ensure single instance")
+        logger.warning(f"Failed to acquire leader lock: {e}")
+        logger.warning("Scheduler will NOT start - cannot ensure single instance")
         return False
 
 
@@ -168,12 +171,12 @@ def start_scheduler_once(callback=None):
     
     cb = callback or _scheduler_callback
     if not cb:
-        print("[SCHEDULER] No scheduler callback registered, cannot start")
+        logger.warning("No scheduler callback registered, cannot start")
         return False
     
     with _scheduler_lock:
         if _scheduler_started:
-            print("[SCHEDULER] Scheduler already started, ignoring duplicate call")
+            logger.info("Scheduler already started, ignoring duplicate call")
             return False
         
         try:
@@ -181,7 +184,7 @@ def start_scheduler_once(callback=None):
             _scheduler_started = True
             return True
         except Exception as e:
-            print(f"[SCHEDULER] Callback failed, will retry: {e}")
+            logger.exception("Callback failed, will retry")
             return False
 
 
@@ -207,17 +210,17 @@ def start_leader_retry_loop(scheduler_callback):
             time.sleep(RETRY_INTERVAL_SECONDS)
             
             try:
-                print("[SCHEDULER] Retrying leader lock acquisition...")
+                logger.info("Retrying leader lock acquisition...")
                 
                 if acquire_scheduler_leader_lock():
-                    print("[SCHEDULER] Leader lock acquired on retry")
+                    logger.info("Leader lock acquired on retry")
                     start_scheduler_once()
                     break
                     
             except Exception as e:
-                print(f"[SCHEDULER] Retry loop error: {e}")
+                logger.exception("Retry loop error")
                 continue
     
     thread = threading.Thread(target=retry_loop, daemon=True)
     thread.start()
-    print(f"[SCHEDULER] Started leader retry loop (every {RETRY_INTERVAL_SECONDS}s)")
+    logger.info(f"Started leader retry loop (every {RETRY_INTERVAL_SECONDS}s)")

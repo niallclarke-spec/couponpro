@@ -2,6 +2,9 @@
 import json
 from core.tenant_credentials import get_tenant_setup_status
 
+from core.logging import get_logger
+logger = get_logger(__name__)
+
 
 VALID_PROVIDERS = {'stripe', 'telegram', 'market_data'}
 PROVIDER_REQUIRED_FIELDS = {
@@ -77,9 +80,9 @@ def handle_tenant_integrations(handler, tenant_id):
                 DO UPDATE SET config_json = EXCLUDED.config_json, updated_at = CURRENT_TIMESTAMP
             """, (tenant_id, provider, json.dumps(config)))
             conn.commit()
-        print(f"[TENANT] Saved {provider} integration for tenant {tenant_id}")
+        logger.info(f"Saved {provider} integration for tenant {tenant_id}")
     except Exception as e:
-        print(f"[TENANT] Error saving integration: {e}")
+        logger.exception("Error saving integration")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -185,7 +188,7 @@ def handle_tenant_map_user(handler):
                 action = 'moved'
                 previous_tenant_id = prev_tenant
         
-        print(f"[TENANT] User mapping {action}: user={clerk_user_id}, tenant={tenant_id}")
+        logger.info(f"User mapping {action}: user={clerk_user_id}, tenant={tenant_id}")
         
         response = {
             'success': True,
@@ -201,8 +204,8 @@ def handle_tenant_map_user(handler):
     except Exception as e:
         error_str = str(e).lower()
         if 'unique' in error_str or 'duplicate' in error_str or 'constraint' in error_str:
-            print(f"[TENANT] Constraint violation: {e}")
+            logger.warning(f"Constraint violation: {e}")
             _send_json(handler, 409, {'error': 'User mapping conflict - constraint violation'})
         else:
-            print(f"[TENANT] Error mapping user: {e}")
+            logger.error(f"Error mapping user: {e}")
             _send_json(handler, 400, {'error': 'Failed to create user mapping'})

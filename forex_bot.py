@@ -8,6 +8,9 @@ from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
 from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 def get_forex_bot_token():
     """
@@ -22,10 +25,10 @@ def get_forex_bot_token():
         # Dev: Use test bot
         test_token = os.environ.get('ENTRYLAB_TEST_BOT')
         if test_token:
-            print("[FOREX BOT] 🧪 Using ENTRYLAB_TEST_BOT (dev mode)")
+            logger.info("🧪 Using ENTRYLAB_TEST_BOT (dev mode)")
             return test_token
         else:
-            print("[FOREX BOT] ⚠️ ENTRYLAB_TEST_BOT not set, falling back to FOREX_BOT_TOKEN")
+            logger.warning("⚠️ ENTRYLAB_TEST_BOT not set, falling back to FOREX_BOT_TOKEN")
     
     # Prod: Use real bot
     return os.environ.get('FOREX_BOT_TOKEN')
@@ -42,7 +45,7 @@ def get_forex_channel_id():
     if is_replit:
         # Dev: Use test channel
         test_channel = "-1003343226469"  # EntryLab test channel
-        print(f"[FOREX BOT] 🧪 Using test channel (dev mode)")
+        logger.info("🧪 Using test channel (dev mode)")
         return test_channel
     
     # Prod: Use real channel
@@ -58,10 +61,10 @@ class ForexTelegramBot:
         if self.token:
             self.bot = Bot(token=self.token)
         else:
-            print("⚠️  Forex bot token not set - forex bot will not work")
+            logger.warning("⚠️  Forex bot token not set - forex bot will not work")
         
         if not self.channel_id:
-            print("⚠️  Forex channel ID not set - forex bot will not work")
+            logger.warning("⚠️  Forex channel ID not set - forex bot will not work")
     
     async def post_signal(self, signal_data):
         """
@@ -75,15 +78,15 @@ class ForexTelegramBot:
             int: Signal ID from database or None if failed
         """
         if not self.bot or not self.channel_id:
-            print("❌ Forex bot not configured properly")
+            logger.error("❌ Forex bot not configured properly")
             return None
         
         try:
             pending_signals = get_forex_signals(status='pending')
             if pending_signals and len(pending_signals) > 0:
                 existing = pending_signals[0]
-                print(f"❌ Cannot post new signal - signal #{existing['id']} is still pending")
-                print(f"   Entry: ${existing['entry_price']}, created at: {existing.get('posted_at')}")
+                logger.error(f"❌ Cannot post new signal - signal #{existing['id']} is still pending")
+                logger.error(f"   Entry: ${existing['entry_price']}, created at: {existing.get('posted_at')}")
                 return None
             
             signal_type = signal_data['signal_type']
@@ -153,10 +156,10 @@ class ForexTelegramBot:
             )
             
             if not signal_id:
-                print("❌ Failed to create draft signal in database")
+                logger.error("❌ Failed to create draft signal in database")
                 return None
             
-            print(f"📝 Created draft signal #{signal_id}, posting to Telegram...")
+            logger.info(f"📝 Created draft signal #{signal_id}, posting to Telegram...")
             
             try:
                 sent_message = await self.bot.send_message(
@@ -166,21 +169,21 @@ class ForexTelegramBot:
                 )
                 
                 if update_signal_status(signal_id, 'pending', telegram_message_id=sent_message.message_id):
-                    print(f"✅ Signal #{signal_id} status updated to pending (Telegram msg: {sent_message.message_id})")
+                    logger.info(f"✅ Signal #{signal_id} status updated to pending (Telegram msg: {sent_message.message_id})")
                 else:
-                    print(f"❌ Failed to update signal #{signal_id} status to pending after Telegram broadcast")
-                    print(f"⚠️ Ghost signal detected: Telegram message sent but DB update failed")
+                    logger.error(f"❌ Failed to update signal #{signal_id} status to pending after Telegram broadcast")
+                    logger.warning(f"⚠️ Ghost signal detected: Telegram message sent but DB update failed")
                     fallback_success = update_signal_status(signal_id, 'broadcast_failed')
                     if fallback_success:
-                        print(f"📝 Signal #{signal_id} marked as broadcast_failed (fallback)")
+                        logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed (fallback)")
                     else:
-                        print(f"🚨 CRITICAL: Could not mark signal #{signal_id} as broadcast_failed - manual cleanup required")
+                        logger.error(f"🚨 CRITICAL: Could not mark signal #{signal_id} as broadcast_failed - manual cleanup required")
                     return None
                     
             except TelegramError as e:
-                print(f"❌ Failed to post signal to Telegram: {e}")
+                logger.error(f"❌ Failed to post signal to Telegram: {e}")
                 update_signal_status(signal_id, 'broadcast_failed')
-                print(f"📝 Signal #{signal_id} marked as broadcast_failed")
+                logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed")
                 return None
             
             indicators_dict = signal_data.get('all_indicators', {})
@@ -196,7 +199,7 @@ class ForexTelegramBot:
             
             if signal_id and indicators_dict:
                 update_signal_original_indicators(signal_id, indicators_dict=indicators_dict)
-                print(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
+                logger.info(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
                 
                 add_signal_narrative(
                     signal_id=signal_id,
@@ -207,11 +210,11 @@ class ForexTelegramBot:
                     notes=f"{signal_type} signal entry at ${entry:.2f}"
                 )
             
-            print(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
+            logger.info(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id
             
         except Exception as e:
-            print(f"❌ Unexpected error posting signal: {e}")
+            logger.error(f"❌ Unexpected error posting signal: {e}")
             return None
     
     async def post_tp_hit(self, signal_id, tp_number, pips_profit, position_percentage, remaining_percentage=None):
@@ -257,10 +260,10 @@ class ForexTelegramBot:
                 notes=f"TP{tp_number} hit: +${pips_profit:.2f} ({position_percentage}% closed)"
             )
             
-            print(f"✅ Posted TP{tp_number} notification for signal #{signal_id}")
+            logger.info(f"✅ Posted TP{tp_number} notification for signal #{signal_id}")
             
         except Exception as e:
-            print(f"❌ Failed to post TP{tp_number} notification: {e}")
+            logger.error(f"❌ Failed to post TP{tp_number} notification: {e}")
     
     async def post_breakeven_alert(self, signal_id, entry_price, current_price):
         """
@@ -300,10 +303,10 @@ class ForexTelegramBot:
                 notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.0f} pips (${dollar_profit:.2f})"
             )
             
-            print(f"✅ Posted breakeven alert for signal #{signal_id}")
+            logger.info(f"✅ Posted breakeven alert for signal #{signal_id}")
             
         except Exception as e:
-            print(f"❌ Failed to post breakeven alert: {e}")
+            logger.error(f"❌ Failed to post breakeven alert: {e}")
     
     async def post_tp_celebration(self, signal_id, pips_profit, ai_message=None):
         """
@@ -335,10 +338,10 @@ Total profit: <b>+${pips_profit:.2f}</b>"""
                 notes=f"Trade complete: +${pips_profit:.2f}"
             )
             
-            print(f"✅ Posted TP celebration for signal #{signal_id}")
+            logger.info(f"✅ Posted TP celebration for signal #{signal_id}")
             
         except Exception as e:
-            print(f"❌ Failed to post TP celebration: {e}")
+            logger.error(f"❌ Failed to post TP celebration: {e}")
     
     async def post_sl_hit(self, signal_id, pips_loss, signal_type='BUY'):
         """
@@ -373,10 +376,10 @@ Risk was managed. Onwards to the next opportunity."""
                 notes=f"Stop loss hit: -${abs(pips_loss):.2f}"
             )
             
-            print(f"✅ Posted SL notification for signal #{signal_id}")
+            logger.info(f"✅ Posted SL notification for signal #{signal_id}")
             
         except Exception as e:
-            print(f"❌ Failed to post SL notification: {e}")
+            logger.error(f"❌ Failed to post SL notification: {e}")
     
     async def post_signal_expired(self, signal_id, pips, signal_type='BUY'):
         """
@@ -405,10 +408,10 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
-            print(f"✅ Posted expiry notification for signal #{signal_id}")
+            logger.info(f"✅ Posted expiry notification for signal #{signal_id}")
             
         except Exception as e:
-            print(f"❌ Failed to post expiry notification: {e}")
+            logger.error(f"❌ Failed to post expiry notification: {e}")
     
     async def post_signal_guidance(self, signal_id, guidance_type, message, signal_data):
         """
@@ -471,11 +474,11 @@ Signal closed after maximum hold time."""
                 notes=f"{guidance_type.title()} guidance at {progress:.1f}% progress"
             )
             
-            print(f"✅ Posted {guidance_type} guidance for signal #{signal_id}")
+            logger.info(f"✅ Posted {guidance_type} guidance for signal #{signal_id}")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to post signal guidance: {e}")
+            logger.error(f"❌ Failed to post signal guidance: {e}")
             return False
     
     async def post_revalidation_update(self, signal_id, thesis_status, message, current_price, entry_price):
@@ -524,11 +527,11 @@ Signal closed after maximum hold time."""
                 notes=f"Thesis re-validation: {thesis_status}"
             )
             
-            print(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+            logger.info(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to post revalidation update: {e}")
+            logger.error(f"❌ Failed to post revalidation update: {e}")
             return False
     
     async def post_signal_timeout(self, signal_id, message, current_price, entry_price):
@@ -567,11 +570,11 @@ Signal closed after maximum hold time."""
                 notes="Signal closed due to timeout"
             )
             
-            print(f"✅ Posted timeout notification for signal #{signal_id}")
+            logger.info(f"✅ Posted timeout notification for signal #{signal_id}")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to post timeout notification: {e}")
+            logger.error(f"❌ Failed to post timeout notification: {e}")
             return False
     
     async def post_morning_briefing(self):
@@ -615,7 +618,7 @@ Signal closed after maximum hold time."""
                                 if len(news_items) >= 2:
                                     break
                 except Exception as e:
-                    print(f"[MORNING] Error fetching news: {e}")
+                    logger.error(f"Error fetching news: {e}")
             
             # Build message
             date_str = datetime.utcnow().strftime('%b %d')
@@ -649,12 +652,10 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
-            print(f"✅ Posted morning briefing")
+            logger.info("✅ Posted morning briefing")
             
         except Exception as e:
-            print(f"❌ Failed to post morning briefing: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Failed to post morning briefing")
     
     async def post_daily_recap(self, ai_recap=None):
         """
@@ -713,10 +714,10 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
-            print(f"✅ Posted daily recap")
+            logger.info("✅ Posted daily recap")
             
         except Exception as e:
-            print(f"❌ Failed to post daily recap: {e}")
+            logger.error(f"❌ Failed to post daily recap: {e}")
     
     async def post_weekly_recap(self, ai_recap=None):
         """
@@ -782,9 +783,9 @@ Signal closed after maximum hold time."""
                 parse_mode='HTML'
             )
             
-            print(f"✅ Posted weekly recap")
+            logger.info("✅ Posted weekly recap")
             
         except Exception as e:
-            print(f"❌ Failed to post weekly recap: {e}")
+            logger.error(f"❌ Failed to post weekly recap: {e}")
 
 forex_telegram_bot = ForexTelegramBot()

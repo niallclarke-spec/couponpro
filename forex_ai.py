@@ -11,6 +11,9 @@ from db import (
     get_forex_signals_by_period, get_forex_stats_by_period,
     get_recent_signal_streak, get_recent_phrases, add_recent_phrase
 )
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _get_client():
@@ -187,7 +190,7 @@ TP HIT:
         return message
         
     except Exception as e:
-        print(f"❌ Error generating AI celebration: {e}")
+        logger.exception("Error generating AI celebration")
         # Fallback message
         return f"""🎇🎇 XAUUSD 🎇🎇
 
@@ -261,7 +264,7 @@ Generate the analytical recap commentary (don't repeat the numbers, focus on ins
         return f"\n<b>Today's Signals:</b>\n{signal_list}\n\n{commentary}"
         
     except Exception as e:
-        print(f"❌ Error generating daily recap: {e}")
+        logger.exception("Error generating daily recap")
         return None
 
 def generate_morning_summary(current_price, news_items=None):
@@ -317,7 +320,7 @@ Generate the morning message:"""
         return content.strip().strip('"\'') if content else "Stay sharp out there."
         
     except Exception as e:
-        print(f"❌ Error generating morning summary: {e}")
+        logger.exception("Error generating morning summary")
         return "Stay sharp out there."
 
 def generate_weekly_recap():
@@ -366,7 +369,7 @@ Generate the analytical recap:"""
         return content.strip() if content else None
         
     except Exception as e:
-        print(f"❌ Error generating weekly recap: {e}")
+        logger.exception("Error generating weekly recap")
         return None
 
 def generate_signal_guidance(signal_id, signal_type, progress_percent, guidance_type, current_price, entry_price, tp_price, sl_price, indicator_deltas=None, minutes_open=None):
@@ -472,7 +475,7 @@ Generate just the short line:"""
         return message
         
     except Exception as e:
-        print(f"❌ Error generating signal guidance: {e}")
+        logger.exception("Error generating signal guidance")
         return get_fallback_guidance(guidance_type, signal_type, progress_percent, current_price, entry_price)
 
 def get_fallback_guidance(guidance_type, signal_type, progress_percent, current_price, entry_price):
@@ -592,7 +595,7 @@ Status: {status_label}
         return message
         
     except Exception as e:
-        print(f"❌ Error generating revalidation message: {e}")
+        logger.exception("Error generating revalidation message")
         return get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, current_price, entry_price)
 
 def generate_timeout_message(signal_id, signal_type, minutes_elapsed, current_price, entry_price, tp_price, sl_price, current_indicators=None, original_indicators=None):
@@ -683,7 +686,7 @@ Generate the message:"""
         return content.strip() if content else get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators)
         
     except Exception as e:
-        print(f"❌ Error generating timeout message: {e}")
+        logger.exception("Error generating timeout message")
         return get_fallback_timeout(signal_type, minutes_elapsed, current_price, entry_price, current_indicators)
 
 def get_fallback_revalidation(thesis_status, signal_type, minutes_elapsed, reasons, current_price, entry_price):

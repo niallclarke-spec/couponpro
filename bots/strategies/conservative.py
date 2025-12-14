@@ -6,6 +6,9 @@ Requires multiple confirmations, trend alignment, stronger ADX
 from typing import Optional, Dict, Any
 from bots.strategies.base import BaseStrategy
 from db import get_forex_config
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class ConservativeStrategy(BaseStrategy):
@@ -42,7 +45,7 @@ class ConservativeStrategy(BaseStrategy):
                 self.atr_sl_multiplier = 1.6
                 self.atr_tp_multiplier = 3.2
         except Exception as e:
-            print(f"[CONSERVATIVE] Config error: {e}")
+            logger.error(f"Config error: {e}")
             self.rsi_oversold = 30
             self.rsi_overbought = 70
             self.adx_threshold = 25
@@ -70,7 +73,7 @@ class ConservativeStrategy(BaseStrategy):
             return None
         
         if adx < self.adx_threshold:
-            print(f"[CONSERVATIVE] ADX {adx:.2f} < {self.adx_threshold}, trend too weak")
+            logger.info(f"ADX {adx:.2f} < {self.adx_threshold}, trend too weak")
             return None
         
         if rsi >= self.rsi_oversold:

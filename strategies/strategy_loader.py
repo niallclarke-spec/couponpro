@@ -4,6 +4,9 @@ Dynamically loads and manages trading strategies
 """
 from typing import Dict, Optional, List
 from strategies.base_strategy import BaseStrategy
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 STRATEGY_REGISTRY: Dict[str, type] = {}
 
@@ -54,7 +57,7 @@ def get_active_strategy(bot_type: str = 'aggressive', tenant_id: Optional[str] =
         return strategy_class(tenant_id=tenant_id)
     
     if 'aggressive' in STRATEGY_REGISTRY:
-        print(f"[STRATEGY] Unknown bot_type '{bot_type}', falling back to aggressive")
+        logger.warning(f"Unknown bot_type '{bot_type}', falling back to aggressive")
         return STRATEGY_REGISTRY['aggressive'](tenant_id=tenant_id)
     
     return None

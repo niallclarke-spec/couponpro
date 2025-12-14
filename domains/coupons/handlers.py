@@ -14,6 +14,9 @@ from utils.multipart import parse_multipart_formdata
 
 from core.config import Config
 
+from core.logging import get_logger
+logger = get_logger(__name__)
+
 
 def handle_campaigns_list(handler):
     """GET /api/campaigns"""
@@ -27,7 +30,7 @@ def handle_campaigns_list(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(campaigns).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error getting campaigns: {e}")
+        logger.exception("Error getting campaigns")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -59,7 +62,7 @@ def handle_campaign_by_id(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid campaign ID'}).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error getting campaign: {e}")
+        logger.exception("Error getting campaign")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -79,7 +82,7 @@ def handle_campaign_submissions(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(submissions).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error getting submissions: {e}")
+        logger.exception("Error getting submissions")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -126,7 +129,7 @@ def handle_bot_stats(handler):
                 'daily_usage': []
             }).encode())
     except Exception as e:
-        print(f"[BOT_STATS] Error getting bot stats: {e}")
+        logger.exception("Error getting bot stats")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -150,7 +153,7 @@ def handle_bot_users(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(result).encode())
     except Exception as e:
-        print(f"[API] Error getting bot users: {e}")
+        logger.exception("Error getting bot users")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -177,7 +180,7 @@ def handle_broadcast_status(handler):
             handler.end_headers()
             handler.wfile.write(json.dumps({'error': 'Job not found'}).encode())
     except Exception as e:
-        print(f"[BROADCAST] Error getting job status: {e}")
+        logger.exception("Error getting job status")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -200,7 +203,7 @@ def handle_broadcast_jobs(handler):
             'active_users': user_count
         }).encode())
     except Exception as e:
-        print(f"[BROADCAST] Error getting broadcast jobs: {e}")
+        logger.exception("Error getting broadcast jobs")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -226,7 +229,7 @@ def handle_user_activity(handler):
             'history': history
         }).encode())
     except Exception as e:
-        print(f"[API] Error getting user activity: {e}")
+        logger.exception("Error getting user activity")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -267,7 +270,7 @@ def handle_invalid_coupons(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(result).encode())
     except Exception as e:
-        print(f"[API] Error getting invalid coupons: {e}")
+        logger.exception("Error getting invalid coupons")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -321,7 +324,7 @@ def handle_validate_coupon(handler):
             'message': 'Invalid request format'
         }).encode())
     except Exception as e:
-        print(f"[COUPON] Validation error: {e}")
+        logger.exception("Validation error")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -347,8 +350,7 @@ def handle_campaigns_create(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': True, 'campaign': campaign}).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error creating campaign: {e}")
-        traceback.print_exc()
+        logger.exception("Error creating campaign")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -373,8 +375,7 @@ def handle_campaign_submit(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps(result).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error submitting to campaign: {e}")
-        traceback.print_exc()
+        logger.exception("Error submitting to campaign")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -405,8 +406,7 @@ def handle_campaign_update(handler):
             handler.end_headers()
             handler.wfile.write(json.dumps({'success': False, 'error': 'Campaign not found'}).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error updating campaign: {e}")
-        traceback.print_exc()
+        logger.exception("Error updating campaign")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -434,8 +434,7 @@ def handle_campaign_delete(handler):
             handler.end_headers()
             handler.wfile.write(json.dumps({'success': False, 'error': 'Campaign not found'}).encode())
     except Exception as e:
-        print(f"[CAMPAIGNS] Error deleting campaign: {e}")
-        traceback.print_exc()
+        logger.exception("Error deleting campaign")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -505,8 +504,7 @@ def handle_broadcast(handler):
             'error': 'Invalid request format'
         }).encode())
     except Exception as e:
-        print(f"[BROADCAST] Error: {e}")
-        traceback.print_exc()
+        logger.exception("Broadcast error")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -564,7 +562,7 @@ def handle_upload_overlay(handler):
         }).encode())
         
     except Exception as e:
-        print(f"[OVERLAY] Upload error: {str(e)}")
+        logger.exception("Upload error")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -590,8 +588,8 @@ def handle_upload_template(handler):
         name = fields.get('name')
         slug = fields.get('slug')
         
-        print(f"[UPLOAD DEBUG] Received slug from client: '{slug}'")
-        print(f"[UPLOAD DEBUG] Received name from client: '{name}'")
+        logger.info(f"Received slug from client: '{slug}'")
+        logger.info(f"Received name from client: '{name}'")
         
         if not slug or not re.match(r'^[a-z0-9-]+$', slug):
             raise ValueError('Invalid slug: must contain only lowercase letters, numbers, and hyphens')
@@ -600,7 +598,7 @@ def handle_upload_template(handler):
             raise ValueError('Invalid slug: path traversal detected')
         
         is_editing = fields.get('isEditing') == 'true'
-        print(f"[UPLOAD] isEditing flag: {is_editing}")
+        logger.info(f"isEditing flag: {is_editing}")
         
         template_dir = os.path.join('assets', 'templates', slug)
         is_existing_template = os.path.exists(template_dir)
@@ -613,18 +611,18 @@ def handle_upload_template(handler):
                 req = urllib.request.Request(cdn_url, method='HEAD')
                 urllib.request.urlopen(req, timeout=5)
                 is_existing_template = True
-                print(f"[UPLOAD] Template '{slug}' exists in Spaces - allowing edit without images")
+                logger.info(f"Template '{slug}' exists in Spaces - allowing edit without images")
             except urllib.error.HTTPError as e:
                 if e.code == 404:
-                    print(f"[UPLOAD] Template '{slug}' confirmed not in Spaces (404) - allowing upload")
+                    logger.info(f"Template '{slug}' confirmed not in Spaces (404) - allowing upload")
                 else:
-                    print(f"[UPLOAD] Template '{slug}' - Spaces check got HTTP {e.code}, allowing upload to proceed")
+                    logger.info(f"Template '{slug}' - Spaces check got HTTP {e.code}, allowing upload to proceed")
             except Exception as e:
-                print(f"[UPLOAD] Warning: Spaces check error for '{slug}': {e} - allowing upload to proceed")
+                logger.warning(f"Spaces check error for '{slug}': {e} - allowing upload to proceed")
         
         if not is_editing and is_existing_template:
             error_msg = f"Template with slug '{slug}' already exists! Click 'New Template' to clear the form or edit the existing template instead."
-            print(f"[UPLOAD] REJECTED: {error_msg}")
+            logger.info(f"REJECTED: {error_msg}")
             raise ValueError(error_msg)
         
         has_square_image = 'squareImage' in files and files['squareImage'].get('filename')
@@ -678,7 +676,7 @@ def handle_upload_template(handler):
                     with open(meta_path, 'r') as f:
                         existing_meta = json.load(f)
                 except Exception as e:
-                    print(f"Warning: Could not load local meta.json: {e}")
+                    logger.warning(f"Could not load local meta.json: {e}")
             
             if not existing_meta and server.OBJECT_STORAGE_AVAILABLE:
                 try:
@@ -687,9 +685,9 @@ def handle_upload_template(handler):
                     meta_url = f"https://{spaces_bucket}.{spaces_region}.cdn.digitaloceanspaces.com/templates/{slug}/meta.json"
                     response = urllib.request.urlopen(meta_url, timeout=5)
                     existing_meta = json.loads(response.read().decode('utf-8'))
-                    print(f"[UPLOAD] Loaded existing meta.json from Spaces for '{slug}'")
+                    logger.info(f"Loaded existing meta.json from Spaces for '{slug}'")
                 except Exception as e:
-                    print(f"Warning: Could not load meta.json from Spaces: {e}")
+                    logger.warning(f"Could not load meta.json from Spaces: {e}")
             
             if existing_meta:
                 if 'square' in existing_meta and isinstance(existing_meta['square'], dict):
@@ -764,12 +762,12 @@ def handle_upload_template(handler):
                 with open(index_path, 'r') as f:
                     index_content = f.read()
                 storage_service.upload_file(index_content.encode(), 'templates/index.json')
-                print(f"[UPLOAD] index.json uploaded to Spaces for persistence")
+                logger.info("index.json uploaded to Spaces for persistence")
         
         if server.TELEGRAM_BOT_AVAILABLE:
             server.telegram_bot.INDEX_CACHE['data'] = None
             server.telegram_bot.INDEX_CACHE['expires_at'] = 0
-            print(f"[UPLOAD] Telegram cache cleared - template available immediately")
+            logger.info("Telegram cache cleared - template available immediately")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -793,14 +791,14 @@ def handle_delete_template(handler):
     import re
     import shutil
     
-    print(f"[DELETE] Delete request received")
+    logger.info("Delete request received")
     try:
         content_length = int(handler.headers['Content-Length'])
         post_data = handler.rfile.read(content_length)
         data = json.loads(post_data.decode('utf-8'))
         slug = data.get('slug', '')
         
-        print(f"[DELETE] Authenticated - attempting to delete template: {slug}")
+        logger.info(f"Authenticated - attempting to delete template: {slug}")
         
         if not slug or not re.match(r'^[a-z0-9-]+$', slug):
             raise ValueError('Invalid slug')
@@ -815,15 +813,15 @@ def handle_delete_template(handler):
             from object_storage import ObjectStorageService
             storage_service = ObjectStorageService()
             storage_service.delete_template(slug)
-            print(f"[DELETE] Template removed from object storage: {slug}")
+            logger.info(f"Template removed from object storage: {slug}")
             deleted_something = True
         
         if os.path.exists(template_dir):
             shutil.rmtree(template_dir)
-            print(f"[DELETE] Template directory removed: {template_dir}")
+            logger.info(f"Template directory removed: {template_dir}")
             deleted_something = True
         else:
-            print(f"[DELETE] No local directory found (normal in production): {template_dir}")
+            logger.info(f"No local directory found (normal in production): {template_dir}")
         
         if not deleted_something:
             raise ValueError(f'Template "{slug}" not found in storage or locally')
@@ -838,7 +836,7 @@ def handle_delete_template(handler):
         if result.returncode != 0:
             raise Exception(f'Index regeneration failed: {result.stderr or result.stdout}')
         
-        print(f"[DELETE] Index regenerated successfully")
+        logger.info("Index regenerated successfully")
         
         if server.OBJECT_STORAGE_AVAILABLE:
             from object_storage import ObjectStorageService
@@ -848,12 +846,12 @@ def handle_delete_template(handler):
                 with open(index_path, 'r') as f:
                     index_content = f.read()
                 storage_service.upload_file(index_content.encode(), 'templates/index.json')
-                print(f"[DELETE] index.json uploaded to Spaces after deletion")
+                logger.info("index.json uploaded to Spaces after deletion")
         
         if server.TELEGRAM_BOT_AVAILABLE:
             server.telegram_bot.INDEX_CACHE['data'] = None
             server.telegram_bot.INDEX_CACHE['expires_at'] = 0
-            print(f"[DELETE] Telegram cache cleared - template removed immediately")
+            logger.info("Telegram cache cleared - template removed immediately")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -863,10 +861,10 @@ def handle_delete_template(handler):
             'message': f'Template "{slug}" deleted successfully'
         }).encode())
         
-        print(f"[DELETE] Success response sent for: {slug}")
+        logger.info(f"Success response sent for: {slug}")
         
     except Exception as e:
-        print(f"[DELETE] Error during deletion: {str(e)}")
+        logger.exception("Error during deletion")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -889,7 +887,7 @@ def handle_toggle_telegram_template(handler):
         if not slug:
             raise ValueError('Template slug is required')
         
-        print(f"[TELEGRAM_TOGGLE] Toggling template '{slug}' to {'enabled' if enabled else 'disabled'}")
+        logger.info(f"Toggling template '{slug}' to {'enabled' if enabled else 'disabled'}")
         
         spaces_bucket = Config.get_spaces_bucket()
         spaces_region = Config.get_spaces_region()
@@ -908,7 +906,7 @@ def handle_toggle_telegram_template(handler):
             storage_service = ObjectStorageService()
             meta_json_str = json.dumps(meta, indent=2)
             storage_service.upload_file(meta_json_str.encode(), f"templates/{slug}/meta.json")
-            print(f"[TELEGRAM_TOGGLE] Updated meta.json for '{slug}' in Spaces")
+            logger.info(f"Updated meta.json for '{slug}' in Spaces")
         
         template_dir = os.path.join('assets', 'templates', slug)
         if os.path.exists(template_dir):
@@ -924,9 +922,9 @@ def handle_toggle_telegram_template(handler):
                 timeout=10
             )
             if result.returncode != 0:
-                print(f"[TELEGRAM_TOGGLE] Warning: Index regeneration failed: {result.stderr}")
+                logger.warning(f"Index regeneration failed: {result.stderr}")
             else:
-                print(f"[TELEGRAM_TOGGLE] Index regenerated successfully")
+                logger.info("Index regenerated successfully")
                 
                 if server.OBJECT_STORAGE_AVAILABLE:
                     from object_storage import ObjectStorageService
@@ -936,14 +934,14 @@ def handle_toggle_telegram_template(handler):
                         with open(index_path, 'r') as f:
                             index_content = f.read()
                         storage_service.upload_file(index_content.encode(), 'templates/index.json')
-                        print(f"[TELEGRAM_TOGGLE] Index.json uploaded to Spaces")
+                        logger.info("Index.json uploaded to Spaces")
         except Exception as e:
-            print(f"[TELEGRAM_TOGGLE] Warning: Index update failed: {e}")
+            logger.warning(f"Index update failed: {e}")
         
         if server.TELEGRAM_BOT_AVAILABLE:
             server.telegram_bot.INDEX_CACHE['data'] = None
             server.telegram_bot.INDEX_CACHE['expires_at'] = 0
-            print(f"[TELEGRAM_TOGGLE] Telegram cache cleared - visibility change applied immediately")
+            logger.info("Telegram cache cleared - visibility change applied immediately")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -954,7 +952,7 @@ def handle_toggle_telegram_template(handler):
         }).encode())
         
     except Exception as e:
-        print(f"[TELEGRAM_TOGGLE] Error: {str(e)}")
+        logger.exception("Error toggling template")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -969,7 +967,7 @@ def handle_clear_telegram_cache(handler):
         if server.TELEGRAM_BOT_AVAILABLE:
             server.telegram_bot.INDEX_CACHE['data'] = None
             server.telegram_bot.INDEX_CACHE['expires_at'] = 0
-            print(f"[CACHE] Telegram template cache cleared")
+            logger.info("Telegram template cache cleared")
             
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
@@ -988,7 +986,7 @@ def handle_clear_telegram_cache(handler):
             }).encode())
             
     except Exception as e:
-        print(f"[CACHE] Error clearing cache: {str(e)}")
+        logger.exception("Error clearing cache")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()

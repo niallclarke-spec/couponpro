@@ -7,6 +7,9 @@ from strategies.base_strategy import BaseStrategy, SignalData, TakeProfitLevel
 from forex_api import twelve_data_client
 from db import get_forex_config, get_daily_pnl, get_last_completed_signal
 from datetime import datetime
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class ConservativeStrategy(BaseStrategy):
@@ -43,7 +46,7 @@ class ConservativeStrategy(BaseStrategy):
             else:
                 self._set_defaults()
         except Exception as e:
-            print(f"[CONSERVATIVE] Error loading config: {e}")
+            logger.error(f"Error loading config: {e}")
             self._set_defaults()
     
     def _set_defaults(self):
@@ -120,7 +123,7 @@ class ConservativeStrategy(BaseStrategy):
                 tp3_pct = int(config.get('tp3_percentage', 20))
                 return tp1_pct, tp2_pct, tp3_pct, tp_count
         except Exception as e:
-            print(f"[CONSERVATIVE] Error loading TP config: {e}")
+            logger.error(f"Error loading TP config: {e}")
         
         return 50, 30, 20, 3
     
@@ -128,11 +131,11 @@ class ConservativeStrategy(BaseStrategy):
         try:
             self.load_config()
             
-            print(f"\n[CONSERVATIVE] Checking for signals on {self.symbol} {timeframe}...")
+            logger.info(f"Checking for signals on {self.symbol} {timeframe}...")
             
             can_generate, guardrail_reason = self.check_guardrails()
             if not can_generate:
-                print(f"[CONSERVATIVE] Guardrail blocked: {guardrail_reason}")
+                logger.info(f"Guardrail blocked: {guardrail_reason}")
                 return None
             
             price = twelve_data_client.get_price(self.symbol)
@@ -146,7 +149,7 @@ class ConservativeStrategy(BaseStrategy):
             ema200 = twelve_data_client.get_ema(self.symbol, '1h', 200)
             
             if not all([price, rsi, macd_data, atr, adx, bbands, stoch, ema50, ema200]):
-                print("[CONSERVATIVE] Missing indicator data, skipping signal check")
+                logger.warning("Missing indicator data, skipping signal check")
                 return None
             
             assert price is not None
@@ -159,13 +162,13 @@ class ConservativeStrategy(BaseStrategy):
             assert ema50 is not None
             assert ema200 is not None
             
-            print(f"[CONSERVATIVE] Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
+            logger.info(f"Price: {price:.2f}, RSI: {rsi:.2f}, MACD: {macd_data['macd']:.4f}, ADX: {adx:.2f}")
             
             trend_is_bullish = ema50 > ema200
             trend_is_bearish = ema50 < ema200
             
             if adx < self.adx_threshold:
-                print(f"[CONSERVATIVE] Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
+                logger.info(f"Weak trend - ADX {adx:.2f} < {self.adx_threshold}")
                 return None
             
             signal_type = None
@@ -179,7 +182,7 @@ class ConservativeStrategy(BaseStrategy):
                 confirmations = sum([bb_touch, stoch_oversold, macd_bullish])
                 if confirmations >= 2:
                     signal_type = 'BUY'
-                    print(f"[CONSERVATIVE] BUY signal - RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
+                    logger.info(f"📈 BUY signal - RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
             
             elif rsi > self.rsi_overbought and trend_is_bearish:
                 bb_distance = abs(price - bbands['upper'])
@@ -190,10 +193,10 @@ class ConservativeStrategy(BaseStrategy):
                 confirmations = sum([bb_touch, stoch_overbought, macd_bearish])
                 if confirmations >= 2:
                     signal_type = 'SELL'
-                    print(f"[CONSERVATIVE] SELL signal - RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
+                    logger.info(f"📉 SELL signal - RSI={rsi:.2f}, ADX={adx:.2f}, Confirmations={confirmations}")
             
             if not signal_type:
-                print(f"[CONSERVATIVE] No signal - RSI={rsi:.2f}, Trend={'Bullish' if trend_is_bullish else 'Bearish'}")
+                logger.info(f"No signal - RSI={rsi:.2f}, Trend={'Bullish' if trend_is_bullish else 'Bearish'}")
                 return None
             
             take_profits, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
@@ -222,14 +225,12 @@ class ConservativeStrategy(BaseStrategy):
                 bot_type=self.bot_type
             )
             
-            print(f"[CONSERVATIVE] Signal generated: {signal_type} @ {price:.2f}")
+            logger.info(f"🎯 Signal generated: {signal_type} @ {price:.2f}")
             
             return signal_data
             
         except Exception as e:
-            print(f"[CONSERVATIVE] Error checking for signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error checking for signals: {e}")
             return None
     
     def get_indicators_used(self) -> List[str]:

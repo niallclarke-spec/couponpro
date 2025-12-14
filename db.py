@@ -7,6 +7,10 @@ from psycopg2 import pool
 from contextlib import contextmanager
 from datetime import datetime
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 class DatabasePool:
     def __init__(self):
         self.connection_pool = None
@@ -27,7 +31,7 @@ class DatabasePool:
                     connect_timeout=10,
                     options='-c statement_timeout=30000'
                 )
-                print("✅ Database connection pool initialized (using DATABASE_URL, timeout=10s)")
+                logger.info("Database connection pool initialized (using DATABASE_URL, timeout=10s)")
             elif db_host:
                 self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                     1,
@@ -41,14 +45,14 @@ class DatabasePool:
                     connect_timeout=10,
                     options='-c statement_timeout=30000'
                 )
-                print("✅ Database connection pool initialized (using DB_HOST, timeout=10s)")
+                logger.info("Database connection pool initialized (using DB_HOST, timeout=10s)")
             else:
-                print("ℹ️  Database not configured (missing DATABASE_URL or DB_HOST), campaigns feature disabled")
+                logger.info("Database not configured (missing DATABASE_URL or DB_HOST), campaigns feature disabled")
                 self.connection_pool = None
                 return
                 
         except Exception as e:
-            print(f"❌ Failed to initialize database pool: {e}")
+            logger.exception(f"Failed to initialize database pool: {e}")
             self.connection_pool = None
     
     @contextmanager
@@ -62,14 +66,14 @@ class DatabasePool:
             conn = self.connection_pool.getconn()
             yield conn
         except Exception as e:
-            print(f"Database connection error: {e}")
+            logger.exception(f"Database connection error: {e}")
             if conn:
                 try:
                     # Only rollback if connection is still alive
                     if not conn.closed:
                         conn.rollback()
                 except Exception as rollback_error:
-                    print(f"Rollback failed (connection may be closed): {rollback_error}")
+                    logger.exception(f"Rollback failed (connection may be closed): {rollback_error}")
             raise
         finally:
             if conn:
@@ -82,7 +86,7 @@ class DatabasePool:
                         # Return healthy connection to pool
                         self.connection_pool.putconn(conn)
                 except Exception as cleanup_error:
-                    print(f"Connection cleanup error: {cleanup_error}")
+                    logger.exception(f"Connection cleanup error: {cleanup_error}")
     
     def initialize_schema(self):
         """Create campaigns and submissions tables if they don't exist. Returns True on success."""
@@ -156,7 +160,7 @@ class DatabasePool:
                 """)
                 
                 # Add error_type column if it doesn't exist (migration for existing tables)
-                print("[MIGRATION] Checking if bot_usage.error_type column exists...")
+                logger.info("Checking if bot_usage.error_type column exists...")
                 cursor.execute("""
                     SELECT COUNT(*) FROM information_schema.columns 
                     WHERE table_name='bot_usage' AND column_name='error_type'
@@ -164,14 +168,14 @@ class DatabasePool:
                 column_exists = cursor.fetchone()[0] > 0
                 
                 if not column_exists:
-                    print("[MIGRATION] Adding error_type column to bot_usage table...")
+                    logger.info("Adding error_type column to bot_usage table...")
                     cursor.execute("ALTER TABLE bot_usage ADD COLUMN error_type VARCHAR(100)")
-                    print("[MIGRATION] ✅ error_type column added successfully")
+                    logger.info("error_type column added successfully")
                 else:
-                    print("[MIGRATION] error_type column already exists, skipping")
+                    logger.info("error_type column already exists, skipping")
                 
                 # Add device_type column if it doesn't exist (migration for existing tables)
-                print("[MIGRATION] Checking if bot_usage.device_type column exists...")
+                logger.info("Checking if bot_usage.device_type column exists...")
                 cursor.execute("""
                     SELECT COUNT(*) FROM information_schema.columns 
                     WHERE table_name='bot_usage' AND column_name='device_type'
@@ -179,15 +183,15 @@ class DatabasePool:
                 device_type_exists = cursor.fetchone()[0] > 0
                 
                 if not device_type_exists:
-                    print("[MIGRATION] Adding device_type column to bot_usage table...")
+                    logger.info("Adding device_type column to bot_usage table...")
                     cursor.execute("""
                         ALTER TABLE bot_usage 
                         ADD COLUMN device_type VARCHAR(20) DEFAULT 'unknown' 
                         CHECK (device_type IN ('mobile', 'desktop', 'tablet', 'unknown'))
                     """)
-                    print("[MIGRATION] ✅ device_type column added successfully")
+                    logger.info("device_type column added successfully")
                 else:
-                    print("[MIGRATION] device_type column already exists, skipping")
+                    logger.info("device_type column already exists, skipping")
                 
                 # Create index on created_at for faster date-based queries
                 cursor.execute("""
@@ -218,7 +222,7 @@ class DatabasePool:
                 """)
                 
                 # Migration: Add user profile columns to bot_users table
-                print("[MIGRATION] Checking if bot_users user profile columns exist...")
+                logger.info("Checking if bot_users user profile columns exist...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='bot_users' AND column_name IN ('username', 'first_name', 'last_name')
@@ -226,25 +230,25 @@ class DatabasePool:
                 existing_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'username' not in existing_columns:
-                    print("[MIGRATION] Adding username column to bot_users table...")
+                    logger.info("Adding username column to bot_users table...")
                     cursor.execute("ALTER TABLE bot_users ADD COLUMN username VARCHAR(255)")
-                    print("[MIGRATION] ✅ username column added successfully")
+                    logger.info("username column added successfully")
                 else:
-                    print("[MIGRATION] username column already exists, skipping")
+                    logger.info("username column already exists, skipping")
                 
                 if 'first_name' not in existing_columns:
-                    print("[MIGRATION] Adding first_name column to bot_users table...")
+                    logger.info("Adding first_name column to bot_users table...")
                     cursor.execute("ALTER TABLE bot_users ADD COLUMN first_name VARCHAR(255)")
-                    print("[MIGRATION] ✅ first_name column added successfully")
+                    logger.info("first_name column added successfully")
                 else:
-                    print("[MIGRATION] first_name column already exists, skipping")
+                    logger.info("first_name column already exists, skipping")
                 
                 if 'last_name' not in existing_columns:
-                    print("[MIGRATION] Adding last_name column to bot_users table...")
+                    logger.info("Adding last_name column to bot_users table...")
                     cursor.execute("ALTER TABLE bot_users ADD COLUMN last_name VARCHAR(255)")
-                    print("[MIGRATION] ✅ last_name column added successfully")
+                    logger.info("last_name column added successfully")
                 else:
-                    print("[MIGRATION] last_name column already exists, skipping")
+                    logger.info("last_name column already exists, skipping")
                 
                 # Create broadcast_jobs table for tracking broadcasts
                 cursor.execute("""
@@ -299,7 +303,7 @@ class DatabasePool:
                 """)
                 
                 # Migration: Add new forex_signals columns for signal bot system
-                print("[MIGRATION] Checking forex_signals table for new signal bot columns...")
+                logger.info("Checking forex_signals table for new signal bot columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name IN (
@@ -310,66 +314,66 @@ class DatabasePool:
                 existing_signal_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'bot_type' not in existing_signal_columns:
-                    print("[MIGRATION] Adding bot_type column to forex_signals table...")
+                    logger.info("Adding bot_type column to forex_signals table...")
                     cursor.execute("""
                         ALTER TABLE forex_signals 
                         ADD COLUMN bot_type VARCHAR(20) DEFAULT 'aggressive'
                     """)
-                    print("[MIGRATION] ✅ bot_type column added successfully")
+                    logger.info("bot_type column added successfully")
                 else:
-                    print("[MIGRATION] bot_type column already exists, skipping")
+                    logger.info("bot_type column already exists, skipping")
                 
                 if 'telegram_message_id' not in existing_signal_columns:
-                    print("[MIGRATION] Adding telegram_message_id column to forex_signals table...")
+                    logger.info("Adding telegram_message_id column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN telegram_message_id BIGINT")
-                    print("[MIGRATION] ✅ telegram_message_id column added successfully")
+                    logger.info("telegram_message_id column added successfully")
                 else:
-                    print("[MIGRATION] telegram_message_id column already exists, skipping")
+                    logger.info("telegram_message_id column already exists, skipping")
                 
                 if 'breakeven_set' not in existing_signal_columns:
-                    print("[MIGRATION] Adding breakeven_set column to forex_signals table...")
+                    logger.info("Adding breakeven_set column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_set BOOLEAN DEFAULT FALSE")
-                    print("[MIGRATION] ✅ breakeven_set column added successfully")
+                    logger.info("breakeven_set column added successfully")
                 else:
-                    print("[MIGRATION] breakeven_set column already exists, skipping")
+                    logger.info("breakeven_set column already exists, skipping")
                 
                 if 'breakeven_price' not in existing_signal_columns:
-                    print("[MIGRATION] Adding breakeven_price column to forex_signals table...")
+                    logger.info("Adding breakeven_price column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_price DECIMAL(10, 2)")
-                    print("[MIGRATION] ✅ breakeven_price column added successfully")
+                    logger.info("breakeven_price column added successfully")
                 else:
-                    print("[MIGRATION] breakeven_price column already exists, skipping")
+                    logger.info("breakeven_price column already exists, skipping")
                 
                 if 'guidance_count' not in existing_signal_columns:
-                    print("[MIGRATION] Adding guidance_count column to forex_signals table...")
+                    logger.info("Adding guidance_count column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN guidance_count INTEGER DEFAULT 0")
-                    print("[MIGRATION] ✅ guidance_count column added successfully")
+                    logger.info("guidance_count column added successfully")
                 else:
-                    print("[MIGRATION] guidance_count column already exists, skipping")
+                    logger.info("guidance_count column already exists, skipping")
                 
                 if 'last_guidance_at' not in existing_signal_columns:
-                    print("[MIGRATION] Adding last_guidance_at column to forex_signals table...")
+                    logger.info("Adding last_guidance_at column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_guidance_at TIMESTAMP")
-                    print("[MIGRATION] ✅ last_guidance_at column added successfully")
+                    logger.info("last_guidance_at column added successfully")
                 else:
-                    print("[MIGRATION] last_guidance_at column already exists, skipping")
+                    logger.info("last_guidance_at column already exists, skipping")
                 
                 if 'indicators_used' not in existing_signal_columns:
-                    print("[MIGRATION] Adding indicators_used column to forex_signals table...")
+                    logger.info("Adding indicators_used column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN indicators_used JSONB")
-                    print("[MIGRATION] ✅ indicators_used column added successfully")
+                    logger.info("indicators_used column added successfully")
                 else:
-                    print("[MIGRATION] indicators_used column already exists, skipping")
+                    logger.info("indicators_used column already exists, skipping")
                 
                 if 'notes' not in existing_signal_columns:
-                    print("[MIGRATION] Adding notes column to forex_signals table...")
+                    logger.info("Adding notes column to forex_signals table...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN notes TEXT")
-                    print("[MIGRATION] ✅ notes column added successfully")
+                    logger.info("notes column added successfully")
                 else:
-                    print("[MIGRATION] notes column already exists, skipping")
+                    logger.info("notes column already exists, skipping")
                 
                 # Migration: Add indicator re-validation columns
-                print("[MIGRATION] Checking forex_signals for indicator re-validation columns...")
+                logger.info("Checking forex_signals for indicator re-validation columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name IN (
@@ -381,49 +385,49 @@ class DatabasePool:
                 existing_reval_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'original_rsi' not in existing_reval_columns:
-                    print("[MIGRATION] Adding original_rsi column...")
+                    logger.info("Adding original_rsi column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_rsi DECIMAL(5, 2)")
-                    print("[MIGRATION] ✅ original_rsi column added")
+                    logger.info("original_rsi column added")
                 
                 if 'original_macd' not in existing_reval_columns:
-                    print("[MIGRATION] Adding original_macd column...")
+                    logger.info("Adding original_macd column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_macd DECIMAL(10, 4)")
-                    print("[MIGRATION] ✅ original_macd column added")
+                    logger.info("original_macd column added")
                 
                 if 'original_adx' not in existing_reval_columns:
-                    print("[MIGRATION] Adding original_adx column...")
+                    logger.info("Adding original_adx column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_adx DECIMAL(5, 2)")
-                    print("[MIGRATION] ✅ original_adx column added")
+                    logger.info("original_adx column added")
                 
                 if 'original_stoch_k' not in existing_reval_columns:
-                    print("[MIGRATION] Adding original_stoch_k column...")
+                    logger.info("Adding original_stoch_k column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_stoch_k DECIMAL(5, 2)")
-                    print("[MIGRATION] ✅ original_stoch_k column added")
+                    logger.info("original_stoch_k column added")
                 
                 if 'last_revalidation_at' not in existing_reval_columns:
-                    print("[MIGRATION] Adding last_revalidation_at column...")
+                    logger.info("Adding last_revalidation_at column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_revalidation_at TIMESTAMP")
-                    print("[MIGRATION] ✅ last_revalidation_at column added")
+                    logger.info("last_revalidation_at column added")
                 
                 if 'revalidation_count' not in existing_reval_columns:
-                    print("[MIGRATION] Adding revalidation_count column...")
+                    logger.info("Adding revalidation_count column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN revalidation_count INTEGER DEFAULT 0")
-                    print("[MIGRATION] ✅ revalidation_count column added")
+                    logger.info("revalidation_count column added")
                 
                 if 'thesis_status' not in existing_reval_columns:
-                    print("[MIGRATION] Adding thesis_status column...")
+                    logger.info("Adding thesis_status column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN thesis_status VARCHAR(20) DEFAULT 'intact'")
-                    print("[MIGRATION] ✅ thesis_status column added")
+                    logger.info("thesis_status column added")
                 
                 if 'thesis_changed_at' not in existing_reval_columns:
-                    print("[MIGRATION] Adding thesis_changed_at column...")
+                    logger.info("Adding thesis_changed_at column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN thesis_changed_at TIMESTAMP")
-                    print("[MIGRATION] ✅ thesis_changed_at column added")
+                    logger.info("thesis_changed_at column added")
                 
                 if 'timeout_notified' not in existing_reval_columns:
-                    print("[MIGRATION] Adding timeout_notified column...")
+                    logger.info("Adding timeout_notified column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN timeout_notified BOOLEAN DEFAULT FALSE")
-                    print("[MIGRATION] ✅ timeout_notified column added")
+                    logger.info("timeout_notified column added")
                 
                 # Migration: Add JSONB column for dynamic indicator storage
                 cursor.execute("""
@@ -431,14 +435,14 @@ class DatabasePool:
                     WHERE table_name='forex_signals' AND column_name = 'original_indicators_json'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding original_indicators_json column...")
+                    logger.info("Adding original_indicators_json column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN original_indicators_json JSONB")
-                    print("[MIGRATION] ✅ original_indicators_json column added")
+                    logger.info("original_indicators_json column added")
                 else:
-                    print("[MIGRATION] original_indicators_json column already exists, skipping")
+                    logger.info("original_indicators_json column already exists, skipping")
                 
                 # Migration: Add guidance zone tracking columns
-                print("[MIGRATION] Checking forex_signals for guidance zone columns...")
+                logger.info("Checking forex_signals for guidance zone columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name IN (
@@ -448,18 +452,18 @@ class DatabasePool:
                 existing_zone_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'last_progress_zone' not in existing_zone_columns:
-                    print("[MIGRATION] Adding last_progress_zone column...")
+                    logger.info("Adding last_progress_zone column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_progress_zone INTEGER DEFAULT 0")
-                    print("[MIGRATION] ✅ last_progress_zone column added")
+                    logger.info("last_progress_zone column added")
                 else:
-                    print("[MIGRATION] last_progress_zone column already exists, skipping")
+                    logger.info("last_progress_zone column already exists, skipping")
                 
                 if 'last_caution_zone' not in existing_zone_columns:
-                    print("[MIGRATION] Adding last_caution_zone column...")
+                    logger.info("Adding last_caution_zone column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_caution_zone INTEGER DEFAULT 0")
-                    print("[MIGRATION] ✅ last_caution_zone column added")
+                    logger.info("last_caution_zone column added")
                 else:
-                    print("[MIGRATION] last_caution_zone column already exists, skipping")
+                    logger.info("last_caution_zone column already exists, skipping")
                 
                 # Create index on bot_type for filtering by bot type
                 cursor.execute("""
@@ -580,7 +584,7 @@ class DatabasePool:
                 """)
                 
                 # Migration: Add conversion tracking columns to telegram_subscriptions
-                print("[MIGRATION] Checking telegram_subscriptions for conversion tracking columns...")
+                logger.info("Checking telegram_subscriptions for conversion tracking columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name = 'telegram_subscriptions'
@@ -588,43 +592,43 @@ class DatabasePool:
                 existing_sub_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'free_signup_at' not in existing_sub_columns:
-                    print("[MIGRATION] Adding free_signup_at column...")
+                    logger.info("Adding free_signup_at column...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN free_signup_at TIMESTAMP")
-                    print("[MIGRATION] ✅ free_signup_at column added")
+                    logger.info("free_signup_at column added")
                 else:
-                    print("[MIGRATION] free_signup_at column already exists, skipping")
+                    logger.info("free_signup_at column already exists, skipping")
                 
                 if 'is_converted' not in existing_sub_columns:
-                    print("[MIGRATION] Adding is_converted column...")
+                    logger.info("Adding is_converted column...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN is_converted BOOLEAN DEFAULT FALSE")
-                    print("[MIGRATION] ✅ is_converted column added")
+                    logger.info("is_converted column added")
                 else:
-                    print("[MIGRATION] is_converted column already exists, skipping")
+                    logger.info("is_converted column already exists, skipping")
                 
                 if 'converted_at' not in existing_sub_columns:
-                    print("[MIGRATION] Adding converted_at column...")
+                    logger.info("Adding converted_at column...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN converted_at TIMESTAMP")
-                    print("[MIGRATION] ✅ converted_at column added")
+                    logger.info("converted_at column added")
                 else:
-                    print("[MIGRATION] converted_at column already exists, skipping")
+                    logger.info("converted_at column already exists, skipping")
                 
                 if 'conversion_days' not in existing_sub_columns:
-                    print("[MIGRATION] Adding conversion_days column...")
+                    logger.info("Adding conversion_days column...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN conversion_days INTEGER")
-                    print("[MIGRATION] ✅ conversion_days column added")
+                    logger.info("conversion_days column added")
                 else:
-                    print("[MIGRATION] conversion_days column already exists, skipping")
+                    logger.info("conversion_days column already exists, skipping")
                 
                 if 'utm_source' not in existing_sub_columns:
-                    print("[MIGRATION] Adding UTM tracking columns...")
+                    logger.info("Adding UTM tracking columns...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_source VARCHAR(255)")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_medium VARCHAR(255)")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_campaign VARCHAR(255)")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_content VARCHAR(255)")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN utm_term VARCHAR(255)")
-                    print("[MIGRATION] ✅ UTM columns added (utm_source, utm_medium, utm_campaign, utm_content, utm_term)")
+                    logger.info("UTM columns added (utm_source, utm_medium, utm_campaign, utm_content, utm_term)")
                 else:
-                    print("[MIGRATION] UTM columns already exist, skipping")
+                    logger.info("UTM columns already exist, skipping")
                 
                 # Create index on is_converted for quick conversion queries
                 cursor.execute("""
@@ -650,7 +654,7 @@ class DatabasePool:
                 # ============================================================
                 # Multi-tenancy: Create tenants table
                 # ============================================================
-                print("[MIGRATION] Checking for tenants table...")
+                logger.info("Checking for tenants table...")
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS tenants (
                         id VARCHAR(50) PRIMARY KEY,
@@ -663,7 +667,7 @@ class DatabasePool:
                     INSERT INTO tenants (id, name) VALUES ('entrylab', 'EntryLab')
                     ON CONFLICT (id) DO NOTHING
                 """)
-                print("[MIGRATION] tenants table ready, 'entrylab' tenant seeded")
+                logger.info("tenants table ready, 'entrylab' tenant seeded")
                 
                 # Create tenant_users table
                 cursor.execute("""
@@ -678,7 +682,7 @@ class DatabasePool:
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_users_tenant_id ON tenant_users(tenant_id)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_users_email ON tenant_users(email)")
-                print("[MIGRATION] tenant_users table ready")
+                logger.info("tenant_users table ready")
                 
                 # Create tenant_integrations table (future credential storage)
                 cursor.execute("""
@@ -693,7 +697,7 @@ class DatabasePool:
                     )
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_integrations_tenant_id ON tenant_integrations(tenant_id)")
-                print("[MIGRATION] tenant_integrations table ready")
+                logger.info("tenant_integrations table ready")
                 
                 # ============================================================
                 # Add tenant_id to existing tables
@@ -705,11 +709,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='forex_signals' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to forex_signals...")
+                    logger.info("Adding tenant_id to forex_signals...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to forex_signals")
+                    logger.info("tenant_id added to forex_signals")
                 else:
-                    print("[MIGRATION] tenant_id already exists on forex_signals, skipping")
+                    logger.info("tenant_id already exists on forex_signals, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_forex_signals_tenant_id ON forex_signals(tenant_id)")
                 
                 # Add tenant_id to forex_config
@@ -718,11 +722,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='forex_config' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to forex_config...")
+                    logger.info("Adding tenant_id to forex_config...")
                     cursor.execute("ALTER TABLE forex_config ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to forex_config")
+                    logger.info("tenant_id added to forex_config")
                 else:
-                    print("[MIGRATION] tenant_id already exists on forex_config, skipping")
+                    logger.info("tenant_id already exists on forex_config, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_forex_config_tenant_id ON forex_config(tenant_id)")
                 
                 # Add tenant_id to telegram_subscriptions
@@ -731,11 +735,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='telegram_subscriptions' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to telegram_subscriptions...")
+                    logger.info("Adding tenant_id to telegram_subscriptions...")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to telegram_subscriptions")
+                    logger.info("tenant_id added to telegram_subscriptions")
                 else:
-                    print("[MIGRATION] tenant_id already exists on telegram_subscriptions, skipping")
+                    logger.info("tenant_id already exists on telegram_subscriptions, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_tenant_id ON telegram_subscriptions(tenant_id)")
                 
                 # Add tenant_id to recent_phrases
@@ -744,11 +748,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='recent_phrases' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to recent_phrases...")
+                    logger.info("Adding tenant_id to recent_phrases...")
                     cursor.execute("ALTER TABLE recent_phrases ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to recent_phrases")
+                    logger.info("tenant_id added to recent_phrases")
                 else:
-                    print("[MIGRATION] tenant_id already exists on recent_phrases, skipping")
+                    logger.info("tenant_id already exists on recent_phrases, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_recent_phrases_tenant_id ON recent_phrases(tenant_id)")
                 
                 # Add tenant_id to campaigns
@@ -757,11 +761,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='campaigns' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to campaigns...")
+                    logger.info("Adding tenant_id to campaigns...")
                     cursor.execute("ALTER TABLE campaigns ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to campaigns")
+                    logger.info("tenant_id added to campaigns")
                 else:
-                    print("[MIGRATION] tenant_id already exists on campaigns, skipping")
+                    logger.info("tenant_id already exists on campaigns, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_campaigns_tenant_id ON campaigns(tenant_id)")
                 
                 # Add tenant_id to bot_usage
@@ -770,11 +774,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='bot_usage' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to bot_usage...")
+                    logger.info("Adding tenant_id to bot_usage...")
                     cursor.execute("ALTER TABLE bot_usage ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to bot_usage")
+                    logger.info("tenant_id added to bot_usage")
                 else:
-                    print("[MIGRATION] tenant_id already exists on bot_usage, skipping")
+                    logger.info("tenant_id already exists on bot_usage, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_usage_tenant_id ON bot_usage(tenant_id)")
                 
                 # Add tenant_id to bot_users
@@ -783,11 +787,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='bot_users' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to bot_users...")
+                    logger.info("Adding tenant_id to bot_users...")
                     cursor.execute("ALTER TABLE bot_users ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to bot_users")
+                    logger.info("tenant_id added to bot_users")
                 else:
-                    print("[MIGRATION] tenant_id already exists on bot_users, skipping")
+                    logger.info("tenant_id already exists on bot_users, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_users_tenant_id ON bot_users(tenant_id)")
                 
                 # Add tenant_id to broadcast_jobs
@@ -796,11 +800,11 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='broadcast_jobs' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to broadcast_jobs...")
+                    logger.info("Adding tenant_id to broadcast_jobs...")
                     cursor.execute("ALTER TABLE broadcast_jobs ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to broadcast_jobs")
+                    logger.info("tenant_id added to broadcast_jobs")
                 else:
-                    print("[MIGRATION] tenant_id already exists on broadcast_jobs, skipping")
+                    logger.info("tenant_id already exists on broadcast_jobs, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_broadcast_jobs_tenant_id ON broadcast_jobs(tenant_id)")
                 
                 # Add tenant_id to bot_config
@@ -809,17 +813,17 @@ class DatabasePool:
                     WHERE table_schema='public' AND table_name='bot_config' AND column_name='tenant_id'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding tenant_id to bot_config...")
+                    logger.info("Adding tenant_id to bot_config...")
                     cursor.execute("ALTER TABLE bot_config ADD COLUMN tenant_id VARCHAR(50) DEFAULT 'entrylab'")
-                    print("[MIGRATION] ✅ tenant_id added to bot_config")
+                    logger.info("tenant_id added to bot_config")
                 else:
-                    print("[MIGRATION] tenant_id already exists on bot_config, skipping")
+                    logger.info("tenant_id already exists on bot_config, skipping")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_config_tenant_id ON bot_config(tenant_id)")
                 
                 # ============================================================
                 # Migrate processed_webhook_events to v2 with tenant_id
                 # ============================================================
-                print("[MIGRATION] Checking processed_webhook_events migration...")
+                logger.info("Checking processed_webhook_events migration...")
                 
                 # Create v2 table if not exists
                 cursor.execute("""
@@ -869,7 +873,7 @@ class DatabasePool:
                             SELECT 'entrylab', event_id, 'stripe', processed_at
                             FROM processed_webhook_events
                         """)
-                    print(f"[MIGRATION] Copied {cursor.rowcount} rows to processed_webhook_events_v2")
+                    logger.info(f"Copied {cursor.rowcount} rows to processed_webhook_events_v2")
                 
                 # Swap tables if old exists and _old doesn't exist yet
                 cursor.execute("""
@@ -883,12 +887,12 @@ class DatabasePool:
                 if old_exists and not old_backup_exists:
                     cursor.execute("ALTER TABLE processed_webhook_events RENAME TO processed_webhook_events_old")
                     cursor.execute("ALTER TABLE processed_webhook_events_v2 RENAME TO processed_webhook_events")
-                    print("[MIGRATION] ✅ Swapped processed_webhook_events tables")
+                    logger.info("Swapped processed_webhook_events tables")
                 else:
-                    print("[MIGRATION] processed_webhook_events swap already done or skipped")
+                    logger.info("processed_webhook_events swap already done or skipped")
                 
                 # Migration: Add multi-TP columns for modular strategy system
-                print("[MIGRATION] Checking forex_signals for multi-TP columns...")
+                logger.info("Checking forex_signals for multi-TP columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name IN (
@@ -902,43 +906,43 @@ class DatabasePool:
                 existing_tp_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'take_profit_2' not in existing_tp_columns:
-                    print("[MIGRATION] Adding take_profit_2 column...")
+                    logger.info("Adding take_profit_2 column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN take_profit_2 DECIMAL(10, 2)")
-                    print("[MIGRATION] ✅ take_profit_2 column added")
+                    logger.info("take_profit_2 column added")
                 
                 if 'take_profit_3' not in existing_tp_columns:
-                    print("[MIGRATION] Adding take_profit_3 column...")
+                    logger.info("Adding take_profit_3 column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN take_profit_3 DECIMAL(10, 2)")
-                    print("[MIGRATION] ✅ take_profit_3 column added")
+                    logger.info("take_profit_3 column added")
                 
                 if 'tp1_percentage' not in existing_tp_columns:
-                    print("[MIGRATION] Adding TP percentage columns...")
+                    logger.info("Adding TP percentage columns...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_percentage INTEGER DEFAULT 100")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_percentage INTEGER DEFAULT 0")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_percentage INTEGER DEFAULT 0")
-                    print("[MIGRATION] ✅ TP percentage columns added")
+                    logger.info("TP percentage columns added")
                 
                 if 'tp1_hit' not in existing_tp_columns:
-                    print("[MIGRATION] Adding TP hit tracking columns...")
+                    logger.info("Adding TP hit tracking columns...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_hit BOOLEAN DEFAULT FALSE")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_hit BOOLEAN DEFAULT FALSE")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_hit BOOLEAN DEFAULT FALSE")
-                    print("[MIGRATION] ✅ TP hit columns added")
+                    logger.info("TP hit columns added")
                 
                 if 'tp1_hit_at' not in existing_tp_columns:
-                    print("[MIGRATION] Adding TP hit timestamp columns...")
+                    logger.info("Adding TP hit timestamp columns...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_hit_at TIMESTAMP")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_hit_at TIMESTAMP")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_hit_at TIMESTAMP")
-                    print("[MIGRATION] ✅ TP hit timestamp columns added")
+                    logger.info("TP hit timestamp columns added")
                 
                 if 'breakeven_triggered' not in existing_tp_columns:
-                    print("[MIGRATION] Adding breakeven_triggered columns...")
+                    logger.info("Adding breakeven_triggered columns...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered BOOLEAN DEFAULT FALSE")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN breakeven_triggered_at TIMESTAMP")
-                    print("[MIGRATION] ✅ breakeven_triggered columns added")
+                    logger.info("breakeven_triggered columns added")
                 
-                print("[MIGRATION] Checking forex_signals for milestone tracking columns...")
+                logger.info("Checking forex_signals for milestone tracking columns...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name IN (
@@ -948,115 +952,115 @@ class DatabasePool:
                 existing_milestone_columns = {row[0] for row in cursor.fetchall()}
                 
                 if 'last_milestone_at' not in existing_milestone_columns:
-                    print("[MIGRATION] Adding last_milestone_at column...")
+                    logger.info("Adding last_milestone_at column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN last_milestone_at TIMESTAMP")
-                    print("[MIGRATION] ✅ last_milestone_at column added")
+                    logger.info("last_milestone_at column added")
                 
                 if 'milestones_sent' not in existing_milestone_columns:
-                    print("[MIGRATION] Adding milestones_sent column...")
+                    logger.info("Adding milestones_sent column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN milestones_sent TEXT DEFAULT ''")
-                    print("[MIGRATION] ✅ milestones_sent column added")
+                    logger.info("milestones_sent column added")
                 
                 # Migration: Add close_price column for tracking exit price
-                print("[MIGRATION] Checking forex_signals for close_price column...")
+                logger.info("Checking forex_signals for close_price column...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name = 'close_price'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding close_price column...")
+                    logger.info("Adding close_price column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN close_price DECIMAL(10, 2)")
-                    print("[MIGRATION] ✅ close_price column added")
+                    logger.info("close_price column added")
                 else:
-                    print("[MIGRATION] close_price column already exists, skipping")
+                    logger.info("close_price column already exists, skipping")
                 
                 # Migration: Add effective_sl column for tracking guided stop loss
-                print("[MIGRATION] Checking forex_signals for effective_sl column...")
+                logger.info("Checking forex_signals for effective_sl column...")
                 cursor.execute("""
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name='forex_signals' AND column_name = 'effective_sl'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding effective_sl column...")
+                    logger.info("Adding effective_sl column...")
                     cursor.execute("ALTER TABLE forex_signals ADD COLUMN effective_sl DECIMAL(10, 2)")
-                    print("[MIGRATION] ✅ effective_sl column added")
+                    logger.info("effective_sl column added")
                 else:
-                    print("[MIGRATION] effective_sl column already exists, skipping")
+                    logger.info("effective_sl column already exists, skipping")
                 
                 # ============================================================
                 # Phase 2B: Add unique constraints (tenant_id + natural_key)
                 # ============================================================
                 
                 # 1. bot_users: UNIQUE (tenant_id, chat_id)
-                print("[MIGRATION] Checking bot_users unique constraint (tenant_id, chat_id)...")
+                logger.info("Checking bot_users unique constraint (tenant_id, chat_id)...")
                 cursor.execute("""
                     SELECT 1 FROM pg_constraint c
                     JOIN pg_namespace n ON n.oid = c.connamespace
                     WHERE c.conname = 'uq_bot_users_tenant_chat' AND n.nspname = 'public'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding unique constraint uq_bot_users_tenant_chat...")
+                    logger.info("Adding unique constraint uq_bot_users_tenant_chat...")
                     cursor.execute("ALTER TABLE bot_users DROP CONSTRAINT IF EXISTS bot_users_pkey")
                     cursor.execute("ALTER TABLE bot_users ADD CONSTRAINT uq_bot_users_tenant_chat UNIQUE (tenant_id, chat_id)")
-                    print("[MIGRATION] ✅ uq_bot_users_tenant_chat constraint added")
+                    logger.info("uq_bot_users_tenant_chat constraint added")
                 else:
-                    print("[MIGRATION] uq_bot_users_tenant_chat already exists, skipping")
+                    logger.info("uq_bot_users_tenant_chat already exists, skipping")
                 
                 # 2. forex_config: UNIQUE (tenant_id, setting_key)
-                print("[MIGRATION] Checking forex_config unique constraint (tenant_id, setting_key)...")
+                logger.info("Checking forex_config unique constraint (tenant_id, setting_key)...")
                 cursor.execute("""
                     SELECT 1 FROM pg_constraint c
                     JOIN pg_namespace n ON n.oid = c.connamespace
                     WHERE c.conname = 'uq_forex_config_tenant_key' AND n.nspname = 'public'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding unique constraint uq_forex_config_tenant_key...")
+                    logger.info("Adding unique constraint uq_forex_config_tenant_key...")
                     cursor.execute("ALTER TABLE forex_config DROP CONSTRAINT IF EXISTS forex_config_setting_key_key")
                     cursor.execute("ALTER TABLE forex_config ADD CONSTRAINT uq_forex_config_tenant_key UNIQUE (tenant_id, setting_key)")
-                    print("[MIGRATION] ✅ uq_forex_config_tenant_key constraint added")
+                    logger.info("uq_forex_config_tenant_key constraint added")
                 else:
-                    print("[MIGRATION] uq_forex_config_tenant_key already exists, skipping")
+                    logger.info("uq_forex_config_tenant_key already exists, skipping")
                 
                 # 3. bot_config: UNIQUE (tenant_id, setting_key) + add id column
-                print("[MIGRATION] Checking bot_config unique constraint (tenant_id, setting_key)...")
+                logger.info("Checking bot_config unique constraint (tenant_id, setting_key)...")
                 cursor.execute("""
                     SELECT 1 FROM pg_constraint c
                     JOIN pg_namespace n ON n.oid = c.connamespace
                     WHERE c.conname = 'uq_bot_config_tenant_key' AND n.nspname = 'public'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding id column and unique constraint to bot_config...")
+                    logger.info("Adding id column and unique constraint to bot_config...")
                     cursor.execute("""
                         SELECT column_name FROM information_schema.columns 
                         WHERE table_name='bot_config' AND column_name='id'
                     """)
                     if not cursor.fetchone():
                         cursor.execute("ALTER TABLE bot_config ADD COLUMN id SERIAL")
-                        print("[MIGRATION] ✅ id column added to bot_config")
+                        logger.info("id column added to bot_config")
                     cursor.execute("ALTER TABLE bot_config DROP CONSTRAINT IF EXISTS bot_config_pkey")
                     cursor.execute("ALTER TABLE bot_config ADD CONSTRAINT bot_config_pkey PRIMARY KEY (id)")
                     cursor.execute("ALTER TABLE bot_config ADD CONSTRAINT uq_bot_config_tenant_key UNIQUE (tenant_id, setting_key)")
-                    print("[MIGRATION] ✅ uq_bot_config_tenant_key constraint added")
+                    logger.info("uq_bot_config_tenant_key constraint added")
                 else:
-                    print("[MIGRATION] uq_bot_config_tenant_key already exists, skipping")
+                    logger.info("uq_bot_config_tenant_key already exists, skipping")
                 
                 # 4. telegram_subscriptions: UNIQUE (tenant_id, email)
-                print("[MIGRATION] Checking telegram_subscriptions unique constraint (tenant_id, email)...")
+                logger.info("Checking telegram_subscriptions unique constraint (tenant_id, email)...")
                 cursor.execute("""
                     SELECT 1 FROM pg_constraint c
                     JOIN pg_namespace n ON n.oid = c.connamespace
                     WHERE c.conname = 'uq_telegram_subscriptions_tenant_email' AND n.nspname = 'public'
                 """)
                 if not cursor.fetchone():
-                    print("[MIGRATION] Adding unique constraint uq_telegram_subscriptions_tenant_email...")
+                    logger.info("Adding unique constraint uq_telegram_subscriptions_tenant_email...")
                     cursor.execute("ALTER TABLE telegram_subscriptions DROP CONSTRAINT IF EXISTS telegram_subscriptions_email_key")
                     cursor.execute("ALTER TABLE telegram_subscriptions ADD CONSTRAINT uq_telegram_subscriptions_tenant_email UNIQUE (tenant_id, email)")
-                    print("[MIGRATION] ✅ uq_telegram_subscriptions_tenant_email constraint added")
+                    logger.info("uq_telegram_subscriptions_tenant_email constraint added")
                 else:
-                    print("[MIGRATION] uq_telegram_subscriptions_tenant_email already exists, skipping")
+                    logger.info("uq_telegram_subscriptions_tenant_email already exists, skipping")
                 
                 conn.commit()
-                print("✅ Database schema initialized")
+                logger.info("Database schema initialized")
                 
                 # Initialize default forex config
                 initialize_default_forex_config()
@@ -1066,7 +1070,7 @@ class DatabasePool:
                 
                 return True
         except Exception as e:
-            print(f"❌ Failed to initialize schema: {e}")
+            logger.exception(f"Failed to initialize schema: {e}")
             return False
 
 # Global database pool instance
@@ -1088,7 +1092,7 @@ def create_campaign(title, description, start_date, end_date, prize, platforms, 
             conn.commit()
             return campaign_id
     except Exception as e:
-        print(f"Error creating campaign: {e}")
+        logger.exception(f"Error creating campaign: {e}")
         raise
 
 def get_all_campaigns(tenant_id):
@@ -1118,7 +1122,7 @@ def get_all_campaigns(tenant_id):
                 })
             return campaigns
     except Exception as e:
-        print(f"Error getting campaigns: {e}")
+        logger.exception(f"Error getting campaigns: {e}")
         return []
 
 def get_campaign_by_id(campaign_id, tenant_id):
@@ -1147,7 +1151,7 @@ def get_campaign_by_id(campaign_id, tenant_id):
                 }
             return None
     except Exception as e:
-        print(f"Error getting campaign: {e}")
+        logger.exception(f"Error getting campaign: {e}")
         return None
 
 def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, tenant_id, overlay_url=None):
@@ -1164,7 +1168,7 @@ def update_campaign(campaign_id, title, description, start_date, end_date, prize
             conn.commit()
             return True
     except Exception as e:
-        print(f"Error updating campaign: {e}")
+        logger.exception(f"Error updating campaign: {e}")
         raise
 
 def delete_campaign(campaign_id, tenant_id):
@@ -1176,7 +1180,7 @@ def delete_campaign(campaign_id, tenant_id):
             conn.commit()
             return True
     except Exception as e:
-        print(f"Error deleting campaign: {e}")
+        logger.exception(f"Error deleting campaign: {e}")
         raise
 
 def update_campaign_statuses(tenant_id):
@@ -1202,7 +1206,7 @@ def update_campaign_statuses(tenant_id):
             
             conn.commit()
     except Exception as e:
-        print(f"Error updating campaign statuses: {e}")
+        logger.exception(f"Error updating campaign statuses: {e}")
 
 # Submission operations
 def create_submission(campaign_id, email, instagram_url, twitter_url, facebook_url):
@@ -1220,7 +1224,7 @@ def create_submission(campaign_id, email, instagram_url, twitter_url, facebook_u
             conn.commit()
             return submission_id
     except Exception as e:
-        print(f"Error creating submission: {e}")
+        logger.exception(f"Error creating submission: {e}")
         raise
 
 def get_campaign_submissions(campaign_id):
@@ -1247,7 +1251,7 @@ def get_campaign_submissions(campaign_id):
                 })
             return submissions
     except Exception as e:
-        print(f"Error getting submissions: {e}")
+        logger.exception(f"Error getting submissions: {e}")
         return []
 
 def get_submission_count(campaign_id):
@@ -1260,7 +1264,7 @@ def get_submission_count(campaign_id):
             """, (campaign_id,))
             return cursor.fetchone()[0]
     except Exception as e:
-        print(f"Error getting submission count: {e}")
+        logger.exception(f"Error getting submission count: {e}")
         return 0
 
 # Bot usage tracking
@@ -1277,16 +1281,11 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, tenant_id, error
         device_type (str): Device type ('mobile', 'desktop', 'tablet', 'unknown')
         tenant_id (str): Tenant ID (default: 'entrylab')
     """
-    import sys
-    msg = f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}, device={device_type}"
-    print(msg, flush=True)
-    sys.stdout.flush()
+    logger.info(f"Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}, device={device_type}")
     
     try:
         if not db_pool.connection_pool:
-            err_msg = f"[BOT_USAGE] ERROR: No database connection pool available"
-            print(err_msg, flush=True)
-            sys.stdout.flush()
+            logger.error("No database connection pool available")
             return
         
         with db_pool.get_connection() as conn:
@@ -1297,13 +1296,9 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, tenant_id, error
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (tenant_id, chat_id, template_slug, coupon_code, success, error_type, device_type))
             conn.commit()
-            success_msg = f"[BOT_USAGE] ✅ Successfully logged usage"
-            print(success_msg, flush=True)
-            sys.stdout.flush()
+            logger.info("Successfully logged usage")
     except Exception as e:
-        error_msg = f"[BOT_USAGE] ❌ Failed to log usage: {e}"
-        print(error_msg, flush=True)
-        sys.stdout.flush()
+        logger.exception(f"Failed to log usage: {e}")
 
 def get_bot_stats(tenant_id, days=30, template_filter=None):
     """
@@ -1497,7 +1492,7 @@ def get_bot_stats(tenant_id, days=30, template_filter=None):
                 'daily_usage': usage_data  # Backward compatibility
             }
     except Exception as e:
-        print(f"Error getting bot stats: {e}")
+        logger.exception(f"Error getting bot stats: {e}")
         return None
 
 def get_day_of_week_stats(tenant_id, days=30):
@@ -1597,7 +1592,7 @@ def get_day_of_week_stats(tenant_id, days=30):
                 
                 return {'type': 'daily', 'data': ordered_days}
     except Exception as e:
-        print(f"Error getting day-of-week stats: {e}")
+        logger.exception(f"Error getting day-of-week stats: {e}")
         return {'type': 'daily', 'data': []}
 
 # Bot user tracking for broadcasts
@@ -1631,7 +1626,7 @@ def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_na
             """, (chat_id, coupon_code, username, first_name, last_name))
             conn.commit()
     except Exception as e:
-        print(f"[BOT_USER] Failed to track user (non-critical): {e}")
+        logger.exception(f"[BOT_USER] Failed to track user (non-critical): {e}")
 
 def get_bot_user(chat_id, tenant_id):
     """
@@ -1680,7 +1675,7 @@ def get_bot_user(chat_id, tenant_id):
                 }
             return None
     except Exception as e:
-        print(f"[DB] Error getting bot user: {e}")
+        logger.exception(f"Error getting bot user: {e}")
         return None
 
 def get_active_bot_users(tenant_id, days=30):
@@ -1719,7 +1714,7 @@ def get_active_bot_users(tenant_id, days=30):
                 })
             return users
     except Exception as e:
-        print(f"Error getting active bot users: {e}")
+        logger.exception(f"Error getting active bot users: {e}")
         return []
 
 def get_bot_user_count(tenant_id, days=30):
@@ -1748,7 +1743,7 @@ def get_bot_user_count(tenant_id, days=30):
             """, (interval, tenant_id))
             return cursor.fetchone()[0]
     except Exception as e:
-        print(f"Error getting bot user count: {e}")
+        logger.exception(f"Error getting bot user count: {e}")
         return 0
 
 def get_retention_rates(tenant_id):
@@ -1865,7 +1860,7 @@ def get_retention_rates(tenant_id):
                 'day30': day30_retention
             }
     except Exception as e:
-        print(f"Error calculating retention rates: {e}")
+        logger.exception(f"Error calculating retention rates: {e}")
         return {'day1': 0, 'day7': 0, 'day30': 0}
 
 def get_all_bot_users(tenant_id, limit=100, offset=0):
@@ -1928,7 +1923,7 @@ def get_all_bot_users(tenant_id, limit=100, offset=0):
             
             return {'users': users, 'total': total}
     except Exception as e:
-        print(f"Error getting all bot users: {e}")
+        logger.exception(f"Error getting all bot users: {e}")
         return {'users': [], 'total': 0}
 
 def get_user_activity_history(chat_id, tenant_id, limit=100):
@@ -1974,7 +1969,7 @@ def get_user_activity_history(chat_id, tenant_id, limit=100):
             
             return history
     except Exception as e:
-        print(f"Error getting user activity history: {e}")
+        logger.exception(f"Error getting user activity history: {e}")
         return []
 
 def get_invalid_coupon_attempts(tenant_id, limit=100, offset=0, template_filter=None, days=None):
@@ -2054,7 +2049,7 @@ def get_invalid_coupon_attempts(tenant_id, limit=100, offset=0, template_filter=
             
             return {'attempts': attempts, 'total': total}
     except Exception as e:
-        print(f"Error getting invalid coupon attempts: {e}")
+        logger.exception(f"Error getting invalid coupon attempts: {e}")
         return {'attempts': [], 'total': 0}
 
 def remove_bot_user(chat_id, tenant_id):
@@ -2074,7 +2069,7 @@ def remove_bot_user(chat_id, tenant_id):
             cursor.execute("DELETE FROM bot_users WHERE chat_id = %s AND tenant_id = %s", (chat_id, tenant_id))
             conn.commit()
     except Exception as e:
-        print(f"[BOT_USER] Failed to remove user {chat_id}: {e}")
+        logger.exception(f"[BOT_USER] Failed to remove user {chat_id}: {e}")
 
 # Broadcast job management
 def create_broadcast_job(message, target_days, total_users, tenant_id):
@@ -2105,7 +2100,7 @@ def create_broadcast_job(message, target_days, total_users, tenant_id):
             conn.commit()
             return job_id
     except Exception as e:
-        print(f"Error creating broadcast job: {e}")
+        logger.exception(f"Error creating broadcast job: {e}")
         return None
 
 def update_broadcast_job(job_id, tenant_id, status=None, sent_count=None, failed_count=None, completed=False):
@@ -2152,7 +2147,7 @@ def update_broadcast_job(job_id, tenant_id, status=None, sent_count=None, failed
                 cursor.execute(query, params)
                 conn.commit()
     except Exception as e:
-        print(f"Error updating broadcast job {job_id}: {e}")
+        logger.exception(f"Error updating broadcast job {job_id}: {e}")
 
 def get_broadcast_job(job_id, tenant_id):
     """
@@ -2193,7 +2188,7 @@ def get_broadcast_job(job_id, tenant_id):
                 }
             return None
     except Exception as e:
-        print(f"Error getting broadcast job {job_id}: {e}")
+        logger.exception(f"Error getting broadcast job {job_id}: {e}")
         return None
 
 def get_recent_broadcast_jobs(tenant_id, limit=10):
@@ -2237,7 +2232,7 @@ def get_recent_broadcast_jobs(tenant_id, limit=10):
                 })
             return jobs
     except Exception as e:
-        print(f"Error getting recent broadcast jobs: {e}")
+        logger.exception(f"Error getting recent broadcast jobs: {e}")
         return []
 
 # Forex signals operations
@@ -2291,7 +2286,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, tenant_id, ta
             conn.commit()
             return signal_id
     except Exception as e:
-        print(f"Error creating forex signal: {e}")
+        logger.exception(f"Error creating forex signal: {e}")
         raise
 
 def update_signal_status(signal_id, new_status, tenant_id, telegram_message_id=None):
@@ -2326,19 +2321,19 @@ def update_signal_status(signal_id, new_status, tenant_id, telegram_message_id=N
         conn.commit()
         return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal status: {e}")
+        logger.exception(f"Error updating signal status: {e}")
         if conn:
             try:
                 conn.rollback()
             except Exception as rollback_error:
-                print(f"Rollback failed: {rollback_error}")
+                logger.exception(f"Rollback failed: {rollback_error}")
         return False
     finally:
         if conn:
             try:
                 db_pool.connection_pool.putconn(conn)
             except Exception as cleanup_error:
-                print(f"Connection cleanup error: {cleanup_error}")
+                logger.exception(f"Connection cleanup error: {cleanup_error}")
 
 def get_forex_signals(tenant_id, status=None, limit=100):
     """
@@ -2448,7 +2443,7 @@ def get_forex_signals(tenant_id, status=None, limit=100):
                 })
             return signals
     except Exception as e:
-        print(f"Error getting forex signals: {e}")
+        logger.exception(f"Error getting forex signals: {e}")
         return []
 
 def update_forex_signal_status(signal_id, status, tenant_id, result_pips=None, close_price=None):
@@ -2499,11 +2494,11 @@ def update_forex_signal_status(signal_id, status, tenant_id, result_pips=None, c
             if status in ('won', 'lost', 'expired', 'cancelled'):
                 promoted = promote_queued_bot()
                 if promoted:
-                    print(f"[SIGNAL CLOSE] Automatically activated queued bot: {promoted}")
+                    logger.info(f"[SIGNAL CLOSE] Automatically activated queued bot: {promoted}")
             
             return True
     except Exception as e:
-        print(f"Error updating forex signal status: {e}")
+        logger.exception(f"Error updating forex signal status: {e}")
         raise
 
 def get_forex_stats(tenant_id, days=7):
@@ -2607,7 +2602,7 @@ def get_forex_stats(tenant_id, days=7):
                 'daily_signals': daily_signals
             }
     except Exception as e:
-        print(f"Error getting forex stats: {e}")
+        logger.exception(f"Error getting forex stats: {e}")
         return None
 
 def get_forex_signals_by_period(tenant_id, period='today'):
@@ -2688,7 +2683,7 @@ def get_forex_signals_by_period(tenant_id, period='today'):
                 })
             return signals
     except Exception as e:
-        print(f"Error getting forex signals by period: {e}")
+        logger.exception(f"Error getting forex signals by period: {e}")
         return []
 
 def get_forex_stats_by_period(tenant_id, period='today'):
@@ -2739,7 +2734,7 @@ def get_forex_stats_by_period(tenant_id, period='today'):
                 'total_pips': float(row[4]) if row[4] else 0.0
             }
     except Exception as e:
-        print(f"Error getting forex stats by period: {e}")
+        logger.exception(f"Error getting forex stats by period: {e}")
         return None
 
 def get_daily_pnl(tenant_id):
@@ -2770,7 +2765,7 @@ def get_daily_pnl(tenant_id):
             row = cursor.fetchone()
             return float(row[0]) if row and row[0] else 0.0
     except Exception as e:
-        print(f"Error getting daily P/L: {e}")
+        logger.exception(f"Error getting daily P/L: {e}")
         return 0.0
 
 def get_signal_metrics(tenant_id):
@@ -2811,7 +2806,7 @@ def get_signal_metrics(tenant_id):
                 }
             return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
     except Exception as e:
-        print(f"Error getting signal metrics: {e}")
+        logger.exception(f"Error getting signal metrics: {e}")
         return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
 
 def get_last_completed_signal(tenant_id):
@@ -2850,7 +2845,7 @@ def get_last_completed_signal(tenant_id):
                 }
             return None
     except Exception as e:
-        print(f"Error getting last completed signal: {e}")
+        logger.exception(f"Error getting last completed signal: {e}")
         return None
 
 def get_recent_signal_streak(tenant_id, limit=5):
@@ -2905,7 +2900,7 @@ def get_recent_signal_streak(tenant_id, limit=5):
                 'signals': signals
             }
     except Exception as e:
-        print(f"Error getting recent streak: {e}")
+        logger.exception(f"Error getting recent streak: {e}")
         return {'type': 'mixed', 'count': 0, 'signals': []}
 
 # Forex configuration operations
@@ -2945,10 +2940,10 @@ def initialize_default_forex_config():
                 """, (key, value))
             
             conn.commit()
-            print("✅ Forex config initialized with defaults")
+            logger.info("Forex config initialized with defaults")
             return True
     except Exception as e:
-        print(f"Error initializing forex config: {e}")
+        logger.exception(f"Error initializing forex config: {e}")
         return False
 
 def get_forex_config(tenant_id):
@@ -3018,7 +3013,7 @@ def get_forex_config(tenant_id):
             
             return config
     except Exception as e:
-        print(f"Error getting forex config: {e}")
+        logger.exception(f"Error getting forex config: {e}")
         return None
 
 def update_forex_config(config_updates):
@@ -3049,10 +3044,10 @@ def update_forex_config(config_updates):
                 """, (key, str(value)))
             
             conn.commit()
-            print(f"✅ Forex config updated: {list(config_updates.keys())}")
+            logger.info(f"Forex config updated: {list(config_updates.keys())}")
             return True
     except Exception as e:
-        print(f"Error updating forex config: {e}")
+        logger.exception(f"Error updating forex config: {e}")
         raise
 
 
@@ -3080,7 +3075,7 @@ def get_bot_config(tenant_id):
             
             return config
     except Exception as e:
-        print(f"Error getting bot config: {e}")
+        logger.exception(f"Error getting bot config: {e}")
         return None
 
 def init_bot_config():
@@ -3097,10 +3092,10 @@ def init_bot_config():
                 ON CONFLICT (tenant_id, setting_key) DO NOTHING
             """)
             conn.commit()
-            print("✅ Bot config initialized with defaults")
+            logger.info("Bot config initialized with defaults")
             return True
     except Exception as e:
-        print(f"Error initializing bot config: {e}")
+        logger.exception(f"Error initializing bot config: {e}")
         return False
 
 def update_breakeven_triggered(signal_id, breakeven_price, tenant_id):
@@ -3129,10 +3124,10 @@ def update_breakeven_triggered(signal_id, breakeven_price, tenant_id):
                 WHERE id = %s AND tenant_id = %s
             """, (breakeven_price, signal_id, tenant_id))
             conn.commit()
-            print(f"✅ Signal #{signal_id}: Breakeven triggered at ${breakeven_price:.2f}")
+            logger.info(f"Signal #{signal_id}: Breakeven triggered at ${breakeven_price:.2f}")
             return True
     except Exception as e:
-        print(f"Error updating breakeven triggered: {e}")
+        logger.exception(f"Error updating breakeven triggered: {e}")
         return False
 
 def get_last_recap_date(recap_type, tenant_id):
@@ -3161,7 +3156,7 @@ def get_last_recap_date(recap_type, tenant_id):
             row = cursor.fetchone()
             return row[0] if row else None
     except Exception as e:
-        print(f"Error getting last {recap_type} recap: {e}")
+        logger.exception(f"Error getting last {recap_type} recap: {e}")
         return None
 
 
@@ -3195,7 +3190,7 @@ def set_last_recap_date(recap_type, value):
             conn.commit()
             return True
     except Exception as e:
-        print(f"Error setting last {recap_type} recap: {e}")
+        logger.exception(f"Error setting last {recap_type} recap: {e}")
         return False
 
 # ===== Bot Config Functions =====
@@ -3225,10 +3220,10 @@ def initialize_default_bot_config():
                 """, (key, value))
             
             conn.commit()
-            print("✅ Bot config initialized with defaults")
+            logger.info("Bot config initialized with defaults")
             return True
     except Exception as e:
-        print(f"Error initializing bot config: {e}")
+        logger.exception(f"Error initializing bot config: {e}")
         return False
 
 def get_active_bot(tenant_id):
@@ -3258,7 +3253,7 @@ def get_active_bot(tenant_id):
                 return result[0]
             return 'aggressive'
     except Exception as e:
-        print(f"Error getting active bot: {e}")
+        logger.exception(f"Error getting active bot: {e}")
         return 'aggressive'
 
 def set_active_bot(bot_type):
@@ -3291,10 +3286,10 @@ def set_active_bot(bot_type):
             """, (bot_type,))
             
             conn.commit()
-            print(f"✅ Active bot set to: {bot_type}")
+            logger.info(f"Active bot set to: {bot_type}")
             return True
     except Exception as e:
-        print(f"Error setting active bot: {e}")
+        logger.exception(f"Error setting active bot: {e}")
         raise
 
 
@@ -3325,7 +3320,7 @@ def get_queued_bot(tenant_id):
                 return result[0]
             return None
     except Exception as e:
-        print(f"Error getting queued bot: {e}")
+        logger.exception(f"Error getting queued bot: {e}")
         return None
 
 
@@ -3359,10 +3354,10 @@ def set_queued_bot(bot_type):
             """, (bot_type,))
             
             conn.commit()
-            print(f"✅ Bot queued: {bot_type}")
+            logger.info(f"Bot queued: {bot_type}")
             return True
     except Exception as e:
-        print(f"Error setting queued bot: {e}")
+        logger.exception(f"Error setting queued bot: {e}")
         raise
 
 
@@ -3389,10 +3384,10 @@ def clear_queued_bot(tenant_id):
             """, (tenant_id,))
             
             conn.commit()
-            print("✅ Queued bot cleared")
+            logger.info("Queued bot cleared")
             return True
     except Exception as e:
-        print(f"Error clearing queued bot: {e}")
+        logger.exception(f"Error clearing queued bot: {e}")
         return False
 
 
@@ -3411,10 +3406,10 @@ def promote_queued_bot():
         set_active_bot(queued)
         clear_queued_bot()
         
-        print(f"✅ Promoted queued bot to active: {queued}")
+        logger.info(f"Promoted queued bot to active: {queued}")
         return queued
     except Exception as e:
-        print(f"Error promoting queued bot: {e}")
+        logger.exception(f"Error promoting queued bot: {e}")
         return None
 
 
@@ -3476,7 +3471,7 @@ def get_open_signal(tenant_id):
                 }
             return None
     except Exception as e:
-        print(f"Error getting open signal: {e}")
+        logger.exception(f"Error getting open signal: {e}")
         return None
 
 def get_signals_by_bot_type(bot_type, tenant_id, status=None, limit=50):
@@ -3547,7 +3542,7 @@ def get_signals_by_bot_type(bot_type, tenant_id, status=None, limit=50):
                 })
             return signals
     except Exception as e:
-        print(f"Error getting signals by bot type: {e}")
+        logger.exception(f"Error getting signals by bot type: {e}")
         return []
 
 
@@ -3579,7 +3574,7 @@ def count_signals_today_by_bot(bot_type, tenant_id):
             row = cursor.fetchone()
             return row[0] if row else 0
     except Exception as e:
-        print(f"Error counting signals today for bot {bot_type}: {e}")
+        logger.exception(f"Error counting signals today for bot {bot_type}: {e}")
         return 0
 
 
@@ -3611,7 +3606,7 @@ def get_last_signal_time_by_bot(bot_type, tenant_id):
             row = cursor.fetchone()
             return row[0] if row else None
     except Exception as e:
-        print(f"Error getting last signal time for bot {bot_type}: {e}")
+        logger.exception(f"Error getting last signal time for bot {bot_type}: {e}")
         return None
 
 
@@ -3643,7 +3638,7 @@ def update_signal_telegram_message_id(signal_id, message_id, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal telegram message ID: {e}")
+        logger.exception(f"Error updating signal telegram message ID: {e}")
         return False
 
 def update_signal_breakeven(signal_id, breakeven_price, tenant_id):
@@ -3675,7 +3670,7 @@ def update_signal_breakeven(signal_id, breakeven_price, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal breakeven: {e}")
+        logger.exception(f"Error updating signal breakeven: {e}")
         return False
 
 def update_tp_hit(signal_id, tp_level, tenant_id):
@@ -3695,7 +3690,7 @@ def update_tp_hit(signal_id, tp_level, tenant_id):
             return False
         
         if tp_level not in [1, 2, 3]:
-            print(f"Invalid TP level: {tp_level}")
+            logger.info(f"Invalid TP level: {tp_level}")
             return False
         
         with db_pool.get_connection() as conn:
@@ -3714,7 +3709,7 @@ def update_tp_hit(signal_id, tp_level, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating TP{tp_level} hit: {e}")
+        logger.exception(f"Error updating TP{tp_level} hit: {e}")
         return False
 
 def update_signal_guidance(signal_id, notes, tenant_id, progress_zone=None, caution_zone=None):
@@ -3769,7 +3764,7 @@ def update_signal_guidance(signal_id, notes, tenant_id, progress_zone=None, caut
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal guidance: {e}")
+        logger.exception(f"Error updating signal guidance: {e}")
         return False
 
 def is_milestone_already_sent(signal_id, milestone_key, tenant_id):
@@ -3801,7 +3796,7 @@ def is_milestone_already_sent(signal_id, milestone_key, tenant_id):
                 return milestone_key in row[0]
             return False
     except Exception as e:
-        print(f"Error checking milestone sent: {e}")
+        logger.exception(f"Error checking milestone sent: {e}")
         return True  # Fail safe
 
 def update_milestone_sent(signal_id, milestone_key, tenant_id):
@@ -3836,7 +3831,7 @@ def update_milestone_sent(signal_id, milestone_key, tenant_id):
             conn.commit()
             return cursor.rowcount > 0  # True only if we successfully claimed it
     except Exception as e:
-        print(f"Error updating milestone sent: {e}")
+        logger.exception(f"Error updating milestone sent: {e}")
         return False
 
 def update_effective_sl(signal_id, new_sl_price, tenant_id):
@@ -3874,10 +3869,10 @@ def update_effective_sl(signal_id, new_sl_price, tenant_id):
             """, (new_sl_price, signal_id, tenant_id))
             
             conn.commit()
-            print(f"[EFFECTIVE_SL] Updated signal {signal_id} effective_sl to {new_sl_price}")
+            logger.info(f"Updated signal {signal_id} effective_sl to {new_sl_price}")
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating effective SL: {e}")
+        logger.exception(f"Error updating effective SL: {e}")
         return False
 
 def update_signal_original_indicators(signal_id, tenant_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):
@@ -3945,7 +3940,7 @@ def update_signal_original_indicators(signal_id, tenant_id, rsi=None, macd=None,
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal original indicators: {e}")
+        logger.exception(f"Error updating signal original indicators: {e}")
         return False
 
 def update_signal_revalidation(signal_id, thesis_status, tenant_id, notes=None):
@@ -3984,7 +3979,7 @@ def update_signal_revalidation(signal_id, thesis_status, tenant_id, notes=None):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal revalidation: {e}")
+        logger.exception(f"Error updating signal revalidation: {e}")
         return False
 
 def update_signal_timeout_notified(signal_id, tenant_id):
@@ -4014,7 +4009,7 @@ def update_signal_timeout_notified(signal_id, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating signal timeout notified: {e}")
+        logger.exception(f"Error updating signal timeout notified: {e}")
         return False
 
 # ===== Signal Narrative Functions =====
@@ -4061,7 +4056,7 @@ def add_signal_narrative(signal_id, event_type, current_price=None, progress_per
             conn.commit()
             return narrative_id
     except Exception as e:
-        print(f"Error adding signal narrative: {e}")
+        logger.exception(f"Error adding signal narrative: {e}")
         return None
 
 def get_signal_narrative(signal_id):
@@ -4104,7 +4099,7 @@ def get_signal_narrative(signal_id):
                 })
             return events
     except Exception as e:
-        print(f"Error getting signal narrative: {e}")
+        logger.exception(f"Error getting signal narrative: {e}")
         return []
 
 def get_latest_indicators_for_signal(signal_id):
@@ -4140,7 +4135,7 @@ def get_latest_indicators_for_signal(signal_id):
                 }
             return None
     except Exception as e:
-        print(f"Error getting latest indicators: {e}")
+        logger.exception(f"Error getting latest indicators: {e}")
         return None
 
 # ===== Recent Phrases Functions (Repetition Avoidance) =====
@@ -4169,7 +4164,7 @@ def add_recent_phrase(phrase_type, phrase_text, tenant_id):
             conn.commit()
             return True
     except Exception as e:
-        print(f"Error adding recent phrase: {e}")
+        logger.exception(f"Error adding recent phrase: {e}")
         return False
 
 def get_recent_phrases(phrase_type, tenant_id, limit=10):
@@ -4201,7 +4196,7 @@ def get_recent_phrases(phrase_type, tenant_id, limit=10):
             
             return [row[0] for row in cursor.fetchall()]
     except Exception as e:
-        print(f"Error getting recent phrases: {e}")
+        logger.exception(f"Error getting recent phrases: {e}")
         return []
 
 def cleanup_old_phrases(tenant_id, days_to_keep=7):
@@ -4228,10 +4223,10 @@ def cleanup_old_phrases(tenant_id, days_to_keep=7):
             deleted_count = cursor.rowcount
             conn.commit()
             if deleted_count > 0:
-                print(f"[DB] Cleaned up {deleted_count} old phrases")
+                logger.info(f"Cleaned up {deleted_count} old phrases")
             return True
     except Exception as e:
-        print(f"Error cleaning up old phrases: {e}")
+        logger.exception(f"Error cleaning up old phrases: {e}")
         return False
 
 # ===== Telegram Subscriptions Functions =====
@@ -4265,7 +4260,7 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
     """
     try:
         if not db_pool.connection_pool:
-            print("[DB] No connection pool available")
+            logger.info("No connection pool available")
             return None, "Database connection pool not available"
         
         # Normalize Stripe IDs - empty/placeholder strings become NULL
@@ -4278,7 +4273,7 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
         is_free_signup = amount_paid == 0 or 'free' in plan_type.lower() if plan_type else False
         is_paid_signup = not is_free_signup and amount_paid > 0
         
-        print(f"[DB] Creating subscription: email={email}, stripe_sub_id={stripe_subscription_id}, plan_type={plan_type}, is_free={is_free_signup}")
+        logger.info(f"Creating subscription: email={email}, stripe_sub_id={stripe_subscription_id}, plan_type={plan_type}, is_free={is_free_signup}")
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -4310,7 +4305,7 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
                         if isinstance(free_signup_date, str):
                             free_signup_date = datetime.fromisoformat(free_signup_date.replace('Z', '+00:00'))
                         conversion_days = (now - free_signup_date).days
-                        print(f"[DB] 🎉 Conversion detected! {email} upgraded from free to paid after {conversion_days} days")
+                        logger.info(f"Conversion detected! {email} upgraded from free to paid after {conversion_days} days")
             
             if is_free_signup:
                 # For free signups, set free_signup_at and UTM params
@@ -4389,9 +4384,9 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
     except Exception as e:
         import traceback
         error_msg = f"{type(e).__name__}: {str(e)}"
-        print(f"[DB ERROR] Failed to create telegram subscription for {email}")
-        print(f"[DB ERROR] {error_msg}")
-        print(f"[DB ERROR] Traceback: {traceback.format_exc()}")
+        logger.exception(f"Failed to create telegram subscription for {email}")
+        logger.exception(f"{error_msg}")
+        logger.exception(f"Traceback: {traceback.format_exc()}")
         return None, error_msg
 
 # Alias for backwards compatibility with webhook handlers
@@ -4437,7 +4432,7 @@ def get_telegram_subscription_by_email(email, tenant_id):
                 'updated_at': row[15].isoformat() if row[15] else None
             }
     except Exception as e:
-        print(f"Error getting telegram subscription by email: {e}")
+        logger.exception(f"Error getting telegram subscription by email: {e}")
         return None
 
 def get_telegram_subscription_by_id(subscription_id, tenant_id):
@@ -4480,7 +4475,7 @@ def get_telegram_subscription_by_id(subscription_id, tenant_id):
                 'updated_at': row[15].isoformat() if row[15] else None
             }
     except Exception as e:
-        print(f"Error getting telegram subscription by id: {e}")
+        logger.exception(f"Error getting telegram subscription by id: {e}")
         return None
 
 def update_telegram_subscription_invite(email, invite_link, tenant_id):
@@ -4501,7 +4496,7 @@ def update_telegram_subscription_invite(email, invite_link, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating telegram subscription invite: {e}")
+        logger.exception(f"Error updating telegram subscription invite: {e}")
         return False
 
 def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username, tenant_id):
@@ -4524,7 +4519,7 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating telegram subscription user joined: {e}")
+        logger.exception(f"Error updating telegram subscription user joined: {e}")
         return False
 
 def update_subscription_status(tenant_id, email=None, stripe_subscription_id=None, status=None, reason=None):
@@ -4570,11 +4565,11 @@ def update_subscription_status(tenant_id, email=None, stripe_subscription_id=Non
             conn.commit()
             
             if result:
-                print(f"[DB] Subscription status updated: {result[0]} -> {status} (reason: {reason})")
+                logger.info(f"Subscription status updated: {result[0]} -> {status} (reason: {reason})")
                 return True, result[0], result[1]
             return False, None, None
     except Exception as e:
-        print(f"Error updating subscription status: {e}")
+        logger.exception(f"Error updating subscription status: {e}")
         return False, None, None
 
 
@@ -4601,7 +4596,7 @@ def revoke_telegram_subscription(email, tenant_id, reason='subscription_canceled
                 return result[0]
             return None
     except Exception as e:
-        print(f"Error revoking telegram subscription: {e}")
+        logger.exception(f"Error revoking telegram subscription: {e}")
         return None
 
 def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id):
@@ -4623,11 +4618,11 @@ def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id):
             conn.commit()
             
             if result:
-                print(f"[DB] Deleted subscription for customer {stripe_customer_id}: {result[0]}")
+                logger.info(f"Deleted subscription for customer {stripe_customer_id}: {result[0]}")
                 return True
             return False
     except Exception as e:
-        print(f"Error deleting subscription by customer ID: {e}")
+        logger.exception(f"Error deleting subscription by customer ID: {e}")
         return False
 
 
@@ -4650,11 +4645,11 @@ def delete_subscription_by_email(email, tenant_id):
             conn.commit()
             
             if result:
-                print(f"[DB] Deleted subscription for email {email}")
+                logger.info(f"Deleted subscription for email {email}")
                 return True
             return False
     except Exception as e:
-        print(f"Error deleting subscription by email: {e}")
+        logger.exception(f"Error deleting subscription by email: {e}")
         return False
 
 
@@ -4674,10 +4669,10 @@ def clear_all_telegram_subscriptions(tenant_id):
             cursor.execute("ALTER SEQUENCE telegram_subscriptions_id_seq RESTART WITH 1")
             
             conn.commit()
-            print(f"[DB] Cleared {deleted_count} telegram subscriptions")
+            logger.info(f"Cleared {deleted_count} telegram subscriptions")
             return deleted_count
     except Exception as e:
-        print(f"Error clearing telegram subscriptions: {e}")
+        logger.exception(f"Error clearing telegram subscriptions: {e}")
         raise
 
 def cleanup_test_telegram_subscriptions(tenant_id):
@@ -4706,10 +4701,10 @@ def cleanup_test_telegram_subscriptions(tenant_id):
             conn.commit()
             
             deleted_info = [{'id': r[0], 'email': r[1], 'amount': float(r[2])} for r in deleted_records]
-            print(f"[DB] Cleaned up {len(deleted_records)} test records: {deleted_info}")
+            logger.info(f"Cleaned up {len(deleted_records)} test records: {deleted_info}")
             return deleted_info
     except Exception as e:
-        print(f"Error cleaning up test telegram subscriptions: {e}")
+        logger.exception(f"Error cleaning up test telegram subscriptions: {e}")
         raise
 
 def delete_telegram_subscription(subscription_id, tenant_id):
@@ -4731,18 +4726,18 @@ def delete_telegram_subscription(subscription_id, tenant_id):
             conn.commit()
             
             if deleted:
-                print(f"[DB] Deleted telegram subscription ID={subscription_id}")
+                logger.info(f"Deleted telegram subscription ID={subscription_id}")
                 return True
             return False
     except Exception as e:
-        print(f"Error deleting telegram subscription {subscription_id}: {e}")
+        logger.exception(f"Error deleting telegram subscription {subscription_id}: {e}")
         raise
 
 def get_all_telegram_subscriptions(tenant_id, status_filter=None, include_test=False):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
-            print("[DB] No connection pool for get_all_telegram_subscriptions")
+            logger.info("No connection pool for get_all_telegram_subscriptions")
             return []
         
         with db_pool.get_connection() as conn:
@@ -4791,7 +4786,7 @@ def get_all_telegram_subscriptions(tenant_id, status_filter=None, include_test=F
                 """
             
             cursor.execute(query, params)
-            print(f"[DB] get_all_telegram_subscriptions: found {cursor.rowcount} rows")
+            logger.info(f"get_all_telegram_subscriptions: found {cursor.rowcount} rows")
             
             subscriptions = []
             for row in cursor.fetchall():
@@ -4817,7 +4812,7 @@ def get_all_telegram_subscriptions(tenant_id, status_filter=None, include_test=F
             
             return subscriptions
     except Exception as e:
-        print(f"Error getting all telegram subscriptions: {e}")
+        logger.exception(f"Error getting all telegram subscriptions: {e}")
         return []
 
 def update_telegram_subscription_last_seen(telegram_user_id, tenant_id):
@@ -4838,7 +4833,7 @@ def update_telegram_subscription_last_seen(telegram_user_id, tenant_id):
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
-        print(f"Error updating telegram subscription last seen: {e}")
+        logger.exception(f"Error updating telegram subscription last seen: {e}")
         return False
 
 def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at, tenant_id):
@@ -4860,7 +4855,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
     """
     try:
         if not db_pool.connection_pool:
-            print("[JOIN_TRACKER] Database not available")
+            logger.info("Database not available")
             return None
         
         with db_pool.get_connection() as conn:
@@ -4878,7 +4873,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
                 if result:
                     subscription_id = result[0]
                     email = result[1]
-                    print(f"[JOIN_TRACKER] Found subscription by invite_link: {email}")
+                    logger.info(f"Found subscription by invite_link: {email}")
             
             # Fallback: Find most recent pending subscription if no invite_link match
             if not subscription_id:
@@ -4892,9 +4887,9 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
                 if result:
                     subscription_id = result[0]
                     email = result[1]
-                    print(f"[JOIN_TRACKER] Fallback: Using most recent pending subscription: {email}")
+                    logger.info(f"Fallback: Using most recent pending subscription: {email}")
                 else:
-                    print(f"[JOIN_TRACKER] ⚠️ No pending subscription found for user {telegram_user_id} (@{telegram_username})")
+                    logger.warning(f"No pending subscription found for user {telegram_user_id} (@{telegram_username})")
                     return None
             
             # Update the subscription with user info atomically
@@ -4914,7 +4909,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
             conn.commit()
             
             if result:
-                print(f"[JOIN_TRACKER] ✅ Successfully linked subscription {result[1]} to Telegram user {telegram_user_id} (@{telegram_username})")
+                logger.info(f"Successfully linked subscription {result[1]} to Telegram user {telegram_user_id} (@{telegram_username})")
                 return {
                     'id': result[0],
                     'email': result[1],
@@ -4927,7 +4922,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
             return None
             
     except Exception as e:
-        print(f"[JOIN_TRACKER] ❌ Error linking subscription to telegram user: {e}")
+        logger.exception(f"Error linking subscription to telegram user: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -5101,7 +5096,7 @@ def get_conversion_analytics(tenant_id):
             }
             
     except Exception as e:
-        print(f"Error getting conversion analytics: {e}")
+        logger.exception(f"Error getting conversion analytics: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -5133,7 +5128,7 @@ def is_webhook_event_processed(event_id, tenant_id):
             """, (event_id, tenant_id))
             return cursor.fetchone() is not None
     except Exception as e:
-        print(f"[IDEMPOTENCY] Error checking webhook event: {e}")
+        logger.exception(f"Error checking webhook event: {e}")
         return False
 
 def record_webhook_event_processed(event_id, tenant_id, event_source='stripe'):
@@ -5162,7 +5157,7 @@ def record_webhook_event_processed(event_id, tenant_id, event_source='stripe'):
             conn.commit()
             return True
     except Exception as e:
-        print(f"[IDEMPOTENCY] Error recording webhook event: {e}")
+        logger.exception(f"Error recording webhook event: {e}")
         return False
 
 def cleanup_old_webhook_events(tenant_id, hours=24):
@@ -5191,8 +5186,8 @@ def cleanup_old_webhook_events(tenant_id, hours=24):
             deleted = cursor.rowcount
             conn.commit()
             if deleted > 0:
-                print(f"[IDEMPOTENCY] Cleaned up {deleted} old webhook events")
+                logger.info(f"Cleaned up {deleted} old webhook events")
             return deleted
     except Exception as e:
-        print(f"[IDEMPOTENCY] Error cleaning up webhook events: {e}")
+        logger.exception(f"Error cleaning up webhook events: {e}")
         return 0

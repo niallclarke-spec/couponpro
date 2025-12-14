@@ -6,6 +6,9 @@ Lower confirmation requirements, wider entry zones
 from typing import Optional, Dict, Any
 from bots.strategies.base import BaseStrategy
 from db import get_forex_config
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class AggressiveStrategy(BaseStrategy):
@@ -40,7 +43,7 @@ class AggressiveStrategy(BaseStrategy):
                 self.atr_sl_multiplier = 2.4
                 self.atr_tp_multiplier = 4.8
         except Exception as e:
-            print(f"[AGGRESSIVE] Config error: {e}")
+            logger.error(f"Config error: {e}")
             self.rsi_oversold = 45
             self.rsi_overbought = 55
             self.adx_threshold = 5
@@ -62,7 +65,7 @@ class AggressiveStrategy(BaseStrategy):
         stoch = indicators['stoch']
         
         if adx < self.adx_threshold:
-            print(f"[AGGRESSIVE] ADX {adx:.2f} < {self.adx_threshold}, too weak")
+            logger.info(f"ADX {adx:.2f} < {self.adx_threshold}, too weak")
             return None
         
         if rsi >= self.rsi_oversold:

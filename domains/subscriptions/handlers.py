@@ -9,6 +9,9 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 from core.config import Config
 
+from core.logging import get_logger
+logger = get_logger(__name__)
+
 
 def handle_telegram_check_access(handler):
     """GET /api/telegram/check-access/<email>"""
@@ -64,8 +67,7 @@ def handle_telegram_check_access(handler):
         handler.wfile.write(json.dumps(response_data).encode())
         
     except Exception as e:
-        print(f"[TELEGRAM-SUB] Error checking access: {e}")
-        traceback.print_exc()
+        logger.exception("Error checking access")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -89,8 +91,7 @@ def handle_telegram_subscriptions(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'subscriptions': subscriptions}).encode())
     except Exception as e:
-        print(f"[TELEGRAM-SUB] Error getting subscriptions: {e}")
-        traceback.print_exc()
+        logger.exception("Error getting subscriptions")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -117,11 +118,11 @@ def handle_telegram_revenue_metrics(handler):
         
         from stripe_client import get_stripe_metrics
         
-        print(f"[REVENUE] Fetching metrics for {len(stripe_sub_ids)} PromoStack subscriptions (period: {period})...")
+        logger.info(f"Fetching metrics for {len(stripe_sub_ids)} PromoStack subscriptions (period: {period})...")
         metrics = get_stripe_metrics(subscription_ids=stripe_sub_ids, period=period)
         
         if metrics:
-            print(f"[REVENUE] Stripe returned: revenue=${metrics.get('total_revenue')}, rebill=${metrics.get('monthly_rebill')}")
+            logger.info(f"Stripe returned: revenue=${metrics.get('total_revenue')}, rebill=${metrics.get('monthly_rebill')}")
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -130,8 +131,7 @@ def handle_telegram_revenue_metrics(handler):
             raise Exception("Failed to fetch metrics from Stripe")
         
     except Exception as e:
-        print(f"[REVENUE] Error getting metrics: {e}")
-        traceback.print_exc()
+        logger.exception("Error getting metrics")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -157,8 +157,7 @@ def handle_telegram_conversion_analytics(handler):
             handler.wfile.write(json.dumps({'error': 'Failed to fetch conversion analytics'}).encode())
         
     except Exception as e:
-        print(f"[CONVERSIONS] Error getting analytics: {e}")
-        traceback.print_exc()
+        logger.exception("Error getting analytics")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -229,7 +228,7 @@ def handle_telegram_billing(handler):
                     billing_error = billing_info.get('error')
                     billing_info = None
             except Exception as stripe_err:
-                print(f"[BILLING] Error fetching subscription from Stripe: {stripe_err}")
+                logger.exception("Error fetching subscription from Stripe")
                 billing_error = str(stripe_err)
         
         if not billing_info and stripe_customer_id:
@@ -240,7 +239,7 @@ def handle_telegram_billing(handler):
                     billing_error = billing_info.get('error')
                     billing_info = None
             except Exception as stripe_err:
-                print(f"[BILLING] Error fetching customer from Stripe: {stripe_err}")
+                logger.exception("Error fetching customer from Stripe")
                 billing_error = str(stripe_err)
         
         if billing_info:
@@ -264,8 +263,7 @@ def handle_telegram_billing(handler):
         handler.wfile.write(json.dumps(response_data).encode())
         
     except Exception as e:
-        print(f"[BILLING] Error getting billing info: {e}")
-        traceback.print_exc()
+        logger.exception("Error getting billing info")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -331,11 +329,11 @@ def handle_telegram_grant_access(handler):
             return
         
         is_free_user = amount_paid == 0 or 'free' in plan_type.lower()
-        print(f"[TELEGRAM-SUB] Grant access request for {email}")
-        print(f"[TELEGRAM-SUB] Data: plan={plan_type}, amount=${amount_paid}, free={is_free_user}")
-        print(f"[TELEGRAM-SUB] Stripe: customer_id={stripe_customer_id}, subscription_id={stripe_subscription_id}")
+        logger.info(f"Grant access request for {email}")
+        logger.info(f"Data: plan={plan_type}, amount=${amount_paid}, free={is_free_user}")
+        logger.info(f"Stripe: customer_id={stripe_customer_id}, subscription_id={stripe_subscription_id}")
         if utm_source or utm_campaign:
-            print(f"[TELEGRAM-SUB] UTM: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
+            logger.info(f"UTM: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
         
         subscription, db_error = server.db.create_telegram_subscription(
             email=email,
@@ -354,7 +352,7 @@ def handle_telegram_grant_access(handler):
         
         if not subscription:
             error_msg = db_error or 'Failed to create subscription record'
-            print(f"[TELEGRAM-SUB] ❌ Database error: {error_msg}")
+            logger.error(f"Database error: {error_msg}")
             handler.send_response(500)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -362,7 +360,7 @@ def handle_telegram_grant_access(handler):
             return
         
         if is_free_user:
-            print(f"[TELEGRAM-SUB] ✅ Free lead captured for {email}")
+            logger.info(f"Free lead captured for {email}")
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -393,7 +391,7 @@ def handle_telegram_grant_access(handler):
         
         server.db.update_telegram_subscription_invite(email, invite_link, tenant_id=handler.tenant_id)
         
-        print(f"[TELEGRAM-SUB] ✅ Premium access granted for {email}, invite: {invite_link}")
+        logger.info(f"Premium access granted for {email}, invite: {invite_link}")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -411,8 +409,7 @@ def handle_telegram_grant_access(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
     except Exception as e:
-        print(f"[TELEGRAM-SUB] Error granting access: {e}")
-        traceback.print_exc()
+        logger.exception("Error granting access")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -456,7 +453,7 @@ def handle_telegram_cleanup_test_data(handler):
     try:
         deleted_info = server.db.cleanup_test_telegram_subscriptions(tenant_id=handler.tenant_id)
         
-        print(f"[CLEANUP] Deleted {len(deleted_info)} test records: {deleted_info}")
+        logger.info(f"Deleted {len(deleted_info)} test records: {deleted_info}")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -468,8 +465,7 @@ def handle_telegram_cleanup_test_data(handler):
         }).encode())
         
     except Exception as e:
-        print(f"[CLEANUP] Error: {e}")
-        traceback.print_exc()
+        logger.exception("Cleanup error")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -513,7 +509,7 @@ def handle_telegram_cancel_subscription(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': 'No Stripe subscription linked to this record'}).encode())
             return
         
-        print(f"[CANCEL] Canceling subscription {stripe_subscription_id} for user {subscription.get('email')}, immediately={cancel_immediately}")
+        logger.info(f"Canceling subscription {stripe_subscription_id} for user {subscription.get('email')}, immediately={cancel_immediately}")
         
         from stripe_client import cancel_subscription
         result = cancel_subscription(stripe_subscription_id, cancel_immediately=cancel_immediately)
@@ -529,9 +525,9 @@ def handle_telegram_cancel_subscription(handler):
                         from telegram_bot import sync_kick_user_from_channel
                         kicked_from_telegram = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
                         if kicked_from_telegram:
-                            print(f"[CANCEL] Kicked user {telegram_user_id} from Telegram channel")
+                            logger.info(f"Kicked user {telegram_user_id} from Telegram channel")
                         else:
-                            print(f"[CANCEL] Warning: Failed to kick user {telegram_user_id} from Telegram channel")
+                            logger.warning(f"Failed to kick user {telegram_user_id} from Telegram channel")
                 
                 result['kicked_from_telegram'] = kicked_from_telegram
                 result['message'] = 'Subscription canceled immediately' + (' and removed from Telegram channel' if kicked_from_telegram else '')
@@ -552,8 +548,7 @@ def handle_telegram_cancel_subscription(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
     except Exception as e:
-        print(f"[CANCEL] Error canceling subscription: {e}")
-        traceback.print_exc()
+        logger.exception("Error canceling subscription")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -581,7 +576,7 @@ def handle_telegram_delete_subscription(handler):
         
         subscription = server.db.get_telegram_subscription_by_id(int(subscription_id), tenant_id=handler.tenant_id)
         if subscription:
-            print(f"[DELETE] Deleting subscription record: ID={subscription_id}, Email={subscription.get('email')}")
+            logger.info(f"Deleting subscription record: ID={subscription_id}, Email={subscription.get('email')}")
         
         kicked = False
         if telegram_user_id and server.TELEGRAM_BOT_AVAILABLE:
@@ -590,7 +585,7 @@ def handle_telegram_delete_subscription(handler):
                 from telegram_bot import sync_kick_user_from_channel
                 kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
                 if kicked:
-                    print(f"[DELETE] Kicked user {telegram_user_id} from Telegram channel")
+                    logger.info(f"Kicked user {telegram_user_id} from Telegram channel")
         
         deleted = server.db.delete_telegram_subscription(int(subscription_id), tenant_id=handler.tenant_id)
         
@@ -615,8 +610,7 @@ def handle_telegram_delete_subscription(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
     except Exception as e:
-        print(f"[DELETE] Error deleting subscription: {e}")
-        traceback.print_exc()
+        logger.exception("Error deleting subscription")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -659,7 +653,7 @@ def handle_telegram_revoke_access(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': 'Missing required field: email'}).encode())
             return
         
-        print(f"[TELEGRAM-SUB] Revoke access request for {email}, reason: {reason}")
+        logger.info(f"Revoke access request for {email}, reason: {reason}")
         
         subscription = server.db.get_telegram_subscription_by_email(email, tenant_id=handler.tenant_id)
         
@@ -675,14 +669,14 @@ def handle_telegram_revoke_access(handler):
         if telegram_user_id:
             private_channel_id = Config.get_forex_channel_id()
             if not private_channel_id:
-                print("[TELEGRAM-SUB] ⚠️ FOREX_CHANNEL_ID not configured, cannot kick user")
+                logger.warning("FOREX_CHANNEL_ID not configured, cannot kick user")
             else:
                 kicked = server.telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id)
                 
                 if kicked:
-                    print(f"[TELEGRAM-SUB] ✅ User {telegram_user_id} kicked from channel")
+                    logger.info(f"User {telegram_user_id} kicked from channel")
                 else:
-                    print(f"[TELEGRAM-SUB] ⚠️  Failed to kick user {telegram_user_id}")
+                    logger.warning(f"Failed to kick user {telegram_user_id}")
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -698,8 +692,7 @@ def handle_telegram_revoke_access(handler):
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
     except Exception as e:
-        print(f"[TELEGRAM-SUB] Error revoking access: {e}")
-        traceback.print_exc()
+        logger.exception("Error revoking access")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()

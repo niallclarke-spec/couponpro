@@ -1,5 +1,8 @@
 """Tenant credential resolution helper."""
 import os
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def resolve_credentials(tenant_id: str, provider: str) -> dict:
@@ -30,7 +33,7 @@ def resolve_credentials(tenant_id: str, provider: str) -> dict:
             row = cursor.fetchone()
             return row[0] if row else {}
     except Exception as e:
-        print(f"[TENANT] Error resolving credentials for {tenant_id}/{provider}: {e}")
+        logger.exception(f"Error resolving credentials for {tenant_id}/{provider}")
         return {}
 
 
@@ -79,7 +82,7 @@ def get_tenant_setup_status(tenant_id: str) -> dict:
             'is_complete': all(configured.values())
         }
     except Exception as e:
-        print(f"[TENANT] Error getting setup status for {tenant_id}: {e}")
+        logger.exception(f"Error getting setup status for {tenant_id}")
         return {
             'tenant_id': tenant_id,
             'is_entrylab': False,
@@ -109,7 +112,7 @@ def get_tenant_for_user(clerk_user_id: str) -> str:
             row = cursor.fetchone()
             return row[0] if row else None
     except Exception as e:
-        print(f"[TENANT] Error looking up tenant for user {clerk_user_id}: {e}")
+        logger.exception(f"Error looking up tenant for user {clerk_user_id}")
         return None
 
 
@@ -144,8 +147,8 @@ def bootstrap_tenant(clerk_user_id: str, email: str) -> str:
             )
             conn.commit()
         
-        print(f"[TENANT] Created new tenant {tenant_id} for user {clerk_user_id}")
+        logger.info(f"Created new tenant {tenant_id} for user {clerk_user_id}")
         return tenant_id
     except Exception as e:
-        print(f"[TENANT] Error bootstrapping tenant for {clerk_user_id}: {e}")
+        logger.exception(f"Error bootstrapping tenant for {clerk_user_id}")
         return None

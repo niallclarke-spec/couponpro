@@ -14,6 +14,9 @@ from strategies.base_strategy import BaseStrategy, SignalData, TakeProfitLevel
 from forex_api import twelve_data_client
 from db import get_forex_config, get_daily_pnl, count_signals_today_by_bot, get_last_signal_time_by_bot
 from datetime import datetime, timedelta
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class RajaBanksStrategy(BaseStrategy):
@@ -49,7 +52,7 @@ class RajaBanksStrategy(BaseStrategy):
             else:
                 self._set_defaults()
         except Exception as e:
-            print(f"[RAJA_BANKS] Error loading config: {e}")
+            logger.error(f"Error loading config: {e}")
             self._set_defaults()
     
     def _set_defaults(self):
@@ -255,7 +258,7 @@ class RajaBanksStrategy(BaseStrategy):
                 tp3_pct = int(config.get('tp3_percentage', 20))
                 return tp1_pct, tp2_pct, tp3_pct, tp_count
         except Exception as e:
-            print(f"[RAJA_BANKS] Error loading TP config: {e}")
+            logger.error(f"Error loading TP config: {e}")
         
         return 50, 30, 20, 3
     
@@ -263,19 +266,19 @@ class RajaBanksStrategy(BaseStrategy):
         try:
             self.load_config()
             
-            print(f"\n[RAJA_BANKS] Checking for signals on {self.symbol} {timeframe}...")
+            logger.info(f"Checking for signals on {self.symbol} {timeframe}...")
             
             can_generate, guardrail_reason = self.check_guardrails()
             if not can_generate:
-                print(f"[RAJA_BANKS] Guardrail blocked: {guardrail_reason}")
+                logger.info(f"Guardrail blocked: {guardrail_reason}")
                 return None
             
             in_session, session_name = self.is_in_session()
-            print(f"[RAJA_BANKS] Session: {session_name}")
+            logger.info(f"Session: {session_name}")
             
             candles = twelve_data_client.get_time_series(self.symbol, timeframe, 10)
             if not candles or len(candles) < 3:
-                print("[RAJA_BANKS] Insufficient candle data")
+                logger.warning("Insufficient candle data")
                 return None
             
             ema50 = twelve_data_client.get_ema(self.symbol, '1h', 50)
@@ -283,7 +286,7 @@ class RajaBanksStrategy(BaseStrategy):
             atr = twelve_data_client.get_atr(self.symbol, timeframe)
             
             if not all([ema50, ema200, atr]):
-                print("[RAJA_BANKS] Missing indicator data")
+                logger.warning("Missing indicator data")
                 return None
             
             assert ema50 is not None
@@ -295,7 +298,7 @@ class RajaBanksStrategy(BaseStrategy):
             impulse = self.detect_impulse_break(candles)
             
             if not impulse:
-                print("[RAJA_BANKS] No impulse breakout detected")
+                logger.info("No impulse breakout detected")
                 return None
             
             signal_type = impulse['signal_type']
@@ -306,10 +309,10 @@ class RajaBanksStrategy(BaseStrategy):
             is_valid, trend_reason = self.validate_with_trend(signal_type, ema50, ema200, sr_data)
             
             if not is_valid:
-                print(f"[RAJA_BANKS] {trend_reason}")
+                logger.info(f"{trend_reason}")
                 return None
             
-            print(f"[RAJA_BANKS] {trend_reason}")
+            logger.info(f"{trend_reason}")
             
             take_profits, calculated_sl = self.calculate_tp_sl(
                 entry_price, atr, signal_type, wick_target
@@ -346,19 +349,17 @@ class RajaBanksStrategy(BaseStrategy):
             
             signals_today = count_signals_today_by_bot(self.bot_type)
             
-            print(f"[RAJA_BANKS] Signal generated: {signal_type} @ {entry_price:.2f}")
-            print(f"[RAJA_BANKS] TP1: {take_profits[0].price:.2f} ({take_profits[0].percentage}%)")
+            logger.info(f"🎯 Signal generated: {signal_type} @ {entry_price:.2f}")
+            logger.info(f"📊 TP1: {take_profits[0].price:.2f} ({take_profits[0].percentage}%)")
             if len(take_profits) > 1:
-                print(f"[RAJA_BANKS] TP2: {take_profits[1].price:.2f} ({take_profits[1].percentage}%)")
-            print(f"[RAJA_BANKS] SL: {stop_loss:.2f} (tight candle-based)")
-            print(f"[RAJA_BANKS] Signals today: {signals_today + 1}/{self.MAX_SIGNALS_PER_DAY}")
+                logger.info(f"📊 TP2: {take_profits[1].price:.2f} ({take_profits[1].percentage}%)")
+            logger.info(f"🛑 SL: {stop_loss:.2f} (tight candle-based)")
+            logger.info(f"📈 Signals today: {signals_today + 1}/{self.MAX_SIGNALS_PER_DAY}")
             
             return signal_data
             
         except Exception as e:
-            print(f"[RAJA_BANKS] Error checking for signals: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Error checking for signals: {e}")
             return None
     
     def get_indicators_used(self) -> List[str]:

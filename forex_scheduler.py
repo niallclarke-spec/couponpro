@@ -14,6 +14,9 @@ from forex_ai import generate_tp_celebration, generate_daily_recap, generate_wee
 from db import update_forex_signal_status, get_forex_signals, update_signal_breakeven, update_signal_guidance, update_signal_revalidation, update_signal_timeout_notified, get_last_recap_date, set_last_recap_date, update_milestone_sent, update_effective_sl, db_pool
 from forex_api import twelve_data_client
 from bots.core.milestone_tracker import milestone_tracker
+from core.logging import get_logger, set_request_context, clear_request_context
+
+logger = get_logger(__name__)
 
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
@@ -58,39 +61,40 @@ class ForexScheduler:
                 if self.last_bot_config_updated_at is None:
                     self.last_bot_config_updated_at = current_bot_updated_at
                 elif current_bot_updated_at and current_bot_updated_at != self.last_bot_config_updated_at:
-                    print(f"[SCHEDULER] 🔄 bot_config change detected")
+                    logger.info("🔄 bot_config change detected")
                     should_reload = True
                     self.last_bot_config_updated_at = current_bot_updated_at
                 
                 if self.last_forex_config_updated_at is None:
                     self.last_forex_config_updated_at = current_forex_updated_at
                 elif current_forex_updated_at and current_forex_updated_at != self.last_forex_config_updated_at:
-                    print(f"[SCHEDULER] 🔄 forex_config change detected (guardrails/indicators)")
+                    logger.info("🔄 forex_config change detected (guardrails/indicators)")
                     should_reload = True
                     self.last_forex_config_updated_at = current_forex_updated_at
                 
                 if should_reload:
-                    print(f"[SCHEDULER] 🔄 Reloading config...")
+                    logger.info("🔄 Reloading config...")
                     forex_signal_engine.reload_config()
-                    print(f"[SCHEDULER] ✅ Config hot-reloaded successfully")
+                    logger.info("✅ Config hot-reloaded successfully")
         except Exception as e:
-            print(f"[SCHEDULER] ⚠️ Error checking config update: {e}")
+            logger.warning(f"⚠️ Error checking config update: {e}")
     
     async def run_signal_check(self):
         """Check for new signals on both 15min and 1h timeframes"""
+        set_request_context(tenant_id=self.tenant_id)
         try:
             self._check_config_update()
             
             if not forex_signal_engine.is_trading_hours():
-                print("[SCHEDULER] Outside trading hours (8AM-10PM GMT), skipping signal check")
+                logger.info("Outside trading hours (8AM-10PM GMT), skipping signal check")
                 return
             
             # CRITICAL: Only allow ONE active signal at a time
             pending_signals = get_forex_signals(status='pending', tenant_id=self.tenant_id)
             if pending_signals and len(pending_signals) > 0:
                 signal = pending_signals[0]
-                print(f"[SCHEDULER] ⏸️ Active signal #{signal['id']} still pending - skipping new signal check")
-                print(f"[SCHEDULER] Entry: ${signal['entry_price']}, TP: ${signal['take_profit']}, SL: ${signal['stop_loss']}")
+                logger.info(f"⏸️ Active signal #{signal['id']} still pending - skipping new signal check")
+                logger.info(f"Entry: ${signal['entry_price']}, TP: ${signal['take_profit']}, SL: ${signal['stop_loss']}")
                 return
             
             # Determine if it's time to check 1h timeframe (every 30 minutes)
@@ -110,31 +114,32 @@ class ForexScheduler:
             if signal_data:
                 signal_id = await forex_telegram_bot.post_signal(signal_data)
                 if signal_id:
-                    print(f"[SCHEDULER] ✅ New 15min signal #{signal_id} posted successfully")
+                    logger.info(f"✅ New 15min signal #{signal_id} posted successfully")
                     # Update 1h timestamp even if we posted a 15min signal (prevent starvation)
                     if should_check_1h:
                         self.last_1h_check = now
-                        print("[SCHEDULER] ⏭️ Skipped 1h check (signal already active)")
+                        logger.info("⏭️ Skipped 1h check (signal already active)")
                     return
             
             # Check 1-hour timeframe if due
             if should_check_1h:
-                print("[SCHEDULER] 📊 Checking 1-hour timeframe...")
+                logger.info("📊 Checking 1-hour timeframe...")
                 signal_data_1h = await forex_signal_engine.check_for_signals(timeframe='1h')
                 self.last_1h_check = now
                 
                 if signal_data_1h:
                     signal_id = await forex_telegram_bot.post_signal(signal_data_1h)
                     if signal_id:
-                        print(f"[SCHEDULER] ✅ New 1h signal #{signal_id} posted successfully")
+                        logger.info(f"✅ New 1h signal #{signal_id} posted successfully")
                     else:
-                        print("[SCHEDULER] ❌ Failed to post 1h signal to Telegram")
+                        logger.error("❌ Failed to post 1h signal to Telegram")
             
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error in signal check: {e}")
+            logger.error(f"❌ Error in signal check: {e}")
     
     async def run_signal_monitoring(self):
         """Monitor active signals for multi-TP hits, SL hits, and breakeven alerts"""
+        set_request_context(tenant_id=self.tenant_id)
         try:
             updates = await forex_signal_engine.monitor_active_signals()
             
@@ -163,8 +168,8 @@ class ForexScheduler:
                     if remaining > 0 and matching_signal:
                         tp1_price = float(matching_signal.get('take_profit', 0))
                         update_effective_sl(signal_id, tp1_price, tenant_id=self.tenant_id)
-                        print(f"[SCHEDULER] 🔒 Set effective_sl to TP1 (${tp1_price:.2f}) for signal #{signal_id}")
-                    print(f"[SCHEDULER] ✅ Posted TP1 celebration for signal #{signal_id}")
+                        logger.info(f"🔒 Set effective_sl to TP1 (${tp1_price:.2f}) for signal #{signal_id}")
+                    logger.info(f"✅ Posted TP1 celebration for signal #{signal_id}")
                 
                 elif event == 'tp2_hit':
                     remaining = update.get('remaining', 0)
@@ -178,8 +183,8 @@ class ForexScheduler:
                     )
                     if remaining > 0 and tp2_price:
                         update_effective_sl(signal_id, float(tp2_price), tenant_id=self.tenant_id)
-                        print(f"[SCHEDULER] 🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
-                    print(f"[SCHEDULER] ✅ Posted TP2 celebration for signal #{signal_id}")
+                        logger.info(f"🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
+                    logger.info(f"✅ Posted TP2 celebration for signal #{signal_id}")
                 
                 elif event == 'tp3_hit':
                     message = milestone_tracker.generate_tp3_celebration(signal_type, pips)
@@ -190,7 +195,7 @@ class ForexScheduler:
                     )
                     if status == 'won':
                         update_forex_signal_status(signal_id, 'won', pips, close_price, tenant_id=self.tenant_id)
-                        print(f"[SCHEDULER] ✅ Signal #{signal_id} completed - all TPs hit!")
+                        logger.info(f"✅ Signal #{signal_id} completed - all TPs hit!")
                 
                 elif event == 'sl_hit_profit_locked':
                     update_forex_signal_status(signal_id, 'won', pips, close_price, tenant_id=self.tenant_id)
@@ -200,7 +205,7 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] 🔒 Posted profit-locked SL notification for signal #{signal_id}")
+                    logger.info(f"🔒 Posted profit-locked SL notification for signal #{signal_id}")
                 
                 elif event == 'sl_hit_breakeven':
                     update_forex_signal_status(signal_id, 'won', pips, close_price, tenant_id=self.tenant_id)
@@ -210,7 +215,7 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] 🔒 Posted breakeven exit notification for signal #{signal_id}")
+                    logger.info(f"🔒 Posted breakeven exit notification for signal #{signal_id}")
                 
                 elif event == 'sl_hit':
                     update_forex_signal_status(signal_id, status, pips, close_price, tenant_id=self.tenant_id)
@@ -220,7 +225,7 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] ❌ Posted SL notification for signal #{signal_id}")
+                    logger.error(f"❌ Posted SL notification for signal #{signal_id}")
                 
                 elif status == 'won':
                     update_forex_signal_status(signal_id, status, pips, close_price, tenant_id=self.tenant_id)
@@ -230,7 +235,7 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] ✅ Posted TP celebration for signal #{signal_id}")
+                    logger.info(f"✅ Posted TP celebration for signal #{signal_id}")
                     
                 elif status == 'lost':
                     update_forex_signal_status(signal_id, status, pips, close_price, tenant_id=self.tenant_id)
@@ -240,23 +245,21 @@ class ForexScheduler:
                         text=message,
                         parse_mode='HTML'
                     )
-                    print(f"[SCHEDULER] ❌ Posted SL notification for signal #{signal_id}")
+                    logger.error(f"❌ Posted SL notification for signal #{signal_id}")
                     
                 elif status == 'expired':
                     # If signal expires with positive pips, it's still a win
                     final_status = 'won' if pips > 0 else 'expired'
                     update_forex_signal_status(signal_id, final_status, pips, close_price, tenant_id=self.tenant_id)
                     await forex_telegram_bot.post_signal_expired(signal_id, pips, signal_type)
-                    print(f"[SCHEDULER] ✅ Posted expiry notification for signal #{signal_id} (status: {final_status})")
+                    logger.info(f"✅ Posted expiry notification for signal #{signal_id} (status: {final_status})")
                 
                 if status in ('won', 'lost', 'expired'):
                     forex_signal_engine.load_active_strategy()
-                    print(f"[SCHEDULER] Strategy reloaded after signal #{signal_id} closed")
+                    logger.info(f"Strategy reloaded after signal #{signal_id} closed")
                 
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error in signal monitoring: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error in signal monitoring")
     
     async def run_signal_guidance(self):
         """
@@ -270,6 +273,7 @@ class ForexScheduler:
         
         90-second cooldown between all messages.
         """
+        set_request_context(tenant_id=self.tenant_id)
         try:
             active_signals = get_forex_signals(status='pending', tenant_id=self.tenant_id)
             
@@ -294,7 +298,7 @@ class ForexScheduler:
                     claimed = update_milestone_sent(signal_id, milestone_key, tenant_id=self.tenant_id)
                     
                     if not claimed:
-                        print(f"[SCHEDULER] ⏭️ Milestone {milestone_key} already claimed by another worker for signal #{signal_id}")
+                        logger.info(f"⏭️ Milestone {milestone_key} already claimed by another worker for signal #{signal_id}")
                         continue
                     
                     message = milestone_tracker.generate_milestone_message(milestone_event)
@@ -310,20 +314,19 @@ class ForexScheduler:
                             if milestone == 'tp1_70_breakeven':
                                 update_signal_breakeven(signal_id, milestone_event['entry_price'], tenant_id=self.tenant_id)
                                 update_effective_sl(signal_id, milestone_event['entry_price'], tenant_id=self.tenant_id)
-                                print(f"[SCHEDULER] 🔒 Set effective_sl to entry (breakeven) for signal #{signal_id}")
+                                logger.info(f"🔒 Set effective_sl to entry (breakeven) for signal #{signal_id}")
                             
-                            print(f"[SCHEDULER] ✅ Posted {milestone} milestone for signal #{signal_id}")
+                            logger.info(f"✅ Posted {milestone} milestone for signal #{signal_id}")
                             
                         except Exception as e:
-                            print(f"[SCHEDULER] ❌ Failed to post milestone message: {e}")
+                            logger.error(f"❌ Failed to post milestone message: {e}")
                 
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error in signal guidance: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error in signal guidance")
     
     async def run_stagnant_signal_checks(self):
         """Check stagnant signals for re-validation and timeout"""
+        set_request_context(tenant_id=self.tenant_id)
         try:
             revalidation_events = await forex_signal_engine.check_stagnant_signals()
             
@@ -341,7 +344,7 @@ class ForexScheduler:
                 # Fetch current price
                 current_price = twelve_data_client.get_price(forex_signal_engine.symbol)
                 if not current_price:
-                    print(f"[SCHEDULER] ⚠️ Could not fetch price for revalidation of signal #{signal_id}")
+                    logger.warning(f"⚠️ Could not fetch price for revalidation of signal #{signal_id}")
                     continue
                 
                 if event_type == 'timeout':
@@ -354,7 +357,7 @@ class ForexScheduler:
                         if validation:
                             current_indicators = validation.get('current_indicators', {})
                     except Exception as e:
-                        print(f"[SCHEDULER] Could not fetch current indicators for timeout: {e}")
+                        logger.warning(f"Could not fetch current indicators for timeout: {e}")
                     
                     # Generate close recommendation with technical justification
                     ai_message = generate_timeout_message(
@@ -387,7 +390,7 @@ class ForexScheduler:
                         final_status = 'won' if pips > 0 else 'expired'
                         update_forex_signal_status(signal_id, final_status, pips, current_price, tenant_id=self.tenant_id)
                         forex_signal_engine.load_active_strategy()
-                        print(f"[SCHEDULER] ✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h (status: {final_status})")
+                        logger.info(f"✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h (status: {final_status})")
                     
                 elif event_type == 'revalidation':
                     # Perform indicator re-validation
@@ -404,15 +407,15 @@ class ForexScheduler:
                         if thesis_status != previous_status:
                             # Status changed - always post
                             should_post = True
-                            print(f"[SCHEDULER] Thesis status changed: {previous_status} -> {thesis_status}")
+                            logger.info(f"Thesis status changed: {previous_status} -> {thesis_status}")
                         elif thesis_status == 'intact':
                             # Back to healthy - no need to spam
                             should_post = False
-                            print(f"[SCHEDULER] Signal #{signal_id} thesis still intact - no update needed")
+                            logger.info(f"Signal #{signal_id} thesis still intact - no update needed")
                         else:
                             # Still weakening/broken - don't repeat the same message
                             should_post = False
-                            print(f"[SCHEDULER] Signal #{signal_id} thesis still {thesis_status} - skipping duplicate message")
+                            logger.info(f"Signal #{signal_id} thesis still {thesis_status} - skipping duplicate message")
                         
                         # Always update the database timestamp (for tracking), but only post if status changed
                         update_signal_revalidation(signal_id, thesis_status, f"Check: {thesis_status}", tenant_id=self.tenant_id)
@@ -440,7 +443,7 @@ class ForexScheduler:
                             
                             if success:
                                 update_signal_revalidation(signal_id, thesis_status, f"Revalidation: {ai_message[:100]}", tenant_id=self.tenant_id)
-                                print(f"[SCHEDULER] ✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
+                                logger.info(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
                                 
                                 # If thesis is broken, recommend closing
                                 if thesis_status == 'broken':
@@ -453,12 +456,10 @@ class ForexScheduler:
                                     final_status = 'won' if pips > 0 else 'expired'
                                     update_forex_signal_status(signal_id, final_status, pips, current_price, tenant_id=self.tenant_id)
                                     forex_signal_engine.load_active_strategy()
-                                    print(f"[SCHEDULER] 🚨 Signal #{signal_id} closed due to broken thesis (status: {final_status})")
+                                    logger.warning(f"🚨 Signal #{signal_id} closed due to broken thesis (status: {final_status})")
                 
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error in stagnant signal checks: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ Error in stagnant signal checks")
     
     async def check_morning_briefing(self):
         """Post morning briefing at 6:20 AM UTC with news and market levels"""
@@ -470,13 +471,13 @@ class ForexScheduler:
                 last_posted = get_last_recap_date('morning_briefing', tenant_id=self.tenant_id)
                 
                 if last_posted != current_date_str:
-                    print("[SCHEDULER] Generating morning briefing...")
+                    logger.info("Generating morning briefing...")
                     await forex_telegram_bot.post_morning_briefing()
                     set_last_recap_date('morning_briefing', current_date_str, tenant_id=self.tenant_id)
-                    print("[SCHEDULER] ✅ Morning briefing posted")
+                    logger.info("✅ Morning briefing posted")
         
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error posting morning briefing: {e}")
+            logger.error(f"❌ Error posting morning briefing: {e}")
     
     async def check_daily_recap(self):
         """Post daily recap at 6:30 AM UTC (yesterday's signals)"""
@@ -489,7 +490,7 @@ class ForexScheduler:
                 last_posted = get_last_recap_date('daily', tenant_id=self.tenant_id)
                 
                 if last_posted != current_date_str:
-                    print("[SCHEDULER] Generating daily recap...")
+                    logger.info("Generating daily recap...")
                     
                     ai_recap = generate_daily_recap()
                     await forex_telegram_bot.post_daily_recap(ai_recap)
@@ -497,12 +498,12 @@ class ForexScheduler:
                     # Persist to database
                     set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
                     self.last_daily_recap = current_date_str
-                    print("[SCHEDULER] ✅ Daily recap posted")
+                    logger.info("✅ Daily recap posted")
                 else:
-                    print("[SCHEDULER] Daily recap already posted today, skipping")
+                    logger.info("Daily recap already posted today, skipping")
         
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error posting daily recap: {e}")
+            logger.error(f"❌ Error posting daily recap: {e}")
     
     async def check_weekly_recap(self):
         """Post weekly recap on Sunday"""
@@ -516,7 +517,7 @@ class ForexScheduler:
                 last_posted = get_last_recap_date('weekly', tenant_id=self.tenant_id)
                 
                 if last_posted != week_number:
-                    print("[SCHEDULER] Generating weekly recap...")
+                    logger.info("Generating weekly recap...")
                     
                     ai_recap = generate_weekly_recap()
                     await forex_telegram_bot.post_weekly_recap(ai_recap)
@@ -524,29 +525,30 @@ class ForexScheduler:
                     # Persist to database
                     set_last_recap_date('weekly', week_number, tenant_id=self.tenant_id)
                     self.last_weekly_recap = week_number
-                    print("[SCHEDULER] ✅ Weekly recap posted")
+                    logger.info("✅ Weekly recap posted")
                 else:
-                    print("[SCHEDULER] Weekly recap already posted this week, skipping")
+                    logger.info("Weekly recap already posted this week, skipping")
         
         except Exception as e:
-            print(f"[SCHEDULER] ❌ Error posting weekly recap: {e}")
+            logger.error(f"❌ Error posting weekly recap: {e}")
     
     async def run_forever(self):
         """Main scheduler loop"""
-        print("\n" + "="*60)
-        print("🚀 FOREX SIGNALS SCHEDULER STARTED")
-        print("="*60)
-        print(f"📊 Signal checks: 15min timeframe every 15 minutes")
-        print(f"📊 Signal checks: 1h timeframe every 30 minutes")
-        print(f"🔍 Price monitoring: Every 1 minute")
-        print(f"💡 Signal guidance: Every 1 minute (with 10min cooldown)")
-        print(f"🔄 Stagnant re-validation: First at 90min, then every 30min")
-        print(f"⏰ Hard timeout: 3 hours")
-        print(f"☀️ Morning briefing: 6:20 AM UTC")
-        print(f"📅 Daily recap: 6:30 AM UTC")
-        print(f"📅 Weekly recap: Sunday 6:30 AM UTC")
-        print(f"⏰ Trading hours: 8AM-10PM GMT")
-        print("="*60 + "\n")
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("🚀 FOREX SIGNALS SCHEDULER STARTED")
+        logger.info("=" * 60)
+        logger.info("📊 Signal checks: 15min timeframe every 15 minutes")
+        logger.info("📊 Signal checks: 1h timeframe every 30 minutes")
+        logger.info("🔍 Price monitoring: Every 1 minute")
+        logger.info("💡 Signal guidance: Every 1 minute (with 10min cooldown)")
+        logger.info("🔄 Stagnant re-validation: First at 90min, then every 30min")
+        logger.info("⏰ Hard timeout: 3 hours")
+        logger.info("☀️ Morning briefing: 6:20 AM UTC")
+        logger.info("📅 Daily recap: 6:30 AM UTC")
+        logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")
+        logger.info("⏰ Trading hours: 8AM-10PM GMT")
+        logger.info("=" * 60)
         
         signal_check_counter = 0
         monitor_counter = 0
@@ -573,10 +575,10 @@ class ForexScheduler:
                 await asyncio.sleep(self.monitor_interval)
                 
             except KeyboardInterrupt:
-                print("\n[SCHEDULER] Shutting down...")
+                logger.info("Shutting down...")
                 break
             except Exception as e:
-                print(f"[SCHEDULER] ❌ Unexpected error: {e}")
+                logger.error(f"❌ Unexpected error: {e}")
                 await asyncio.sleep(60)
 
 def parse_args():
@@ -590,7 +592,7 @@ def get_tenant_id(args):
     """Get tenant_id from args or environment, exit if missing"""
     tenant_id = getattr(args, 'tenant', None) or os.environ.get('TENANT_ID')
     if not tenant_id:
-        print("ERROR: tenant_id is required. Use --tenant <id> or set TENANT_ID env var")
+        logger.error("tenant_id is required. Use --tenant <id> or set TENANT_ID env var")
         import sys
         sys.exit(1)
     return tenant_id
@@ -613,7 +615,7 @@ if __name__ == '__main__':
     scheduler = ForexScheduler(tenant_id=tenant_id)
     
     if args.once:
-        print(f"[SCHEDULER] Running single check with tenant={tenant_id}")
+        logger.info(f"Running single check with tenant={tenant_id}")
         asyncio.run(scheduler.run_signal_check())
     else:
         asyncio.run(scheduler.run_forever())
