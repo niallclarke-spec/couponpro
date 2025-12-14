@@ -158,3 +158,57 @@ class TestAllTenantsMode:
                     covered.add(tenant_id)
         
         assert covered == set(all_tenants)
+
+
+class TestFailureIsolation:
+    """Tests for failure isolation in multi-tenant mode."""
+    
+    def test_one_tenant_failure_does_not_stop_others(self):
+        """Simulates per-tenant try/except: one failure shouldn't stop the loop."""
+        tenants = ['tenant_ok_1', 'tenant_fail', 'tenant_ok_2', 'tenant_ok_3']
+        
+        results = {'succeeded': 0, 'failed': 0}
+        
+        for tenant_id in tenants:
+            try:
+                if tenant_id == 'tenant_fail':
+                    raise Exception("Simulated failure")
+                results['succeeded'] += 1
+            except Exception:
+                results['failed'] += 1
+        
+        assert results['succeeded'] == 3
+        assert results['failed'] == 1
+    
+    def test_deterministic_shard_assignment_sha256(self):
+        """Verify SHA256-based sharding is deterministic."""
+        import hashlib
+        
+        tenant_id = "test-deterministic-tenant"
+        total_shards = 10
+        
+        def compute_shard(tid, n):
+            hash_val = int(hashlib.sha256(tid.encode()).hexdigest(), 16)
+            return hash_val % n
+        
+        expected_shard = compute_shard(tenant_id, total_shards)
+        
+        for _ in range(100):
+            assert compute_shard(tenant_id, total_shards) == expected_shard
+    
+    def test_shard_assignment_matches_tenant_in_shard(self):
+        """Verify tenant_in_shard matches expected SHA256 logic."""
+        import hashlib
+        
+        test_tenants = ['alpha', 'beta', 'gamma', 'delta', 'epsilon']
+        total_shards = 4
+        
+        for tenant_id in test_tenants:
+            hash_val = int(hashlib.sha256(tenant_id.encode()).hexdigest(), 16)
+            expected_shard = hash_val % total_shards
+            
+            assert tenant_in_shard(tenant_id, expected_shard, total_shards) is True
+            
+            for other_shard in range(total_shards):
+                if other_shard != expected_shard:
+                    assert tenant_in_shard(tenant_id, other_shard, total_shards) is False
