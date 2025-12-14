@@ -237,3 +237,22 @@ def require_tenant_runtime(tenant_id: Optional[str] = None) -> TenantRuntime:
         sys.exit(2)
     
     return TenantRuntime(tenant_id=resolved_tenant)
+
+
+def get_runtime(tenant_id: str) -> TenantRuntime:
+    """
+    Get a new TenantRuntime instance for the given tenant.
+    
+    IMPORTANT: This always returns a NEW instance - no caching.
+    Each call creates a fresh runtime to ensure tenant isolation.
+    
+    Args:
+        tenant_id: Tenant identifier (required)
+    
+    Returns:
+        New TenantRuntime instance
+    
+    Example:
+        runtime = get_runtime("entrylab")
+    """
+    return TenantRuntime(tenant_id=tenant_id)
