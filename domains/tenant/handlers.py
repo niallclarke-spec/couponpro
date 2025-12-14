@@ -109,10 +109,7 @@ def handle_tenant_map_user(handler):
     EntryLab-admin-only endpoint to create/update tenant_users mappings.
     
     Option A: 1 Clerk user → 1 tenant (enforced by UNIQUE(clerk_user_id)).
-    Actions:
-      - created: New mapping inserted
-      - updated: Same tenant, role changed
-      - moved: User reassigned to different tenant (includes previous_tenant_id)
+    Uses atomic INSERT ... ON CONFLICT upsert with RETURNING to determine action.
     """
     try:
         content_length = int(handler.headers.get('Content-Length', 0))
@@ -156,57 +153,53 @@ def handle_tenant_map_user(handler):
                 _send_json(handler, 400, {'error': f'Tenant not found: {tenant_id}'})
                 return
             
-            cursor.execute(
-                "SELECT tenant_id, role FROM tenant_users WHERE clerk_user_id = %s",
-                (clerk_user_id,)
-            )
-            existing = cursor.fetchone()
-            
-            if existing is None:
-                cursor.execute(
-                    "INSERT INTO tenant_users (clerk_user_id, tenant_id, role) VALUES (%s, %s, %s)",
-                    (clerk_user_id, tenant_id, role)
+            cursor.execute("""
+                WITH prev AS (
+                    SELECT tenant_id, role FROM tenant_users WHERE clerk_user_id = %s
                 )
-                conn.commit()
+                INSERT INTO tenant_users (clerk_user_id, tenant_id, role)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (clerk_user_id) 
+                DO UPDATE SET tenant_id = EXCLUDED.tenant_id, role = EXCLUDED.role
+                RETURNING 
+                    (SELECT tenant_id FROM prev) AS prev_tenant,
+                    (SELECT role FROM prev) AS prev_role,
+                    (xmax = 0) AS is_insert
+            """, (clerk_user_id, clerk_user_id, tenant_id, role))
+            
+            row = cursor.fetchone()
+            conn.commit()
+            
+            prev_tenant, prev_role, is_insert = row
+            
+            if is_insert:
                 action = 'created'
                 previous_tenant_id = None
-                print(f"[TENANT] User mapping created: tenant={tenant_id}, user={clerk_user_id}")
+            elif prev_tenant == tenant_id:
+                action = 'updated'
+                previous_tenant_id = None
             else:
-                existing_tenant, existing_role = existing
-                if existing_tenant == tenant_id:
-                    if existing_role == role:
-                        action = 'updated'
-                    else:
-                        cursor.execute(
-                            "UPDATE tenant_users SET role = %s WHERE clerk_user_id = %s",
-                            (role, clerk_user_id)
-                        )
-                        conn.commit()
-                        action = 'updated'
-                    previous_tenant_id = None
-                    print(f"[TENANT] User mapping updated: tenant={tenant_id}, user={clerk_user_id}")
-                else:
-                    cursor.execute(
-                        "UPDATE tenant_users SET tenant_id = %s, role = %s WHERE clerk_user_id = %s",
-                        (tenant_id, role, clerk_user_id)
-                    )
-                    conn.commit()
-                    action = 'moved'
-                    previous_tenant_id = existing_tenant
-                    print(f"[TENANT] User mapping moved: {previous_tenant_id} -> {tenant_id}, user={clerk_user_id}")
+                action = 'moved'
+                previous_tenant_id = prev_tenant
+        
+        print(f"[TENANT] User mapping {action}: user={clerk_user_id}, tenant={tenant_id}")
         
         response = {
             'success': True,
+            'action': action,
             'tenant_id': tenant_id,
+            'previous_tenant_id': previous_tenant_id,
             'clerk_user_id': clerk_user_id,
-            'role': role,
-            'action': action
+            'role': role
         }
-        if previous_tenant_id:
-            response['previous_tenant_id'] = previous_tenant_id
         
         _send_json(handler, 200, response)
         
     except Exception as e:
-        print(f"[TENANT] Error mapping user: {e}")
-        _send_json(handler, 400, {'error': 'Database constraint violation or unexpected error'})
+        error_str = str(e).lower()
+        if 'unique' in error_str or 'duplicate' in error_str or 'constraint' in error_str:
+            print(f"[TENANT] Constraint violation: {e}")
+            _send_json(handler, 409, {'error': 'User mapping conflict - constraint violation'})
+        else:
+            print(f"[TENANT] Error mapping user: {e}")
+            _send_json(handler, 400, {'error': 'Failed to create user mapping'})
