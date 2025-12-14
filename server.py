@@ -8,7 +8,6 @@ import secrets
 import base64
 from urllib.parse import urlparse, parse_qs
 import mimetypes
-import cgi
 from http import cookies
 import time
 import hmac

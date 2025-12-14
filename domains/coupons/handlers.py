@@ -8,8 +8,9 @@ import traceback
 import time
 import os
 import subprocess
-import cgi
 from urllib.parse import urlparse, parse_qs
+
+from utils.multipart import parse_multipart_formdata
 
 from core.config import Config
 
@@ -527,30 +528,25 @@ def handle_upload_overlay(handler):
         return
     
     try:
-        content_type = handler.headers['Content-Type']
+        content_type = handler.headers.get('Content-Type', '')
         if not content_type.startswith('multipart/form-data'):
             raise ValueError('Expected multipart/form-data')
         
-        form = cgi.FieldStorage(
-            fp=handler.rfile,
-            headers=handler.headers,
-            environ={
-                'REQUEST_METHOD': 'POST',
-                'CONTENT_TYPE': handler.headers['Content-Type'],
-            }
-        )
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length) if content_length else b''
+        fields, files = parse_multipart_formdata(content_type, body)
         
-        if 'overlayImage' not in form or not form['overlayImage'].filename:
+        if 'overlayImage' not in files or not files['overlayImage'].get('filename'):
             raise ValueError('No overlay image provided')
         
-        overlay_file = form['overlayImage']
-        filename = overlay_file.filename
+        overlay_file = files['overlayImage']
+        filename = overlay_file['filename']
         
         timestamp = int(time.time())
         ext = filename.split('.')[-1] if '.' in filename else 'png'
         overlay_filename = f"overlay_{timestamp}.{ext}"
         
-        image_data = overlay_file.file.read()
+        image_data = overlay_file['data']
         
         storage_service = ObjectStorageService()
         overlay_url = storage_service.upload_file(
@@ -582,22 +578,16 @@ def handle_upload_template(handler):
     import urllib.error
     
     try:
-        content_type = handler.headers['Content-Type']
+        content_type = handler.headers.get('Content-Type', '')
         if not content_type.startswith('multipart/form-data'):
             raise ValueError('Expected multipart/form-data')
         
-        form = cgi.FieldStorage(
-            fp=handler.rfile,
-            headers=handler.headers,
-            environ={
-                'REQUEST_METHOD': 'POST',
-                'CONTENT_TYPE': handler.headers['Content-Type'],
-            }
-        )
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length) if content_length else b''
+        fields, files = parse_multipart_formdata(content_type, body)
         
-        name = form.getvalue('name')
-        slug = form.getvalue('slug')
-        name = form.getvalue('name')
+        name = fields.get('name')
+        slug = fields.get('slug')
         
         print(f"[UPLOAD DEBUG] Received slug from client: '{slug}'")
         print(f"[UPLOAD DEBUG] Received name from client: '{name}'")
@@ -608,7 +598,7 @@ def handle_upload_template(handler):
         if '..' in slug or '/' in slug or '\\' in slug:
             raise ValueError('Invalid slug: path traversal detected')
         
-        is_editing = form.getvalue('isEditing') == 'true'
+        is_editing = fields.get('isEditing') == 'true'
         print(f"[UPLOAD] isEditing flag: {is_editing}")
         
         template_dir = os.path.join('assets', 'templates', slug)
@@ -636,36 +626,36 @@ def handle_upload_template(handler):
             print(f"[UPLOAD] REJECTED: {error_msg}")
             raise ValueError(error_msg)
         
-        has_square_image = 'squareImage' in form and form['squareImage'].filename
-        has_story_image = 'storyImage' in form and form['storyImage'].filename
+        has_square_image = 'squareImage' in files and files['squareImage'].get('filename')
+        has_story_image = 'storyImage' in files and files['storyImage'].get('filename')
         
         if not is_existing_template:
             if not has_square_image and not has_story_image:
                 raise ValueError('At least one variant (square or portrait) image is required for new templates')
         
         square_coords = {
-            'leftPct': float(form.getvalue('squareLeftPct')),
-            'topPct': float(form.getvalue('squareTopPct')),
-            'widthPct': float(form.getvalue('squareWidthPct')),
-            'heightPct': float(form.getvalue('squareHeightPct')),
-            'hAlign': form.getvalue('squareHAlign'),
-            'vAlign': form.getvalue('squareVAlign')
+            'leftPct': float(fields.get('squareLeftPct')),
+            'topPct': float(fields.get('squareTopPct')),
+            'widthPct': float(fields.get('squareWidthPct')),
+            'heightPct': float(fields.get('squareHeightPct')),
+            'hAlign': fields.get('squareHAlign'),
+            'vAlign': fields.get('squareVAlign')
         }
         
         story_coords = {
-            'leftPct': float(form.getvalue('storyLeftPct')),
-            'topPct': float(form.getvalue('storyTopPct')),
-            'widthPct': float(form.getvalue('storyWidthPct')),
-            'heightPct': float(form.getvalue('storyHeightPct')),
-            'hAlign': form.getvalue('storyHAlign'),
-            'vAlign': form.getvalue('storyVAlign')
+            'leftPct': float(fields.get('storyLeftPct')),
+            'topPct': float(fields.get('storyTopPct')),
+            'widthPct': float(fields.get('storyWidthPct')),
+            'heightPct': float(fields.get('storyHeightPct')),
+            'hAlign': fields.get('storyHAlign'),
+            'vAlign': fields.get('storyVAlign')
         }
         
-        square_max_font = int(float(form.getvalue('squareMaxFontPx')))
-        story_max_font = int(float(form.getvalue('storyMaxFontPx')))
+        square_max_font = int(float(fields.get('squareMaxFontPx')))
+        story_max_font = int(float(fields.get('storyMaxFontPx')))
         
-        square_font_color = form.getvalue('squareFontColor') or '#FF273E'
-        story_font_color = form.getvalue('storyFontColor') or '#FF273E'
+        square_font_color = fields.get('squareFontColor') or '#FF273E'
+        story_font_color = fields.get('storyFontColor') or '#FF273E'
         
         if not server.OBJECT_STORAGE_AVAILABLE and (has_square_image or has_story_image):
             raise ValueError('Template uploads are only available on Replit. Please use the Replit admin panel to upload templates.')
@@ -709,13 +699,11 @@ def handle_upload_template(handler):
                     existing_story_url = existing_story_data.get('imageUrl') or existing_story_data.get('image')
         
         if has_square_image and storage_service:
-            square_image = form['squareImage']
-            square_data = square_image.file.read()
+            square_data = files['squareImage']['data']
             image_urls['square'] = storage_service.upload_file(square_data, f"templates/{slug}/square.png")
         
         if has_story_image and storage_service:
-            story_image = form['storyImage']
-            story_data = story_image.file.read()
+            story_data = files['storyImage']['data']
             image_urls['story'] = storage_service.upload_file(story_data, f"templates/{slug}/story.png")
         
         os.makedirs(template_dir, exist_ok=True)
