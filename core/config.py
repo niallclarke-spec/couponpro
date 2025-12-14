@@ -131,9 +131,9 @@ class Config:
         return os.environ.get('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
     
     @staticmethod
-    def get_clerk_jwt_key():
+    def get_clerk_jwks_url():
         """
-        Get Clerk JWT public key for networkless verification.
-        This is the PEM-formatted public key from Clerk Dashboard → JWT Templates.
+        Get Clerk JWKS URL for runtime key fetching.
+        Format: https://<your-clerk-domain>/.well-known/jwks.json
         """
-        return os.environ.get('CLERK_JWT_KEY')
+        return os.environ.get('CLERK_JWKS_URL')
