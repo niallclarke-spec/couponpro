@@ -1,0 +1,48 @@
+TASK: Fix leader election so it works in production even when DATABASE_URL is NOT set.
+
+Problem:
+- Production logs show: "[SCHEDULER] No DATABASE_URL, assuming single instance mode"
+- But the app clearly connects to Postgres using DB_HOST (pool initialized), so we DO have DB access.
+- During deploy two instances boot; because leader lock is skipped, BOTH start the scheduler.
+
+Goal:
+- Leader election must ALWAYS use Postgres when DB is available, regardless of DATABASE_URL presence.
+- Only one instance should ever log:
+  "[SCHEDULER] Leader lock acquired, starting scheduler"
+  "[BOOTSTRAP] Forex scheduler started in background thread"
+- The other instance should log something like:
+  "[SCHEDULER] Leader lock not acquired, skipping scheduler start (standby)"
+
+Required changes:
+1) core/leader.py
+   - Remove the "No DATABASE_URL -> single instance mode" bypass.
+   - Implement a function to build a Postgres DSN from existing env vars already used by the app:
+     DB_HOST, DB_PORT (default 5432), DB_NAME, DB_USER, DB_PASSWORD, DB_SSLMODE (optional)
+   - If DATABASE_URL exists, use it; else build DSN from the DB_* vars.
+   - Acquire advisory lock using a dedicated connection (not from pool) and keep it open.
+   - If connection cannot be created (missing vars), log a WARNING and DO NOT start scheduler automatically.
+     (Fail-safe: better to not run scheduler than to run it twice.)
+
+2) core/bootstrap.py (or wherever scheduler start is wrapped)
+   - Ensure scheduler start is ONLY gated by leader election.
+   - No code path should start scheduler without passing the leader lock check.
+
+3) Logging
+   - Log the resolved DB mode clearly:
+     - "[SCHEDULER] Leader lock using DATABASE_URL" OR
+     - "[SCHEDULER] Leader lock using DB_HOST/DB_* vars"
+   - If lock not acquired: log standby message and do not start scheduler.
+
+4) Verification (must be included in output)
+   - Provide a quick grep-based check:
+     - After deploy, total occurrences of "[BOOTSTRAP] Forex scheduler started" across logs should be 1.
+   - Provide expected log examples for leader vs standby instance.
+
+Constraints:
+- Keep existing behavior for migrations / pool unchanged.
+- Do not introduce new dependencies.
+- Advisory lock ID stays the same: 8237461823746182.
+- Keep the existing start_scheduler_once() guard (thread lock + flag-after-success).
+
+Deliverable:
+- Commit changes and show the exact files modified + brief reasoning.

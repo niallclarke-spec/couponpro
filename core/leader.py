@@ -8,6 +8,7 @@ Safety guarantees:
 1. Scheduler can ONLY start once per process (threading.Lock protected)
 2. Retry loop is resilient to DB connection drops (auto-reconnect)
 3. All threads are daemon threads (clean shutdown)
+4. Fail-safe: if no DB connection possible, scheduler does NOT start
 """
 import psycopg2
 import threading
@@ -22,18 +23,54 @@ _is_leader = False
 _scheduler_started = False
 _scheduler_lock = threading.Lock()
 _scheduler_callback = None
+_connection_mode = None
+
+
+def _build_dsn_from_db_vars():
+    """
+    Build a PostgreSQL DSN from individual DB_* environment variables.
+    Returns tuple of (dsn_string, missing_vars_list).
+    """
+    host = Config.get_db_host()
+    port = Config.get_db_port() or '5432'
+    name = Config.get_db_name()
+    user = Config.get_db_user()
+    password = Config.get_db_password()
+    sslmode = Config.get_db_sslmode()
+    
+    missing = []
+    if not host:
+        missing.append('DB_HOST')
+    if not name:
+        missing.append('DB_NAME')
+    if not user:
+        missing.append('DB_USER')
+    if not password:
+        missing.append('DB_PASSWORD')
+    
+    if missing:
+        return None, missing
+    
+    dsn = f"postgresql://{user}:{password}@{host}:{port}/{name}?sslmode={sslmode}"
+    return dsn, []
 
 
 def _get_or_create_connection():
     """
     Get existing connection or create new one.
     Handles reconnection if connection was dropped.
-    """
-    global _leader_connection
     
-    db_url = Config.get_database_url()
-    if not db_url:
-        return None
+    Connection priority:
+    1. DATABASE_URL environment variable
+    2. Build DSN from DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+    
+    Returns:
+        Connection object if successful, None if no credentials available.
+    
+    Raises:
+        Exception if connection fails (credentials exist but connection error).
+    """
+    global _leader_connection, _connection_mode
     
     if _leader_connection is not None:
         try:
@@ -47,10 +84,26 @@ def _get_or_create_connection():
                 pass
             _leader_connection = None
     
-    _leader_connection = psycopg2.connect(db_url)
-    _leader_connection.autocommit = True
-    print("[SCHEDULER] Database connection established")
-    return _leader_connection
+    db_url = Config.get_database_url()
+    if db_url:
+        _connection_mode = "DATABASE_URL"
+        print("[SCHEDULER] Leader lock using DATABASE_URL")
+        _leader_connection = psycopg2.connect(db_url)
+        _leader_connection.autocommit = True
+        print("[SCHEDULER] Database connection established")
+        return _leader_connection
+    
+    dsn, missing = _build_dsn_from_db_vars()
+    if dsn:
+        _connection_mode = "DB_* vars"
+        print("[SCHEDULER] Leader lock using DB_HOST/DB_* vars")
+        _leader_connection = psycopg2.connect(dsn)
+        _leader_connection.autocommit = True
+        print("[SCHEDULER] Database connection established")
+        return _leader_connection
+    
+    _connection_mode = None
+    return None
 
 
 def acquire_scheduler_leader_lock() -> bool:
@@ -60,6 +113,11 @@ def acquire_scheduler_leader_lock() -> bool:
     Uses a dedicated connection that stays open for process lifetime.
     The lock is automatically released when the connection closes.
     
+    FAIL-SAFE BEHAVIOR:
+    - If no DB credentials available: returns False (scheduler does NOT start)
+    - If connection fails: returns False (scheduler does NOT start)
+    - If lock not acquired: returns False (another instance is leader)
+    
     Returns:
         True if lock acquired (we are leader), False otherwise.
     """
@@ -68,9 +126,9 @@ def acquire_scheduler_leader_lock() -> bool:
     try:
         conn = _get_or_create_connection()
         if conn is None:
-            print("[SCHEDULER] No DATABASE_URL, assuming single instance mode")
-            _is_leader = True
-            return True
+            print("[SCHEDULER] ⚠️  WARNING: No database credentials available (need DATABASE_URL or DB_HOST/DB_* vars)")
+            print("[SCHEDULER] ⚠️  Scheduler will NOT start - cannot ensure single instance")
+            return False
         
         cursor = conn.cursor()
         cursor.execute("SELECT pg_try_advisory_lock(%s)", (SCHEDULER_LOCK_ID,))
@@ -78,13 +136,15 @@ def acquire_scheduler_leader_lock() -> bool:
         
         if result:
             _is_leader = True
-        
-        return result
+            return True
+        else:
+            print("[SCHEDULER] Leader lock not acquired, another instance is leader (standby mode)")
+            return False
         
     except Exception as e:
-        print(f"[SCHEDULER] Error acquiring leader lock: {e}")
-        _is_leader = True
-        return True
+        print(f"[SCHEDULER] ⚠️  WARNING: Failed to acquire leader lock: {e}")
+        print("[SCHEDULER] ⚠️  Scheduler will NOT start - cannot ensure single instance")
+        return False
 
 
 def start_scheduler_once(callback=None):

@@ -82,6 +82,10 @@ class Config:
         return os.environ.get('DB_PASSWORD')
     
     @staticmethod
+    def get_db_sslmode():
+        return os.environ.get('DB_SSLMODE', 'require')
+    
+    @staticmethod
     def get_stripe_secret_key():
         return os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET')
     
