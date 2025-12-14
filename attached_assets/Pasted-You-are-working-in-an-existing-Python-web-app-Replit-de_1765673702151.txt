@@ -1,0 +1,78 @@
+You are working in an existing Python web app (Replit dev, DigitalOcean prod) that has just completed a multi-tenancy DB migration.
+
+ABSOLUTE REQUIREMENTS (do not violate):
+1) The Coupon/Campaign/Broadcast “domain” is EntryLab-only and must NOT be exposed to SaaS tenants.
+   - Any route under: /api/campaigns*, /api/broadcast*, /api/bot-stats, /api/bot-users, /api/upload-template, /api/delete-template, /api/toggle-telegram-template, /api/validate-coupon
+   must return 403 for any tenant_id != 'entrylab'.
+2) EntryLab continues to use current env-based credentials exactly as before (NO behavior changes for EntryLab).
+   - EntryLab should not be forced to store creds in DB; it keeps using env vars.
+3) New tenants must provide and connect their own credentials (Stripe + Telegram bot + Data API key). Until setup is complete, tenant cannot run Forex SaaS features.
+4) Do not introduce new external dependencies unless absolutely necessary. Prefer stdlib + existing libs.
+5) Multi-tenant DB tables already exist:
+   - tenants, tenant_users, tenant_integrations
+   - tenant_id columns exist on: forex_signals, forex_config, telegram_subscriptions, recent_phrases, campaigns, bot_usage, bot_users, broadcast_jobs, bot_config
+   - processed_webhook_events is tenant-scoped (tenant_id, event_id unique)
+
+GOAL FOR THIS TASK (PHASE 1: “Tenant Setup Wizard” foundation)
+Implement the minimum required to support a tenant setup phase:
+A) Add a “tenant bootstrap” on first authenticated request:
+   - Determine tenant_id for the logged-in user using tenant_users (by clerk_user_id).
+   - If no tenant_users row exists yet:
+     - Create a new tenant with id generated from clerk_user_id (safe slug) OR a random short id, and name derived from email domain, and is_active=true.
+     - Insert tenant_users row mapping clerk_user_id → tenant_id.
+   - EXCEPTION: If the user is an “EntryLab admin” (existing admin logic), tenant_id must be 'entrylab' always (no auto tenant creation).
+   - Store tenant_id on request context (e.g., flask.g.tenant_id) for downstream handlers.
+
+B) Create API endpoints for setup status + saving integrations for NON-entrylab tenants only:
+   1. GET /api/tenant/setup-status
+      - Returns JSON: { tenant_id, is_entrylab, required: {stripe, telegram, market_data}, configured: {…}, is_complete }
+      - For entrylab: always is_complete=true and configured=true for all (because env-based).
+      - For other tenants: look up tenant_integrations providers and determine configured booleans.
+   2. POST /api/tenant/integrations
+      - Accept JSON { provider: 'stripe'|'telegram'|'market_data', config: {...} }
+      - Validate required fields per provider:
+        - stripe: stripe_account_id (string), webhook_secret (string)
+        - telegram: bot_token (string)
+        - market_data: api_key (string)
+      - Store into tenant_integrations as JSONB (config_json), upsert by (tenant_id, provider).
+      - Security: do NOT log secrets. Never return secrets back in responses. Return {success:true}.
+      - For entrylab tenant: return 400 explaining EntryLab uses env credentials.
+
+C) Add a single helper function used everywhere (new file or in existing utils):
+   - resolve_credentials(tenant_id, provider)
+     - If tenant_id == 'entrylab': return from env vars (current keys already used in code)
+     - Else: read tenant_integrations.config_json for that provider and return it
+   - For now, DO NOT refactor all integrations. Just implement the helper and ensure it is used at least by the new setup-status endpoint.
+
+D) Enforce that Forex SaaS endpoints require setup completion for non-entrylab tenants:
+   - Add a lightweight gate in auth middleware (or per-route decorator) so that for tenant_id != 'entrylab',
+     requests to Forex SaaS routes return 403 with JSON {error:'tenant_setup_incomplete'} if integrations are missing.
+   - Forex SaaS routes include at least: /api/forex-signals, /api/forex-config, /api/signal-bot/status, /api/forex-stats, /api/forex-tp-config and webhook endpoints that should remain functional only after setup.
+   - IMPORTANT: EntryLab must be unaffected.
+
+E) Add/extend route guards for EntryLab-only coupon/broadcast domain:
+   - Centralize an ENTRYLAB_ONLY_ROUTES prefix list and enforce tenant_id == 'entrylab'.
+   - Return 403 JSON {error:'forbidden'} for other tenants.
+
+IMPLEMENTATION RULES:
+- Keep changes minimal and surgical.
+- Follow the existing code style and patterns (auth, db_pool usage, route structure).
+- All DB writes must be idempotent and safe.
+- Add indexes ONLY if needed (prefer existing).
+- Add clear log lines WITHOUT secrets (e.g., “[TENANT] created tenant abc123 for user …”).
+- Do not break existing imports or startup.
+
+DELIVERABLES:
+1) Code changes implementing A–E.
+2) A short “How to test” section in a comment or README snippet with curl examples:
+   - setup-status
+   - saving each integration provider
+   - confirming non-entrylab tenants get blocked on /api/forex-signals until setup is complete
+   - confirming /api/upload-template is 403 for non-entrylab tenants
+
+Before coding:
+- Run a quick ripgrep to find where auth middleware sets current user / clerk_user_id.
+- Identify where to store tenant_id in request context.
+- Then implement endpoints and guards.
+
+Proceed now and implement.
