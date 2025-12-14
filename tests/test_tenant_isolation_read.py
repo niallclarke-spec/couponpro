@@ -11,9 +11,12 @@ Run: pytest tests/test_tenant_isolation_read.py -v
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import db
+from db import database_url_is_set, can_connect
 
 
 TENANT_A = "entrylab"
@@ -26,6 +29,8 @@ class TestTenantIsolationRead:
     @classmethod
     def setup_class(cls):
         """Ensure database connection pool is initialized."""
+        if not database_url_is_set() or not can_connect():
+            pytest.skip("DATABASE_URL not set or DB unreachable")
         if not db.db_pool.connection_pool:
             db.db_pool.initialize_pool()
     

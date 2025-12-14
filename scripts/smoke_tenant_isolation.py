@@ -60,20 +60,32 @@ class TenantIsolationTest:
         self.db = None
         self.db_initialized = False
     
+    def _is_ci_environment(self) -> bool:
+        """Check if running in CI environment."""
+        ci_val = os.environ.get('CI', '').lower()
+        return ci_val in ('1', 'true')
+    
+    def _fail_or_skip(self, message: str):
+        """Exit with code 1 in CI, code 0 locally."""
+        print(message)
+        if self._is_ci_environment():
+            sys.exit(1)
+        else:
+            print("(Local environment: exiting with code 0)")
+            sys.exit(0)
+    
     def setup(self):
         """Initialize database connection with fail-fast behavior."""
         db_url = os.environ.get('DATABASE_URL')
         if not db_url:
-            print("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: DATABASE_URL not set")
-            sys.exit(1)
+            self._fail_or_skip("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: DATABASE_URL not set")
         
         try:
             import db as db_module
             self.db = db_module
             
             if not self.db.db_pool or not self.db.db_pool.connection_pool:
-                print("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: database pool not initialized")
-                sys.exit(1)
+                self._fail_or_skip("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: database pool not initialized")
             
             with self.db.db_pool.get_connection() as conn:
                 cursor = conn.cursor()
@@ -83,8 +95,7 @@ class TenantIsolationTest:
             self.db_initialized = True
             
         except Exception as e:
-            print(f"Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: {e}")
-            sys.exit(1)
+            self._fail_or_skip(f"Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: {e}")
         
         logger.info(f"Testing isolation between tenant_a={self.tenant_a} and tenant_b={self.tenant_b}")
     

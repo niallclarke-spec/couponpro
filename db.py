@@ -68,6 +68,16 @@ class DatabasePool:
         self.connection_pool = None
         self._initialize_pool()
     
+    def initialize_pool(self, *args, **kwargs):
+        """Public method to initialize the connection pool (idempotent).
+        
+        If the connection pool already exists, this method does nothing.
+        This provides backward compatibility for callers expecting this method.
+        """
+        if self.connection_pool is not None:
+            return
+        self._initialize_pool()
+    
     def _initialize_pool(self):
         """Initialize PostgreSQL connection pool"""
         try:
@@ -1134,6 +1144,44 @@ class DatabasePool:
 
 # Global database pool instance
 db_pool = DatabasePool()
+
+
+def database_url_is_set() -> bool:
+    """Check if DATABASE_URL environment variable is set."""
+    return bool(os.environ.get('DATABASE_URL'))
+
+
+def can_connect(timeout: int = 2) -> bool:
+    """Attempt a quick connection and return True/False without raising.
+    
+    Args:
+        timeout: Connection timeout in seconds (default: 2).
+        
+    Returns:
+        True if connection succeeds, False otherwise.
+    """
+    if not db_pool or not db_pool.connection_pool:
+        if not database_url_is_set() and not os.environ.get('DB_HOST'):
+            return False
+        try:
+            database_url = os.environ.get('DATABASE_URL')
+            if database_url:
+                conn = psycopg2.connect(database_url, connect_timeout=timeout)
+                conn.close()
+                return True
+            return False
+        except Exception:
+            return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return True
+    except Exception:
+        return False
+
 
 # Campaign CRUD operations
 def create_campaign(title, description, start_date, end_date, prize, platforms, tenant_id, overlay_url=None):
