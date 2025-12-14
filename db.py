@@ -2364,7 +2364,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, tenant_id, ta
                        bot_type='aggressive', indicators_used=None, notes=None,
                        take_profit_2=None, take_profit_3=None,
                        tp1_percentage=100, tp2_percentage=0, tp3_percentage=0,
-                       status='draft'):
+                       status='pending'):
     """
     Create a new forex signal with multi-TP support.
     
@@ -2386,7 +2386,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, tenant_id, ta
         tp1_percentage (int): Percentage to close at TP1 (default 100)
         tp2_percentage (int): Percentage to close at TP2 (default 0)
         tp3_percentage (int): Percentage to close at TP3 (default 0)
-        status (str): Initial status ('draft', 'pending', etc.) - default 'draft'
+        status (str): Initial status ('draft', 'pending', etc.) - default 'pending'
         tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
@@ -3089,7 +3089,7 @@ def get_forex_config(tenant_id):
     """
     try:
         if not db_pool.connection_pool:
-            return None
+            return {}
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -3133,11 +3133,12 @@ def get_forex_config(tenant_id):
                 }
             
             config['updated_at'] = latest_update.isoformat() if latest_update else None
+            config['tenant_id'] = tenant_id
             
             return config
     except Exception as e:
         logger.exception(f"Error getting forex config: {e}")
-        return None
+        return {}
 
 def update_forex_config(config_updates):
     """
@@ -3181,7 +3182,7 @@ def get_bot_config(tenant_id):
     """
     try:
         if not db_pool.connection_pool:
-            return None
+            return {}
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -3191,7 +3192,7 @@ def get_bot_config(tenant_id):
                 WHERE tenant_id = %s AND setting_key LIKE 'bot_%'
             """, (tenant_id,))
             
-            config = {'active_bot_type': 'aggressive'}
+            config = {'active_bot_type': 'aggressive', 'tenant_id': tenant_id}
             for row in cursor.fetchall():
                 key = row[0].replace('bot_', '')
                 config[key] = row[1]
@@ -3199,7 +3200,7 @@ def get_bot_config(tenant_id):
             return config
     except Exception as e:
         logger.exception(f"Error getting bot config: {e}")
-        return None
+        return {}
 
 def init_bot_config():
     """Initialize default bot config settings"""
