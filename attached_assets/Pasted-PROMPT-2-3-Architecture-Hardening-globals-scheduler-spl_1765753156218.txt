@@ -1,0 +1,100 @@
+PROMPT 2/3 — Architecture Hardening (globals, scheduler split, error handling)
+
+Context:
+- Current tests pass (67 passed, 3 skipped).
+- We fixed packaging (`core`, `scheduler.runner`) and added a root conftest.py for sys.path.
+- We already have structured logging in place.
+- Remaining architecture pain points:
+  1) Global singletons / shared mutable state (bad for multi-tenant)
+  2) Scheduler does too much in one file (generation, monitoring, messaging, config)
+  3) Error handling is mostly try/except + logging; no central “alert” hook
+  4) Duplication / confusing strategy folders (strategies/ vs bots/strategies/) — don’t fully solve yet, but reduce ambiguity safely.
+
+Goal for this prompt:
+- Introduce a clean “TenantRuntime” container that holds all per-tenant dependencies.
+- Refactor scheduler into small modules under `scheduler/` WITHOUT breaking existing CLI usage.
+- Add an error boundary wrapper that calls `core.alerts.notify_error()` on unhandled exceptions.
+- Add tests that enforce: “no global runtime” + “new runtime per tenant” + “DB not initialized on import”.
+
+Rules:
+- Minimize breaking changes. Keep existing entrypoints working:
+  - `python forex_scheduler.py ...` must still work
+  - any existing imports of `start_forex_scheduler()` must still work
+- Avoid DB connections at import time.
+- Use lazy imports in runners.
+- Any new modules must have __init__.py as needed.
+
+Implementation steps:
+
+A) Create per-tenant runtime container
+1. Create `core/runtime.py` (or `domains/tenant/runtime.py` if you already have a runtime folder, but tests may expect core/runtime.py).
+2. Implement:
+   - `class TenantRuntime:`
+     - `def __init__(self, tenant_id: str, *, enable_rls: bool | None = None):`
+     - stores tenant_id
+     - lazily exposes helpers for db access, config access, scheduler runner, and messaging/telegram bot client if applicable.
+     - MUST NOT initialize DB pool on __init__ (only when a method is called).
+   - `def get_runtime(tenant_id: str) -> TenantRuntime:` returns a NEW instance each call (no caching globals).
+   - If you need caching, put it behind an optional flag; default must be “no caching”.
+
+B) Split scheduler responsibilities into `scheduler/` package
+Create these modules (or equivalent) and move logic gradually:
+- `scheduler/config_loader.py` → functions to load tenant config/bot selection with tenant_id
+- `scheduler/signal_generator.py` → generate signals (tenant-scoped)
+- `scheduler/signal_monitor.py` → monitor active signals + milestones + timeouts
+- `scheduler/messenger.py` → telegram/message sending utilities (tenant-scoped)
+- `scheduler/runner.py` should remain the stable wrapper. It should call into `scheduler/orchestrator.py` or similar.
+
+Notes:
+- You do NOT need to perfectly split everything — but enforce clear seams so we can continue refactor in Prompt 3.
+- Keep forex_scheduler.py as a thin CLI wrapper that just parses args and calls `scheduler.runner.SchedulerRunner`.
+
+C) Error boundary + alerting hook
+1. Ensure `core/alerts.py` exists and exports `notify_error(...)`.
+2. Create `core/error_boundary.py` with helper:
+   - `def run_guarded(fn, *, tenant_id: str | None = None, context: dict | None = None):`
+     - wraps fn() in try/except
+     - on exception: log it AND call notify_error with useful context (tenant_id, file/module, stack trace)
+     - re-raise in dev mode, or exit non-zero for CLI scripts
+3. Use this guard in:
+   - forex_scheduler.py CLI main
+   - any “start_*” entrypoint that previously swallowed exceptions
+
+D) Add/Update tests (lightweight, no DB)
+Add a new test file `tests/test_architecture_hardening.py` with:
+1. `test_imports_do_not_init_db_pool`:
+   - import forex_scheduler, scheduler.runner, core.runtime
+   - assert no DB connection attempt occurred.
+   - If you have a sentinel in db.py, monkeypatch it.
+   - If not, add a sentinel in DatabasePool like `self._initialized` and expose a safe getter `db.db_pool.is_initialized()`.
+2. `test_get_runtime_returns_new_instance`:
+   - r1 = get_runtime("a"); r2 = get_runtime("a"); assert r1 is not r2
+3. `test_runner_uses_runtime_not_globals`:
+   - instantiate SchedulerRunner("entrylab")
+   - ensure it stores tenant_id and does not reference global engine singletons.
+   - If global names still exist, test should fail until removed or deprecated.
+
+E) Keep compatibility
+- forex_scheduler.py must continue to accept:
+  - --tenant
+  - --once
+  - --all-tenants
+  - --shard i/n
+- If logic moved, keep args the same.
+
+Acceptance Criteria:
+- `pytest -q` passes
+- `python - <<EOF ... EOF` cold import succeeds:
+  import forex_scheduler
+  import scheduler.runner
+  import core.runtime
+  print("Cold import OK")
+- No DB pool initialization on import.
+- Scheduler still runnable.
+
+Output:
+- List files created/changed.
+- Show pytest output.
+- Show cold import output.
+
+Go implement now.
