@@ -7,10 +7,17 @@ Tests database isolation between two tenants across key tables:
 - forex_config  
 - bot_config
 
+Requirements:
+    - Postgres DATABASE_URL must be set and reachable
+    - Example: export DATABASE_URL="postgres://user:pass@host:5432/dbname"
+
 Usage:
     python scripts/smoke_tenant_isolation.py
     python scripts/smoke_tenant_isolation.py --tenant-a foo --tenant-b bar
     python scripts/smoke_tenant_isolation.py --keep-data
+
+Options:
+    --keep-data    Retains test rows for manual inspection after run
 
 Exit codes:
     0 = All tests passed
@@ -47,23 +54,45 @@ class TenantIsolationTest:
         self.tenant_a = tenant_a
         self.tenant_b = tenant_b
         self.keep_data = keep_data
-        self.created_signal_ids = []
+        self.created_signals = []
         self.passed = 0
         self.failed = 0
         self.db = None
+        self.db_initialized = False
     
     def setup(self):
-        """Initialize database connection."""
-        import db as db_module
-        self.db = db_module
+        """Initialize database connection with fail-fast behavior."""
+        db_url = os.environ.get('DATABASE_URL')
+        if not db_url:
+            print("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: DATABASE_URL not set")
+            sys.exit(1)
         
-        if not self.db.db_pool or not self.db.db_pool.connection_pool:
-            raise RuntimeError("DATABASE_URL not set or database unavailable")
+        try:
+            import db as db_module
+            self.db = db_module
+            
+            if not self.db.db_pool or not self.db.db_pool.connection_pool:
+                print("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: database pool not initialized")
+                sys.exit(1)
+            
+            with self.db.db_pool.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+            
+            self.db_initialized = True
+            
+        except Exception as e:
+            print(f"Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: {e}")
+            sys.exit(1)
         
         logger.info(f"Testing isolation between tenant_a={self.tenant_a} and tenant_b={self.tenant_b}")
     
     def cleanup(self):
         """Remove test data created during tests."""
+        if not self.db_initialized:
+            return
+        
         if self.keep_data:
             logger.info("--keep-data specified, skipping cleanup")
             return
@@ -74,24 +103,32 @@ class TenantIsolationTest:
             with self.db.db_pool.get_connection() as conn:
                 cursor = conn.cursor()
                 
-                for signal_id in self.created_signal_ids:
+                for signal_id, tenant_id in self.created_signals:
                     cursor.execute(
-                        "DELETE FROM forex_signals WHERE id = %s",
-                        (signal_id,)
+                        "DELETE FROM forex_signals WHERE id = %s AND tenant_id = %s",
+                        (signal_id, tenant_id)
                     )
                 
                 cursor.execute(
-                    "DELETE FROM forex_config WHERE tenant_id IN (%s, %s)",
-                    (self.tenant_a, self.tenant_b)
+                    "DELETE FROM forex_config WHERE tenant_id = %s",
+                    (self.tenant_a,)
+                )
+                cursor.execute(
+                    "DELETE FROM forex_config WHERE tenant_id = %s",
+                    (self.tenant_b,)
                 )
                 
                 cursor.execute(
-                    "DELETE FROM bot_config WHERE tenant_id IN (%s, %s)",
-                    (self.tenant_a, self.tenant_b)
+                    "DELETE FROM bot_config WHERE tenant_id = %s",
+                    (self.tenant_a,)
+                )
+                cursor.execute(
+                    "DELETE FROM bot_config WHERE tenant_id = %s",
+                    (self.tenant_b,)
                 )
                 
                 conn.commit()
-                logger.info(f"Cleaned up {len(self.created_signal_ids)} signals and configs")
+                logger.info(f"Cleaned up {len(self.created_signals)} signals and configs")
         except Exception as e:
             logger.error(f"Cleanup failed: {e}")
     
@@ -118,7 +155,7 @@ class TenantIsolationTest:
             take_profit=Decimal('2010.00'),
             stop_loss=Decimal('1990.00')
         )
-        self.created_signal_ids.append(signal_id)
+        self.created_signals.append((signal_id, self.tenant_a))
         
         self.assert_test(signal_id is not None, "Create signal for tenant_a")
         
@@ -144,7 +181,7 @@ class TenantIsolationTest:
             take_profit=Decimal('2040.00'),
             stop_loss=Decimal('2060.00')
         )
-        self.created_signal_ids.append(signal_id)
+        self.created_signals.append((signal_id, self.tenant_a))
         
         result = self.db.update_signal_status(signal_id, 'active', self.tenant_b)
         
