@@ -185,3 +185,65 @@ class TestSchedulerModules:
         messenger = Messenger(runtime)
         monitor = SignalMonitor(runtime, messenger)
         assert monitor.tenant_id == 'mon-test'
+
+
+class TestForexSchedulerIntegration:
+    """Integration tests for ForexSchedulerRunner."""
+    
+    @pytest.mark.asyncio
+    async def test_scheduler_runner_run_once(self):
+        """ForexSchedulerRunner.run_once() should complete without errors when properly mocked."""
+        from core.runtime import TenantRuntime
+        from forex_scheduler import ForexSchedulerRunner
+        
+        runtime = TenantRuntime(tenant_id='integration-test')
+        runner = ForexSchedulerRunner(runtime)
+        
+        mock_signal_engine = MagicMock()
+        mock_signal_engine.is_trading_hours.return_value = False
+        mock_signal_engine.check_for_signals = MagicMock(return_value=None)
+        
+        with patch.object(runtime, 'get_signal_engine', return_value=mock_signal_engine), \
+             patch.object(runtime, 'get_forex_signals', return_value=[]):
+            await runner.run_once()
+        
+        mock_signal_engine.is_trading_hours.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_scheduler_runner_skips_with_pending_signal(self):
+        """ForexSchedulerRunner should skip signal generation if one is already pending."""
+        from core.runtime import TenantRuntime
+        from forex_scheduler import ForexSchedulerRunner
+        
+        runtime = TenantRuntime(tenant_id='integration-test-2')
+        runner = ForexSchedulerRunner(runtime)
+        
+        mock_signal_engine = MagicMock()
+        mock_signal_engine.is_trading_hours.return_value = True
+        
+        pending_signal = {
+            'id': 123,
+            'entry_price': 2000.0,
+            'take_profit': 2050.0,
+            'stop_loss': 1980.0
+        }
+        
+        with patch.object(runtime, 'get_signal_engine', return_value=mock_signal_engine), \
+             patch.object(runtime, 'get_forex_signals', return_value=[pending_signal]):
+            await runner.run_once()
+        
+        mock_signal_engine.check_for_signals.assert_not_called()
+    
+    def test_scheduler_runner_construction(self):
+        """ForexSchedulerRunner should construct with TenantRuntime."""
+        from core.runtime import TenantRuntime
+        from forex_scheduler import ForexSchedulerRunner
+        
+        runtime = TenantRuntime(tenant_id='construction-test')
+        runner = ForexSchedulerRunner(runtime)
+        
+        assert runner.tenant_id == 'construction-test'
+        assert runner.runtime is runtime
+        assert runner.messenger is not None
+        assert runner.generator is not None
+        assert runner.monitor is not None

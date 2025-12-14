@@ -94,7 +94,8 @@ class ForexSignalEngine:
         
         self._active_bot_type = bot_type
         self._active_strategy = get_active_strategy(bot_type)
-        logger.info(f"Switched to strategy: {self._active_strategy.name}")
+        if self._active_strategy:
+            logger.info(f"Switched to strategy: {self._active_strategy.name}")
         return True
     
     def get_available_strategies(self):
@@ -187,12 +188,12 @@ class ForexSignalEngine:
                 return False, f"Outside trading session ({self.session_start_hour_utc}:00-{self.session_end_hour_utc}:00 UTC)"
         
         # 2. Check daily loss cap (use <= to pause AT the threshold, not just past it)
-        daily_pnl = get_daily_pnl()
+        daily_pnl = get_daily_pnl(tenant_id=self.tenant_id)
         if daily_pnl <= -self.daily_loss_cap_pips:
             return False, f"Daily loss cap reached ({daily_pnl:.1f} pips, cap: -{self.daily_loss_cap_pips})"
         
         # 3. Check back-to-back loss throttle
-        last_signal = get_last_completed_signal()
+        last_signal = get_last_completed_signal(tenant_id=self.tenant_id)
         if last_signal and last_signal['status'] == 'lost':
             closed_at = last_signal['closed_at']
             if closed_at:
@@ -340,7 +341,7 @@ class ForexSignalEngine:
                         pips = round((tp1 - entry) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
-                        update_tp_hit(signal_id, 1)
+                        update_tp_hit(signal_id, 1, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp1_hit',
@@ -360,7 +361,7 @@ class ForexSignalEngine:
                         pips = round((tp2 - entry) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
-                        update_tp_hit(signal_id, 2)
+                        update_tp_hit(signal_id, 2, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp2_hit',
@@ -379,7 +380,7 @@ class ForexSignalEngine:
                     if has_tp3 and tp2_hit and not tp3_hit and current_price >= tp3:
                         pips = round((tp3 - entry) * 100, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
-                        update_tp_hit(signal_id, 3)
+                        update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp3_hit',
@@ -418,7 +419,7 @@ class ForexSignalEngine:
                         pips = round((entry - tp1) * 100, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
-                        update_tp_hit(signal_id, 1)
+                        update_tp_hit(signal_id, 1, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp1_hit',
@@ -438,7 +439,7 @@ class ForexSignalEngine:
                         pips = round((entry - tp2) * 100, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
-                        update_tp_hit(signal_id, 2)
+                        update_tp_hit(signal_id, 2, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp2_hit',
@@ -457,7 +458,7 @@ class ForexSignalEngine:
                     if has_tp3 and tp2_hit and not tp3_hit and current_price <= tp3:
                         pips = round((entry - tp3) * 100, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
-                        update_tp_hit(signal_id, 3)
+                        update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp3_hit',

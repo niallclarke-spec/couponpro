@@ -34,6 +34,5 @@ PyJWT==2.10.1
 # Testing
 pytest==9.0.2
 
-# Constraints: Explicitly exclude the wrong telegram package
-# The 'telegram' package (0.0.1) is a stub that shadows python-telegram-bot
-# pip will not install it if python-telegram-bot is already installed
+# Async testing
+pytest-asyncio
