@@ -1179,7 +1179,7 @@ def delete_campaign(campaign_id, tenant_id='entrylab'):
         print(f"Error deleting campaign: {e}")
         raise
 
-def update_campaign_statuses():
+def update_campaign_statuses(tenant_id='entrylab'):
     """Update campaign statuses based on current time"""
     try:
         with db_pool.get_connection() as conn:
@@ -1190,15 +1190,15 @@ def update_campaign_statuses():
             cursor.execute("""
                 UPDATE campaigns
                 SET status = 'ongoing'
-                WHERE start_date <= %s AND end_date >= %s AND status != 'ongoing'
-            """, (now, now))
+                WHERE start_date <= %s AND end_date >= %s AND status != 'ongoing' AND tenant_id = %s
+            """, (now, now, tenant_id))
             
             # Update to expired
             cursor.execute("""
                 UPDATE campaigns
                 SET status = 'expired'
-                WHERE end_date < %s AND status != 'expired'
-            """, (now,))
+                WHERE end_date < %s AND status != 'expired' AND tenant_id = %s
+            """, (now, tenant_id))
             
             conn.commit()
     except Exception as e:
@@ -3717,7 +3717,7 @@ def update_tp_hit(signal_id, tp_level, tenant_id='entrylab'):
         print(f"Error updating TP{tp_level} hit: {e}")
         return False
 
-def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None):
+def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None, tenant_id='entrylab'):
     """
     Update guidance information for a signal with zone tracking.
     Increments guidance_count and updates last_guidance_at, notes, and zone levels.
@@ -3727,6 +3727,7 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
         notes (str): AI guidance notes/reasons
         progress_zone (int, optional): Progress zone reached (30, 60, 85)
         caution_zone (int, optional): Caution zone reached (30, 60)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3745,8 +3746,8 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
                         last_guidance_at = CURRENT_TIMESTAMP,
                         notes = %s,
                         last_progress_zone = GREATEST(COALESCE(last_progress_zone, 0), %s)
-                    WHERE id = %s
-                """, (notes, progress_zone, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (notes, progress_zone, signal_id, tenant_id))
             elif caution_zone is not None:
                 cursor.execute("""
                     UPDATE forex_signals
@@ -3754,16 +3755,16 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
                         last_guidance_at = CURRENT_TIMESTAMP,
                         notes = %s,
                         last_caution_zone = GREATEST(COALESCE(last_caution_zone, 0), %s)
-                    WHERE id = %s
-                """, (notes, caution_zone, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (notes, caution_zone, signal_id, tenant_id))
             else:
                 cursor.execute("""
                     UPDATE forex_signals
                     SET guidance_count = COALESCE(guidance_count, 0) + 1,
                         last_guidance_at = CURRENT_TIMESTAMP,
                         notes = %s
-                    WHERE id = %s
-                """, (notes, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (notes, signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -3838,7 +3839,7 @@ def update_milestone_sent(signal_id, milestone_key, tenant_id='entrylab'):
         print(f"Error updating milestone sent: {e}")
         return False
 
-def update_effective_sl(signal_id, new_sl_price):
+def update_effective_sl(signal_id, new_sl_price, tenant_id='entrylab'):
     """
     Update the effective stop loss for a signal.
     
@@ -3854,6 +3855,7 @@ def update_effective_sl(signal_id, new_sl_price):
     Args:
         signal_id (int): Signal ID
         new_sl_price (float): New effective stop loss price
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3868,8 +3870,8 @@ def update_effective_sl(signal_id, new_sl_price):
             cursor.execute("""
                 UPDATE forex_signals
                 SET effective_sl = %s
-                WHERE id = %s
-            """, (new_sl_price, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (new_sl_price, signal_id, tenant_id))
             
             conn.commit()
             print(f"[EFFECTIVE_SL] Updated signal {signal_id} effective_sl to {new_sl_price}")
@@ -3878,7 +3880,7 @@ def update_effective_sl(signal_id, new_sl_price):
         print(f"Error updating effective SL: {e}")
         return False
 
-def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):
+def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None, tenant_id='entrylab'):
     """
     Store original indicator values when signal is created for later re-validation.
     
@@ -3892,6 +3894,7 @@ def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, 
         adx (float, optional): Original ADX value (legacy)
         stoch_k (float, optional): Original Stochastic K value (legacy)
         indicators_dict (dict, optional): Dictionary of all indicators {'rsi': 45.2, 'macd': 0.0012, ...}
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3928,14 +3931,15 @@ def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, 
                     original_adx = %s,
                     original_stoch_k = %s,
                     original_indicators_json = %s
-                WHERE id = %s
+                WHERE id = %s AND tenant_id = %s
             """, (
                 rsi or all_indicators.get('rsi'),
                 macd or all_indicators.get('macd'),
                 adx or all_indicators.get('adx'),
                 stoch_k or all_indicators.get('stochastic'),
                 json.dumps(all_indicators) if all_indicators else None,
-                signal_id
+                signal_id,
+                tenant_id
             ))
             
             conn.commit()
@@ -3944,7 +3948,7 @@ def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, 
         print(f"Error updating signal original indicators: {e}")
         return False
 
-def update_signal_revalidation(signal_id, thesis_status, notes=None):
+def update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id='entrylab'):
     """
     Update revalidation data for a signal (for stagnant trade monitoring).
     
@@ -3952,6 +3956,7 @@ def update_signal_revalidation(signal_id, thesis_status, notes=None):
         signal_id (int): Signal ID
         thesis_status (str): 'intact', 'weakening', or 'broken'
         notes (str, optional): Notes about revalidation
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3973,8 +3978,8 @@ def update_signal_revalidation(signal_id, thesis_status, notes=None):
                         ELSE thesis_changed_at 
                     END,
                     notes = COALESCE(%s, notes)
-                WHERE id = %s
-            """, (thesis_status, thesis_status, notes, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (thesis_status, thesis_status, notes, signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -3982,12 +3987,13 @@ def update_signal_revalidation(signal_id, thesis_status, notes=None):
         print(f"Error updating signal revalidation: {e}")
         return False
 
-def update_signal_timeout_notified(signal_id):
+def update_signal_timeout_notified(signal_id, tenant_id='entrylab'):
     """
     Mark a signal as having received the timeout notification.
     
     Args:
         signal_id (int): Signal ID
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -4002,8 +4008,8 @@ def update_signal_timeout_notified(signal_id):
             cursor.execute("""
                 UPDATE forex_signals
                 SET timeout_notified = TRUE
-                WHERE id = %s
-            """, (signal_id,))
+                WHERE id = %s AND tenant_id = %s
+            """, (signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -4343,7 +4349,7 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
                             is_converted = TRUE,
                             converted_at = CURRENT_TIMESTAMP,
                             conversion_days = %s
-                        WHERE email = %s
+                        WHERE email = %s AND tenant_id = 'entrylab'
                         RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
                     """, (name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
                           conversion_days, email))
@@ -4900,9 +4906,9 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
                     last_seen_at = %s,
                     status = 'active',
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id = %s
+                WHERE id = %s AND tenant_id = %s
                 RETURNING id, email, telegram_user_id, telegram_username, status, joined_at
-            """, (telegram_user_id, telegram_username, joined_at, joined_at, subscription_id))
+            """, (telegram_user_id, telegram_username, joined_at, joined_at, subscription_id, tenant_id))
             
             result = cursor.fetchone()
             conn.commit()
