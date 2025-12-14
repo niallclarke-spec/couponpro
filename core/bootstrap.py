@@ -85,10 +85,11 @@ def start_app(ctx: AppContext) -> None:
     
     if ctx.forex_scheduler_available:
         try:
-            from core.leader import acquire_scheduler_leader_lock, start_leader_retry_loop
+            from core.leader import acquire_scheduler_leader_lock, start_leader_retry_loop, start_scheduler_once
             from workers.scheduler import start_forex_scheduler
             
-            def start_scheduler():
+            def _do_start_scheduler():
+                """Actual scheduler startup - called via start_scheduler_once()"""
                 def run_forex_scheduler():
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
@@ -105,10 +106,10 @@ def start_app(ctx: AppContext) -> None:
             
             if acquire_scheduler_leader_lock():
                 print("[SCHEDULER] Leader lock acquired, starting scheduler")
-                start_scheduler()
+                start_scheduler_once(_do_start_scheduler)
             else:
                 print("[SCHEDULER] Leader lock not acquired, waiting for leader to terminate")
-                start_leader_retry_loop(start_scheduler)
+                start_leader_retry_loop(_do_start_scheduler)
         except Exception as e:
             print(f"[BOOTSTRAP] Forex scheduler startup failed: {e}")
             import traceback
