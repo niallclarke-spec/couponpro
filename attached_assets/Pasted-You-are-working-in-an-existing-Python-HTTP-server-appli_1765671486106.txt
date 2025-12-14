@@ -1,0 +1,80 @@
+You are working in an existing Python HTTP server application that is already live in production.
+DO NOT refactor broadly. DO NOT change API responses. DO NOT change routing, auth, tenant logic, or database schema.
+
+Your task is to fix TWO specific production issues only.
+
+============================================================
+GOAL A — REMOVE `cgi` USAGE (Python 3.13 compatibility)
+============================================================
+
+Current issue:
+Startup logs show:
+DeprecationWarning: 'cgi' is deprecated and slated for removal in Python 3.13
+
+Requirements:
+1) Locate exactly where `import cgi` is used.
+2) Identify the precise functionality it supports (likely multipart/form-data parsing for file uploads).
+3) Replace `cgi` usage with a Python 3.13-safe alternative:
+   - Prefer a standard-library solution if possible.
+   - Do NOT introduce new third-party dependencies unless absolutely necessary.
+   - Implement the minimum required logic to preserve CURRENT behavior.
+4) Preserve:
+   - Same request fields
+   - Same filenames
+   - Same upload behavior
+   - Same API responses
+5) Remove `import cgi` completely once replacement is in place.
+6) Add a short comment explaining the change is for Python 3.13 compatibility.
+
+Validation:
+- `python3 -c "import server; print('server import ok')"` must succeed
+- Scheduler must NOT auto-start on import
+- Server starts without any cgi DeprecationWarning
+- Upload / POST endpoints continue working as before
+
+============================================================
+GOAL B — FIX STRIPE `current_period_end` ERROR
+============================================================
+
+Current issue in logs:
+[Stripe] Direct access failed: 'current_period_end'
+
+This is caused by assuming the field exists on the subscription object.
+
+Requirements:
+1) Locate the Stripe revenue / rebill calculation logic accessing `current_period_end`.
+2) Make it robust across Stripe API versions:
+   - Use safe access (`.get()` style)
+   - If missing, retrieve the subscription via Stripe API OR derive from invoice/line period data
+3) Eliminate the KeyError entirely.
+4) Do NOT log entire Stripe objects.
+5) Preserve existing output format and calculations as closely as possible.
+
+Validation:
+- Call the revenue endpoint (e.g. `/api/telegram/revenue-metrics?period=all`)
+- Endpoint returns 200
+- No "Direct access failed" log appears
+- No exceptions raised
+
+============================================================
+CONSTRAINTS (VERY IMPORTANT)
+============================================================
+
+- NO schema changes
+- NO auth changes
+- NO tenant logic changes
+- NO route changes
+- NO refactors outside these two fixes
+- NO behavior regressions
+
+============================================================
+DELIVERABLES
+============================================================
+
+1) Commit-ready code changes
+2) List of files + exact changes made
+3) Confirmation that:
+   - Server imports cleanly
+   - Scheduler behavior unchanged
+   - Stripe logs are clean
+   - Existing functionality preserved

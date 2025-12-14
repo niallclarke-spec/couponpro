@@ -1,0 +1,91 @@
+Implement EXACTLY these two fixes and nothing else. Do not refactor unrelated code.
+
+========================================================
+FIX 1 — Remove deprecated `cgi` usage (keep uploads working)
+========================================================
+A) server.py
+- Remove `import cgi` from server.py (it is unused there).
+
+B) Create new file: utils/multipart.py
+- Add a stdlib-only multipart/form-data parser using email.parser.BytesParser + email.policy.default.
+- Expose: parse_multipart_formdata(content_type: str, body: bytes) -> (fields: dict, files: dict)
+- files[name] must include: filename, content_type, data (bytes)
+- fields[name] must be decoded utf-8 with errors="replace"
+
+Use this exact structure (can copy exactly):
+
+from email.parser import BytesParser
+from email.policy import default
+
+def parse_multipart_formdata(content_type: str, body: bytes):
+    if not content_type or "multipart/form-data" not in content_type:
+        raise ValueError("Not multipart/form-data")
+
+    raw = (f"Content-Type: {content_type}\r\n"
+           f"MIME-Version: 1.0\r\n"
+           f"\r\n").encode("utf-8") + (body or b"")
+
+    msg = BytesParser(policy=default).parsebytes(raw)
+
+    fields = {}
+    files = {}
+
+    for part in msg.iter_parts():
+        cd = part.get("Content-Disposition", "")
+        if not cd or "form-data" not in cd:
+            continue
+
+        name = part.get_param("name", header="Content-Disposition")
+        filename = part.get_param("filename", header="Content-Disposition")
+
+        payload = part.get_payload(decode=True) or b""
+        ctype = part.get_content_type()
+
+        if filename:
+            files[name] = {"filename": filename, "content_type": ctype, "data": payload}
+        else:
+            fields[name] = payload.decode("utf-8", errors="replace")
+
+    return fields, files
+
+C) domains/coupons/handlers.py
+- Remove `import cgi`
+- Replace both usages of `cgi.FieldStorage()` (around lines ~534 and ~589) with:
+  - content_length = int(handler.headers.get("Content-Length", 0))
+  - content_type = handler.headers.get("Content-Type", "")
+  - body = handler.rfile.read(content_length) if content_length else b""
+  - fields, files = parse_multipart_formdata(content_type, body)
+- Then map the original FieldStorage logic to use `files[...]` and `fields[...]` WITHOUT changing behavior:
+  - same required field names as before
+  - same validation and error responses as before
+  - same file bytes passed into existing upload logic
+
+========================================================
+FIX 2 — Stripe `current_period_end` KeyError (no more crashes)
+========================================================
+In integrations/stripe/client.py (around where it currently logs “Direct access failed: 'current_period_end'”):
+
+- Replace ANY dict-style access `sub['current_period_end']` with safe access:
+  1) if hasattr(sub, "get"): period_end = sub.get("current_period_end")
+  2) if period_end is None: period_end = getattr(sub, "current_period_end", None)
+- If still None, retrieve full subscription once:
+  - sub_id from sub.get("id") or getattr(sub, "id", None)
+  - full_sub = stripe.Subscription.retrieve(sub_id)
+  - extract full_sub current_period_end using same safe access
+- If still None, SKIP rebill calc for that subscription (continue) and log ONLY a short message containing sub_id (do NOT print full objects).
+- Remove the “Direct access failed” log block entirely.
+
+========================================================
+Verification (run these)
+========================================================
+1) Import invariant:
+python3 -c "import server; print('server import ok')"
+
+2) Start server and confirm NO DeprecationWarning about cgi.
+
+3) Confirm uploads still work:
+- use whatever existing admin action triggers upload-template/upload-overlay
+- ensure endpoint returns 200 as before
+
+4) Confirm Stripe revenue metrics no longer prints current_period_end errors:
+Hit /api/telegram/revenue-metrics?period=all and ensure it completes without KeyError.
