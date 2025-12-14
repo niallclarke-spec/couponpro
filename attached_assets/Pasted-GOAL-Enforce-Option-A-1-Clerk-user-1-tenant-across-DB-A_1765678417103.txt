@@ -1,0 +1,82 @@
+GOAL: Enforce Option A (1 Clerk user → 1 tenant) across DB + API.
+
+CONTEXT:
+- We have multi-tenancy tables: tenants, tenant_users, tenant_integrations.
+- Tenant mapping is stored in tenant_users.
+- We have Clerk JWT auth + middleware tenant resolution already implemented.
+- We added POST /api/tenants/map-user (EntryLab-admin-only) to map a Clerk user to a tenant.
+
+REQUIREMENT (Option A):
+- A clerk_user_id can belong to ONE tenant only.
+- This must be enforced at the DATABASE level and matched by API behavior.
+
+TASKS (implement ALL):
+
+1) DATABASE CONSTRAINT (hard guarantee)
+- Ensure tenant_users has a UNIQUE constraint on (clerk_user_id).
+- If a different unique exists that conflicts, adjust safely.
+- Also ensure tenant_users has a PRIMARY KEY or UNIQUE on id if needed, but the core is UNIQUE(clerk_user_id).
+
+2) INDEXES (performance)
+- Ensure index exists on tenant_users(tenant_id) for lookups.
+- Keep/ensure index on clerk_user_id (unique implies index).
+
+3) API BEHAVIOR: /api/tenants/map-user must match Option A
+- Endpoint remains EntryLab-admin-only, auth_required=True, db_required=True.
+- Validate:
+  - tenant_id present + stripped non-empty
+  - clerk_user_id present + stripped non-empty
+  - tenant_id != 'entrylab' (reject)
+  - role in {'admin','member'} default 'admin'
+- Implement explicit behavior:
+  A) If clerk_user_id does NOT exist in tenant_users:
+     - INSERT mapping.
+  B) If clerk_user_id exists:
+     - If existing.tenant_id == tenant_id:
+         - Update role only (if changed) and return success with "action": "updated"
+     - If existing.tenant_id != tenant_id:
+         - This is a "MOVE" (user is being reassigned to a different tenant).
+         - Allow this ONLY because the caller is EntryLab admin.
+         - Perform UPDATE tenant_id + role and return success with "action": "moved", including previous_tenant_id in response.
+
+- IMPORTANT: Use ON CONFLICT (clerk_user_id) for upsert (NOT (tenant_id, clerk_user_id)).
+- Response shape:
+  {
+    "success": true,
+    "tenant_id": "...",
+    "clerk_user_id": "...",
+    "role": "...",
+    "action": "created" | "updated" | "moved",
+    "previous_tenant_id": "..." (only when moved)
+  }
+
+4) ERROR HANDLING
+- If tenant_id provided does not exist in tenants table → 400 with clear message.
+- If DB constraint violation occurs unexpectedly → return 400 with safe error (no stack traces).
+
+5) MIGRATION SAFETY
+- Before adding UNIQUE(clerk_user_id), check for duplicates:
+  - SELECT clerk_user_id, COUNT(*) FROM tenant_users GROUP BY clerk_user_id HAVING COUNT(*) > 1;
+- If duplicates exist, DO NOT guess. Implement safe cleanup strategy:
+  - Keep the most recently updated row if updated_at exists; otherwise keep the latest created_at; otherwise keep the row with max(id).
+  - Delete others.
+  - Log how many rows removed.
+- Only then add the UNIQUE constraint.
+
+6) VERIFICATION (must provide proof)
+After implementation, output:
+- The exact SQL showing the UNIQUE(clerk_user_id) exists.
+- The upsert query used in the handler.
+- A short test plan with curl examples:
+  - Create mapping (created)
+  - Map same tenant different role (updated)
+  - Map to new tenant (moved)
+  - Attempt tenant_id='entrylab' (400)
+  - Attempt unknown tenant (400)
+
+NON-GOALS (do NOT implement):
+- Many-to-many memberships.
+- Auto-tenant creation.
+- Any changes to EntryLab env-based credentials behavior.
+
+Deliverable: Commit-ready code + updated migration logic + verification output.
