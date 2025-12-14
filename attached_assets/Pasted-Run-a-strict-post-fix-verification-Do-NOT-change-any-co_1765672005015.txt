@@ -1,0 +1,78 @@
+Run a strict post-fix verification. Do NOT change any code unless a test fails; if a test fails, report exactly where/why first.
+
+========================================================
+1) Confirm cgi is fully gone
+========================================================
+rg -n "^\s*import\s+cgi\b|cgi\." -S .
+
+Expect: zero matches.
+
+========================================================
+2) Validate multipart parser correctness with a real multipart request
+========================================================
+Goal: prove /api/upload-template and /api/upload-overlay still accept multipart/form-data and save files exactly as before.
+
+A) Start server in background:
+python3 server.py &
+sleep 2
+
+B) Create a small test file:
+printf "hello-template" > /tmp/test-template.png
+printf "hello-overlay" > /tmp/test-overlay.png
+
+C) Call the endpoints using curl multipart upload.
+IMPORTANT: match the SAME field names the handlers expect. Inspect the handler code to confirm names.
+- If the handler expects "template" file field, use -F "template=@/tmp/test-template.png"
+- If it expects "overlay" file field, use -F "overlay=@/tmp/test-overlay.png"
+- Include any required non-file fields via -F "name=value"
+
+Run:
+curl -i -X POST http://localhost:8080/api/upload-template \
+  -F "template=@/tmp/test-template.png" \
+  -F "name=test_template"
+
+curl -i -X POST http://localhost:8080/api/upload-overlay \
+  -F "overlay=@/tmp/test-overlay.png" \
+  -F "name=test_overlay"
+
+D) Verify responses:
+- HTTP status should match previous success path (usually 200)
+- Response body should indicate success
+- If the system stores uploads (e.g., Spaces/local), verify the stored object exists or that the DB record was created.
+
+E) Add one negative test:
+Send request missing file field and confirm it returns the same error as before (400/422 etc):
+curl -i -X POST http://localhost:8080/api/upload-template -F "name=missing_file"
+
+========================================================
+3) Stripe current_period_end regression test
+========================================================
+We need to prove /api/telegram/revenue-metrics works and no KeyError occurs.
+
+A) Hit the endpoint twice (to test caching paths too):
+curl -s http://localhost:8080/api/telegram/revenue-metrics?period=all | head -200
+curl -s http://localhost:8080/api/telegram/revenue-metrics?period=all | head -200
+
+B) Scan logs for these strings (should NOT exist anymore):
+- "current_period_end"
+- "Direct access failed"
+- "KeyError"
+
+========================================================
+4) Minimal production-style smoke tests
+========================================================
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/login
+curl -s http://localhost:8080/api/check-auth | head -50
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8080/api/stripe/webhook -H "Content-Type: application/json" -d '{}'
+
+========================================================
+Deliverable
+========================================================
+Output a small report:
+
+- cgi grep: PASS/FAIL
+- upload-template: PASS/FAIL (+ status + response snippet)
+- upload-overlay: PASS/FAIL (+ status + response snippet)
+- negative upload test: PASS/FAIL
+- stripe revenue-metrics: PASS/FAIL (confirm no KeyError/logs)
+- overall: READY / NOT READY

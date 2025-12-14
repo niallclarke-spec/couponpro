@@ -1,0 +1,95 @@
+Finish post-fix verification with REAL multipart uploads + auth-guard checks.
+Do NOT change any code unless a test fails. If a test fails, print:
+(1) endpoint, (2) status code, (3) response body, (4) relevant log lines, (5) suspected root cause.
+
+========================================================
+0) Start fresh server
+========================================================
+pkill -f "python3 server.py" || true
+python3 server.py > /tmp/server.log 2>&1 &
+sleep 2
+tail -n 30 /tmp/server.log
+
+========================================================
+1) Confirm cgi is truly gone (ignore comment/docs)
+========================================================
+rg -n "^\s*import\s+cgi\b|cgi\." -S . || true
+
+If matches are ONLY in comments/strings, report PASS and list file:line.
+If any real import/usage remains, report FAIL and stop.
+
+========================================================
+2) Identify the exact multipart field names expected by the handlers
+========================================================
+Open domains/coupons/handlers.py and locate:
+- handle_upload_template
+- handle_upload_overlay
+
+Extract and print the expected:
+- file field name(s) (e.g. 'file', 'template', 'overlay', etc)
+- any required text fields (e.g. 'name', 'template_name', etc)
+Do NOT guess.
+
+========================================================
+3) Multipart upload tests (real curl multipart/form-data)
+========================================================
+Create test files:
+printf "hello-template" > /tmp/test-template.png
+printf "hello-overlay" > /tmp/test-overlay.png
+
+Use the EXACT field names from step (2).
+Run:
+
+curl -i -X POST http://localhost:8080/api/upload-template \
+  -F "<TEMPLATE_FILE_FIELD>=@/tmp/test-template.png" \
+  -F "<REQUIRED_TEXT_FIELD_1>=test_template" \
+  -F "<REQUIRED_TEXT_FIELD_2>=test_template" || true
+
+curl -i -X POST http://localhost:8080/api/upload-overlay \
+  -F "<OVERLAY_FILE_FIELD>=@/tmp/test-overlay.png" \
+  -F "<REQUIRED_TEXT_FIELD_1>=test_overlay" \
+  -F "<REQUIRED_TEXT_FIELD_2>=test_overlay" || true
+
+Capture:
+- HTTP status code
+- response body (first ~400 chars)
+- any server log lines for each request:
+  tail -n 80 /tmp/server.log
+
+Negative test (missing file):
+curl -i -X POST http://localhost:8080/api/upload-template \
+  -F "<REQUIRED_TEXT_FIELD_1>=missing_file" || true
+
+Confirm it returns the same error semantics as before (400/422 etc).
+
+========================================================
+4) Stripe regression check (no auth needed to prove no crash)
+========================================================
+Hit the Stripe webhook endpoint with empty JSON:
+curl -i -X POST http://localhost:8080/api/stripe/webhook \
+  -H "Content-Type: application/json" \
+  -d '{}' || true
+
+Then tail logs:
+tail -n 80 /tmp/server.log
+
+========================================================
+5) Auth-guard sanity (no login required)
+========================================================
+These should return Unauthorized and NOT 500:
+curl -i http://localhost:8080/api/telegram/revenue-metrics?period=all || true
+curl -i http://localhost:8080/api/forex-signals?limit=5 || true
+
+========================================================
+Deliverable
+========================================================
+Print a FINAL table:
+
+- upload-template: PASS/FAIL (status + body snippet)
+- upload-overlay: PASS/FAIL (status + body snippet)
+- negative upload: PASS/FAIL
+- stripe webhook empty JSON: PASS/FAIL (status + body snippet)
+- auth-guard endpoints return 401/403 (not 500): PASS/FAIL
+- conclusion: READY / NOT READY
+
+If NOT READY, propose the minimal fix (exact file + lines).
