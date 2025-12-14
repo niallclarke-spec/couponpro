@@ -1,0 +1,61 @@
+You are working in an existing Python codebase (Postgres + psycopg2) that is now multi-tenant. 
+Goal: make `python scripts/smoke_tenant_isolation.py` pass against a real DATABASE_URL by fixing **db.py** bugs (NOT architecture refactors), while keeping strict tenant isolation.
+
+CONTEXT / CURRENT FAILURES
+1) Smoke test failure reveals a bug in `db.py:get_bot_config`:
+   - It sometimes raises `IndexError` around line ~3188 (likely due to indexing into `fetchone()` when it returns None or an unexpected shape).
+   - It can also return `None` instead of `{}`.
+
+2) Smoke test expects config getters to be safe and tenant-scoped:
+   - `get_bot_config(tenant_id, key)` should never crash.
+   - If no config exists, it should return `{}` (or a consistent empty structure) rather than None.
+   - Must never read another tenant’s data.
+
+REQUIREMENTS
+A) Fix `get_bot_config` robustness + return type
+- Function must accept `tenant_id` and enforce tenant filter in SQL:
+  `SELECT setting_key, setting_value FROM bot_config WHERE tenant_id=%s ...`
+- If key-specific: return the parsed value, but never raise IndexError when no row exists.
+- If the stored value is JSON: safely parse; if invalid JSON, return raw string.
+- If no row(s), return `{}` for the “all config” call, or `None` (ONLY if the caller expects None) — but in this project, smoke test expects `{}`. Use `{}` consistently.
+- Never return None for the "get full config dict" style call.
+- Add clear docstring and type hints.
+
+B) Fix any similar “fetchone() None” crashes for tenant-scoped config getters
+- Search for `fetchone()[0]`, `fetchone()[1]`, or direct indexing without None checks in:
+  - `get_forex_config`
+  - `get_bot_config`
+  - `get_active_bot`
+- Patch them to handle empty result sets safely.
+- Ensure every SELECT on tenant-aware tables includes tenant_id in WHERE.
+- Do NOT relax the tenant_audit gate (it must still pass).
+
+C) Make smoke test resilient (only minimal changes)
+- In `scripts/smoke_tenant_isolation.py`, treat missing config as `{}` not failure.
+- If the smoke test uses `get_bot_config` expecting a dict, ensure that’s true.
+- Keep tenant_id in all UPDATE/DELETE WHERE clauses (audit must pass).
+
+D) Add/adjust tests (fast unit tests)
+- Add a small test file (or extend existing tests) to verify:
+  1) `get_bot_config` returns `{}` when no rows exist for that tenant.
+  2) It does not crash when the table is empty.
+  3) It does not leak across tenants (insert config for tenant A, verify tenant B sees `{}`).
+- These tests should skip cleanly when DATABASE_URL is not set, matching the project’s existing testing pattern.
+
+IMPLEMENTATION STEPS
+1) Open `db.py` and locate `get_bot_config` (around line ~3188). Fix the IndexError by:
+   - storing `row = cursor.fetchone()`
+   - checking `if not row: return {}`
+   - never indexing into None
+2) Ensure SQL always includes tenant_id filtering.
+3) Ensure the function returns a dict for “get all config for tenant” call.
+4) Update smoke test only if needed for null/empty handling.
+5) Run these commands and make them pass:
+   - `python scripts/tenant_audit.py`
+   - `pytest -q`
+   - (with real DB) `python scripts/smoke_tenant_isolation.py`
+
+OUTPUT
+- Make the smallest safe changes.
+- Show the exact files changed and a brief bullet summary of each change.
+- Do NOT claim anything passed unless you actually ran the commands and saw them pass.
