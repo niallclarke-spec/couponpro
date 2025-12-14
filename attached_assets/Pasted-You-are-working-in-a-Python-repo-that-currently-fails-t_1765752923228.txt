@@ -1,0 +1,57 @@
+You are working in a Python repo that currently fails tests due to missing packages:
+
+- `ModuleNotFoundError: No module named 'core'` when importing `core.alerts`
+- `ModuleNotFoundError: No module named 'scheduler.runner'`
+
+Goal: Fix packaging/import structure with minimal behavioral changes.
+
+DO THIS IN ORDER:
+
+1) Inspect the repo structure:
+   - Run: `ls -la`
+   - Run: `find . -maxdepth 2 -type d -print`
+   - Run: `find . -maxdepth 2 -type f -name "*.py" -print | sort`
+   - Confirm whether `core/` and `scheduler/` directories exist.
+
+2) Ensure `core` is importable and contains `alerts.py`:
+   - If `core/` directory does NOT exist: create it.
+   - Create/ensure these files exist:
+     - `core/__init__.py`
+     - `core/alerts.py`
+   - In `core/alerts.py`, implement a safe default function:
+     - `def notify_error(message: str, *, tenant_id: str | None = None, request_id: str | None = None, exc: Exception | None = None, extra: dict | None = None) -> None:`
+     - It should NOT raise. It can log using existing structured logging if present; otherwise use stdlib logging.
+     - Keep it dependency-free (no external services).
+
+   - If you already have alert/notify logic somewhere else (different module path), keep it AND make `core/alerts.py` call into it, but still export `notify_error`.
+
+3) Ensure `scheduler.runner` is importable:
+   - If `scheduler/` directory does NOT exist: create it.
+   - Create/ensure these files exist:
+     - `scheduler/__init__.py`
+     - `scheduler/runner.py`
+
+   - In `scheduler/runner.py`, add a thin runner wrapper that does NOT trigger DB connections on import.
+     - It should provide a class or function that the rest of the code can call.
+     - Minimal acceptable implementation:
+       - `class SchedulerRunner:`
+         - `def __init__(self, tenant_id: str): ...`
+         - `def run_once(self) -> None: ...`  (internally call existing scheduler logic if it exists, otherwise raise NotImplementedError with a clear message)
+     - IMPORTANT: do not import heavy modules at top-level if they initialize DB pools. Use local imports inside methods.
+
+4) Backwards compatibility shims:
+   - If your repo already has similar modules under different paths (example: `scheduler/generator.py`, `core_logging.py`, etc.), DO NOT delete them.
+   - Instead, re-export from the expected locations (`core/*`, `scheduler/runner.py`) so existing imports keep working.
+
+5) Fix the failing test immediately:
+   - Run: `pytest tests/test_runtime_refactor.py -k alert -q`
+   - It must pass (or skip) without `ModuleNotFoundError`.
+
+6) Then run the full suite:
+   - Run: `pytest -q`
+   - Ensure no new failures.
+
+Output:
+- Show the created/updated files.
+- Show the exact pytest output for the two commands above.
+- Keep changes minimal and import-safe (no DB init on import).
