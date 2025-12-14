@@ -14,8 +14,11 @@ import threading
 import asyncio
 
 from core.app_context import AppContext
+from core.logging import configure_logging, get_logger
 
 _started = False
+
+logger = get_logger(__name__)
 
 
 def start_app(ctx: AppContext) -> None:
@@ -37,39 +40,39 @@ def start_app(ctx: AppContext) -> None:
     """
     global _started
     
+    configure_logging()
+    
     if _started:
-        print("[BOOTSTRAP] Already started, skipping")
+        logger.debug("Already started, skipping")
         return
     
     _started = True
-    print("[BOOTSTRAP] Starting application...")
+    logger.info("Starting application...")
     
     if ctx.database_available:
         try:
             import db
             schema_ok = db.db_pool.initialize_schema()
             if schema_ok:
-                print("[BOOTSTRAP] Database schema initialized")
+                logger.info("Database schema initialized")
                 ctx.database_available = True
             else:
-                print("[BOOTSTRAP] Database schema initialization failed")
+                logger.error("Database schema initialization failed")
                 ctx.database_available = False
                 ctx.forex_scheduler_available = False
         except Exception as e:
-            print(f"[BOOTSTRAP] Database import failed: {e}")
+            logger.exception("Database import failed")
             ctx.database_available = False
             ctx.forex_scheduler_available = False
     
     if ctx.telegram_bot_available and ctx.coupon_bot_token:
         try:
             import telegram_bot
-            print("[BOOTSTRAP] Initializing coupon bot webhook...")
+            logger.info("Initializing coupon bot webhook...")
             telegram_bot.start_webhook_bot(ctx.coupon_bot_token)
-            print("[BOOTSTRAP] Coupon bot webhook started")
+            logger.info("Coupon bot webhook started")
         except Exception as e:
-            print(f"[BOOTSTRAP] Coupon bot startup failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("Coupon bot startup failed")
     
     if ctx.telegram_bot_available and ctx.forex_bot_token:
         try:
@@ -77,11 +80,11 @@ def start_app(ctx: AppContext) -> None:
             webhook_url = "https://dash.promostack.io/api/forex-telegram-webhook"
             success = telegram_bot.setup_forex_webhook(ctx.forex_bot_token, webhook_url)
             if success:
-                print(f"[BOOTSTRAP] Forex bot webhook configured: {webhook_url}")
+                logger.info(f"Forex bot webhook configured: {webhook_url}")
             else:
-                print("[BOOTSTRAP] Forex bot webhook setup failed")
+                logger.warning("Forex bot webhook setup failed")
         except Exception as e:
-            print(f"[BOOTSTRAP] Forex bot webhook error: {e}")
+            logger.exception("Forex bot webhook error")
     
     if ctx.forex_scheduler_available:
         try:
@@ -96,32 +99,28 @@ def start_app(ctx: AppContext) -> None:
                     try:
                         loop.run_until_complete(start_forex_scheduler())
                     except Exception as e:
-                        print(f"[BOOTSTRAP] Scheduler error: {e}")
-                        import traceback
-                        traceback.print_exc()
+                        logger.exception("Scheduler error")
                 
                 scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
                 scheduler_thread.start()
-                print("[BOOTSTRAP] Forex scheduler started in background thread")
+                logger.info("Forex scheduler started in background thread")
             
             if acquire_scheduler_leader_lock():
-                print("[SCHEDULER] Leader lock acquired, starting scheduler")
+                logger.info("Leader lock acquired, starting scheduler")
                 start_scheduler_once(_do_start_scheduler)
             else:
-                print("[SCHEDULER] Leader lock not acquired, waiting for leader to terminate")
+                logger.info("Leader lock not acquired, waiting for leader to terminate")
                 start_leader_retry_loop(_do_start_scheduler)
         except Exception as e:
-            print(f"[BOOTSTRAP] Forex scheduler startup failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("Forex scheduler startup failed")
     
     if ctx.stripe_available:
         try:
             from stripe_client import get_stripe_client
             get_stripe_client()
-            print("[BOOTSTRAP] Stripe client initialized")
+            logger.info("Stripe client initialized")
         except Exception as e:
-            print(f"[BOOTSTRAP] Stripe initialization failed: {e}")
+            logger.exception("Stripe initialization failed")
             ctx.stripe_available = False
     
-    print("[BOOTSTRAP] Application started")
+    logger.info("Application started")
