@@ -175,6 +175,9 @@ def handle_tenant_map_user(handler):
             if is_insert:
                 action = 'created'
                 previous_tenant_id = None
+            elif prev_tenant == tenant_id and prev_role == role:
+                action = 'unchanged'
+                previous_tenant_id = None
             elif prev_tenant == tenant_id:
                 action = 'updated'
                 previous_tenant_id = None
