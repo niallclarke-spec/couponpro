@@ -44,13 +44,13 @@ class SignalGenerator:
             True if config was reloaded
         """
         try:
+            from db import tenant_conn
+            
             db = self.runtime.db
             if not db.db_pool.connection_pool:
                 return False
             
-            with db.db_pool.get_connection() as conn:
-                cursor = conn.cursor()
-                
+            with tenant_conn(self.tenant_id) as (conn, cursor):
                 cursor.execute("""
                     SELECT updated_at FROM bot_config WHERE setting_key = 'active_bot' AND tenant_id = %s
                 """, (self.tenant_id,))

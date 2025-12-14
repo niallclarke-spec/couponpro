@@ -366,3 +366,149 @@ class TestRLSIsolation:
                 os.environ.pop('ENABLE_RLS', None)
             else:
                 os.environ['ENABLE_RLS'] = original_value
+
+
+class TestTenantConnMockBased:
+    """Mock-based tests for tenant_conn() that do NOT require a real database.
+    
+    These tests verify the SET LOCAL behavior using mocks to capture SQL executed.
+    """
+    
+    def test_tenant_conn_set_local_when_rls_enabled(self, monkeypatch):
+        """Test that tenant_conn executes SET LOCAL when ENABLE_RLS=1 (mock-based, no DB)."""
+        from unittest.mock import MagicMock, patch
+        
+        monkeypatch.setenv('ENABLE_RLS', '1')
+        
+        executed_sql = []
+        
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = ('test_tenant_abc',)
+        
+        def capture_execute(sql, params=None):
+            if params:
+                executed_sql.append((sql, params))
+            else:
+                executed_sql.append((sql, None))
+        
+        mock_cursor.execute.side_effect = capture_execute
+        
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.closed = False
+        
+        mock_pool = MagicMock()
+        mock_pool.getconn.return_value = mock_conn
+        
+        mock_db_pool = MagicMock()
+        mock_db_pool.connection_pool = mock_pool
+        
+        with patch('db.db_pool', mock_db_pool):
+            import db as db_module
+            importlib_needed = False
+            try:
+                with db_module.tenant_conn('test_tenant_abc') as (conn, cursor):
+                    pass
+            except Exception:
+                pass
+        
+        set_local_calls = [
+            call for call in executed_sql 
+            if 'SET LOCAL app.tenant_id' in call[0]
+        ]
+        
+        assert len(set_local_calls) >= 1, \
+            f"Expected SET LOCAL app.tenant_id call, got: {executed_sql}"
+        
+        set_local_sql, set_local_params = set_local_calls[0]
+        assert set_local_params == ('test_tenant_abc',), \
+            f"Expected tenant_id 'test_tenant_abc' in params, got: {set_local_params}"
+    
+    def test_tenant_conn_no_set_local_when_rls_disabled(self, monkeypatch):
+        """Test that tenant_conn does NOT execute SET LOCAL when ENABLE_RLS is not set (mock-based)."""
+        from unittest.mock import MagicMock, patch
+        
+        monkeypatch.delenv('ENABLE_RLS', raising=False)
+        
+        executed_sql = []
+        
+        mock_cursor = MagicMock()
+        
+        def capture_execute(sql, params=None):
+            if params:
+                executed_sql.append((sql, params))
+            else:
+                executed_sql.append((sql, None))
+        
+        mock_cursor.execute.side_effect = capture_execute
+        
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.closed = False
+        
+        mock_pool = MagicMock()
+        mock_pool.getconn.return_value = mock_conn
+        
+        mock_db_pool = MagicMock()
+        mock_db_pool.connection_pool = mock_pool
+        
+        with patch('db.db_pool', mock_db_pool):
+            import db as db_module
+            try:
+                with db_module.tenant_conn('test_tenant_xyz') as (conn, cursor):
+                    pass
+            except Exception:
+                pass
+        
+        set_local_calls = [
+            call for call in executed_sql 
+            if 'SET LOCAL app.tenant_id' in str(call[0])
+        ]
+        
+        assert len(set_local_calls) == 0, \
+            f"SET LOCAL should NOT be called when ENABLE_RLS is not set, got: {executed_sql}"
+    
+    def test_tenant_conn_verifies_tenant_context_when_rls_enabled(self, monkeypatch):
+        """Test that tenant_conn verifies tenant context after SET LOCAL (mock-based)."""
+        from unittest.mock import MagicMock, patch
+        
+        monkeypatch.setenv('ENABLE_RLS', '1')
+        
+        executed_sql = []
+        
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = ('verified_tenant',)
+        
+        def capture_execute(sql, params=None):
+            if params:
+                executed_sql.append((sql, params))
+            else:
+                executed_sql.append((sql, None))
+        
+        mock_cursor.execute.side_effect = capture_execute
+        
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.closed = False
+        
+        mock_pool = MagicMock()
+        mock_pool.getconn.return_value = mock_conn
+        
+        mock_db_pool = MagicMock()
+        mock_db_pool.connection_pool = mock_pool
+        
+        with patch('db.db_pool', mock_db_pool):
+            import db as db_module
+            try:
+                with db_module.tenant_conn('verified_tenant') as (conn, cursor):
+                    pass
+            except Exception:
+                pass
+        
+        verify_calls = [
+            call for call in executed_sql 
+            if "current_setting('app.tenant_id'" in str(call[0])
+        ]
+        
+        assert len(verify_calls) >= 1, \
+            f"Expected verification query for app.tenant_id, got: {executed_sql}"

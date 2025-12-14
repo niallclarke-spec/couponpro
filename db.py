@@ -18,11 +18,17 @@ def tenant_conn(tenant_id: str):
     Gets connection, begins transaction, sets tenant context if ENABLE_RLS=1,
     yields (conn, cursor), commits on success, rolls back on error.
     
+    When ENABLE_RLS=1, this function also verifies that the tenant context was
+    correctly set, and raises RuntimeError if verification fails.
+    
     Args:
         tenant_id: The tenant ID to scope this connection to.
         
     Yields:
         Tuple of (connection, cursor) for database operations.
+        
+    Raises:
+        RuntimeError: If ENABLE_RLS=1 and tenant context verification fails.
         
     Example:
         with tenant_conn('tenant_123') as (conn, cursor):
@@ -40,6 +46,16 @@ def tenant_conn(tenant_id: str):
         if os.environ.get('ENABLE_RLS') == '1':
             cursor.execute("SET LOCAL app.tenant_id TO %s", (tenant_id,))
             logger.debug(f"RLS: Set app.tenant_id = {tenant_id}")
+            
+            cursor.execute("SELECT current_setting('app.tenant_id', true)")
+            result = cursor.fetchone()
+            actual_tenant_id = result[0] if result else None
+            if actual_tenant_id != tenant_id:
+                raise RuntimeError(
+                    f"RLS tenant context not set correctly. "
+                    f"Expected '{tenant_id}', got '{actual_tenant_id}'. "
+                    f"This may indicate a database configuration issue."
+                )
         
         yield (conn, cursor)
         

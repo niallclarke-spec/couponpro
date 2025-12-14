@@ -253,3 +253,65 @@ python forex_scheduler.py --all-tenants --shard 0/3 --once
 ```
 
 Sharding uses consistent hashing: `hash(tenant_id) % total_shards == shard_index`
+
+---
+
+## RLS Enforcement Requirements
+
+### Prerequisites for ENABLE_RLS=1
+
+**IMPORTANT:** Setting `ENABLE_RLS=1` requires that RLS policies have already been applied to the database via `migrations/rls_phase2.sql`.
+
+Before enabling RLS:
+```bash
+# 1. Apply the RLS migration to your database
+psql $DATABASE_URL -f migrations/rls_phase2.sql
+
+# 2. Then enable RLS in your environment
+export ENABLE_RLS=1
+```
+
+If RLS is enabled without the migration applied, tenant isolation will not be enforced at the database level.
+
+### Mandatory Access Pattern
+
+**All tenant table access MUST use `tenant_conn(tenant_id)` or db.py functions.**
+
+Tenant tables include:
+- `forex_signals`
+- `forex_config`
+- `bot_config`
+- `telegram_subscriptions`
+- `recent_phrases`
+- `campaigns`
+- `bot_usage`
+- `bot_users`
+- `broadcast_jobs`
+- `processed_webhook_events`
+
+Non-tenant operations (advisory locks, tenant management tables, migrations) may use raw connections.
+
+### Troubleshooting
+
+**Error: "RLS tenant context not set correctly"**
+
+This error occurs when `tenant_conn()` cannot verify the tenant context was set correctly.
+
+Possible causes:
+1. Database does not support the `app.tenant_id` session variable
+2. PostgreSQL version too old (requires 9.5+)
+3. Connection pooling issue (connection state not properly reset)
+
+**Error: "RLS tenant context not set" (in RLS policy logs)**
+
+If you see this error in database logs, it means a query was executed without going through `tenant_conn()`.
+
+The caller bypassed the required `tenant_conn()` context manager. Fix by:
+1. Finding the code that directly uses `cursor.execute()` on tenant tables
+2. Wrapping it in `with tenant_conn(tenant_id) as (conn, cursor):`
+3. Or using the appropriate db.py function that handles tenant context
+
+Run the tenant audit to find violations:
+```bash
+python scripts/tenant_audit.py
+```
