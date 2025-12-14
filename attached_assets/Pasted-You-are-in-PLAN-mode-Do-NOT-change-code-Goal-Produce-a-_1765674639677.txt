@@ -1,0 +1,51 @@
+You are in PLAN mode. Do NOT change code.
+
+Goal: Produce a production deployment + verification runbook for DigitalOcean that:
+- Confirms multi-tenant migrations are applied
+- Confirms EntryLab remains env-credentialed and cannot be overridden
+- Confirms new tenant endpoints are reachable but protected
+- Confirms Stripe + multipart endpoints behave as expected
+- Detects duplicate scheduler startups (if any) and proves whether it’s real or just dev restarts
+
+Deliverable: A step-by-step runbook with exact commands and expected outputs.
+
+Include these sections:
+
+1) Pre-deploy checklist (DO App + DO DB)
+- Required env vars (including Clerk publishable + secret)
+- Which secrets MUST be encrypted/stored only as env vars (and never committed)
+- Any “do not forget” config: webhook URLs, allowed origins, ports, health checks
+
+2) Database verification (DO console SQL)
+Provide exact SQL queries that validate:
+- tenants table exists and entrylab seeded
+- tenant_id columns exist on the 9 tables and have default 'entrylab'
+- processed_webhook_events has (tenant_id, event_id, event_source, processed_at) and unique constraint
+- processed_webhook_events_old still exists as rollback
+- Index existence checks where relevant
+
+3) HTTP smoke tests (unauth and auth)
+Provide curl commands + expected status codes/body for:
+- GET /api/check-auth (unauth)
+- GET /api/tenant/setup-status (unauth -> 401, auth -> 200)
+- POST /api/tenant/integrations (auth) and confirm it blocks tenant_id==entrylab
+- POST /api/stripe/webhook with {} (should return 200 {"received": true})
+- GET /api/telegram/revenue-metrics (auth required)
+- POST /api/upload-template and /api/upload-overlay (auth required)
+Include both negative (should 401/403) and positive tests.
+
+4) Scheduler single-start verification (PROD)
+Explain how to confirm only one scheduler instance is running in production:
+- What log lines to look for
+- How to distinguish a real double-start from a platform restart
+- If multiple workers are enabled, explain implications and recommended safe config
+
+5) Rollback plan
+- What to do if deployment fails
+- How to revert webhook table swap using processed_webhook_events_old
+- How to disable new tenant guards temporarily (without removing code), if needed
+
+Constraints:
+- Do not ask me questions.
+- Use concrete commands and expected outputs.
+- Keep it concise and executable.

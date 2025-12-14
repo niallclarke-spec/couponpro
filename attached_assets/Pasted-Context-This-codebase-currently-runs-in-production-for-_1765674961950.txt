@@ -1,0 +1,64 @@
+Context:
+This codebase currently runs in production for EntryLab (single-tenant).
+A multi-tenant foundation exists, but true tenant resolution is NOT yet implemented.
+
+What already exists (DO NOT CHANGE):
+- tenants, tenant_users, tenant_integrations tables
+- tenant_id columns on core tables (default 'entrylab')
+- resolve_credentials() routes EntryLab to env vars
+- /api/tenant/setup-status and /api/tenant/integrations endpoints
+- Route guards for EntryLab-only routes and Forex SaaS routes
+- Admin password auth continues to work and must remain unchanged
+
+Important constraint:
+EntryLab behavior must remain 100% unchanged.
+No tenant should ever be inferred from request data.
+No code should be written in this phase.
+
+Goal of this PLAN:
+Design Phase 2A — **real tenant resolution using Clerk authentication**, without implementing it yet.
+
+Specifically, I want you to:
+
+1) **Analyze the current auth flow**
+   - Where admin auth is validated
+   - Where Clerk auth would need to be introduced
+   - How requests currently reach apply_route_checks()
+
+2) **Propose a safe tenant resolution strategy**
+   - How clerk_user_id should be extracted from a verified Clerk JWT
+   - Where tenant lookup against tenant_users should occur
+   - How tenant_id should be attached to the request lifecycle
+
+3) **Define exact failure behavior**
+   - What happens if a Clerk-authenticated user has no tenant mapping
+   - What HTTP status and JSON body should be returned
+   - Ensure admin auth always forces tenant_id = 'entrylab'
+
+4) **List exact files that would change**
+   - middleware files
+   - any new helper modules
+   - ZERO changes to business logic handlers
+
+5) **Explicitly call out what is NOT included**
+   - No auto-tenant creation
+   - No UI changes
+   - No tenant-aware query refactors
+   - No secrets encryption changes
+
+6) **Provide a step-by-step build plan**
+   - In ordered steps
+   - With notes on risk and rollback safety
+   - With verification steps for each stage
+
+Output format required:
+- Section A: Current auth flow summary
+- Section B: Proposed tenant resolution flow
+- Section C: Failure & edge-case handling
+- Section D: Files to be modified (with reasons)
+- Section E: Step-by-step build plan
+- Section F: Explicit non-goals
+
+Do NOT implement anything.
+Do NOT assume anything not proven in the codebase.
+Do NOT skip details.

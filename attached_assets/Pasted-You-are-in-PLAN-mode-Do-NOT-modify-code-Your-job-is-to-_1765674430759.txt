@@ -1,0 +1,73 @@
+You are in PLAN mode. Do NOT modify code. Your job is to VERIFY the claimed completed work exists, is wired in, and does not change EntryLab behavior.
+
+Claimed completed work to verify:
+1) CGI module removal:
+   - server.py no longer imports cgi
+   - domains/coupons/handlers.py no longer uses cgi.FieldStorage
+   - utils/multipart.py exists and is used by upload endpoints
+2) Stripe rebill fixes:
+   - no current_period_end KeyError
+   - uses safe accessor patterns + Invoice.create_preview fallback
+   - has 5-minute caching
+3) Multi-tenant setup wizard foundation:
+   - core/tenant_credentials.py exists and is used
+   - domains/tenant/handlers.py endpoints exist AND are registered
+   - api/middleware.py has route guards:
+       a) EntryLab-only guard
+       b) Forex SaaS guard requiring setup completion for non-entrylab
+   - EntryLab continues using environment credentials unchanged
+   - Non-entrylab tenants are blocked from Forex features until setup complete
+
+DELIVERABLE:
+A verification report with:
+- Exact file paths + key functions/classes found
+- Exact route registration locations (where endpoints are attached to the app/router)
+- Exact middleware insertion point (where middleware runs in request flow)
+- A test matrix (requests to run) + expected responses
+- Any discrepancies or “claimed but not actually wired” items
+
+CONSTRAINTS:
+- Do NOT ask me questions. Make reasonable assumptions and state them.
+- Do NOT output secrets/tokens.
+- Use concrete evidence: show the relevant lines/blocks (short excerpts) and where they are.
+
+STEPS TO PERFORM (must include outputs):
+A) Codebase evidence (commands + results)
+   - rg -n "import cgi|cgi\.FieldStorage" .
+   - rg -n "parse_multipart|BytesParser|utils/multipart" .
+   - rg -n "tenant_credentials|resolve_credentials|tenant_users|tenant_integrations" .
+   - rg -n "setup-status|/api/tenant|tenant/integrations" .
+   - rg -n "apply_route_checks|tenant_id|entrylab" api/ domains/ core/
+   - rg -n "Invoice\.create_preview|current_period_end|rebill|cache" integrations/stripe
+
+B) Route wiring proof
+   - Identify the exact server/app factory file(s)
+   - Show where tenant handlers are imported and registered
+   - Confirm URL paths and HTTP methods
+
+C) Middleware behavior proof
+   - Show how tenant_id is derived for:
+       1) EntryLab/admin password auth
+       2) Clerk user auth (if present)
+   - Confirm where tenant context is stored (e.g., flask.g, request.state, etc.)
+   - Confirm what happens if tenant cannot be resolved
+
+D) Runtime verification plan (commands I can run)
+   Provide curl commands and expected status codes for:
+   - GET /api/check-auth (unauth)
+   - GET /api/tenant/setup-status (unauth then auth)
+   - POST /api/tenant/integrations (auth)
+   - GET /api/forex-signals (entrylab auth vs non-entrylab auth)
+   - POST /api/upload-template (auth multipart)
+   - GET /api/telegram/revenue-metrics (auth)
+
+E) Regression guard: “EntryLab unchanged”
+   - Prove resolve_credentials prefers environment for tenant_id='entrylab'
+   - Prove tenant integrations cannot override entrylab env-based creds
+   - Prove existing routes still accessible for entrylab
+
+OUTPUT FORMAT:
+- Section 1: Evidence Summary (pass/fail per claim)
+- Section 2: Wiring Proof (routes + middleware call path)
+- Section 3: Test Matrix (curl tests + expected outputs)
+- Section 4: Risks / Gaps (anything that could break in prod)

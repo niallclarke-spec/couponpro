@@ -129,3 +129,11 @@ class Config:
     def get_clerk_publishable_key():
         """Matches DigitalOcean + Clerk naming convention (NEXT_PUBLIC_ prefix)."""
         return os.environ.get('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+    
+    @staticmethod
+    def get_clerk_jwt_key():
+        """
+        Get Clerk JWT public key for networkless verification.
+        This is the PEM-formatted public key from Clerk Dashboard → JWT Templates.
+        """
+        return os.environ.get('CLERK_JWT_KEY')

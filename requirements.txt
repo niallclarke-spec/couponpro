@@ -10,3 +10,4 @@ psycopg2-binary
 aiolimiter
 openai
 stripe
+PyJWT>=2.8.0

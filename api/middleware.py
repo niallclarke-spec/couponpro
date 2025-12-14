@@ -5,7 +5,7 @@ Thin wrappers that apply auth and availability checks before calling handlers.
 These wrappers call the EXISTING check_auth() and availability flags unchanged.
 """
 import json
-from typing import Callable, Any
+from typing import Callable, Any, Tuple, Optional
 
 from api.routes import Route
 
@@ -61,6 +61,18 @@ def send_setup_required(handler_instance, status: dict) -> None:
     }).encode())
 
 
+def send_no_tenant_mapping(handler_instance, clerk_user_id: str) -> None:
+    """Send a 403 response when Clerk user has no tenant mapping."""
+    handler_instance.send_response(403)
+    handler_instance.send_header('Content-type', 'application/json')
+    handler_instance.end_headers()
+    handler_instance.wfile.write(json.dumps({
+        'error': 'No tenant mapping',
+        'message': 'Your account is not associated with any tenant. Please contact support.',
+        'clerk_user_id': clerk_user_id
+    }).encode())
+
+
 def is_entrylab_only_route(path: str) -> bool:
     """Check if the path is an EntryLab-only route."""
     for route in ENTRYLAB_ONLY_ROUTES:
@@ -85,18 +97,38 @@ def is_entrylab_admin(handler_instance) -> bool:
     return handler_instance.check_auth()
 
 
-def determine_tenant_id(handler_instance) -> str:
+def determine_tenant_id(handler_instance) -> Tuple[Optional[str], Optional[str]]:
     """
     Determine the tenant_id for the current request.
     
-    - EntryLab admins (using admin_session cookie) -> 'entrylab'
-    - Other authenticated users -> lookup from tenant_users or bootstrap
-    - Unauthenticated -> None
+    Returns:
+        Tuple of (tenant_id, error_reason):
+        - ('entrylab', None) for admin auth
+        - (tenant_id, None) for mapped Clerk user  
+        - (None, 'no_tenant_mapping') for valid Clerk but unmapped
+        - (None, None) for unauthenticated
     """
     if is_entrylab_admin(handler_instance):
-        return 'entrylab'
+        return ('entrylab', None)
     
-    return None
+    auth_header = handler_instance.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[7:]
+        from core.clerk_auth import verify_clerk_jwt
+        claims = verify_clerk_jwt(token)
+        if claims:
+            clerk_user_id = claims['sub']
+            handler_instance.clerk_user_id = clerk_user_id
+            handler_instance.clerk_email = claims.get('email')
+            
+            from core.tenant_credentials import get_tenant_for_user
+            tenant_id = get_tenant_for_user(clerk_user_id)
+            if tenant_id:
+                return (tenant_id, None)
+            else:
+                return (None, 'no_tenant_mapping')
+    
+    return (None, None)
 
 
 def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bool:
@@ -105,8 +137,8 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
     
     This function applies checks in the following order:
     1. Database availability (if db_required)
-    2. Authentication (if auth_required)
-    3. Tenant context determination
+    2. Tenant context determination (checks BOTH admin_session cookie AND Clerk JWT)
+    3. Authentication (if auth_required) - accepts either auth method
     4. EntryLab-only route check
     5. Forex SaaS route setup completion check
     
@@ -123,13 +155,19 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
         send_db_unavailable(handler_instance)
         return False
     
-    if route.auth_required and not handler_instance.check_auth():
-        send_unauthorized(handler_instance)
-        return False
-    
     path = handler_instance.path.split('?')[0]
     
-    tenant_id = determine_tenant_id(handler_instance)
+    tenant_id, error = determine_tenant_id(handler_instance)
+    
+    if error == 'no_tenant_mapping':
+        send_no_tenant_mapping(handler_instance, getattr(handler_instance, 'clerk_user_id', ''))
+        return False
+    
+    if route.auth_required:
+        if tenant_id is None:
+            send_unauthorized(handler_instance)
+            return False
+    
     handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
     
     if is_entrylab_only_route(path):
