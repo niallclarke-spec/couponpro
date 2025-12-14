@@ -77,8 +77,8 @@ def run_guarded(
         error_context = {
             "exception_type": type(exc).__name__,
             "exception_message": str(exc),
-            "module": getattr(fn, '__module__', 'unknown'),
-            "function": getattr(fn, '__name__', 'anonymous'),
+            "source_module": getattr(fn, '__module__', 'unknown'),
+            "source_function": getattr(fn, '__name__', 'anonymous'),
         }
         
         if context:
@@ -89,7 +89,7 @@ def run_guarded(
             extra={
                 "tenant_id": tenant_id,
                 "stack_trace": stack_trace,
-                **error_context
+                "error_context": error_context,
             }
         )
         
@@ -142,8 +142,8 @@ async def run_guarded_async(
         error_context = {
             "exception_type": type(exc).__name__,
             "exception_message": str(exc),
-            "module": getattr(fn, '__module__', 'unknown'),
-            "function": getattr(fn, '__name__', 'anonymous'),
+            "source_module": getattr(fn, '__module__', 'unknown'),
+            "source_function": getattr(fn, '__name__', 'anonymous'),
         }
         
         if context:
@@ -154,7 +154,7 @@ async def run_guarded_async(
             extra={
                 "tenant_id": tenant_id,
                 "stack_trace": stack_trace,
-                **error_context
+                "error_context": error_context,
             }
         )
         
