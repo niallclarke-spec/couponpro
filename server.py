@@ -366,7 +366,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     days = int(days_param)
                 
-                result = db.get_day_of_week_stats(days)
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                result = db.get_day_of_week_stats(days, tenant_id=tenant_id)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -395,7 +396,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             
             try:
-                retention = db.get_retention_rates()
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                retention = db.get_retention_rates(tenant_id=tenant_id)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -647,13 +649,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 for sub in subscriptions:
                     if sub.get('email'):
+                        tenant_id = getattr(self, 'tenant_id', 'entrylab')
                         result, error = db.create_or_update_telegram_subscription(
                             email=sub['email'],
                             stripe_customer_id=sub.get('customer_id'),
                             stripe_subscription_id=sub.get('subscription_id'),
                             plan_type=sub.get('plan_name') or 'premium',
                             amount_paid=sub.get('amount_paid', 0),
-                            name=sub.get('name')
+                            name=sub.get('name'),
+                            tenant_id=tenant_id
                         )
                         if result:
                             synced += 1
@@ -706,6 +710,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 post_data = self.rfile.read(content_length)
                 data = json.loads(post_data.decode('utf-8'))
                 
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
                 db.update_campaign(
                     campaign_id=campaign_id,
                     title=data['title'],
@@ -714,7 +719,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     end_date=data['end_date'],
                     prize=data.get('prize', ''),
                     platforms=json.dumps(data.get('platforms', [])),
-                    overlay_url=data.get('overlay_url')
+                    overlay_url=data.get('overlay_url'),
+                    tenant_id=tenant_id
                 )
                 
                 self.send_response(200)
@@ -750,7 +756,8 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 campaign_id = int(parsed_path.path.split('/')[3])
-                db.delete_campaign(campaign_id)
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                db.delete_campaign(campaign_id, tenant_id=tenant_id)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
