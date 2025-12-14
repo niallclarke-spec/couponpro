@@ -1,0 +1,74 @@
+Implement structured logging (Phase 1/3) — replace print() and add log context
+
+You are working in an existing Python repo. Goal: introduce structured logging and replace print() statements across the codebase with logger.*() calls without changing business logic.
+
+Requirements
+	1.	Create a central logging module
+
+	•	Add core/logging.py (or core/logger.py if that already exists) that exposes:
+	•	get_logger(name: str) -> logging.Logger
+	•	configure_logging() that configures formatting + levels based on env vars.
+	•	Use Python stdlib logging only (no new dependencies).
+	•	Log format must include:
+	•	timestamp
+	•	level
+	•	module name
+	•	tenant_id (if available)
+	•	request_id (if available)
+	•	message
+	•	exception stack traces when relevant
+
+	2.	Tenant + request context in logs
+
+	•	If tenant_context.py exists, integrate with it.
+	•	Provide helpers:
+	•	set_request_context(tenant_id: str | None, request_id: str | None)
+	•	clear_request_context()
+	•	get_context() -> dict
+	•	Implement via contextvars (not globals).
+	•	Logging should automatically include context fields via a custom logging.Filter or LogRecordFactory.
+
+	3.	Wire it into app startup
+
+	•	In server.py (or main entry), call configure_logging() exactly once at startup.
+	•	If there is middleware (e.g., api/middleware.py), ensure each request sets:
+	•	request_id (use incoming header X-Request-Id if present, else generate uuid4)
+	•	tenant_id if known for the request
+	•	Clear context at request end.
+
+	4.	Replace print() with logger
+
+	•	Replace print(...) across:
+	•	server.py
+	•	forex_scheduler.py
+	•	forex_bot.py
+	•	forex_signals.py
+	•	bots/**
+	•	domains/**
+	•	scripts/** (except scripts may use print for final summaries; prefer logger where reasonable)
+	•	Mapping:
+	•	print informational → logger.info
+	•	warnings/soft failures → logger.warning
+	•	caught exceptions → logger.exception (include stack trace)
+	•	debugging chatter → logger.debug
+
+	5.	Error handling upgrade (no behavior change)
+
+	•	Wherever you currently do except Exception as e: print(...), change to:
+	•	logger.exception("...context...")
+	•	Keep the same fallback behavior/returns.
+
+	6.	Do not refactor architecture in this step
+
+	•	No moving files, no changing function signatures, no changing DB logic.
+	•	This phase must be safe and focused.
+
+Acceptance Criteria
+	•	pytest -q passes.
+	•	python scripts/tenant_audit.py passes.
+	•	python forex_scheduler.py --once --tenant entrylab runs without the previous “missing tenant_id” noise (logging should capture errors cleanly, but don’t change scheduler logic here).
+	•	Logs show tenant_id + request_id when available.
+
+Output
+	•	Provide a concise diff summary: which files changed, and key examples of replaced prints.
+	•	Mention any places you intentionally left print() (e.g., CLI script final output) and why.
