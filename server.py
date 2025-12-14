@@ -547,6 +547,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             tenant_id = getattr(self, 'tenant_id', 'entrylab')
             tenant_handlers.handle_tenant_integrations(self, tenant_id)
             return
+        elif parsed_path.path == '/api/tenants/map-user':
+            tenant_handlers.handle_tenant_map_user(self)
+            return
         
         # Dispatch to telegram webhook handlers
         if parsed_path.path == '/api/telegram-webhook':

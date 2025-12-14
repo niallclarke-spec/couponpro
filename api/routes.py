@@ -182,6 +182,8 @@ POST_ROUTES: List[Route] = [
     # Tenant
     Route('POST', '/api/tenant/integrations', 'handle_api_tenant_integrations',
           auth_required=True, db_required=True),
+    Route('POST', '/api/tenants/map-user', 'handle_api_tenant_map_user',
+          auth_required=True, db_required=True),
 ]
 
 

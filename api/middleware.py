@@ -14,7 +14,8 @@ ENTRYLAB_ONLY_ROUTES = [
     '/api/campaigns', '/api/broadcast', '/api/bot-stats', '/api/bot-users',
     '/api/upload-template', '/api/delete-template', '/api/toggle-telegram-template', '/api/validate-coupon',
     '/api/broadcast-status', '/api/broadcast-jobs', '/api/user-activity', '/api/invalid-coupons',
-    '/api/telegram-webhook', '/api/day-of-week-stats', '/api/retention-rates'
+    '/api/telegram-webhook', '/api/day-of-week-stats', '/api/retention-rates',
+    '/api/tenants/map-user'
 ]
 
 FOREX_SAAS_ROUTES = [

@@ -90,3 +90,97 @@ def handle_tenant_integrations(handler, tenant_id):
     handler.send_header('Content-type', 'application/json')
     handler.end_headers()
     handler.wfile.write(json.dumps({'success': True}).encode())
+
+
+VALID_ROLES = {'admin', 'member'}
+
+
+def handle_tenant_map_user(handler):
+    """
+    POST /api/tenants/map-user
+    EntryLab-admin-only endpoint to create/update tenant_users mappings.
+    """
+    try:
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body)
+    except Exception as e:
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': f'Invalid JSON: {e}'}).encode())
+        return
+    
+    tenant_id = (data.get('tenant_id') or '').strip()
+    clerk_user_id = (data.get('clerk_user_id') or '').strip()
+    role = (data.get('role') or 'admin').strip()
+    
+    if not tenant_id:
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'tenant_id is required'}).encode())
+        return
+    
+    if not clerk_user_id:
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'clerk_user_id is required'}).encode())
+        return
+    
+    if tenant_id == 'entrylab':
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Cannot map users to entrylab tenant'}).encode())
+        return
+    
+    if role not in VALID_ROLES:
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': f'Invalid role. Must be one of: {", ".join(VALID_ROLES)}'}).encode())
+        return
+    
+    from db import db_pool
+    if not db_pool or not db_pool.connection_pool:
+        handler.send_response(503)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+        return
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_users (clerk_user_id, tenant_id, role)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (clerk_user_id) 
+                DO UPDATE SET tenant_id = EXCLUDED.tenant_id, role = EXCLUDED.role
+                RETURNING (xmax = 0) AS is_insert
+            """, (clerk_user_id, tenant_id, role))
+            row = cursor.fetchone()
+            is_created = row[0] if row else True
+            conn.commit()
+        
+        action = 'created' if is_created else 'updated'
+        print(f"[TENANT] User mapping {action}: tenant={tenant_id}, user={clerk_user_id}")
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'success': True,
+            'tenant_id': tenant_id,
+            'clerk_user_id': clerk_user_id,
+            'role': role
+        }).encode())
+        
+    except Exception as e:
+        print(f"[TENANT] Error mapping user: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
