@@ -1,0 +1,64 @@
+Remove globals, introduce tenant-scoped runtime container, and split scheduler responsibilities (light refactor, not a rewrite).
+
+You are working in an existing Python repo that is now multi-tenant hardened and has structured logging. Architecture issues remain: global singletons/shared mutable state, scheduler doing too many things, duplicated strategy folders, and risk of missing tenant context in non-test runtime paths.
+
+Hard Requirements
+	1.	Introduce a tenant-scoped “AppContext” / “TenantRuntime” container
+
+	•	Create core/runtime.py with a class like:
+	•	TenantRuntime(tenant_id: str, request_id: str | None = None)
+	•	It should hold and lazily initialize tenant-scoped dependencies used by scheduler/bot:
+	•	DB access wrapper (existing db module calls are fine; just ensure tenant_id always passed)
+	•	forex config loader
+	•	bot config loader (get_active_bot)
+	•	telegram bot client (if used by scheduler paths)
+	•	strategy registry / strategy factory
+	•	No global singletons like forex_signal_engine or forex_telegram_bot. Replace them with runtime-owned instances.
+
+	2.	Scheduler separation: split into 3 units (still runs as one process)
+Refactor forex_scheduler.py into these modules:
+
+	•	scheduler/generator.py — creates new signals (strategy + config + DB insert)
+	•	scheduler/monitor.py — monitors active signals, updates SL/TP/breakeven/milestones
+	•	scheduler/messenger.py — handles Telegram posting and updates (if applicable)
+Keep forex_scheduler.py as the CLI entrypoint that wires these together.
+
+Rules:
+	•	No behavior changes (same outputs/messages), just code movement + cleaner boundaries.
+	•	Each module must accept TenantRuntime (or tenant_id) explicitly.
+
+	3.	Strategy folder duplication cleanup (no breaking imports)
+Currently there are both strategies/ and bots/strategies/.
+
+	•	Choose ONE canonical location for strategies (prefer bots/strategies/ or whichever is already used most).
+	•	Create thin compatibility imports in the old location so existing imports don’t break, e.g.:
+	•	strategies/aggressive.py becomes a wrapper that imports from the canonical module.
+	•	Ensure strategy registry uses the canonical location.
+
+	4.	Tenant enforcement at runtime
+
+	•	Add a guard that prevents accidental calls without tenant_id:
+	•	In TenantRuntime, when calling any db/config function, tenant_id must be passed.
+	•	If any code path attempts to call a tenant-aware db function without tenant_id, raise a clear exception:
+	•	RuntimeError("Missing tenant_id for tenant-aware operation: <function_name>")
+	•	Ensure scheduler CLI requires tenant via --tenant or TENANT_ID env var. If missing: exit with error code 2 and log an error.
+
+	5.	Tests
+Add tests ensuring:
+
+	•	No global singleton instances exist for scheduler engine/bot after refactor (simple grep-based test allowed).
+	•	Scheduler modules can be imported without executing DB calls at import-time (important!).
+	•	A minimal unit test that constructs TenantRuntime("tenant_test") and verifies strategy registry can load.
+	•	pytest -q passes.
+
+Acceptance Criteria
+	•	python forex_scheduler.py --once --tenant entrylab works.
+	•	python -c "import forex_scheduler; print('import ok')" does NOT trigger DB/config loading side effects.
+	•	pytest -q passes.
+	•	python scripts/tenant_audit.py passes.
+	•	Provide concise diff summary.
+
+Constraints
+	•	Do not implement Postgres RLS yet.
+	•	Do not add new dependencies.
+	•	Keep public APIs stable where possible; use compatibility wrappers if moving modules.
