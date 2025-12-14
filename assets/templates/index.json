@@ -1,22 +1,16 @@
 {
   "templates": [
     {
-      "slug": "10k-giveaway-1",
-      "name": "10k Giveaway (1)",
-      "meta": "assets/templates/10k-giveaway-1/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/10k-giveaway-1/square.png"
+      "slug": "december-22-off",
+      "name": "December | 22% OFF",
+      "meta": "assets/templates/december-22-off/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/december-22-off/square.png"
     },
     {
-      "slug": "10k-giveaway-",
-      "name": "10k Giveaway (2)",
-      "meta": "assets/templates/10k-giveaway-/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/10k-giveaway-/square.png"
-    },
-    {
-      "slug": "promo-3",
-      "name": "Promo 3",
-      "meta": "assets/templates/promo-3/meta.json",
-      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/promo-3/square.png"
+      "slug": "test-template-verify-123",
+      "name": "Test Template Verification",
+      "meta": "assets/templates/test-template-verify-123/meta.json",
+      "square": "https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/test-template-verify-123/square.png"
     }
   ]
 }
