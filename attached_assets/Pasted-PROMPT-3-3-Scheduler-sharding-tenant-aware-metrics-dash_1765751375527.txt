@@ -1,0 +1,118 @@
+PROMPT 3/3 — Scheduler sharding + tenant-aware metrics dashboard plumbing
+
+Goal:
+1) Run the forex scheduler across ALL tenants, sharded deterministically across N workers.
+2) Add tenant-aware metrics endpoints + basic dashboard query functions.
+3) Keep everything safe with tenant isolation + ENABLE_RLS compatibility.
+4) Everything must be copy/paste runnable, with tests.
+
+------------------------------------------------------------
+A) Per-tenant scheduler runner (multi-tenant)
+------------------------------------------------------------
+
+In forex_scheduler.py (or a new runner module), implement:
+
+- CLI flags:
+  --tenant <id>            (runs a single tenant)
+  --all-tenants            (runs all active tenants)
+  --shard i/n              (optional, only when --all-tenants is used)
+  --once                   (existing behavior)
+  --dry-run                (existing behavior if present)
+
+Rules:
+- If --tenant is provided: run ONLY that tenant
+- If --all-tenants: load list of active tenants from DB:
+    SELECT id FROM tenants WHERE is_active = TRUE ORDER BY id;
+- If --shard i/n: only run tenants where sha256(tenant_id) % n == i
+
+Implementation details:
+- Deterministic shard assignment:
+  idx = int(sha256(tenant_id).hexdigest(), 16) % n
+- Each tenant run has a hard timeout (e.g. 120 seconds) so one tenant cannot stall the whole worker
+- Log a summary: total/succeeded/failed/skipped + timing
+
+Tenant context:
+- Every tenant run MUST set tenant_id into:
+  - scheduler runner object
+  - db calls
+  - logging context
+- If ENABLE_RLS=1, ensure every DB op uses db.tenant_conn(tenant_id) OR equivalent so SET LOCAL app.tenant_id is always applied.
+
+------------------------------------------------------------
+B) Tenant-aware metrics (server + db helpers)
+------------------------------------------------------------
+
+1) Add db.py helper(s) that compute counts scoped by tenant_id and optional date range:
+- signals_created
+- signals_closed
+- signals_active
+- subscriptions_total
+- bot_usage_events_total
+- bot_usage_errors_total (by error_type if available)
+
+All must accept tenant_id and optionally days=N.
+All must work with ENABLE_RLS=0 and ENABLE_RLS=1.
+
+2) Add endpoint:
+GET /api/metrics/tenant?days=7
+- Must be auth-protected (same auth you use elsewhere)
+- Must read tenant_id from request (X-Tenant-Id header or existing middleware)
+- Return JSON like:
+{
+  "tenant_id": "entrylab",
+  "days": 7,
+  "signals": { "created": 12, "closed": 9, "active": 3 },
+  "subscriptions": { "total": 102, "converted": 33 },
+  "bot_usage": { "events": 1880, "errors": 12, "errors_by_type": {...} }
+}
+
+If jq is not available, do not require it for usage examples.
+
+------------------------------------------------------------
+C) Smoke test for tenant isolation (fix audit compliance)
+------------------------------------------------------------
+
+Create scripts/smoke_tenant_isolation.py that:
+- Requires DATABASE_URL set; fail-fast with a clean error if missing/unreachable
+- Creates/uses tenant_a_smoke and tenant_b_smoke
+- Inserts rows for both tenants into:
+  - forex_signals
+  - forex_config
+  - bot_config
+- Verifies:
+  - Reads for tenant A never see tenant B rows
+  - Updates for tenant A cannot affect tenant B rows
+  - Deletes for tenant A only delete tenant A rows
+
+IMPORTANT:
+- Any UPDATE/DELETE must include tenant_id in WHERE to satisfy tenant_audit.py
+- Cleanup must also include tenant_id
+- Track inserted rows as (id, tenant_id) pairs for cleanup
+
+Add Makefile target:
+make smoke -> runs the smoke test
+
+------------------------------------------------------------
+D) Tests
+------------------------------------------------------------
+
+Add tests for:
+1) Shard assignment is deterministic and evenly partitions a sample tenant list
+2) --all-tenants with --shard only runs correct subset (mock tenants list if needed)
+3) Metrics endpoint returns expected shape and is tenant-scoped
+
+All tests must pass under pytest without requiring external services.
+
+------------------------------------------------------------
+E) Acceptance
+------------------------------------------------------------
+
+Run and paste outputs:
+python scripts/tenant_audit.py
+pytest -q
+python scripts/smoke_tenant_isolation.py   (only if DATABASE_URL is set/available)
+
+Expected:
+- tenant audit passes
+- pytest passes
+- smoke test passes when DB is available
