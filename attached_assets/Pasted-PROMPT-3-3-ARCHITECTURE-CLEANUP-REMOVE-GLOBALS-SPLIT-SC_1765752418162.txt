@@ -1,0 +1,98 @@
+PROMPT 3/3 — ARCHITECTURE CLEANUP: REMOVE GLOBALS, SPLIT SCHEDULER, DEDUPE STRATEGIES, IMPROVE ERROR HANDLING
+
+Goal:
+Raise architecture from ~5/10 to ~8/10 by eliminating global singletons/mutable state, shrinking the scheduler file, removing duplicate strategy folders, and adding proper error boundaries + alerting hooks.
+
+Constraints:
+- Do NOT rewrite the whole app.
+- Keep behavior identical unless explicitly stated.
+- Small, safe refactors with tests.
+- Multi-tenant and RLS assumptions remain intact (tenant_id required everywhere, tenant_conn used when ENABLE_RLS=1).
+
+A) Remove global singletons / shared mutable state
+1) Identify globals like:
+   - forex_signal_engine, forex_telegram_bot, shared configs, shared caches
+2) Replace them with explicit dependency injection:
+   - Create a TenantRuntime (or AppRuntime) object that holds:
+     - tenant_id
+     - db access (db module functions)
+     - strategy registry
+     - telegram client (if used)
+     - config loader
+     - logger
+3) Ensure scheduler runner creates a fresh runtime per tenant run.
+4) Make sure imports do not execute tenant work at import time (no DB calls in module import).
+
+Acceptance:
+- Importing core modules does not trigger DB pool init or config load.
+- No cross-tenant shared runtime objects.
+
+B) Split scheduler into smaller modules (no behavior changes)
+Refactor forex_scheduler.py into modules:
+- scheduler/runner.py       (orchestration, CLI, sharding, per-tenant loop)
+- scheduler/config.py       (config loading/reloading)
+- scheduler/generator.py    (signal generation logic)
+- scheduler/monitor.py      (pending signal monitoring, milestones, BE suggestions)
+- scheduler/messenger.py    (telegram messaging / dispatch)
+- scheduler/locks.py        (advisory lock logic if any)
+Keep forex_scheduler.py as a thin CLI wrapper for backward compatibility:
+- start_forex_scheduler() still works
+- python forex_scheduler.py --once still works
+
+Acceptance:
+- forex_scheduler.py becomes mostly CLI + wiring (< ~200 lines ideally).
+- Tests updated with minimal changes.
+- Existing CLI flags still work: --tenant, --all-tenants, --shard, --once, etc.
+
+C) Remove duplicate strategy folders cleanly (strategies/ vs bots/strategies/)
+1) Pick ONE canonical strategy home (recommend: bots/strategies/ if that’s the “product” surface).
+2) Create a strategy registry:
+   - A single registry that discovers strategies and exposes:
+     - list_strategies()
+     - get_strategy(name)
+3) Migrate imports to the canonical path.
+4) If you must keep backwards compatibility:
+   - Leave the old folder with thin import re-exports and deprecation comments
+   - Or remove it and update all call sites/tests.
+
+Acceptance:
+- No duplicated strategy implementations.
+- One authoritative registry and loader path.
+
+D) Improve error handling + add alerting hook (no external services required)
+1) Replace “try/except print” patterns with consistent boundaries:
+   - In scheduler runner: catch exceptions per-tenant, log with stack trace, continue other tenants.
+   - In per-job logic: catch expected exceptions and return safe failure codes.
+2) Add a simple alert hook interface in core/alerts.py:
+   - def notify_error(message: str, tenant_id: str | None, context: dict | None)
+   Default implementation just logs a WARN.
+   Later we can wire to Slack/Sentry/etc without refactoring call sites.
+3) Update the scheduler runner to call notify_error on tenant failures.
+
+Acceptance:
+- Fatal exceptions don’t crash the whole multi-tenant scheduler loop.
+- A single place exists to add real alerting later.
+
+E) Tests (must keep green)
+1) Add tests that enforce:
+   - importing key modules doesn’t initialize DB pool (use monkeypatch/spies)
+   - strategy registry returns expected set of strategies
+   - scheduler runner creates per-tenant runtime (no global shared engine)
+2) Existing tests must pass:
+   - tenant_audit gate
+   - runtime_refactor tests
+   - scheduler_sharding tests
+   - RLS tests should remain skipped unless migration present
+
+Deliverables:
+- New scheduler/ package with the split modules
+- Canonical strategy registry + removal of duplicate strategy folder
+- TenantRuntime (or similar) for dependency injection and no globals
+- core/alerts.py with notify_error hook
+- Updated tests and docs if needed
+
+Acceptance commands:
+python scripts/tenant_audit.py
+pytest -q
+python -c "import forex_scheduler; print('import ok')"
+python forex_scheduler.py --once --tenant entrylab   (requires real DB)
