@@ -1,0 +1,25 @@
+Task: Fix forex_scheduler tenant context + CLI so scheduler runs with required tenant_id
+
+Problem: Running python forex_scheduler.py --once currently logs errors like get_forex_config() missing 1 required positional argument: 'tenant_id' and get_active_bot() missing 1 required positional argument: 'tenant_id'. This means the scheduler is calling tenant-scoped db functions without passing tenant_id after tenant hardening removed defaults.
+
+Goal: python forex_scheduler.py --once --tenant entrylab (and optionally TENANT_ID=entrylab python forex_scheduler.py --once) must run without any “missing tenant_id” errors and must load forex config + active bot correctly.
+
+Requirements:
+	1.	Add a required tenant identifier to the scheduler runtime:
+	•	Support CLI flag: --tenant <tenant_id>.
+	•	Also support env var fallback: TENANT_ID.
+	•	If neither is provided, exit with a clear error message and non-zero code. Do not silently default.
+	2.	Ensure all db calls in forex_scheduler pass tenant_id explicitly or are executed inside a tenant context manager that guarantees get_current_tenant() returns the tenant. (Use whichever approach matches the new tenant_context.py infrastructure.)
+	3.	Fix the specific failing paths:
+	•	Any call to db.get_forex_config(...) must include tenant_id.
+	•	Any call to db.get_active_bot(...) must include tenant_id.
+	•	Any strategy loader / config loader that calls db must be tenant-scoped.
+	4.	Keep raw SQL already present tenant filtered (it currently queries bot_config / forex_config with tenant_id = %s — keep that).
+	5.	Add/adjust a small test if needed:
+	•	A pytest test that imports scheduler modules without executing the runtime loop (no side effects at import time).
+	•	OR a lightweight check that parse_args(['--once','--tenant','entrylab']) produces tenant_id and scheduler uses it.
+
+Acceptance checks:
+	•	python forex_scheduler.py --once --tenant entrylab runs without “missing tenant_id” errors.
+	•	make ci still passes.
+	•	No new tenant defaults are introduced.
