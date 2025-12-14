@@ -1,0 +1,52 @@
+Add a real Smoke Test Script (scripts/smoke_tenant_isolation.py)
+
+Create scripts/smoke_tenant_isolation.py that can be run locally and in CI.
+
+Purpose: prove end-to-end tenant isolation at runtime using the real DB connection (not mocks).
+
+Requirements
+	1.	Uses two test tenants: tenant_smoke_a, tenant_smoke_b.
+	2.	Creates minimal rows in at least 3 tenant-aware tables (choose from: forex_signals, forex_config, bot_config, telegram_subscriptions, campaigns, etc.).
+	3.	Verifies:
+	•	Reads scoped by tenant return only the correct tenant’s rows.
+	•	Updates scoped by tenant do not affect the other tenant.
+	•	A “wrong tenant update” returns False / no-op (whatever your db functions return), and the row remains unchanged.
+	4.	Must clean up after itself (delete inserted rows) even if an assertion fails (use try/finally).
+	5.	Must accept:
+	•	--tenant-a, --tenant-b overrides
+	•	--keep-data flag to skip cleanup for debugging
+	6.	Exit codes:
+	•	0 on success
+	•	1 on failure (print a clear failure reason)
+	7.	Should not require server running. It should import db and connect directly.
+
+Output Example
+	•	Print a compact checklist:
+	•	✅ Insert A/B
+	•	✅ Read isolation
+	•	✅ Update isolation
+	•	✅ Wrong-tenant no-op
+	•	✅ Cleanup
+
+Also update the Makefile:
+	•	make smoke → runs the smoke script
+	•	Add it to make ci only if SMOKE_DB=1 env var is set (CI shouldn’t require a real DB unless explicitly enabled)
+
+B) Tenant-Aware Metrics Dashboard (minimal + useful)
+
+Add lightweight metrics endpoints and internal aggregation:
+
+1) DB query helper
+	•	Add db.get_tenant_metrics(tenant_id, days=7) returning:
+	•	counts of signals created/closed
+	•	count of active signals
+	•	bot_usage count (if relevant)
+	•	subscriptions created + converted (if present)
+	•	basic error counts if you have an error_type column (bot_usage has it)
+Keep it fast: aggregate via SQL with WHERE tenant_id = %s and date filtering.
+
+2) API endpoint
+Add GET /api/metrics/tenant?days=7:
+	•	Auth-protected (same auth scheme you use for admin/tenant endpoints)
+	•	Uses tenant_id from request context (NOT from querystring unless admin)
+	•	Returns JSON like:

@@ -1,0 +1,126 @@
+You are refactoring and hardening a Python multi-tenant application that already enforces explicit tenant_id usage, has CI tenant audits, and passes all tests.
+
+Your task is to implement FOUR concrete upgrades without breaking existing behavior.
+
+========================
+A) SMOKE TEST (REQUIRED)
+========================
+
+Create: scripts/smoke_tenant_isolation.py
+
+Purpose:
+Prove real runtime tenant isolation using the actual database (no mocks).
+
+Requirements:
+- Use two tenants: tenant_smoke_a and tenant_smoke_b
+- Insert minimal test rows into at least THREE tenant-aware tables
+  (choose from: forex_signals, forex_config, bot_config, telegram_subscriptions, campaigns)
+- Verify:
+  1) Reads for tenant A do NOT return tenant B data
+  2) Updates scoped to tenant A do NOT affect tenant B
+  3) Wrong-tenant update attempts return False / no-op and leave data unchanged
+- Cleanup all inserted data using try/finally
+- CLI flags:
+  --tenant-a
+  --tenant-b
+  --keep-data
+- Exit codes:
+  0 = success
+  1 = failure
+- Must run without the server running (imports db directly)
+
+Output example:
+✅ insert A/B
+✅ read isolation
+✅ update isolation
+✅ wrong-tenant no-op
+✅ cleanup
+
+Update Makefile:
+- make smoke → runs smoke test
+- make ci → includes smoke ONLY if SMOKE_DB=1 is set
+
+========================
+B) TENANT METRICS ENDPOINT
+========================
+
+Add db.get_tenant_metrics(tenant_id, days=7) returning aggregated counts:
+- signals created / closed / active
+- subscriptions created / converted
+- bot_usage events + error_type counts (if present)
+
+Add API endpoint:
+GET /api/metrics/tenant?days=7
+
+Rules:
+- tenant_id comes from request context (NOT querystring)
+- auth-protected
+- returns JSON with tenant_id, days, and aggregated metrics
+- log one structured INFO line including tenant_id + request_id
+
+========================
+C) PER-TENANT SCHEDULER SHARDING
+========================
+
+Add scheduler support for multi-tenant execution:
+
+CLI options:
+- --tenant <id>
+- --all-tenants
+- --shard N/M   (e.g. 0/3, 1/3, 2/3)
+
+Implementation:
+- db.get_active_tenants() → returns active tenant IDs
+- Deterministic sharding:
+  hash(tenant_id) % M == N
+- In --all-tenants mode:
+  - Loop tenants
+  - Run each in isolation
+  - One tenant failure MUST NOT stop others
+  - Enforce per-tenant execution time budget
+- Log summary: total / succeeded / failed / skipped
+
+Add tests:
+- shard assignment is stable
+- all-tenants mode calls runner once per tenant
+
+========================
+D) RLS PHASE 2 (SCAFFOLD ONLY)
+========================
+
+Add Row Level Security support behind a flag.
+
+- Env flag: ENABLE_RLS=1
+- When enabled:
+  - On DB connection checkout, execute:
+    SET app.tenant_id = %s
+- Add migration file (DO NOT auto-run):
+  migrations/rls_phase2.sql
+  - Enable RLS on all tenant-aware tables
+  - Policy:
+    USING (tenant_id = current_setting('app.tenant_id'))
+
+Update SECURITY.md:
+- How to enable RLS
+- Rollback steps
+- Pooling caveats
+
+Add a guard test:
+- If ENABLE_RLS=1, assert DB connection setup applies tenant session variable
+
+========================
+ACCEPTANCE CHECKS
+========================
+
+All must pass:
+- make ci
+- make smoke   (with DATABASE_URL set)
+- python scripts/smoke_tenant_isolation.py
+- python forex_scheduler.py --once --tenant entrylab
+- python forex_scheduler.py --all-tenants --shard 0/1 --once
+
+At completion, print:
+- Files added/modified
+- How to run smoke test
+- Example metrics endpoint response
+- How to enable RLS safely
