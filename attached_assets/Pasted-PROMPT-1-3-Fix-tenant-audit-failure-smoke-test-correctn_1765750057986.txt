@@ -1,0 +1,105 @@
+PROMPT 1/3 — Fix tenant audit failure + smoke test correctness
+
+Goal:
+Fix the tenant isolation audit failure caused by scripts/smoke_tenant_isolation.py
+and improve smoke test safety. Do NOT weaken the audit or production logic.
+
+----------------------------------------------------------------
+A) Fix the failing DELETE in scripts/smoke_tenant_isolation.py
+----------------------------------------------------------------
+
+The tenant audit reports:
+
+- File: scripts/smoke_tenant_isolation.py
+- DELETE on forex_signals
+- Missing tenant_id in WHERE clause
+
+Locate the DELETE statement around line ~78:
+
+    DELETE FROM forex_signals WHERE id = %s
+
+Change it to:
+
+    DELETE FROM forex_signals
+    WHERE id = %s AND tenant_id = %s
+
+Ensure the cursor call passes parameters in this order:
+(signal_id, tenant_id)
+
+----------------------------------------------------------------
+B) Enforce tenant safety across the entire smoke test
+----------------------------------------------------------------
+
+In scripts/smoke_tenant_isolation.py:
+
+- Search for ALL UPDATE and DELETE statements
+- For ANY tenant-aware table, REQUIRE tenant_id in WHERE
+
+Tenant-aware tables:
+- forex_signals
+- forex_config
+- bot_config
+- telegram_subscriptions
+- recent_phrases
+- campaigns
+- bot_usage
+- bot_users
+- broadcast_jobs
+
+Rules:
+- UPDATE / DELETE → must include tenant_id in WHERE
+- INSERT → must explicitly insert tenant_id where column exists
+
+----------------------------------------------------------------
+C) Fail fast if DATABASE_URL is not usable
+----------------------------------------------------------------
+
+Current behavior:
+- Psycopg2 throws DNS error
+- Cleanup runs and crashes
+- Output is noisy and confusing
+
+Fix this:
+
+- If DATABASE_URL is missing OR connection fails:
+  - Print ONE clear error message
+  - Exit with non-zero status
+  - Do NOT attempt cleanup if pool was never initialized
+
+Desired behavior example:
+
+    Smoke test requires a reachable Postgres DATABASE_URL.
+    Connection failed: <error message>
+
+    exit(1)
+
+----------------------------------------------------------------
+D) Keep tenant audit STRICT
+----------------------------------------------------------------
+
+After fixes:
+
+- python scripts/tenant_audit.py MUST PASS
+- pytest -q MUST PASS
+- Do NOT weaken audit rules
+- Smoke test is intentionally included in audit scope
+
+----------------------------------------------------------------
+E) Add developer usage note at top of smoke test
+----------------------------------------------------------------
+
+At the top of scripts/smoke_tenant_isolation.py add a short comment:
+
+- Smoke test requires Postgres DATABASE_URL
+- Example:
+      export DATABASE_URL="postgres://user:pass@host:5432/dbname"
+- Optional flag --keep-data retains rows for inspection
+
+----------------------------------------------------------------
+Acceptance Criteria
+----------------------------------------------------------------
+
+1) python scripts/tenant_audit.py passes
+2) pytest -q passes (including tenant audit gate)
+3) Smoke test exits cleanly with clear message if DB is unreachable
+4) No UPDATE/DELETE on tenant-aware tables without tenant_id
