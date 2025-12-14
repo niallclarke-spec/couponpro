@@ -1,0 +1,104 @@
+PROMPT 3/3 — Scalability + Safety Polish (strategies, smoke/metrics, sharding, RLS)
+
+Context:
+- Prompt 2/3 completed: runtime container, scheduler split, error boundary, architecture tests.
+- Current status: pytest -q → 84 passed, 3 skipped.
+- We already have multi-tenant hardening + sharding + metrics + RLS Phase 2 scaffold behind ENABLE_RLS.
+
+Goals for this prompt:
+1) Eliminate confusion/duplication between `strategies/` and `bots/strategies/` safely.
+2) Make smoke test + metrics endpoint reliably runnable both locally and in CI (with smart skipping when DB is unavailable).
+3) Ensure scheduler sharding and “all tenants” mode are robust: timeouts, per-tenant failure isolation, deterministic sharding verified.
+4) Ensure RLS mode actually protects us at runtime: when ENABLE_RLS=1, tenant_conn() is used for tenant-table operations and verifies context.
+
+Rules:
+- Don’t break existing imports. If you consolidate folders, keep compatibility shims.
+- No DB init on import (keep the architecture guarantee).
+- Smoke test must never create cross-tenant risk: all mutations and cleanup must include tenant_id.
+- If DATABASE_URL is missing/unreachable, tests should SKIP, not crash (except in CI where we want explicit failure if a DB is expected).
+
+PART A — Strategy folder consolidation (canonical source of truth)
+1) Decide ONE canonical strategy package:
+   - Prefer `strategies/` as canonical.
+2) For every module in `bots/strategies/` that duplicates `strategies/`:
+   - Replace its contents with a thin re-export shim:
+     - `from strategies.<name> import *`
+   - Add a deprecation comment at top (no runtime warning spam).
+3) Update imports across repo to use canonical `strategies/` where easy/safe, but keep shims so nothing breaks.
+4) Add tests:
+   - `tests/test_strategy_imports.py` ensures:
+     - importing from both paths works
+     - both paths reference the same class/function objects (or behave equivalently)
+     - no duplicate registrations if you have a registry system
+
+PART B — Smoke test: make it robust + audit-compliant + CI-smart
+You already have scripts/smoke_tenant_isolation.py, but tighten it:
+1) Ensure any UPDATE/DELETE on tenant-aware tables includes tenant_id.
+2) Track created rows as (tenant_id, primary_key) tuples for cleanup.
+3) Add DB availability helpers:
+   - `database_url_is_set()`
+   - `can_connect()` (quick connect check with low timeout)
+4) Behavior:
+   - If DB unavailable and running locally: exit code 0 with a clear “SKIPPED — DB unavailable”.
+   - If DB unavailable and running in CI (detect via env var CI=true): exit code 1.
+5) Add Makefile targets:
+   - `make smoke` runs smoke test
+   - `make ci` runs pytest + tenant_audit, and runs smoke only if CI=true AND DATABASE_URL is set.
+6) Update scripts/tenant_audit.py allowlist:
+   - ensure it scans smoke script too and passes.
+
+PART C — Metrics endpoint verifiability + no jq dependency
+1) Ensure GET `/api/metrics/tenant?days=N`:
+   - requires auth (whatever your current auth mechanism is)
+   - reads tenant_id from header X-Tenant-Id (or your middleware)
+2) Add a tiny CLI helper `scripts/get_metrics.py` that:
+   - calls the endpoint
+   - prints formatted JSON using Python (no jq)
+   - exits non-zero on non-200
+3) Add an integration-ish test (DB optional):
+   - if DB available: create a small amount of tenant data and assert metrics counts match.
+   - if DB unavailable: skip cleanly.
+
+PART D — Sharding robustness
+1) Ensure `--all-tenants` mode:
+   - queries active tenants from tenants table (is_active = TRUE)
+   - deterministically assigns shard via SHA256(tenant_id) % N == shard_index
+   - processes tenants sequentially with per-tenant try/except so one tenant doesn’t kill the whole run
+   - per-tenant timeout guard (e.g., 120s) that aborts that tenant’s run but continues others
+2) Add/extend tests in tests/test_scheduler_sharding.py:
+   - deterministic assignment
+   - stable distribution
+   - “one tenant failure doesn’t stop others” (can be mocked, no DB)
+
+PART E — RLS Phase 2 runtime enforcement
+1) Ensure tenant-table DB access in scheduler paths uses tenant_conn(tenant_id) (or db wrappers that use it).
+   - Specifically: scheduler/generator.py (or scheduler modules), config load, signal updates.
+2) When ENABLE_RLS=1:
+   - tenant_conn must run `SET LOCAL app.tenant_id = <tenant_id>`
+   - verify context set correctly (raise RuntimeError if not)
+3) Add unit tests that mock cursor.execute to assert SET LOCAL is called first when ENABLE_RLS=1.
+4) Ensure RLS tests skip if migration not applied, but unit tests do not require DB.
+
+Acceptance checks (must all pass):
+- python scripts/tenant_audit.py → PASS
+- pytest -q → PASS
+- Cold import OK:
+  python - << 'EOF'
+  import forex_scheduler
+  import scheduler.runner
+  import core.runtime
+  import strategies
+  import bots.strategies
+  print("Cold import OK")
+  EOF
+- Smoke test behavior:
+  - With no DATABASE_URL locally → exits 0 with SKIPPED message
+  - With CI=true and no DATABASE_URL → exits 1
+- No DB init on import maintained.
+
+Output:
+- Summarize changes + list files touched
+- Paste pytest output
+- Paste tenant_audit output
+- Paste smoke test output in “DB missing” scenario
+Proceed to implement now.
