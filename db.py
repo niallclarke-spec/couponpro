@@ -11,6 +11,58 @@ from core.logging import get_logger
 
 logger = get_logger(__name__)
 
+@contextmanager
+def tenant_conn(tenant_id: str):
+    """Context manager for tenant-scoped DB operations with RLS support.
+    
+    Gets connection, begins transaction, sets tenant context if ENABLE_RLS=1,
+    yields (conn, cursor), commits on success, rolls back on error.
+    
+    Args:
+        tenant_id: The tenant ID to scope this connection to.
+        
+    Yields:
+        Tuple of (connection, cursor) for database operations.
+        
+    Example:
+        with tenant_conn('tenant_123') as (conn, cursor):
+            cursor.execute("SELECT * FROM forex_signals")
+            rows = cursor.fetchall()
+    """
+    if not db_pool or not db_pool.connection_pool:
+        raise Exception("Database connection pool not initialized")
+    
+    conn = None
+    try:
+        conn = db_pool.connection_pool.getconn()
+        cursor = conn.cursor()
+        
+        if os.environ.get('ENABLE_RLS') == '1':
+            cursor.execute("SET LOCAL app.tenant_id TO %s", (tenant_id,))
+            logger.debug(f"RLS: Set app.tenant_id = {tenant_id}")
+        
+        yield (conn, cursor)
+        
+        conn.commit()
+    except Exception as e:
+        logger.exception(f"Database error in tenant_conn: {e}")
+        if conn and not conn.closed:
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                logger.exception(f"Rollback failed: {rollback_error}")
+        raise
+    finally:
+        if conn:
+            try:
+                if conn.closed:
+                    db_pool.connection_pool.putconn(conn, close=True)
+                else:
+                    db_pool.connection_pool.putconn(conn)
+            except Exception as cleanup_error:
+                logger.exception(f"Connection cleanup error: {cleanup_error}")
+
+
 class DatabasePool:
     def __init__(self):
         self.connection_pool = None

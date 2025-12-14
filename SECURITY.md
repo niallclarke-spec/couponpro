@@ -114,39 +114,119 @@ RLS would add valuable defense-in-depth but requires careful implementation to h
 
 ---
 
-## RLS Phase 2 Implementation (SCAFFOLD)
+## RLS Phase 2 Implementation
 
-### Environment Flag
+Row-Level Security (RLS) Phase 2 provides database-enforced tenant isolation as an additional defense layer beyond application-level filtering.
 
-Set `ENABLE_RLS=1` to enable RLS connection setup:
+### Covered Tables
+
+RLS policies are defined for all 10 tenant-aware tables:
+- `forex_signals`
+- `forex_config`
+- `bot_config`
+- `telegram_subscriptions`
+- `recent_phrases`
+- `campaigns`
+- `bot_usage`
+- `bot_users`
+- `broadcast_jobs`
+- `processed_webhook_events`
+
+### How to Apply the Migration
+
+Apply the RLS policies manually after testing in staging:
+
+```bash
+psql $DATABASE_URL -f migrations/rls_phase2.sql
+```
+
+### How to Enable RLS
+
+Set the `ENABLE_RLS` environment variable:
 
 ```bash
 export ENABLE_RLS=1
 ```
 
-When enabled, each database connection will execute:
-```sql
-SET app.tenant_id = '<tenant_id>'
+When enabled, the application will execute `SET LOCAL app.tenant_id = '<tenant_id>'` on each database connection before executing queries.
+
+### Using the tenant_conn() Helper
+
+The `tenant_conn()` context manager provides a convenient way to execute tenant-scoped database operations:
+
+```python
+from db import tenant_conn
+
+with tenant_conn('tenant_123') as (conn, cursor):
+    cursor.execute("SELECT * FROM forex_signals")
+    rows = cursor.fetchall()
 ```
 
-### Migration File
+This helper:
+- Gets a connection from the pool
+- Begins a transaction
+- Sets `app.tenant_id` when `ENABLE_RLS=1`
+- Yields `(connection, cursor)` for your operations
+- Commits on success, rolls back on error
+- Returns the connection to the pool
 
-The RLS policies are defined in `migrations/rls_phase2.sql`:
-- **DO NOT auto-run** - requires manual execution after testing
-- Enables RLS on: `forex_signals`, `forex_config`, `bot_config`, `telegram_subscriptions`, `bot_usage`
-- Policy: `USING (tenant_id = current_setting('app.tenant_id', true))`
+### Expected Behavior When app.tenant_id Is Not Set
 
-### Deployment Steps
+When RLS is enabled and `app.tenant_id` is not set (or set to a non-matching value):
+- **SELECT queries** return empty results (no rows visible)
+- **INSERT queries** fail with policy violation (if tenant_id doesn't match session)
+- **UPDATE/DELETE queries** affect zero rows (no matching rows visible)
 
-1. Test in staging environment first
-2. Set `ENABLE_RLS=1` in environment
-3. Verify application sets tenant context correctly
-4. Run migration manually: `psql $DATABASE_URL -f migrations/rls_phase2.sql`
-5. Monitor for any access issues
+This provides a safe default: if tenant context is missing, queries are denied rather than exposing data.
 
-### Rollback
+### Rollback Instructions
 
-If issues occur, rollback commands are included in the migration file.
+If issues occur after enabling RLS:
+
+**Step 1: Disable the flag**
+```bash
+unset ENABLE_RLS
+# or set ENABLE_RLS=0
+```
+
+**Step 2: Remove RLS policies (if needed)**
+```sql
+-- Run these commands to completely remove RLS
+DROP POLICY IF EXISTS tenant_isolation_forex_signals ON forex_signals;
+DROP POLICY IF EXISTS tenant_isolation_forex_config ON forex_config;
+DROP POLICY IF EXISTS tenant_isolation_bot_config ON bot_config;
+DROP POLICY IF EXISTS tenant_isolation_telegram_subscriptions ON telegram_subscriptions;
+DROP POLICY IF EXISTS tenant_isolation_recent_phrases ON recent_phrases;
+DROP POLICY IF EXISTS tenant_isolation_campaigns ON campaigns;
+DROP POLICY IF EXISTS tenant_isolation_bot_usage ON bot_usage;
+DROP POLICY IF EXISTS tenant_isolation_bot_users ON bot_users;
+DROP POLICY IF EXISTS tenant_isolation_broadcast_jobs ON broadcast_jobs;
+DROP POLICY IF EXISTS tenant_isolation_processed_webhook_events ON processed_webhook_events;
+
+ALTER TABLE forex_signals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE forex_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE telegram_subscriptions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE recent_phrases DISABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_usage DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE broadcast_jobs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE processed_webhook_events DISABLE ROW LEVEL SECURITY;
+```
+
+### Testing RLS
+
+Run RLS-specific tests:
+```bash
+pytest tests/test_rls_setup.py -v
+```
+
+Tests verify:
+- `tenant_conn()` sets tenant context correctly
+- SELECT isolation: queries only return current tenant's rows
+- UPDATE isolation: updates only affect current tenant's rows
+- Empty results when tenant context is not set
 
 ---
 
