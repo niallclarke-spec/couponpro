@@ -1073,7 +1073,7 @@ class DatabasePool:
 db_pool = DatabasePool()
 
 # Campaign CRUD operations
-def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id):
+def create_campaign(title, description, start_date, end_date, prize, platforms, tenant_id, overlay_url=None):
     """Create a new campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -1150,7 +1150,7 @@ def get_campaign_by_id(campaign_id, tenant_id):
         print(f"Error getting campaign: {e}")
         return None
 
-def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id):
+def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, tenant_id, overlay_url=None):
     """Update an existing campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -1264,7 +1264,7 @@ def get_submission_count(campaign_id):
         return 0
 
 # Bot usage tracking
-def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown', tenant_id):
+def log_bot_usage(chat_id, template_slug, coupon_code, success, tenant_id, error_type=None, device_type='unknown'):
     """
     Log Telegram bot usage. Silently fails to avoid disrupting bot operation.
     
@@ -1305,7 +1305,7 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None,
         print(error_msg, flush=True)
         sys.stdout.flush()
 
-def get_bot_stats(days=30, template_filter=None, tenant_id):
+def get_bot_stats(tenant_id, days=30, template_filter=None):
     """
     Get bot usage statistics for the last N days, or 'today'/'yesterday' for exact day filtering.
     
@@ -1500,7 +1500,7 @@ def get_bot_stats(days=30, template_filter=None, tenant_id):
         print(f"Error getting bot stats: {e}")
         return None
 
-def get_day_of_week_stats(days=30, tenant_id):
+def get_day_of_week_stats(tenant_id, days=30):
     """
     Get day-of-week or hour-of-day usage statistics.
     
@@ -1683,7 +1683,7 @@ def get_bot_user(chat_id, tenant_id):
         print(f"[DB] Error getting bot user: {e}")
         return None
 
-def get_active_bot_users(days=30, tenant_id):
+def get_active_bot_users(tenant_id, days=30):
     """
     Get all active bot users within the last N days for broadcasting.
     
@@ -1722,7 +1722,7 @@ def get_active_bot_users(days=30, tenant_id):
         print(f"Error getting active bot users: {e}")
         return []
 
-def get_bot_user_count(days=30, tenant_id):
+def get_bot_user_count(tenant_id, days=30):
     """
     Get count of active bot users within the last N days.
     
@@ -1868,7 +1868,7 @@ def get_retention_rates(tenant_id):
         print(f"Error calculating retention rates: {e}")
         return {'day1': 0, 'day7': 0, 'day30': 0}
 
-def get_all_bot_users(limit=100, offset=0, tenant_id):
+def get_all_bot_users(tenant_id, limit=100, offset=0):
     """
     Get all bot users with their activity stats.
     
@@ -1931,7 +1931,7 @@ def get_all_bot_users(limit=100, offset=0, tenant_id):
         print(f"Error getting all bot users: {e}")
         return {'users': [], 'total': 0}
 
-def get_user_activity_history(chat_id, limit=100, tenant_id):
+def get_user_activity_history(chat_id, tenant_id, limit=100):
     """
     Get complete activity history for a specific user.
     
@@ -1977,7 +1977,7 @@ def get_user_activity_history(chat_id, limit=100, tenant_id):
         print(f"Error getting user activity history: {e}")
         return []
 
-def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None, tenant_id):
+def get_invalid_coupon_attempts(tenant_id, limit=100, offset=0, template_filter=None, days=None):
     """
     Get all invalid coupon validation attempts.
     
@@ -2108,7 +2108,7 @@ def create_broadcast_job(message, target_days, total_users, tenant_id):
         print(f"Error creating broadcast job: {e}")
         return None
 
-def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False, tenant_id):
+def update_broadcast_job(job_id, tenant_id, status=None, sent_count=None, failed_count=None, completed=False):
     """
     Update broadcast job progress.
     
@@ -2196,7 +2196,7 @@ def get_broadcast_job(job_id, tenant_id):
         print(f"Error getting broadcast job {job_id}: {e}")
         return None
 
-def get_recent_broadcast_jobs(limit=10, tenant_id):
+def get_recent_broadcast_jobs(tenant_id, limit=10):
     """
     Get recent broadcast jobs.
     
@@ -2241,12 +2241,12 @@ def get_recent_broadcast_jobs(limit=10, tenant_id):
         return []
 
 # Forex signals operations
-def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=None, 
+def create_forex_signal(signal_type, pair, timeframe, entry_price, tenant_id, take_profit=None, 
                        stop_loss=None, rsi_value=None, macd_value=None, atr_value=None,
                        bot_type='aggressive', indicators_used=None, notes=None,
                        take_profit_2=None, take_profit_3=None,
                        tp1_percentage=100, tp2_percentage=0, tp3_percentage=0,
-                       status='draft', tenant_id):
+                       status='draft'):
     """
     Create a new forex signal with multi-TP support.
     
@@ -2294,7 +2294,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         print(f"Error creating forex signal: {e}")
         raise
 
-def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant_id):
+def update_signal_status(signal_id, new_status, tenant_id, telegram_message_id=None):
     """
     Update a signal's status (e.g., from 'draft' to 'pending' or 'broadcast_failed').
     
@@ -2340,7 +2340,7 @@ def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant
             except Exception as cleanup_error:
                 print(f"Connection cleanup error: {cleanup_error}")
 
-def get_forex_signals(status=None, limit=100, tenant_id):
+def get_forex_signals(tenant_id, status=None, limit=100):
     """
     Get forex signals with optional status filtering.
     
@@ -2451,7 +2451,7 @@ def get_forex_signals(status=None, limit=100, tenant_id):
         print(f"Error getting forex signals: {e}")
         return []
 
-def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None, tenant_id):
+def update_forex_signal_status(signal_id, status, tenant_id, result_pips=None, close_price=None):
     """
     Update forex signal status and optionally set result.
     
@@ -2506,7 +2506,7 @@ def update_forex_signal_status(signal_id, status, result_pips=None, close_price=
         print(f"Error updating forex signal status: {e}")
         raise
 
-def get_forex_stats(days=7, tenant_id):
+def get_forex_stats(tenant_id, days=7):
     """
     Get forex signals statistics for the last N days.
     
@@ -2610,7 +2610,7 @@ def get_forex_stats(days=7, tenant_id):
         print(f"Error getting forex stats: {e}")
         return None
 
-def get_forex_signals_by_period(period='today', tenant_id):
+def get_forex_signals_by_period(tenant_id, period='today'):
     """
     Get forex signals for a specific time period.
     
@@ -2691,7 +2691,7 @@ def get_forex_signals_by_period(period='today', tenant_id):
         print(f"Error getting forex signals by period: {e}")
         return []
 
-def get_forex_stats_by_period(period='today', tenant_id):
+def get_forex_stats_by_period(tenant_id, period='today'):
     """
     Get forex statistics for a specific time period.
     
@@ -2853,7 +2853,7 @@ def get_last_completed_signal(tenant_id):
         print(f"Error getting last completed signal: {e}")
         return None
 
-def get_recent_signal_streak(limit=5, tenant_id):
+def get_recent_signal_streak(tenant_id, limit=5):
     """
     Get the recent win/loss streak for context-aware AI prompts.
     
@@ -3479,7 +3479,7 @@ def get_open_signal(tenant_id):
         print(f"Error getting open signal: {e}")
         return None
 
-def get_signals_by_bot_type(bot_type, status=None, limit=50, tenant_id):
+def get_signals_by_bot_type(bot_type, tenant_id, status=None, limit=50):
     """
     Get forex signals filtered by bot type.
     
@@ -3717,7 +3717,7 @@ def update_tp_hit(signal_id, tp_level, tenant_id):
         print(f"Error updating TP{tp_level} hit: {e}")
         return False
 
-def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None, tenant_id):
+def update_signal_guidance(signal_id, notes, tenant_id, progress_zone=None, caution_zone=None):
     """
     Update guidance information for a signal with zone tracking.
     Increments guidance_count and updates last_guidance_at, notes, and zone levels.
@@ -3880,7 +3880,7 @@ def update_effective_sl(signal_id, new_sl_price, tenant_id):
         print(f"Error updating effective SL: {e}")
         return False
 
-def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None, tenant_id):
+def update_signal_original_indicators(signal_id, tenant_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None):
     """
     Store original indicator values when signal is created for later re-validation.
     
@@ -3948,7 +3948,7 @@ def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, 
         print(f"Error updating signal original indicators: {e}")
         return False
 
-def update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id):
+def update_signal_revalidation(signal_id, thesis_status, tenant_id, notes=None):
     """
     Update revalidation data for a signal (for stagnant trade monitoring).
     
@@ -4172,7 +4172,7 @@ def add_recent_phrase(phrase_type, phrase_text, tenant_id):
         print(f"Error adding recent phrase: {e}")
         return False
 
-def get_recent_phrases(phrase_type, limit=10, tenant_id):
+def get_recent_phrases(phrase_type, tenant_id, limit=10):
     """
     Get recently used phrases of a specific type to avoid repetition.
     
@@ -4204,7 +4204,7 @@ def get_recent_phrases(phrase_type, limit=10, tenant_id):
         print(f"Error getting recent phrases: {e}")
         return []
 
-def cleanup_old_phrases(days_to_keep=7, tenant_id):
+def cleanup_old_phrases(tenant_id, days_to_keep=7):
     """
     Remove phrases older than specified days to prevent unbounded growth.
     
@@ -4236,7 +4236,7 @@ def cleanup_old_phrases(days_to_keep=7, tenant_id):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None, tenant_id):
+def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None):
     """
     Create or update a telegram subscription record (UPSERT) with conversion tracking.
     
@@ -4527,7 +4527,7 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
         print(f"Error updating telegram subscription user joined: {e}")
         return False
 
-def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None, tenant_id):
+def update_subscription_status(tenant_id, email=None, stripe_subscription_id=None, status=None, reason=None):
     """
     Update subscription status based on email or stripe_subscription_id.
     
@@ -4578,7 +4578,7 @@ def update_subscription_status(email=None, stripe_subscription_id=None, status=N
         return False, None, None
 
 
-def revoke_telegram_subscription(email, reason='subscription_canceled', tenant_id):
+def revoke_telegram_subscription(email, tenant_id, reason='subscription_canceled'):
     """Revoke telegram subscription access"""
     try:
         if not db_pool.connection_pool:
@@ -4738,7 +4738,7 @@ def delete_telegram_subscription(subscription_id, tenant_id):
         print(f"Error deleting telegram subscription {subscription_id}: {e}")
         raise
 
-def get_all_telegram_subscriptions(status_filter=None, include_test=False, tenant_id):
+def get_all_telegram_subscriptions(tenant_id, status_filter=None, include_test=False):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
@@ -5136,7 +5136,7 @@ def is_webhook_event_processed(event_id, tenant_id):
         print(f"[IDEMPOTENCY] Error checking webhook event: {e}")
         return False
 
-def record_webhook_event_processed(event_id, event_source='stripe', tenant_id):
+def record_webhook_event_processed(event_id, tenant_id, event_source='stripe'):
     """
     Record that a webhook event has been processed.
     
@@ -5165,7 +5165,7 @@ def record_webhook_event_processed(event_id, event_source='stripe', tenant_id):
         print(f"[IDEMPOTENCY] Error recording webhook event: {e}")
         return False
 
-def cleanup_old_webhook_events(hours=24, tenant_id):
+def cleanup_old_webhook_events(tenant_id, hours=24):
     """
     Clean up old processed webhook events to prevent table growth.
     Events older than specified hours are deleted.
