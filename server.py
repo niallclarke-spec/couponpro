@@ -412,6 +412,41 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(retention).encode())
             except Exception as e:
                 logger.exception("Error getting retention rates")
+        
+        elif parsed_path.path == '/api/metrics/tenant':
+            import uuid
+            request_id = str(uuid.uuid4())[:8]
+            
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            
+            try:
+                query_params = parse_qs(parsed_path.query)
+                days = int(query_params.get('days', [7])[0])
+                
+                tenant_id = getattr(self, 'tenant_id', 'entrylab')
+                set_request_context(tenant_id=tenant_id, request_id=request_id)
+                logger.info(f"tenant={tenant_id} req={request_id} path=/api/metrics/tenant days={days}")
+                
+                metrics = db.get_tenant_metrics(tenant_id=tenant_id, days=days)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(metrics).encode())
+            except Exception as e:
+                logger.exception(f"Error getting tenant metrics: req={request_id}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()

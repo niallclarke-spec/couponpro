@@ -56,20 +56,30 @@ class DatabasePool:
             self.connection_pool = None
     
     @contextmanager
-    def get_connection(self):
-        """Context manager for database connections"""
+    def get_connection(self, tenant_id: str = None):
+        """Context manager for database connections.
+        
+        Args:
+            tenant_id: Optional tenant ID for RLS setup. When ENABLE_RLS=1 is set
+                      and tenant_id is provided, sets app.tenant_id session variable.
+        """
         if not self.connection_pool:
             raise Exception("Database connection pool not initialized")
         
         conn = None
         try:
             conn = self.connection_pool.getconn()
+            
+            if tenant_id and os.environ.get('ENABLE_RLS') == '1':
+                cursor = conn.cursor()
+                cursor.execute("SET LOCAL app.tenant_id TO %s", (tenant_id,))
+                logger.debug(f"RLS: Set app.tenant_id = {tenant_id}")
+            
             yield conn
         except Exception as e:
             logger.exception(f"Database connection error: {e}")
             if conn:
                 try:
-                    # Only rollback if connection is still alive
                     if not conn.closed:
                         conn.rollback()
                 except Exception as rollback_error:
@@ -78,12 +88,9 @@ class DatabasePool:
         finally:
             if conn:
                 try:
-                    # Check if connection is still usable
                     if conn.closed:
-                        # Close it completely and don't return to pool
                         self.connection_pool.putconn(conn, close=True)
                     else:
-                        # Return healthy connection to pool
                         self.connection_pool.putconn(conn)
                 except Exception as cleanup_error:
                     logger.exception(f"Connection cleanup error: {cleanup_error}")
@@ -5191,3 +5198,131 @@ def cleanup_old_webhook_events(tenant_id, hours=24):
     except Exception as e:
         logger.exception(f"Error cleaning up webhook events: {e}")
         return 0
+
+
+def get_tenant_metrics(tenant_id, days=7):
+    """
+    Get aggregated metrics for a tenant.
+    
+    Args:
+        tenant_id (str): The tenant ID
+        days (int): Number of days to look back (default: 7)
+    
+    Returns:
+        dict: Aggregated metrics including:
+            - signals_created: Count of signals created in period
+            - signals_closed: Count of signals closed in period
+            - signals_active: Count of currently active signals
+            - subscriptions_created: Count of subscriptions created in period
+            - subscriptions_converted: Count of subscriptions that converted (status='active')
+            - bot_usage_events: Count of bot usage events in period
+            - error_counts: Dict of error_type -> count
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals 
+                WHERE tenant_id = %s 
+                AND posted_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+            """, (tenant_id, days))
+            signals_created = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals 
+                WHERE tenant_id = %s 
+                AND closed_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+            """, (tenant_id, days))
+            signals_closed = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals 
+                WHERE tenant_id = %s 
+                AND status = 'active'
+            """, (tenant_id,))
+            signals_active = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM telegram_subscriptions 
+                WHERE tenant_id = %s 
+                AND created_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+            """, (tenant_id, days))
+            subscriptions_created = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM telegram_subscriptions 
+                WHERE tenant_id = %s 
+                AND created_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+                AND status = 'active'
+            """, (tenant_id, days))
+            subscriptions_converted = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM bot_usage 
+                WHERE tenant_id = %s 
+                AND created_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+            """, (tenant_id, days))
+            bot_usage_events = cursor.fetchone()[0] or 0
+            
+            cursor.execute("""
+                SELECT error_type, COUNT(*) as cnt FROM bot_usage 
+                WHERE tenant_id = %s 
+                AND created_at >= CURRENT_DATE - %s * INTERVAL '1 day'
+                AND error_type IS NOT NULL
+                GROUP BY error_type
+            """, (tenant_id, days))
+            error_counts = {row[0]: row[1] for row in cursor.fetchall()}
+            
+            return {
+                'signals_created': signals_created,
+                'signals_closed': signals_closed,
+                'signals_active': signals_active,
+                'subscriptions_created': subscriptions_created,
+                'subscriptions_converted': subscriptions_converted,
+                'bot_usage_events': bot_usage_events,
+                'error_counts': error_counts
+            }
+    except Exception as e:
+        logger.exception(f"Error getting tenant metrics: {e}")
+        return {}
+
+
+def get_active_tenants():
+    """
+    Get list of active tenant IDs.
+    
+    Queries distinct tenant_ids from forex_config where enabled=true,
+    or falls back to distinct tenant_ids from forex_signals if no config exists.
+    
+    Returns:
+        list[str]: List of active tenant IDs
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT DISTINCT tenant_id FROM forex_config 
+                WHERE enabled = true
+            """)
+            tenants = [row[0] for row in cursor.fetchall()]
+            
+            if not tenants:
+                cursor.execute("""
+                    SELECT DISTINCT tenant_id FROM forex_signals
+                    WHERE tenant_id IS NOT NULL
+                    LIMIT 100
+                """)
+                tenants = [row[0] for row in cursor.fetchall()]
+            
+            return tenants
+    except Exception as e:
+        logger.exception(f"Error getting active tenants: {e}")
+        return []

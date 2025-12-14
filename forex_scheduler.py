@@ -181,28 +181,152 @@ def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Forex Signals Scheduler')
     parser.add_argument('--once', action='store_true', help='Run one signal check cycle and exit')
-    parser.add_argument('--tenant', type=str, help='Tenant ID (required)')
+    parser.add_argument('--tenant', type=str, help='Tenant ID (single tenant mode)')
+    parser.add_argument('--all-tenants', action='store_true', help='Run for all active tenants')
+    parser.add_argument('--shard', type=str, help='Shard assignment N/M (e.g., 0/3 for shard 0 of 3)')
     return parser.parse_args()
+
+
+def parse_shard(shard_str: str) -> tuple:
+    """Parse shard string like '0/3' into (shard_index, total_shards)."""
+    if not shard_str or '/' not in shard_str:
+        return None, None
+    parts = shard_str.split('/')
+    if len(parts) != 2:
+        return None, None
+    try:
+        shard_index = int(parts[0])
+        total_shards = int(parts[1])
+        if shard_index < 0 or shard_index >= total_shards or total_shards < 1:
+            return None, None
+        return shard_index, total_shards
+    except ValueError:
+        return None, None
+
+
+def tenant_in_shard(tenant_id: str, shard_index: int, total_shards: int) -> bool:
+    """Determine if a tenant belongs to a shard using consistent hashing.
+    
+    Uses SHA256 for deterministic hashing (Python's hash() is randomized per process).
+    """
+    import hashlib
+    hash_value = int(hashlib.sha256(tenant_id.encode()).hexdigest(), 16)
+    return hash_value % total_shards == shard_index
+
+
+TENANT_TIMEOUT_SECONDS = 120  # 2 minute per-tenant execution budget
+
+
+async def run_tenant_with_timeout(tenant_id: str, once: bool) -> dict:
+    """
+    Run scheduler for a single tenant with timeout protection.
+    
+    Returns dict with 'success', 'tenant_id', 'error' keys.
+    """
+    result = {'tenant_id': tenant_id, 'success': False, 'error': None}
+    
+    try:
+        runtime = require_tenant_runtime(tenant_id)
+        signal_engine = runtime.get_signal_engine()
+        signal_engine.set_tenant_id(runtime.tenant_id)
+        
+        scheduler = ForexSchedulerRunner(runtime)
+        
+        if once:
+            await asyncio.wait_for(
+                scheduler.run_once(),
+                timeout=TENANT_TIMEOUT_SECONDS
+            )
+        else:
+            await scheduler.run_forever()
+        
+        result['success'] = True
+    except asyncio.TimeoutError:
+        result['error'] = f"Timeout after {TENANT_TIMEOUT_SECONDS}s"
+        logger.warning(f"Tenant {tenant_id} timed out after {TENANT_TIMEOUT_SECONDS}s")
+    except Exception as e:
+        result['error'] = str(e)
+        logger.exception(f"Tenant {tenant_id} failed: {e}")
+    
+    return result
+
+
+async def run_all_tenants(once: bool, shard_index: int = None, total_shards: int = None):
+    """
+    Run scheduler for all active tenants (or a shard of them).
+    
+    Args:
+        once: If True, run once and exit. If False, run forever (not supported in multi-tenant).
+        shard_index: Optional shard index (0-based)
+        total_shards: Optional total number of shards
+    """
+    import db as db_module
+    
+    all_tenants = db_module.get_active_tenants()
+    
+    if not all_tenants:
+        logger.warning("No active tenants found")
+        return
+    
+    if shard_index is not None and total_shards is not None:
+        tenants = [t for t in all_tenants if tenant_in_shard(t, shard_index, total_shards)]
+        logger.info(f"Shard {shard_index}/{total_shards}: {len(tenants)} of {len(all_tenants)} tenants")
+    else:
+        tenants = all_tenants
+        logger.info(f"All tenants mode: {len(tenants)} tenants")
+    
+    if not tenants:
+        logger.info("No tenants in this shard, exiting")
+        return
+    
+    if not once:
+        logger.error("--all-tenants mode requires --once flag (continuous multi-tenant not supported)")
+        return
+    
+    succeeded = 0
+    failed = 0
+    skipped = 0
+    
+    for tenant_id in tenants:
+        logger.info(f"Processing tenant: {tenant_id}")
+        result = await run_tenant_with_timeout(tenant_id, once=True)
+        
+        if result['success']:
+            succeeded += 1
+            logger.info(f"✅ Tenant {tenant_id} completed successfully")
+        else:
+            failed += 1
+            logger.error(f"❌ Tenant {tenant_id} failed: {result['error']}")
+    
+    total = succeeded + failed + skipped
+    logger.info("=" * 50)
+    logger.info(f"MULTI-TENANT RUN SUMMARY")
+    logger.info(f"  Total:     {total}")
+    logger.info(f"  Succeeded: {succeeded}")
+    logger.info(f"  Failed:    {failed}")
+    logger.info(f"  Skipped:   {skipped}")
+    logger.info("=" * 50)
 
 
 async def main():
     """Async entry point"""
     args = parse_args()
     
-    # Create tenant runtime (will exit if tenant not provided)
-    runtime = require_tenant_runtime(args.tenant)
-    
-    # Set tenant on signal engine
-    signal_engine = runtime.get_signal_engine()
-    signal_engine.set_tenant_id(runtime.tenant_id)
-    
-    # Create and run scheduler
-    scheduler = ForexSchedulerRunner(runtime)
-    
-    if args.once:
-        await scheduler.run_once()
+    if args.all_tenants:
+        shard_index, total_shards = parse_shard(args.shard) if args.shard else (None, None)
+        await run_all_tenants(args.once, shard_index, total_shards)
     else:
-        await scheduler.run_forever()
+        runtime = require_tenant_runtime(args.tenant)
+        
+        signal_engine = runtime.get_signal_engine()
+        signal_engine.set_tenant_id(runtime.tenant_id)
+        
+        scheduler = ForexSchedulerRunner(runtime)
+        
+        if args.once:
+            await scheduler.run_once()
+        else:
+            await scheduler.run_forever()
 
 
 def start_forex_scheduler(tenant_id: str = None):

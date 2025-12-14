@@ -111,3 +111,65 @@ ALTER TABLE forex_signals FORCE ROW LEVEL SECURITY;
 - Runtime tripwire logs tenant context for audit trail
 
 RLS would add valuable defense-in-depth but requires careful implementation to handle connection pooling and session management. Recommend implementing RLS as a Phase 2 security enhancement after the current app-level controls are battle-tested in production.
+
+---
+
+## RLS Phase 2 Implementation (SCAFFOLD)
+
+### Environment Flag
+
+Set `ENABLE_RLS=1` to enable RLS connection setup:
+
+```bash
+export ENABLE_RLS=1
+```
+
+When enabled, each database connection will execute:
+```sql
+SET app.tenant_id = '<tenant_id>'
+```
+
+### Migration File
+
+The RLS policies are defined in `migrations/rls_phase2.sql`:
+- **DO NOT auto-run** - requires manual execution after testing
+- Enables RLS on: `forex_signals`, `forex_config`, `bot_config`, `telegram_subscriptions`, `bot_usage`
+- Policy: `USING (tenant_id = current_setting('app.tenant_id', true))`
+
+### Deployment Steps
+
+1. Test in staging environment first
+2. Set `ENABLE_RLS=1` in environment
+3. Verify application sets tenant context correctly
+4. Run migration manually: `psql $DATABASE_URL -f migrations/rls_phase2.sql`
+5. Monitor for any access issues
+
+### Rollback
+
+If issues occur, rollback commands are included in the migration file.
+
+---
+
+## Smoke Testing
+
+Run tenant isolation smoke tests:
+```bash
+make smoke
+# or
+python scripts/smoke_tenant_isolation.py
+```
+
+---
+
+## Scheduler Sharding
+
+Multi-tenant scheduler supports sharding for horizontal scaling:
+```bash
+# Run all tenants
+python forex_scheduler.py --all-tenants --once
+
+# Run specific shard (0 of 3)
+python forex_scheduler.py --all-tenants --shard 0/3 --once
+```
+
+Sharding uses consistent hashing: `hash(tenant_id) % total_shards == shard_index`
