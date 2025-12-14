@@ -22,6 +22,7 @@ from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
+from domains.tenant import handlers as tenant_handlers
 from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
 from integrations.stripe.webhooks import handle_stripe_webhook
 
@@ -248,6 +249,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/signal-bot/signals':
             forex_handlers.handle_signal_bot_signals(self)
+            return
+        
+        # Dispatch to tenant domain handlers
+        if parsed_path.path == '/api/tenant/setup-status':
+            tenant_id = getattr(self, 'tenant_id', 'entrylab')
+            tenant_handlers.handle_tenant_setup_status(self, tenant_id)
             return
         
         # Legacy /admin path support - redirect to admin.promostack.io
@@ -533,6 +540,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/signal-bot/cancel-queue':
             forex_handlers.handle_signal_bot_cancel_queue(self)
+            return
+        
+        # Dispatch to tenant domain handlers
+        if parsed_path.path == '/api/tenant/integrations':
+            tenant_id = getattr(self, 'tenant_id', 'entrylab')
+            tenant_handlers.handle_tenant_integrations(self, tenant_id)
             return
         
         # Dispatch to telegram webhook handlers

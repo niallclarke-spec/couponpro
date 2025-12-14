@@ -101,6 +101,10 @@ GET_ROUTES: List[Route] = [
     # Invalid coupons
     Route('GET', '/api/invalid-coupons', 'handle_api_invalid_coupons',
           auth_required=True, db_required=True),
+    
+    # Tenant
+    Route('GET', '/api/tenant/setup-status', 'handle_api_tenant_setup_status',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -173,6 +177,10 @@ POST_ROUTES: List[Route] = [
     Route('POST', '/api/campaigns/', 'handle_api_campaign_delete',
           auth_required=True, db_required=True, is_prefix=True, contains='/delete'),
     Route('POST', '/api/campaigns', 'handle_api_campaigns_create',
+          auth_required=True, db_required=True),
+    
+    # Tenant
+    Route('POST', '/api/tenant/integrations', 'handle_api_tenant_integrations',
           auth_required=True, db_required=True),
 ]
 
