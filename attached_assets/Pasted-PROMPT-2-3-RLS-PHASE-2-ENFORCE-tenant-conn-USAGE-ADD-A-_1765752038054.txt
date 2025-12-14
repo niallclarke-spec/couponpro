@@ -1,0 +1,51 @@
+PROMPT 2/3 — RLS PHASE 2: ENFORCE tenant_conn() USAGE + ADD A REAL RUNTIME GUARD
+
+Goal:
+When ENABLE_RLS=1, it should be hard/impossible to accidentally run tenant-table queries without setting the DB session tenant context.
+
+Current situation:
+- We have tenant_conn() in db.py which does SET LOCAL app.tenant_id when ENABLE_RLS=1.
+- But some code paths may still use get_conn()/raw cursor/connection_pool directly.
+
+Work to do:
+
+A) Centralize tenant-scoped DB access in db.py
+1) Identify ALL places outside db.py that open DB connections directly or run cursor.execute on tenant tables:
+   - forex_scheduler.py
+   - forex_signals.py
+   - forex_bot.py
+   - bots/** (bot_manager, strategies, etc.)
+2) Replace those direct connection/cursor usages with calls into db.py functions OR wrap them in db.tenant_conn(tenant_id).
+
+Rule:
+- If a query touches a tenant-aware table, it MUST run via tenant_conn(tenant_id) when ENABLE_RLS=1.
+- Non-tenant tables (like advisory locks) can keep using the raw leader connection.
+
+B) Add a “fail fast” runtime guard when ENABLE_RLS=1
+1) In db.py, inside tenant_conn():
+   - After SET LOCAL app.tenant_id, execute a quick sanity check:
+     SELECT current_setting('app.tenant_id', true)
+     and assert it equals the tenant_id we set (or raise RuntimeError).
+2) Add a lightweight helper:
+   - def require_rls_tenant_context(cursor, tenant_id): (optional)
+   so db functions can call it when ENABLE_RLS=1.
+
+C) Add/extend tests (do not require manual migration)
+We already skip RLS tests if migration not applied, but we should still test wiring logic:
+1) Add a unit test that monkeypatches ENABLE_RLS=1 and asserts tenant_conn() runs SET LOCAL app.tenant_id.
+   - Use a fake cursor/conn object or monkeypatch psycopg2 cursor.execute to capture SQL.
+   - This test should pass without a DB.
+2) Keep the existing RLS integration tests skipped unless the migration is present.
+
+D) Update docs
+1) In SECURITY.md, add a clear statement:
+   - ENABLE_RLS=1 requires RLS policies already applied.
+   - All tenant table access must use tenant_conn(tenant_id).
+2) Add a short troubleshooting section:
+   - If you see “RLS tenant context not set” errors, the caller bypassed tenant_conn.
+
+Acceptance criteria:
+- rg search finds no tenant-table cursor.execute calls outside db.py unless they are wrapped in tenant_conn().
+- Unit test confirms tenant_conn runs SET LOCAL when ENABLE_RLS=1 (no DB required).
+- tenant_audit passes.
+- pytest -q passes (RLS integration tests may remain skipped unless migration applied).
