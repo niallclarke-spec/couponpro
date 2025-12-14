@@ -1073,7 +1073,7 @@ class DatabasePool:
 db_pool = DatabasePool()
 
 # Campaign CRUD operations
-def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id='entrylab'):
+def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id):
     """Create a new campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -1091,7 +1091,7 @@ def create_campaign(title, description, start_date, end_date, prize, platforms, 
         print(f"Error creating campaign: {e}")
         raise
 
-def get_all_campaigns(tenant_id='entrylab'):
+def get_all_campaigns(tenant_id):
     """Get all campaigns ordered by start_date descending"""
     try:
         with db_pool.get_connection() as conn:
@@ -1121,7 +1121,7 @@ def get_all_campaigns(tenant_id='entrylab'):
         print(f"Error getting campaigns: {e}")
         return []
 
-def get_campaign_by_id(campaign_id, tenant_id='entrylab'):
+def get_campaign_by_id(campaign_id, tenant_id):
     """Get a single campaign by ID"""
     try:
         with db_pool.get_connection() as conn:
@@ -1150,7 +1150,7 @@ def get_campaign_by_id(campaign_id, tenant_id='entrylab'):
         print(f"Error getting campaign: {e}")
         return None
 
-def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id='entrylab'):
+def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id):
     """Update an existing campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -1167,7 +1167,7 @@ def update_campaign(campaign_id, title, description, start_date, end_date, prize
         print(f"Error updating campaign: {e}")
         raise
 
-def delete_campaign(campaign_id, tenant_id='entrylab'):
+def delete_campaign(campaign_id, tenant_id):
     """Delete a campaign and its submissions"""
     try:
         with db_pool.get_connection() as conn:
@@ -1179,7 +1179,7 @@ def delete_campaign(campaign_id, tenant_id='entrylab'):
         print(f"Error deleting campaign: {e}")
         raise
 
-def update_campaign_statuses(tenant_id='entrylab'):
+def update_campaign_statuses(tenant_id):
     """Update campaign statuses based on current time"""
     try:
         with db_pool.get_connection() as conn:
@@ -1264,7 +1264,7 @@ def get_submission_count(campaign_id):
         return 0
 
 # Bot usage tracking
-def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown', tenant_id='entrylab'):
+def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown', tenant_id):
     """
     Log Telegram bot usage. Silently fails to avoid disrupting bot operation.
     
@@ -1305,7 +1305,7 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None,
         print(error_msg, flush=True)
         sys.stdout.flush()
 
-def get_bot_stats(days=30, template_filter=None, tenant_id='entrylab'):
+def get_bot_stats(days=30, template_filter=None, tenant_id):
     """
     Get bot usage statistics for the last N days, or 'today'/'yesterday' for exact day filtering.
     
@@ -1500,7 +1500,7 @@ def get_bot_stats(days=30, template_filter=None, tenant_id='entrylab'):
         print(f"Error getting bot stats: {e}")
         return None
 
-def get_day_of_week_stats(days=30, tenant_id='entrylab'):
+def get_day_of_week_stats(days=30, tenant_id):
     """
     Get day-of-week or hour-of-day usage statistics.
     
@@ -1633,7 +1633,7 @@ def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_na
     except Exception as e:
         print(f"[BOT_USER] Failed to track user (non-critical): {e}")
 
-def get_bot_user(chat_id, tenant_id='entrylab'):
+def get_bot_user(chat_id, tenant_id):
     """
     Get bot user data including last coupon used, profile information, and activity stats.
     
@@ -1683,7 +1683,7 @@ def get_bot_user(chat_id, tenant_id='entrylab'):
         print(f"[DB] Error getting bot user: {e}")
         return None
 
-def get_active_bot_users(days=30, tenant_id='entrylab'):
+def get_active_bot_users(days=30, tenant_id):
     """
     Get all active bot users within the last N days for broadcasting.
     
@@ -1722,7 +1722,7 @@ def get_active_bot_users(days=30, tenant_id='entrylab'):
         print(f"Error getting active bot users: {e}")
         return []
 
-def get_bot_user_count(days=30, tenant_id='entrylab'):
+def get_bot_user_count(days=30, tenant_id):
     """
     Get count of active bot users within the last N days.
     
@@ -1751,7 +1751,7 @@ def get_bot_user_count(days=30, tenant_id='entrylab'):
         print(f"Error getting bot user count: {e}")
         return 0
 
-def get_retention_rates(tenant_id='entrylab'):
+def get_retention_rates(tenant_id):
     """
     Calculate Day 1, Day 7, and Day 30 retention rates.
     
@@ -1868,7 +1868,7 @@ def get_retention_rates(tenant_id='entrylab'):
         print(f"Error calculating retention rates: {e}")
         return {'day1': 0, 'day7': 0, 'day30': 0}
 
-def get_all_bot_users(limit=100, offset=0, tenant_id='entrylab'):
+def get_all_bot_users(limit=100, offset=0, tenant_id):
     """
     Get all bot users with their activity stats.
     
@@ -1931,7 +1931,7 @@ def get_all_bot_users(limit=100, offset=0, tenant_id='entrylab'):
         print(f"Error getting all bot users: {e}")
         return {'users': [], 'total': 0}
 
-def get_user_activity_history(chat_id, limit=100, tenant_id='entrylab'):
+def get_user_activity_history(chat_id, limit=100, tenant_id):
     """
     Get complete activity history for a specific user.
     
@@ -1977,7 +1977,7 @@ def get_user_activity_history(chat_id, limit=100, tenant_id='entrylab'):
         print(f"Error getting user activity history: {e}")
         return []
 
-def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None, tenant_id='entrylab'):
+def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None, tenant_id):
     """
     Get all invalid coupon validation attempts.
     
@@ -2057,7 +2057,7 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
         print(f"Error getting invalid coupon attempts: {e}")
         return {'attempts': [], 'total': 0}
 
-def remove_bot_user(chat_id, tenant_id='entrylab'):
+def remove_bot_user(chat_id, tenant_id):
     """
     Remove a bot user (e.g., when they block the bot).
     
@@ -2077,7 +2077,7 @@ def remove_bot_user(chat_id, tenant_id='entrylab'):
         print(f"[BOT_USER] Failed to remove user {chat_id}: {e}")
 
 # Broadcast job management
-def create_broadcast_job(message, target_days, total_users, tenant_id='entrylab'):
+def create_broadcast_job(message, target_days, total_users, tenant_id):
     """
     Create a new broadcast job.
     
@@ -2108,7 +2108,7 @@ def create_broadcast_job(message, target_days, total_users, tenant_id='entrylab'
         print(f"Error creating broadcast job: {e}")
         return None
 
-def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False, tenant_id='entrylab'):
+def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False, tenant_id):
     """
     Update broadcast job progress.
     
@@ -2154,7 +2154,7 @@ def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None
     except Exception as e:
         print(f"Error updating broadcast job {job_id}: {e}")
 
-def get_broadcast_job(job_id, tenant_id='entrylab'):
+def get_broadcast_job(job_id, tenant_id):
     """
     Get broadcast job details.
     
@@ -2196,7 +2196,7 @@ def get_broadcast_job(job_id, tenant_id='entrylab'):
         print(f"Error getting broadcast job {job_id}: {e}")
         return None
 
-def get_recent_broadcast_jobs(limit=10, tenant_id='entrylab'):
+def get_recent_broadcast_jobs(limit=10, tenant_id):
     """
     Get recent broadcast jobs.
     
@@ -2246,7 +2246,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
                        bot_type='aggressive', indicators_used=None, notes=None,
                        take_profit_2=None, take_profit_3=None,
                        tp1_percentage=100, tp2_percentage=0, tp3_percentage=0,
-                       status='draft', tenant_id='entrylab'):
+                       status='draft', tenant_id):
     """
     Create a new forex signal with multi-TP support.
     
@@ -2294,7 +2294,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         print(f"Error creating forex signal: {e}")
         raise
 
-def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant_id='entrylab'):
+def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant_id):
     """
     Update a signal's status (e.g., from 'draft' to 'pending' or 'broadcast_failed').
     
@@ -2340,7 +2340,7 @@ def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant
             except Exception as cleanup_error:
                 print(f"Connection cleanup error: {cleanup_error}")
 
-def get_forex_signals(status=None, limit=100, tenant_id='entrylab'):
+def get_forex_signals(status=None, limit=100, tenant_id):
     """
     Get forex signals with optional status filtering.
     
@@ -2451,7 +2451,7 @@ def get_forex_signals(status=None, limit=100, tenant_id='entrylab'):
         print(f"Error getting forex signals: {e}")
         return []
 
-def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None, tenant_id='entrylab'):
+def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None, tenant_id):
     """
     Update forex signal status and optionally set result.
     
@@ -2506,7 +2506,7 @@ def update_forex_signal_status(signal_id, status, result_pips=None, close_price=
         print(f"Error updating forex signal status: {e}")
         raise
 
-def get_forex_stats(days=7, tenant_id='entrylab'):
+def get_forex_stats(days=7, tenant_id):
     """
     Get forex signals statistics for the last N days.
     
@@ -2610,7 +2610,7 @@ def get_forex_stats(days=7, tenant_id='entrylab'):
         print(f"Error getting forex stats: {e}")
         return None
 
-def get_forex_signals_by_period(period='today', tenant_id='entrylab'):
+def get_forex_signals_by_period(period='today', tenant_id):
     """
     Get forex signals for a specific time period.
     
@@ -2691,7 +2691,7 @@ def get_forex_signals_by_period(period='today', tenant_id='entrylab'):
         print(f"Error getting forex signals by period: {e}")
         return []
 
-def get_forex_stats_by_period(period='today', tenant_id='entrylab'):
+def get_forex_stats_by_period(period='today', tenant_id):
     """
     Get forex statistics for a specific time period.
     
@@ -2742,7 +2742,7 @@ def get_forex_stats_by_period(period='today', tenant_id='entrylab'):
         print(f"Error getting forex stats by period: {e}")
         return None
 
-def get_daily_pnl(tenant_id='entrylab'):
+def get_daily_pnl(tenant_id):
     """
     Get today's profit/loss in pips for daily loss cap checking.
     
@@ -2773,7 +2773,7 @@ def get_daily_pnl(tenant_id='entrylab'):
         print(f"Error getting daily P/L: {e}")
         return 0.0
 
-def get_signal_metrics(tenant_id='entrylab'):
+def get_signal_metrics(tenant_id):
     """
     Get advanced signal metrics: avg hold time and avg pips per trade.
     
@@ -2814,7 +2814,7 @@ def get_signal_metrics(tenant_id='entrylab'):
         print(f"Error getting signal metrics: {e}")
         return {'avg_hold_time_minutes': 0, 'avg_pips_per_trade': 0, 'total_completed': 0}
 
-def get_last_completed_signal(tenant_id='entrylab'):
+def get_last_completed_signal(tenant_id):
     """
     Get the most recently closed signal for back-to-back throttle checking.
     
@@ -2853,7 +2853,7 @@ def get_last_completed_signal(tenant_id='entrylab'):
         print(f"Error getting last completed signal: {e}")
         return None
 
-def get_recent_signal_streak(limit=5, tenant_id='entrylab'):
+def get_recent_signal_streak(limit=5, tenant_id):
     """
     Get the recent win/loss streak for context-aware AI prompts.
     
@@ -2951,7 +2951,7 @@ def initialize_default_forex_config():
         print(f"Error initializing forex config: {e}")
         return False
 
-def get_forex_config(tenant_id='entrylab'):
+def get_forex_config(tenant_id):
     """
     Get current forex configuration as a dictionary.
     
@@ -3056,7 +3056,7 @@ def update_forex_config(config_updates):
         raise
 
 
-def get_bot_config(tenant_id='entrylab'):
+def get_bot_config(tenant_id):
     """
     Get bot configuration from forex_config table.
     Returns dict with active_bot_type and other bot settings.
@@ -3103,7 +3103,7 @@ def init_bot_config():
         print(f"Error initializing bot config: {e}")
         return False
 
-def update_breakeven_triggered(signal_id, breakeven_price, tenant_id='entrylab'):
+def update_breakeven_triggered(signal_id, breakeven_price, tenant_id):
     """
     Record that breakeven alert was triggered for a signal.
     
@@ -3135,7 +3135,7 @@ def update_breakeven_triggered(signal_id, breakeven_price, tenant_id='entrylab')
         print(f"Error updating breakeven triggered: {e}")
         return False
 
-def get_last_recap_date(recap_type, tenant_id='entrylab'):
+def get_last_recap_date(recap_type, tenant_id):
     """
     Get the last date a recap was posted (persisted to survive restarts).
     
@@ -3231,7 +3231,7 @@ def initialize_default_bot_config():
         print(f"Error initializing bot config: {e}")
         return False
 
-def get_active_bot(tenant_id='entrylab'):
+def get_active_bot(tenant_id):
     """
     Get the current active bot type.
     
@@ -3298,7 +3298,7 @@ def set_active_bot(bot_type):
         raise
 
 
-def get_queued_bot(tenant_id='entrylab'):
+def get_queued_bot(tenant_id):
     """
     Get the queued bot type (bot scheduled to activate after current signal closes).
     
@@ -3366,7 +3366,7 @@ def set_queued_bot(bot_type):
         raise
 
 
-def clear_queued_bot(tenant_id='entrylab'):
+def clear_queued_bot(tenant_id):
     """
     Clear the queued bot (cancel pending bot switch).
     
@@ -3418,7 +3418,7 @@ def promote_queued_bot():
         return None
 
 
-def get_open_signal(tenant_id='entrylab'):
+def get_open_signal(tenant_id):
     """
     Get the currently open signal if any.
     
@@ -3479,7 +3479,7 @@ def get_open_signal(tenant_id='entrylab'):
         print(f"Error getting open signal: {e}")
         return None
 
-def get_signals_by_bot_type(bot_type, status=None, limit=50, tenant_id='entrylab'):
+def get_signals_by_bot_type(bot_type, status=None, limit=50, tenant_id):
     """
     Get forex signals filtered by bot type.
     
@@ -3551,7 +3551,7 @@ def get_signals_by_bot_type(bot_type, status=None, limit=50, tenant_id='entrylab
         return []
 
 
-def count_signals_today_by_bot(bot_type, tenant_id='entrylab'):
+def count_signals_today_by_bot(bot_type, tenant_id):
     """
     Count signals generated today by a specific bot type.
     
@@ -3583,7 +3583,7 @@ def count_signals_today_by_bot(bot_type, tenant_id='entrylab'):
         return 0
 
 
-def get_last_signal_time_by_bot(bot_type, tenant_id='entrylab'):
+def get_last_signal_time_by_bot(bot_type, tenant_id):
     """
     Get the timestamp of the last signal generated by a specific bot type.
     
@@ -3615,7 +3615,7 @@ def get_last_signal_time_by_bot(bot_type, tenant_id='entrylab'):
         return None
 
 
-def update_signal_telegram_message_id(signal_id, message_id, tenant_id='entrylab'):
+def update_signal_telegram_message_id(signal_id, message_id, tenant_id):
     """
     Update the telegram_message_id for a signal.
     
@@ -3646,7 +3646,7 @@ def update_signal_telegram_message_id(signal_id, message_id, tenant_id='entrylab
         print(f"Error updating signal telegram message ID: {e}")
         return False
 
-def update_signal_breakeven(signal_id, breakeven_price, tenant_id='entrylab'):
+def update_signal_breakeven(signal_id, breakeven_price, tenant_id):
     """
     Update breakeven status for a signal.
     
@@ -3678,7 +3678,7 @@ def update_signal_breakeven(signal_id, breakeven_price, tenant_id='entrylab'):
         print(f"Error updating signal breakeven: {e}")
         return False
 
-def update_tp_hit(signal_id, tp_level, tenant_id='entrylab'):
+def update_tp_hit(signal_id, tp_level, tenant_id):
     """
     Mark a specific TP level as hit.
     
@@ -3717,7 +3717,7 @@ def update_tp_hit(signal_id, tp_level, tenant_id='entrylab'):
         print(f"Error updating TP{tp_level} hit: {e}")
         return False
 
-def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None, tenant_id='entrylab'):
+def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None, tenant_id):
     """
     Update guidance information for a signal with zone tracking.
     Increments guidance_count and updates last_guidance_at, notes, and zone levels.
@@ -3772,7 +3772,7 @@ def update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=No
         print(f"Error updating signal guidance: {e}")
         return False
 
-def is_milestone_already_sent(signal_id, milestone_key, tenant_id='entrylab'):
+def is_milestone_already_sent(signal_id, milestone_key, tenant_id):
     """
     Check if a milestone has already been sent for a signal.
     Used for race condition prevention with multiple workers.
@@ -3804,7 +3804,7 @@ def is_milestone_already_sent(signal_id, milestone_key, tenant_id='entrylab'):
         print(f"Error checking milestone sent: {e}")
         return True  # Fail safe
 
-def update_milestone_sent(signal_id, milestone_key, tenant_id='entrylab'):
+def update_milestone_sent(signal_id, milestone_key, tenant_id):
     """
     Record that a milestone notification was sent.
     Uses atomic UPDATE with WHERE NOT LIKE to prevent race conditions.
@@ -3839,7 +3839,7 @@ def update_milestone_sent(signal_id, milestone_key, tenant_id='entrylab'):
         print(f"Error updating milestone sent: {e}")
         return False
 
-def update_effective_sl(signal_id, new_sl_price, tenant_id='entrylab'):
+def update_effective_sl(signal_id, new_sl_price, tenant_id):
     """
     Update the effective stop loss for a signal.
     
@@ -3880,7 +3880,7 @@ def update_effective_sl(signal_id, new_sl_price, tenant_id='entrylab'):
         print(f"Error updating effective SL: {e}")
         return False
 
-def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None, tenant_id='entrylab'):
+def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, stoch_k=None, indicators_dict=None, tenant_id):
     """
     Store original indicator values when signal is created for later re-validation.
     
@@ -3948,7 +3948,7 @@ def update_signal_original_indicators(signal_id, rsi=None, macd=None, adx=None, 
         print(f"Error updating signal original indicators: {e}")
         return False
 
-def update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id='entrylab'):
+def update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id):
     """
     Update revalidation data for a signal (for stagnant trade monitoring).
     
@@ -3987,7 +3987,7 @@ def update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id='
         print(f"Error updating signal revalidation: {e}")
         return False
 
-def update_signal_timeout_notified(signal_id, tenant_id='entrylab'):
+def update_signal_timeout_notified(signal_id, tenant_id):
     """
     Mark a signal as having received the timeout notification.
     
@@ -4145,7 +4145,7 @@ def get_latest_indicators_for_signal(signal_id):
 
 # ===== Recent Phrases Functions (Repetition Avoidance) =====
 
-def add_recent_phrase(phrase_type, phrase_text, tenant_id='entrylab'):
+def add_recent_phrase(phrase_type, phrase_text, tenant_id):
     """
     Record a phrase that was used in a message for repetition avoidance.
     
@@ -4172,7 +4172,7 @@ def add_recent_phrase(phrase_type, phrase_text, tenant_id='entrylab'):
         print(f"Error adding recent phrase: {e}")
         return False
 
-def get_recent_phrases(phrase_type, limit=10, tenant_id='entrylab'):
+def get_recent_phrases(phrase_type, limit=10, tenant_id):
     """
     Get recently used phrases of a specific type to avoid repetition.
     
@@ -4204,7 +4204,7 @@ def get_recent_phrases(phrase_type, limit=10, tenant_id='entrylab'):
         print(f"Error getting recent phrases: {e}")
         return []
 
-def cleanup_old_phrases(days_to_keep=7, tenant_id='entrylab'):
+def cleanup_old_phrases(days_to_keep=7, tenant_id):
     """
     Remove phrases older than specified days to prevent unbounded growth.
     
@@ -4236,7 +4236,7 @@ def cleanup_old_phrases(days_to_keep=7, tenant_id='entrylab'):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None, tenant_id='entrylab'):
+def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None, tenant_id):
     """
     Create or update a telegram subscription record (UPSERT) with conversion tracking.
     
@@ -4397,7 +4397,7 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
 # Alias for backwards compatibility with webhook handlers
 create_or_update_telegram_subscription = create_telegram_subscription
 
-def get_telegram_subscription_by_email(email, tenant_id='entrylab'):
+def get_telegram_subscription_by_email(email, tenant_id):
     """Get telegram subscription by email"""
     try:
         if not db_pool.connection_pool:
@@ -4440,7 +4440,7 @@ def get_telegram_subscription_by_email(email, tenant_id='entrylab'):
         print(f"Error getting telegram subscription by email: {e}")
         return None
 
-def get_telegram_subscription_by_id(subscription_id, tenant_id='entrylab'):
+def get_telegram_subscription_by_id(subscription_id, tenant_id):
     """Get telegram subscription by ID"""
     try:
         if not db_pool.connection_pool:
@@ -4483,7 +4483,7 @@ def get_telegram_subscription_by_id(subscription_id, tenant_id='entrylab'):
         print(f"Error getting telegram subscription by id: {e}")
         return None
 
-def update_telegram_subscription_invite(email, invite_link, tenant_id='entrylab'):
+def update_telegram_subscription_invite(email, invite_link, tenant_id):
     """Update telegram subscription with invite link"""
     try:
         if not db_pool.connection_pool:
@@ -4504,7 +4504,7 @@ def update_telegram_subscription_invite(email, invite_link, tenant_id='entrylab'
         print(f"Error updating telegram subscription invite: {e}")
         return False
 
-def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username, tenant_id='entrylab'):
+def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username, tenant_id):
     """Update telegram subscription when user joins channel"""
     try:
         if not db_pool.connection_pool:
@@ -4527,7 +4527,7 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
         print(f"Error updating telegram subscription user joined: {e}")
         return False
 
-def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None, tenant_id='entrylab'):
+def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None, tenant_id):
     """
     Update subscription status based on email or stripe_subscription_id.
     
@@ -4578,7 +4578,7 @@ def update_subscription_status(email=None, stripe_subscription_id=None, status=N
         return False, None, None
 
 
-def revoke_telegram_subscription(email, reason='subscription_canceled', tenant_id='entrylab'):
+def revoke_telegram_subscription(email, reason='subscription_canceled', tenant_id):
     """Revoke telegram subscription access"""
     try:
         if not db_pool.connection_pool:
@@ -4604,7 +4604,7 @@ def revoke_telegram_subscription(email, reason='subscription_canceled', tenant_i
         print(f"Error revoking telegram subscription: {e}")
         return None
 
-def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id='entrylab'):
+def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id):
     """Delete subscription record by Stripe customer ID"""
     try:
         if not db_pool.connection_pool:
@@ -4631,7 +4631,7 @@ def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id='entryl
         return False
 
 
-def delete_subscription_by_email(email, tenant_id='entrylab'):
+def delete_subscription_by_email(email, tenant_id):
     """Delete subscription record by email"""
     try:
         if not db_pool.connection_pool:
@@ -4658,7 +4658,7 @@ def delete_subscription_by_email(email, tenant_id='entrylab'):
         return False
 
 
-def clear_all_telegram_subscriptions(tenant_id='entrylab'):
+def clear_all_telegram_subscriptions(tenant_id):
     """Delete all telegram subscriptions (for testing/cleanup)"""
     try:
         if not db_pool.connection_pool:
@@ -4680,7 +4680,7 @@ def clear_all_telegram_subscriptions(tenant_id='entrylab'):
         print(f"Error clearing telegram subscriptions: {e}")
         raise
 
-def cleanup_test_telegram_subscriptions(tenant_id='entrylab'):
+def cleanup_test_telegram_subscriptions(tenant_id):
     """Delete test telegram subscriptions (fake paid records with test emails)"""
     try:
         if not db_pool.connection_pool:
@@ -4712,7 +4712,7 @@ def cleanup_test_telegram_subscriptions(tenant_id='entrylab'):
         print(f"Error cleaning up test telegram subscriptions: {e}")
         raise
 
-def delete_telegram_subscription(subscription_id, tenant_id='entrylab'):
+def delete_telegram_subscription(subscription_id, tenant_id):
     """Delete a specific telegram subscription by ID"""
     try:
         if not db_pool.connection_pool:
@@ -4738,7 +4738,7 @@ def delete_telegram_subscription(subscription_id, tenant_id='entrylab'):
         print(f"Error deleting telegram subscription {subscription_id}: {e}")
         raise
 
-def get_all_telegram_subscriptions(status_filter=None, include_test=False, tenant_id='entrylab'):
+def get_all_telegram_subscriptions(status_filter=None, include_test=False, tenant_id):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
@@ -4820,7 +4820,7 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False, tenan
         print(f"Error getting all telegram subscriptions: {e}")
         return []
 
-def update_telegram_subscription_last_seen(telegram_user_id, tenant_id='entrylab'):
+def update_telegram_subscription_last_seen(telegram_user_id, tenant_id):
     """Update last_seen_at for a telegram user"""
     try:
         if not db_pool.connection_pool:
@@ -4841,7 +4841,7 @@ def update_telegram_subscription_last_seen(telegram_user_id, tenant_id='entrylab
         print(f"Error updating telegram subscription last seen: {e}")
         return False
 
-def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at, tenant_id='entrylab'):
+def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, joined_at, tenant_id):
     """
     Auto-link a Telegram user ID to a subscription record when they join the channel.
     
@@ -4934,7 +4934,7 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
 
 # ===== Conversion Analytics Functions =====
 
-def get_conversion_analytics(tenant_id='entrylab'):
+def get_conversion_analytics(tenant_id):
     """
     Get comprehensive conversion analytics for free-to-VIP tracking.
     
@@ -5109,7 +5109,7 @@ def get_conversion_analytics(tenant_id='entrylab'):
 
 # ===== Webhook Idempotency Functions =====
 
-def is_webhook_event_processed(event_id, tenant_id='entrylab'):
+def is_webhook_event_processed(event_id, tenant_id):
     """
     Check if a webhook event has already been processed.
     Used to prevent duplicate processing of Stripe webhook events.
@@ -5136,7 +5136,7 @@ def is_webhook_event_processed(event_id, tenant_id='entrylab'):
         print(f"[IDEMPOTENCY] Error checking webhook event: {e}")
         return False
 
-def record_webhook_event_processed(event_id, event_source='stripe', tenant_id='entrylab'):
+def record_webhook_event_processed(event_id, event_source='stripe', tenant_id):
     """
     Record that a webhook event has been processed.
     
@@ -5165,7 +5165,7 @@ def record_webhook_event_processed(event_id, event_source='stripe', tenant_id='e
         print(f"[IDEMPOTENCY] Error recording webhook event: {e}")
         return False
 
-def cleanup_old_webhook_events(hours=24, tenant_id='entrylab'):
+def cleanup_old_webhook_events(hours=24, tenant_id):
     """
     Clean up old processed webhook events to prevent table growth.
     Events older than specified hours are deleted.
