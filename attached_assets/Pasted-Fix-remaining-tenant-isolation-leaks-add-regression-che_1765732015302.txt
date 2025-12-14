@@ -1,0 +1,72 @@
+Fix remaining tenant-isolation leaks + add regression checks
+
+You are working in a multi-tenant app. Tenant isolation is required for all tenant-aware tables. Some UPDATE queries still lack tenant scoping.
+
+Goal
+	1.	Patch the remaining SQL queries in db.py that update tenant-aware tables without filtering by tenant_id.
+	2.	Ensure function signatures accept tenant_id where needed (default 'entrylab' to match existing style).
+	3.	Add quick regression checks/tests (lightweight) to prevent future cross-tenant writes.
+
+Fix these specific functions in db.py
+
+A) forex_signals updates (all must include tenant_id)
+
+Update these functions so every UPDATE includes WHERE id = %s AND tenant_id = %s:
+	•	update_signal_guidance(signal_id, notes, progress_zone=None, caution_zone=None, tenant_id='entrylab')
+	•	Add tenant_id parameter
+	•	In all 3 branches, change WHERE id = %s → WHERE id = %s AND tenant_id = %s
+	•	Append tenant_id to params
+	•	update_effective_sl(signal_id, new_sl_price, tenant_id='entrylab')
+	•	Update query to WHERE id = %s AND tenant_id = %s
+	•	update_signal_original_indicators(..., tenant_id='entrylab')
+	•	Add tenant_id parameter
+	•	Update query to WHERE id = %s AND tenant_id = %s
+	•	update_signal_revalidation(signal_id, thesis_status, notes=None, tenant_id='entrylab')
+	•	Add tenant_id param
+	•	Update query to WHERE id = %s AND tenant_id = %s
+	•	update_signal_timeout_notified(signal_id, tenant_id='entrylab')
+	•	Add tenant_id param
+	•	Update query to WHERE id = %s AND tenant_id = %s
+
+✅ Keep existing return behaviour (rowcount checks etc.)
+
+B) telegram_subscriptions conversion update must be tenant-scoped
+
+In the conversion branch currently doing:
+
+UPDATE telegram_subscriptions SET ... WHERE email = %s
+
+Change it to:
+
+... WHERE email = %s AND tenant_id = %s
+
+Update params accordingly. Do NOT change the existing INSERT ON CONFLICT (tenant_id, email) behaviour—just fix the UPDATE.
+
+C) Join tracker update must be tenant-scoped (defence in depth)
+
+In the join tracker function that updates by subscription id:
+
+UPDATE telegram_subscriptions ... WHERE id = %s
+
+Change to:
+
+WHERE id = %s AND tenant_id = %s
+
+Update params accordingly.
+
+Decision required: campaigns global update
+
+There is a function update_campaign_statuses() that updates campaigns without tenant filtering. Determine whether campaigns are tenant-scoped (table has tenant_id). If tenant-scoped, add tenant_id parameter and filter both status updates by tenant. If it’s intended to be global admin maintenance, leave it global but add a clear comment explaining it is global by design and must only run in trusted admin context.
+
+Add regression checks (minimal)
+
+Add ONE of the following (choose whichever fits project structure best):
+	•	A small unit test file (pytest) that creates rows for two tenants and confirms calling each updated function only affects the target tenant’s row.
+OR
+	•	A lightweight “sanity check” script under /scripts/tenant_audit.py that scans db.py and flags UPDATE/DELETE statements touching tenant tables that do not include tenant_id in the WHERE clause within ~20 lines.
+
+Acceptance criteria
+	•	All the above functions now include tenant_id filtering.
+	•	No breaking changes: update call sites if necessary (pass tenant_id through).
+	•	Server still runs.
+	•	Provide a short summary of what was changed and where.
