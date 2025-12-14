@@ -105,6 +105,19 @@ def verify_signed_session(token):
         print(f"[AUTH] Token verification error: {e}")
         return False
 
+def log_tenant_context(tenant_id, request_path, request_id=None):
+    """Log tenant context for audit trail. Raises if tenant_id missing on tenant-required paths."""
+    import uuid
+    req_id = request_id or str(uuid.uuid4())[:8]
+    
+    TENANT_REQUIRED_PATHS = ['/api/campaigns', '/api/forex', '/api/bot', '/api/telegram']
+    
+    if any(request_path.startswith(p) for p in TENANT_REQUIRED_PATHS):
+        if not tenant_id:
+            print(f"[TRIPWIRE] ❌ Missing tenant_id on {request_path} (req={req_id})")
+            raise ValueError(f"Tenant context required for {request_path}")
+        print(f"[TRIPWIRE] ✓ tenant={tenant_id} path={request_path} req={req_id}")
+
 mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
 mimetypes.add_type('application/json', '.json')
