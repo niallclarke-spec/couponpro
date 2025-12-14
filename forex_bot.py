@@ -49,10 +49,11 @@ def get_forex_channel_id():
     return os.environ.get('FOREX_CHANNEL_ID')
 
 class ForexTelegramBot:
-    def __init__(self):
+    def __init__(self, tenant_id: str = None):
         self.token = get_forex_bot_token()
         self.channel_id = get_forex_channel_id()
         self.bot = None
+        self.tenant_id = tenant_id
         
         if self.token:
             self.bot = Bot(token=self.token)
@@ -142,7 +143,7 @@ class ForexTelegramBot:
                 rsi_value=rsi,
                 macd_value=macd,
                 atr_value=atr,
-                bot_type=get_active_bot(),
+                bot_type=get_active_bot(tenant_id=self.tenant_id),
                 take_profit_2=tp2,
                 take_profit_3=tp3,
                 tp1_percentage=tp1_pct,

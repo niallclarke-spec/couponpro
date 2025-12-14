@@ -65,8 +65,9 @@ class BaseStrategy(ABC):
     
     breakeven_threshold: float = 70.0
     
-    def __init__(self):
+    def __init__(self, tenant_id: Optional[str] = None):
         self.symbol = 'XAU/USD'
+        self.tenant_id = tenant_id
     
     @abstractmethod
     async def check_for_signals(self, timeframe: str = '15min') -> Optional[SignalData]:

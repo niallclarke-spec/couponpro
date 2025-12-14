@@ -4,7 +4,9 @@ Runs signal checks every 15 minutes and monitors active signals
 Handles daily/weekly recaps at scheduled times
 Includes milestone-based progress notifications for active signals
 """
+import argparse
 import asyncio
+import os
 from datetime import datetime, time
 from forex_signals import forex_signal_engine
 from forex_bot import forex_telegram_bot
@@ -577,8 +579,41 @@ class ForexScheduler:
                 print(f"[SCHEDULER] ❌ Unexpected error: {e}")
                 await asyncio.sleep(60)
 
-forex_scheduler = ForexScheduler()
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='Forex Signals Scheduler')
+    parser.add_argument('--once', action='store_true', help='Run one signal check cycle and exit')
+    parser.add_argument('--tenant', type=str, help='Tenant ID (required)')
+    return parser.parse_args()
 
-async def start_forex_scheduler():
+def get_tenant_id(args):
+    """Get tenant_id from args or environment, exit if missing"""
+    tenant_id = getattr(args, 'tenant', None) or os.environ.get('TENANT_ID')
+    if not tenant_id:
+        print("ERROR: tenant_id is required. Use --tenant <id> or set TENANT_ID env var")
+        import sys
+        sys.exit(1)
+    return tenant_id
+
+forex_scheduler = None
+
+async def start_forex_scheduler(tenant_id=None):
     """Entry point to start the scheduler"""
+    global forex_scheduler
+    tid = tenant_id or os.environ.get('TENANT_ID', 'entrylab')
+    forex_scheduler = ForexScheduler(tenant_id=tid)
     await forex_scheduler.run_forever()
+
+if __name__ == '__main__':
+    args = parse_args()
+    tenant_id = get_tenant_id(args)
+    
+    forex_signal_engine.set_tenant_id(tenant_id)
+    
+    scheduler = ForexScheduler(tenant_id=tenant_id)
+    
+    if args.once:
+        print(f"[SCHEDULER] Running single check with tenant={tenant_id}")
+        asyncio.run(scheduler.run_signal_check())
+    else:
+        asyncio.run(scheduler.run_forever())

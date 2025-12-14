@@ -33,8 +33,9 @@ DECISION_ZONE_THRESHOLD = 85      # 85% toward TP - final push update
 GUIDANCE_COOLDOWN_MINUTES = 10    # Minimum time between guidance messages
 
 class ForexSignalEngine:
-    def __init__(self):
+    def __init__(self, tenant_id=None):
         self.symbol = 'XAU/USD'
+        self.tenant_id = tenant_id or os.environ.get('TENANT_ID', 'entrylab')
         self._active_strategy = None
         self._active_bot_type = 'aggressive'
         
@@ -47,11 +48,17 @@ class ForexSignalEngine:
         self.revalidation_interval_minutes = REVALIDATION_INTERVAL_MINUTES
         self.hard_timeout_minutes = HARD_TIMEOUT_MINUTES
     
+    def set_tenant_id(self, tenant_id):
+        """Set tenant_id and reload config"""
+        self.tenant_id = tenant_id
+        self.load_config()
+        self.load_active_strategy()
+    
     def load_active_strategy(self):
         """Load the active strategy from bot_config table"""
         try:
             # Use get_active_bot() which reads from bot_config table (set by admin UI)
-            self._active_bot_type = get_active_bot() or 'aggressive'
+            self._active_bot_type = get_active_bot(tenant_id=self.tenant_id) or 'aggressive'
             
             self._active_strategy = get_active_strategy(self._active_bot_type)
             if self._active_strategy:
@@ -77,7 +84,7 @@ class ForexSignalEngine:
             print(f"[FOREX ENGINE] Unknown strategy: {bot_type}")
             return False
         
-        pending_signals = get_forex_signals(status='pending')
+        pending_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
         if pending_signals and len(pending_signals) > 0:
             print(f"[FOREX ENGINE] Cannot switch strategy while signal #{pending_signals[0]['id']} is active")
             return False
@@ -94,7 +101,7 @@ class ForexSignalEngine:
     def load_config(self):
         """Load configuration from database or use defaults"""
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 self.rsi_oversold = config.get('rsi_oversold', 40)
                 self.rsi_overbought = config.get('rsi_overbought', 60)
@@ -149,7 +156,7 @@ class ForexSignalEngine:
         print("[FOREX CONFIG] Reloading configuration...")
         self.load_config()
         
-        new_bot_type = get_active_bot() or 'aggressive'
+        new_bot_type = get_active_bot(tenant_id=self.tenant_id) or 'aggressive'
         if new_bot_type != self._active_bot_type:
             print(f"[FOREX CONFIG] Strategy changed: {self._active_bot_type} -> {new_bot_type}")
             self._active_bot_type = new_bot_type
@@ -269,7 +276,7 @@ class ForexSignalEngine:
         Returns list of events that need updates/notifications
         """
         try:
-            active_signals = get_forex_signals(status='pending')
+            active_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
             
             if not active_signals:
                 return []
@@ -517,7 +524,7 @@ class ForexSignalEngine:
         - 60%: Decision point (consider early exit)
         """
         try:
-            active_signals = get_forex_signals(status='pending')
+            active_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
             
             if not active_signals:
                 return []
@@ -731,7 +738,7 @@ class ForexSignalEngine:
         - Hard timeout at 3 hours
         """
         try:
-            active_signals = get_forex_signals(status='pending')
+            active_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
             
             if not active_signals:
                 return []

@@ -36,13 +36,13 @@ class RajaBanksStrategy(BaseStrategy):
     MAX_SIGNALS_PER_DAY = 4
     COOLDOWN_MINUTES = 15
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, tenant_id: Optional[str] = None):
+        super().__init__(tenant_id=tenant_id)
         self.load_config()
     
     def load_config(self):
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 self.atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
                 self.daily_loss_cap_pips = float(config.get('daily_loss_cap_pips', 50.0))
@@ -247,7 +247,7 @@ class RajaBanksStrategy(BaseStrategy):
     def _get_tp_config(self) -> Tuple[int, int, int, int]:
         """Get TP configuration from database"""
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 tp_count = int(config.get('tp_count', 3))
                 tp1_pct = int(config.get('tp1_percentage', 50))

@@ -20,15 +20,15 @@ class ConservativeStrategy(BaseStrategy):
     - Tighter ATR multipliers for TP/SL
     """
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, tenant_id=None):
+        super().__init__(tenant_id=tenant_id)
         self.name = 'conservative'
         self.load_strategy_config()
     
     def load_strategy_config(self):
         """Load conservative-specific configuration"""
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 self.rsi_oversold = config.get('rsi_oversold', 40) - 10
                 self.rsi_overbought = config.get('rsi_overbought', 60) + 10

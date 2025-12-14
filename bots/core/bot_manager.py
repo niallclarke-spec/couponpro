@@ -12,8 +12,9 @@ class BotManager:
     Only one bot can generate signals at any time
     """
     
-    def __init__(self):
+    def __init__(self, tenant_id: str = None):
         self._strategies = {}
+        self.tenant_id = tenant_id
         self._load_strategies()
     
     def _load_strategies(self):
@@ -30,14 +31,14 @@ class BotManager:
     
     def get_active_strategy(self):
         """Get the currently active strategy"""
-        active_bot = get_active_bot()
+        active_bot = get_active_bot(tenant_id=self.tenant_id)
         if active_bot and active_bot in self._strategies:
             return self._strategies[active_bot]
         return self._strategies['aggressive']
     
     def get_active_bot_name(self) -> str:
         """Get the name of the currently active bot"""
-        return get_active_bot() or 'aggressive'
+        return get_active_bot(tenant_id=self.tenant_id) or 'aggressive'
     
     def set_active_bot(self, bot_type: str) -> bool:
         """

@@ -11,17 +11,18 @@ from db import get_forex_config
 class BaseStrategy(ABC):
     """Abstract base class for trading strategies"""
     
-    def __init__(self):
+    def __init__(self, tenant_id: str = None):
         self.name = 'base'
         self.symbol = 'XAU/USD'
         self.timeframe = '15min'
         self.indicators = indicator_utils
+        self.tenant_id = tenant_id
         self.load_config()
     
     def load_config(self):
         """Load configuration from database"""
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 self.trading_start_hour = config.get('trading_start_hour', 8)
                 self.trading_end_hour = config.get('trading_end_hour', 22)

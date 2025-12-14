@@ -19,8 +19,8 @@ class CustomStrategy(BaseStrategy):
     - TP/SL multipliers
     """
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, tenant_id: str = None):
+        super().__init__(tenant_id=tenant_id)
         self.name = 'custom'
         self.active_indicators = []
         self.required_confirmations = 2
@@ -30,7 +30,7 @@ class CustomStrategy(BaseStrategy):
     def load_strategy_config(self):
         """Load custom strategy configuration from database"""
         try:
-            config = get_forex_config()
+            config = get_forex_config(tenant_id=self.tenant_id)
             if config:
                 self.rsi_oversold = config.get('rsi_oversold', 40)
                 self.rsi_overbought = config.get('rsi_overbought', 60)
