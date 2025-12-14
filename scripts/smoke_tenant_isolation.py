@@ -212,8 +212,8 @@ class TenantIsolationTest:
         """Test forex_config tenant isolation."""
         logger.info("\n--- Testing forex_config isolation ---")
         
-        config_a = self.db.get_forex_config(self.tenant_a)
-        config_b = self.db.get_forex_config(self.tenant_b)
+        config_a = self.db.get_forex_config(self.tenant_a) or {}
+        config_b = self.db.get_forex_config(self.tenant_b) or {}
         
         self.assert_test(
             config_a.get('tenant_id') == self.tenant_a or config_a == {},
@@ -231,8 +231,8 @@ class TenantIsolationTest:
         """Test bot_config tenant isolation."""
         logger.info("\n--- Testing bot_config isolation ---")
         
-        config_a = self.db.get_bot_config(self.tenant_a)
-        config_b = self.db.get_bot_config(self.tenant_b)
+        config_a = self.db.get_bot_config(self.tenant_a) or {}
+        config_b = self.db.get_bot_config(self.tenant_b) or {}
         
         self.assert_test(
             config_a.get('tenant_id') == self.tenant_a or config_a == {},
