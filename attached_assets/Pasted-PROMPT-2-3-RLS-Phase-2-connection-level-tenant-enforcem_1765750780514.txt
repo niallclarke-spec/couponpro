@@ -1,0 +1,127 @@
+PROMPT 2/3 — RLS Phase 2 + connection-level tenant enforcement (safe rollout)
+
+Goal:
+Add Postgres Row Level Security (RLS) as a Phase 2 hardening layer so cross-tenant reads/writes become impossible even if a dev forgets tenant_id in a query.
+This must be behind a feature flag (ENABLE_RLS=1) and must not break local/dev unless enabled.
+
+----------------------------------------------------------------
+A) Add RLS SQL migration (manual execution OK)
+----------------------------------------------------------------
+
+Create: migrations/rls_phase2.sql
+
+For EACH tenant-aware table below, do:
+
+1) Ensure RLS is enabled
+2) Create a policy that enforces tenant_id = current_setting('app.tenant_id', true)
+3) Add SELECT/INSERT/UPDATE/DELETE policies (or ALL) as appropriate
+4) Make sure policies work for normal app role (likely the same DB user you already use)
+
+Tenant-aware tables:
+- forex_signals
+- forex_config
+- bot_config
+- telegram_subscriptions
+- recent_phrases
+- campaigns
+- bot_usage
+- bot_users
+- broadcast_jobs
+- processed_webhook_events
+
+RLS policy rule (core):
+tenant_id = current_setting('app.tenant_id', true)
+
+Notes:
+- Use current_setting(..., true) so it returns NULL instead of error if not set.
+- If it is NULL, the policy should deny access (NULL comparisons should fail).
+- Do NOT enable RLS on tenants / tenant_users / tenant_integrations unless we explicitly want it.
+
+Example pattern:
+
+ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS tenant_isolation_<table> ON <table>;
+
+CREATE POLICY tenant_isolation_<table>
+ON <table>
+FOR ALL
+USING (tenant_id = current_setting('app.tenant_id', true))
+WITH CHECK (tenant_id = current_setting('app.tenant_id', true));
+
+----------------------------------------------------------------
+B) Set LOCAL app.tenant_id per-connection (feature-flagged)
+----------------------------------------------------------------
+
+When ENABLE_RLS=1 is set in env:
+
+Every time your code acquires a DB connection for a tenant-scoped operation:
+- execute: SET LOCAL app.tenant_id = %s
+- within the same transaction scope
+
+Implementation approach (choose the cleanest for this codebase):
+1) Add a helper in db.py like:
+
+with db.tenant_conn(tenant_id) as (conn, cursor):
+    ...
+
+that:
+- begins a transaction
+- runs SET LOCAL app.tenant_id
+- returns cursor for queries
+- commits/rolls back safely
+
+OR
+2) If you already have a tenant_context / decorator, integrate there so every DB access in that context sets app.tenant_id.
+
+Important:
+- SET LOCAL only persists for the transaction, which is good (prevents leakage across requests).
+- Ensure autocommit behavior doesn’t break SET LOCAL. If autocommit is on, either disable for that block or use SET (not LOCAL) and then RESET, but LOCAL+tx is preferred.
+
+----------------------------------------------------------------
+C) Update tenant audit + tests (don’t weaken them)
+----------------------------------------------------------------
+
+Add tests in tests/test_rls_setup.py (or new tests) to ensure:
+
+1) When ENABLE_RLS=1:
+   - A query without tenant_id filter cannot read another tenant’s rows (RLS blocks it).
+2) When ENABLE_RLS is NOT enabled:
+   - Existing tenant isolation behavior remains unchanged.
+
+Suggested test shape:
+- Insert rows for tenant_a and tenant_b into forex_signals
+- Set app.tenant_id to tenant_a (via your new helper)
+- Attempt SELECT without tenant_id filter:
+    SELECT * FROM forex_signals
+  It should return only tenant_a rows when RLS is enabled.
+- Attempt UPDATE without tenant_id filter under tenant_a context:
+    UPDATE forex_signals SET notes='x'
+  It should only affect tenant_a rows under RLS.
+
+Do not require a real prod DB; use the test DB you already use for pytest.
+
+----------------------------------------------------------------
+D) Update SECURITY.md / docs
+----------------------------------------------------------------
+
+Document:
+- How to apply migrations/rls_phase2.sql
+- How to enable: ENABLE_RLS=1
+- Expected behavior if app.tenant_id not set (queries denied)
+- Rollback: disable flag + optionally disable RLS/policies
+
+----------------------------------------------------------------
+E) Acceptance Criteria
+----------------------------------------------------------------
+
+1) make ci passes
+2) python scripts/tenant_audit.py passes
+3) New RLS tests pass
+4) ENABLE_RLS=1 does NOT break scheduler/server when tenant is provided
+5) Cross-tenant access is impossible under RLS even with missing tenant_id in SQL
+
+After implementing, run and paste:
+
+python scripts/tenant_audit.py
+pytest -q
