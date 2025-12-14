@@ -1,14 +1,39 @@
-# Python dependencies for CouponPro server
-python-dotenv
-boto3
-sift-stack-py
-botocore
-python-telegram-bot[rate-limiter]
-Pillow
-requests
-psycopg2-binary
-aiolimiter
-openai
-stripe
-PyJWT>=2.8.0
-pytest
+# Python dependencies for PromoStack server
+# IMPORTANT: Use python-telegram-bot, NOT the 'telegram' package (which is a stub/malware)
+
+# Core dependencies
+python-dotenv==1.1.1
+boto3==1.40.44
+botocore>=1.40.0
+sift-stack-py>=0.9.0
+
+# Telegram (MUST be python-telegram-bot, NOT telegram)
+python-telegram-bot[rate-limiter]==22.5
+
+# Image processing
+Pillow==11.3.0
+
+# HTTP & networking
+requests==2.32.5
+
+# Database
+psycopg2-binary==2.9.10
+
+# Rate limiting
+aiolimiter==1.2.1
+
+# AI
+openai==2.8.1
+
+# Payments
+stripe==14.0.1
+
+# Auth
+PyJWT==2.10.1
+
+# Testing
+pytest==9.0.2
+
+# Constraints: Explicitly exclude the wrong telegram package
+# The 'telegram' package (0.0.1) is a stub that shadows python-telegram-bot
+# pip will not install it if python-telegram-bot is already installed
