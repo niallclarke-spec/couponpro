@@ -17,7 +17,7 @@ def handle_forex_signals(handler):
         status_filter = query_params.get('status', [None])[0]
         limit = int(query_params.get('limit', [100])[0])
         
-        signals = get_forex_signals(status=status_filter, limit=limit)
+        signals = get_forex_signals(status=status_filter, limit=limit, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -36,7 +36,7 @@ def handle_forex_config(handler):
     from db import get_forex_config
     
     try:
-        config = get_forex_config()
+        config = get_forex_config(tenant_id=handler.tenant_id)
         
         if config:
             handler.send_response(200)
@@ -65,8 +65,8 @@ def handle_forex_stats(handler):
         query_params = parse_qs(parsed_path.query)
         days = int(query_params.get('days', [7])[0])
         
-        stats = get_forex_stats(days=days)
-        metrics = get_signal_metrics()
+        stats = get_forex_stats(days=days, tenant_id=handler.tenant_id)
+        metrics = get_signal_metrics(tenant_id=handler.tenant_id)
         
         if stats:
             stats['avg_hold_time_minutes'] = metrics.get('avg_hold_time_minutes', 0)
@@ -105,9 +105,9 @@ def handle_signal_bot_status(handler):
     from forex_api import twelve_data_client
     
     try:
-        active_bot = get_active_bot()
-        queued_bot = get_queued_bot()
-        open_signal = get_open_signal()
+        active_bot = get_active_bot(tenant_id=handler.tenant_id)
+        queued_bot = get_queued_bot(tenant_id=handler.tenant_id)
+        open_signal = get_open_signal(tenant_id=handler.tenant_id)
         
         current_price = None
         current_pips = None
@@ -131,12 +131,12 @@ def handle_signal_bot_status(handler):
             except Exception as price_err:
                 print(f"[BOT STATUS] Error fetching current price: {price_err}")
         
-        aggressive_signals = get_signals_by_bot_type('aggressive', limit=10)
-        conservative_signals = get_signals_by_bot_type('conservative', limit=10)
-        custom_signals = get_signals_by_bot_type('custom', limit=10)
-        legacy_signals = get_signals_by_bot_type('legacy', limit=10)
+        aggressive_signals = get_signals_by_bot_type('aggressive', limit=10, tenant_id=handler.tenant_id)
+        conservative_signals = get_signals_by_bot_type('conservative', limit=10, tenant_id=handler.tenant_id)
+        custom_signals = get_signals_by_bot_type('custom', limit=10, tenant_id=handler.tenant_id)
+        legacy_signals = get_signals_by_bot_type('legacy', limit=10, tenant_id=handler.tenant_id)
         
-        daily_pnl = get_daily_pnl() or 0
+        daily_pnl = get_daily_pnl(tenant_id=handler.tenant_id) or 0
         
         status = {
             'active_bot': active_bot or 'aggressive',
@@ -237,7 +237,7 @@ def handle_forex_config_post(handler):
                 errors.append('trading_start_hour must be less than trading_end_hour')
         elif 'trading_start_hour' in config_updates or 'trading_end_hour' in config_updates:
             from db import get_forex_config
-            current_config = get_forex_config() or {}
+            current_config = get_forex_config(tenant_id=handler.tenant_id) or {}
             start_hour = config_updates.get('trading_start_hour', current_config.get('trading_start_hour', 8))
             end_hour = config_updates.get('trading_end_hour', current_config.get('trading_end_hour', 22))
             if start_hour >= end_hour:
@@ -266,7 +266,7 @@ def handle_forex_config_post(handler):
             return
         
         from db import update_forex_config
-        update_forex_config(config_updates)
+        update_forex_config(config_updates, tenant_id=handler.tenant_id)
         
         if server.FOREX_SCHEDULER_AVAILABLE:
             from forex_signals import forex_signal_engine
@@ -322,7 +322,7 @@ def handle_forex_tp_config_post(handler):
             'tp1_percentage': tp1_pct,
             'tp2_percentage': tp2_pct,
             'tp3_percentage': tp3_pct
-        })
+        }, tenant_id=handler.tenant_id)
         
         print(f"[TP CONFIG] Updated: {tp_count} TPs at {tp1_pct}/{tp2_pct}/{tp3_pct}%")
         
@@ -375,12 +375,12 @@ def handle_signal_bot_set_active(handler):
         
         from db import set_active_bot, get_open_signal, set_queued_bot, clear_queued_bot, get_active_bot
         
-        open_signal = get_open_signal()
-        current_bot = get_active_bot()
+        open_signal = get_open_signal(tenant_id=handler.tenant_id)
+        current_bot = get_active_bot(tenant_id=handler.tenant_id)
         
         if open_signal:
             if bot_type == current_bot:
-                clear_queued_bot()
+                clear_queued_bot(tenant_id=handler.tenant_id)
                 handler.send_response(200)
                 handler.send_header('Content-type', 'application/json')
                 handler.end_headers()
@@ -392,7 +392,7 @@ def handle_signal_bot_set_active(handler):
                 }).encode())
                 return
             
-            set_queued_bot(bot_type)
+            set_queued_bot(bot_type, tenant_id=handler.tenant_id)
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -405,8 +405,8 @@ def handle_signal_bot_set_active(handler):
             }).encode())
             return
         
-        clear_queued_bot()
-        success = set_active_bot(bot_type)
+        clear_queued_bot(tenant_id=handler.tenant_id)
+        success = set_active_bot(bot_type, tenant_id=handler.tenant_id)
         
         if success:
             handler.send_response(200)
@@ -442,8 +442,8 @@ def handle_signal_bot_cancel_queue(handler):
     try:
         from db import clear_queued_bot, get_active_bot
         
-        clear_queued_bot()
-        active_bot = get_active_bot()
+        clear_queued_bot(tenant_id=handler.tenant_id)
+        active_bot = get_active_bot(tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -467,7 +467,7 @@ def handle_forex_tp_config_get(handler):
     from db import get_forex_config
     
     try:
-        config = get_forex_config() or {}
+        config = get_forex_config(tenant_id=handler.tenant_id) or {}
         
         tp_config = {
             'success': True,
@@ -557,9 +557,9 @@ def handle_signal_bot_signals(handler):
         limit = int(query_params.get('limit', [50])[0])
         
         if bot_type:
-            signals = get_signals_by_bot_type(bot_type, status=status_filter, limit=limit)
+            signals = get_signals_by_bot_type(bot_type, status=status_filter, limit=limit, tenant_id=handler.tenant_id)
         else:
-            signals = get_forex_signals(status=status_filter, limit=limit)
+            signals = get_forex_signals(status=status_filter, limit=limit, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')

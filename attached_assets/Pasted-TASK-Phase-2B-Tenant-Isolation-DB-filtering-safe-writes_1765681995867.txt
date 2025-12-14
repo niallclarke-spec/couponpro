@@ -1,0 +1,33 @@
+TASK: Phase 2B — Tenant Isolation (DB filtering + safe writes)
+
+Goal:
+Make the app truly multi-tenant by ensuring all tenant-aware data reads/writes are scoped to handler_instance.tenant_id (default entrylab). No tenant can read or modify another tenant’s data.
+
+Scope (must-do):
+1) Identify the “key tables” already carrying tenant_id (you previously added tenant_id to: forex_signals, forex_config, telegram_subscriptions, recent_phrases, campaigns, bot_usage, bot_users, broadcast_jobs, bot_config).
+2) Update ALL DB helper functions that read lists or single records from these tables to include tenant_id = %s filter.
+   - Example: get_all_telegram_subscriptions(), get_forex_signals(), get_campaigns(), revenue metrics helpers, bot_usage queries, etc.
+   - For single-record fetches by id, add AND tenant_id = %s.
+3) Update ALL insert/update statements for these tables to explicitly set tenant_id (never rely on default) using handler_instance.tenant_id.
+4) Do not change EntryLab behavior: when tenant_id resolves to 'entrylab', everything works exactly as before.
+5) Add a safety assertion: if a handler is called with tenant_id missing, force it to 'entrylab' (but never allow tenant_id='entrylab' to be overridden by integrations).
+6) Add a small verification harness:
+   - SQL proof: show a couple of before/after example queries with tenant_id filters.
+   - Curl tests: for entrylab admin_session ensure endpoints still return the same results.
+   - For a mapped Clerk user tenant (non-entrylab), confirm:
+     - Access to EntryLab-only routes remains blocked (existing).
+     - Their allowed routes return empty data until that tenant has data.
+     - Writes create rows under that tenant_id.
+
+Non-goals (explicitly excluded):
+- No new UI work.
+- No changes to Clerk JWT verification or tenant mapping endpoint.
+- No encryption of tenant_integrations yet.
+
+Deliverables:
+- A short list of modified files/functions (DB helpers + handlers).
+- Clear logging only where needed (avoid noisy logs).
+- Update any tests or add minimal tests if you have an existing tests folder.
+
+Important:
+Follow the existing codebase patterns. Use parameterized SQL. Avoid breaking existing EntryLab admin flows.

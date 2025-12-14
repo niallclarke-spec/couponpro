@@ -35,7 +35,7 @@ def handle_telegram_check_access(handler):
             handler.wfile.write(json.dumps({'hasAccess': False, 'error': 'Email parameter required'}).encode())
             return
         
-        subscription = server.db.get_telegram_subscription_by_email(email)
+        subscription = server.db.get_telegram_subscription_by_email(email, tenant_id=handler.tenant_id)
         
         if not subscription:
             handler.send_response(200)
@@ -82,7 +82,7 @@ def handle_telegram_subscriptions(handler):
         status_filter = query_params.get('status', [None])[0]
         include_test = query_params.get('include_test', ['false'])[0].lower() == 'true'
         
-        subscriptions = server.db.get_all_telegram_subscriptions(status_filter=status_filter, include_test=include_test)
+        subscriptions = server.db.get_all_telegram_subscriptions(status_filter=status_filter, include_test=include_test, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -112,7 +112,7 @@ def handle_telegram_revenue_metrics(handler):
         if period not in valid_periods:
             period = 'all'
         
-        subscriptions = server.db.get_all_telegram_subscriptions()
+        subscriptions = server.db.get_all_telegram_subscriptions(tenant_id=handler.tenant_id)
         stripe_sub_ids = [s.get('stripe_subscription_id') for s in subscriptions if s.get('stripe_subscription_id')]
         
         from stripe_client import get_stripe_metrics
@@ -143,7 +143,7 @@ def handle_telegram_conversion_analytics(handler):
     import server
     
     try:
-        analytics = server.db.get_conversion_analytics()
+        analytics = server.db.get_conversion_analytics(tenant_id=handler.tenant_id)
         
         if analytics:
             handler.send_response(200)
@@ -180,7 +180,7 @@ def handle_telegram_billing(handler):
             handler.wfile.write(json.dumps({'error': 'Subscription ID required'}).encode())
             return
         
-        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id))
+        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id), tenant_id=handler.tenant_id)
         
         if not subscription:
             handler.send_response(404)
@@ -348,7 +348,8 @@ def handle_telegram_grant_access(handler):
             utm_medium=utm_medium,
             utm_campaign=utm_campaign,
             utm_content=utm_content,
-            utm_term=utm_term
+            utm_term=utm_term,
+            tenant_id=handler.tenant_id
         )
         
         if not subscription:
@@ -390,7 +391,7 @@ def handle_telegram_grant_access(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': 'Failed to create invite link'}).encode())
             return
         
-        server.db.update_telegram_subscription_invite(email, invite_link)
+        server.db.update_telegram_subscription_invite(email, invite_link, tenant_id=handler.tenant_id)
         
         print(f"[TELEGRAM-SUB] ✅ Premium access granted for {email}, invite: {invite_link}")
         
@@ -433,7 +434,7 @@ def handle_telegram_clear_all(handler):
         return
     
     try:
-        deleted = server.db.clear_all_telegram_subscriptions()
+        deleted = server.db.clear_all_telegram_subscriptions(tenant_id=handler.tenant_id)
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -453,7 +454,7 @@ def handle_telegram_cleanup_test_data(handler):
     import server
     
     try:
-        deleted_info = server.db.cleanup_test_telegram_subscriptions()
+        deleted_info = server.db.cleanup_test_telegram_subscriptions(tenant_id=handler.tenant_id)
         
         print(f"[CLEANUP] Deleted {len(deleted_info)} test records: {deleted_info}")
         
@@ -494,7 +495,7 @@ def handle_telegram_cancel_subscription(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': 'Missing subscriptionId'}).encode())
             return
         
-        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id))
+        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id), tenant_id=handler.tenant_id)
         
         if not subscription:
             handler.send_response(404)
@@ -520,7 +521,7 @@ def handle_telegram_cancel_subscription(handler):
         if result.get('success'):
             kicked_from_telegram = False
             if cancel_immediately:
-                telegram_user_id = server.db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled')
+                telegram_user_id = server.db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled', tenant_id=handler.tenant_id)
                 
                 if telegram_user_id and server.TELEGRAM_BOT_AVAILABLE:
                     private_channel_id = Config.get_forex_channel_id()
@@ -578,7 +579,7 @@ def handle_telegram_delete_subscription(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': 'Missing subscriptionId'}).encode())
             return
         
-        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id))
+        subscription = server.db.get_telegram_subscription_by_id(int(subscription_id), tenant_id=handler.tenant_id)
         if subscription:
             print(f"[DELETE] Deleting subscription record: ID={subscription_id}, Email={subscription.get('email')}")
         
@@ -591,7 +592,7 @@ def handle_telegram_delete_subscription(handler):
                 if kicked:
                     print(f"[DELETE] Kicked user {telegram_user_id} from Telegram channel")
         
-        deleted = server.db.delete_telegram_subscription(int(subscription_id))
+        deleted = server.db.delete_telegram_subscription(int(subscription_id), tenant_id=handler.tenant_id)
         
         if deleted:
             handler.send_response(200)
@@ -660,7 +661,7 @@ def handle_telegram_revoke_access(handler):
         
         print(f"[TELEGRAM-SUB] Revoke access request for {email}, reason: {reason}")
         
-        subscription = server.db.get_telegram_subscription_by_email(email)
+        subscription = server.db.get_telegram_subscription_by_email(email, tenant_id=handler.tenant_id)
         
         if not subscription:
             handler.send_response(404)
@@ -669,7 +670,7 @@ def handle_telegram_revoke_access(handler):
             handler.wfile.write(json.dumps({'success': False, 'error': f'No subscription found for {email}'}).encode())
             return
         
-        telegram_user_id = server.db.revoke_telegram_subscription(email, reason)
+        telegram_user_id = server.db.revoke_telegram_subscription(email, reason, tenant_id=handler.tenant_id)
         
         if telegram_user_id:
             private_channel_id = Config.get_forex_channel_id()

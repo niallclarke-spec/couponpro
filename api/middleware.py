@@ -168,8 +168,9 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
         if tenant_id is None:
             send_unauthorized(handler_instance)
             return False
-    
-    handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+        handler_instance.tenant_id = tenant_id
+    else:
+        handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
     
     if is_entrylab_only_route(path):
         if tenant_id != 'entrylab':

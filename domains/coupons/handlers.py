@@ -21,7 +21,7 @@ def handle_campaigns_list(handler):
     
     try:
         server.db.update_campaign_statuses()
-        campaigns = server.db.get_all_campaigns()
+        campaigns = server.db.get_all_campaigns(tenant_id=handler.tenant_id)
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -41,7 +41,7 @@ def handle_campaign_by_id(handler):
     
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
-        campaign = server.db.get_campaign_by_id(campaign_id)
+        campaign = server.db.get_campaign_by_id(campaign_id, tenant_id=handler.tenant_id)
         
         if campaign:
             handler.send_response(200)
@@ -73,7 +73,7 @@ def handle_campaign_submissions(handler):
     
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
-        submissions = server.db.get_campaign_submissions(campaign_id)
+        submissions = server.db.get_campaign_submissions(campaign_id, tenant_id=handler.tenant_id)
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -104,7 +104,7 @@ def handle_bot_stats(handler):
         else:
             days = int(days_param)
         
-        stats = server.db.get_bot_stats(days, template_filter=template)
+        stats = server.db.get_bot_stats(days, template_filter=template, tenant_id=handler.tenant_id)
         
         if stats:
             handler.send_response(200)
@@ -143,7 +143,7 @@ def handle_bot_users(handler):
         limit = int(query_params.get('limit', ['100'])[0])
         offset = int(query_params.get('offset', ['0'])[0])
         
-        result = server.db.get_all_bot_users(limit=limit, offset=offset)
+        result = server.db.get_all_bot_users(limit=limit, offset=offset, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -164,7 +164,7 @@ def handle_broadcast_status(handler):
     
     try:
         job_id = int(parsed_path.path.split('/')[-1])
-        job = server.db.get_broadcast_job(job_id)
+        job = server.db.get_broadcast_job(job_id, tenant_id=handler.tenant_id)
         
         if job:
             handler.send_response(200)
@@ -189,8 +189,8 @@ def handle_broadcast_jobs(handler):
     import server
     
     try:
-        jobs = server.db.get_recent_broadcast_jobs(limit=20)
-        user_count = server.db.get_bot_user_count(days=30)
+        jobs = server.db.get_recent_broadcast_jobs(limit=20, tenant_id=handler.tenant_id)
+        user_count = server.db.get_bot_user_count(days=30, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -215,8 +215,8 @@ def handle_user_activity(handler):
     try:
         chat_id = int(parsed_path.path.split('/')[-1])
         
-        user = server.db.get_bot_user(chat_id)
-        history = server.db.get_user_activity_history(chat_id, limit=100)
+        user = server.db.get_bot_user(chat_id, tenant_id=handler.tenant_id)
+        history = server.db.get_user_activity_history(chat_id, limit=100, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -258,7 +258,8 @@ def handle_invalid_coupons(handler):
             limit=limit, 
             offset=offset, 
             template_filter=template_filter,
-            days=days
+            days=days,
+            tenant_id=handler.tenant_id
         )
         
         handler.send_response(200)
@@ -339,7 +340,7 @@ def handle_campaigns_create(handler):
         post_data = handler.rfile.read(content_length)
         data = json.loads(post_data.decode('utf-8'))
         
-        campaign = server.db.create_campaign(data)
+        campaign = server.db.create_campaign(data, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -365,7 +366,7 @@ def handle_campaign_submit(handler):
         post_data = handler.rfile.read(content_length)
         data = json.loads(post_data.decode('utf-8'))
         
-        result = server.db.submit_to_campaign(campaign_id, data)
+        result = server.db.submit_to_campaign(campaign_id, data, tenant_id=handler.tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -391,7 +392,7 @@ def handle_campaign_update(handler):
         post_data = handler.rfile.read(content_length)
         data = json.loads(post_data.decode('utf-8'))
         
-        campaign = server.db.update_campaign(campaign_id, data)
+        campaign = server.db.update_campaign(campaign_id, data, tenant_id=handler.tenant_id)
         
         if campaign:
             handler.send_response(200)
@@ -420,7 +421,7 @@ def handle_campaign_delete(handler):
     try:
         campaign_id = int(parsed_path.path.split('/')[3])
         
-        result = server.db.delete_campaign(campaign_id)
+        result = server.db.delete_campaign(campaign_id, tenant_id=handler.tenant_id)
         
         if result:
             handler.send_response(200)
@@ -473,7 +474,7 @@ def handle_broadcast(handler):
             }).encode())
             return
         
-        users = server.db.get_active_bot_users(days)
+        users = server.db.get_active_bot_users(days, tenant_id=handler.tenant_id)
         
         if not users:
             handler.send_response(200)

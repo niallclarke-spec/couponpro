@@ -983,6 +983,78 @@ class DatabasePool:
                 else:
                     print("[MIGRATION] effective_sl column already exists, skipping")
                 
+                # ============================================================
+                # Phase 2B: Add unique constraints (tenant_id + natural_key)
+                # ============================================================
+                
+                # 1. bot_users: UNIQUE (tenant_id, chat_id)
+                print("[MIGRATION] Checking bot_users unique constraint (tenant_id, chat_id)...")
+                cursor.execute("""
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_namespace n ON n.oid = c.connamespace
+                    WHERE c.conname = 'uq_bot_users_tenant_chat' AND n.nspname = 'public'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding unique constraint uq_bot_users_tenant_chat...")
+                    cursor.execute("ALTER TABLE bot_users DROP CONSTRAINT IF EXISTS bot_users_pkey")
+                    cursor.execute("ALTER TABLE bot_users ADD CONSTRAINT uq_bot_users_tenant_chat UNIQUE (tenant_id, chat_id)")
+                    print("[MIGRATION] ✅ uq_bot_users_tenant_chat constraint added")
+                else:
+                    print("[MIGRATION] uq_bot_users_tenant_chat already exists, skipping")
+                
+                # 2. forex_config: UNIQUE (tenant_id, setting_key)
+                print("[MIGRATION] Checking forex_config unique constraint (tenant_id, setting_key)...")
+                cursor.execute("""
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_namespace n ON n.oid = c.connamespace
+                    WHERE c.conname = 'uq_forex_config_tenant_key' AND n.nspname = 'public'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding unique constraint uq_forex_config_tenant_key...")
+                    cursor.execute("ALTER TABLE forex_config DROP CONSTRAINT IF EXISTS forex_config_setting_key_key")
+                    cursor.execute("ALTER TABLE forex_config ADD CONSTRAINT uq_forex_config_tenant_key UNIQUE (tenant_id, setting_key)")
+                    print("[MIGRATION] ✅ uq_forex_config_tenant_key constraint added")
+                else:
+                    print("[MIGRATION] uq_forex_config_tenant_key already exists, skipping")
+                
+                # 3. bot_config: UNIQUE (tenant_id, setting_key) + add id column
+                print("[MIGRATION] Checking bot_config unique constraint (tenant_id, setting_key)...")
+                cursor.execute("""
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_namespace n ON n.oid = c.connamespace
+                    WHERE c.conname = 'uq_bot_config_tenant_key' AND n.nspname = 'public'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding id column and unique constraint to bot_config...")
+                    cursor.execute("""
+                        SELECT column_name FROM information_schema.columns 
+                        WHERE table_name='bot_config' AND column_name='id'
+                    """)
+                    if not cursor.fetchone():
+                        cursor.execute("ALTER TABLE bot_config ADD COLUMN id SERIAL")
+                        print("[MIGRATION] ✅ id column added to bot_config")
+                    cursor.execute("ALTER TABLE bot_config DROP CONSTRAINT IF EXISTS bot_config_pkey")
+                    cursor.execute("ALTER TABLE bot_config ADD CONSTRAINT bot_config_pkey PRIMARY KEY (id)")
+                    cursor.execute("ALTER TABLE bot_config ADD CONSTRAINT uq_bot_config_tenant_key UNIQUE (tenant_id, setting_key)")
+                    print("[MIGRATION] ✅ uq_bot_config_tenant_key constraint added")
+                else:
+                    print("[MIGRATION] uq_bot_config_tenant_key already exists, skipping")
+                
+                # 4. telegram_subscriptions: UNIQUE (tenant_id, email)
+                print("[MIGRATION] Checking telegram_subscriptions unique constraint (tenant_id, email)...")
+                cursor.execute("""
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_namespace n ON n.oid = c.connamespace
+                    WHERE c.conname = 'uq_telegram_subscriptions_tenant_email' AND n.nspname = 'public'
+                """)
+                if not cursor.fetchone():
+                    print("[MIGRATION] Adding unique constraint uq_telegram_subscriptions_tenant_email...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions DROP CONSTRAINT IF EXISTS telegram_subscriptions_email_key")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD CONSTRAINT uq_telegram_subscriptions_tenant_email UNIQUE (tenant_id, email)")
+                    print("[MIGRATION] ✅ uq_telegram_subscriptions_tenant_email constraint added")
+                else:
+                    print("[MIGRATION] uq_telegram_subscriptions_tenant_email already exists, skipping")
+                
                 conn.commit()
                 print("✅ Database schema initialized")
                 
@@ -1001,17 +1073,17 @@ class DatabasePool:
 db_pool = DatabasePool()
 
 # Campaign CRUD operations
-def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None):
+def create_campaign(title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id='entrylab'):
     """Create a new campaign"""
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO campaigns 
-                (title, description, start_date, end_date, prize, platforms, overlay_url, status)
-                VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+                (tenant_id, title, description, start_date, end_date, prize, platforms, overlay_url, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)
                 RETURNING id
-            """, (title, description, start_date, end_date, prize, platforms, overlay_url, 'scheduled'))
+            """, (tenant_id, title, description, start_date, end_date, prize, platforms, overlay_url, 'scheduled'))
             campaign_id = cursor.fetchone()[0]
             conn.commit()
             return campaign_id
@@ -1019,7 +1091,7 @@ def create_campaign(title, description, start_date, end_date, prize, platforms, 
         print(f"Error creating campaign: {e}")
         raise
 
-def get_all_campaigns():
+def get_all_campaigns(tenant_id='entrylab'):
     """Get all campaigns ordered by start_date descending"""
     try:
         with db_pool.get_connection() as conn:
@@ -1027,8 +1099,9 @@ def get_all_campaigns():
             cursor.execute("""
                 SELECT id, title, description, start_date, end_date, prize, platforms, overlay_url, status, created_at
                 FROM campaigns
+                WHERE tenant_id = %s
                 ORDER BY start_date DESC
-            """)
+            """, (tenant_id,))
             campaigns = []
             for row in cursor.fetchall():
                 campaigns.append({
@@ -1048,7 +1121,7 @@ def get_all_campaigns():
         print(f"Error getting campaigns: {e}")
         return []
 
-def get_campaign_by_id(campaign_id):
+def get_campaign_by_id(campaign_id, tenant_id='entrylab'):
     """Get a single campaign by ID"""
     try:
         with db_pool.get_connection() as conn:
@@ -1056,8 +1129,8 @@ def get_campaign_by_id(campaign_id):
             cursor.execute("""
                 SELECT id, title, description, start_date, end_date, prize, platforms, overlay_url, status, created_at
                 FROM campaigns
-                WHERE id = %s
-            """, (campaign_id,))
+                WHERE id = %s AND tenant_id = %s
+            """, (campaign_id, tenant_id))
             row = cursor.fetchone()
             if row:
                 return {
@@ -1077,7 +1150,7 @@ def get_campaign_by_id(campaign_id):
         print(f"Error getting campaign: {e}")
         return None
 
-def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None):
+def update_campaign(campaign_id, title, description, start_date, end_date, prize, platforms, overlay_url=None, tenant_id='entrylab'):
     """Update an existing campaign"""
     try:
         with db_pool.get_connection() as conn:
@@ -1086,20 +1159,20 @@ def update_campaign(campaign_id, title, description, start_date, end_date, prize
                 UPDATE campaigns
                 SET title = %s, description = %s, start_date = %s, end_date = %s,
                     prize = %s, platforms = %s::jsonb, overlay_url = %s, updated_at = CURRENT_TIMESTAMP
-                WHERE id = %s
-            """, (title, description, start_date, end_date, prize, platforms, overlay_url, campaign_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (title, description, start_date, end_date, prize, platforms, overlay_url, campaign_id, tenant_id))
             conn.commit()
             return True
     except Exception as e:
         print(f"Error updating campaign: {e}")
         raise
 
-def delete_campaign(campaign_id):
+def delete_campaign(campaign_id, tenant_id='entrylab'):
     """Delete a campaign and its submissions"""
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM campaigns WHERE id = %s", (campaign_id,))
+            cursor.execute("DELETE FROM campaigns WHERE id = %s AND tenant_id = %s", (campaign_id, tenant_id))
             conn.commit()
             return True
     except Exception as e:
@@ -1191,7 +1264,7 @@ def get_submission_count(campaign_id):
         return 0
 
 # Bot usage tracking
-def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown'):
+def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None, device_type='unknown', tenant_id='entrylab'):
     """
     Log Telegram bot usage. Silently fails to avoid disrupting bot operation.
     
@@ -1202,6 +1275,7 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None,
         success (bool): Whether the operation succeeded
         error_type (str): Type of error if failed (e.g., 'network', 'invalid_coupon', 'template_not_found')
         device_type (str): Device type ('mobile', 'desktop', 'tablet', 'unknown')
+        tenant_id (str): Tenant ID (default: 'entrylab')
     """
     import sys
     msg = f"[BOT_USAGE] Attempting to log: chat_id={chat_id}, template={template_slug}, coupon={coupon_code}, success={success}, error={error_type}, device={device_type}"
@@ -1219,9 +1293,9 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None,
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO bot_usage 
-                (chat_id, template_slug, coupon_code, success, error_type, device_type)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (chat_id, template_slug, coupon_code, success, error_type, device_type))
+                (tenant_id, chat_id, template_slug, coupon_code, success, error_type, device_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (tenant_id, chat_id, template_slug, coupon_code, success, error_type, device_type))
             conn.commit()
             success_msg = f"[BOT_USAGE] ✅ Successfully logged usage"
             print(success_msg, flush=True)
@@ -1231,13 +1305,14 @@ def log_bot_usage(chat_id, template_slug, coupon_code, success, error_type=None,
         print(error_msg, flush=True)
         sys.stdout.flush()
 
-def get_bot_stats(days=30, template_filter=None):
+def get_bot_stats(days=30, template_filter=None, tenant_id='entrylab'):
     """
     Get bot usage statistics for the last N days, or 'today'/'yesterday' for exact day filtering.
     
     Args:
         days (int|str): Number of days, or 'today'/'yesterday' for exact date filtering (default: 30)
         template_filter (str, optional): Filter popular coupons by specific template slug
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Statistics including total uses, success rate, popular templates/coupons
@@ -1261,14 +1336,14 @@ def get_bot_stats(days=30, template_filter=None):
             
             # Build WHERE clause based on filter type
             if days == 'today':
-                where_clause = "created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'"
-                where_params = ()
+                where_clause = "tenant_id = %s AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'"
+                where_params = (tenant_id,)
             elif days == 'yesterday':
-                where_clause = "created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
-                where_params = ()
+                where_clause = "tenant_id = %s AND created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
+                where_params = (tenant_id,)
             else:
-                where_clause = "created_at >= CURRENT_TIMESTAMP - %s::interval"
-                where_params = (f"{days} days",)
+                where_clause = "tenant_id = %s AND created_at >= CURRENT_TIMESTAMP - %s::interval"
+                where_params = (tenant_id, f"{days} days")
             
             # Total usage count
             cursor.execute(f"""
@@ -1425,12 +1500,13 @@ def get_bot_stats(days=30, template_filter=None):
         print(f"Error getting bot stats: {e}")
         return None
 
-def get_day_of_week_stats(days=30):
+def get_day_of_week_stats(days=30, tenant_id='entrylab'):
     """
     Get day-of-week or hour-of-day usage statistics.
     
     Args:
         days (int or str): Number of days to analyze, or 'today'/'yesterday' for hourly stats
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: {
@@ -1459,9 +1535,10 @@ def get_day_of_week_stats(days=30):
                     FROM bot_usage
                     WHERE {where_clause}
                     AND success = true
+                    AND tenant_id = %s
                     GROUP BY hour_num
                     ORDER BY hour_num
-                """)
+                """, (tenant_id,))
                 
                 # Ensure all 24 hours are present (0-23)
                 hour_data = {i: 0 for i in range(24)}
@@ -1492,9 +1569,10 @@ def get_day_of_week_stats(days=30):
                     FROM bot_usage
                     WHERE created_at >= CURRENT_TIMESTAMP - %s::interval
                     AND success = true
+                    AND tenant_id = %s
                     GROUP BY day_name, day_num
                     ORDER BY day_num
-                """, (interval,))
+                """, (interval, tenant_id))
                 
                 # Map to ensure all days are present
                 day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -1541,9 +1619,9 @@ def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_na
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO bot_users (chat_id, last_coupon_code, username, first_name, last_name, first_used, last_used)
-                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (chat_id) 
+                INSERT INTO bot_users (tenant_id, chat_id, last_coupon_code, username, first_name, last_name, first_used, last_used)
+                VALUES ('entrylab', %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, chat_id) 
                 DO UPDATE SET 
                     last_coupon_code = EXCLUDED.last_coupon_code,
                     username = COALESCE(EXCLUDED.username, bot_users.username),
@@ -1555,12 +1633,13 @@ def track_bot_user(chat_id, coupon_code, username=None, first_name=None, last_na
     except Exception as e:
         print(f"[BOT_USER] Failed to track user (non-critical): {e}")
 
-def get_bot_user(chat_id):
+def get_bot_user(chat_id, tenant_id='entrylab'):
     """
     Get bot user data including last coupon used, profile information, and activity stats.
     
     Args:
         chat_id (int): Telegram chat ID
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: User data with chat_id, last_coupon_code, last_used, username, first_name, last_name, total_generations, unique_coupons
@@ -1583,10 +1662,10 @@ def get_bot_user(chat_id):
                     COUNT(b.id) FILTER (WHERE b.success = true) as total_generations,
                     COUNT(DISTINCT b.coupon_code) FILTER (WHERE b.success = true) as unique_coupons
                 FROM bot_users u
-                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id
-                WHERE u.chat_id = %s
+                LEFT JOIN bot_usage b ON u.chat_id = b.chat_id AND b.tenant_id = %s
+                WHERE u.chat_id = %s AND u.tenant_id = %s
                 GROUP BY u.chat_id, u.last_coupon_code, u.last_used, u.username, u.first_name, u.last_name
-            """, (chat_id,))
+            """, (tenant_id, chat_id, tenant_id))
             row = cursor.fetchone()
             if row:
                 return {
@@ -1604,12 +1683,13 @@ def get_bot_user(chat_id):
         print(f"[DB] Error getting bot user: {e}")
         return None
 
-def get_active_bot_users(days=30):
+def get_active_bot_users(days=30, tenant_id='entrylab'):
     """
     Get all active bot users within the last N days for broadcasting.
     
     Args:
         days (int): Number of days to consider "active" (default: 30)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of dicts with chat_id and last_coupon_code
@@ -1626,8 +1706,9 @@ def get_active_bot_users(days=30):
                 SELECT chat_id, last_coupon_code, last_used
                 FROM bot_users
                 WHERE last_used >= CURRENT_TIMESTAMP - %s::interval
+                AND tenant_id = %s
                 ORDER BY last_used DESC
-            """, (interval,))
+            """, (interval, tenant_id))
             
             users = []
             for row in cursor.fetchall():
@@ -1641,12 +1722,13 @@ def get_active_bot_users(days=30):
         print(f"Error getting active bot users: {e}")
         return []
 
-def get_bot_user_count(days=30):
+def get_bot_user_count(days=30, tenant_id='entrylab'):
     """
     Get count of active bot users within the last N days.
     
     Args:
         days (int): Number of days to consider "active" (default: 30)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         int: Number of active users
@@ -1662,7 +1744,8 @@ def get_bot_user_count(days=30):
             cursor.execute("""
                 SELECT COUNT(*) FROM bot_users
                 WHERE last_used >= CURRENT_TIMESTAMP - %s::interval
-            """, (interval,))
+                AND tenant_id = %s
+            """, (interval, tenant_id))
             return cursor.fetchone()[0]
     except Exception as e:
         print(f"Error getting bot user count: {e}")
@@ -1882,7 +1965,7 @@ def get_user_activity_history(chat_id, limit=100):
         print(f"Error getting user activity history: {e}")
         return []
 
-def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None):
+def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=None, tenant_id='entrylab'):
     """
     Get all invalid coupon validation attempts.
     
@@ -1891,6 +1974,7 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
         offset (int): Offset for pagination
         template_filter (str, optional): Filter by template name
         days (int, optional): Filter by number of days (e.g., 7 for last 7 days)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: {
@@ -1906,8 +1990,8 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
             cursor = conn.cursor()
             
             # Build query with optional template filter and date range
-            where_clause = "WHERE success = FALSE"
-            params = []
+            where_clause = "WHERE success = FALSE AND b.tenant_id = %s"
+            params = [tenant_id]
             
             if days is not None:
                 where_clause += " AND created_at >= NOW() - INTERVAL '%s days'"
@@ -1918,7 +2002,8 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
                 params.append(template_filter)
             
             # Get total count
-            cursor.execute(f"SELECT COUNT(*) FROM bot_usage {where_clause}", params)
+            count_where = where_clause.replace("b.tenant_id", "tenant_id")
+            cursor.execute(f"SELECT COUNT(*) FROM bot_usage {count_where}", params)
             total = cursor.fetchone()[0]
             
             # Get attempts with user info
@@ -1935,11 +2020,11 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
                     u.last_name,
                     COUNT(*) OVER (PARTITION BY b.coupon_code) as attempt_count
                 FROM bot_usage b
-                LEFT JOIN bot_users u ON b.chat_id = u.chat_id
+                LEFT JOIN bot_users u ON b.chat_id = u.chat_id AND u.tenant_id = %s
                 {where_clause}
                 ORDER BY b.created_at DESC
                 LIMIT %s OFFSET %s
-            """, query_params)
+            """, [tenant_id] + query_params)
             
             attempts = []
             for row in cursor.fetchall():
@@ -1960,12 +2045,13 @@ def get_invalid_coupon_attempts(limit=100, offset=0, template_filter=None, days=
         print(f"Error getting invalid coupon attempts: {e}")
         return {'attempts': [], 'total': 0}
 
-def remove_bot_user(chat_id):
+def remove_bot_user(chat_id, tenant_id='entrylab'):
     """
     Remove a bot user (e.g., when they block the bot).
     
     Args:
         chat_id (int): Telegram chat ID to remove
+        tenant_id (str): Tenant ID (default: 'entrylab')
     """
     try:
         if not db_pool.connection_pool:
@@ -1973,13 +2059,13 @@ def remove_bot_user(chat_id):
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM bot_users WHERE chat_id = %s", (chat_id,))
+            cursor.execute("DELETE FROM bot_users WHERE chat_id = %s AND tenant_id = %s", (chat_id, tenant_id))
             conn.commit()
     except Exception as e:
         print(f"[BOT_USER] Failed to remove user {chat_id}: {e}")
 
 # Broadcast job management
-def create_broadcast_job(message, target_days, total_users):
+def create_broadcast_job(message, target_days, total_users, tenant_id='entrylab'):
     """
     Create a new broadcast job.
     
@@ -1987,6 +2073,7 @@ def create_broadcast_job(message, target_days, total_users):
         message (str): Message to broadcast
         target_days (int): Days of activity to target
         total_users (int): Total number of users to broadcast to
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         int: Job ID
@@ -1998,10 +2085,10 @@ def create_broadcast_job(message, target_days, total_users):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO broadcast_jobs (message, target_days, status, total_users)
-                VALUES (%s, %s, 'pending', %s)
+                INSERT INTO broadcast_jobs (tenant_id, message, target_days, status, total_users)
+                VALUES (%s, %s, %s, 'pending', %s)
                 RETURNING id
-            """, (message, target_days, total_users))
+            """, (tenant_id, message, target_days, total_users))
             job_id = cursor.fetchone()[0]
             conn.commit()
             return job_id
@@ -2009,7 +2096,7 @@ def create_broadcast_job(message, target_days, total_users):
         print(f"Error creating broadcast job: {e}")
         return None
 
-def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False):
+def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None, completed=False, tenant_id='entrylab'):
     """
     Update broadcast job progress.
     
@@ -2019,6 +2106,7 @@ def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None
         sent_count (int): Number of successfully sent messages
         failed_count (int): Number of failed messages
         completed (bool): Whether job is completed
+        tenant_id (str): Tenant ID (default: 'entrylab')
     """
     try:
         if not db_pool.connection_pool:
@@ -2047,18 +2135,20 @@ def update_broadcast_job(job_id, status=None, sent_count=None, failed_count=None
             
             if updates:
                 params.append(job_id)
-                query = f"UPDATE broadcast_jobs SET {', '.join(updates)} WHERE id = %s"
+                params.append(tenant_id)
+                query = f"UPDATE broadcast_jobs SET {', '.join(updates)} WHERE id = %s AND tenant_id = %s"
                 cursor.execute(query, params)
                 conn.commit()
     except Exception as e:
         print(f"Error updating broadcast job {job_id}: {e}")
 
-def get_broadcast_job(job_id):
+def get_broadcast_job(job_id, tenant_id='entrylab'):
     """
     Get broadcast job details.
     
     Args:
         job_id (int): Job ID
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Job details or None if not found
@@ -2073,8 +2163,8 @@ def get_broadcast_job(job_id):
                 SELECT id, message, target_days, status, total_users, 
                        sent_count, failed_count, created_at, completed_at
                 FROM broadcast_jobs
-                WHERE id = %s
-            """, (job_id,))
+                WHERE id = %s AND tenant_id = %s
+            """, (job_id, tenant_id))
             row = cursor.fetchone()
             
             if row:
@@ -2094,12 +2184,13 @@ def get_broadcast_job(job_id):
         print(f"Error getting broadcast job {job_id}: {e}")
         return None
 
-def get_recent_broadcast_jobs(limit=10):
+def get_recent_broadcast_jobs(limit=10, tenant_id='entrylab'):
     """
     Get recent broadcast jobs.
     
     Args:
         limit (int): Number of jobs to return
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of job dicts
@@ -2114,9 +2205,10 @@ def get_recent_broadcast_jobs(limit=10):
                 SELECT id, message, target_days, status, total_users, 
                        sent_count, failed_count, created_at, completed_at
                 FROM broadcast_jobs
+                WHERE tenant_id = %s
                 ORDER BY created_at DESC
                 LIMIT %s
-            """, (limit,))
+            """, (tenant_id, limit))
             
             jobs = []
             for row in cursor.fetchall():
@@ -2142,7 +2234,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
                        bot_type='aggressive', indicators_used=None, notes=None,
                        take_profit_2=None, take_profit_3=None,
                        tp1_percentage=100, tp2_percentage=0, tp3_percentage=0,
-                       status='draft'):
+                       status='draft', tenant_id='entrylab'):
     """
     Create a new forex signal with multi-TP support.
     
@@ -2165,6 +2257,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         tp2_percentage (int): Percentage to close at TP2 (default 0)
         tp3_percentage (int): Percentage to close at TP3 (default 0)
         status (str): Initial status ('draft', 'pending', etc.) - default 'draft'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         int: Signal ID
@@ -2174,12 +2267,12 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO forex_signals 
-                (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
+                (tenant_id, signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
                  rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes,
                  take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
+            """, (tenant_id, signal_type, pair, timeframe, entry_price, take_profit, stop_loss,
                   rsi_value, macd_value, atr_value, status, bot_type, indicators_used, notes,
                   take_profit_2, take_profit_3, tp1_percentage, tp2_percentage, tp3_percentage))
             signal_id = cursor.fetchone()[0]
@@ -2189,7 +2282,7 @@ def create_forex_signal(signal_type, pair, timeframe, entry_price, take_profit=N
         print(f"Error creating forex signal: {e}")
         raise
 
-def update_signal_status(signal_id, new_status, telegram_message_id=None):
+def update_signal_status(signal_id, new_status, telegram_message_id=None, tenant_id='entrylab'):
     """
     Update a signal's status (e.g., from 'draft' to 'pending' or 'broadcast_failed').
     
@@ -2197,6 +2290,7 @@ def update_signal_status(signal_id, new_status, telegram_message_id=None):
         signal_id (int): The signal ID to update
         new_status (str): New status ('pending', 'broadcast_failed', etc.)
         telegram_message_id (int, optional): Telegram message ID if broadcast succeeded
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if update succeeded, False otherwise
@@ -2209,14 +2303,14 @@ def update_signal_status(signal_id, new_status, telegram_message_id=None):
             cursor.execute("""
                 UPDATE forex_signals 
                 SET status = %s, telegram_message_id = %s
-                WHERE id = %s
-            """, (new_status, telegram_message_id, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (new_status, telegram_message_id, signal_id, tenant_id))
         else:
             cursor.execute("""
                 UPDATE forex_signals 
                 SET status = %s
-                WHERE id = %s
-            """, (new_status, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (new_status, signal_id, tenant_id))
         conn.commit()
         return cursor.rowcount > 0
     except Exception as e:
@@ -2234,13 +2328,14 @@ def update_signal_status(signal_id, new_status, telegram_message_id=None):
             except Exception as cleanup_error:
                 print(f"Connection cleanup error: {cleanup_error}")
 
-def get_forex_signals(status=None, limit=100):
+def get_forex_signals(status=None, limit=100, tenant_id='entrylab'):
     """
     Get forex signals with optional status filtering.
     
     Args:
         status (str, optional): Filter by status ('pending', 'won', 'lost', 'expired')
         limit (int): Maximum number of signals to return (default: 100)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of signal dictionaries
@@ -2265,10 +2360,10 @@ def get_forex_signals(status=None, limit=100):
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
                            breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
                     FROM forex_signals
-                    WHERE status = %s
+                    WHERE tenant_id = %s AND status = %s
                     ORDER BY posted_at DESC
                     LIMIT %s
-                """, (status, limit))
+                """, (tenant_id, status, limit))
             else:
                 cursor.execute("""
                     SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
@@ -2285,10 +2380,10 @@ def get_forex_signals(status=None, limit=100):
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
                            breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
                     FROM forex_signals
-                    WHERE status NOT IN ('draft', 'broadcast_failed')
+                    WHERE tenant_id = %s AND status NOT IN ('draft', 'broadcast_failed')
                     ORDER BY posted_at DESC
                     LIMIT %s
-                """, (limit,))
+                """, (tenant_id, limit))
             
             signals = []
             for row in cursor.fetchall():
@@ -2344,7 +2439,7 @@ def get_forex_signals(status=None, limit=100):
         print(f"Error getting forex signals: {e}")
         return []
 
-def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None):
+def update_forex_signal_status(signal_id, status, result_pips=None, close_price=None, tenant_id='entrylab'):
     """
     Update forex signal status and optionally set result.
     
@@ -2353,6 +2448,7 @@ def update_forex_signal_status(signal_id, status, result_pips=None, close_price=
         status (str): New status ('pending', 'won', 'lost', 'expired')
         result_pips (float, optional): Result in pips (positive for profit, negative for loss)
         close_price (float, optional): Price at which the signal closed
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -2365,26 +2461,26 @@ def update_forex_signal_status(signal_id, status, result_pips=None, close_price=
                 cursor.execute("""
                     UPDATE forex_signals
                     SET status = %s, result_pips = %s, close_price = %s, closed_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (status, result_pips, close_price, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, result_pips, close_price, signal_id, tenant_id))
             elif result_pips is not None:
                 cursor.execute("""
                     UPDATE forex_signals
                     SET status = %s, result_pips = %s, closed_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (status, result_pips, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, result_pips, signal_id, tenant_id))
             elif close_price is not None:
                 cursor.execute("""
                     UPDATE forex_signals
                     SET status = %s, close_price = %s, closed_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (status, close_price, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, close_price, signal_id, tenant_id))
             else:
                 cursor.execute("""
                     UPDATE forex_signals
                     SET status = %s, closed_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (status, signal_id))
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, signal_id, tenant_id))
             
             conn.commit()
             
@@ -2398,12 +2494,13 @@ def update_forex_signal_status(signal_id, status, result_pips=None, close_price=
         print(f"Error updating forex signal status: {e}")
         raise
 
-def get_forex_stats(days=7):
+def get_forex_stats(days=7, tenant_id='entrylab'):
     """
     Get forex signals statistics for the last N days.
     
     Args:
         days (int): Number of days to analyze (default: 7)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Statistics including total signals, win rate, profit/loss, etc.
@@ -2418,8 +2515,8 @@ def get_forex_stats(days=7):
             # Total signals in the period
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE posted_at >= CURRENT_TIMESTAMP - %s::interval
-            """, (f"{days} days",))
+                WHERE tenant_id = %s AND posted_at >= CURRENT_TIMESTAMP - %s::interval
+            """, (tenant_id, f"{days} days"))
             total_signals = cursor.fetchone()[0]
             
             # Closed signals (won + lost)
@@ -2501,12 +2598,13 @@ def get_forex_stats(days=7):
         print(f"Error getting forex stats: {e}")
         return None
 
-def get_forex_signals_by_period(period='today'):
+def get_forex_signals_by_period(period='today', tenant_id='entrylab'):
     """
     Get forex signals for a specific time period.
     
     Args:
         period (str): Time period - 'today', 'yesterday', 'week', 'month'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of signals for that period
@@ -2524,7 +2622,7 @@ def get_forex_signals_by_period(period='today'):
                            stop_loss, status, rsi_value, macd_value, atr_value, 
                            posted_at, closed_at, result_pips
                     FROM forex_signals
-                    WHERE posted_at >= CURRENT_DATE
+                    WHERE posted_at >= CURRENT_DATE AND tenant_id = %s
                     ORDER BY posted_at DESC
                 """
             elif period == 'yesterday':
@@ -2534,7 +2632,7 @@ def get_forex_signals_by_period(period='today'):
                            posted_at, closed_at, result_pips
                     FROM forex_signals
                     WHERE posted_at >= CURRENT_DATE - INTERVAL '1 day'
-                    AND posted_at < CURRENT_DATE
+                    AND posted_at < CURRENT_DATE AND tenant_id = %s
                     ORDER BY posted_at DESC
                 """
             elif period == 'week':
@@ -2543,7 +2641,7 @@ def get_forex_signals_by_period(period='today'):
                            stop_loss, status, rsi_value, macd_value, atr_value, 
                            posted_at, closed_at, result_pips
                     FROM forex_signals
-                    WHERE posted_at >= CURRENT_DATE - INTERVAL '7 days'
+                    WHERE posted_at >= CURRENT_DATE - INTERVAL '7 days' AND tenant_id = %s
                     ORDER BY posted_at DESC
                 """
             else:
@@ -2552,11 +2650,11 @@ def get_forex_signals_by_period(period='today'):
                            stop_loss, status, rsi_value, macd_value, atr_value, 
                            posted_at, closed_at, result_pips
                     FROM forex_signals
-                    WHERE posted_at >= CURRENT_DATE - INTERVAL '30 days'
+                    WHERE posted_at >= CURRENT_DATE - INTERVAL '30 days' AND tenant_id = %s
                     ORDER BY posted_at DESC
                 """
             
-            cursor.execute(query)
+            cursor.execute(query, (tenant_id,))
             
             signals = []
             for row in cursor.fetchall():
@@ -2581,12 +2679,13 @@ def get_forex_signals_by_period(period='today'):
         print(f"Error getting forex signals by period: {e}")
         return []
 
-def get_forex_stats_by_period(period='today'):
+def get_forex_stats_by_period(period='today', tenant_id='entrylab'):
     """
     Get forex statistics for a specific time period.
     
     Args:
         period (str): 'today', 'yesterday', 'week', 'month'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Statistics for that period
@@ -2615,8 +2714,8 @@ def get_forex_stats_by_period(period='today'):
                     SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
                     COALESCE(SUM(result_pips), 0) as total_pips
                 FROM forex_signals
-                WHERE {time_filter}
-            """)
+                WHERE {time_filter} AND tenant_id = %s
+            """, (tenant_id,))
             
             row = cursor.fetchone()
             
@@ -2631,9 +2730,12 @@ def get_forex_stats_by_period(period='today'):
         print(f"Error getting forex stats by period: {e}")
         return None
 
-def get_daily_pnl():
+def get_daily_pnl(tenant_id='entrylab'):
     """
     Get today's profit/loss in pips for daily loss cap checking.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         float: Total pips for today (negative = loss)
@@ -2650,7 +2752,8 @@ def get_daily_pnl():
                 FROM forex_signals
                 WHERE posted_at >= CURRENT_DATE
                 AND status IN ('won', 'lost', 'expired')
-            """)
+                AND tenant_id = %s
+            """, (tenant_id,))
             
             row = cursor.fetchone()
             return float(row[0]) if row and row[0] else 0.0
@@ -2658,9 +2761,12 @@ def get_daily_pnl():
         print(f"Error getting daily P/L: {e}")
         return 0.0
 
-def get_signal_metrics():
+def get_signal_metrics(tenant_id='entrylab'):
     """
     Get advanced signal metrics: avg hold time and avg pips per trade.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: {avg_hold_time_minutes, avg_pips_per_trade, total_completed}
@@ -2681,7 +2787,8 @@ def get_signal_metrics():
                 WHERE status IN ('won', 'lost')
                 AND closed_at IS NOT NULL
                 AND posted_at IS NOT NULL
-            """)
+                AND tenant_id = %s
+            """, (tenant_id,))
             
             row = cursor.fetchone()
             if row:
@@ -2815,9 +2922,9 @@ def initialize_default_forex_config():
             
             for key, value in default_config.items():
                 cursor.execute("""
-                    INSERT INTO forex_config (setting_key, setting_value, updated_at)
-                    VALUES (%s, %s, CURRENT_TIMESTAMP)
-                    ON CONFLICT (setting_key) 
+                    INSERT INTO forex_config (tenant_id, setting_key, setting_value, updated_at)
+                    VALUES ('entrylab', %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (tenant_id, setting_key) 
                     DO NOTHING
                 """, (key, value))
             
@@ -2828,9 +2935,12 @@ def initialize_default_forex_config():
         print(f"Error initializing forex config: {e}")
         return False
 
-def get_forex_config():
+def get_forex_config(tenant_id='entrylab'):
     """
     Get current forex configuration as a dictionary.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Configuration with keys:
@@ -2853,7 +2963,8 @@ def get_forex_config():
             cursor.execute("""
                 SELECT setting_key, setting_value, updated_at
                 FROM forex_config
-            """)
+                WHERE tenant_id = %s
+            """, (tenant_id,))
             
             config = {}
             latest_update = None
@@ -2913,9 +3024,9 @@ def update_forex_config(config_updates):
             
             for key, value in config_updates.items():
                 cursor.execute("""
-                    INSERT INTO forex_config (setting_key, setting_value, updated_at)
-                    VALUES (%s, %s, CURRENT_TIMESTAMP)
-                    ON CONFLICT (setting_key) 
+                    INSERT INTO forex_config (tenant_id, setting_key, setting_value, updated_at)
+                    VALUES ('entrylab', %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (tenant_id, setting_key) 
                     DO UPDATE SET 
                         setting_value = EXCLUDED.setting_value,
                         updated_at = CURRENT_TIMESTAMP
@@ -2929,7 +3040,7 @@ def update_forex_config(config_updates):
         raise
 
 
-def get_bot_config():
+def get_bot_config(tenant_id='entrylab'):
     """
     Get bot configuration from forex_config table.
     Returns dict with active_bot_type and other bot settings.
@@ -2943,8 +3054,8 @@ def get_bot_config():
             cursor.execute("""
                 SELECT setting_key, setting_value
                 FROM forex_config
-                WHERE setting_key LIKE 'bot_%'
-            """)
+                WHERE tenant_id = %s AND setting_key LIKE 'bot_%'
+            """, (tenant_id,))
             
             config = {'active_bot_type': 'aggressive'}
             for row in cursor.fetchall():
@@ -2965,9 +3076,9 @@ def init_bot_config():
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO forex_config (setting_key, setting_value, updated_at)
-                VALUES ('bot_active_bot_type', 'aggressive', CURRENT_TIMESTAMP)
-                ON CONFLICT (setting_key) DO NOTHING
+                INSERT INTO forex_config (tenant_id, setting_key, setting_value, updated_at)
+                VALUES ('entrylab', 'bot_active_bot_type', 'aggressive', CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, setting_key) DO NOTHING
             """)
             conn.commit()
             print("✅ Bot config initialized with defaults")
@@ -2976,13 +3087,14 @@ def init_bot_config():
         print(f"Error initializing bot config: {e}")
         return False
 
-def update_breakeven_triggered(signal_id, breakeven_price):
+def update_breakeven_triggered(signal_id, breakeven_price, tenant_id='entrylab'):
     """
     Record that breakeven alert was triggered for a signal.
     
     Args:
         signal_id: The signal ID
         breakeven_price: The entry price (used for breakeven SL)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -2998,8 +3110,8 @@ def update_breakeven_triggered(signal_id, breakeven_price):
                 SET breakeven_triggered = TRUE, 
                     breakeven_triggered_at = CURRENT_TIMESTAMP,
                     breakeven_price = %s
-                WHERE id = %s
-            """, (breakeven_price, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (breakeven_price, signal_id, tenant_id))
             conn.commit()
             print(f"✅ Signal #{signal_id}: Breakeven triggered at ${breakeven_price:.2f}")
             return True
@@ -3007,12 +3119,13 @@ def update_breakeven_triggered(signal_id, breakeven_price):
         print(f"Error updating breakeven triggered: {e}")
         return False
 
-def get_last_recap_date(recap_type):
+def get_last_recap_date(recap_type, tenant_id='entrylab'):
     """
     Get the last date a recap was posted (persisted to survive restarts).
     
     Args:
         recap_type: 'daily' or 'weekly'
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         str or None: Last recap date/week as string
@@ -3027,8 +3140,8 @@ def get_last_recap_date(recap_type):
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT setting_value FROM forex_config 
-                WHERE setting_key = %s
-            """, (key,))
+                WHERE tenant_id = %s AND setting_key = %s
+            """, (tenant_id, key))
             row = cursor.fetchone()
             return row[0] if row else None
     except Exception as e:
@@ -3056,9 +3169,9 @@ def set_last_recap_date(recap_type, value):
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO forex_config (setting_key, setting_value, updated_at)
-                VALUES (%s, %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (setting_key) 
+                INSERT INTO forex_config (tenant_id, setting_key, setting_value, updated_at)
+                VALUES ('entrylab', %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, setting_key) 
                 DO UPDATE SET 
                     setting_value = EXCLUDED.setting_value,
                     updated_at = CURRENT_TIMESTAMP
@@ -3089,9 +3202,9 @@ def initialize_default_bot_config():
             
             for key, value in default_config.items():
                 cursor.execute("""
-                    INSERT INTO bot_config (setting_key, setting_value, updated_at)
-                    VALUES (%s, %s, CURRENT_TIMESTAMP)
-                    ON CONFLICT (setting_key) 
+                    INSERT INTO bot_config (tenant_id, setting_key, setting_value, updated_at)
+                    VALUES ('entrylab', %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (tenant_id, setting_key) 
                     DO NOTHING
                 """, (key, value))
             
@@ -3102,9 +3215,12 @@ def initialize_default_bot_config():
         print(f"Error initializing bot config: {e}")
         return False
 
-def get_active_bot():
+def get_active_bot(tenant_id='entrylab'):
     """
     Get the current active bot type.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         str: Active bot type ('aggressive', 'conservative', or 'custom')
@@ -3118,8 +3234,8 @@ def get_active_bot():
             
             cursor.execute("""
                 SELECT setting_value FROM bot_config
-                WHERE setting_key = 'active_bot'
-            """)
+                WHERE tenant_id = %s AND setting_key = 'active_bot'
+            """, (tenant_id,))
             
             result = cursor.fetchone()
             if result:
@@ -3150,9 +3266,9 @@ def set_active_bot(bot_type):
             cursor = conn.cursor()
             
             cursor.execute("""
-                INSERT INTO bot_config (setting_key, setting_value, updated_at)
-                VALUES ('active_bot', %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (setting_key) 
+                INSERT INTO bot_config (tenant_id, setting_key, setting_value, updated_at)
+                VALUES ('entrylab', 'active_bot', %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, setting_key) 
                 DO UPDATE SET 
                     setting_value = EXCLUDED.setting_value,
                     updated_at = CURRENT_TIMESTAMP
@@ -3166,9 +3282,12 @@ def set_active_bot(bot_type):
         raise
 
 
-def get_queued_bot():
+def get_queued_bot(tenant_id='entrylab'):
     """
     Get the queued bot type (bot scheduled to activate after current signal closes).
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         str or None: Queued bot type, or None if no bot is queued
@@ -3182,8 +3301,8 @@ def get_queued_bot():
             
             cursor.execute("""
                 SELECT setting_value FROM bot_config
-                WHERE setting_key = 'queued_bot'
-            """)
+                WHERE tenant_id = %s AND setting_key = 'queued_bot'
+            """, (tenant_id,))
             
             result = cursor.fetchone()
             if result and result[0]:
@@ -3215,9 +3334,9 @@ def set_queued_bot(bot_type):
             cursor = conn.cursor()
             
             cursor.execute("""
-                INSERT INTO bot_config (setting_key, setting_value, updated_at)
-                VALUES ('queued_bot', %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (setting_key) 
+                INSERT INTO bot_config (tenant_id, setting_key, setting_value, updated_at)
+                VALUES ('entrylab', 'queued_bot', %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, setting_key) 
                 DO UPDATE SET 
                     setting_value = EXCLUDED.setting_value,
                     updated_at = CURRENT_TIMESTAMP
@@ -3231,9 +3350,12 @@ def set_queued_bot(bot_type):
         raise
 
 
-def clear_queued_bot():
+def clear_queued_bot(tenant_id='entrylab'):
     """
     Clear the queued bot (cancel pending bot switch).
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3247,8 +3369,8 @@ def clear_queued_bot():
             
             cursor.execute("""
                 DELETE FROM bot_config
-                WHERE setting_key = 'queued_bot'
-            """)
+                WHERE tenant_id = %s AND setting_key = 'queued_bot'
+            """, (tenant_id,))
             
             conn.commit()
             print("✅ Queued bot cleared")
@@ -3280,9 +3402,12 @@ def promote_queued_bot():
         return None
 
 
-def get_open_signal():
+def get_open_signal(tenant_id='entrylab'):
     """
     Get the currently open signal if any.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Signal dictionary or None if no open signal exists
@@ -3301,10 +3426,10 @@ def get_open_signal():
                        breakeven_set, breakeven_price, guidance_count, last_guidance_at,
                        indicators_used, notes, effective_sl
                 FROM forex_signals
-                WHERE status IN ('open', 'pending')
+                WHERE tenant_id = %s AND status IN ('open', 'pending')
                 ORDER BY posted_at DESC
                 LIMIT 1
-            """)
+            """, (tenant_id,))
             
             row = cursor.fetchone()
             if row:
@@ -3338,7 +3463,7 @@ def get_open_signal():
         print(f"Error getting open signal: {e}")
         return None
 
-def get_signals_by_bot_type(bot_type, status=None, limit=50):
+def get_signals_by_bot_type(bot_type, status=None, limit=50, tenant_id='entrylab'):
     """
     Get forex signals filtered by bot type.
     
@@ -3346,6 +3471,7 @@ def get_signals_by_bot_type(bot_type, status=None, limit=50):
         bot_type (str): Bot type ('aggressive', 'conservative', or 'custom')
         status (str, optional): Filter by status ('pending', 'open', 'won', 'lost')
         limit (int): Maximum number of signals to return (default: 50)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of signal dictionaries
@@ -3364,9 +3490,9 @@ def get_signals_by_bot_type(bot_type, status=None, limit=50):
                        breakeven_set, breakeven_price, guidance_count, last_guidance_at,
                        indicators_used, notes
                 FROM forex_signals
-                WHERE bot_type = %s
+                WHERE tenant_id = %s AND bot_type = %s
             """
-            params = [bot_type]
+            params = [tenant_id, bot_type]
             
             if status:
                 query += " AND status = %s"
@@ -3409,12 +3535,13 @@ def get_signals_by_bot_type(bot_type, status=None, limit=50):
         return []
 
 
-def count_signals_today_by_bot(bot_type):
+def count_signals_today_by_bot(bot_type, tenant_id='entrylab'):
     """
     Count signals generated today by a specific bot type.
     
     Args:
         bot_type (str): Bot type ('aggressive', 'conservative', 'raja_banks', etc.)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         int: Number of signals today for this bot type
@@ -3428,10 +3555,10 @@ def count_signals_today_by_bot(bot_type):
             
             cursor.execute("""
                 SELECT COUNT(*) FROM forex_signals
-                WHERE bot_type = %s 
+                WHERE tenant_id = %s AND bot_type = %s 
                 AND DATE(posted_at) = CURRENT_DATE
                 AND status NOT IN ('draft', 'broadcast_failed')
-            """, (bot_type,))
+            """, (tenant_id, bot_type))
             
             row = cursor.fetchone()
             return row[0] if row else 0
@@ -3440,12 +3567,13 @@ def count_signals_today_by_bot(bot_type):
         return 0
 
 
-def get_last_signal_time_by_bot(bot_type):
+def get_last_signal_time_by_bot(bot_type, tenant_id='entrylab'):
     """
     Get the timestamp of the last signal generated by a specific bot type.
     
     Args:
         bot_type (str): Bot type ('aggressive', 'conservative', 'raja_banks', etc.)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         datetime or None: Timestamp of last signal, or None if no signals
@@ -3459,10 +3587,10 @@ def get_last_signal_time_by_bot(bot_type):
             
             cursor.execute("""
                 SELECT posted_at FROM forex_signals
-                WHERE bot_type = %s 
+                WHERE tenant_id = %s AND bot_type = %s 
                 ORDER BY posted_at DESC
                 LIMIT 1
-            """, (bot_type,))
+            """, (tenant_id, bot_type))
             
             row = cursor.fetchone()
             return row[0] if row else None
@@ -3471,13 +3599,14 @@ def get_last_signal_time_by_bot(bot_type):
         return None
 
 
-def update_signal_telegram_message_id(signal_id, message_id):
+def update_signal_telegram_message_id(signal_id, message_id, tenant_id='entrylab'):
     """
     Update the telegram_message_id for a signal.
     
     Args:
         signal_id (int): Signal ID
         message_id (int): Telegram message ID
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3492,8 +3621,8 @@ def update_signal_telegram_message_id(signal_id, message_id):
             cursor.execute("""
                 UPDATE forex_signals
                 SET telegram_message_id = %s
-                WHERE id = %s
-            """, (message_id, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (message_id, signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -3501,13 +3630,14 @@ def update_signal_telegram_message_id(signal_id, message_id):
         print(f"Error updating signal telegram message ID: {e}")
         return False
 
-def update_signal_breakeven(signal_id, breakeven_price):
+def update_signal_breakeven(signal_id, breakeven_price, tenant_id='entrylab'):
     """
     Update breakeven status for a signal.
     
     Args:
         signal_id (int): Signal ID
         breakeven_price (float): Breakeven price (entry price)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3523,8 +3653,8 @@ def update_signal_breakeven(signal_id, breakeven_price):
                 UPDATE forex_signals
                 SET breakeven_set = TRUE,
                     breakeven_price = %s
-                WHERE id = %s
-            """, (breakeven_price, signal_id))
+                WHERE id = %s AND tenant_id = %s
+            """, (breakeven_price, signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -3532,13 +3662,14 @@ def update_signal_breakeven(signal_id, breakeven_price):
         print(f"Error updating signal breakeven: {e}")
         return False
 
-def update_tp_hit(signal_id, tp_level):
+def update_tp_hit(signal_id, tp_level, tenant_id='entrylab'):
     """
     Mark a specific TP level as hit.
     
     Args:
         signal_id (int): Signal ID
         tp_level (int): TP level (1, 2, or 3)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3561,8 +3692,8 @@ def update_tp_hit(signal_id, tp_level):
                 UPDATE forex_signals
                 SET {hit_column} = TRUE,
                     {hit_at_column} = CURRENT_TIMESTAMP
-                WHERE id = %s
-            """, (signal_id,))
+                WHERE id = %s AND tenant_id = %s
+            """, (signal_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -3990,13 +4121,14 @@ def get_latest_indicators_for_signal(signal_id):
 
 # ===== Recent Phrases Functions (Repetition Avoidance) =====
 
-def add_recent_phrase(phrase_type, phrase_text):
+def add_recent_phrase(phrase_type, phrase_text, tenant_id='entrylab'):
     """
     Record a phrase that was used in a message for repetition avoidance.
     
     Args:
         phrase_type: Type of phrase ('greeting', 'closing', 'update', 'celebration', etc.)
         phrase_text: The actual phrase used
+        tenant_id (str): Tenant ID (default: 'entrylab')
     """
     try:
         if not db_pool.connection_pool:
@@ -4006,9 +4138,9 @@ def add_recent_phrase(phrase_type, phrase_text):
             cursor = conn.cursor()
             
             cursor.execute("""
-                INSERT INTO recent_phrases (phrase_type, phrase_text, used_at)
-                VALUES (%s, %s, CURRENT_TIMESTAMP)
-            """, (phrase_type, phrase_text))
+                INSERT INTO recent_phrases (tenant_id, phrase_type, phrase_text, used_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+            """, (tenant_id, phrase_type, phrase_text))
             
             conn.commit()
             return True
@@ -4016,13 +4148,14 @@ def add_recent_phrase(phrase_type, phrase_text):
         print(f"Error adding recent phrase: {e}")
         return False
 
-def get_recent_phrases(phrase_type, limit=10):
+def get_recent_phrases(phrase_type, limit=10, tenant_id='entrylab'):
     """
     Get recently used phrases of a specific type to avoid repetition.
     
     Args:
         phrase_type: Type of phrase to retrieve
         limit: Number of recent phrases to return (default 10)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         list: List of recently used phrases
@@ -4037,19 +4170,23 @@ def get_recent_phrases(phrase_type, limit=10):
             cursor.execute("""
                 SELECT phrase_text, used_at
                 FROM recent_phrases
-                WHERE phrase_type = %s
+                WHERE phrase_type = %s AND tenant_id = %s
                 ORDER BY used_at DESC
                 LIMIT %s
-            """, (phrase_type, limit))
+            """, (phrase_type, tenant_id, limit))
             
             return [row[0] for row in cursor.fetchall()]
     except Exception as e:
         print(f"Error getting recent phrases: {e}")
         return []
 
-def cleanup_old_phrases(days_to_keep=7):
+def cleanup_old_phrases(days_to_keep=7, tenant_id='entrylab'):
     """
     Remove phrases older than specified days to prevent unbounded growth.
+    
+    Args:
+        days_to_keep (int): Number of days of phrases to keep (default: 7)
+        tenant_id (str): Tenant ID (default: 'entrylab')
     """
     try:
         if not db_pool.connection_pool:
@@ -4061,7 +4198,8 @@ def cleanup_old_phrases(days_to_keep=7):
             cursor.execute("""
                 DELETE FROM recent_phrases
                 WHERE used_at < CURRENT_TIMESTAMP - INTERVAL '%s days'
-            """, (days_to_keep,))
+                AND tenant_id = %s
+            """, (days_to_keep, tenant_id))
             
             deleted_count = cursor.rowcount
             conn.commit()
@@ -4154,11 +4292,11 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
                 # For free signups, set free_signup_at and UTM params
                 cursor.execute("""
                     INSERT INTO telegram_subscriptions 
-                    (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
+                    (tenant_id, email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
                      status, created_at, updated_at, free_signup_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
-                    VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+                    VALUES ('entrylab', %s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
                             CURRENT_TIMESTAMP, %s, %s, %s, %s, %s)
-                    ON CONFLICT (email) DO UPDATE SET
+                    ON CONFLICT (tenant_id, email) DO UPDATE SET
                         name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
                         plan_type = EXCLUDED.plan_type,
                         amount_paid = EXCLUDED.amount_paid,
@@ -4194,11 +4332,11 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
                 else:
                     cursor.execute("""
                         INSERT INTO telegram_subscriptions 
-                        (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
+                        (tenant_id, email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
                          status, created_at, updated_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
-                        VALUES (%s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+                        VALUES ('entrylab', %s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
                                 %s, %s, %s, %s, %s)
-                        ON CONFLICT (email) DO UPDATE SET
+                        ON CONFLICT (tenant_id, email) DO UPDATE SET
                             name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
                             stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, telegram_subscriptions.stripe_customer_id),
                             stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, telegram_subscriptions.stripe_subscription_id),
@@ -4235,7 +4373,7 @@ def create_telegram_subscription(email, stripe_customer_id=None, stripe_subscrip
 # Alias for backwards compatibility with webhook handlers
 create_or_update_telegram_subscription = create_telegram_subscription
 
-def get_telegram_subscription_by_email(email):
+def get_telegram_subscription_by_email(email, tenant_id='entrylab'):
     """Get telegram subscription by email"""
     try:
         if not db_pool.connection_pool:
@@ -4249,8 +4387,8 @@ def get_telegram_subscription_by_email(email):
                        stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
                        status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
                 FROM telegram_subscriptions
-                WHERE email = %s
-            """, (email,))
+                WHERE email = %s AND tenant_id = %s
+            """, (email, tenant_id))
             
             row = cursor.fetchone()
             if not row:
@@ -4278,7 +4416,7 @@ def get_telegram_subscription_by_email(email):
         print(f"Error getting telegram subscription by email: {e}")
         return None
 
-def get_telegram_subscription_by_id(subscription_id):
+def get_telegram_subscription_by_id(subscription_id, tenant_id='entrylab'):
     """Get telegram subscription by ID"""
     try:
         if not db_pool.connection_pool:
@@ -4292,8 +4430,8 @@ def get_telegram_subscription_by_id(subscription_id):
                        stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
                        status, invite_link, joined_at, last_seen_at, revoked_at, created_at, updated_at
                 FROM telegram_subscriptions
-                WHERE id = %s
-            """, (subscription_id,))
+                WHERE id = %s AND tenant_id = %s
+            """, (subscription_id, tenant_id))
             
             row = cursor.fetchone()
             if not row:
@@ -4321,7 +4459,7 @@ def get_telegram_subscription_by_id(subscription_id):
         print(f"Error getting telegram subscription by id: {e}")
         return None
 
-def update_telegram_subscription_invite(email, invite_link):
+def update_telegram_subscription_invite(email, invite_link, tenant_id='entrylab'):
     """Update telegram subscription with invite link"""
     try:
         if not db_pool.connection_pool:
@@ -4333,8 +4471,8 @@ def update_telegram_subscription_invite(email, invite_link):
             cursor.execute("""
                 UPDATE telegram_subscriptions
                 SET invite_link = %s, status = 'active', updated_at = CURRENT_TIMESTAMP
-                WHERE email = %s
-            """, (invite_link, email))
+                WHERE email = %s AND tenant_id = %s
+            """, (invite_link, email, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -4342,7 +4480,7 @@ def update_telegram_subscription_invite(email, invite_link):
         print(f"Error updating telegram subscription invite: {e}")
         return False
 
-def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username):
+def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_username, tenant_id='entrylab'):
     """Update telegram subscription when user joins channel"""
     try:
         if not db_pool.connection_pool:
@@ -4356,8 +4494,8 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
                 SET telegram_user_id = %s, telegram_username = %s, 
                     joined_at = CURRENT_TIMESTAMP, last_seen_at = CURRENT_TIMESTAMP,
                     status = 'active', updated_at = CURRENT_TIMESTAMP
-                WHERE email = %s
-            """, (telegram_user_id, telegram_username, email))
+                WHERE email = %s AND tenant_id = %s
+            """, (telegram_user_id, telegram_username, email, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -4365,7 +4503,7 @@ def update_telegram_subscription_user_joined(email, telegram_user_id, telegram_u
         print(f"Error updating telegram subscription user joined: {e}")
         return False
 
-def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None):
+def update_subscription_status(email=None, stripe_subscription_id=None, status=None, reason=None, tenant_id='entrylab'):
     """
     Update subscription status based on email or stripe_subscription_id.
     
@@ -4374,6 +4512,7 @@ def update_subscription_status(email=None, stripe_subscription_id=None, status=N
         stripe_subscription_id: Stripe subscription ID (optional if email provided)
         status: New status (e.g., 'payment_failed', 'past_due', 'active')
         reason: Optional reason for the status change
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         tuple: (success: bool, email: str or None, telegram_user_id: int or None)
@@ -4392,16 +4531,16 @@ def update_subscription_status(email=None, stripe_subscription_id=None, status=N
                 cursor.execute("""
                     UPDATE telegram_subscriptions
                     SET status = %s, updated_at = CURRENT_TIMESTAMP
-                    WHERE stripe_subscription_id = %s
+                    WHERE stripe_subscription_id = %s AND tenant_id = %s
                     RETURNING email, telegram_user_id
-                """, (status, stripe_subscription_id))
+                """, (status, stripe_subscription_id, tenant_id))
             else:
                 cursor.execute("""
                     UPDATE telegram_subscriptions
                     SET status = %s, updated_at = CURRENT_TIMESTAMP
-                    WHERE email = %s
+                    WHERE email = %s AND tenant_id = %s
                     RETURNING email, telegram_user_id
-                """, (status, email))
+                """, (status, email, tenant_id))
             
             result = cursor.fetchone()
             conn.commit()
@@ -4415,7 +4554,7 @@ def update_subscription_status(email=None, stripe_subscription_id=None, status=N
         return False, None, None
 
 
-def revoke_telegram_subscription(email, reason='subscription_canceled'):
+def revoke_telegram_subscription(email, reason='subscription_canceled', tenant_id='entrylab'):
     """Revoke telegram subscription access"""
     try:
         if not db_pool.connection_pool:
@@ -4427,9 +4566,9 @@ def revoke_telegram_subscription(email, reason='subscription_canceled'):
             cursor.execute("""
                 UPDATE telegram_subscriptions
                 SET status = 'revoked', revoked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                WHERE email = %s
+                WHERE email = %s AND tenant_id = %s
                 RETURNING telegram_user_id
-            """, (email,))
+            """, (email, tenant_id))
             
             result = cursor.fetchone()
             conn.commit()
@@ -4441,7 +4580,7 @@ def revoke_telegram_subscription(email, reason='subscription_canceled'):
         print(f"Error revoking telegram subscription: {e}")
         return None
 
-def delete_subscription_by_stripe_customer(stripe_customer_id):
+def delete_subscription_by_stripe_customer(stripe_customer_id, tenant_id='entrylab'):
     """Delete subscription record by Stripe customer ID"""
     try:
         if not db_pool.connection_pool:
@@ -4452,9 +4591,9 @@ def delete_subscription_by_stripe_customer(stripe_customer_id):
             
             cursor.execute("""
                 DELETE FROM telegram_subscriptions
-                WHERE stripe_customer_id = %s
+                WHERE stripe_customer_id = %s AND tenant_id = %s
                 RETURNING email
-            """, (stripe_customer_id,))
+            """, (stripe_customer_id, tenant_id))
             
             result = cursor.fetchone()
             conn.commit()
@@ -4468,7 +4607,7 @@ def delete_subscription_by_stripe_customer(stripe_customer_id):
         return False
 
 
-def delete_subscription_by_email(email):
+def delete_subscription_by_email(email, tenant_id='entrylab'):
     """Delete subscription record by email"""
     try:
         if not db_pool.connection_pool:
@@ -4479,9 +4618,9 @@ def delete_subscription_by_email(email):
             
             cursor.execute("""
                 DELETE FROM telegram_subscriptions
-                WHERE email = %s
+                WHERE email = %s AND tenant_id = %s
                 RETURNING id
-            """, (email,))
+            """, (email, tenant_id))
             
             result = cursor.fetchone()
             conn.commit()
@@ -4548,7 +4687,7 @@ def cleanup_test_telegram_subscriptions():
         print(f"Error cleaning up test telegram subscriptions: {e}")
         raise
 
-def delete_telegram_subscription(subscription_id):
+def delete_telegram_subscription(subscription_id, tenant_id='entrylab'):
     """Delete a specific telegram subscription by ID"""
     try:
         if not db_pool.connection_pool:
@@ -4559,9 +4698,9 @@ def delete_telegram_subscription(subscription_id):
             
             cursor.execute("""
                 DELETE FROM telegram_subscriptions 
-                WHERE id = %s
+                WHERE id = %s AND tenant_id = %s
                 RETURNING id
-            """, (subscription_id,))
+            """, (subscription_id, tenant_id))
             
             deleted = cursor.fetchone()
             conn.commit()
@@ -4574,7 +4713,7 @@ def delete_telegram_subscription(subscription_id):
         print(f"Error deleting telegram subscription {subscription_id}: {e}")
         raise
 
-def get_all_telegram_subscriptions(status_filter=None, include_test=False):
+def get_all_telegram_subscriptions(status_filter=None, include_test=False, tenant_id='entrylab'):
     """Get all telegram subscriptions with optional status filter and test/live filter"""
     try:
         if not db_pool.connection_pool:
@@ -4591,8 +4730,8 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False):
             """)
             has_is_test_column = cursor.fetchone() is not None
             
-            conditions = []
-            params = []
+            conditions = ["tenant_id = %s"]
+            params = [tenant_id]
             
             if status_filter:
                 conditions.append("status = %s")
@@ -4602,9 +4741,7 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False):
             if has_is_test_column and not include_test:
                 conditions.append("(is_test = FALSE OR is_test IS NULL)")
             
-            where_clause = ""
-            if conditions:
-                where_clause = "WHERE " + " AND ".join(conditions)
+            where_clause = "WHERE " + " AND ".join(conditions)
             
             # Build query based on whether is_test column exists
             if has_is_test_column:
@@ -4658,7 +4795,7 @@ def get_all_telegram_subscriptions(status_filter=None, include_test=False):
         print(f"Error getting all telegram subscriptions: {e}")
         return []
 
-def update_telegram_subscription_last_seen(telegram_user_id):
+def update_telegram_subscription_last_seen(telegram_user_id, tenant_id='entrylab'):
     """Update last_seen_at for a telegram user"""
     try:
         if not db_pool.connection_pool:
@@ -4670,8 +4807,8 @@ def update_telegram_subscription_last_seen(telegram_user_id):
             cursor.execute("""
                 UPDATE telegram_subscriptions
                 SET last_seen_at = CURRENT_TIMESTAMP
-                WHERE telegram_user_id = %s
-            """, (telegram_user_id,))
+                WHERE telegram_user_id = %s AND tenant_id = %s
+            """, (telegram_user_id, tenant_id))
             
             conn.commit()
             return cursor.rowcount > 0
@@ -4771,9 +4908,12 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
 
 # ===== Conversion Analytics Functions =====
 
-def get_conversion_analytics():
+def get_conversion_analytics(tenant_id='entrylab'):
     """
     Get comprehensive conversion analytics for free-to-VIP tracking.
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         dict: Analytics data including conversion rate, top sources, etc.
@@ -4788,15 +4928,15 @@ def get_conversion_analytics():
             # Total free signups
             cursor.execute("""
                 SELECT COUNT(*) FROM telegram_subscriptions 
-                WHERE free_signup_at IS NOT NULL
-            """)
+                WHERE free_signup_at IS NOT NULL AND tenant_id = %s
+            """, (tenant_id,))
             total_free_signups = cursor.fetchone()[0] or 0
             
             # Total conversions
             cursor.execute("""
                 SELECT COUNT(*) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE
-            """)
+                WHERE is_converted = TRUE AND tenant_id = %s
+            """, (tenant_id,))
             total_conversions = cursor.fetchone()[0] or 0
             
             # Conversion rate
@@ -4805,15 +4945,15 @@ def get_conversion_analytics():
             # Average conversion time
             cursor.execute("""
                 SELECT AVG(conversion_days) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND conversion_days IS NOT NULL
-            """)
+                WHERE is_converted = TRUE AND conversion_days IS NOT NULL AND tenant_id = %s
+            """, (tenant_id,))
             avg_conversion_days = cursor.fetchone()[0] or 0
             
             # Total revenue from conversions
             cursor.execute("""
                 SELECT SUM(amount_paid) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE
-            """)
+                WHERE is_converted = TRUE AND tenant_id = %s
+            """, (tenant_id,))
             conversion_revenue = float(cursor.fetchone()[0] or 0)
             
             # Conversions by UTM source
@@ -4823,11 +4963,11 @@ def get_conversion_analytics():
                     COUNT(*) as conversions,
                     SUM(amount_paid) as revenue
                 FROM telegram_subscriptions 
-                WHERE is_converted = TRUE
+                WHERE is_converted = TRUE AND tenant_id = %s
                 GROUP BY utm_source
                 ORDER BY conversions DESC
                 LIMIT 10
-            """)
+            """, (tenant_id,))
             by_source = [{'source': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
                          for row in cursor.fetchall()]
             
@@ -4838,11 +4978,11 @@ def get_conversion_analytics():
                     COUNT(*) as conversions,
                     SUM(amount_paid) as revenue
                 FROM telegram_subscriptions 
-                WHERE is_converted = TRUE
+                WHERE is_converted = TRUE AND tenant_id = %s
                 GROUP BY utm_campaign
                 ORDER BY conversions DESC
                 LIMIT 10
-            """)
+            """, (tenant_id,))
             by_campaign = [{'campaign': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
                            for row in cursor.fetchall()]
             
@@ -4853,11 +4993,11 @@ def get_conversion_analytics():
                     COUNT(*) as signups,
                     SUM(CASE WHEN is_converted = TRUE THEN 1 ELSE 0 END) as converted
                 FROM telegram_subscriptions 
-                WHERE free_signup_at IS NOT NULL
+                WHERE free_signup_at IS NOT NULL AND tenant_id = %s
                 GROUP BY utm_source
                 ORDER BY signups DESC
                 LIMIT 10
-            """)
+            """, (tenant_id,))
             funnel_by_source = [
                 {
                     'source': row[0], 
@@ -4872,10 +5012,10 @@ def get_conversion_analytics():
             cursor.execute("""
                 SELECT email, utm_source, utm_campaign, amount_paid, conversion_days, converted_at
                 FROM telegram_subscriptions 
-                WHERE is_converted = TRUE
+                WHERE is_converted = TRUE AND tenant_id = %s
                 ORDER BY converted_at DESC
                 LIMIT 10
-            """)
+            """, (tenant_id,))
             recent_conversions = [
                 {
                     'email': row[0],
@@ -4895,12 +5035,13 @@ def get_conversion_analytics():
                     free_signup_at, is_converted, converted_at, 
                     amount_paid, plan_type, status, telegram_username
                 FROM telegram_subscriptions 
+                WHERE tenant_id = %s
                 ORDER BY 
                     CASE WHEN is_converted = TRUE THEN 0 ELSE 1 END,
                     free_signup_at DESC NULLS LAST,
                     created_at DESC
                 LIMIT 50
-            """)
+            """, (tenant_id,))
             all_leads = [
                 {
                     'email': row[0],
