@@ -94,6 +94,9 @@ def start_scheduler_once(callback=None):
     Thread-safe: uses threading.Lock to ensure only one caller succeeds.
     Both the immediate-start path and retry-loop path call this.
     
+    If the callback raises an exception, the started flag remains False
+    so a later retry can attempt again.
+    
     Args:
         callback: Function to call to start the scheduler. If None, uses
                   the callback registered via start_leader_retry_loop.
@@ -113,10 +116,13 @@ def start_scheduler_once(callback=None):
             print("[SCHEDULER] Scheduler already started, ignoring duplicate call")
             return False
         
-        _scheduler_started = True
-    
-    cb()
-    return True
+        try:
+            cb()
+            _scheduler_started = True
+            return True
+        except Exception as e:
+            print(f"[SCHEDULER] Callback failed, will retry: {e}")
+            return False
 
 
 def start_leader_retry_loop(scheduler_callback):
