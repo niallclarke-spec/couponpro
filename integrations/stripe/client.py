@@ -6,8 +6,11 @@ import os
 import stripe
 import requests
 from datetime import datetime, timedelta
+import time as _time
 
 _stripe_credentials = None
+_upcoming_invoice_cache = {}  # {sub_id: (cache_time, result)}
+UPCOMING_INVOICE_CACHE_TTL = 300  # 5 minutes
 
 def get_stripe_credentials():
     """
@@ -105,6 +108,69 @@ def get_stripe_client():
     credentials = get_stripe_credentials()
     stripe.api_key = credentials['secret_key']
     return stripe
+
+def _get_next_rebill_from_subscription(stripe_client, sub):
+    """
+    Returns (next_charge_unix_ts, amount_due_cents) or None if cannot determine.
+    Uses Invoice.create_preview as fallback when current_period_end is missing.
+    """
+    global _upcoming_invoice_cache
+    
+    sub_id = getattr(sub, 'id', None) or (sub.get('id') if hasattr(sub, 'get') else None)
+    if not sub_id:
+        return None
+    
+    # Check cache first
+    now = _time.time()
+    if sub_id in _upcoming_invoice_cache:
+        cache_time, cached_result = _upcoming_invoice_cache[sub_id]
+        if now - cache_time < UPCOMING_INVOICE_CACHE_TTL:
+            return cached_result
+    
+    # Try to get current_period_end from subscription
+    period_end = None
+    if hasattr(sub, 'get'):
+        period_end = sub.get('current_period_end')
+    if period_end is None:
+        period_end = getattr(sub, 'current_period_end', None)
+    
+    # If we have period_end, try to get amount from subscription items
+    if period_end is not None:
+        try:
+            items = getattr(sub, 'items', None)
+            if items and hasattr(items, 'data') and items.data:
+                price = getattr(items.data[0], 'price', None)
+                if price:
+                    unit_amount = getattr(price, 'unit_amount', None)
+                    quantity = getattr(items.data[0], 'quantity', 1) or 1
+                    if unit_amount is not None:
+                        result = (period_end, unit_amount * quantity)
+                        _upcoming_invoice_cache[sub_id] = (now, result)
+                        return result
+        except Exception:
+            pass
+    
+    # Fallback: use Invoice.create_preview
+    try:
+        print(f"[Stripe] Sub {sub_id[:15]}... missing current_period_end, using Invoice.create_preview()")
+        upcoming = stripe_client.Invoice.create_preview(subscription=sub_id)
+        
+        # Get timestamp from preview
+        ts = getattr(upcoming, 'period_end', None) or \
+             getattr(upcoming, 'next_payment_attempt', None) or \
+             getattr(upcoming, 'created', None)
+        
+        # Get amount from preview (in cents)
+        amount = getattr(upcoming, 'amount_due', None) or getattr(upcoming, 'total', None) or 0
+        
+        if ts:
+            result = (ts, amount)
+            _upcoming_invoice_cache[sub_id] = (now, result)
+            return result
+    except Exception as e:
+        print(f"[Stripe] Invoice.create_preview failed for {sub_id[:15]}...: {e}")
+    
+    return None
 
 def get_subscription_billing_info(stripe_subscription_id):
     """
@@ -461,26 +527,18 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP", period=
             try:
                 sub = client.Subscription.retrieve(sub_id)
                 
-                # Debug: print all keys of the subscription object
-                if hasattr(sub, 'keys'):
-                    print(f"[Stripe] Sub keys: {list(sub.keys())[:10]}...")
-                
                 # Use safe attribute access for Stripe objects (Python 3.13 compatible)
                 status = getattr(sub, 'status', 'unknown')
                 cancel_at_period_end = getattr(sub, 'cancel_at_period_end', False)
-                customer_id = getattr(sub, 'customer', None)
                 
-                # Safe access for current_period_end - works across Stripe API versions
-                period_end = None
-                if hasattr(sub, 'get'):
-                    period_end = sub.get('current_period_end')
-                if period_end is None:
-                    period_end = getattr(sub, 'current_period_end', None)
-                
-                # If still None, subscription object may be incomplete - skip rebill for this sub
-                if period_end is None:
-                    print(f"[Stripe] Sub {sub_id[:15]}... missing current_period_end, skipping rebill calc")
+                # Use helper to get rebill info (handles missing current_period_end)
+                rebill_info = _get_next_rebill_from_subscription(client, sub)
+                if rebill_info is None:
+                    print(f"[Stripe] Sub {sub_id[:15]}... could not determine rebill info, skipping")
                     continue
+                
+                next_payment_ts, rebill_amount_cents = rebill_info
+                rebill_amount = rebill_amount_cents / 100  # Convert cents to dollars
                 
                 print(f"[Stripe] Sub {sub_id[:15]}... status={status}, cancel_at_end={cancel_at_period_end}")
                 
@@ -492,119 +550,61 @@ def get_stripe_metrics(subscription_ids=None, product_name_filter="VIP", period=
                         print(f"[Stripe] Sub will cancel at period end, skipping rebill")
                         continue
                     
-                    # Get upcoming invoice using create_preview (Stripe SDK 14+)
-                    try:
-                        upcoming = stripe.Invoice.create_preview(subscription=sub_id)
+                    # Calculate rebill using data from helper
+                    if next_payment_ts:
+                        next_payment_date = datetime.fromtimestamp(next_payment_ts)
                         
-                        # Get next payment date from the preview invoice
-                        next_payment_ts = getattr(upcoming, 'period_end', None) or \
-                                          getattr(upcoming, 'next_payment_attempt', None) or \
-                                          getattr(upcoming, 'created', None)
-                        
-                        # Default rebill from preview
-                        rebill_amount = (getattr(upcoming, 'total', 0) or 0) / 100
-                        
-                        # FIX: Check if discount was "once" and first invoice is paid
-                        # In this case, the preview still shows discounted price but the 
-                        # ACTUAL renewal will be at full price
+                        # Get billing interval to calculate all renewals this month
+                        billing_interval = None
+                        billing_interval_count = 1
                         try:
-                            # Retrieve subscription with expanded fields
-                            sub_expanded = client.Subscription.retrieve(
-                                sub_id,
-                                expand=['discount.coupon', 'latest_invoice', 'items.data.price']
-                            )
-                            
-                            # Check if coupon was "once" and first invoice already paid
-                            discount = getattr(sub_expanded, 'discount', None)
-                            latest_invoice = getattr(sub_expanded, 'latest_invoice', None)
-                            
-                            coupon_duration = None
-                            if discount:
-                                coupon = getattr(discount, 'coupon', None)
-                                if coupon:
-                                    coupon_duration = getattr(coupon, 'duration', None)
-                            
-                            latest_status = None
-                            latest_reason = None
-                            if latest_invoice:
-                                latest_status = getattr(latest_invoice, 'status', None)
-                                latest_reason = getattr(latest_invoice, 'billing_reason', None)
-                            
-                            # If once-off coupon and first invoice is paid, use base price
-                            if (coupon_duration == 'once' and 
-                                latest_status == 'paid' and 
-                                latest_reason == 'subscription_create'):
-                                
-                                # Get base price from subscription items
-                                items = getattr(sub_expanded, 'items', None)
-                                if items and hasattr(items, 'data') and items.data:
-                                    price = getattr(items.data[0], 'price', None)
-                                    if price:
-                                        base_amount = (getattr(price, 'unit_amount', 0) or 0) / 100
-                                        print(f"[Stripe] Once-off discount already used, using base price: ${base_amount}")
-                                        rebill_amount = base_amount
+                            items = getattr(sub, 'items', None)
+                            if items and hasattr(items, 'data') and items.data:
+                                price = getattr(items.data[0], 'price', None)
+                                if price:
+                                    recurring = getattr(price, 'recurring', None)
+                                    if recurring:
+                                        billing_interval = getattr(recurring, 'interval', None)
+                                        billing_interval_count = getattr(recurring, 'interval_count', 1) or 1
                         except Exception as e:
-                            print(f"[Stripe] Coupon check error: {e}")
+                            print(f"[Stripe] Error getting interval: {e}")
                         
-                        if next_payment_ts:
-                            next_payment_date = datetime.fromtimestamp(next_payment_ts)
-                            
-                            # Get billing interval to calculate all renewals this month
-                            billing_interval = None
-                            billing_interval_count = 1
-                            try:
-                                items = getattr(sub, 'items', None)
-                                if items and hasattr(items, 'data') and items.data:
-                                    price = getattr(items.data[0], 'price', None)
-                                    if price:
-                                        recurring = getattr(price, 'recurring', None)
-                                        if recurring:
-                                            billing_interval = getattr(recurring, 'interval', None)
-                                            billing_interval_count = getattr(recurring, 'interval_count', 1) or 1
-                            except Exception as e:
-                                print(f"[Stripe] Error getting interval: {e}")
-                            
-                            # Calculate all renewals in the period for weekly/daily subscriptions
-                            renewals_in_period = 0
-                            check_date = next_payment_date
-                            
-                            # Determine days between renewals
-                            if billing_interval == 'day':
-                                interval_days = billing_interval_count
-                            elif billing_interval == 'week':
-                                interval_days = 7 * billing_interval_count
-                            else:
-                                interval_days = None  # Monthly or yearly - just count once
-                            
-                            if interval_days and interval_days < 30:
-                                # Count all renewals in the period
-                                while check_date < rebill_end:
-                                    if check_date >= rebill_start:
-                                        renewals_in_period += 1
-                                    check_date += timedelta(days=interval_days)
-                                
-                                if renewals_in_period > 0:
-                                    total_for_sub = rebill_amount * renewals_in_period
-                                    monthly_rebill += total_for_sub
-                                    print(f"[Stripe] ✓ {billing_interval}ly sub: ${rebill_amount} x {renewals_in_period} renewals = ${total_for_sub}")
-                                else:
-                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
-                            else:
-                                # Monthly/yearly - just check if next renewal is in period
-                                if rebill_start <= next_payment_date < rebill_end:
-                                    monthly_rebill += rebill_amount
-                                    print(f"[Stripe] ✓ Rebill in period: ${rebill_amount} on {next_payment_date.date()}")
-                                else:
-                                    print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
+                        # Calculate all renewals in the period for weekly/daily subscriptions
+                        renewals_in_period = 0
+                        check_date = next_payment_date
+                        
+                        # Determine days between renewals
+                        if billing_interval == 'day':
+                            interval_days = billing_interval_count
+                        elif billing_interval == 'week':
+                            interval_days = 7 * billing_interval_count
                         else:
-                            # No date info - count it anyway
-                            monthly_rebill += rebill_amount
-                            print(f"[Stripe] ✓ Rebill (no date): ${rebill_amount}")
+                            interval_days = None  # Monthly or yearly - just count once
+                        
+                        if interval_days and interval_days < 30:
+                            # Count all renewals in the period
+                            while check_date < rebill_end:
+                                if check_date >= rebill_start:
+                                    renewals_in_period += 1
+                                check_date += timedelta(days=interval_days)
                             
-                    except stripe.error.InvalidRequestError as e:
-                        print(f"[Stripe] No upcoming invoice: {str(e)[:60]}...")
-                    except Exception as e:
-                        print(f"[Stripe] Preview error: {e}")
+                            if renewals_in_period > 0:
+                                total_for_sub = rebill_amount * renewals_in_period
+                                monthly_rebill += total_for_sub
+                                print(f"[Stripe] ✓ {billing_interval}ly sub: ${rebill_amount} x {renewals_in_period} renewals = ${total_for_sub}")
+                            else:
+                                print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
+                        else:
+                            # Monthly/yearly - just check if next renewal is in period
+                            if rebill_start <= next_payment_date < rebill_end:
+                                monthly_rebill += rebill_amount
+                                print(f"[Stripe] ✓ Rebill in period: ${rebill_amount} on {next_payment_date.date()}")
+                            else:
+                                print(f"[Stripe] Sub renews {next_payment_date.date()} (not in period)")
+                    else:
+                        # No date info - count it anyway
+                        monthly_rebill += rebill_amount
+                        print(f"[Stripe] ✓ Rebill (no date): ${rebill_amount}")
             except Exception as e:
                 print(f"[Stripe] Sub check error for {sub_id}: {e}")
                 import traceback
