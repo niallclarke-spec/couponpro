@@ -1,0 +1,36 @@
+You are working on PromoStack (Python server.py app). We are seeing duplicate BOOTSTRAP/SCHEDULER starts during deploy (two instances briefly run). This is causing the FOREX scheduler to start twice, which is NOT acceptable.
+
+GOAL: Make the forex scheduler “leader-only” so that even if multiple processes/instances start, ONLY ONE runs the scheduler loop. All other instances must skip starting it.
+
+REQUIREMENTS:
+1) Use Postgres advisory locks (preferred) to elect a single leader.
+2) The lock must be held for the lifetime of the process. If the leader dies, another instance can become leader.
+3) Do NOT change existing behavior for normal single-instance runs.
+4) Log clearly:
+   - “[SCHEDULER] Leader lock acquired, starting scheduler”
+   - “[SCHEDULER] Leader lock not acquired, skipping scheduler start”
+5) This must cover ALL background threads: signal checks, price monitoring, guidance, stagnant revalidation, morning briefing, daily/weekly recap — everything that currently starts under “Forex scheduler started…”
+6) Keep it safe across tenants (multi-tenant doesn’t matter here; lock is global for now).
+
+IMPLEMENTATION DETAILS (use these patterns):
+- Add a helper in a sensible place (e.g., core/leader.py or api/leader.py):
+  acquire_scheduler_leader_lock(conn) -> bool
+- Use PostgreSQL pg_try_advisory_lock with a constant BIGINT key, e.g.:
+  SELECT pg_try_advisory_lock(8237461823746182);
+- IMPORTANT: advisory lock is per DB session, so you MUST keep the same DB connection open for as long as we want to hold leadership. Do not release it. If you use a pool, explicitly open a dedicated connection for leadership and keep it.
+
+WHERE TO APPLY:
+- In server startup / bootstrap area where the forex scheduler thread is started (where you currently log “[BOOTSTRAP] Forex scheduler started in background thread”).
+- Wrap the scheduler start call with leader lock acquisition. Only start scheduler if lock acquired.
+
+VERIFICATION:
+1) Deploy or simulate by starting two processes. Confirm logs show:
+   - One instance acquires lock and starts scheduler
+   - Other instance skips scheduler start
+2) Confirm the web server still runs fine on both instances, but only one scheduler runs.
+3) Confirm no duplicate scheduled actions occur (only one set of periodic logs per interval).
+
+Return:
+- Files changed + brief summary
+- Exact SQL used for advisory lock
+- Proof in logs from a test run showing one leader and one follower

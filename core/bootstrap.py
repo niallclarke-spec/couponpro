@@ -85,21 +85,30 @@ def start_app(ctx: AppContext) -> None:
     
     if ctx.forex_scheduler_available:
         try:
+            from core.leader import acquire_scheduler_leader_lock, start_leader_retry_loop
             from workers.scheduler import start_forex_scheduler
             
-            def run_forex_scheduler():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    loop.run_until_complete(start_forex_scheduler())
-                except Exception as e:
-                    print(f"[BOOTSTRAP] Scheduler error: {e}")
-                    import traceback
-                    traceback.print_exc()
+            def start_scheduler():
+                def run_forex_scheduler():
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(start_forex_scheduler())
+                    except Exception as e:
+                        print(f"[BOOTSTRAP] Scheduler error: {e}")
+                        import traceback
+                        traceback.print_exc()
+                
+                scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
+                scheduler_thread.start()
+                print("[BOOTSTRAP] Forex scheduler started in background thread")
             
-            scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
-            scheduler_thread.start()
-            print("[BOOTSTRAP] Forex scheduler started in background thread")
+            if acquire_scheduler_leader_lock():
+                print("[SCHEDULER] Leader lock acquired, starting scheduler")
+                start_scheduler()
+            else:
+                print("[SCHEDULER] Leader lock not acquired, waiting for leader to terminate")
+                start_leader_retry_loop(start_scheduler)
         except Exception as e:
             print(f"[BOOTSTRAP] Forex scheduler startup failed: {e}")
             import traceback
