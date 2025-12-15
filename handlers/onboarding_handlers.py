@@ -399,6 +399,9 @@ def handle_onboarding_business(handler):
         }
         state = db.update_onboarding_step(tenant_id, 'business', step_data)
         
+        # Also update the tenants table with display_name so it shows in admin
+        db.update_tenant_display_name(tenant_id, display_name)
+        
         if state:
             _send_json_response(handler, 200, {
                 'success': True,

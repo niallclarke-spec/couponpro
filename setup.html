@@ -1106,19 +1106,18 @@
             hideAlert();
 
             try {
-                const formData = new FormData();
-                formData.append('business_name', businessName);
-                formData.append('support_email', supportEmail);
-                if (logoFile) {
-                    formData.append('logo', logoFile);
-                }
-
                 const headers = await getAuthHeaders(false);
+                headers['Content-Type'] = 'application/json';
+                
                 const response = await fetch('/api/onboarding/business', {
                     method: 'POST',
                     headers: headers,
                     credentials: 'include',
-                    body: formData
+                    body: JSON.stringify({
+                        display_name: businessName,
+                        support_email: supportEmail,
+                        logo_url: null
+                    })
                 });
 
                 const data = await response.json();

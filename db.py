@@ -5775,6 +5775,35 @@ def ensure_tenant_exists(tenant_id: str, display_name: str = None, owner_email: 
         return False
 
 
+def update_tenant_display_name(tenant_id: str, display_name: str) -> bool:
+    """
+    Update the display_name for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        display_name: New display name
+        
+    Returns:
+        True if updated, False on error
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE tenants SET display_name = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (display_name, tenant_id))
+            conn.commit()
+            logger.info(f"Updated display_name for tenant {tenant_id}: {display_name}")
+            return True
+    except Exception as e:
+        logger.exception(f"Error updating tenant display_name: {e}")
+        return False
+
+
 def get_all_tenants():
     """
     Get all tenants with their details and onboarding status.
