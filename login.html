@@ -297,6 +297,11 @@
                     if (avatarUrl) {
                         sessionStorage.setItem('clerk_user_avatar', avatarUrl);
                     }
+                    
+                    // Auto-redirect to admin after successful sign-in
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 500);
                 }
             } catch (err) {
                 console.error('Failed to get session token:', err);

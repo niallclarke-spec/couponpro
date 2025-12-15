@@ -5433,7 +5433,9 @@
 
         async function checkAuth() {
             try {
+                const headers = await getAuthHeaders();
                 const response = await fetch('/api/check-auth', {
+                    headers: headers,
                     credentials: 'include'
                 });
                 const data = await response.json();
@@ -5694,40 +5696,25 @@
         }
 
         async function handleLogout() {
-            try {
-                // Sign out from Clerk if available
-                if (window.Clerk && typeof window.Clerk.signOut === 'function') {
-                    try {
-                        await window.Clerk.signOut();
-                    } catch (clerkError) {
-                        console.warn('Clerk signOut failed:', clerkError);
-                    }
+            sessionStorage.removeItem('clerk_session_token');
+            sessionStorage.removeItem('clerk_user_email');
+            sessionStorage.removeItem('clerk_user_avatar');
+            
+            if (window.Clerk) {
+                try {
+                    await window.Clerk.signOut();
+                } catch (err) {
+                    console.warn('Clerk signOut error:', err);
                 }
-                
-                // Call backend logout endpoint
-                await fetch('/api/logout', { method: 'POST' });
-                
-                // Clear any session storage
-                sessionStorage.removeItem('clerk_session_token');
-                sessionStorage.removeItem('clerk_user_email');
-                sessionStorage.removeItem('clerk_user_avatar');
-                
-                // Update UI state
-                document.getElementById('dashboard').classList.add('hidden');
-                document.getElementById('loginPage').classList.remove('hidden');
-                const passwordEl = document.getElementById('password');
-                if (passwordEl) passwordEl.value = '';
-                appState.isLoggedIn = false;
-                window.location.hash = '';
-                updateAuthUI(false, null, null);
-                
-                // Redirect to login page
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Logout failed:', error);
-                // Force redirect to login even on error
-                window.location.href = '/login';
             }
+            
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (err) {
+                console.warn('Backend logout error:', err);
+            }
+            
+            window.location.href = '/login';
         }
 
         async function handleAccessDeniedLogout() {
@@ -6054,9 +6041,7 @@
         async function loadSubscriptions() {
             try {
                 const url = `/api/telegram-subscriptions?include_test=true`;
-                const response = await fetch(url, {
-                    credentials: 'include'
-                });
+                const response = await authedFetch(url);
                 if (!response.ok) throw new Error('Failed to load subscriptions');
                 
                 const data = await response.json();
@@ -6094,9 +6079,7 @@
             document.getElementById('churnRate').innerHTML = '<span class="loading-spinner"></span>';
             
             try {
-                const response = await fetch(`/api/telegram/revenue-metrics?period=${period}`, {
-                    credentials: 'include'
-                });
+                const response = await authedFetch(`/api/telegram/revenue-metrics?period=${period}`);
                 
                 if (!response.ok) throw new Error('Failed to fetch revenue metrics');
                 
@@ -6148,9 +6131,7 @@
 
         async function loadTelegramChannelStats() {
             try {
-                const response = await fetch('/api/telegram-channel-stats', {
-                    credentials: 'include'
-                });
+                const response = await authedFetch('/api/telegram-channel-stats');
                 
                 if (!response.ok) throw new Error('Failed to fetch channel stats');
                 
@@ -6494,9 +6475,8 @@
             if (!confirmed) return;
             
             try {
-                const response = await fetch('/api/telegram/cleanup-test-data', {
-                    method: 'POST',
-                    credentials: 'include'
+                const response = await authedFetch('/api/telegram/cleanup-test-data', {
+                    method: 'POST'
                 });
                 
                 const result = await response.json();
@@ -6540,12 +6520,8 @@
             }
             
             try {
-                const response = await fetch('/api/telegram/cancel-subscription', {
+                const response = await authedFetch('/api/telegram/cancel-subscription', {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         subscriptionId: subscriptionId,
                         cancelImmediately: cancelImmediately
@@ -6605,12 +6581,8 @@
             if (!confirmed) return;
             
             try {
-                const response = await fetch('/api/telegram/delete-subscription', {
+                const response = await authedFetch('/api/telegram/delete-subscription', {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         subscriptionId: subscriptionId,
                         telegramUserId: telegramUserId
@@ -7339,10 +7311,8 @@
             successEl.style.display = 'none';
             
             try {
-                const response = await fetch('/api/signal-bot/set-active', {
+                const response = await authedFetch('/api/signal-bot/set-active', {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ bot_type: selectedBotType })
                 });
                 
@@ -7379,10 +7349,8 @@
             if (successEl) successEl.style.display = 'none';
             
             try {
-                const response = await fetch('/api/signal-bot/cancel-queue', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' }
+                const response = await authedFetch('/api/signal-bot/cancel-queue', {
+                    method: 'POST'
                 });
                 
                 const result = await response.json();
@@ -7486,9 +7454,7 @@
         
         async function loadTpConfig() {
             try {
-                const response = await fetch('/api/forex-tp-config', {
-                    credentials: 'include'
-                });
+                const response = await authedFetch('/api/forex-tp-config');
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -7520,10 +7486,8 @@
             }
             
             try {
-                const response = await fetch('/api/forex-tp-config', {
+                const response = await authedFetch('/api/forex-tp-config', {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         tp_count: currentTpCount,
                         tp1_percentage: tp1,
@@ -7562,10 +7526,8 @@
                 const sessionStartHour = document.getElementById('sessionStartHour').value;
                 const sessionEndHour = document.getElementById('sessionEndHour').value;
                 
-                const response = await fetch('/api/forex-config', {
+                const response = await authedFetch('/api/forex-config', {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         daily_loss_cap_pips: parseFloat(dailyLossCap),
                         back_to_back_throttle_minutes: parseInt(backToBackThrottle),
@@ -7599,9 +7561,7 @@
         
         async function loadGuardrailSettings() {
             try {
-                const response = await fetch('/api/forex-config', {
-                    credentials: 'include'
-                });
+                const response = await authedFetch('/api/forex-config');
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -7796,8 +7756,12 @@
             formData.append('storyFontColor', document.getElementById('storyFontColor').value);
 
             try {
+                const authHeaders = await getAuthHeaders();
+                delete authHeaders['Content-Type'];
                 const response = await fetch('/api/upload-template', {
                     method: 'POST',
+                    headers: authHeaders,
+                    credentials: 'include',
                     body: formData
                 });
 
@@ -7988,9 +7952,8 @@
                 closeDeleteModal();
                 
                 try {
-                    const response = await fetch('/api/delete-template', {
+                    const response = await authedFetch('/api/delete-template', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ slug })
                     });
                     
@@ -8022,9 +7985,8 @@
             const container = checkbox.closest('.telegram-toggle-container');
             
             try {
-                const response = await fetch('/api/toggle-telegram-template', {
+                const response = await authedFetch('/api/toggle-telegram-template', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ slug, enabled })
                 });
                 
@@ -8083,9 +8045,8 @@
                 
                 for (const template of selected) {
                     try {
-                        const response = await fetch('/api/delete-template', {
+                        const response = await authedFetch('/api/delete-template', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ slug: template.slug })
                         });
                         
@@ -8510,7 +8471,7 @@
             campaignsList.innerHTML = '<p style="color: #718096; text-align: center;">Loading campaigns...</p>';
             
             try {
-                const response = await fetch('/api/campaigns');
+                const response = await authedFetch('/api/campaigns');
                 const data = await response.json();
                 
                 if (!data.campaigns || data.campaigns.length === 0) {
@@ -8566,8 +8527,12 @@
             submitBtn.textContent = editId ? 'Updating...' : 'Creating...';
             
             try {
+                const authHeaders = await getAuthHeaders();
+                delete authHeaders['Content-Type'];
                 const response = await fetch(editId ? '/api/edit-campaign' : '/api/create-campaign', {
                     method: 'POST',
+                    headers: authHeaders,
+                    credentials: 'include',
                     body: formData
                 });
                 
@@ -8590,7 +8555,7 @@
 
         async function editCampaign(id) {
             try {
-                const response = await fetch(`/api/campaigns`);
+                const response = await authedFetch(`/api/campaigns`);
                 const data = await response.json();
                 const campaign = data.campaigns.find(c => c.id === id);
                 
@@ -8621,9 +8586,8 @@
             if (!confirm(`Delete campaign "${title}"?`)) return;
             
             try {
-                const response = await fetch('/api/delete-campaign', {
+                const response = await authedFetch('/api/delete-campaign', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id })
                 });
                 
@@ -8677,7 +8641,7 @@
 
         async function loadActiveUsersCount() {
             try {
-                const response = await fetch('/api/broadcast-jobs');
+                const response = await authedFetch('/api/broadcast-jobs');
                 const data = await response.json();
                 
                 document.getElementById('activeUsersCount').textContent = data.active_users || 0;
@@ -8689,7 +8653,7 @@
 
         async function loadBroadcastHistory() {
             try {
-                const response = await fetch('/api/broadcast-jobs');
+                const response = await authedFetch('/api/broadcast-jobs');
                 const data = await response.json();
                 
                 if (!data.jobs || data.jobs.length === 0) {
@@ -8774,9 +8738,8 @@
             document.getElementById('broadcastForm').querySelector('button[type="submit"]').disabled = true;
 
             try {
-                const response = await fetch('/api/broadcast', {
+                const response = await authedFetch('/api/broadcast', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message, days: 30 })
                 });
 
@@ -8870,8 +8833,8 @@
         async function loadAnalytics() {
             try {
                 const [statsResponse, retentionResponse] = await Promise.all([
-                    fetch(`/api/bot-stats?days=${currentAnalyticsDays}`),
-                    fetch('/api/retention-rates')
+                    authedFetch(`/api/bot-stats?days=${currentAnalyticsDays}`),
+                    authedFetch('/api/retention-rates')
                 ]);
                 
                 if (!statsResponse.ok) {
@@ -9330,7 +9293,7 @@
         // Most Active Users Leaderboard
         async function loadMostActiveUsers() {
             try {
-                const response = await fetch('/api/bot-users?limit=1000&offset=0');
+                const response = await authedFetch('/api/bot-users?limit=1000&offset=0');
                 const data = await response.json();
                 
                 renderMostActiveUsers(data.users || []);

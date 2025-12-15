@@ -189,21 +189,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
         
         elif 'dash.promostack.io' in host and parsed_path.path == '/':
-            try:
-                with open('index.html', 'r') as f:
-                    content = f.read()
-                
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html; charset=utf-8')
-                self.end_headers()
-                self.wfile.write(content.encode('utf-8'))
-                return
-            except FileNotFoundError:
-                self.send_error(404, "Frontend page not found")
-                return
-            except Exception as e:
-                self.send_error(500, f"Server error: {str(e)}")
-                return
+            # Redirect to login page
+            self.send_response(302)
+            self.send_header('Location', '/login')
+            self.end_headers()
+            return
         
         # Apply middleware checks via routing table (auth/db requirements)
         route = match_route('GET', parsed_path.path, GET_ROUTES + PAGE_ROUTES)
@@ -328,6 +318,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(content.encode('utf-8'))
             except FileNotFoundError:
                 self.send_error(404, "Login page not found")
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+        
+        elif parsed_path.path == '/coupon':
+            try:
+                with open('index.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_error(404, "Coupon page not found")
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
@@ -592,6 +596,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
+        elif parsed_path.path == '/':
+            # Default homepage: redirect to login (not admin.promostack.io or dash.promostack.io)
+            self.send_response(302)
+            self.send_header('Location', '/login')
+            self.end_headers()
         else:
             super().do_GET()
         clear_request_context()
