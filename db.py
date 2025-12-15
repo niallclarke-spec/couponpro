@@ -5408,27 +5408,73 @@ def get_tenant_metrics(tenant_id, days=7):
         return {}
 
 
+def _column_exists(schema: str, table: str, column: str) -> bool:
+    """Check if a column exists in the database using information_schema."""
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = %s AND table_name = %s AND column_name = %s
+                LIMIT 1
+            """, (schema, table, column))
+            return cursor.fetchone() is not None
+    except Exception:
+        return False
+
+
+def _build_forex_config_tenants_query() -> tuple:
+    """Build tenant discovery query based on available columns in forex_config.
+    
+    Checks for common enable/status column patterns and returns appropriate query.
+    Falls back to returning all tenants if no known enable flag column exists.
+    
+    Returns:
+        tuple: (query_string, query_params)
+    """
+    base_query = "SELECT DISTINCT tenant_id FROM forex_config WHERE tenant_id IS NOT NULL"
+    
+    # Rule 1: Check for 'enabled' column
+    if _column_exists('public', 'forex_config', 'enabled'):
+        return (base_query + " AND enabled = true", ())
+    
+    # Rule 2: Check for 'is_enabled' column
+    if _column_exists('public', 'forex_config', 'is_enabled'):
+        return (base_query + " AND is_enabled = true", ())
+    
+    # Rule 3: Check for 'status' column
+    if _column_exists('public', 'forex_config', 'status'):
+        return (base_query + " AND status IN ('active', 'enabled', 'on')", ())
+    
+    # Rule 4: Check for 'active' column
+    if _column_exists('public', 'forex_config', 'active'):
+        return (base_query + " AND active = true", ())
+    
+    # Rule 5: No known enabled flag - return all tenants with config
+    return (base_query, ())
+
+
 def get_active_tenants():
     """
     Get list of active tenant IDs.
     
-    Queries distinct tenant_ids from forex_config where enabled=true,
-    or falls back to distinct tenant_ids from forex_signals if no config exists.
+    Uses schema-tolerant query that checks for available columns in forex_config.
+    Falls back to distinct tenant_ids from forex_signals if no config exists.
     
     Returns:
         list[str]: List of active tenant IDs
     """
     try:
-        if not db_pool.connection_pool:
+        if not db_pool or not db_pool.connection_pool:
             return []
         
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            cursor.execute("""
-                SELECT DISTINCT tenant_id FROM forex_config 
-                WHERE enabled = true
-            """)
+            query, params = _build_forex_config_tenants_query()
+            cursor.execute(query, params)
             tenants = [row[0] for row in cursor.fetchall()]
             
             if not tenants:
