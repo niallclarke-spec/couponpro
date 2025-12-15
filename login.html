@@ -340,25 +340,39 @@
                         await new Promise(resolve => requestAnimationFrame(resolve));
                     }
 
-                    // Show sign-in form
+                    // Show sign-in or sign-up form based on URL
                     if (!clerkMounted) {
                         clerkMounted = true;
                         const loadingText = signinEl.querySelector('.loading-text');
                         if (loadingText) loadingText.style.display = 'none';
-                        clerkInstance.mountSignIn(signinEl, {
-                            appearance: {
-                                baseTheme: window.Clerk?.themes?.dark,
-                                variables: {
-                                    colorPrimary: '#4f46e5',
-                                    colorBackground: '#0B1739',
-                                    colorInputBackground: '#091128',
-                                    colorInputText: '#ffffff',
-                                    colorText: '#ffffff',
-                                    colorTextSecondary: '#94a3b8',
-                                    colorNeutral: '#ffffff'
-                                }
+                        
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const isSignUp = urlParams.get('mode') === 'signup';
+                        
+                        const clerkAppearance = {
+                            baseTheme: window.Clerk?.themes?.dark,
+                            variables: {
+                                colorPrimary: '#4f46e5',
+                                colorBackground: '#0B1739',
+                                colorInputBackground: '#091128',
+                                colorInputText: '#ffffff',
+                                colorText: '#ffffff',
+                                colorTextSecondary: '#94a3b8',
+                                colorNeutral: '#ffffff'
                             }
-                        });
+                        };
+                        
+                        if (isSignUp) {
+                            clerkInstance.mountSignUp(signinEl, {
+                                appearance: clerkAppearance,
+                                signInUrl: '/login'
+                            });
+                        } else {
+                            clerkInstance.mountSignIn(signinEl, {
+                                appearance: clerkAppearance,
+                                signUpUrl: '/login?mode=signup'
+                            });
+                        }
                     }
 
                     // Fade in the sign-in form
