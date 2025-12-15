@@ -5437,12 +5437,14 @@
                     credentials: 'include'
                 });
                 const data = await response.json();
+                
                 if (response.ok && data.authenticated) {
                     document.getElementById('loginPage').classList.add('hidden');
                     document.getElementById('accessDeniedPage').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
                     appState.isLoggedIn = true;
                     initializeRouting();
+                    // Use server data - email/avatar from Clerk token with fallback handled in updateAuthUI
                     updateAuthUI(true, data.email, data.avatar);
                 } else if (data.email) {
                     showAccessDenied(data.email);
@@ -5482,17 +5484,19 @@
                 if (signinLink) signinLink.style.display = 'none';
                 if (userChipContainer) userChipContainer.style.display = 'block';
                 
-                if (userChipEmail && email) {
-                    userChipEmail.textContent = email;
+                // Always update email - use fallback if not provided
+                if (userChipEmail) {
+                    userChipEmail.textContent = email || 'Admin';
                 }
                 
+                // Always update avatar - use first letter of email or fallback
                 if (userChipAvatar) {
                     if (avatarUrl) {
                         userChipAvatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
                     } else if (email) {
                         userChipAvatar.textContent = email.charAt(0).toUpperCase();
                     } else {
-                        userChipAvatar.textContent = '?';
+                        userChipAvatar.textContent = 'A';
                     }
                 }
             } else {
@@ -5691,10 +5695,24 @@
 
         async function handleLogout() {
             try {
+                // Sign out from Clerk if available
+                if (window.Clerk && typeof window.Clerk.signOut === 'function') {
+                    try {
+                        await window.Clerk.signOut();
+                    } catch (clerkError) {
+                        console.warn('Clerk signOut failed:', clerkError);
+                    }
+                }
+                
+                // Call backend logout endpoint
                 await fetch('/api/logout', { method: 'POST' });
+                
+                // Clear any session storage
                 sessionStorage.removeItem('clerk_session_token');
                 sessionStorage.removeItem('clerk_user_email');
                 sessionStorage.removeItem('clerk_user_avatar');
+                
+                // Update UI state
                 document.getElementById('dashboard').classList.add('hidden');
                 document.getElementById('loginPage').classList.remove('hidden');
                 const passwordEl = document.getElementById('password');
@@ -5702,12 +5720,26 @@
                 appState.isLoggedIn = false;
                 window.location.hash = '';
                 updateAuthUI(false, null, null);
+                
+                // Redirect to login page
+                window.location.href = '/login';
             } catch (error) {
                 console.error('Logout failed:', error);
+                // Force redirect to login even on error
+                window.location.href = '/login';
             }
         }
 
         async function handleAccessDeniedLogout() {
+            // Sign out from Clerk if available
+            if (window.Clerk && typeof window.Clerk.signOut === 'function') {
+                try {
+                    await window.Clerk.signOut();
+                } catch (clerkError) {
+                    console.warn('Clerk signOut failed:', clerkError);
+                }
+            }
+            
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
             window.location.href = '/login';
