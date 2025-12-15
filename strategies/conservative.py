@@ -71,11 +71,11 @@ class ConservativeStrategy(BaseStrategy):
             if not (self.session_start_hour_utc <= current_hour < self.session_end_hour_utc):
                 return False, f"Outside trading session ({self.session_start_hour_utc}:00-{self.session_end_hour_utc}:00 UTC)"
         
-        daily_pnl = get_daily_pnl()
+        daily_pnl = get_daily_pnl(tenant_id=self.tenant_id)
         if daily_pnl <= -self.daily_loss_cap_pips:
             return False, f"Daily loss cap reached ({daily_pnl:.1f} pips, cap: -{self.daily_loss_cap_pips})"
         
-        last_signal = get_last_completed_signal()
+        last_signal = get_last_completed_signal(tenant_id=self.tenant_id)
         if last_signal and last_signal['status'] == 'lost':
             closed_at = last_signal['closed_at']
             if closed_at:

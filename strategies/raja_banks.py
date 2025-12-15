@@ -76,7 +76,7 @@ class RajaBanksStrategy(BaseStrategy):
     
     def check_cooldown(self) -> Tuple[bool, Optional[str]]:
         """Check if enough time has passed since last signal (using database)"""
-        last_signal_time = get_last_signal_time_by_bot(self.bot_type)
+        last_signal_time = get_last_signal_time_by_bot(self.bot_type, tenant_id=self.tenant_id)
         
         if last_signal_time is None:
             return True, None
@@ -95,7 +95,7 @@ class RajaBanksStrategy(BaseStrategy):
     
     def check_daily_limit(self) -> Tuple[bool, Optional[str]]:
         """Check if daily signal limit has been reached (using database)"""
-        signals_today = count_signals_today_by_bot(self.bot_type)
+        signals_today = count_signals_today_by_bot(self.bot_type, tenant_id=self.tenant_id)
         
         if signals_today >= self.MAX_SIGNALS_PER_DAY:
             return False, f"Daily limit reached ({signals_today}/{self.MAX_SIGNALS_PER_DAY} signals)"
@@ -116,7 +116,7 @@ class RajaBanksStrategy(BaseStrategy):
         if not can_trade:
             return False, limit_msg
         
-        daily_pnl = get_daily_pnl()
+        daily_pnl = get_daily_pnl(tenant_id=self.tenant_id)
         if daily_pnl <= -self.daily_loss_cap_pips:
             return False, f"Daily loss cap reached ({daily_pnl:.1f} pips)"
         
@@ -347,7 +347,7 @@ class RajaBanksStrategy(BaseStrategy):
                 bot_type=self.bot_type
             )
             
-            signals_today = count_signals_today_by_bot(self.bot_type)
+            signals_today = count_signals_today_by_bot(self.bot_type, tenant_id=self.tenant_id)
             
             logger.info(f"🎯 Signal generated: {signal_type} @ {entry_price:.2f}")
             logger.info(f"📊 TP1: {take_profits[0].price:.2f} ({take_profits[0].percentage}%)")
