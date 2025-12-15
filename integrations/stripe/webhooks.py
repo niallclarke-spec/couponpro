@@ -105,8 +105,8 @@ def resolve_tenant_and_vip_status(db_module, price_id, subscription_id=None):
         if entrylab_vip and price_id == entrylab_vip:
             return 'entrylab', entrylab_vip, True
     
-    print(f"[STRIPE WEBHOOK] ⚠️ Price {price_id} not found in any tenant's price cache")
-    return 'entrylab', None, True
+    print(f"[STRIPE WEBHOOK] ⚠️ Price not found in any tenant's cache, skipping VIP grant")
+    return (None, None, False)
 
 
 def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_module):

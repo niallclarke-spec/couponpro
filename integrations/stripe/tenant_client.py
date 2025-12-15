@@ -33,8 +33,6 @@ class TenantStripeClient:
             params = {'limit': 100}
             if active_only:
                 params['active'] = True
-            if self.stripe_account_id:
-                params['stripe_account'] = self.stripe_account_id
             
             products = []
             has_more = True
