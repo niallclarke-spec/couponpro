@@ -1,0 +1,77 @@
+You are working in my existing Python repo (multi-tenant forex scheduler). Do NOT refactor broadly. Make the smallest, safest fixes to address the two runtime issues shown in my terminal output.
+
+CONTEXT / CURRENT FAILURES
+1) When I run with a placeholder DATABASE_URL like:
+   export DATABASE_URL="postgres://USER:PASS@HOST:5432/DBNAME"
+   Postgres fails DNS with:
+   could not translate host name "HOST" to address
+   This is expected because HOST is not real, but our tooling behavior should be clearer and should never mislead us into thinking smoke tests passed when DB is unreachable.
+
+2) When I run:
+   python forex_scheduler.py --once --tenant entrylab
+   I get:
+   TypeError: get_daily_pnl() missing 1 required positional argument: 'tenant_id'
+   This happens inside strategies/aggressive.py (check_guardrails -> get_daily_pnl()).
+   Tenant hardening made tenant_id required, so this is a bug.
+
+GOALS
+A) Fix the missing tenant_id path so scheduler runs end-to-end for a real tenant.
+B) Improve DB availability behavior so the system clearly differentiates:
+   - DATABASE_URL not set
+   - DATABASE_URL set but unreachable (DNS/network/auth failure)
+   and so smoke/scheduler exit codes are correct and not confusing.
+
+REQUIREMENTS
+1) Fix tenant_id propagation in ALL strategy guardrail paths:
+   - Search for get_daily_pnl( and any other db calls recently changed to require tenant_id (e.g. get_last_completed_signal, get_forex_signals, etc.)
+   - Ensure every call includes tenant_id from the runtime/engine/scheduler context.
+   - If a strategy method doesn’t have tenant_id available, add it as a parameter or store it on the strategy instance when constructed (preferred: pass via constructor).
+   - Keep changes minimal.
+
+2) Ensure the scheduler constructs strategies with tenant context:
+   - Verify the scheduler/runner/runtime creates the strategy objects with tenant_id available.
+   - Do NOT reintroduce global singletons.
+   - Maintain current TenantRuntime model.
+
+3) Improve DB connection error clarity + exit behavior:
+   - In smoke_tenant_isolation.py:
+     * If DATABASE_URL is missing: keep current behavior (local exits 0 with SKIPPED message, CI exits 1).
+     * If DATABASE_URL is set but DB init fails (DNS/auth/etc): print a clear message like:
+       "DATABASE_URL is set but database connection failed (dns/auth/network)."
+       Keep local exit code 0 only if the script is explicitly designed to skip locally; otherwise follow current policy. Do NOT claim "PASSED" when DB is unreachable.
+   - In forex_scheduler.py:
+     * If DATABASE_URL is set but db pool initialization fails, exit non-zero and print a clear single-line summary at the end (don’t spam stack traces unless DEBUG is enabled).
+     * Avoid running strategy logic if db pool can’t initialize.
+
+4) Add/Update tests:
+   - Add a unit test proving strategies call get_daily_pnl with tenant_id.
+   - Add a unit test verifying scheduler refuses to run if DB pool init fails (can be mocked).
+   - Ensure pytest -q still passes (expect ~116 passed, a few skipped for DB/RLS).
+
+WHAT TO CHANGE (LIKELY FILES)
+- strategies/aggressive.py (and any other strategies that call db functions without tenant_id)
+- strategies/conservative.py and strategies/raja_banks.py (audit for same pattern)
+- scheduler/runner.py or forex_scheduler.py (where strategy objects are created and tenant is passed)
+- db.py only if absolutely required for error message clarity (avoid broad edits)
+- scripts/smoke_tenant_isolation.py (connection failure messaging / exit policy)
+
+ACCEPTANCE CRITERIA (RUN THESE COMMANDS)
+1) python scripts/tenant_audit.py  -> must PASS
+2) pytest -q                       -> must PASS (skips ok)
+3) Cold import must work:
+   python - << 'EOF'
+   import forex_scheduler, scheduler.runner, core.runtime
+   print("Cold import OK")
+   EOF
+4) With real DB secrets set (do NOT use HOST placeholder), scheduler must run without tenant_id TypeError:
+   export TENANT_ID=entrylab
+   python forex_scheduler.py --once --tenant entrylab
+
+IMPORTANT
+- Keep changes minimal and targeted.
+- Do not remove tenant_id requirements from db functions.
+- Do not change business logic or signal behavior; only fix tenant propagation + DB init handling.
+- After changes, show me:
+  (a) which files changed
+  (b) the exact ripgrep results for calls you fixed
+  (c) the terminal outputs for the acceptance commands above
