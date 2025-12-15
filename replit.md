@@ -29,6 +29,27 @@ The platform uses two subdomains with different access levels:
 - `/app`: Client dashboard (accessible to all authenticated users)
 - `/coupon`: Public coupon generator
 - `/login`: Clerk authentication page
+- `/setup`: Tenant onboarding wizard (accessible from dash host)
+
+### Tenant Onboarding System
+New tenants accessing dash.promostack.io are guided through a 4-step setup wizard before accessing the main dashboard:
+
+**Onboarding Flow:**
+1. **Telegram Bot Setup**: Validates Telegram bot token via getMe API
+2. **Stripe Configuration**: Validates Stripe API keys via /v1/balance API
+3. **Business Information**: Collects business name, timezone, and contact email
+4. **Completion**: Confirms setup and redirects to main dashboard
+
+**Key Files:**
+- `setup.html`: 4-step wizard UI with Clerk auth, dark PromoStack theme
+- `handlers/onboarding_handlers.py`: API handlers with external service verification
+- `db.py`: `onboarding_state` table schema and migrations
+- `api/routes.py`: Onboarding route definitions
+
+**Auto-Provisioning:**
+- New users without a tenant automatically get one created via `bootstrap_tenant`
+- Onboarding state is tracked per-tenant with step completion flags
+- The `onboarding_state` table stores: telegram_done, stripe_done, business_done, completed_at
 
 ### Authentication Architecture
 The platform supports dual authentication methods:
