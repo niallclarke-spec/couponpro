@@ -1,0 +1,120 @@
+Implement a “Products” tab in the CLIENT APP (dash.promostack.io) that lets each tenant pull their existing Stripe Products + Prices from their connected Stripe account and choose which Price is the “VIP Subscription” plan used by the system. This removes the need to ask for Stripe Product/Price IDs during onboarding. The app must store the selected Stripe Price ID per tenant and use it in billing + webhook logic to grant/revoke VIP access.
+
+IMPORTANT CONTEXT / REQUIREMENTS
+	•	Multi-tenant SaaS.
+	•	There are two subdomains:
+	•	admin.promostack.io = admin-only (restricted by ADMIN_EMAILS)
+	•	dash.promostack.io = client dashboard (any authenticated Clerk user)
+	•	Implement this ONLY for dash.promostack.io (tenant-facing). Admin subdomain should not expose tenant product management UI.
+	•	We already have Stripe “connection” stored per tenant (either via pasted keys or Connect). You must not break existing flow. Support both:
+	1.	Tenants that have a Stripe Secret Key saved (legacy/simple integration)
+	2.	Tenants that have Stripe Connect (preferred). If Connect exists, use that account context for Stripe API calls.
+	•	The UI must feel modern and consistent with our dark theme.
+
+WHAT TO BUILD
+	1.	Tenant Products Tab (Frontend)
+
+	•	Add a new sidebar/nav item in the dash app: “Products”.
+	•	The Products page shows:
+	•	Connection status: “Stripe Connected” / “Stripe Not Connected”
+	•	A primary button: “Sync from Stripe”
+	•	A table/list of Stripe Products and their Prices (focus on recurring subscription prices)
+	•	Each row should show:
+	•	Product name
+	•	Price amount + currency
+	•	Billing interval (month/year/etc)
+	•	Price nickname (if exists)
+	•	Price ID (hidden behind a “copy” icon or expandable details; do NOT clutter UI)
+	•	Status: Active/Archived
+	•	A clear CTA: “Set as VIP Plan” (or “Selected” if already selected)
+	•	At top, show the currently selected VIP plan (product name + amount + interval). If none selected, show a warning banner: “No VIP Plan selected — subscriptions won’t grant VIP access until you choose one.”
+	•	Provide a filter toggle:
+	•	“Show only recurring subscription prices” ON by default.
+	•	Also allow “Show one-time prices” OFF by default (optional).
+	•	Provide a small “Refresh” icon that re-fetches without full page reload.
+	•	The page must never show the old coupon generator UI. This is a separate dash area.
+
+	2.	Backend API Endpoints
+Implement robust endpoints that are tenant-aware and host-aware:
+
+	•	GET /api/stripe/status
+	•	Returns whether tenant has Stripe configured and which method (connect vs secret key).
+	•	POST /api/stripe/sync-products
+	•	Fetches products and prices from Stripe for this tenant.
+	•	Caches to DB (recommended) or returns live response (acceptable). If caching, store product_id, product_name, active, created, updated; store prices: price_id, product_id, unit_amount, currency, recurring interval, interval_count, active, nickname, type.
+	•	Only include safe data. Do not store secret keys in responses.
+	•	GET /api/stripe/products
+	•	Returns the cached list (or live) of products + prices for this tenant.
+	•	POST /api/stripe/set-vip-price
+	•	Body: { price_id: “price_xxx” }
+	•	Validates the price belongs to the tenant’s Stripe account.
+	•	Validates it is recurring (subscription) by default; allow override only if we explicitly add one-time products later.
+	•	Persists this to tenant config: tenant.vip_price_id = price_id (and store vip_product_id too if easy).
+	•	Returns the selected VIP plan details.
+
+	3.	Stripe API Access Logic (Connect vs Secret Key)
+Implement a single helper for tenant Stripe client:
+
+	•	Determine tenant from auth context (Clerk user -> tenant record).
+	•	If tenant has stripe_connect_account_id (or equivalent), create Stripe calls in the context of that connected account (Stripe-Account header).
+	•	Else if tenant has stripe_secret_key, instantiate Stripe with that key.
+	•	Else return “Stripe not connected”.
+
+	4.	Update Billing + Webhook Logic To Use vip_price_id
+Wherever the system currently decides “which purchase grants VIP access”, update it to:
+
+	•	Match incoming subscription events to tenant.vip_price_id (or tenant.vip_product_id if your current logic uses product).
+	•	For subscription created/paid: if subscription contains vip_price_id => grant VIP access in Telegram (existing logic).
+	•	For cancellation/failed payment: revoke VIP access (existing logic).
+	•	Ensure we handle price changes gracefully:
+	•	If tenant changes VIP plan selection, new purchases use new vip_price_id. Existing active subs remain active; do not accidentally revoke unless truly canceled.
+	•	Add clear logs around webhook processing showing tenant, matched price_id, and decision.
+
+	5.	Error Handling + UX
+
+	•	If Stripe is not connected:
+	•	Products page should show a “Connect Stripe” CTA linking to whatever Stripe connect flow we already have.
+	•	If Stripe API returns permission errors:
+	•	Show a readable UI error: “Could not fetch products from Stripe. Please re-connect Stripe or check permissions.”
+	•	Prevent flashing / glitchy navigation:
+	•	Keep a skeleton loader while fetching.
+	•	Don’t redirect to old pages.
+	•	Ensure Clerk sign-in/out remains smooth:
+	•	No unexpected popups or extra redirect loops from Stripe calls.
+
+	6.	Security / Access Control
+
+	•	Ensure:
+	•	Only authenticated tenant users can call these endpoints on dash.
+	•	Admin-only endpoints remain restricted on admin.promostack.io.
+	•	A tenant can never see another tenant’s Stripe products.
+	•	Never expose Stripe secret keys to frontend.
+	•	Sanitize all outgoing data.
+
+	7.	Data Model Changes (If needed)
+If we have a tenant table/config:
+
+	•	Add fields:
+	•	vip_price_id (string)
+	•	vip_product_id (string, optional)
+	•	stripe_last_sync_at (datetime)
+	•	If caching product/price:
+	•	Create tables tenant_stripe_products and tenant_stripe_prices (or JSON blob on tenant if simpler).
+	•	Ensure they are keyed by tenant_id.
+
+ACCEPTANCE TESTS (DO THESE)
+After implementing, verify these cases:
+	1.	Tenant with Stripe connected can open Products tab, click Sync, see products/prices, set VIP plan, refresh page, selection persists.
+	2.	Tenant without Stripe sees Connect CTA and no crashes.
+	3.	Webhook event for a subscription with the selected vip_price_id grants VIP access.
+	4.	Webhook event for a different price_id does NOT grant VIP access.
+	5.	Switching VIP plan updates future matching without breaking existing.
+	6.	Admin email logging in on admin.promostack.io cannot see tenant Products tab (client-only feature).
+	7.	No UI redirects to coupon generator page during signup/login flows.
+
+DELIVERABLES
+	•	List of files changed
+	•	Brief notes on where vip_price_id is stored and used
+	•	A short “How to use” note for tenants: go to Products -> Sync -> Set VIP Plan
+
+Now implement all of the above with clean, readable code and consistent UI.
