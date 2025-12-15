@@ -1,0 +1,41 @@
+You are working in an existing app called PromoStack. There is a frontend + a Python backend (server.py). The backend runs fine. The frontend Google/Clerk login is broken.
+
+The bug
+
+When I click “Login with Google” inside the dashboard, it routes to a Sign In screen that shows:
+
+“Clerk is not configured. Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.”
+
+So the frontend is not receiving the Clerk publishable key at runtime/build time.
+
+Goal
+	1.	Make Clerk load correctly in the frontend by wiring in NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY properly.
+	2.	Ensure “Login with Google” does NOT show when I am already logged in (currently it shows in the dashboard even when authenticated).
+	3.	Keep the old static password login working for now, but once Clerk works, make it easy to remove the static login later (leave a TODO comment + identify where it lives).
+
+Constraints / preferences
+	•	Do NOT ask me to run lots of terminal commands.
+	•	Make the fix inside the codebase so it works in Replit deploys.
+	•	If this app is Next.js / Vite / React static build, assume env vars may be injected at build time, so implement a robust approach.
+	•	If the frontend is currently being served as static files from the Python server, ensure the Clerk publishable key is still available to the browser.
+
+Implementation requirements
+
+A) Fix Clerk config:
+	•	Find where Clerk is initialized (e.g. <ClerkProvider publishableKey=...> or similar).
+	•	Ensure the publishable key is read from process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (or equivalent for the framework).
+	•	If static HTML is served, add a small /api/config endpoint in server.py that returns a JSON { clerkPublishableKey: "..." } pulled from the environment, and have the frontend fetch it once on boot and pass it into ClerkProvider. This avoids build-time env injection issues.
+	•	Add a clear error message if the key is missing (but it should not be missing once configured).
+
+B) Hide “Login with Google” when already authenticated:
+	•	Detect auth state properly (Clerk useUser() / useAuth() or whatever the framework uses).
+	•	If logged in → show Logout only
+	•	If logged out → show Login with Google only
+
+C) Verification:
+	•	After your changes, clicking “Login with Google” should no longer show the Clerk-not-configured error.
+	•	The dashboard should not show “Login with Google” when already logged in.
+
+Output
+	•	Tell me exactly which files you changed and what you changed in each.
+	•	Keep changes minimal and clean.
