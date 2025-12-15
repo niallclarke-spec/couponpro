@@ -456,14 +456,38 @@
                         console.error('[Auth] Failed to set auth cookie:', err);
                     }
                     
+                    // Get host type from config API (supports query param override in dev)
+                    let hostType = 'default';
+                    try {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const hostTypeParam = urlParams.get('host_type') || '';
+                        const configUrl = hostTypeParam ? `/api/config?host_type=${hostTypeParam}` : '/api/config';
+                        const configResp = await fetch(configUrl);
+                        if (configResp.ok) {
+                            const config = await configResp.json();
+                            hostType = config.hostType || 'default';
+                            console.log('[Auth] Host type from config:', hostType);
+                        }
+                    } catch (err) {
+                        console.warn('[Auth] Failed to get host type, using default:', err);
+                    }
+                    
                     // Host-aware redirect after sign-in
-                    const host = window.location.hostname.toLowerCase();
                     let redirectPath = '/admin';
                     
-                    if (host.startsWith('dash.')) {
-                        redirectPath = '/app';
-                    } else if (host.startsWith('admin.')) {
+                    if (hostType === 'dash') {
+                        // Tenant users go to setup (onboarding) wizard
+                        redirectPath = '/setup';
+                    } else if (hostType === 'admin') {
                         redirectPath = '/admin';
+                    } else {
+                        // Default: check hostname as fallback
+                        const host = window.location.hostname.toLowerCase();
+                        if (host.startsWith('dash.')) {
+                            redirectPath = '/setup';
+                        } else if (host.startsWith('admin.')) {
+                            redirectPath = '/admin';
+                        }
                     }
                     
                     // Redirect after server sets the cookie

@@ -20,12 +20,14 @@ class HostContext(NamedTuple):
     is_dev: bool
 
 
-def parse_host_context(host_header: str) -> HostContext:
+def parse_host_context(host_header: str, query_params: dict = None) -> HostContext:
     """
     Parse the Host header to determine routing context.
     
     Args:
         host_header: The Host header value (e.g., 'admin.promostack.io:443')
+        query_params: Optional dict with query parameters. If 'host_type' param
+                     is present in dev environments, it overrides subdomain detection.
         
     Returns:
         HostContext with host_type, canonical_domain, and is_dev flag
@@ -42,6 +44,22 @@ def parse_host_context(host_header: str) -> HostContext:
         '.replit.dev',
         '.replit.app'
     ])
+    
+    # In dev environments, allow query param override for testing
+    if is_dev and query_params and 'host_type' in query_params:
+        override = query_params['host_type'].lower()
+        if override == 'admin':
+            return HostContext(
+                host_type=HostType.ADMIN,
+                canonical_domain=host_without_port,
+                is_dev=is_dev
+            )
+        elif override == 'dash':
+            return HostContext(
+                host_type=HostType.DASH,
+                canonical_domain=host_without_port,
+                is_dev=is_dev
+            )
     
     if host_without_port.startswith('admin.'):
         return HostContext(

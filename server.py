@@ -655,16 +655,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
         elif parsed_path.path == '/api/config':
-            # Public endpoint to get frontend config (Clerk publishable key, etc.)
+            # Public endpoint to get frontend config (Clerk publishable key, host type, etc.)
             # No auth required - this is public configuration data
             try:
                 clerk_key = Config.get_clerk_publishable_key() or ''
+                
+                # Get host context for frontend routing
+                host_header = self.headers.get('Host', '')
+                query_params = {k: v[0] for k, v in parse_qs(parsed_path.query).items()}
+                host_context = parse_host_context(host_header, query_params)
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
-                self.send_header('Cache-Control', 'public, max-age=3600')  # Cache for 1 hour
+                self.send_header('Cache-Control', 'no-cache')  # Don't cache - host_type may vary
                 self.end_headers()
                 self.wfile.write(json.dumps({
-                    'clerkPublishableKey': clerk_key
+                    'clerkPublishableKey': clerk_key,
+                    'hostType': host_context.host_type.value,
+                    'isDev': host_context.is_dev
                 }).encode())
             except Exception as e:
                 logger.exception("Error getting config")
