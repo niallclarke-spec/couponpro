@@ -800,6 +800,60 @@ class DatabasePool:
                 """)
                 logger.info("onboarding_state table ready")
                 
+                # Create tenant_stripe_settings table (VIP plan selection)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_stripe_settings (
+                        tenant_id VARCHAR(50) PRIMARY KEY REFERENCES tenants(id),
+                        vip_product_id VARCHAR(255),
+                        vip_price_id VARCHAR(255),
+                        stripe_account_id VARCHAR(255),
+                        stripe_last_sync_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                logger.info("tenant_stripe_settings table ready")
+                
+                # Create tenant_stripe_products table (cached Stripe products)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_stripe_products (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+                        product_id VARCHAR(255) NOT NULL,
+                        name VARCHAR(255),
+                        description TEXT,
+                        active BOOLEAN DEFAULT TRUE,
+                        metadata JSONB DEFAULT '{}',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (tenant_id, product_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_stripe_products_tenant_id ON tenant_stripe_products(tenant_id)")
+                logger.info("tenant_stripe_products table ready")
+                
+                # Create tenant_stripe_prices table (cached Stripe prices)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_stripe_prices (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+                        price_id VARCHAR(255) NOT NULL,
+                        product_id VARCHAR(255) NOT NULL,
+                        currency VARCHAR(10),
+                        unit_amount INTEGER,
+                        recurring_interval VARCHAR(20),
+                        recurring_interval_count INTEGER DEFAULT 1,
+                        nickname VARCHAR(255),
+                        active BOOLEAN DEFAULT TRUE,
+                        type VARCHAR(20) DEFAULT 'recurring',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (tenant_id, price_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_stripe_prices_tenant_id ON tenant_stripe_prices(tenant_id)")
+                logger.info("tenant_stripe_prices table ready")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================
@@ -5984,3 +6038,324 @@ def get_tenant_integration(tenant_id: str, provider: str) -> dict:
     except Exception as e:
         logger.exception(f"Error getting tenant integration: {e}")
         return None
+
+
+# ============================================================
+# Tenant Stripe Product/Price Caching Functions
+# ============================================================
+
+def get_tenant_stripe_settings(tenant_id: str) -> dict:
+    """
+    Get Stripe settings for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        Dict with settings or None if not found
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id, vip_product_id, vip_price_id, stripe_account_id, 
+                       stripe_last_sync_at, created_at, updated_at
+                FROM tenant_stripe_settings
+                WHERE tenant_id = %s
+            """, (tenant_id,))
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'tenant_id': row[0],
+                    'vip_product_id': row[1],
+                    'vip_price_id': row[2],
+                    'stripe_account_id': row[3],
+                    'stripe_last_sync_at': row[4].isoformat() if row[4] else None,
+                    'created_at': row[5].isoformat() if row[5] else None,
+                    'updated_at': row[6].isoformat() if row[6] else None
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error getting tenant stripe settings: {e}")
+        return None
+
+
+def save_tenant_stripe_settings(tenant_id: str, vip_product_id: str = None, 
+                                 vip_price_id: str = None, stripe_account_id: str = None) -> bool:
+    """
+    Upsert Stripe settings for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        vip_product_id: The Stripe product ID for VIP plan
+        vip_price_id: The Stripe price ID for VIP plan
+        stripe_account_id: Stripe Connect account ID (if applicable)
+        
+    Returns:
+        True if saved successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_stripe_settings (tenant_id, vip_product_id, vip_price_id, stripe_account_id)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (tenant_id) DO UPDATE SET
+                    vip_product_id = COALESCE(EXCLUDED.vip_product_id, tenant_stripe_settings.vip_product_id),
+                    vip_price_id = COALESCE(EXCLUDED.vip_price_id, tenant_stripe_settings.vip_price_id),
+                    stripe_account_id = COALESCE(EXCLUDED.stripe_account_id, tenant_stripe_settings.stripe_account_id),
+                    updated_at = NOW()
+            """, (tenant_id, vip_product_id, vip_price_id, stripe_account_id))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error saving tenant stripe settings: {e}")
+        return False
+
+
+def update_stripe_sync_timestamp(tenant_id: str) -> bool:
+    """
+    Update the stripe_last_sync_at timestamp for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        True if updated successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_stripe_settings (tenant_id, stripe_last_sync_at)
+                VALUES (%s, NOW())
+                ON CONFLICT (tenant_id) DO UPDATE SET
+                    stripe_last_sync_at = NOW(),
+                    updated_at = NOW()
+            """, (tenant_id,))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error updating stripe sync timestamp: {e}")
+        return False
+
+
+def upsert_tenant_stripe_product(tenant_id: str, product_id: str, name: str = None,
+                                  description: str = None, active: bool = True, 
+                                  metadata: dict = None) -> bool:
+    """
+    Upsert a Stripe product for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        product_id: Stripe product ID
+        name: Product name
+        description: Product description
+        active: Whether product is active
+        metadata: Product metadata as dict
+        
+    Returns:
+        True if upserted successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        import json
+        metadata_json = json.dumps(metadata) if metadata else '{}'
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_stripe_products (tenant_id, product_id, name, description, active, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (tenant_id, product_id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    description = EXCLUDED.description,
+                    active = EXCLUDED.active,
+                    metadata = EXCLUDED.metadata,
+                    updated_at = NOW()
+            """, (tenant_id, product_id, name, description, active, metadata_json))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error upserting tenant stripe product: {e}")
+        return False
+
+
+def upsert_tenant_stripe_price(tenant_id: str, price_id: str, product_id: str,
+                                currency: str = None, unit_amount: int = None,
+                                recurring_interval: str = None, recurring_interval_count: int = 1,
+                                nickname: str = None, active: bool = True, 
+                                price_type: str = 'recurring') -> bool:
+    """
+    Upsert a Stripe price for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        price_id: Stripe price ID
+        product_id: Stripe product ID this price belongs to
+        currency: Currency code (e.g., 'usd')
+        unit_amount: Price in cents
+        recurring_interval: Interval for recurring prices (month, year, week, day)
+        recurring_interval_count: Number of intervals between billings
+        nickname: Price nickname
+        active: Whether price is active
+        price_type: Type of price ('recurring' or 'one_time')
+        
+    Returns:
+        True if upserted successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_stripe_prices 
+                    (tenant_id, price_id, product_id, currency, unit_amount, 
+                     recurring_interval, recurring_interval_count, nickname, active, type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (tenant_id, price_id) DO UPDATE SET
+                    product_id = EXCLUDED.product_id,
+                    currency = EXCLUDED.currency,
+                    unit_amount = EXCLUDED.unit_amount,
+                    recurring_interval = EXCLUDED.recurring_interval,
+                    recurring_interval_count = EXCLUDED.recurring_interval_count,
+                    nickname = EXCLUDED.nickname,
+                    active = EXCLUDED.active,
+                    type = EXCLUDED.type,
+                    updated_at = NOW()
+            """, (tenant_id, price_id, product_id, currency, unit_amount,
+                  recurring_interval, recurring_interval_count, nickname, active, price_type))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error upserting tenant stripe price: {e}")
+        return False
+
+
+def get_tenant_stripe_products(tenant_id: str) -> list:
+    """
+    Get all Stripe products for a tenant with nested prices.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        List of product dicts, each with a 'prices' list
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Get products
+            cursor.execute("""
+                SELECT id, product_id, name, description, active, metadata, created_at, updated_at
+                FROM tenant_stripe_products
+                WHERE tenant_id = %s
+                ORDER BY name
+            """, (tenant_id,))
+            
+            products = []
+            product_rows = cursor.fetchall()
+            
+            for row in product_rows:
+                product = {
+                    'id': row[0],
+                    'product_id': row[1],
+                    'name': row[2],
+                    'description': row[3],
+                    'active': row[4],
+                    'metadata': row[5] if row[5] else {},
+                    'created_at': row[6].isoformat() if row[6] else None,
+                    'updated_at': row[7].isoformat() if row[7] else None,
+                    'prices': []
+                }
+                products.append(product)
+            
+            # Get prices for all products
+            cursor.execute("""
+                SELECT id, price_id, product_id, currency, unit_amount, 
+                       recurring_interval, recurring_interval_count, nickname, active, type,
+                       created_at, updated_at
+                FROM tenant_stripe_prices
+                WHERE tenant_id = %s
+                ORDER BY unit_amount
+            """, (tenant_id,))
+            
+            price_rows = cursor.fetchall()
+            
+            # Map prices to products
+            product_map = {p['product_id']: p for p in products}
+            for row in price_rows:
+                price = {
+                    'id': row[0],
+                    'price_id': row[1],
+                    'product_id': row[2],
+                    'currency': row[3],
+                    'unit_amount': row[4],
+                    'recurring_interval': row[5],
+                    'recurring_interval_count': row[6],
+                    'nickname': row[7],
+                    'active': row[8],
+                    'type': row[9],
+                    'created_at': row[10].isoformat() if row[10] else None,
+                    'updated_at': row[11].isoformat() if row[11] else None
+                }
+                
+                if row[2] in product_map:
+                    product_map[row[2]]['prices'].append(price)
+            
+            return products
+    except Exception as e:
+        logger.exception(f"Error getting tenant stripe products: {e}")
+        return []
+
+
+def clear_tenant_stripe_cache(tenant_id: str) -> bool:
+    """
+    Delete all cached Stripe products and prices for a tenant.
+    Call this before a full resync from Stripe.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        True if cleared successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Delete prices first (no FK constraint but good practice)
+            cursor.execute("DELETE FROM tenant_stripe_prices WHERE tenant_id = %s", (tenant_id,))
+            prices_deleted = cursor.rowcount
+            
+            # Delete products
+            cursor.execute("DELETE FROM tenant_stripe_products WHERE tenant_id = %s", (tenant_id,))
+            products_deleted = cursor.rowcount
+            
+            conn.commit()
+            logger.info(f"Cleared stripe cache for tenant {tenant_id}: {products_deleted} products, {prices_deleted} prices")
+            return True
+    except Exception as e:
+        logger.exception(f"Error clearing tenant stripe cache: {e}")
+        return False
