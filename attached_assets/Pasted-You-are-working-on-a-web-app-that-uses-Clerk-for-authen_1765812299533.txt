@@ -1,0 +1,58 @@
+You are working on a web app that uses Clerk for authentication.
+
+GOAL:
+- Fix the frontend login so Clerk is the ONLY login UI
+- Remove duplicate login widgets
+- Fix dark mode styling so “Continue with Google” text is readable
+- Ensure only a specific admin email can access the admin dashboard
+- Keep static password login temporarily but clearly mark it for removal
+
+TASKS (DO THESE IN ORDER):
+
+1) LOGIN PAGE CLEANUP
+- Remove or hide any custom HTML login card/UI.
+- Leave ONLY a single container for Clerk, e.g. <div id="clerk-root"></div>.
+- Ensure Clerk.mountSignIn() is called exactly once.
+
+2) CLERK DARK MODE FIX
+- When calling Clerk.mountSignIn, apply Clerk’s dark theme properly:
+  - Use baseTheme: Clerk.themes.dark
+  - Ensure button text (including Google login) is white and readable
+  - Do NOT use manual CSS overrides on Clerk internals
+
+3) REMOVE DOUBLE RENDERING
+- Ensure Clerk is not mounted twice due to:
+  - duplicate script loads
+  - repeated initialization after fetching /api/config
+- Add a guard so mountSignIn cannot run more than once.
+
+4) ADMIN EMAIL RESTRICTION
+- Treat the email "niallclarkefs@gmail.com" as the ONLY admin.
+- After Clerk authentication, read the user’s primary email.
+- If the email is NOT "niallclarkefs@gmail.com":
+  - Block access to admin.html
+  - Show a clear “Access denied” message.
+- Enforce this both:
+  - frontend (UX)
+  - backend (API protection)
+
+5) BACKEND AUTH CHECK
+- Ensure backend endpoints validate Clerk JWTs properly.
+- /auth/me should return the authenticated Clerk user if logged in.
+- Admin-only endpoints must additionally verify the email.
+
+6) LEGACY LOGIN HANDLING
+- Leave the static password login working for now.
+- Add clear TODO comments in both frontend and backend explaining:
+  - it must be removed once Clerk is fully live
+  - which files/lines to delete later
+
+7) DO NOT:
+- Do not add hacks
+- Do not hardcode UI styles inside Clerk components
+- Do not introduce new auth systems
+
+OUTPUT:
+- Update only the necessary files
+- Keep changes minimal and clean
+- Prefer clarity over cleverness
