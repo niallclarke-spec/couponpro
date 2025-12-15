@@ -10,6 +10,7 @@
             --bg-secondary: #091128;
             --bg-card: #0B1739;
             --bg-card-hover: #122048;
+            --bg-sidebar: #081028;
             --accent-primary: #4f46e5;
             --accent-primary-hover: #6366f1;
             --accent-gradient: linear-gradient(90deg, #1e3a5f 0%, #4f46e5 50%, #7c3aed 100%);
@@ -23,6 +24,13 @@
             --radius-md: 10px;
             --radius-lg: 14px;
             --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --sidebar-width: 260px;
+            --status-success: #10b981;
+            --status-success-bg: rgba(16, 185, 129, 0.15);
+            --status-warning: #f59e0b;
+            --status-warning-bg: rgba(245, 158, 11, 0.15);
+            --status-error: #ef4444;
+            --status-error-bg: rgba(239, 68, 68, 0.15);
         }
 
         * {
@@ -36,48 +44,78 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-primary);
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
         }
 
-        .dashboard-logo {
-            text-align: center;
-            margin-bottom: 40px;
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-primary);
         }
 
-        .dashboard-logo img {
-            width: 220px;
+        .sidebar-logo {
+            width: 160px;
             height: auto;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
         }
 
-        .dashboard-container {
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
             display: flex;
             flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 480px;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
         }
 
-        .dashboard-card {
+        .nav-item:hover {
             background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            padding: 40px;
-            width: 100%;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-primary);
-            text-align: center;
+            color: var(--text-primary);
         }
 
-        .welcome-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 24px;
+        .nav-item.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-primary);
         }
 
         .user-chip {
@@ -85,15 +123,15 @@
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: var(--bg-secondary);
+            background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-md);
-            margin-bottom: 24px;
+            margin-bottom: 12px;
         }
 
         .user-chip-avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: var(--accent-gradient);
             display: flex;
@@ -101,7 +139,7 @@
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             flex-shrink: 0;
             overflow: hidden;
         }
@@ -114,27 +152,112 @@
 
         .user-chip-info {
             flex: 1;
-            text-align: left;
             min-width: 0;
         }
 
         .user-chip-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             margin-bottom: 2px;
         }
 
         .user-chip-email {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
+        .nav-item.signout {
+            color: var(--text-secondary);
+        }
+
+        .nav-item.signout:hover {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .content-wrapper {
+            max-width: 1200px;
+            padding: 32px;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.connected {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+        }
+
+        .status-badge.disconnected {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .status-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
         .btn {
-            display: inline-block;
-            padding: 12px 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
             border-radius: var(--radius-md);
             font-size: 14px;
             font-weight: 600;
@@ -147,87 +270,290 @@
         .btn-primary {
             background: var(--accent-gradient);
             color: white;
-            width: 100%;
-            margin-bottom: 12px;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px var(--accent-glow);
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-card);
             color: var(--text-primary);
-            width: 100%;
+            border: 1px solid var(--border-secondary);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--bg-card-hover);
         }
 
-        .btn-signout {
-            background: transparent;
-            border: 1px solid var(--border-secondary);
-            color: var(--text-secondary);
-            width: 100%;
-            margin-top: 16px;
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 13px;
         }
 
-        .btn-signout:hover {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: #ef4444;
-            color: #ef4444;
+        .btn-success {
+            background: var(--status-success);
+            color: white;
         }
 
-        .nav-links {
-            margin-top: 24px;
+        .warning-banner {
             display: flex;
-            gap: 16px;
-            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--status-warning-bg);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
         }
 
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
+        .warning-banner svg {
+            width: 20px;
+            height: 20px;
+            color: var(--status-warning);
+            flex-shrink: 0;
+        }
+
+        .warning-banner-text {
             font-size: 14px;
-            transition: color 0.2s;
+            color: var(--status-warning);
         }
 
-        .nav-links a:hover {
+        .vip-plan-card {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .vip-plan-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .vip-plan-label {
+            background: var(--accent-primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .vip-plan-name {
+            font-size: 18px;
+            font-weight: 600;
             color: var(--text-primary);
         }
 
-        .loading-state {
+        .vip-plan-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
             color: var(--text-secondary);
             font-size: 14px;
-            padding: 40px;
         }
 
-        .signing-out-overlay {
-            display: none;
-            position: fixed;
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--bg-primary);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            background: white;
+            transform: translateX(20px);
+        }
+
+        .products-grid {
+            display: grid;
             gap: 16px;
         }
 
-        .signing-out-overlay.show {
-            display: flex;
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
         }
 
-        .signing-out-overlay .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border-secondary);
-            border-top-color: var(--accent-primary);
+        .product-card:hover {
+            border-color: var(--border-secondary);
+            background: var(--bg-card-hover);
+        }
+
+        .product-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .product-nickname {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .product-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .product-status.active {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+        }
+
+        .product-status.archived {
+            background: rgba(107, 114, 128, 0.15);
+            color: #6b7280;
+        }
+
+        .product-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .product-interval {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .product-type {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+        }
+
+        .empty-state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -236,62 +562,366 @@
             to { transform: rotate(360deg); }
         }
 
-        .signing-out-overlay .text {
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(8, 16, 40, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-overlay .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-secondary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-overlay .text {
             color: var(--text-secondary);
-            font-size: 16px;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--status-success);
+            color: white;
+        }
+
+        .toast.error {
+            background: var(--status-error);
+            color: white;
+        }
+
+        .welcome-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            text-align: center;
+            border: 1px solid var(--border-primary);
+            max-width: 480px;
+            margin: 60px auto;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .quick-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .quick-link:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .quick-link svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent-primary);
+        }
+
+        .quick-link-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .quick-link-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .quick-link-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .mobile-menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .content-wrapper {
+                padding: 80px 16px 32px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="signing-out-overlay" id="signing-out-overlay">
+    <div class="loading-overlay" id="loading-overlay">
         <div class="spinner"></div>
-        <div class="text">Signing out...</div>
+        <div class="text" id="loading-text">Loading...</div>
     </div>
 
-    <div class="dashboard-container">
-        <div class="dashboard-logo">
-            <img src="/assets/promostack-logo.png" alt="PromoStack" />
-        </div>
+    <div id="toast" class="toast"></div>
 
-        <div class="dashboard-card" id="dashboard-content">
-            <div class="loading-state" id="loading-state">Loading...</div>
-            
-            <div id="authenticated-content" style="display: none;">
-                <h1 class="welcome-title">Welcome to PromoStack</h1>
-                
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <div class="app-layout" id="app-layout" style="display: none;">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/promostack-logo.png" alt="PromoStack" class="sidebar-logo" />
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9,22 9,12 15,12 15,22"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#products" class="nav-item" data-page="products">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    Products
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
                 <div class="user-chip">
                     <div class="user-chip-avatar" id="user-avatar">
                         <span id="user-initials"></span>
                     </div>
                     <div class="user-chip-info">
                         <div class="user-chip-label">Signed in as</div>
-                        <div class="user-chip-email" id="user-email"></div>
+                        <div class="user-chip-email" id="user-email">Loading...</div>
                     </div>
                 </div>
-
-                <a href="/coupon" class="btn btn-primary">Coupon Generator</a>
-                
-                <button id="signout-btn" class="btn btn-signout">Sign Out</button>
+                <button class="nav-item signout" id="signout-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16,17 21,12 16,7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sign Out
+                </button>
             </div>
-        </div>
+        </aside>
 
-        <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
-        </div>
+        <main class="main-content">
+            <div class="content-wrapper">
+                <section id="page-dashboard" class="page-section active">
+                    <div class="welcome-card">
+                        <h1 class="welcome-title">Welcome to PromoStack</h1>
+                        <p class="welcome-text">Manage your products, subscriptions, and VIP access all in one place.</p>
+                        <div class="quick-links">
+                            <a href="#products" class="quick-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                </svg>
+                                <div class="quick-link-text">
+                                    <div class="quick-link-title">Products</div>
+                                    <div class="quick-link-desc">Manage your Stripe products and VIP plans</div>
+                                </div>
+                            </a>
+                            <a href="/coupon" class="quick-link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/>
+                                    <path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/>
+                                    <line x1="12" y1="4" x2="12" y2="20"/>
+                                </svg>
+                                <div class="quick-link-text">
+                                    <div class="quick-link-title">Coupon Generator</div>
+                                    <div class="quick-link-desc">Create discount codes for your customers</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-products" class="page-section">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h1 class="page-title">Products</h1>
+                            <div id="stripe-status-badge" class="status-badge disconnected">
+                                <span class="status-badge-dot"></span>
+                                <span id="stripe-status-text">Not Connected</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="sync-products-btn" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <polyline points="23,4 23,10 17,10"/>
+                                <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"/>
+                            </svg>
+                            <span id="sync-btn-text">Sync from Stripe</span>
+                        </button>
+                    </div>
+
+                    <div id="vip-warning-banner" class="warning-banner" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <span class="warning-banner-text">No VIP Plan selected — subscriptions won't grant VIP access until you choose one.</span>
+                    </div>
+
+                    <div id="vip-plan-card" class="vip-plan-card" style="display: none;">
+                        <div class="vip-plan-header">
+                            <span class="vip-plan-label">Selected VIP Plan</span>
+                        </div>
+                        <div class="vip-plan-name" id="vip-plan-name">-</div>
+                        <div class="vip-plan-details">
+                            <span id="vip-plan-price">-</span>
+                            <span id="vip-plan-interval">-</span>
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="toggle-wrapper">
+                            <label class="toggle">
+                                <input type="checkbox" id="filter-recurring" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">Show only recurring prices</span>
+                        </div>
+                    </div>
+
+                    <div id="products-container">
+                        <div class="empty-state" id="products-empty-state">
+                            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                            <h3 class="empty-state-title" id="empty-state-title">No products synced yet</h3>
+                            <p class="empty-state-text" id="empty-state-text">Click 'Sync from Stripe' to import your products.</p>
+                        </div>
+                        <div class="products-grid" id="products-grid" style="display: none;"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
 
     <script>
         let CLERK_PUBLISHABLE_KEY = '{{CLERK_PUBLISHABLE_KEY}}';
         let clerkInstance = null;
+        let stripeStatus = { connected: false, vip_price_id: null };
+        let productsData = [];
 
         async function getAuthHeaders(includeContentType = false) {
             const headers = {};
-            
             if (includeContentType) {
                 headers['Content-Type'] = 'application/json';
             }
-            
             if (window.Clerk && window.Clerk.session) {
                 try {
                     const token = await window.Clerk.session.getToken();
@@ -302,12 +932,10 @@
                     console.warn('Failed to get Clerk token:', err);
                 }
             }
-            
             const storedToken = sessionStorage.getItem('clerk_session_token');
             if (!headers['Authorization'] && storedToken) {
                 headers['Authorization'] = `Bearer ${storedToken}`;
             }
-            
             let userEmail = sessionStorage.getItem('clerk_user_email');
             if (window.Clerk && window.Clerk.user) {
                 userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress || 
@@ -317,7 +945,6 @@
             if (userEmail) {
                 headers['X-Clerk-User-Email'] = userEmail;
             }
-            
             return headers;
         }
 
@@ -366,16 +993,44 @@
             });
         }
 
-        async function handleSignOut() {
-            const overlay = document.getElementById('signing-out-overlay');
-            overlay.classList.add('show');
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
 
+        function showLoading(text = 'Loading...') {
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = text;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        function formatPrice(amount, currency) {
+            const formatted = (amount / 100).toFixed(2);
+            const symbols = { usd: '$', eur: '€', gbp: '£' };
+            const symbol = symbols[currency.toLowerCase()] || currency.toUpperCase() + ' ';
+            return symbol + formatted;
+        }
+
+        function formatInterval(interval, count = 1) {
+            if (!interval) return 'one-time';
+            if (count === 1) return `/ ${interval}`;
+            return `/ ${count} ${interval}s`;
+        }
+
+        async function handleSignOut() {
+            showLoading('Signing out...');
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
             sessionStorage.removeItem('clerk_user_avatar');
-
-            // Wait for overlay to paint before proceeding
-            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
             try {
                 if (clerkInstance) {
@@ -385,21 +1040,14 @@
                 console.error('Sign out error:', err);
             }
 
-            // Small delay to ensure signOut fully completes
             await new Promise(resolve => setTimeout(resolve, 100));
-
             window.location.replace('/login?signed_out=1');
         }
 
         function showAuthenticatedUI(user) {
-            const loadingState = document.getElementById('loading-state');
-            const authenticatedContent = document.getElementById('authenticated-content');
             const userEmailEl = document.getElementById('user-email');
             const userAvatarEl = document.getElementById('user-avatar');
             const userInitialsEl = document.getElementById('user-initials');
-
-            loadingState.style.display = 'none';
-            authenticatedContent.style.display = 'block';
 
             const email = user.primaryEmailAddress?.emailAddress || 
                           user.emailAddresses?.[0]?.emailAddress || 
@@ -414,10 +1062,237 @@
                 const initials = email.charAt(0).toUpperCase();
                 userInitialsEl.textContent = initials;
             }
+
+            document.getElementById('app-layout').style.display = 'flex';
+            hideLoading();
+        }
+
+        function navigateTo(page) {
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.toggle('active', section.id === `page-${page}`);
+            });
+            
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+
+            if (page === 'products') {
+                loadStripeStatus();
+                loadProducts();
+            }
+        }
+
+        function handleHashChange() {
+            const hash = window.location.hash.slice(1) || 'dashboard';
+            navigateTo(hash);
+        }
+
+        async function loadStripeStatus() {
+            try {
+                const headers = await getAuthHeaders();
+                const resp = await fetch('/api/stripe/status', { headers, credentials: 'include' });
+                if (resp.ok) {
+                    stripeStatus = await resp.json();
+                    updateStripeStatusUI();
+                }
+            } catch (err) {
+                console.error('Failed to load Stripe status:', err);
+            }
+        }
+
+        function updateStripeStatusUI() {
+            const badge = document.getElementById('stripe-status-badge');
+            const statusText = document.getElementById('stripe-status-text');
+            const syncBtn = document.getElementById('sync-products-btn');
+
+            if (stripeStatus.connected) {
+                badge.className = 'status-badge connected';
+                statusText.textContent = 'Connected';
+                syncBtn.disabled = false;
+            } else {
+                badge.className = 'status-badge disconnected';
+                statusText.textContent = 'Not Connected';
+                syncBtn.disabled = true;
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const headers = await getAuthHeaders();
+                const resp = await fetch('/api/stripe/products', { headers, credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    productsData = data.products || [];
+                    stripeStatus.vip_price_id = data.vip_price_id;
+                    renderProducts();
+                }
+            } catch (err) {
+                console.error('Failed to load products:', err);
+            }
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('products-grid');
+            const emptyState = document.getElementById('products-empty-state');
+            const vipWarning = document.getElementById('vip-warning-banner');
+            const vipCard = document.getElementById('vip-plan-card');
+            const filterRecurring = document.getElementById('filter-recurring').checked;
+
+            let allPrices = [];
+            productsData.forEach(product => {
+                (product.prices || []).forEach(price => {
+                    allPrices.push({
+                        ...price,
+                        product_name: product.name,
+                        product_active: product.active
+                    });
+                });
+            });
+
+            if (filterRecurring) {
+                allPrices = allPrices.filter(p => p.price_type === 'recurring');
+            }
+
+            if (!stripeStatus.connected) {
+                emptyState.style.display = 'block';
+                container.style.display = 'none';
+                vipWarning.style.display = 'none';
+                vipCard.style.display = 'none';
+                document.getElementById('empty-state-title').textContent = 'Stripe not connected';
+                document.getElementById('empty-state-text').textContent = 'Connect Stripe in the onboarding wizard to manage products.';
+                return;
+            }
+
+            if (allPrices.length === 0) {
+                emptyState.style.display = 'block';
+                container.style.display = 'none';
+                vipWarning.style.display = 'none';
+                vipCard.style.display = 'none';
+                document.getElementById('empty-state-title').textContent = 'No products synced yet';
+                document.getElementById('empty-state-text').textContent = "Click 'Sync from Stripe' to import your products.";
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.style.display = 'grid';
+
+            const vipPrice = allPrices.find(p => p.price_id === stripeStatus.vip_price_id);
+            if (vipPrice) {
+                vipWarning.style.display = 'none';
+                vipCard.style.display = 'block';
+                document.getElementById('vip-plan-name').textContent = vipPrice.product_name;
+                document.getElementById('vip-plan-price').textContent = formatPrice(vipPrice.unit_amount, vipPrice.currency);
+                document.getElementById('vip-plan-interval').textContent = formatInterval(vipPrice.recurring_interval, vipPrice.recurring_interval_count);
+            } else {
+                vipWarning.style.display = 'flex';
+                vipCard.style.display = 'none';
+            }
+
+            container.innerHTML = allPrices.map(price => {
+                const isVip = price.price_id === stripeStatus.vip_price_id;
+                const isActive = price.active && price.product_active;
+                return `
+                    <div class="product-card">
+                        <div class="product-card-header">
+                            <div>
+                                <div class="product-name">${escapeHtml(price.product_name)}</div>
+                                ${price.nickname ? `<div class="product-nickname">${escapeHtml(price.nickname)}</div>` : ''}
+                            </div>
+                            <span class="product-status ${isActive ? 'active' : 'archived'}">${isActive ? 'Active' : 'Archived'}</span>
+                        </div>
+                        <div class="product-details">
+                            <span class="product-price">${formatPrice(price.unit_amount, price.currency)}</span>
+                            <span class="product-interval">${formatInterval(price.recurring_interval, price.recurring_interval_count)}</span>
+                            <span class="product-type">${price.price_type === 'recurring' ? 'Subscription' : 'One-time'}</span>
+                        </div>
+                        <div class="product-actions">
+                            ${isVip 
+                                ? `<button class="btn btn-success btn-sm" disabled>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <polyline points="20,6 9,17 4,12"/>
+                                    </svg>
+                                    Selected
+                                  </button>` 
+                                : `<button class="btn btn-secondary btn-sm" onclick="setVipPlan('${price.price_id}')">Set as VIP Plan</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function syncProducts() {
+            const btn = document.getElementById('sync-products-btn');
+            const btnText = document.getElementById('sync-btn-text');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading-spinner"></span> Syncing...';
+
+            try {
+                const headers = await getAuthHeaders(true);
+                const resp = await fetch('/api/stripe/sync-products', {
+                    method: 'POST',
+                    headers,
+                    credentials: 'include'
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok && data.success) {
+                    showToast(`Synced ${data.products_synced} products and ${data.prices_synced} prices`, 'success');
+                    await loadProducts();
+                } else {
+                    showToast(data.error || 'Failed to sync products', 'error');
+                }
+            } catch (err) {
+                console.error('Sync error:', err);
+                showToast('Failed to sync products', 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Sync from Stripe';
+            }
+        }
+
+        async function setVipPlan(priceId) {
+            try {
+                showLoading('Setting VIP plan...');
+                const headers = await getAuthHeaders(true);
+                const resp = await fetch('/api/stripe/set-vip-price', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ price_id: priceId }),
+                    credentials: 'include'
+                });
+                
+                const data = await resp.json();
+                hideLoading();
+                
+                if (resp.ok && data.success) {
+                    showToast('VIP plan updated successfully', 'success');
+                    stripeStatus.vip_price_id = priceId;
+                    renderProducts();
+                } else {
+                    showToast(data.error || 'Failed to set VIP plan', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                console.error('Set VIP error:', err);
+                showToast('Failed to set VIP plan', 'error');
+            }
         }
 
         async function checkAuthAndInit() {
-            const loadingState = document.getElementById('loading-state');
+            showLoading('Loading...');
             
             try {
                 const headers = {};
@@ -443,7 +1318,8 @@
 
                 const clerkKey = await getClerkKey();
                 if (!clerkKey) {
-                    loadingState.textContent = 'Authentication not configured.';
+                    hideLoading();
+                    showToast('Authentication not configured', 'error');
                     return;
                 }
 
@@ -465,6 +1341,7 @@
                         }
                     }
                     showAuthenticatedUI(clerkInstance.user);
+                    handleHashChange();
                 } else {
                     window.location.href = '/login';
                 }
@@ -479,6 +1356,31 @@
             checkAuthAndInit();
 
             document.getElementById('signout-btn').addEventListener('click', handleSignOut);
+            document.getElementById('sync-products-btn').addEventListener('click', syncProducts);
+            document.getElementById('filter-recurring').addEventListener('change', renderProducts);
+
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.hash = item.dataset.page;
+                });
+            });
+
+            window.addEventListener('hashchange', handleHashChange);
+
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            });
+
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            });
         });
     </script>
 </body>
