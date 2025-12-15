@@ -20,6 +20,7 @@ from core.logging import get_logger, set_request_context, clear_request_context
 logger = get_logger(__name__)
 
 from core.config import Config
+from core.host_context import parse_host_context, HostType
 from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
 from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
@@ -171,38 +172,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_GET(self):
         parsed_path = urlparse(self.path)
-        host = self.headers.get('Host', '').lower()
+        host_header = self.headers.get('Host', '').lower()
         set_request_context(request_id=None)
         
-        # Domain-based routing for custom domains
-        if 'admin.promostack.io' in host and parsed_path.path == '/':
-            try:
-                with open('admin.html', 'r') as f:
-                    content = f.read()
-                
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html; charset=utf-8')
-                self.end_headers()
-                self.wfile.write(content.encode('utf-8'))
-                return
-            except FileNotFoundError:
-                self.send_error(404, "Admin page not found")
-                return
-            except Exception as e:
-                self.send_error(500, f"Server error: {str(e)}")
-                return
+        # Parse host context for routing decisions
+        host_context = parse_host_context(host_header)
+        self.host_context = host_context
         
-        elif 'dash.promostack.io' in host and parsed_path.path == '/':
-            # Redirect to login page
-            self.send_response(302)
-            self.send_header('Location', '/login')
-            self.end_headers()
-            return
+        # Root path routing based on host
+        if parsed_path.path == '/':
+            if host_context.host_type == HostType.ADMIN:
+                self.send_response(302)
+                self.send_header('Location', '/admin')
+                self.end_headers()
+                return
+            elif host_context.host_type == HostType.DASH:
+                self.send_response(302)
+                self.send_header('Location', '/app')
+                self.end_headers()
+                return
+            else:
+                self.send_response(302)
+                self.send_header('Location', '/login')
+                self.end_headers()
+                return
         
         # Apply middleware checks via routing table (auth/db requirements)
         route = match_route('GET', parsed_path.path, GET_ROUTES + PAGE_ROUTES)
         if route:
-            if not apply_route_checks(route, self, DATABASE_AVAILABLE):
+            if not apply_route_checks(route, self, DATABASE_AVAILABLE, host_context.host_type):
                 return  # Middleware sent 401/503 response
         
         # Dispatch to subscription domain handlers
@@ -281,19 +279,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             tenant_handlers.handle_tenant_setup_status(self, tenant_id)
             return
         
-        # Legacy /admin path support - redirect to admin.promostack.io
+        # Admin dashboard path
         if parsed_path.path == '/admin/':
             self.send_response(301)
             self.send_header('Location', '/admin')
             self.end_headers()
         elif parsed_path.path == '/admin':
-            # Dev mode: serve admin panel directly on localhost/replit
-            # Production: redirect to admin.promostack.io
-            is_dev = 'localhost' in host or '127.0.0.1' in host or 'replit' in host or ':' in host
-            
-            if not is_dev and 'admin.promostack.io' not in host:
-                self.send_response(301)
-                self.send_header('Location', 'https://admin.promostack.io')
+            # Admin dashboard - accessible on admin host or dev environments
+            if not host_context.is_dev and host_context.host_type == HostType.DASH:
+                self.send_response(302)
+                self.send_header('Location', 'https://admin.promostack.io/admin')
                 self.end_headers()
                 return
             
@@ -307,6 +302,27 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(content.encode('utf-8'))
             except FileNotFoundError:
                 self.send_error(404, "Admin page not found")
+            except Exception as e:
+                self.send_error(500, f"Server error: {str(e)}")
+        
+        elif parsed_path.path == '/app':
+            # Client dashboard - accessible on dash host or dev environments
+            if not host_context.is_dev and host_context.host_type == HostType.ADMIN:
+                self.send_response(302)
+                self.send_header('Location', 'https://dash.promostack.io/app')
+                self.end_headers()
+                return
+            
+            try:
+                with open('app.html', 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_error(404, "Client dashboard not found")
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
@@ -390,7 +406,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         
         elif parsed_path.path == '/api/check-auth':
-            # Check if user is authenticated (for page refresh)
+            # Host-aware auth check - admin host requires ADMIN_EMAILS, dash host accepts any JWT
             from auth.clerk_auth import get_auth_user_from_request, is_admin_email
             clerk_user = get_auth_user_from_request(self)
             
@@ -398,25 +414,17 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             query_params = parse_qs(parsed_path.query)
             frontend_email = query_params.get('email', [None])[0]
             
+            # Determine if admin check is required based on host
+            require_admin = host_context.host_type != HostType.DASH
+            
             if clerk_user:
                 # JWT is valid - use email from JWT if available, else trust frontend email
                 email = clerk_user.get('email') or frontend_email
                 avatar = clerk_user.get('avatar_url')
+                is_admin = is_admin_email(email)
                 
-                logger.info(f"[check-auth] JWT valid, email={email}, clerk_email={clerk_user.get('email')}, frontend_email={frontend_email}")
-                
-                if is_admin_email(email):
-                    # Authenticated and authorized as admin
-                    self.send_response(200)
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({
-                        'authenticated': True,
-                        'email': email,
-                        'avatar': avatar
-                    }).encode())
-                else:
-                    # Authenticated but NOT admin - 403 Forbidden
+                if require_admin and not is_admin:
+                    # Admin host but not admin email - 403 Forbidden
                     self.send_response(403)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
@@ -425,15 +433,29 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         'email': email,
                         'error': 'Access denied - not an admin email'
                     }).encode())
+                else:
+                    # Authenticated (and admin if required)
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'authenticated': True,
+                        'email': email,
+                        'avatar': avatar,
+                        'is_admin': is_admin,
+                        'host_type': host_context.host_type.value
+                    }).encode())
             elif self.check_auth():
-                # Legacy cookie auth (admin_session)
+                # Legacy cookie auth (admin_session) - only for admin access
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     'authenticated': True,
                     'email': None,
-                    'avatar': None
+                    'avatar': None,
+                    'is_admin': True,
+                    'host_type': host_context.host_type.value
                 }).encode())
             else:
                 # Not authenticated at all

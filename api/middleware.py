@@ -8,6 +8,7 @@ import json
 from typing import Callable, Any, Tuple, Optional
 
 from api.routes import Route
+from core.host_context import HostType
 
 
 ENTRYLAB_ONLY_ROUTES = [
@@ -132,14 +133,16 @@ def determine_tenant_id(handler_instance) -> Tuple[Optional[str], Optional[str]]
     return (None, None)
 
 
-def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bool:
+def apply_route_checks(route: Route, handler_instance, db_available: bool, host_type: Optional[HostType] = None) -> bool:
     """
     Apply middleware checks for a route before calling the handler.
     
     This function applies checks in the following order:
     1. Database availability (if db_required)
     2. Tenant context determination (checks BOTH admin_session cookie AND Clerk JWT)
-    3. Authentication (if auth_required) - accepts either auth method
+    3. Host-aware authentication:
+       - HostType.DASH: any valid JWT (tenant mapping still applies)
+       - HostType.ADMIN or None: requires admin email check (backwards compatible)
     4. EntryLab-only route check
     5. Forex SaaS route setup completion check
     
@@ -147,6 +150,7 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
         route: The matched Route with middleware flags
         handler_instance: The MyHTTPRequestHandler instance
         db_available: Current DATABASE_AVAILABLE flag value
+        host_type: Optional host type for host-aware auth rules
     
     Returns:
         True if all checks pass and handler should be called
@@ -168,13 +172,41 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
         send_no_tenant_mapping(handler_instance, getattr(handler_instance, 'clerk_user_id', ''))
         return False
     
-    if route.auth_required:
-        if tenant_id is None:
-            send_unauthorized(handler_instance)
-            return False
-        handler_instance.tenant_id = tenant_id
+    # Host-aware authentication logic
+    if host_type == HostType.DASH:
+        # Dash subdomain: any authenticated user can access (tenant mapping already enforced above)
+        if route.auth_required:
+            if tenant_id is None:
+                send_unauthorized(handler_instance)
+                return False
+            handler_instance.tenant_id = tenant_id
+        else:
+            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+    elif host_type == HostType.ADMIN:
+        # Admin subdomain: require both valid JWT AND admin email
+        if route.auth_required:
+            if tenant_id is None:
+                send_unauthorized(handler_instance)
+                return False
+            # For admin host, verify admin email
+            clerk_email = getattr(handler_instance, 'clerk_email', None)
+            if clerk_email:
+                from auth.clerk_auth import is_admin_email
+                if not is_admin_email(clerk_email):
+                    send_forbidden(handler_instance, 'Admin access required')
+                    return False
+            handler_instance.tenant_id = tenant_id
+        else:
+            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
     else:
-        handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+        # Default host (None): keep existing behavior - admin email required for backwards compatibility
+        if route.auth_required:
+            if tenant_id is None:
+                send_unauthorized(handler_instance)
+                return False
+            handler_instance.tenant_id = tenant_id
+        else:
+            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
     
     if is_entrylab_only_route(path):
         if tenant_id != 'entrylab':
