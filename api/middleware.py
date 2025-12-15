@@ -166,9 +166,12 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
     if path == '/api/check-auth':
         return True
     
+    # Skip tenant mapping requirement for onboarding endpoints (new users don't have mapping yet)
+    is_onboarding_route = path.startswith('/api/onboarding/')
+    
     tenant_id, error = determine_tenant_id(handler_instance)
     
-    if error == 'no_tenant_mapping':
+    if error == 'no_tenant_mapping' and not is_onboarding_route:
         send_no_tenant_mapping(handler_instance, getattr(handler_instance, 'clerk_user_id', ''))
         return False
     
@@ -176,9 +179,18 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
     if host_type == HostType.DASH:
         # Dash subdomain: any authenticated user can access (tenant mapping already enforced above)
         if route.auth_required:
-            if tenant_id is None:
+            if tenant_id is None and not is_onboarding_route:
                 send_unauthorized(handler_instance)
                 return False
+            # For onboarding routes without tenant_id, verify JWT (header or cookie)
+            if tenant_id is None and is_onboarding_route:
+                from auth.clerk_auth import get_auth_user_from_request
+                auth_user = get_auth_user_from_request(handler_instance)
+                if not auth_user:
+                    send_unauthorized(handler_instance)
+                    return False
+                handler_instance.clerk_user_id = auth_user['clerk_user_id']
+                handler_instance.clerk_email = auth_user.get('email') or handler_instance.headers.get('X-Clerk-User-Email', '')
             handler_instance.tenant_id = tenant_id
         else:
             handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'

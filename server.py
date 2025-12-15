@@ -27,6 +27,7 @@ from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
 from domains.tenant import handlers as tenant_handlers
+from handlers import onboarding_handlers
 from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
 from integrations.stripe.webhooks import handle_stripe_webhook
 
@@ -277,6 +278,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             tenant_id = getattr(self, 'tenant_id', 'entrylab')
             set_request_context(tenant_id=tenant_id)
             tenant_handlers.handle_tenant_setup_status(self, tenant_id)
+            return
+        
+        # Dispatch to onboarding handlers (GET)
+        if parsed_path.path == '/api/onboarding/state':
+            onboarding_handlers.handle_onboarding_state(self)
             return
         
         # Admin dashboard path
@@ -745,10 +751,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         set_request_context(request_id=None)
         
+        # Parse host context for host-aware routing
+        host_context = parse_host_context(self.headers.get('Host', ''))
+        
         # Apply middleware checks via routing table (auth/db requirements)
         route = match_route('POST', parsed_path.path, POST_ROUTES)
         if route:
-            if not apply_route_checks(route, self, DATABASE_AVAILABLE):
+            if not apply_route_checks(route, self, DATABASE_AVAILABLE, host_context.host_type):
                 return  # Middleware sent 401/503 response
         
         # Auth cookie endpoint - validates JWT and sets email cookie for page navigation
@@ -865,6 +874,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/tenants/map-user':
             tenant_handlers.handle_tenant_map_user(self)
+            return
+        
+        # Dispatch to onboarding handlers
+        if parsed_path.path == '/api/onboarding/telegram':
+            onboarding_handlers.handle_onboarding_telegram(self)
+            return
+        elif parsed_path.path == '/api/onboarding/stripe':
+            onboarding_handlers.handle_onboarding_stripe(self)
+            return
+        elif parsed_path.path == '/api/onboarding/business':
+            onboarding_handlers.handle_onboarding_business(self)
+            return
+        elif parsed_path.path == '/api/onboarding/complete':
+            onboarding_handlers.handle_onboarding_complete(self)
             return
         
         # Dispatch to telegram webhook handlers

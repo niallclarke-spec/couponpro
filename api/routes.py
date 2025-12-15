@@ -105,6 +105,10 @@ GET_ROUTES: List[Route] = [
     # Tenant
     Route('GET', '/api/tenant/setup-status', 'handle_api_tenant_setup_status',
           auth_required=True, db_required=True),
+    
+    # Onboarding
+    Route('GET', '/api/onboarding/state', 'handle_api_onboarding_state',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -183,6 +187,19 @@ POST_ROUTES: List[Route] = [
     Route('POST', '/api/tenant/integrations', 'handle_api_tenant_integrations',
           auth_required=True, db_required=True),
     Route('POST', '/api/tenants/map-user', 'handle_api_tenant_map_user',
+          auth_required=True, db_required=True),
+    
+    # Auth cookie
+    Route('POST', '/api/set-auth-cookie', 'handle_api_set_auth_cookie'),
+    
+    # Onboarding
+    Route('POST', '/api/onboarding/telegram', 'handle_api_onboarding_telegram',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/onboarding/stripe', 'handle_api_onboarding_stripe',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/onboarding/business', 'handle_api_onboarding_business',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/onboarding/complete', 'handle_api_onboarding_complete',
           auth_required=True, db_required=True),
 ]
 

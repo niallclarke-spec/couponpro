@@ -152,3 +152,34 @@ def bootstrap_tenant(clerk_user_id: str, email: str) -> str:
     except Exception as e:
         logger.exception(f"Error bootstrapping tenant for {clerk_user_id}")
         return None
+
+
+def map_clerk_user_to_tenant(clerk_user_id: str, tenant_id: str, email: str = None) -> bool:
+    """
+    Map a Clerk user to an existing tenant.
+    Used during onboarding when tenant is created separately.
+    
+    Returns True on success, False on error.
+    """
+    from db import db_pool
+    
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_users (clerk_user_id, tenant_id, email, role)
+                VALUES (%s, %s, %s, 'owner')
+                ON CONFLICT (clerk_user_id) DO UPDATE SET
+                    tenant_id = EXCLUDED.tenant_id,
+                    email = COALESCE(EXCLUDED.email, tenant_users.email)
+            """, (clerk_user_id, tenant_id, email))
+            conn.commit()
+        
+        logger.info(f"Mapped user {clerk_user_id} to tenant {tenant_id}")
+        return True
+    except Exception as e:
+        logger.exception(f"Error mapping user {clerk_user_id} to tenant {tenant_id}")
+        return False

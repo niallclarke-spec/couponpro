@@ -9,6 +9,7 @@ Handles onboarding API endpoints for tenant setup including:
 import json
 import urllib.request
 import urllib.error
+from datetime import datetime
 
 from auth.clerk_auth import get_auth_user_from_request
 import db
@@ -30,26 +31,51 @@ def _get_tenant_id_from_handler(handler) -> str:
     return getattr(handler, 'tenant_id', None)
 
 
-def _require_tenant_id(handler) -> str:
-    """Require tenant_id or send 401 error. Returns tenant_id or None if error sent."""
+def _require_tenant_id_or_create(handler) -> str:
+    """
+    Get tenant_id from handler, or create one for new users during onboarding.
+    
+    For new users without a tenant mapping, auto-provisions a tenant using
+    bootstrap_tenant (random UUID for uniqueness) and creates initial onboarding state.
+    
+    Returns tenant_id or None if authentication fails.
+    """
     tenant_id = _get_tenant_id_from_handler(handler)
-    if not tenant_id:
+    if tenant_id:
+        return tenant_id
+    
+    clerk_user_id = getattr(handler, 'clerk_user_id', None)
+    clerk_email = getattr(handler, 'clerk_email', None) or handler.headers.get('X-Clerk-User-Email', '')
+    
+    if not clerk_user_id:
         auth_user = get_auth_user_from_request(handler)
         if not auth_user:
             _send_json_response(handler, 401, {'error': 'Authentication required'})
             return None
-        user_row = db.get_user_by_clerk_id(auth_user['clerk_user_id'])
-        if not user_row or not user_row.get('tenant_id'):
-            _send_json_response(handler, 401, {'error': 'User not associated with a tenant'})
-            return None
-        tenant_id = user_row['tenant_id']
+        clerk_user_id = auth_user['clerk_user_id']
+        clerk_email = auth_user.get('email') or clerk_email
+    
+    from core.tenant_credentials import get_tenant_for_user, bootstrap_tenant
+    
+    existing_tenant = get_tenant_for_user(clerk_user_id)
+    if existing_tenant:
+        db.create_onboarding_state(existing_tenant)
+        return existing_tenant
+    
+    tenant_id = bootstrap_tenant(clerk_user_id, clerk_email)
+    if not tenant_id:
+        _send_json_response(handler, 500, {'error': 'Failed to create tenant'})
+        return None
+    
+    db.create_onboarding_state(tenant_id)
+    
     return tenant_id
 
 
 def handle_onboarding_state(handler):
     """GET /api/onboarding/state - Returns current onboarding state for authenticated tenant."""
     try:
-        tenant_id = _require_tenant_id(handler)
+        tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
             return
         
@@ -70,7 +96,7 @@ def handle_onboarding_state(handler):
 def handle_onboarding_telegram(handler):
     """POST /api/onboarding/telegram - Verify and save Telegram bot token."""
     try:
-        tenant_id = _require_tenant_id(handler)
+        tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
             return
         
@@ -118,7 +144,7 @@ def handle_onboarding_telegram(handler):
             'bot_token': bot_token,
             'bot_username': bot_username,
             'bot_name': bot_name,
-            'verified_at': db.datetime.now().isoformat()
+            'verified_at': datetime.now().isoformat()
         }
         
         if not db.save_tenant_integration(tenant_id, 'telegram', integration_config):
@@ -154,7 +180,7 @@ def handle_onboarding_telegram(handler):
 def handle_onboarding_stripe(handler):
     """POST /api/onboarding/stripe - Verify and save Stripe keys."""
     try:
-        tenant_id = _require_tenant_id(handler)
+        tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
             return
         
@@ -212,7 +238,7 @@ def handle_onboarding_stripe(handler):
             'secret_key': secret_key,
             'publishable_key': publishable_key or '',
             'is_live': is_live,
-            'verified_at': db.datetime.now().isoformat()
+            'verified_at': datetime.now().isoformat()
         }
         
         if not db.save_tenant_integration(tenant_id, 'stripe', integration_config):
@@ -247,7 +273,7 @@ def handle_onboarding_stripe(handler):
 def handle_onboarding_business(handler):
     """POST /api/onboarding/business - Save business info."""
     try:
-        tenant_id = _require_tenant_id(handler)
+        tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
             return
         
@@ -301,7 +327,7 @@ def handle_onboarding_business(handler):
 def handle_onboarding_complete(handler):
     """POST /api/onboarding/complete - Mark onboarding as complete if all steps done."""
     try:
-        tenant_id = _require_tenant_id(handler)
+        tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
             return
         
