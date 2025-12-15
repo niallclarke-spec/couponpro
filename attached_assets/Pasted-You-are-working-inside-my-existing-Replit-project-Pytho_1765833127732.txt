@@ -1,0 +1,141 @@
+You are working inside my existing Replit project (Python server + static HTML pages). Implement a clean, production-ready auth + onboarding flow using Clerk + Google sign-in, with two subdomains and strict role separation.
+
+HIGH-LEVEL GOALS
+	1.	dash.promostack.io = tenant (client) portal
+
+	•	Shows a clean “Sign in / Sign up with Google” screen (Clerk).
+	•	This is the ONLY place tenants sign in / sign up.
+	•	Admin users (emails in ADMIN_EMAILS) must NOT be able to access the admin dashboard from dash. If an admin logs in on dash, show a friendly message like: “You’re an admin — go to admin.promostack.io” + a button linking there, and provide Sign Out.
+
+	2.	admin.promostack.io = admin portal
+
+	•	Shows the same Google sign-in screen (Clerk).
+	•	Only ADMIN_EMAILS can access /admin and admin-only APIs.
+	•	Non-admins must be blocked (403 or an “Access denied” page).
+
+	3.	New tenant onboarding wizard (forced)
+
+	•	When a new tenant signs up on dash (first-ever login), create a tenant record and put them into a required setup wizard.
+	•	Wizard must block access to the main tenant dashboard until completed.
+	•	Wizard steps (minimum):
+Step 1: Connect Telegram (collect bot token + any required webhook/channel identifiers and verify it works)
+Step 2: Stripe setup (collect Stripe secret key and publishable key; validate by calling a lightweight Stripe endpoint)
+Step 3: Confirm business info (tenant display name, support email, optional logo)
+Step 4: Finish + redirect into tenant dashboard
+	•	The wizard must support “save progress” and “resume later”.
+	•	Store everything per-tenant (multi-tenant design), tied to the authenticated Clerk user.
+	•	For security: store secrets in DB encrypted-at-rest (or at minimum clearly mark TODO + isolate secrets in a dedicated table; do not leak them to client-side JS).
+
+ARCHITECTURE RULES (IMPORTANT)
+A) Server-side access control is mandatory
+	•	/admin must NEVER return HTML to unauthenticated users via curl.
+	•	Enforce auth on the backend for:
+	•	/admin (admin-only)
+	•	/app (tenant portal pages that require login)
+	•	/api/* endpoints (each route should be public or protected explicitly)
+	•	Do NOT rely on frontend JS to “hide” content for security.
+
+B) Host-aware routing (subdomain aware)
+	•	Detect host reliably from request headers (Host / X-Forwarded-Host).
+	•	Route behavior:
+	•	On dash host:
+	•	/ should redirect to /login if not authed, or to /app if authed and onboarded, or to /setup if authed but not onboarded.
+	•	On admin host:
+	•	/ should redirect to /login if not authed, or to /admin if authed as admin.
+	•	Prevent cross-access:
+	•	Tenant users cannot access /admin (ever).
+	•	Admin users cannot use dash to reach admin; show “Go to admin site” message.
+	•	Optionally allow admins to still view tenant portal only if explicitly desired; default is deny on dash to keep separation clean.
+
+C) Clerk integration
+	•	Use Clerk JWT verification server-side using the existing CLERK_JWKS_URL and CLERK_SECRET_KEY setup already in the project.
+	•	Frontend should get Clerk publishable key from /api/config (already exists) and never hardcode it.
+	•	Make login UI centered, modern, no duplicate widgets behind it, no “development mode” UI in production (explain what changes when using prod instance).
+
+D) UX quality bar
+	•	Replace the janky logout:
+	•	Single clear “Sign out” action.
+	•	After sign out, land on a stable /login state with no flashing.
+	•	In nav/header:
+	•	Show a user avatar circle with initials or photo (if available via Clerk) + email dropdown.
+	•	When logged in, never show “Login with Google”; it must show the user menu + Sign out.
+	•	Ensure the “Loading…” state is replaced with a deterministic state:
+	•	“Checking session…” for max ~1s, then render user UI.
+	•	No indefinite loading.
+
+WHAT I WANT YOU TO BUILD (PAGES)
+Dash (tenant) site:
+	•	/login (Clerk sign-in) with a clean centered card and correct theming
+	•	/setup (wizard) multi-step UI
+	•	/app (tenant dashboard home — can be minimal placeholder but must demonstrate auth + tenant context)
+	•	Optionally /app/settings to edit integrations after onboarding
+
+Admin site:
+	•	/login (same Clerk login UI)
+	•	/admin (existing admin dashboard, but fully protected server-side)
+
+DATABASE + MODELS
+Create/extend tables as needed:
+	•	tenants: id, slug, name, created_at, onboarding_completed_at, etc.
+	•	tenant_users: tenant_id, clerk_user_id, email, role (tenant_owner / member), created_at
+	•	tenant_integrations: tenant_id, provider (telegram/stripe), encrypted_secret_json, created_at, updated_at
+	•	onboarding_state: tenant_id, step, is_complete, progress_json
+
+Rules:
+	•	First user to create a tenant becomes tenant_owner.
+	•	A tenant is created at first login OR during first wizard step; pick one and be consistent.
+	•	Tenant association should be deterministic from Clerk user id.
+
+API ENDPOINTS (MINIMUM)
+Public:
+	•	GET /api/config (publishable key + maybe host type flags)
+Protected (tenant):
+	•	GET /api/me (returns clerk user + tenant + onboarding state)
+	•	POST /api/onboarding/step (save wizard step data)
+	•	POST /api/onboarding/finish
+	•	POST /api/telegram/verify (verify bot token / channel)
+	•	POST /api/stripe/verify (verify stripe key)
+Protected (admin-only):
+	•	GET /api/admin/* (whatever exists; ensure protection)
+	•	GET /api/check-auth should become host-aware and role-aware
+
+TESTS / SMOKE CHECKS (MANDATORY)
+Add a scripts/auth_smoke_test.sh that uses curl to verify:
+	1.	Unauthed:
+
+	•	dash host /app => 302 to /login (or 401)
+	•	admin host /admin => 302 to /login (or 401)
+
+	2.	Authed tenant:
+
+	•	dash host /app => 200 after onboarding completed, otherwise redirected to /setup
+	•	admin host /admin => 403
+
+	3.	Authed admin:
+
+	•	admin host /admin => 200
+	•	dash host / => shows “Go to admin.promostack.io” page (or denies)
+
+Make the smoke test accept JWT tokens via environment variables:
+	•	TENANT_JWT=…
+	•	ADMIN_JWT=…
+Use curl with -H “Authorization: Bearer $TENANT_JWT” and Host headers (e.g., -H “Host: dash.promostack.io”) so it can be run locally.
+
+DELIVERABLES
+	•	Implement everything above with clean, readable code.
+	•	Update server.py routes and auth middleware to be host-aware and role-aware.
+	•	Update login.html/admin.html and add new pages (setup.html, app.html, etc.) with modern UI and no duplicate Clerk mounts.
+	•	Ensure logout and redirects are smooth and deterministic.
+	•	Provide a short summary of what changed and exactly how to run the smoke test.
+
+IMPORTANT CONSTRAINTS
+	•	Do not remove existing bot/webhook functionality.
+	•	Do not break existing DB migrations; add new migrations safely.
+	•	No “endless terminal commands” as the primary workflow: implement fixes in code + provide the smoke test script.
+
+Start by:
+	1.	Reviewing current auth logic (Clerk + any legacy sessions).
+	2.	Implementing server-side route protection for /admin and tenant routes.
+	3.	Implementing the dash login + setup wizard flow.
+	4.	Implementing the role separation rules.
+	5.	Adding the smoke test script.
