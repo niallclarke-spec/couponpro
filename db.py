@@ -3189,8 +3189,8 @@ def get_bot_config(tenant_id):
             cursor.execute("""
                 SELECT setting_key, setting_value
                 FROM forex_config
-                WHERE tenant_id = %s AND setting_key LIKE 'bot_%'
-            """, (tenant_id,))
+                WHERE tenant_id = %s AND setting_key LIKE %s
+            """, (tenant_id, "bot_%"))
             
             config = {'active_bot_type': 'aggressive', 'tenant_id': tenant_id}
             for row in cursor.fetchall():
