@@ -17,10 +17,28 @@ The platform uses a dark navy theme with a unified admin dashboard featuring a d
 ### Technical Implementations
 The frontend is built with pure HTML, CSS, and vanilla JavaScript. The backend and API are a Python HTTP server (`server.py`). Client-side image generation uses canvas manipulation for the web app, while the Telegram bot uses server-side Python/Pillow. Persistent storage for template images and `meta.json` backups is managed by Digital Ocean Spaces (S3-compatible) with CDN, utilizing `boto3`.
 
+### Dual-Subdomain Architecture
+The platform uses two subdomains with different access levels:
+- **admin.promostack.io**: Admin-only dashboard (requires email in ADMIN_EMAILS)
+- **dash.promostack.io**: Client dashboard (any authenticated Clerk user)
+
+**Host-Aware Routing:**
+- `core/host_context.py`: Parses Host header to determine `host_type` (admin/dash/default)
+- Root path (`/`) redirects to `/admin` (admin host) or `/app` (dash host)
+- `/admin`: Admin dashboard (restricted on dash host)
+- `/app`: Client dashboard (accessible to all authenticated users)
+- `/coupon`: Public coupon generator
+- `/login`: Clerk authentication page
+
 ### Authentication Architecture
 The platform supports dual authentication methods:
 1. **Clerk JWT Authentication** (Primary): Uses Clerk's hosted authentication with JWT tokens sent via `Authorization: Bearer` headers.
 2. **Legacy Cookie Authentication**: HMAC-signed `admin_session` cookie for backward compatibility.
+
+**Host-Aware Auth Rules:**
+- Admin host: Requires valid JWT AND email in ADMIN_EMAILS (env var)
+- Dash host: Requires only valid JWT (no admin email restriction)
+- Default host: Falls back to admin email requirement for backwards compatibility
 
 **Clerk JWT Email Handling:**
 - Default Clerk JWTs only contain `sub` (user ID), not the email address
@@ -31,14 +49,22 @@ The platform supports dual authentication methods:
 **Key Auth Files:**
 - `auth/clerk_auth.py`: Token verification, admin email checking, user extraction
 - `core/clerk_auth.py`: JWT verification middleware
+- `core/host_context.py`: Host detection and routing context
 - `assets/js/auth.js`: Frontend auth helpers (`getAuthHeaders()`, `authedFetch()`)
-- `api/middleware.py`: Route-level auth and tenant checks
+- `api/middleware.py`: Route-level auth and tenant checks with host-aware rules
 
 **Auth Flow:**
 1. User signs in via Clerk on `/login`
-2. Frontend stores email in sessionStorage and redirects to `/admin`
-3. `/api/check-auth` validates JWT + email, returns 200 (admin) / 403 (non-admin) / 401 (unauthenticated)
-4. All authenticated API calls include `Authorization` header + `X-Clerk-User-Email` header
+2. Frontend stores email in sessionStorage
+3. Redirect based on host: admin host → `/admin`, dash host → `/app`
+4. `/api/check-auth` validates JWT + host context, returns 200 (authenticated) / 403 (not authorized for host) / 401 (unauthenticated)
+5. All authenticated API calls include `Authorization` header + `X-Clerk-User-Email` header
+
+**Sign-Out Flow (Fixed):**
+1. Show "Signing out..." overlay immediately
+2. Clear all sessionStorage items (clerk_session_token, clerk_user_email, clerk_user_avatar)
+3. Await `Clerk.signOut()` completion
+4. Force redirect to `/login` (handles iframe context with window.top.location)
 
 ### Feature Specifications
 - **Web Application**: Dynamic template loading, auto-fitting text, live previews, logo overlays, image download/share, and a password-protected admin panel for template management.

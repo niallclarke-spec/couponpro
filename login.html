@@ -155,10 +155,23 @@
 
         <div id="error-message" class="error-message"></div>
 
-        <div class="nav-links">
-            <a href="/admin">Admin Dashboard</a>
-            <a href="/">Home</a>
+        <div class="nav-links" id="nav-links">
+            <a href="/admin" id="dashboard-link">Dashboard</a>
+            <a href="/coupon">Coupon Generator</a>
         </div>
+        <script>
+            (function() {
+                const host = window.location.hostname.toLowerCase();
+                const dashLink = document.getElementById('dashboard-link');
+                if (host.startsWith('dash.')) {
+                    dashLink.href = '/app';
+                    dashLink.textContent = 'Dashboard';
+                } else {
+                    dashLink.href = '/admin';
+                    dashLink.textContent = 'Admin Dashboard';
+                }
+            })();
+        </script>
     </div>
 
     <script>
@@ -262,11 +275,19 @@
                 }
 
                 signoutBtn.addEventListener('click', async () => {
+                    userInfoEl.innerHTML = '<span class="loading-text">Signing out...</span>';
+                    
                     sessionStorage.removeItem('clerk_session_token');
                     sessionStorage.removeItem('clerk_user_email');
                     sessionStorage.removeItem('clerk_user_avatar');
-                    await clerkInstance.signOut();
-                    window.location.reload();
+                    
+                    try {
+                        await clerkInstance.signOut();
+                    } catch (err) {
+                        console.warn('Sign out error:', err);
+                    }
+                    
+                    window.location.href = '/login';
                 });
 
             } catch (err) {
@@ -298,9 +319,23 @@
                         sessionStorage.setItem('clerk_user_avatar', avatarUrl);
                     }
                     
-                    // Auto-redirect to admin after successful sign-in
+                    // Host-aware redirect after sign-in
+                    const host = window.location.hostname.toLowerCase();
+                    let redirectPath = '/admin';
+                    
+                    if (host.startsWith('dash.')) {
+                        redirectPath = '/app';
+                    } else if (host.startsWith('admin.')) {
+                        redirectPath = '/admin';
+                    }
+                    
+                    // Handle iframe context - use top-level navigation
                     setTimeout(() => {
-                        window.location.href = '/admin';
+                        if (window.top !== window.self) {
+                            window.top.location.href = redirectPath;
+                        } else {
+                            window.location.href = redirectPath;
+                        }
                     }, 500);
                 }
             } catch (err) {

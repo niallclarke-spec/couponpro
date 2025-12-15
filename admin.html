@@ -5707,6 +5707,12 @@
         }
 
         async function handleLogout() {
+            // Show signing out state immediately
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+                dashboard.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;">Signing out...</div>';
+            }
+            
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
             sessionStorage.removeItem('clerk_user_avatar');
@@ -5725,7 +5731,12 @@
                 console.warn('Backend logout error:', err);
             }
             
-            window.location.href = '/login';
+            // Handle iframe context - use top-level navigation
+            if (window.top !== window.self) {
+                window.top.location.href = '/login';
+            } else {
+                window.location.href = '/login';
+            }
         }
 
         async function handleAccessDeniedLogout() {
