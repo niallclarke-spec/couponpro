@@ -497,6 +497,59 @@
             color: var(--text-primary);
         }
 
+        .instructions-box {
+            background: rgba(79, 70, 229, 0.08);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .instructions-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        .instructions-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .instructions-list li {
+            margin-bottom: 6px;
+        }
+
+        .instructions-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .instructions-list a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .instructions-list a:hover {
+            text-decoration: underline;
+        }
+
+        .instructions-list code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .instructions-list strong {
+            color: var(--text-primary);
+        }
+
         @media (max-width: 480px) {
             .setup-card {
                 padding: 24px 20px;
@@ -539,20 +592,49 @@
             <!-- Step 1: Telegram Setup -->
             <div class="step-content active" data-step="1">
                 <p class="step-description">
-                    Connect your Telegram bot to send promotional messages and manage subscribers. 
-                    Create a bot via <a href="https://t.me/BotFather" target="_blank" style="color: var(--accent-primary);">@BotFather</a> and paste the token below.
+                    Connect your Telegram bot and channels to manage subscribers and send promotional messages.
                 </p>
+                
+                <div class="instructions-box">
+                    <div class="instructions-title">How to get your Bot Token:</div>
+                    <ol class="instructions-list">
+                        <li>Open Telegram and search for <a href="https://t.me/BotFather" target="_blank">@BotFather</a></li>
+                        <li>Send <code>/newbot</code> and follow the prompts</li>
+                        <li>Copy the token that looks like: <code>123456789:ABCdef...</code></li>
+                    </ol>
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label">Bot Token</label>
                     <input type="text" class="form-input" id="telegramToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
-                    <p class="form-hint">Get this from @BotFather after creating your bot</p>
+                    <p class="form-hint">The token @BotFather gave you when creating your bot</p>
+                </div>
+
+                <div class="instructions-box" style="margin-top: 24px;">
+                    <div class="instructions-title">How to get Channel IDs:</div>
+                    <ol class="instructions-list">
+                        <li>Add your bot as an admin to both channels</li>
+                        <li>For public channels: use the @username (e.g., <code>@yourchannel</code>)</li>
+                        <li>For private channels: forward a message from the channel to <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> to get the ID (e.g., <code>-1001234567890</code>)</li>
+                    </ol>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Free Channel ID</label>
+                    <input type="text" class="form-input" id="freeChannelId" placeholder="@yourchannel or -1001234567890">
+                    <p class="form-hint">Your public/free tier channel where free users can join</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">VIP Channel ID</label>
+                    <input type="text" class="form-input" id="vipChannelId" placeholder="-1001234567890">
+                    <p class="form-hint">Your private/premium channel for paying subscribers</p>
                     <p class="form-error" id="telegramError"></p>
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-primary" id="verifyTelegram" onclick="verifyTelegram()">
-                        Verify Bot
+                        Verify Bot & Channels
                     </button>
                 </div>
             </div>
@@ -560,20 +642,45 @@
             <!-- Step 2: Stripe Setup -->
             <div class="step-content" data-step="2">
                 <p class="step-description">
-                    Connect your Stripe account to accept payments for subscriptions. 
-                    Get your API keys from the <a href="https://dashboard.stripe.com/apikeys" target="_blank" style="color: var(--accent-primary);">Stripe Dashboard</a>.
+                    Connect your Stripe account to accept payments and receive webhook notifications.
                 </p>
+                
+                <div class="instructions-box">
+                    <div class="instructions-title">How to get your API Keys:</div>
+                    <ol class="instructions-list">
+                        <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard > Developers > API Keys</a></li>
+                        <li>Copy your <strong>Secret key</strong> (click "Reveal test/live key")</li>
+                        <li>Copy your <strong>Publishable key</strong> (visible by default)</li>
+                    </ol>
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label">Secret Key</label>
                     <input type="password" class="form-input" id="stripeSecretKey" placeholder="sk_live_...">
-                    <p class="form-hint">Starts with sk_live_ or sk_test_</p>
+                    <p class="form-hint">Starts with sk_live_ (production) or sk_test_ (testing)</p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Publishable Key</label>
                     <input type="text" class="form-input" id="stripePublishableKey" placeholder="pk_live_...">
-                    <p class="form-hint">Starts with pk_live_ or pk_test_</p>
+                    <p class="form-hint">Starts with pk_live_ (production) or pk_test_ (testing)</p>
+                </div>
+
+                <div class="instructions-box" style="margin-top: 24px;">
+                    <div class="instructions-title">How to set up Webhooks:</div>
+                    <ol class="instructions-list">
+                        <li>Go to <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Dashboard > Developers > Webhooks</a></li>
+                        <li>Click "Add endpoint" and enter your webhook URL:<br>
+                            <code id="webhookUrlDisplay">https://yourdomain.com/api/stripe/webhook</code></li>
+                        <li>Select events: <code>checkout.session.completed</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code></li>
+                        <li>After creating, click the endpoint and copy the <strong>Signing secret</strong> (starts with <code>whsec_</code>)</li>
+                    </ol>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Webhook Signing Secret</label>
+                    <input type="password" class="form-input" id="stripeWebhookSecret" placeholder="whsec_...">
+                    <p class="form-hint">Found on your webhook endpoint page - used to verify webhook events</p>
                     <p class="form-error" id="stripeError"></p>
                 </div>
 
@@ -831,7 +938,7 @@
             } else {
                 btn.disabled = false;
                 const btnTexts = {
-                    'verifyTelegram': 'Verify Bot',
+                    'verifyTelegram': 'Verify Bot & Channels',
                     'verifyStripe': 'Verify Keys',
                     'saveBusinessInfo': 'Continue'
                 };
@@ -841,9 +948,21 @@
 
         async function verifyTelegram() {
             const token = document.getElementById('telegramToken').value.trim();
+            const freeChannelId = document.getElementById('freeChannelId').value.trim();
+            const vipChannelId = document.getElementById('vipChannelId').value.trim();
             
             if (!token) {
                 showAlert('Please enter your Telegram bot token', 'error');
+                return;
+            }
+            
+            if (!freeChannelId) {
+                showAlert('Please enter your Free Channel ID', 'error');
+                return;
+            }
+            
+            if (!vipChannelId) {
+                showAlert('Please enter your VIP Channel ID', 'error');
                 return;
             }
 
@@ -856,17 +975,21 @@
                     method: 'POST',
                     headers: headers,
                     credentials: 'include',
-                    body: JSON.stringify({ bot_token: token })
+                    body: JSON.stringify({
+                        bot_token: token,
+                        free_channel_id: freeChannelId,
+                        vip_channel_id: vipChannelId
+                    })
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.success) {
                     completedSteps.add(1);
-                    showAlert('Telegram bot verified successfully!', 'success');
+                    showAlert('Telegram bot and channels verified successfully!', 'success');
                     setTimeout(() => goToStep(2), 1000);
                 } else {
-                    showAlert(data.error || 'Failed to verify Telegram bot', 'error');
+                    showAlert(data.error || 'Failed to verify Telegram setup', 'error');
                 }
             } catch (err) {
                 showAlert('Connection error. Please try again.', 'error');
@@ -878,9 +1001,20 @@
         async function verifyStripe() {
             const secretKey = document.getElementById('stripeSecretKey').value.trim();
             const publishableKey = document.getElementById('stripePublishableKey').value.trim();
+            const webhookSecret = document.getElementById('stripeWebhookSecret').value.trim();
             
             if (!secretKey || !publishableKey) {
-                showAlert('Please enter both Stripe keys', 'error');
+                showAlert('Please enter both API keys', 'error');
+                return;
+            }
+            
+            if (!webhookSecret) {
+                showAlert('Please enter your webhook signing secret', 'error');
+                return;
+            }
+            
+            if (!webhookSecret.startsWith('whsec_')) {
+                showAlert('Webhook secret should start with whsec_', 'error');
                 return;
             }
 
@@ -895,7 +1029,8 @@
                     credentials: 'include',
                     body: JSON.stringify({
                         secret_key: secretKey,
-                        publishable_key: publishableKey
+                        publishable_key: publishableKey,
+                        webhook_secret: webhookSecret
                     })
                 });
 
@@ -903,10 +1038,10 @@
 
                 if (response.ok && data.success) {
                     completedSteps.add(2);
-                    showAlert('Stripe keys verified successfully!', 'success');
+                    showAlert('Stripe configuration verified successfully!', 'success');
                     setTimeout(() => goToStep(3), 1000);
                 } else {
-                    showAlert(data.error || 'Failed to verify Stripe keys', 'error');
+                    showAlert(data.error || 'Failed to verify Stripe configuration', 'error');
                 }
             } catch (err) {
                 showAlert('Connection error. Please try again.', 'error');

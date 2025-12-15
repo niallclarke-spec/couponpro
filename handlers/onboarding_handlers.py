@@ -9,6 +9,7 @@ Handles onboarding API endpoints for tenant setup including:
 import json
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime
 
 from auth.clerk_auth import get_auth_user_from_request
@@ -94,7 +95,7 @@ def handle_onboarding_state(handler):
 
 
 def handle_onboarding_telegram(handler):
-    """POST /api/onboarding/telegram - Verify and save Telegram bot token."""
+    """POST /api/onboarding/telegram - Verify and save Telegram bot token and channel IDs."""
     try:
         tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
@@ -109,9 +110,19 @@ def handle_onboarding_telegram(handler):
         data = json.loads(post_data.decode('utf-8'))
         
         bot_token = data.get('bot_token', '').strip()
+        free_channel_id = data.get('free_channel_id', '').strip()
+        vip_channel_id = data.get('vip_channel_id', '').strip()
         
         if not bot_token:
             _send_json_response(handler, 400, {'success': False, 'error': 'bot_token is required'})
+            return
+        
+        if not free_channel_id:
+            _send_json_response(handler, 400, {'success': False, 'error': 'free_channel_id is required'})
+            return
+        
+        if not vip_channel_id:
+            _send_json_response(handler, 400, {'success': False, 'error': 'vip_channel_id is required'})
             return
         
         try:
@@ -140,10 +151,69 @@ def handle_onboarding_telegram(handler):
             _send_json_response(handler, 400, {'success': False, 'error': f'Failed to verify token: {str(e)}'})
             return
         
+        free_channel_verified = False
+        vip_channel_verified = False
+        free_channel_error = None
+        vip_channel_error = None
+        
+        try:
+            chat_id_param = free_channel_id if free_channel_id.startswith('-') else free_channel_id
+            url = f"https://api.telegram.org/bot{bot_token}/getChat?chat_id={urllib.parse.quote(chat_id_param, safe='@')}"
+            req = urllib.request.Request(url, method='GET')
+            with urllib.request.urlopen(req, timeout=10) as response:
+                chat_info = json.loads(response.read().decode('utf-8'))
+                free_channel_verified = chat_info.get('ok', False)
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                free_channel_error = 'Channel not found or bot is not a member'
+            elif e.code == 403:
+                free_channel_error = 'Bot does not have permission to access this channel'
+            else:
+                free_channel_error = f'Telegram API error: {e.code}'
+            logger.warning(f"Could not verify free channel: {free_channel_error}")
+        except Exception as e:
+            free_channel_error = f'Connection error: {str(e)}'
+            logger.warning(f"Could not verify free channel: {e}")
+        
+        try:
+            chat_id_param = vip_channel_id if vip_channel_id.startswith('-') else vip_channel_id
+            url = f"https://api.telegram.org/bot{bot_token}/getChat?chat_id={urllib.parse.quote(chat_id_param, safe='@')}"
+            req = urllib.request.Request(url, method='GET')
+            with urllib.request.urlopen(req, timeout=10) as response:
+                chat_info = json.loads(response.read().decode('utf-8'))
+                vip_channel_verified = chat_info.get('ok', False)
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                vip_channel_error = 'Channel not found or bot is not a member'
+            elif e.code == 403:
+                vip_channel_error = 'Bot does not have permission to access this channel'
+            else:
+                vip_channel_error = f'Telegram API error: {e.code}'
+            logger.warning(f"Could not verify VIP channel: {vip_channel_error}")
+        except Exception as e:
+            vip_channel_error = f'Connection error: {str(e)}'
+            logger.warning(f"Could not verify VIP channel: {e}")
+        
+        if not free_channel_verified:
+            _send_json_response(handler, 400, {
+                'success': False, 
+                'error': f'Could not access Free channel: {free_channel_error or "Unknown error"}. Make sure the bot is an admin of this channel.'
+            })
+            return
+        
+        if not vip_channel_verified:
+            _send_json_response(handler, 400, {
+                'success': False, 
+                'error': f'Could not access VIP channel: {vip_channel_error or "Unknown error"}. Make sure the bot is an admin of this channel.'
+            })
+            return
+        
         integration_config = {
             'bot_token': bot_token,
             'bot_username': bot_username,
             'bot_name': bot_name,
+            'free_channel_id': free_channel_id,
+            'vip_channel_id': vip_channel_id,
             'verified_at': datetime.now().isoformat()
         }
         
@@ -154,6 +224,8 @@ def handle_onboarding_telegram(handler):
         step_data = {
             'bot_username': bot_username,
             'bot_name': bot_name,
+            'free_channel_id': free_channel_id,
+            'vip_channel_id': vip_channel_id,
             'verified': True
         }
         state = db.update_onboarding_step(tenant_id, 'telegram', step_data)
@@ -164,7 +236,9 @@ def handle_onboarding_telegram(handler):
                 'state': state,
                 'bot_info': {
                     'username': bot_username,
-                    'name': bot_name
+                    'name': bot_name,
+                    'free_channel_verified': free_channel_verified,
+                    'vip_channel_verified': vip_channel_verified
                 }
             })
         else:
@@ -178,7 +252,7 @@ def handle_onboarding_telegram(handler):
 
 
 def handle_onboarding_stripe(handler):
-    """POST /api/onboarding/stripe - Verify and save Stripe keys."""
+    """POST /api/onboarding/stripe - Verify and save Stripe keys and webhook secret."""
     try:
         tenant_id = _require_tenant_id_or_create(handler)
         if not tenant_id:
@@ -194,6 +268,7 @@ def handle_onboarding_stripe(handler):
         
         secret_key = data.get('secret_key', '').strip()
         publishable_key = data.get('publishable_key', '').strip()
+        webhook_secret = data.get('webhook_secret', '').strip()
         
         if not secret_key:
             _send_json_response(handler, 400, {'success': False, 'error': 'secret_key is required'})
@@ -203,8 +278,20 @@ def handle_onboarding_stripe(handler):
             _send_json_response(handler, 400, {'success': False, 'error': 'Invalid Stripe secret key format'})
             return
         
-        if publishable_key and not publishable_key.startswith('pk_'):
+        if not publishable_key:
+            _send_json_response(handler, 400, {'success': False, 'error': 'publishable_key is required'})
+            return
+        
+        if not publishable_key.startswith('pk_'):
             _send_json_response(handler, 400, {'success': False, 'error': 'Invalid Stripe publishable key format'})
+            return
+        
+        if not webhook_secret:
+            _send_json_response(handler, 400, {'success': False, 'error': 'webhook_secret is required'})
+            return
+        
+        if not webhook_secret.startswith('whsec_'):
+            _send_json_response(handler, 400, {'success': False, 'error': 'Invalid webhook secret format (should start with whsec_)'})
             return
         
         try:
@@ -236,7 +323,8 @@ def handle_onboarding_stripe(handler):
         
         integration_config = {
             'secret_key': secret_key,
-            'publishable_key': publishable_key or '',
+            'publishable_key': publishable_key,
+            'webhook_secret': webhook_secret,
             'is_live': is_live,
             'verified_at': datetime.now().isoformat()
         }
@@ -247,6 +335,7 @@ def handle_onboarding_stripe(handler):
         
         step_data = {
             'is_live': is_live,
+            'has_webhook': True,
             'verified': True
         }
         state = db.update_onboarding_step(tenant_id, 'stripe', step_data)
@@ -257,7 +346,8 @@ def handle_onboarding_stripe(handler):
                 'state': state,
                 'stripe_info': {
                     'is_live': is_live,
-                    'has_publishable_key': bool(publishable_key)
+                    'has_publishable_key': True,
+                    'has_webhook_secret': True
                 }
             })
         else:
