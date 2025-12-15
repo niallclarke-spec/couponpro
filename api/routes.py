@@ -219,8 +219,8 @@ POST_ROUTES: List[Route] = [
 # ============================================================================
 
 PAGE_ROUTES: List[Route] = [
-    Route('GET', '/admin/', 'handle_admin_redirect'),
-    Route('GET', '/admin', 'handle_admin_page'),
+    # Note: /admin and /admin/ are NOT in PAGE_ROUTES because they handle
+    # their own auth in server.py and don't need tenant mapping checks
     Route('GET', '/campaign/', 'handle_campaign_page', is_prefix=True),
 ]
 
