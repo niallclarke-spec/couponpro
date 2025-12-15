@@ -307,9 +307,19 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             
             # Check admin authorization (email in ADMIN_EMAILS)
             user_email = auth_user.get('email')
-            # Also check X-Clerk-User-Email header (frontend sends this)
+            # Also check X-Clerk-User-Email header (frontend sends this for AJAX)
             if not user_email:
                 user_email = self.headers.get('X-Clerk-User-Email', '')
+            # Fall back to clerk_user_email cookie (set by login page)
+            if not user_email:
+                from urllib.parse import unquote
+                cookie_header = self.headers.get('Cookie', '')
+                if 'clerk_user_email=' in cookie_header:
+                    for part in cookie_header.split(';'):
+                        part = part.strip()
+                        if part.startswith('clerk_user_email='):
+                            user_email = unquote(part[17:])
+                            break
             
             if not is_admin_email(user_email):
                 # Authenticated but not admin - return 403 with access denied page

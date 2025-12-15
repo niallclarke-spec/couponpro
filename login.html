@@ -380,6 +380,8 @@
                     sessionStorage.removeItem('clerk_session_token');
                     sessionStorage.removeItem('clerk_user_email');
                     sessionStorage.removeItem('clerk_user_avatar');
+                    // Clear email cookie on sign-out
+                    document.cookie = 'clerk_user_email=; path=/; max-age=0; SameSite=Lax';
                     
                     try {
                         await clerkInstance.signOut();
@@ -421,6 +423,10 @@
                         sessionStorage.setItem('clerk_user_avatar', avatarUrl);
                     }
                     
+                    // Set cookie with email so server can read it on page navigation
+                    // This is safe because JWT is still validated server-side
+                    document.cookie = `clerk_user_email=${encodeURIComponent(email)}; path=/; max-age=86400; SameSite=Lax`;
+                    
                     // Host-aware redirect after sign-in
                     const host = window.location.hostname.toLowerCase();
                     let redirectPath = '/admin';
@@ -431,7 +437,7 @@
                         redirectPath = '/admin';
                     }
                     
-                    // Redirect after short delay to allow session storage to sync
+                    // Redirect after short delay to allow cookie to set
                     setTimeout(() => {
                         window.location.href = redirectPath;
                     }, 500);
