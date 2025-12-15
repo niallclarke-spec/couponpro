@@ -1,0 +1,67 @@
+You are working inside my existing Replit Python repo (multi-tenant forex signals/scheduler). I need you to FIX a production bug caused by a DB schema mismatch:
+
+Problem
+- Running sharded scheduler fails with:
+  psycopg2.errors.UndefinedColumn: column "enabled" does not exist
+  It comes from db.py:get_active_tenants() which currently runs:
+    SELECT DISTINCT tenant_id FROM forex_config WHERE enabled = true
+- In my real database, table forex_config exists but DOES NOT have an `enabled` column (and may not have any enable/status column at all). It does have tenant_id (and likely setting_key/setting_value).
+
+Goal
+- Make tenant discovery schema-tolerant so the scheduler can run across different environments without crashing.
+- Keep behavior safe for multi-tenant isolation (never infer tenant_id from nowhere; always require tenant_id IS NOT NULL).
+- Add tests so this never regresses.
+
+What to implement (exact requirements)
+
+1) Update db.py: make get_active_tenants() schema-tolerant
+- Replace the hard-coded `WHERE enabled = true` logic with a query builder that:
+  A) Always starts with:
+     SELECT DISTINCT tenant_id FROM forex_config WHERE tenant_id IS NOT NULL
+  B) If a known “enable flag” column exists, add an additional filter:
+     - Rule 1: if forex_config.enabled exists → AND enabled = true
+     - Rule 2: else if forex_config.is_enabled exists → AND is_enabled = true
+     - Rule 3: else if forex_config.status exists → AND status IN ('active', 'enabled', 'on')
+     - Rule 4: else if forex_config.active exists → AND active = true
+     - Rule 5: else no enable column exists → do NOT add any enable filter (return all tenants with config rows)
+- If the config query returns 0 tenants, fallback to forex_signals:
+    SELECT DISTINCT tenant_id FROM forex_signals
+    WHERE tenant_id IS NOT NULL
+    LIMIT 100
+
+2) Add a helper to detect columns safely
+- Add `_column_exists(schema: str, table: str, column: str) -> bool`
+- Use `information_schema.columns` to check existence.
+- Must be safe when DB pool is not initialized: return False without throwing.
+
+3) Logging (structured logging already exists)
+- Add INFO logs that state which rule was chosen and how many tenants were returned.
+  Example:
+    "get_active_tenants: rule=rule5_fallback, found=1, fallback_to_signals=False"
+- Do not print(); use the existing structured logger.
+
+4) Tests (must pass without a real DB)
+- Add a unit test file like `tests/test_active_tenants_query_builder.py` (or extend an existing one) that verifies:
+  - When enabled exists → builder returns query containing `AND enabled = true`
+  - When enabled missing but status exists → query contains status filter
+  - When none exist → query is the base query (rule5 fallback)
+- These tests must not require a live database. Mock `_column_exists()` return values.
+
+5) Bonus: optional DB inspection helper (nice to have)
+- Add a script `scripts/inspect_table_columns.py` that prints columns for forex_config and clearly shows whether enabled/is_enabled/status/active exist.
+- This script can require DATABASE_URL (fine), but it must fail gracefully with a clear message if DATABASE_URL is missing.
+
+Acceptance criteria (you MUST run these and confirm results in your reply)
+- `python scripts/tenant_audit.py` → PASSED
+- `pytest -q` → all tests pass (existing + new tests)
+- With a real DATABASE_URL available: `python forex_scheduler.py --all-tenants --shard 0/3 --once` should no longer crash due to missing `enabled` column.
+- Ensure no cross-tenant isolation regressions: do NOT remove tenant_id filters anywhere.
+
+Output format (important)
+- In your final response, include:
+  1) Exactly which files you changed/added
+  2) The new get_active_tenants() logic summary
+  3) The exact test command outputs (at least `pytest -q` summary line)
+  4) No “I’ll do it later” — do the work now.
+
+Proceed with the changes now.
