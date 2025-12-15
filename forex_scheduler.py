@@ -7,6 +7,7 @@ Handles CLI argument parsing and main loop orchestration.
 import argparse
 import asyncio
 import os
+import sys
 from datetime import datetime
 
 from core.logging import get_logger
@@ -16,6 +17,61 @@ from scheduler import SignalGenerator, SignalMonitor, Messenger
 from forex_ai import generate_daily_recap, generate_weekly_recap
 
 logger = get_logger(__name__)
+
+
+def check_db_pool_ready() -> bool:
+    """
+    Check if database pool is ready for operations.
+    
+    Returns:
+        True if pool is initialized and reachable, False otherwise.
+    """
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        return True
+    
+    try:
+        import db as db_module
+        if not db_module.db_pool or not db_module.db_pool.connection_pool:
+            return False
+        
+        with db_module.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return True
+    except Exception:
+        return False
+
+
+def require_db_pool_or_exit():
+    """
+    Verify database pool is ready, exit non-zero if DATABASE_URL is set but pool fails.
+    
+    This is a fail-fast check at startup to prevent running scheduler logic
+    without a working database connection.
+    """
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        return
+    
+    try:
+        import db as db_module
+        if not db_module.db_pool or not db_module.db_pool.connection_pool:
+            print("FATAL: DATABASE_URL is set but database pool initialization failed", file=sys.stderr)
+            sys.exit(1)
+        
+        with db_module.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        logger.debug("Database pool connectivity verified")
+    except Exception as e:
+        debug_mode = os.environ.get('DEBUG', '').lower() in ('1', 'true')
+        if debug_mode:
+            logger.exception(f"Database pool verification failed: {e}")
+        print(f"FATAL: DATABASE_URL is set but database connection failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
@@ -321,6 +377,8 @@ async def run_all_tenants(once: bool, shard_index: int = None, total_shards: int
 
 async def main():
     """Async entry point"""
+    require_db_pool_or_exit()
+    
     args = parse_args()
     
     if args.all_tenants:

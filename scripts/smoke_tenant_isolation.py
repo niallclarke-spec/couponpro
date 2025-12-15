@@ -65,27 +65,35 @@ class TenantIsolationTest:
         ci_val = os.environ.get('CI', '').lower()
         return ci_val in ('1', 'true')
     
-    def _fail_or_skip(self, message: str):
-        """Exit with code 1 in CI, code 0 locally."""
-        print(message)
+    def _skip_no_database_url(self):
+        """Exit gracefully when DATABASE_URL is not set (design choice to skip)."""
+        print("SKIPPED: DATABASE_URL not set (no database configured)")
         if self._is_ci_environment():
             sys.exit(1)
         else:
             print("(Local environment: exiting with code 0)")
             sys.exit(0)
     
+    def _fail_connection_error(self, error_msg: str):
+        """Exit with failure when DATABASE_URL is set but connection fails."""
+        print(f"FAILED: DATABASE_URL is set but database connection failed: {error_msg}")
+        if self._is_ci_environment():
+            sys.exit(1)
+        else:
+            sys.exit(1)
+    
     def setup(self):
         """Initialize database connection with fail-fast behavior."""
         db_url = os.environ.get('DATABASE_URL')
         if not db_url:
-            self._fail_or_skip("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: DATABASE_URL not set")
+            self._skip_no_database_url()
         
         try:
             import db as db_module
             self.db = db_module
             
             if not self.db.db_pool or not self.db.db_pool.connection_pool:
-                self._fail_or_skip("Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: database pool not initialized")
+                self._fail_connection_error("database pool not initialized")
             
             with self.db.db_pool.get_connection() as conn:
                 cursor = conn.cursor()
@@ -95,7 +103,7 @@ class TenantIsolationTest:
             self.db_initialized = True
             
         except Exception as e:
-            self._fail_or_skip(f"Smoke test requires a reachable Postgres DATABASE_URL. Connection failed: {e}")
+            self._fail_connection_error(str(e))
         
         logger.info(f"Testing isolation between tenant_a={self.tenant_a} and tenant_b={self.tenant_b}")
     
