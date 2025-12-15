@@ -185,11 +185,55 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script>
-        const CLERK_PUBLISHABLE_KEY = '{{CLERK_PUBLISHABLE_KEY}}';
+        let CLERK_PUBLISHABLE_KEY = '{{CLERK_PUBLISHABLE_KEY}}';
         
         let clerkInstance = null;
+
+        async function getClerkKey() {
+            if (CLERK_PUBLISHABLE_KEY && CLERK_PUBLISHABLE_KEY !== '{{CLERK_PUBLISHABLE_KEY}}') {
+                return CLERK_PUBLISHABLE_KEY;
+            }
+            try {
+                const resp = await fetch('/api/config');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.clerkPublishableKey) {
+                        return data.clerkPublishableKey;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch config:', err);
+            }
+            return null;
+        }
+
+        function loadClerkScript(publishableKey) {
+            return new Promise((resolve, reject) => {
+                if (window.Clerk) {
+                    resolve(window.Clerk);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
+                script.crossOrigin = 'anonymous';
+                script.setAttribute('data-clerk-publishable-key', publishableKey);
+                script.onload = () => {
+                    const checkClerk = setInterval(() => {
+                        if (window.Clerk) {
+                            clearInterval(checkClerk);
+                            resolve(window.Clerk);
+                        }
+                    }, 50);
+                    setTimeout(() => {
+                        clearInterval(checkClerk);
+                        if (!window.Clerk) reject(new Error('Clerk failed to initialize'));
+                    }, 5000);
+                };
+                script.onerror = () => reject(new Error('Failed to load Clerk script'));
+                document.head.appendChild(script);
+            });
+        }
 
         async function initClerk() {
             const errorEl = document.getElementById('error-message');
@@ -198,7 +242,8 @@
             const userEmailEl = document.getElementById('user-email');
             const signoutBtn = document.getElementById('signout-btn');
 
-            if (!CLERK_PUBLISHABLE_KEY || CLERK_PUBLISHABLE_KEY === '{{CLERK_PUBLISHABLE_KEY}}') {
+            const clerkKey = await getClerkKey();
+            if (!clerkKey) {
                 errorEl.textContent = 'Clerk is not configured. Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.';
                 errorEl.classList.add('show');
                 signinEl.innerHTML = '';
@@ -206,7 +251,7 @@
             }
 
             try {
-                clerkInstance = new Clerk(CLERK_PUBLISHABLE_KEY);
+                clerkInstance = await loadClerkScript(clerkKey);
                 await clerkInstance.load();
 
                 if (clerkInstance.user) {

@@ -4077,7 +4077,7 @@
                     <span>🔐</span>
                     <span>Login with Google</span>
                 </a>
-                <button class="logout-btn" onclick="handleLogout()">
+                <button id="logout-btn" class="logout-btn" onclick="handleLogout()" style="display: flex;">
                     <span>🚪</span>
                     <span>Logout</span>
                 </button>
@@ -5324,9 +5324,16 @@
 
         function updateClerkLoginLink() {
             const loginLink = document.getElementById('clerk-login-link');
+            const logoutBtn = document.getElementById('logout-btn');
+            const clerkToken = sessionStorage.getItem('clerk_session_token');
+            const isStaticLoggedIn = appState.isLoggedIn;
+            const isAuthenticated = clerkToken || isStaticLoggedIn;
+            
             if (loginLink) {
-                const token = sessionStorage.getItem('clerk_session_token');
-                loginLink.style.display = token ? 'none' : 'flex';
+                loginLink.style.display = isAuthenticated ? 'none' : 'flex';
+            }
+            if (logoutBtn) {
+                logoutBtn.style.display = isAuthenticated ? 'flex' : 'none';
             }
         }
 
@@ -5475,7 +5482,13 @@
             closeMobileMenu();
         }
 
-        // Login/Logout
+        // TODO: REMOVE STATIC PASSWORD LOGIN - This is legacy auth that should be removed
+        // once Clerk Google login is fully working. To remove:
+        // 1. Delete this handleLogin function
+        // 2. Delete the #loginPage section in HTML (around line 4016)
+        // 3. Remove POST /api/login endpoint in server.py (around line 662)
+        // 4. Remove create_signed_session() and verify_signed_session() in server.py
+        // 5. Update checkAuth() to only use Clerk authentication
         async function handleLogin(event) {
             event.preventDefault();
             const password = document.getElementById('password').value;
@@ -5494,6 +5507,7 @@
                     document.getElementById('dashboard').classList.remove('hidden');
                     appState.isLoggedIn = true;
                     initializeRouting();
+                    updateClerkLoginLink();
                 } else {
                     showAlert('loginAlert', data.error || 'Invalid password', true);
                 }
@@ -5505,11 +5519,14 @@
         async function handleLogout() {
             try {
                 await fetch('/api/logout', { method: 'POST' });
+                sessionStorage.removeItem('clerk_session_token');
+                sessionStorage.removeItem('clerk_user_email');
                 document.getElementById('dashboard').classList.add('hidden');
                 document.getElementById('loginPage').classList.remove('hidden');
                 document.getElementById('password').value = '';
                 appState.isLoggedIn = false;
                 window.location.hash = '';
+                updateClerkLoginLink();
             } catch (error) {
                 console.error('Logout failed:', error);
             }

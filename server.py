@@ -487,6 +487,26 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
+        elif parsed_path.path == '/api/config':
+            # Public endpoint to get frontend config (Clerk publishable key, etc.)
+            # No auth required - this is public configuration data
+            try:
+                clerk_key = Config.get_clerk_publishable_key() or ''
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Cache-Control', 'public, max-age=3600')  # Cache for 1 hour
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'clerkPublishableKey': clerk_key
+                }).encode())
+            except Exception as e:
+                logger.exception("Error getting config")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+            return
+        
         elif parsed_path.path == '/api/telegram-channel-stats':
             if not self.check_auth():
                 self.send_response(401)
@@ -659,6 +679,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if parsed_path.path == '/api/stripe/webhook':
             handle_stripe_webhook(self, STRIPE_AVAILABLE, TELEGRAM_BOT_AVAILABLE, db)
             return
+        # TODO: REMOVE STATIC PASSWORD LOGIN - This is legacy auth that should be removed
+        # once Clerk Google login is fully working. To remove:
+        # 1. Delete this /api/login endpoint
+        # 2. Delete create_signed_session() and verify_signed_session() functions
+        # 3. Update check_auth() to only use Clerk authentication
+        # 4. Also remove related code in admin.html (see TODO there)
         elif parsed_path.path == '/api/login':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
