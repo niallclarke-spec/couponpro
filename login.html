@@ -135,12 +135,70 @@
         .error-message.show {
             display: block;
         }
+
+        /* Signed out transition state */
+        .signed-out-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .signed-out-state.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .signed-out-state.fade-out {
+            opacity: 0;
+        }
+
+        .signed-out-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .signed-out-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Smooth transitions for all states */
+        #clerk-signin {
+            transition: opacity 0.3s ease;
+        }
+
+        #clerk-signin.hidden {
+            display: none;
+        }
+
+        #clerk-signin.fade-in {
+            opacity: 1;
+        }
+
+        #clerk-signin.fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-logo">
             <img src="/assets/promostack-logo.png" alt="PromoStack" />
+        </div>
+
+        <!-- Signed out confirmation state -->
+        <div id="signed-out-state" class="signed-out-state">
+            <div class="signed-out-icon">✓</div>
+            <span class="signed-out-text">You've been signed out</span>
         </div>
 
         <div id="clerk-signin">
@@ -231,12 +289,26 @@
             const userInfoEl = document.getElementById('user-info');
             const userEmailEl = document.getElementById('user-email');
             const signoutBtn = document.getElementById('signout-btn');
+            const signedOutState = document.getElementById('signed-out-state');
+
+            // Check if user just signed out
+            const urlParams = new URLSearchParams(window.location.search);
+            const justSignedOut = urlParams.get('signed_out') === '1';
+
+            // If just signed out, show the confirmation state first
+            if (justSignedOut) {
+                signinEl.style.display = 'none';
+                signedOutState.classList.add('show');
+                // Clear the URL parameter
+                window.history.replaceState({}, '', '/login');
+            }
 
             const clerkKey = await getClerkKey();
             if (!clerkKey) {
                 errorEl.textContent = 'Clerk is not configured. Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.';
                 errorEl.classList.add('show');
                 signinEl.innerHTML = '';
+                signedOutState.classList.remove('show');
                 return;
             }
 
@@ -244,25 +316,30 @@
                 clerkInstance = await loadClerkScript(clerkKey);
                 await clerkInstance.load();
 
-                // Check if user just signed out - don't auto-redirect
-                const urlParams = new URLSearchParams(window.location.search);
-                const justSignedOut = urlParams.get('signed_out') === '1';
-
-                // Check if user just signed out - force clear any stale session
+                // If we just signed out but Clerk still has a session, clear it silently
                 if (justSignedOut && clerkInstance.user) {
                     try {
                         await clerkInstance.signOut();
                     } catch (e) {
                         console.warn('Force signout error:', e);
                     }
-                    // Clear the signed_out param
-                    window.history.replaceState({}, '', '/login');
                 }
 
                 // Only auto-redirect if user is signed in AND didn't just sign out
                 if (clerkInstance.user && !justSignedOut) {
                     handleSignedIn(clerkInstance.user);
                 } else {
+                    // If showing signed-out state, transition to sign-in form after delay
+                    if (justSignedOut) {
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        signedOutState.classList.add('fade-out');
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        signedOutState.classList.remove('show', 'fade-out');
+                        signinEl.style.display = 'flex';
+                        signinEl.style.opacity = '0';
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                    }
+
                     // Show sign-in form
                     if (!clerkMounted) {
                         clerkMounted = true;
@@ -282,6 +359,12 @@
                                 }
                             }
                         });
+                    }
+
+                    // Fade in the sign-in form
+                    if (justSignedOut) {
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        signinEl.style.opacity = '1';
                     }
 
                     clerkInstance.addListener((event) => {
@@ -304,7 +387,8 @@
                         console.warn('Sign out error:', err);
                     }
                     
-                    window.location.href = '/login';
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    window.location.replace('/login?signed_out=1');
                 });
 
             } catch (err) {
@@ -312,6 +396,7 @@
                 errorEl.textContent = 'Failed to initialize authentication. Please try again later.';
                 errorEl.classList.add('show');
                 signinEl.innerHTML = '';
+                signedOutState.classList.remove('show');
             }
         }
 
