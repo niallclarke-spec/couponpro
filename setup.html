@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup | PromoStack</title>
+    <script src="/assets/js/auth.js"></script>
+    <style>
+        :root {
+            --bg-primary: #081028;
+            --bg-secondary: #091128;
+            --bg-card: #0B1739;
+            --bg-card-hover: #122048;
+            --bg-input: #091128;
+            --accent-primary: #CB3CFF;
+            --accent-primary-hover: #d966ff;
+            --accent-glow: rgba(203, 60, 255, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-primary: rgba(255, 255, 255, 0.06);
+            --border-secondary: rgba(255, 255, 255, 0.10);
+            --status-success: #10b981;
+            --status-success-bg: rgba(16, 185, 129, 0.15);
+            --status-error: #ef4444;
+            --status-error-bg: rgba(239, 68, 68, 0.15);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .setup-container {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .setup-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .setup-logo img {
+            width: 180px;
+            height: auto;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: var(--accent-primary);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .step-dot.completed {
+            background: var(--status-success);
+        }
+
+        .step-connector {
+            width: 40px;
+            height: 2px;
+            background: var(--border-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .step-connector.completed {
+            background: var(--status-success);
+        }
+
+        .step-label {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .step-number {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .setup-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-primary);
+        }
+
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-label .optional {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-input.error {
+            border-color: var(--status-error);
+        }
+
+        .form-input.success {
+            border-color: var(--status-success);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .form-error {
+            font-size: 12px;
+            color: var(--status-error);
+            margin-top: 6px;
+            display: none;
+        }
+
+        .form-error.show {
+            display: block;
+        }
+
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--border-secondary);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent-primary);
+            background: rgba(203, 60, 255, 0.05);
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            background: var(--bg-input);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .file-upload-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .file-upload-text span {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            margin-top: 12px;
+        }
+
+        .file-preview.show {
+            display: flex;
+        }
+
+        .file-preview img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+
+        .file-preview-info {
+            flex: 1;
+        }
+
+        .file-preview-name {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .file-preview-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .file-preview-remove {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .file-preview-remove:hover {
+            color: var(--status-error);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-secondary);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--status-success-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--status-success);
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .success-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+        }
+
+        .status-badge.error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .verification-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+        }
+
+        .verification-status-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .alert.success {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 480px) {
+            .setup-card {
+                padding: 24px 20px;
+            }
+
+            .step-connector {
+                width: 24px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-logo">
+            <img src="/assets/promostack-logo.png" alt="PromoStack" />
+        </div>
+
+        <div class="step-indicator" id="stepIndicator">
+            <div class="step-dot active" data-step="1"></div>
+            <div class="step-connector" data-step="1"></div>
+            <div class="step-dot" data-step="2"></div>
+            <div class="step-connector" data-step="2"></div>
+            <div class="step-dot" data-step="3"></div>
+            <div class="step-connector" data-step="3"></div>
+            <div class="step-dot" data-step="4"></div>
+        </div>
+
+        <div class="step-label">
+            <div class="step-number" id="stepNumber">Step 1 of 4</div>
+            <div class="step-title" id="stepTitle">Telegram Setup</div>
+        </div>
+
+        <div class="setup-card">
+            <div id="alert" class="alert"></div>
+
+            <!-- Step 1: Telegram Setup -->
+            <div class="step-content active" data-step="1">
+                <p class="step-description">
+                    Connect your Telegram bot to send promotional messages and manage subscribers. 
+                    Create a bot via <a href="https://t.me/BotFather" target="_blank" style="color: var(--accent-primary);">@BotFather</a> and paste the token below.
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">Bot Token</label>
+                    <input type="text" class="form-input" id="telegramToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+                    <p class="form-hint">Get this from @BotFather after creating your bot</p>
+                    <p class="form-error" id="telegramError"></p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="verifyTelegram" onclick="verifyTelegram()">
+                        Verify Bot
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Stripe Setup -->
+            <div class="step-content" data-step="2">
+                <p class="step-description">
+                    Connect your Stripe account to accept payments for subscriptions. 
+                    Get your API keys from the <a href="https://dashboard.stripe.com/apikeys" target="_blank" style="color: var(--accent-primary);">Stripe Dashboard</a>.
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">Secret Key</label>
+                    <input type="password" class="form-input" id="stripeSecretKey" placeholder="sk_live_...">
+                    <p class="form-hint">Starts with sk_live_ or sk_test_</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Publishable Key</label>
+                    <input type="text" class="form-input" id="stripePublishableKey" placeholder="pk_live_...">
+                    <p class="form-hint">Starts with pk_live_ or pk_test_</p>
+                    <p class="form-error" id="stripeError"></p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(1)">Back</button>
+                    <button class="btn btn-primary" id="verifyStripe" onclick="verifyStripe()">
+                        Verify Keys
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Business Info -->
+            <div class="step-content" data-step="3">
+                <p class="step-description">
+                    Add your business details to personalize your promotional content and customer communications.
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">Business Name</label>
+                    <input type="text" class="form-input" id="businessName" placeholder="Your Business Name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Support Email</label>
+                    <input type="email" class="form-input" id="supportEmail" placeholder="support@yourbusiness.com">
+                    <p class="form-error" id="businessError"></p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Business Logo <span class="optional">(Optional)</span></label>
+                    <div class="file-upload" id="logoUpload">
+                        <input type="file" id="logoFile" accept="image/*" onchange="handleLogoSelect(event)">
+                        <div class="file-upload-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <p class="file-upload-text"><span>Click to upload</span> or drag and drop</p>
+                    </div>
+                    <div class="file-preview" id="logoPreview">
+                        <img id="logoPreviewImg" src="" alt="Logo preview">
+                        <div class="file-preview-info">
+                            <div class="file-preview-name" id="logoFileName"></div>
+                            <div class="file-preview-size" id="logoFileSize"></div>
+                        </div>
+                        <button class="file-preview-remove" onclick="removeLogo()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(2)">Back</button>
+                    <button class="btn btn-primary" id="saveBusinessInfo" onclick="saveBusinessInfo()">
+                        Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Success -->
+            <div class="step-content" data-step="4">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <h2 class="success-title">You're all set!</h2>
+                <p class="success-description">
+                    Your PromoStack account is now fully configured. You can start creating promotional campaigns and managing your subscribers.
+                </p>
+                <button class="btn btn-primary" onclick="goToDashboard()">
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="/login">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let completedSteps = new Set();
+        let logoFile = null;
+
+        const stepTitles = {
+            1: 'Telegram Setup',
+            2: 'Stripe Setup',
+            3: 'Business Info',
+            4: 'Setup Complete'
+        };
+
+        async function initSetup() {
+            try {
+                const headers = await getAuthHeaders();
+                const response = await fetch('/api/onboarding/state', {
+                    headers: headers,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.current_step) {
+                        for (let i = 1; i < data.current_step; i++) {
+                            completedSteps.add(i);
+                        }
+                        goToStep(data.current_step);
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to load onboarding state:', err);
+            }
+        }
+
+        function updateStepIndicator() {
+            const dots = document.querySelectorAll('.step-dot');
+            const connectors = document.querySelectorAll('.step-connector');
+
+            dots.forEach((dot, index) => {
+                const step = index + 1;
+                dot.classList.remove('active', 'completed');
+                if (step === currentStep) {
+                    dot.classList.add('active');
+                } else if (completedSteps.has(step)) {
+                    dot.classList.add('completed');
+                }
+            });
+
+            connectors.forEach((connector, index) => {
+                const step = index + 1;
+                connector.classList.remove('completed');
+                if (completedSteps.has(step)) {
+                    connector.classList.add('completed');
+                }
+            });
+
+            document.getElementById('stepNumber').textContent = `Step ${currentStep} of 4`;
+            document.getElementById('stepTitle').textContent = stepTitles[currentStep];
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            const targetContent = document.querySelector(`.step-content[data-step="${step}"]`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            updateStepIndicator();
+            hideAlert();
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+        }
+
+        function hideAlert() {
+            const alert = document.getElementById('alert');
+            alert.classList.remove('show');
+        }
+
+        function setButtonLoading(buttonId, loading) {
+            const btn = document.getElementById(buttonId);
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading-spinner"></div> Verifying...';
+            } else {
+                btn.disabled = false;
+                const btnTexts = {
+                    'verifyTelegram': 'Verify Bot',
+                    'verifyStripe': 'Verify Keys',
+                    'saveBusinessInfo': 'Continue'
+                };
+                btn.textContent = btnTexts[buttonId] || 'Submit';
+            }
+        }
+
+        async function verifyTelegram() {
+            const token = document.getElementById('telegramToken').value.trim();
+            
+            if (!token) {
+                showAlert('Please enter your Telegram bot token', 'error');
+                return;
+            }
+
+            setButtonLoading('verifyTelegram', true);
+            hideAlert();
+
+            try {
+                const headers = await getAuthHeaders(true);
+                const response = await fetch('/api/onboarding/telegram', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({ bot_token: token })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    completedSteps.add(1);
+                    showAlert('Telegram bot verified successfully!', 'success');
+                    setTimeout(() => goToStep(2), 1000);
+                } else {
+                    showAlert(data.error || 'Failed to verify Telegram bot', 'error');
+                }
+            } catch (err) {
+                showAlert('Connection error. Please try again.', 'error');
+            } finally {
+                setButtonLoading('verifyTelegram', false);
+            }
+        }
+
+        async function verifyStripe() {
+            const secretKey = document.getElementById('stripeSecretKey').value.trim();
+            const publishableKey = document.getElementById('stripePublishableKey').value.trim();
+            
+            if (!secretKey || !publishableKey) {
+                showAlert('Please enter both Stripe keys', 'error');
+                return;
+            }
+
+            setButtonLoading('verifyStripe', true);
+            hideAlert();
+
+            try {
+                const headers = await getAuthHeaders(true);
+                const response = await fetch('/api/onboarding/stripe', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        secret_key: secretKey,
+                        publishable_key: publishableKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    completedSteps.add(2);
+                    showAlert('Stripe keys verified successfully!', 'success');
+                    setTimeout(() => goToStep(3), 1000);
+                } else {
+                    showAlert(data.error || 'Failed to verify Stripe keys', 'error');
+                }
+            } catch (err) {
+                showAlert('Connection error. Please try again.', 'error');
+            } finally {
+                setButtonLoading('verifyStripe', false);
+            }
+        }
+
+        function handleLogoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showAlert('Please select an image file', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('Image must be less than 5MB', 'error');
+                return;
+            }
+
+            logoFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('logoPreviewImg').src = e.target.result;
+                document.getElementById('logoFileName').textContent = file.name;
+                document.getElementById('logoFileSize').textContent = formatFileSize(file.size);
+                document.getElementById('logoPreview').classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            logoFile = null;
+            document.getElementById('logoFile').value = '';
+            document.getElementById('logoPreview').classList.remove('show');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function saveBusinessInfo() {
+            const businessName = document.getElementById('businessName').value.trim();
+            const supportEmail = document.getElementById('supportEmail').value.trim();
+            
+            if (!businessName) {
+                showAlert('Please enter your business name', 'error');
+                return;
+            }
+
+            if (!supportEmail || !supportEmail.includes('@')) {
+                showAlert('Please enter a valid support email', 'error');
+                return;
+            }
+
+            setButtonLoading('saveBusinessInfo', true);
+            hideAlert();
+
+            try {
+                const formData = new FormData();
+                formData.append('business_name', businessName);
+                formData.append('support_email', supportEmail);
+                if (logoFile) {
+                    formData.append('logo', logoFile);
+                }
+
+                const headers = await getAuthHeaders(false);
+                const response = await fetch('/api/onboarding/business', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    completedSteps.add(3);
+                    goToStep(4);
+                } else {
+                    showAlert(data.error || 'Failed to save business info', 'error');
+                }
+            } catch (err) {
+                showAlert('Connection error. Please try again.', 'error');
+            } finally {
+                setButtonLoading('saveBusinessInfo', false);
+            }
+        }
+
+        function goToDashboard() {
+            const host = window.location.hostname.toLowerCase();
+            if (host.startsWith('dash.')) {
+                window.location.href = '/app';
+            } else {
+                window.location.href = '/admin';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initSetup);
+    </script>
+</body>
+</html>

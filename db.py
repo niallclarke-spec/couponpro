@@ -784,6 +784,22 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_integrations_tenant_id ON tenant_integrations(tenant_id)")
                 logger.info("tenant_integrations table ready")
                 
+                # Create onboarding_state table (track wizard progress)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS onboarding_state (
+                        tenant_id VARCHAR(50) PRIMARY KEY REFERENCES tenants(id),
+                        current_step INTEGER DEFAULT 1,
+                        telegram_completed BOOLEAN DEFAULT FALSE,
+                        stripe_completed BOOLEAN DEFAULT FALSE,
+                        business_completed BOOLEAN DEFAULT FALSE,
+                        is_complete BOOLEAN DEFAULT FALSE,
+                        progress_json JSONB DEFAULT '{}',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                logger.info("onboarding_state table ready")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================
@@ -5703,3 +5719,268 @@ def ensure_tenant_exists(tenant_id: str, display_name: str = None, owner_email: 
     except Exception as e:
         logger.exception(f"Error ensuring tenant exists: {e}")
         return False
+
+
+# ============================================================
+# Onboarding State DAO Functions
+# ============================================================
+
+def get_onboarding_state(tenant_id: str) -> dict:
+    """
+    Get onboarding state for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        Onboarding state dict or None if not started
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id, current_step, telegram_completed, stripe_completed, 
+                       business_completed, is_complete, progress_json, created_at, updated_at
+                FROM onboarding_state
+                WHERE tenant_id = %s
+            """, (tenant_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'tenant_id': row[0],
+                'current_step': row[1],
+                'telegram_completed': row[2],
+                'stripe_completed': row[3],
+                'business_completed': row[4],
+                'is_complete': row[5],
+                'progress_json': row[6] or {},
+                'created_at': row[7].isoformat() if row[7] else None,
+                'updated_at': row[8].isoformat() if row[8] else None
+            }
+    except Exception as e:
+        logger.exception(f"Error getting onboarding state: {e}")
+        return None
+
+
+def create_onboarding_state(tenant_id: str) -> dict:
+    """
+    Create initial onboarding state for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        Newly created onboarding state dict
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO onboarding_state (tenant_id, current_step, progress_json)
+                VALUES (%s, 1, '{}')
+                ON CONFLICT (tenant_id) DO NOTHING
+                RETURNING tenant_id, current_step, telegram_completed, stripe_completed, 
+                          business_completed, is_complete, progress_json
+            """, (tenant_id,))
+            
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if row:
+                return {
+                    'tenant_id': row[0],
+                    'current_step': row[1],
+                    'telegram_completed': row[2],
+                    'stripe_completed': row[3],
+                    'business_completed': row[4],
+                    'is_complete': row[5],
+                    'progress_json': row[6] or {}
+                }
+            
+            # Already exists, fetch it
+            return get_onboarding_state(tenant_id)
+    except Exception as e:
+        logger.exception(f"Error creating onboarding state: {e}")
+        return None
+
+
+def update_onboarding_step(tenant_id: str, step: str, data: dict) -> dict:
+    """
+    Update a specific onboarding step.
+    
+    Args:
+        tenant_id: Tenant ID
+        step: Step name ('telegram', 'stripe', 'business')
+        data: Step data to save
+        
+    Returns:
+        Updated onboarding state dict
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    step_column_map = {
+        'telegram': ('telegram_completed', 2),
+        'stripe': ('stripe_completed', 3),
+        'business': ('business_completed', 4)
+    }
+    
+    if step not in step_column_map:
+        logger.error(f"Unknown onboarding step: {step}")
+        return None
+    
+    column_name, next_step = step_column_map[step]
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Update the step completion and store data in progress_json
+            import json
+            cursor.execute(f"""
+                UPDATE onboarding_state
+                SET {column_name} = TRUE,
+                    current_step = GREATEST(current_step, %s),
+                    progress_json = progress_json || %s::jsonb,
+                    updated_at = NOW()
+                WHERE tenant_id = %s
+                RETURNING tenant_id, current_step, telegram_completed, stripe_completed, 
+                          business_completed, is_complete, progress_json
+            """, (next_step, json.dumps({step: data}), tenant_id))
+            
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if row:
+                return {
+                    'tenant_id': row[0],
+                    'current_step': row[1],
+                    'telegram_completed': row[2],
+                    'stripe_completed': row[3],
+                    'business_completed': row[4],
+                    'is_complete': row[5],
+                    'progress_json': row[6] or {}
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error updating onboarding step: {e}")
+        return None
+
+
+def complete_onboarding(tenant_id: str) -> dict:
+    """
+    Mark onboarding as complete.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        Updated onboarding state dict
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE onboarding_state
+                SET is_complete = TRUE,
+                    current_step = 5,
+                    updated_at = NOW()
+                WHERE tenant_id = %s
+                  AND telegram_completed = TRUE
+                  AND stripe_completed = TRUE
+                  AND business_completed = TRUE
+                RETURNING tenant_id, current_step, telegram_completed, stripe_completed, 
+                          business_completed, is_complete, progress_json
+            """, (tenant_id,))
+            
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if row:
+                return {
+                    'tenant_id': row[0],
+                    'current_step': row[1],
+                    'telegram_completed': row[2],
+                    'stripe_completed': row[3],
+                    'business_completed': row[4],
+                    'is_complete': row[5],
+                    'progress_json': row[6] or {}
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error completing onboarding: {e}")
+        return None
+
+
+def save_tenant_integration(tenant_id: str, provider: str, config: dict) -> bool:
+    """
+    Save integration config for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        provider: Integration provider ('telegram', 'stripe')
+        config: Configuration dict (will be stored as JSON)
+        
+    Returns:
+        True if saved successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        import json
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_integrations (tenant_id, provider, config_json)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (tenant_id, provider) DO UPDATE SET
+                    config_json = EXCLUDED.config_json,
+                    updated_at = NOW()
+            """, (tenant_id, provider, json.dumps(config)))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error saving tenant integration: {e}")
+        return False
+
+
+def get_tenant_integration(tenant_id: str, provider: str) -> dict:
+    """
+    Get integration config for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        provider: Integration provider ('telegram', 'stripe')
+        
+    Returns:
+        Config dict or None
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT config_json FROM tenant_integrations
+                WHERE tenant_id = %s AND provider = %s
+            """, (tenant_id, provider))
+            
+            row = cursor.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.exception(f"Error getting tenant integration: {e}")
+        return None
