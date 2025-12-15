@@ -294,6 +294,27 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             stripe_products_handlers.handle_stripe_products(self)
             return
         
+        # Dispatch to admin handlers (GET)
+        if parsed_path.path == '/api/admin/tenants':
+            from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+            auth_user = get_auth_user_from_request(self)
+            if not auth_user:
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Authentication required'}).encode('utf-8'))
+                return
+            user_email = auth_user.get('email') or self.headers.get('X-Clerk-User-Email', '')
+            if not is_admin_email(user_email):
+                self.send_response(403)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Admin access required'}).encode('utf-8'))
+                return
+            from handlers.admin_handlers import handle_get_tenants
+            handle_get_tenants(self)
+            return
+        
         # Admin dashboard path
         if parsed_path.path == '/admin/':
             self.send_response(301)

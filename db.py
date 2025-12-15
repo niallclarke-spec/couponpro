@@ -5775,6 +5775,48 @@ def ensure_tenant_exists(tenant_id: str, display_name: str = None, owner_email: 
         return False
 
 
+def get_all_tenants():
+    """
+    Get all tenants with their details and onboarding status.
+    Returns list of tenant dictionaries.
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    t.id,
+                    t.display_name,
+                    t.owner_email,
+                    t.created_at,
+                    COALESCE(os.is_complete, false) as onboarding_complete
+                FROM tenants t
+                LEFT JOIN onboarding_state os ON os.tenant_id = t.id
+                ORDER BY t.created_at DESC
+            """)
+            
+            rows = cursor.fetchall()
+            
+            tenants = []
+            for row in rows:
+                tenants.append({
+                    'tenant_id': row[0],
+                    'display_name': row[1] or row[0],
+                    'owner_email': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None,
+                    'onboarding_complete': row[4]
+                })
+            
+            return tenants
+    except Exception as e:
+        logger.exception(f"Error getting all tenants: {e}")
+        return []
+
+
 # ============================================================
 # Onboarding State DAO Functions
 # ============================================================

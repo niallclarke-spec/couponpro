@@ -754,6 +754,50 @@
                 align-items: flex-start;
             }
         }
+
+        .impersonation-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #7c3aed, #a855f7);
+            color: white;
+            padding: 8px 16px;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+        }
+
+        .impersonation-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .exit-impersonation-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .exit-impersonation-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        body.impersonating .app-layout,
+        body.impersonating .sidebar {
+            padding-top: 40px;
+        }
+
+        body.impersonating .loading-overlay {
+            top: 40px;
+        }
     </style>
 </head>
 <body>
@@ -763,6 +807,18 @@
     </div>
 
     <div id="toast" class="toast"></div>
+
+    <!-- Impersonation Banner (shown when admin is viewing as tenant) -->
+    <div id="impersonation-banner" class="impersonation-banner" style="display: none;">
+        <div class="impersonation-content">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Viewing as: <strong id="impersonation-tenant-name"></strong></span>
+            <button class="exit-impersonation-btn" onclick="exitImpersonation()">Exit</button>
+        </div>
+    </div>
 
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
@@ -945,7 +1001,33 @@
             if (userEmail) {
                 headers['X-Clerk-User-Email'] = userEmail;
             }
+            const impersonatedTenantId = sessionStorage.getItem('impersonating_tenant_id');
+            if (impersonatedTenantId) {
+                headers['X-Impersonate-Tenant'] = impersonatedTenantId;
+            }
             return headers;
+        }
+
+        function checkImpersonation() {
+            const impersonatingTenantId = sessionStorage.getItem('impersonating_tenant_id');
+            if (impersonatingTenantId) {
+                document.body.classList.add('impersonating');
+                const banner = document.getElementById('impersonation-banner');
+                if (banner) {
+                    banner.style.display = 'flex';
+                    const nameEl = document.getElementById('impersonation-tenant-name');
+                    if (nameEl) {
+                        nameEl.textContent = impersonatingTenantId;
+                    }
+                }
+                window.impersonatedTenantId = impersonatingTenantId;
+            }
+        }
+
+        function exitImpersonation() {
+            sessionStorage.removeItem('impersonating_tenant_id');
+            window.close();
+            window.location.href = '/admin';
         }
 
         async function getClerkKey() {
@@ -1353,6 +1435,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            checkImpersonation();
             checkAuthAndInit();
 
             document.getElementById('signout-btn').addEventListener('click', handleSignOut);
