@@ -736,6 +736,40 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not apply_route_checks(route, self, DATABASE_AVAILABLE):
                 return  # Middleware sent 401/503 response
         
+        # Auth cookie endpoint - validates JWT and sets email cookie for page navigation
+        if parsed_path.path == '/api/set-auth-cookie':
+            from auth.clerk_auth import get_auth_user_from_request
+            
+            auth_user = get_auth_user_from_request(self)
+            if not auth_user:
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Not authenticated'}).encode())
+                return
+            
+            # Get email from header (sent by frontend)
+            email = self.headers.get('X-Clerk-User-Email', '')
+            if not email:
+                email = auth_user.get('email', '')
+            
+            if email:
+                # Set HttpOnly cookie with email for server-side auth checks
+                from urllib.parse import quote
+                cookie_value = quote(email)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Set-Cookie', f'clerk_user_email={cookie_value}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'email': email}).encode())
+                logger.info(f"[auth] Set auth cookie for: {email}")
+            else:
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'No email provided'}).encode())
+            return
+        
         # Dispatch to subscription domain handlers
         if parsed_path.path == '/api/telegram/grant-access':
             subscription_handlers.handle_telegram_grant_access(self)

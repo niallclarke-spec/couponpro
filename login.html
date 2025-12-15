@@ -425,10 +425,22 @@
                         sessionStorage.setItem('clerk_user_avatar', avatarUrl);
                     }
                     
-                    // Set cookie with email so server can read it on page navigation
-                    // This is safe because JWT is still validated server-side
-                    document.cookie = `clerk_user_email=${encodeURIComponent(email)}; path=/; max-age=86400; SameSite=Lax`;
-                    console.log('[Auth] Cookie set for email:', email, 'Cookie value:', document.cookie);
+                    // Call server to set auth cookie (server validates JWT first)
+                    console.log('[Auth] Setting auth cookie via server...');
+                    try {
+                        const response = await fetch('/api/set-auth-cookie', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`,
+                                'X-Clerk-User-Email': email
+                            },
+                            credentials: 'include'
+                        });
+                        console.log('[Auth] Set auth cookie response:', response.status);
+                    } catch (err) {
+                        console.error('[Auth] Failed to set auth cookie:', err);
+                    }
                     
                     // Host-aware redirect after sign-in
                     const host = window.location.hostname.toLowerCase();
@@ -440,10 +452,9 @@
                         redirectPath = '/admin';
                     }
                     
-                    // Redirect after short delay to allow cookie to set
-                    setTimeout(() => {
-                        window.location.href = redirectPath;
-                    }, 500);
+                    // Redirect after server sets the cookie
+                    console.log('[Auth] Redirecting to:', redirectPath);
+                    window.location.href = redirectPath;
                 }
             } catch (err) {
                 console.error('Failed to get session token:', err);
