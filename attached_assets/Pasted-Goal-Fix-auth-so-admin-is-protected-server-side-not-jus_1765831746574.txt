@@ -1,0 +1,33 @@
+Goal: Fix auth so /admin is protected server-side (not just via frontend JS). Right now curl -i http://127.0.0.1:5000/admin returns the full admin HTML (HTTP 200) which means the backend is serving /admin to unauthenticated users. That is wrong.
+
+Requirements:
+	1.	Backend must block /admin unless authenticated.
+	•	If request is not authenticated: return 302 redirect to /login (preferred) OR return 401.
+	•	If authenticated but not authorized (wrong email for admin): return 403 (or redirect to an “Access Denied” screen).
+	2.	Authorization rules:
+	•	admin.promostack.io: only emails in ADMIN_EMAILS can access /admin and any /api/admin/* routes.
+	•	dash.promostack.io: normal users can sign in, but must NOT access /admin.
+	3.	Enforce this in server.py routing layer:
+	•	Add a guard around the /admin route (and any admin-only endpoints) that calls the existing Clerk verification + admin email check.
+	•	Do NOT rely on admin.html JS for security; curl must be blocked.
+	4.	Preserve existing behavior:
+	•	/login should still work and show Clerk.
+	•	Logged-in admin visiting /admin should get 200 and the page loads normally.
+	5.	Add a small “auth smoke test” script/commands in the repo (e.g., scripts/auth_smoke_test.sh) that checks:
+	•	/admin returns 302/401 without auth
+	•	/admin returns 200 with valid admin token
+	•	/admin returns 403 with valid non-admin token
+	•	Include Host header tests for admin.promostack.io vs dash.promostack.io.
+
+Implementation notes:
+	•	Use the existing Clerk JWKS/JWT verification helper you already added.
+	•	Ensure auth uses Authorization: Bearer  and/or Clerk cookie session if that’s how you implemented it.
+	•	Make sure the decision is host-aware (admin vs dash).
+	•	After implementing, run the smoke test locally and confirm curl no longer dumps admin HTML when logged out.
+
+Deliverables:
+	•	Code changes in server.py (and helper files if needed) implementing server-side protection for /admin.
+	•	The smoke test script.
+	•	Brief explanation of what changed and which routes are now protected.
+
+PROMPT END
