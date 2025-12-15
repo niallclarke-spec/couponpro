@@ -179,11 +179,49 @@ def require_auth(request) -> Dict[str, Any]:
     return auth_user
 
 
+def get_admin_emails() -> set:
+    """
+    Get set of allowed admin emails from environment.
+    
+    Reads ADMIN_EMAILS env var (comma-separated) and always includes
+    the primary admin email.
+    
+    Returns:
+        Set of lowercase admin email addresses
+    """
+    admin_emails = {'niallclarkefs@gmail.com'}
+    
+    env_emails = os.environ.get('ADMIN_EMAILS', '')
+    if env_emails:
+        for email in env_emails.split(','):
+            email = email.strip().lower()
+            if email and '@' in email:
+                admin_emails.add(email)
+    
+    return admin_emails
+
+
+def is_admin_email(email: str) -> bool:
+    """
+    Check if email is an allowed admin email.
+    
+    Args:
+        email: Email address to check
+        
+    Returns:
+        True if email is in admin list, False otherwise
+    """
+    if not email:
+        return False
+    return email.lower().strip() in get_admin_emails()
+
+
 def require_admin(request) -> Dict[str, Any]:
     """
     Require admin role or raise AuthorizationError.
     
-    First authenticates the user, then looks up their role in the database.
+    First authenticates the user, then verifies their email is in the
+    allowed admin list, then looks up their role in the database.
     
     Args:
         request: HTTP request handler
@@ -196,6 +234,10 @@ def require_admin(request) -> Dict[str, Any]:
         AuthorizationError: If not admin (403)
     """
     auth_user = require_auth(request)
+    
+    if not is_admin_email(auth_user.get('email')):
+        logger.warning(f"Admin access denied for email: {auth_user.get('email')}")
+        raise AuthorizationError("Admin access required", 403)
     
     import db as db_module
     user_row = db_module.get_user_by_clerk_id(auth_user['clerk_user_id'])

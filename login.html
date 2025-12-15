@@ -7,14 +7,8 @@
     <style>
         :root {
             --bg-primary: #091128;
-            --bg-card: #0B1739;
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
-            --accent-primary: #4f46e5;
-            --accent-primary-hover: #6366f1;
-            --border-primary: rgba(255, 255, 255, 0.06);
-            --radius-lg: 14px;
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -46,24 +40,6 @@
             filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
         }
 
-        .login-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            padding: 48px 40px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-primary);
-            text-align: center;
-        }
-
-        .login-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 24px;
-        }
-
         #clerk-signin {
             min-height: 200px;
             display: flex;
@@ -81,6 +57,7 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
+            margin-top: 24px;
         }
 
         .user-info.show {
@@ -98,7 +75,7 @@
             font-weight: 500;
         }
 
-        .btn {
+        .btn-secondary {
             display: inline-block;
             padding: 12px 24px;
             border-radius: 8px;
@@ -107,22 +84,8 @@
             cursor: pointer;
             transition: all 0.2s;
             border: none;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-primary-hover);
-        }
-
-        .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            margin-top: 12px;
         }
 
         .btn-secondary:hover {
@@ -164,31 +127,28 @@
         <img src="/assets/promostack-logo.png" alt="PromoStack" />
     </div>
 
-    <div class="login-card">
-        <h1 class="login-title">Sign In</h1>
-        
-        <div id="clerk-signin">
-            <span class="loading-text">Loading sign-in...</span>
-        </div>
+    <div id="clerk-signin">
+        <span class="loading-text">Loading sign-in...</span>
+    </div>
 
-        <div id="user-info" class="user-info">
-            <span class="user-status">✓ Signed in successfully</span>
-            <span id="user-email" class="user-email"></span>
-            <button id="signout-btn" class="btn btn-secondary">Sign Out</button>
-        </div>
+    <div id="user-info" class="user-info">
+        <span class="user-status">✓ Signed in successfully</span>
+        <span id="user-email" class="user-email"></span>
+        <button id="signout-btn" class="btn-secondary">Sign Out</button>
+    </div>
 
-        <div id="error-message" class="error-message"></div>
+    <div id="error-message" class="error-message"></div>
 
-        <div class="nav-links">
-            <a href="/admin">Admin Dashboard</a>
-            <a href="/">Home</a>
-        </div>
+    <div class="nav-links">
+        <a href="/admin">Admin Dashboard</a>
+        <a href="/">Home</a>
     </div>
 
     <script>
         let CLERK_PUBLISHABLE_KEY = '{{CLERK_PUBLISHABLE_KEY}}';
         
         let clerkInstance = null;
+        let clerkMounted = false;
 
         async function getClerkKey() {
             if (CLERK_PUBLISHABLE_KEY && CLERK_PUBLISHABLE_KEY !== '{{CLERK_PUBLISHABLE_KEY}}') {
@@ -257,19 +217,23 @@
                 if (clerkInstance.user) {
                     handleSignedIn(clerkInstance.user);
                 } else {
-                    clerkInstance.mountSignIn(signinEl, {
-                        appearance: {
-                            baseTheme: undefined,
-                            variables: {
-                                colorPrimary: '#4f46e5',
-                                colorBackground: '#0B1739',
-                                colorInputBackground: '#091128',
-                                colorInputText: '#ffffff',
-                                colorText: '#ffffff',
-                                colorTextSecondary: '#94a3b8'
+                    if (!clerkMounted) {
+                        clerkMounted = true;
+                        clerkInstance.mountSignIn(signinEl, {
+                            appearance: {
+                                baseTheme: window.Clerk?.themes?.dark,
+                                variables: {
+                                    colorPrimary: '#4f46e5',
+                                    colorBackground: '#0B1739',
+                                    colorInputBackground: '#091128',
+                                    colorInputText: '#ffffff',
+                                    colorText: '#ffffff',
+                                    colorTextSecondary: '#94a3b8',
+                                    colorNeutral: '#ffffff'
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
 
                     clerkInstance.addListener((event) => {
                         if (clerkInstance.user) {

@@ -4035,6 +4035,22 @@
         </div>
     </div>
 
+    <!-- Access Denied Page -->
+    <div class="login-page hidden" id="accessDeniedPage">
+        <div class="login-logo">
+            <img src="/assets/promostack-logo.png" alt="PromoStack" />
+        </div>
+        <div class="login-card" style="text-align: center;">
+            <h1 class="login-title" style="color: #ef4444;">🚫 Access Denied</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
+                Your account does not have admin access to this dashboard.
+            </p>
+            <p id="accessDeniedEmail" style="color: var(--text-muted); margin-bottom: 24px; font-size: 13px;"></p>
+            <a href="https://dash.promostack.io" class="btn" style="width: 100%; display: block; text-align: center; text-decoration: none; margin-bottom: 12px;">Go to Frontend</a>
+            <button onclick="handleAccessDeniedLogout()" class="btn btn-secondary" style="width: 100%;">Sign Out</button>
+        </div>
+    </div>
+
     <!-- Dashboard -->
     <div class="app-container hidden" id="dashboard">
         <!-- Mobile Menu Button -->
@@ -5297,23 +5313,34 @@
         });
 
         async function checkAuth() {
+            const clerkEmail = sessionStorage.getItem('clerk_user_email');
+            
             try {
                 const response = await fetch('/api/check-auth', {
                     credentials: 'include'
                 });
                 if (response.ok) {
                     document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('accessDeniedPage').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
                     appState.isLoggedIn = true;
                     initializeRouting();
+                } else if (clerkEmail) {
+                    showAccessDenied(clerkEmail);
                 } else {
                     document.getElementById('loginPage').classList.remove('hidden');
+                    document.getElementById('accessDeniedPage').classList.add('hidden');
                     document.getElementById('dashboard').classList.add('hidden');
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                document.getElementById('loginPage').classList.remove('hidden');
-                document.getElementById('dashboard').classList.add('hidden');
+                if (clerkEmail) {
+                    showAccessDenied(clerkEmail);
+                } else {
+                    document.getElementById('loginPage').classList.remove('hidden');
+                    document.getElementById('accessDeniedPage').classList.add('hidden');
+                    document.getElementById('dashboard').classList.add('hidden');
+                }
             }
         }
 
@@ -5529,6 +5556,21 @@
                 updateClerkLoginLink();
             } catch (error) {
                 console.error('Logout failed:', error);
+            }
+        }
+
+        async function handleAccessDeniedLogout() {
+            sessionStorage.removeItem('clerk_session_token');
+            sessionStorage.removeItem('clerk_user_email');
+            window.location.href = '/login';
+        }
+
+        function showAccessDenied(email) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('accessDeniedPage').classList.remove('hidden');
+            if (email) {
+                document.getElementById('accessDeniedEmail').textContent = 'Logged in as: ' + email;
             }
         }
 

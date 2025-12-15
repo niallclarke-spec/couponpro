@@ -136,6 +136,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
     
     def check_auth(self):
+        from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+        
+        clerk_user = get_auth_user_from_request(self)
+        if clerk_user:
+            email = clerk_user.get('email')
+            if is_admin_email(email):
+                logger.debug(f"Clerk admin auth valid for: {email}")
+                return True
+            else:
+                logger.debug(f"Clerk auth valid but not admin email: {email}")
+                return False
+        
         cookie_header = self.headers.get('Cookie')
         if not cookie_header:
             logger.debug("No cookie header found")
