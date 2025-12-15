@@ -1,0 +1,49 @@
+Fix the “Loading…” user chip in the authenticated UI.
+
+CURRENT BEHAVIOR
+- After login, the avatar/user chip shows “Loading…”
+- Clicking still reveals “Sign Out” which works
+This means the UI is waiting on Clerk user hydration but it never resolves.
+
+GOAL
+- If authenticated, immediately render a stable user chip using the SERVER as source of truth.
+- Then enhance it with Clerk user data if/when available.
+- Never show “Loading…” indefinitely.
+
+REQUIREMENTS
+1) Update admin.html auth UI logic:
+   - On auth success, fetch /api/check-auth (or existing auth endpoint) and make it return JSON with at least:
+     { "authenticated": true, "email": "...", "avatarUrl": null }
+     If backend already returns email, use it. If not, add minimal backend change to include email from the verified Clerk token.
+   - Use that email immediately to render the chip (fallback avatar = first letter).
+   - Only show “Loading…” for max 500ms, then fall back to the email-based chip.
+   - If Clerk user later becomes available, update avatarUrl/email, but do not block initial render.
+
+2) Fix Clerk client hydration:
+   - Ensure Clerk is loaded only once.
+   - After load, call:
+     await window.Clerk.load()
+     const user = window.Clerk.user
+   - If user is null after load but server auth is true, don’t keep waiting—use the server email.
+
+3) UI behavior:
+   - Authenticated state must show: avatar + email (or truncated) + dropdown caret
+   - Dropdown contains: Sign Out
+   - Sign Out must:
+     - call window.Clerk.signOut() if available
+     - call existing backend logout endpoint (if present)
+     - then force UI to logged-out state
+
+IMPLEMENTATION NOTES
+- Add a small helper like:
+  - renderUserChip({email, avatarUrl})
+  - setAuthUI(authenticated, userData)
+- Add a timeout guard:
+  - start a timer when authenticated UI begins
+  - if Clerk user not available after 500ms, render using server userData and clear loading state
+
+DELIVERABLE
+- Update admin.html (and server.py only if needed) so “Loading…” never persists.
+- The chip shows the real email quickly and still supports Sign Out reliably.
+
+Proceed to implement now.
