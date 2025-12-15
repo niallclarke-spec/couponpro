@@ -403,6 +403,7 @@
         }
 
         async function handleSignedIn(user) {
+            console.log('[Auth] handleSignedIn called, user:', user);
             const signinEl = document.getElementById('clerk-signin');
             const userInfoEl = document.getElementById('user-info');
             const userEmailEl = document.getElementById('user-email');
@@ -411,6 +412,7 @@
             userInfoEl.classList.add('show');
             
             const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || 'Unknown';
+            console.log('[Auth] Email extracted:', email, 'primaryEmailAddress:', user.primaryEmailAddress, 'emailAddresses:', user.emailAddresses);
             userEmailEl.textContent = email;
 
             try {
@@ -426,6 +428,7 @@
                     // Set cookie with email so server can read it on page navigation
                     // This is safe because JWT is still validated server-side
                     document.cookie = `clerk_user_email=${encodeURIComponent(email)}; path=/; max-age=86400; SameSite=Lax`;
+                    console.log('[Auth] Cookie set for email:', email, 'Cookie value:', document.cookie);
                     
                     // Host-aware redirect after sign-in
                     const host = window.location.hostname.toLowerCase();

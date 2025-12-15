@@ -395,6 +395,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 content = content.replace('{{CLERK_PUBLISHABLE_KEY}}', clerk_key)
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self.send_header('Pragma', 'no-cache')
+                self.send_header('Expires', '0')
                 self.end_headers()
                 self.wfile.write(content.encode('utf-8'))
             except FileNotFoundError:
