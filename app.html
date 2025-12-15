@@ -382,7 +382,7 @@
                 console.error('Sign out error:', err);
             }
 
-            window.location.href = '/login';
+            window.location.href = '/login?signed_out=1';
         }
 
         function showAuthenticatedUI(user) {

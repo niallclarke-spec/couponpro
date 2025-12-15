@@ -5731,8 +5731,8 @@
                 console.warn('Backend logout error:', err);
             }
             
-            // Navigate to login page
-            window.location.href = '/login';
+            // Navigate to login page with signed_out flag to prevent auto-redirect
+            window.location.href = '/login?signed_out=1';
         }
 
         async function handleAccessDeniedLogout() {
@@ -5747,7 +5747,7 @@
             
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
-            window.location.href = '/login';
+            window.location.href = '/login?signed_out=1';
         }
 
         function showAccessDenied(email) {
