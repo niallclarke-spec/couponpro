@@ -28,6 +28,7 @@ from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
 from domains.tenant import handlers as tenant_handlers
 from handlers import onboarding_handlers
+from handlers import stripe_products_handlers
 from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
 from integrations.stripe.webhooks import handle_stripe_webhook
 
@@ -283,6 +284,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Dispatch to onboarding handlers (GET)
         if parsed_path.path == '/api/onboarding/state':
             onboarding_handlers.handle_onboarding_state(self)
+            return
+        
+        # Dispatch to stripe products handlers (GET)
+        if parsed_path.path == '/api/stripe/status':
+            stripe_products_handlers.handle_stripe_status(self)
+            return
+        elif parsed_path.path == '/api/stripe/products':
+            stripe_products_handlers.handle_stripe_products(self)
             return
         
         # Admin dashboard path
@@ -896,6 +905,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/onboarding/complete':
             onboarding_handlers.handle_onboarding_complete(self)
+            return
+        
+        # Dispatch to stripe products handlers (POST)
+        if parsed_path.path == '/api/stripe/sync-products':
+            stripe_products_handlers.handle_stripe_sync_products(self)
+            return
+        elif parsed_path.path == '/api/stripe/set-vip-price':
+            stripe_products_handlers.handle_stripe_set_vip_price(self)
             return
         
         # Dispatch to telegram webhook handlers

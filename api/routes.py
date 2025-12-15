@@ -109,6 +109,12 @@ GET_ROUTES: List[Route] = [
     # Onboarding
     Route('GET', '/api/onboarding/state', 'handle_api_onboarding_state',
           auth_required=True, db_required=True),
+    
+    # Stripe Products
+    Route('GET', '/api/stripe/status', 'handle_api_stripe_status',
+          auth_required=True, db_required=True),
+    Route('GET', '/api/stripe/products', 'handle_api_stripe_products',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -172,6 +178,10 @@ POST_ROUTES: List[Route] = [
     Route('POST', '/api/stripe/webhook', 'handle_api_stripe_webhook'),
     Route('POST', '/api/stripe/sync', 'handle_api_stripe_sync',
           auth_required=True),
+    Route('POST', '/api/stripe/sync-products', 'handle_api_stripe_sync_products',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/stripe/set-vip-price', 'handle_api_stripe_set_vip_price',
+          auth_required=True, db_required=True),
     
     # Campaigns (POST)
     Route('POST', '/api/campaigns/', 'handle_api_campaign_submit',
