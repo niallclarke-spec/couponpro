@@ -1,0 +1,55 @@
+We need to restructure auth + routing for two subdomains:
+
+GOAL
+	•	admin.promostack.io = admin-only dashboard (restricted to allowed admin emails)
+	•	dash.promostack.io = client dashboard (for everyone else)
+	•	No Clerk hosted pages should ever be embedded in an iframe. If running inside Replit preview, always use top-level redirect.
+
+PROBLEMS TO FIX
+	1.	Clerk hosted domain (working-raptor-51.accounts.dev / clerk.accounts.dev) is refusing to connect in embedded contexts (iframe). Fix by using top-level redirect or external navigation, not iframe embedding.
+	2.	“Sign Out” currently flashes then returns to dashboard and still appears signed in. Sign out must fully work.
+	3.	Admin and client areas must be separated by hostname:
+	•	Requests to admin.promostack.io should route to admin UI + admin auth rules.
+	•	Requests to dash.promostack.io should route to client UI + client auth rules.
+	4.	After login, redirect users to the correct area depending on host:
+	•	admin host -> /admin
+	•	dash host -> /app (or /dashboard)
+	5.	Server-side auth rules:
+	•	Admin: must have valid Clerk JWT AND email in ADMIN_EMAILS (CSV env var), e.g. niallclarkefs@gmail.com
+	•	Client: valid Clerk JWT is enough (no admin restriction)
+	6.	Make logout reliable:
+	•	await Clerk.signOut({ redirectUrl: “/login” }) (or absolute URL)
+	•	clear any legacy sessionStorage/cookies used by old auth
+	•	after signout, force a hard redirect (window.location.href) to the correct /login for that host
+	•	ensure UI does not show “Signed in successfully” on logout
+
+IMPLEMENTATION REQUIREMENTS
+A) Detect host in backend (server.py):
+	•	Read Host header
+	•	Determine is_admin_host = host startswith “admin.”
+	•	Determine is_dash_host = host startswith “dash.”
+B) Routing:
+	•	GET / should:
+	•	if admin host: redirect to /admin (if logged in) else /login
+	•	if dash host: redirect to /app (if logged in) else /login
+	•	Ensure the old coupon generator UI is NOT the root page anymore. If it exists, serve it at /legacy-coupon or remove UI entirely (keep API endpoints for Telegram usage).
+C) Auth middleware:
+	•	Verify Clerk JWT from Authorization: Bearer 
+	•	Use CLERK_JWKS_URL to validate
+	•	Extract verified email from token claims
+	•	For admin host endpoints (/admin and /api/admin/*): require admin email
+	•	For dash host endpoints (/app and /api/*): require just valid JWT
+D) Frontend token usage:
+	•	In admin.html and client dashboard html:
+	•	Implement getAuthHeaders() that calls: const token = await Clerk.session?.getToken()
+	•	All authenticated fetches must include Authorization header
+E) Avoid iframe for Clerk hosted:
+	•	If any code uses an iframe to load Clerk sign-in, remove it.
+	•	Sign-in should mount Clerk components directly (Clerk.mountSignIn) OR redirect top window to Clerk sign-in.
+	•	If running inside an iframe (window.top !== window.self), force navigation via window.top.location =  for sign-in and sign-out.
+
+DELIVERABLE
+Apply these changes with clean, modern UI:
+	•	Replace the “Login with Google” button when logged in with a compact avatar/menu (email + Sign Out)
+	•	Ensure correct redirect behavior on both subdomains
+	•	Output a short summary of files changed and what changed. Do not give terminal commands.
