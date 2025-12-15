@@ -1,0 +1,157 @@
+PROMPT (Replit) — Fix sharded scheduler crash: `forex_config.enabled` missing + make tenant discovery schema-tolerant + add inspection tooling
+
+Context / Problem
+- When running sharded scheduler mode:
+    python forex_scheduler.py --all-tenants --shard 0/3 --once
+  it crashes inside db.py:get_active_tenants() with:
+
+  psycopg2.errors.UndefinedColumn: column "enabled" does not exist
+  LINE 3: WHERE enabled = true
+
+- Root cause: get_active_tenants() currently runs:
+    SELECT DISTINCT tenant_id FROM forex_config WHERE enabled = true
+  but our actual Neon DB schema does not have an `enabled` column on `forex_config`.
+  This is schema drift and it breaks multi-tenant sharding completely.
+
+Objective
+1) Make tenant discovery (get_active_tenants) robust to schema differences across environments.
+2) Preserve tenant isolation principles (do not add any unsafe UPDATE/DELETE; keep tenant_audit passing).
+3) Do not introduce “DB init on import” regressions (no new global DB connections; only connect at runtime).
+4) Provide a simple way to inspect what columns exist in production DB for forex_config/bot_config.
+5) Add test coverage so we don’t regress again.
+
+Implementation Plan (DO ALL OF THIS)
+
+A) Patch db.py:get_active_tenants() to be schema-tolerant
+1. Locate get_active_tenants() in db.py (currently around line ~5428).
+   Current logic:
+   - query forex_config with WHERE enabled = true
+   - if no tenants, fallback to forex_signals
+   - return list[str] tenant_ids
+
+2. Replace the hardcoded `enabled = true` filter with a dynamic filter based on actual columns present.
+
+3. Add helper functions in db.py (keep them near get_active_tenants or near other helpers):
+   - _column_exists(schema: str, table: str, column: str) -> bool
+     Uses information_schema.columns to check existence.
+     Example query:
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema=%s AND table_name=%s AND column_name=%s
+       LIMIT 1;
+
+   - _build_forex_config_tenants_query() -> tuple[str, tuple]
+     This builds the best possible SELECT query for active tenants depending on available columns.
+     IMPORTANT: It must not throw if a column doesn't exist. It must only reference columns if confirmed.
+
+4. Tenant selection rules (strict order):
+   We want “active tenants” primarily from forex_config, but different schemas exist.
+   Use the first rule that matches the schema:
+
+   Rule 1: If forex_config has column `enabled`:
+     SELECT DISTINCT tenant_id
+     FROM forex_config
+     WHERE enabled = true AND tenant_id IS NOT NULL
+
+   Rule 2: Else if forex_config has column `is_enabled`:
+     SELECT DISTINCT tenant_id
+     FROM forex_config
+     WHERE is_enabled = true AND tenant_id IS NOT NULL
+
+   Rule 3: Else if forex_config has column `status`:
+     SELECT DISTINCT tenant_id
+     FROM forex_config
+     WHERE status IN ('active','enabled','on') AND tenant_id IS NOT NULL
+
+   Rule 4: Else if forex_config has column `active`:
+     SELECT DISTINCT tenant_id
+     FROM forex_config
+     WHERE active = true AND tenant_id IS NOT NULL
+
+   Rule 5: Else (no known “enabled” flag exists):
+     SELECT DISTINCT tenant_id
+     FROM forex_config
+     WHERE tenant_id IS NOT NULL
+
+5. If the forex_config-based query returns zero tenants, keep the existing fallback:
+     SELECT DISTINCT tenant_id
+     FROM forex_signals
+     WHERE tenant_id IS NOT NULL
+     LIMIT 100
+
+6. Ensure the function logs a single clear structured error if anything fails, but never prints.
+   It should return [] if it cannot proceed.
+
+7. Make sure this works with ENABLE_RLS=1 in the future:
+   - If ENABLE_RLS=1, and tenant_conn requires tenant_id, get_active_tenants is cross-tenant by nature.
+   - Therefore: get_active_tenants MUST use a non-tenant-scoped connection (db_pool.get_connection()) as it does today.
+   - Do NOT wrap get_active_tenants in tenant_conn().
+   - If we later enable RLS strictly, we may need an admin role. For now, keep current behavior and add a comment.
+
+B) Add a DB schema inspection script (developer tool)
+Create: scripts/inspect_table_columns.py
+
+Requirements:
+1. Must be safe / read-only (no writes).
+2. Must connect using DATABASE_URL.
+3. Must print, for each table:
+   - schema.table name
+   - each column: name + data_type (from information_schema.columns)
+   Tables to inspect (in this order):
+   - public.forex_config
+   - public.bot_config
+   - public.forex_signals (optional but useful)
+4. Must clearly error if DATABASE_URL is missing.
+5. Must clearly error if connection fails (and exit nonzero).
+6. Output should be human-readable (no need for jq). Example format:
+
+   Table: public.forex_config
+     - tenant_id: character varying
+     - enabled: boolean
+     - ...
+
+C) Add/Update tests to prevent regression
+We need tests that do NOT require a real database and still protect us.
+
+1) Add a unit test file: tests/test_active_tenants_query_builder.py (or extend an existing file).
+2) Mock the column existence checks so we can simulate schemas:
+   - Schema A: forex_config has enabled
+   - Schema B: forex_config has is_enabled
+   - Schema C: forex_config has status
+   - Schema D: forex_config has none of those
+3) Assert that:
+   - The generated SQL string contains the expected WHERE clause (or no clause)
+   - It always includes `tenant_id IS NOT NULL` when an enabled/status filter exists, and at least includes tenant_id selection.
+
+4) Add a runtime test that stubs cursor.execute to ensure:
+   - get_active_tenants() does not execute a query containing "enabled" unless enabled exists.
+   - If first query yields empty results, it runs the fallback to forex_signals.
+
+Do not introduce any test that needs DATABASE_URL.
+
+D) Acceptance checklist (run locally in Replit)
+After implementing:
+1. python scripts/tenant_audit.py
+   - MUST PASS
+2. pytest -q
+   - MUST PASS
+3. With DATABASE_URL set to real Neon DB:
+   - python scripts/inspect_table_columns.py
+     - MUST print the columns successfully.
+   - python forex_scheduler.py --all-tenants --shard 0/3 --once
+     - MUST NOT crash with “column enabled does not exist”.
+     - MUST either:
+       a) find tenants via forex_config (preferred), OR
+       b) cleanly fallback to forex_signals and proceed.
+
+Important constraints
+- Do NOT reintroduce any DB pool initialization at import time.
+- Do NOT change tenant_audit scanning patterns in a way that hides issues.
+- Keep behavior backward compatible: if enabled exists, use it exactly as before.
+- Keep logging structured (use logger.*).
+- No “quick hacks”: the goal is robust multi-env behavior.
+
+Proceed to implement now, then run the acceptance checklist and paste back:
+- the updated get_active_tenants() code summary (what rules chosen)
+- the output of scripts/inspect_table_columns.py (redact sensitive host/user)
+- the output of the sharded scheduler command (first 50 lines)
