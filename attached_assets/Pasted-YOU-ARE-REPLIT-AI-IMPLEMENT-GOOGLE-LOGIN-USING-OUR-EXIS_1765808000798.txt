@@ -1,0 +1,124 @@
+YOU ARE REPLIT AI. IMPLEMENT GOOGLE LOGIN USING OUR EXISTING CLERK SETUP (DO NOT BUILD RAW GOOGLE OAUTH).
+
+GOAL
+- Finish Google login via Clerk (Sign in with Google).
+- Enforce secure authentication across the app (admin + client users).
+- Map Clerk users -> our app users/tenants/roles in Postgres.
+- Keep everything compatible with our multi-tenant hardening and ENABLE_RLS support.
+
+CRITICAL CONSTRAINTS
+- Do NOT initialize the DB pool on import (only inside request handlers/functions).
+- All tenant-aware DB operations must include tenant_id OR use tenant_conn(tenant_id) when ENABLE_RLS=1.
+- Keep existing Clerk progress. Do not rip out Clerk code. Extend it.
+
+ASSUMPTIONS
+- Clerk is already configured in the frontend (publishable key) and backend has access to Clerk JWT/session token.
+- Backend is Python (FastAPI or Flask).
+- DATABASE_URL exists.
+- We can add env vars for Clerk if missing.
+
+WHAT TO IMPLEMENT (END-TO-END)
+
+1) Confirm/finish Clerk “Sign in with Google”
+- Ensure Clerk dashboard has Google OAuth enabled for the application.
+- In the frontend login screen, ensure the primary CTA uses Clerk’s hosted sign-in (or Clerk components) with Google enabled.
+- After login, redirect back to our app.
+
+2) Backend authentication middleware (Clerk token verification)
+- Add a small auth module (e.g. auth/clerk_auth.py) that:
+  - Extracts session token / bearer token from request headers or cookies (whichever we already use).
+  - Verifies Clerk JWT using Clerk’s JWKS (public keys) OR Clerk SDK if installed.
+  - Produces a normalized “auth user” object:
+    { clerk_user_id, email, name, avatar_url }
+
+- Add helpers:
+  - require_auth(request) -> returns auth_user or raises 401
+  - require_admin(request) -> enforces role=admin (derived from DB mapping; see below)
+
+NOTE: Do not call DB on import; all lookups happen inside request handlers.
+
+3) DB tables for mapping (safe, non-destructive)
+- Ensure these tables exist (CREATE TABLE IF NOT EXISTS):
+  A) users:
+     users(
+       id SERIAL PRIMARY KEY,
+       clerk_user_id TEXT UNIQUE NOT NULL,
+       email TEXT UNIQUE NOT NULL,
+       name TEXT,
+       avatar_url TEXT,
+       role TEXT NOT NULL DEFAULT 'client',   -- 'admin' or 'client'
+       tenant_id TEXT,                        -- for client users
+       created_at TIMESTAMP DEFAULT NOW(),
+       last_login_at TIMESTAMP
+     )
+  B) tenants:
+     tenants(
+       tenant_id TEXT PRIMARY KEY,
+       display_name TEXT,
+       owner_email TEXT,
+       status TEXT DEFAULT 'active',
+       created_at TIMESTAMP DEFAULT NOW(),
+       last_seen_at TIMESTAMP
+     )
+
+No destructive migrations. Add only.
+
+4) User provisioning on first login (Clerk -> DB)
+- On every authenticated request (or in a dedicated endpoint), upsert the users row:
+  - If email is in ADMIN_EMAILS env var (comma-separated) => role='admin' and tenant_id=NULL
+  - Else role='client'
+    - If tenant_id not set yet, create it deterministically:
+      tenant_id = slugify(email local-part) OR stable short hash; must be stable over time.
+    - Ensure tenants row exists with:
+      tenant_id, display_name=(name or tenant_id), owner_email=email, status='active'
+
+5) Tenant context resolution for API calls
+- Implement get_effective_tenant_id(auth_user):
+  - If role='client': effective_tenant_id = users.tenant_id
+  - If role='admin': effective_tenant_id = None (for now)
+- IMPORTANT: do not remove the existing X-Tenant-Id header support yet.
+  - For client users: ignore header and use effective_tenant_id.
+  - For admin users: allow header OR later impersonation (we’ll do admin-client switching next).
+- If a tenant-scoped endpoint is hit and effective tenant is missing -> 403 with clear message.
+
+6) RLS compatibility
+- When ENABLE_RLS=1 and effective_tenant_id exists:
+  - all tenant DB access must use tenant_conn(effective_tenant_id)
+- Otherwise:
+  - db_pool.get_connection()
+
+7) Minimal endpoints to confirm it works
+Add/ensure:
+- GET /auth/me
+  - Returns:
+    { email, name, role, tenant_id, avatar_url, clerk_user_id }
+  - 401 if not logged in
+
+- POST /auth/logout
+  - If we use Clerk frontend sessions, logout is primarily frontend; backend can just return 200
+  - (Don’t invent a session system if we’re fully Clerk-based.)
+
+8) Tests (NO real Clerk calls)
+Add tests that do not require network:
+- tests/test_clerk_auth.py
+  - Mock JWT verification function to return a fake Clerk user
+  - Verify user row is created/updated correctly
+  - Verify ADMIN_EMAILS mapping works
+  - Verify deterministic tenant creation and tenants row creation
+- tests/test_auth_guards.py
+  - require_auth returns 401 when missing token
+  - require_admin blocks non-admin
+
+ACCEPTANCE / COMMANDS
+Must pass:
+- python scripts/tenant_audit.py
+- pytest -q
+- Cold import check still OK (no DB init on import)
+
+OUTPUT REQUIRED
+- List files changed/added
+- Any new env vars required (CLERK_*, ADMIN_EMAILS)
+- Exact commands to run locally
+- Confirm tests pass
+
+NOW IMPLEMENT. DO NOT REPLACE CLERK; FINISH THE CLERK-BASED GOOGLE LOGIN PATH.

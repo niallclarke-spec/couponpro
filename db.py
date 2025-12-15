@@ -1144,6 +1144,47 @@ class DatabasePool:
                 else:
                     logger.info("uq_telegram_subscriptions_tenant_email already exists, skipping")
                 
+                # ============================================================
+                # Clerk Auth: Users table for Clerk-authenticated users
+                # ============================================================
+                logger.info("Checking for clerk_users table...")
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS clerk_users (
+                        id SERIAL PRIMARY KEY,
+                        clerk_user_id TEXT UNIQUE NOT NULL,
+                        email TEXT UNIQUE NOT NULL,
+                        name TEXT,
+                        avatar_url TEXT,
+                        role TEXT NOT NULL DEFAULT 'client',
+                        tenant_id TEXT,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        last_login_at TIMESTAMP
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_clerk_users_email ON clerk_users(email)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_clerk_users_clerk_user_id ON clerk_users(clerk_user_id)")
+                logger.info("clerk_users table ready")
+                
+                # Clerk Auth: Ensure tenants table has required columns
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='tenants' AND column_name IN ('display_name', 'owner_email', 'status', 'last_seen_at')
+                """)
+                existing_tenant_cols = {row[0] for row in cursor.fetchall()}
+                
+                if 'display_name' not in existing_tenant_cols:
+                    cursor.execute("ALTER TABLE tenants ADD COLUMN display_name TEXT")
+                    logger.info("display_name column added to tenants")
+                if 'owner_email' not in existing_tenant_cols:
+                    cursor.execute("ALTER TABLE tenants ADD COLUMN owner_email TEXT")
+                    logger.info("owner_email column added to tenants")
+                if 'status' not in existing_tenant_cols:
+                    cursor.execute("ALTER TABLE tenants ADD COLUMN status TEXT DEFAULT 'active'")
+                    logger.info("status column added to tenants")
+                if 'last_seen_at' not in existing_tenant_cols:
+                    cursor.execute("ALTER TABLE tenants ADD COLUMN last_seen_at TIMESTAMP")
+                    logger.info("last_seen_at column added to tenants")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 
@@ -5497,3 +5538,168 @@ def get_active_tenants():
     except Exception as e:
         logger.exception(f"Error getting active tenants: {e}")
         return []
+
+
+# ============================================================
+# Clerk Auth: User provisioning functions
+# ============================================================
+
+def _generate_tenant_id(email: str) -> str:
+    """Generate deterministic tenant_id from email."""
+    import re
+    import hashlib
+    
+    if not email or '@' not in email:
+        return hashlib.sha256(email.encode()).hexdigest()[:12]
+    
+    local_part = email.split('@')[0]
+    slug = re.sub(r'[^a-z0-9]', '', local_part.lower())
+    
+    if len(slug) < 3:
+        return hashlib.sha256(email.encode()).hexdigest()[:12]
+    
+    return slug[:50]
+
+
+def _get_admin_emails() -> set:
+    """Get set of admin emails from ADMIN_EMAILS env var (comma-separated)."""
+    admin_emails_str = os.environ.get('ADMIN_EMAILS', '')
+    if not admin_emails_str:
+        return set()
+    return {e.strip().lower() for e in admin_emails_str.split(',') if e.strip()}
+
+
+def upsert_clerk_user(clerk_user_id: str, email: str, name: str = None, avatar_url: str = None) -> dict:
+    """
+    Upsert Clerk user into clerk_users table.
+    
+    Sets role='admin' if email is in ADMIN_EMAILS env var.
+    For clients, generates deterministic tenant_id from email.
+    Updates last_login_at on every call.
+    
+    Args:
+        clerk_user_id: Clerk's user ID (sub claim)
+        email: User's email address
+        name: User's display name
+        avatar_url: User's avatar URL
+        
+    Returns:
+        User dict with all fields
+    """
+    if not db_pool or not db_pool.connection_pool:
+        raise Exception("Database not available")
+    
+    admin_emails = _get_admin_emails()
+    is_admin = email.lower() in admin_emails if email else False
+    role = 'admin' if is_admin else 'client'
+    tenant_id = None if is_admin else _generate_tenant_id(email)
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO clerk_users (clerk_user_id, email, name, avatar_url, role, tenant_id, last_login_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (clerk_user_id) DO UPDATE SET
+                    email = EXCLUDED.email,
+                    name = EXCLUDED.name,
+                    avatar_url = EXCLUDED.avatar_url,
+                    role = EXCLUDED.role,
+                    last_login_at = NOW()
+                RETURNING id, clerk_user_id, email, name, avatar_url, role, tenant_id, created_at, last_login_at
+            """, (clerk_user_id, email, name, avatar_url, role, tenant_id))
+            
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if tenant_id:
+                ensure_tenant_exists(tenant_id, name or email, email)
+            
+            return {
+                'id': row[0],
+                'clerk_user_id': row[1],
+                'email': row[2],
+                'name': row[3],
+                'avatar_url': row[4],
+                'role': row[5],
+                'tenant_id': row[6],
+                'created_at': row[7].isoformat() if row[7] else None,
+                'last_login_at': row[8].isoformat() if row[8] else None
+            }
+    except Exception as e:
+        logger.exception(f"Error upserting clerk user: {e}")
+        raise
+
+
+def get_user_by_clerk_id(clerk_user_id: str) -> dict:
+    """
+    Get user by Clerk user ID.
+    
+    Args:
+        clerk_user_id: Clerk's user ID
+        
+    Returns:
+        User dict or None if not found
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, clerk_user_id, email, name, avatar_url, role, tenant_id, created_at, last_login_at
+                FROM clerk_users
+                WHERE clerk_user_id = %s
+            """, (clerk_user_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'id': row[0],
+                'clerk_user_id': row[1],
+                'email': row[2],
+                'name': row[3],
+                'avatar_url': row[4],
+                'role': row[5],
+                'tenant_id': row[6],
+                'created_at': row[7].isoformat() if row[7] else None,
+                'last_login_at': row[8].isoformat() if row[8] else None
+            }
+    except Exception as e:
+        logger.exception(f"Error getting user by clerk_id: {e}")
+        return None
+
+
+def ensure_tenant_exists(tenant_id: str, display_name: str = None, owner_email: str = None) -> bool:
+    """
+    Create tenant if it doesn't exist.
+    
+    Args:
+        tenant_id: Tenant ID
+        display_name: Optional display name
+        owner_email: Optional owner email
+        
+    Returns:
+        True if tenant exists/created, False on error
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenants (id, name, display_name, owner_email, is_active, status)
+                VALUES (%s, %s, %s, %s, TRUE, 'active')
+                ON CONFLICT (id) DO UPDATE SET
+                    last_seen_at = NOW()
+            """, (tenant_id, display_name or tenant_id, display_name, owner_email))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error ensuring tenant exists: {e}")
+        return False

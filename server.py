@@ -333,6 +333,42 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_error(500, f"Server error: {str(e)}")
         
+        elif parsed_path.path == '/auth/me':
+            try:
+                from auth.clerk_auth import require_auth, AuthenticationError
+                auth_user = require_auth(self)
+                
+                user_info = db.upsert_clerk_user(
+                    clerk_user_id=auth_user['clerk_user_id'],
+                    email=auth_user.get('email'),
+                    name=auth_user.get('name'),
+                    avatar_url=auth_user.get('avatar_url')
+                )
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'email': user_info.get('email'),
+                    'name': user_info.get('name'),
+                    'role': user_info.get('role'),
+                    'tenant_id': user_info.get('tenant_id'),
+                    'avatar_url': user_info.get('avatar_url'),
+                    'clerk_user_id': user_info.get('clerk_user_id')
+                }).encode())
+            except AuthenticationError as e:
+                self.send_response(e.status_code)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+            except Exception as e:
+                logger.exception("Error in /auth/me")
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+            return
+        
         elif parsed_path.path == '/api/check-auth':
             # Check if user is authenticated (for page refresh)
             if self.check_auth():
@@ -654,6 +690,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+        
+        elif parsed_path.path == '/auth/logout':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True}).encode())
         
         elif parsed_path.path == '/api/logout':
             # No server-side cleanup needed with signed cookies
