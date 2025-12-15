@@ -1,0 +1,40 @@
+PROBLEMS TO FIX
+4) After Clerk sign-in, the UI says “Signed in successfully”, but navigating to /admin (via “Admin Dashboard” link or direct /admin) bounces back to login / fails to load. This means the Clerk session/JWT is not being used correctly on /admin + authenticated API calls.
+5) Logging OUT currently shows a “Signed in successfully” style message (wrong). On sign out it should cleanly sign out and redirect to /login (or show “Signed out” briefly).
+6) The site root (/) currently shows the coupon generator UI, which we do not want users to ever see. Users should land on /admin when logged in, otherwise /login. The coupon generator endpoints must remain for Telegram bot usage, but its UI must not be the homepage.
+7) Ensure Clerk UI + auth is “production-correct”: admin stays signed in across navigation, and /api/check-auth works using Authorization: Bearer .
+
+REQUIRED BEHAVIOR
+A) After sign-in completes, redirect to /admin automatically (no extra clicks).
+B) /admin must not rely on legacy cookie “admin_session”. It must accept Clerk JWT from Authorization header and treat that as the source of truth.
+C) In admin.html, every authenticated fetch must include Clerk JWT:
+	•	Create getAuthHeaders(): await Clerk.session.getToken() and return { Authorization: Bearer ${token} }.
+	•	Wrap calls like /api/check-auth, /api/forex-signals, /api/forex-stats, /api/upload-template, /api/delete-template, etc. with those headers.
+D) /api/check-auth should return JSON { ok: true, email, name } when authorized, otherwise 401 if not logged in, 403 if logged in but not allowed.
+E) Admin access must be restricted server-side to niallclarkefs@gmail.com (and optionally ADMIN_EMAILS env var CSV). Use the VERIFIED email from Clerk token claims.
+F) Logging out:
+	•	await Clerk.signOut()
+	•	clear any legacy/local auth state (sessionStorage keys, old cookies if you set them)
+	•	redirect to /login
+	•	do NOT show “signed in successfully” on logout.
+
+HOMEPAGE ROUTING CHANGES (server.py)
+	•	Change GET / to:
+	•	If request is authenticated (valid Clerk JWT): redirect to /admin
+	•	Else redirect to /login
+	•	Ensure the old coupon-generator UI is not served as / anymore. If it’s index.html, move it to /coupon (or /legacy-coupon) but keep all API endpoints used by Telegram intact.
+
+BACKEND AUTH (server.py and/or auth/clerk_auth.py)
+	•	Update require_admin / check_auth to:
+	•	Read Authorization header: “Bearer ”
+	•	Verify token with Clerk JWKS (CLERK_JWKS_URL)
+	•	Extract primary email from token claims
+	•	Enforce allowed admin emails
+	•	Keep legacy static password login code for now but do not depend on it for /admin working.
+
+DELIVERABLE
+Implement these fixes. Then output:
+	1.	What you changed in server.py
+	2.	What you changed in admin.html
+	3.	What you changed in auth/clerk_auth.py (only if touched)
+No terminal instructions.
