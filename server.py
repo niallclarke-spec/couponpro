@@ -285,13 +285,64 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Location', '/admin')
             self.end_headers()
         elif parsed_path.path == '/admin':
-            # Admin dashboard - accessible on admin host or dev environments
+            # Server-side auth protection for /admin
+            from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+            
+            # On dash subdomain, /admin is blocked entirely (redirect to proper subdomain)
             if not host_context.is_dev and host_context.host_type == HostType.DASH:
                 self.send_response(302)
                 self.send_header('Location', 'https://admin.promostack.io/admin')
                 self.end_headers()
                 return
             
+            # Check authentication
+            auth_user = get_auth_user_from_request(self)
+            
+            if not auth_user:
+                # Not authenticated - redirect to login
+                self.send_response(302)
+                self.send_header('Location', '/login')
+                self.end_headers()
+                return
+            
+            # Check admin authorization (email in ADMIN_EMAILS)
+            user_email = auth_user.get('email')
+            # Also check X-Clerk-User-Email header (frontend sends this)
+            if not user_email:
+                user_email = self.headers.get('X-Clerk-User-Email', '')
+            
+            if not is_admin_email(user_email):
+                # Authenticated but not admin - return 403 with access denied page
+                self.send_response(403)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                access_denied_html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Access Denied | PromoStack</title>
+    <style>
+        body {{ font-family: Inter, sans-serif; background: #091128; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+        .container {{ text-align: center; padding: 40px; }}
+        h1 {{ color: #ef4444; margin-bottom: 16px; }}
+        p {{ color: #94a3b8; margin-bottom: 24px; }}
+        a {{ color: #4f46e5; text-decoration: none; }}
+        .email {{ color: #64748b; font-size: 14px; margin-top: 16px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Access Denied</h1>
+        <p>You don't have permission to access the admin dashboard.</p>
+        <a href="/login?signed_out=1">Sign out and use a different account</a>
+        <p class="email">Logged in as: {user_email or 'Unknown'}</p>
+    </div>
+</body>
+</html>'''
+                self.wfile.write(access_denied_html.encode('utf-8'))
+                return
+            
+            # Authenticated admin - serve the page
             try:
                 with open('admin.html', 'r') as f:
                     content = f.read()
