@@ -6044,6 +6044,76 @@ def get_tenant_integration(tenant_id: str, provider: str) -> dict:
 # Tenant Stripe Product/Price Caching Functions
 # ============================================================
 
+def resolve_tenant_from_price_id(price_id: str):
+    """
+    Find which tenant a price_id belongs to by looking up tenant_stripe_prices.
+    
+    Args:
+        price_id: Stripe price ID
+        
+    Returns:
+        Tuple of (tenant_id, vip_price_id) or (None, None) if not found.
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None, None
+    
+    if not price_id:
+        return None, None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT tsp.tenant_id, tss.vip_price_id
+                FROM tenant_stripe_prices tsp
+                LEFT JOIN tenant_stripe_settings tss ON tsp.tenant_id = tss.tenant_id
+                WHERE tsp.price_id = %s
+                LIMIT 1
+            """, (price_id,))
+            
+            row = cursor.fetchone()
+            if row:
+                return row[0], row[1]
+            return None, None
+    except Exception as e:
+        logger.exception(f"Error resolving tenant from price_id {price_id}: {e}")
+        return None, None
+
+
+def get_tenant_id_by_subscription_id(stripe_subscription_id: str) -> str:
+    """
+    Look up the tenant_id for an existing subscription.
+    Used for subscription updates/deletes where we already have the subscription stored.
+    
+    Args:
+        stripe_subscription_id: Stripe subscription ID
+        
+    Returns:
+        tenant_id or None if not found
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    if not stripe_subscription_id:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id FROM telegram_subscriptions
+                WHERE stripe_subscription_id = %s
+                LIMIT 1
+            """, (stripe_subscription_id,))
+            
+            row = cursor.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.exception(f"Error looking up tenant by subscription {stripe_subscription_id}: {e}")
+        return None
+
+
 def get_tenant_stripe_settings(tenant_id: str) -> dict:
     """
     Get Stripe settings for a tenant.
