@@ -5710,12 +5710,15 @@
             // Show signing out state immediately
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
-                dashboard.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;">Signing out...</div>';
+                dashboard.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;font-size:18px;">Signing out...</div>';
             }
             
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
             sessionStorage.removeItem('clerk_user_avatar');
+            
+            // Wait for overlay to paint before proceeding
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             
             if (window.Clerk) {
                 try {
@@ -5731,8 +5734,11 @@
                 console.warn('Backend logout error:', err);
             }
             
+            // Small delay to ensure signOut fully completes
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Navigate to login page with signed_out flag to prevent auto-redirect
-            window.location.href = '/login?signed_out=1';
+            window.location.replace('/login?signed_out=1');
         }
 
         async function handleAccessDeniedLogout() {
@@ -5747,7 +5753,11 @@
             
             sessionStorage.removeItem('clerk_session_token');
             sessionStorage.removeItem('clerk_user_email');
-            window.location.href = '/login?signed_out=1';
+            
+            // Small delay to ensure signOut fully completes
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            window.location.replace('/login?signed_out=1');
         }
 
         function showAccessDenied(email) {

@@ -374,6 +374,9 @@
             sessionStorage.removeItem('clerk_user_email');
             sessionStorage.removeItem('clerk_user_avatar');
 
+            // Wait for overlay to paint before proceeding
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
             try {
                 if (clerkInstance) {
                     await clerkInstance.signOut();
@@ -382,7 +385,10 @@
                 console.error('Sign out error:', err);
             }
 
-            window.location.href = '/login?signed_out=1';
+            // Small delay to ensure signOut fully completes
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            window.location.replace('/login?signed_out=1');
         }
 
         function showAuthenticatedUI(user) {
