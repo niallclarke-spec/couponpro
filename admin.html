@@ -5434,7 +5434,19 @@
         async function checkAuth() {
             try {
                 const headers = await getAuthHeaders();
-                const response = await fetch('/api/check-auth', {
+                
+                // Get email from Clerk user object or sessionStorage
+                let userEmail = sessionStorage.getItem('clerk_user_email');
+                if (window.Clerk && window.Clerk.user) {
+                    userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress || 
+                                window.Clerk.user.emailAddresses?.[0]?.emailAddress || 
+                                userEmail;
+                }
+                
+                // Include email in request for server to use (JWT may not contain it)
+                const url = userEmail ? `/api/check-auth?email=${encodeURIComponent(userEmail)}` : '/api/check-auth';
+                
+                const response = await fetch(url, {
                     headers: headers,
                     credentials: 'include'
                 });
@@ -5446,7 +5458,6 @@
                     document.getElementById('dashboard').classList.remove('hidden');
                     appState.isLoggedIn = true;
                     initializeRouting();
-                    // Use server data - email/avatar from Clerk token with fallback handled in updateAuthUI
                     updateAuthUI(true, data.email, data.avatar);
                 } else if (data.email) {
                     showAccessDenied(data.email);

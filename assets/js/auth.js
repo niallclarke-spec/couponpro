@@ -21,6 +21,18 @@ async function getAuthHeaders(includeContentType = false) {
         headers['Authorization'] = `Bearer ${storedToken}`;
     }
     
+    // Include email header for server-side admin verification
+    // (Clerk JWTs don't include email by default)
+    let userEmail = sessionStorage.getItem('clerk_user_email');
+    if (window.Clerk && window.Clerk.user) {
+        userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress || 
+                    window.Clerk.user.emailAddresses?.[0]?.emailAddress || 
+                    userEmail;
+    }
+    if (userEmail) {
+        headers['X-Clerk-User-Email'] = userEmail;
+    }
+    
     return headers;
 }
 

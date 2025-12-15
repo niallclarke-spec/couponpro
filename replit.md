@@ -15,7 +15,30 @@ The platform uses a dark navy theme with a unified admin dashboard featuring a d
 - Consistent CSS variables for colors (e.g., `--bg-primary`: #081028, `--accent-primary`: #CB3CFF) and dimensions (e.g., `--radius-sm/md/lg`).
 
 ### Technical Implementations
-The frontend is built with pure HTML, CSS, and vanilla JavaScript. The backend and API are a Python HTTP server (`server.py`). Client-side image generation uses canvas manipulation for the web app, while the Telegram bot uses server-side Python/Pillow. Authentication is based on HMAC-signed cookie authentication for stateless sessions. Persistent storage for template images and `meta.json` backups is managed by Digital Ocean Spaces (S3-compatible) with CDN, utilizing `boto3`.
+The frontend is built with pure HTML, CSS, and vanilla JavaScript. The backend and API are a Python HTTP server (`server.py`). Client-side image generation uses canvas manipulation for the web app, while the Telegram bot uses server-side Python/Pillow. Persistent storage for template images and `meta.json` backups is managed by Digital Ocean Spaces (S3-compatible) with CDN, utilizing `boto3`.
+
+### Authentication Architecture
+The platform supports dual authentication methods:
+1. **Clerk JWT Authentication** (Primary): Uses Clerk's hosted authentication with JWT tokens sent via `Authorization: Bearer` headers.
+2. **Legacy Cookie Authentication**: HMAC-signed `admin_session` cookie for backward compatibility.
+
+**Clerk JWT Email Handling:**
+- Default Clerk JWTs only contain `sub` (user ID), not the email address
+- The frontend sends the user's verified email via `X-Clerk-User-Email` header (from Clerk.user object)
+- The server validates the JWT is valid before trusting the email header
+- Admin emails are checked against a whitelist (e.g., `niallclarkefs@gmail.com`)
+
+**Key Auth Files:**
+- `auth/clerk_auth.py`: Token verification, admin email checking, user extraction
+- `core/clerk_auth.py`: JWT verification middleware
+- `assets/js/auth.js`: Frontend auth helpers (`getAuthHeaders()`, `authedFetch()`)
+- `api/middleware.py`: Route-level auth and tenant checks
+
+**Auth Flow:**
+1. User signs in via Clerk on `/login`
+2. Frontend stores email in sessionStorage and redirects to `/admin`
+3. `/api/check-auth` validates JWT + email, returns 200 (admin) / 403 (non-admin) / 401 (unauthenticated)
+4. All authenticated API calls include `Authorization` header + `X-Clerk-User-Email` header
 
 ### Feature Specifications
 - **Web Application**: Dynamic template loading, auto-fitting text, live previews, logo overlays, image download/share, and a password-protected admin panel for template management.

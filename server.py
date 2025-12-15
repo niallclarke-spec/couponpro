@@ -140,7 +140,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         clerk_user = get_auth_user_from_request(self)
         if clerk_user:
+            # JWT is valid - use email from JWT if available, else trust X-Clerk-User-Email header
             email = clerk_user.get('email')
+            if not email:
+                email = self.headers.get('X-Clerk-User-Email')
+            
             if is_admin_email(email):
                 logger.debug(f"Clerk admin auth valid for: {email}")
                 return True
@@ -387,20 +391,52 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         elif parsed_path.path == '/api/check-auth':
             # Check if user is authenticated (for page refresh)
-            if self.check_auth():
-                from auth.clerk_auth import get_auth_user_from_request
-                clerk_user = get_auth_user_from_request(self)
-                email = clerk_user.get('email') if clerk_user else None
-                avatar = clerk_user.get('avatar_url') if clerk_user else None
+            from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+            clerk_user = get_auth_user_from_request(self)
+            
+            # Get email from query param (sent by frontend from Clerk user object)
+            query_params = parse_qs(parsed_path.query)
+            frontend_email = query_params.get('email', [None])[0]
+            
+            if clerk_user:
+                # JWT is valid - use email from JWT if available, else trust frontend email
+                email = clerk_user.get('email') or frontend_email
+                avatar = clerk_user.get('avatar_url')
+                
+                logger.info(f"[check-auth] JWT valid, email={email}, clerk_email={clerk_user.get('email')}, frontend_email={frontend_email}")
+                
+                if is_admin_email(email):
+                    # Authenticated and authorized as admin
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'authenticated': True,
+                        'email': email,
+                        'avatar': avatar
+                    }).encode())
+                else:
+                    # Authenticated but NOT admin - 403 Forbidden
+                    self.send_response(403)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'authenticated': False,
+                        'email': email,
+                        'error': 'Access denied - not an admin email'
+                    }).encode())
+            elif self.check_auth():
+                # Legacy cookie auth (admin_session)
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     'authenticated': True,
-                    'email': email,
-                    'avatar': avatar
+                    'email': None,
+                    'avatar': None
                 }).encode())
             else:
+                # Not authenticated at all
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()

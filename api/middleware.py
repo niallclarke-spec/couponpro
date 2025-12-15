@@ -158,6 +158,10 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool) -> bo
     
     path = handler_instance.path.split('?')[0]
     
+    # Skip tenant checks for auth-check endpoint (it handles its own auth)
+    if path == '/api/check-auth':
+        return True
+    
     tenant_id, error = determine_tenant_id(handler_instance)
     
     if error == 'no_tenant_mapping':
