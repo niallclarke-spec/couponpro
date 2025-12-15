@@ -5731,12 +5731,8 @@
                 console.warn('Backend logout error:', err);
             }
             
-            // Handle iframe context - use top-level navigation
-            if (window.top !== window.self) {
-                window.top.location.href = '/login';
-            } else {
-                window.location.href = '/login';
-            }
+            // Navigate to login page
+            window.location.href = '/login';
         }
 
         async function handleAccessDeniedLogout() {

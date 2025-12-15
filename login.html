@@ -329,13 +329,9 @@
                         redirectPath = '/admin';
                     }
                     
-                    // Handle iframe context - use top-level navigation
+                    // Redirect after short delay to allow session storage to sync
                     setTimeout(() => {
-                        if (window.top !== window.self) {
-                            window.top.location.href = redirectPath;
-                        } else {
-                            window.location.href = redirectPath;
-                        }
+                        window.location.href = redirectPath;
                     }, 500);
                 }
             } catch (err) {
