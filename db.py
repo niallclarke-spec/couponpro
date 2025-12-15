@@ -5432,28 +5432,33 @@ def _build_forex_config_tenants_query() -> tuple:
     Falls back to returning all tenants if no known enable flag column exists.
     
     Returns:
-        tuple: (query_string, query_params)
+        tuple: (query_string, query_params, rule_used)
     """
     base_query = "SELECT DISTINCT tenant_id FROM forex_config WHERE tenant_id IS NOT NULL"
     
     # Rule 1: Check for 'enabled' column
     if _column_exists('public', 'forex_config', 'enabled'):
-        return (base_query + " AND enabled = true", ())
+        logger.info("get_active_tenants: Using Rule 1 (enabled column)")
+        return (base_query + " AND enabled = true", (), "rule1_enabled")
     
     # Rule 2: Check for 'is_enabled' column
     if _column_exists('public', 'forex_config', 'is_enabled'):
-        return (base_query + " AND is_enabled = true", ())
+        logger.info("get_active_tenants: Using Rule 2 (is_enabled column)")
+        return (base_query + " AND is_enabled = true", (), "rule2_is_enabled")
     
     # Rule 3: Check for 'status' column
     if _column_exists('public', 'forex_config', 'status'):
-        return (base_query + " AND status IN ('active', 'enabled', 'on')", ())
+        logger.info("get_active_tenants: Using Rule 3 (status column)")
+        return (base_query + " AND status IN ('active', 'enabled', 'on')", (), "rule3_status")
     
     # Rule 4: Check for 'active' column
     if _column_exists('public', 'forex_config', 'active'):
-        return (base_query + " AND active = true", ())
+        logger.info("get_active_tenants: Using Rule 4 (active column)")
+        return (base_query + " AND active = true", (), "rule4_active")
     
     # Rule 5: No known enabled flag - return all tenants with config
-    return (base_query, ())
+    logger.info("get_active_tenants: Using Rule 5 (fallback - no enable column found)")
+    return (base_query, (), "rule5_fallback")
 
 
 def get_active_tenants():
@@ -5473,11 +5478,13 @@ def get_active_tenants():
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            query, params = _build_forex_config_tenants_query()
+            query, params, rule_used = _build_forex_config_tenants_query()
             cursor.execute(query, params)
             tenants = [row[0] for row in cursor.fetchall()]
             
+            fallback_used = False
             if not tenants:
+                fallback_used = True
                 cursor.execute("""
                     SELECT DISTINCT tenant_id FROM forex_signals
                     WHERE tenant_id IS NOT NULL
@@ -5485,6 +5492,7 @@ def get_active_tenants():
                 """)
                 tenants = [row[0] for row in cursor.fetchall()]
             
+            logger.info(f"get_active_tenants: rule={rule_used}, found={len(tenants)} tenants, fallback_to_signals={fallback_used}")
             return tenants
     except Exception as e:
         logger.exception(f"Error getting active tenants: {e}")

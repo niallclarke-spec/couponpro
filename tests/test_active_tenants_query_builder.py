@@ -20,11 +20,12 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.side_effect = col_exists_side_effect
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert 'enabled = true' in query
         assert 'is_enabled' not in query
         assert params == ()
+        assert rule == "rule1_enabled"
     
     @patch('db._column_exists')
     def test_rule2_is_enabled_column_exists(self, mock_col_exists):
@@ -36,10 +37,11 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.side_effect = col_exists_side_effect
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert 'is_enabled = true' in query
         assert params == ()
+        assert rule == "rule2_is_enabled"
     
     @patch('db._column_exists')
     def test_rule3_status_column_exists(self, mock_col_exists):
@@ -51,10 +53,11 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.side_effect = col_exists_side_effect
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert "status IN ('active', 'enabled', 'on')" in query
         assert params == ()
+        assert rule == "rule3_status"
     
     @patch('db._column_exists')
     def test_rule4_active_column_exists(self, mock_col_exists):
@@ -66,10 +69,11 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.side_effect = col_exists_side_effect
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert 'active = true' in query
         assert params == ()
+        assert rule == "rule4_active"
     
     @patch('db._column_exists')
     def test_rule5_no_enable_column_fallback(self, mock_col_exists):
@@ -78,7 +82,7 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.return_value = False
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert 'tenant_id IS NOT NULL' in query
         assert 'enabled' not in query
@@ -86,6 +90,7 @@ class TestBuildForexConfigTenantsQuery:
         assert 'status' not in query
         assert 'active' not in query
         assert params == ()
+        assert rule == "rule5_fallback"
     
     @patch('db._column_exists')
     def test_priority_enabled_over_is_enabled(self, mock_col_exists):
@@ -97,10 +102,11 @@ class TestBuildForexConfigTenantsQuery:
         
         mock_col_exists.side_effect = col_exists_side_effect
         
-        query, params = db._build_forex_config_tenants_query()
+        query, params, rule = db._build_forex_config_tenants_query()
         
         assert 'enabled = true' in query
         assert 'is_enabled' not in query
+        assert rule == "rule1_enabled"
 
 
 class TestColumnExists:
@@ -134,7 +140,8 @@ class TestGetActiveTenantsIntegration:
         
         mock_query_builder.return_value = (
             "SELECT DISTINCT tenant_id FROM forex_config WHERE tenant_id IS NOT NULL",
-            ()
+            (),
+            "rule5_fallback"
         )
         
         mock_conn = MagicMock()

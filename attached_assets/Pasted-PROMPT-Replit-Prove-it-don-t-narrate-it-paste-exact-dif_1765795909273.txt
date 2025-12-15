@@ -1,0 +1,70 @@
+PROMPT (Replit) — Prove it, don’t narrate it: paste exact diffs + exact command outputs for the “schema-tolerant sharding” fix
+
+You keep summarizing. I need VERIFIABLE artifacts.
+
+Goal
+- Confirm the sharded scheduler fix is real (no more `forex_config.enabled` crash), and that we didn’t break tenant isolation / audit / cold-import guarantees.
+
+Deliverables (MUST INCLUDE ALL)
+
+1) Show me the EXACT code changes (diffs)
+A) db.py
+- Paste the full updated function(s):
+  - get_active_tenants()
+  - _column_exists() helper
+  - _build_forex_config_tenants_query()
+- Paste them as code blocks (not screenshots).
+- Include enough surrounding context so I can see imports + where helpers live.
+
+B) scripts/inspect_table_columns.py
+- Paste the entire file in a code block.
+
+C) Tests added/updated
+- Paste the full contents of any new test file(s) you created
+  (e.g., tests/test_active_tenants_query_builder.py or similar).
+- If you modified existing tests, paste diffs for those files.
+
+2) Run these commands and paste the RAW OUTPUT (copy/paste)
+(Do not paraphrase. Do not summarize. Paste output.)
+
+A) Baseline safety
+python scripts/tenant_audit.py
+pytest -q
+
+B) Cold import proof (no DB init on import)
+python - << 'EOF'
+import forex_scheduler
+import scheduler.runner
+import core.runtime
+import strategies
+import bots.strategies
+print("Cold import OK")
+EOF
+
+C) DB schema inspection proof (REAL DATABASE_URL must be set)
+python scripts/inspect_table_columns.py
+
+D) Sharded scheduler proof (REAL DATABASE_URL must be set)
+export ENABLE_RLS=0
+python forex_scheduler.py --all-tenants --shard 0/3 --once 2>&1 | head -100
+python forex_scheduler.py --all-tenants --shard 1/3 --once 2>&1 | head -100
+python forex_scheduler.py --all-tenants --shard 2/3 --once 2>&1 | head -100
+
+E) Tenant discovery sanity (print what tenants it found)
+- Add a single INFO log line in get_active_tenants() that logs:
+  - which rule was used (enabled/is_enabled/status/active/no-flag)
+  - how many tenants were returned from forex_config
+  - whether fallback to forex_signals was used
+Then rerun ONE shard command above and paste the output again.
+
+3) Important constraints
+- Do NOT add any new UPDATE/DELETE statements anywhere.
+- Keep tenant_audit passing.
+- Do NOT initialize the DB pool at import-time.
+- Do NOT hardcode Neon-specific schema assumptions.
+- If any command fails, paste the error and fix it immediately, then rerun the whole checklist.
+
+Output format rules
+- Every code artifact must be in a fenced code block.
+- Every command output must be in a fenced code block.
+- No summaries until AFTER all artifacts + outputs are pasted.

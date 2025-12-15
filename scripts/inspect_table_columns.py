@@ -82,9 +82,10 @@ def check_enable_columns() -> None:
         print(f"  {col:<20}: {status}")
     
     print("\nQuery builder result:")
-    query, params = db_module._build_forex_config_tenants_query()
+    query, params, rule = db_module._build_forex_config_tenants_query()
     print(f"  Query: {query}")
     print(f"  Params: {params}")
+    print(f"  Rule: {rule}")
 
 
 def main():
