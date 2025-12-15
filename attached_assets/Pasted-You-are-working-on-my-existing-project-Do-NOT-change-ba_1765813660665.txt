@@ -1,0 +1,88 @@
+You are working on my existing project. Do NOT change backend auth logic unless explicitly required. This task is FRONTEND-FIRST and UI/UX focused.
+
+GOAL
+Fix Clerk authentication UI issues and modernise the login/logout experience.
+
+CURRENT PROBLEMS TO FIX
+1) When a user is already logged in, the sidebar STILL shows a “Login with Google” button. This must NEVER happen.
+2) Instead of a login button when authenticated, show a modern user avatar + dropdown with Logout.
+3) On the /login page, TWO login UIs are visible (old widget behind Clerk modal). The Clerk modal is also off-centre.
+4) The login screen looks broken and unpolished. It must look production-ready.
+
+RULES
+- Keep Clerk as the single source of authentication.
+- Do NOT introduce new frameworks or libraries.
+- Do NOT duplicate Clerk mounts.
+- Do NOT rely on localStorage/sessionStorage alone to decide auth state.
+- Use the server as the source of truth via existing auth endpoints.
+- Make minimal, clean changes limited to admin.html and login.html (server.py only if absolutely necessary for user info).
+
+TASKS TO IMPLEMENT
+
+A) ADMIN DASHBOARD AUTH UI (admin.html)
+- Remove the persistent “Login with Google” button logic.
+- Replace it with this behavior:
+  - If NOT authenticated → show a single “Sign in” button.
+  - If authenticated → show a compact user avatar chip (circle avatar + email) with a dropdown.
+- The dropdown must contain:
+  - Logout
+- Avatar behavior:
+  - If Clerk provides an image URL, use it.
+  - Otherwise generate a fallback avatar (first letter of email in a circle).
+- Clicking Logout must:
+  - Call existing logout logic.
+  - Clear Clerk session.
+  - Return UI to logged-out state immediately.
+
+AUTH STATE LOGIC
+- On page load and on window focus:
+  - Call the existing auth check endpoint.
+  - If 200 → authenticated UI.
+  - If 401/403 → logged-out UI.
+- UI state must always reflect server auth state.
+- Never show Login and Logout at the same time.
+
+UI REQUIREMENTS
+- Modern, minimal, dark-theme friendly.
+- Avatar chip aligned with sidebar.
+- Subtle hover states.
+- Dropdown closes on outside click.
+
+B) LOGIN PAGE CLEANUP (login.html)
+- Remove or fully hide ANY legacy login card or widget.
+- Only ONE Clerk sign-in component must exist.
+- Clerk must mount ONCE only (guard against double mounting).
+- The Clerk sign-in UI must be:
+  - Perfectly centered vertically and horizontally.
+  - Contained in a clean layout (no overlapping background widgets).
+- Add a global guard flag to prevent duplicate Clerk mounting.
+- Ensure correct Clerk CDN usage and window.Clerk initialization.
+
+C) VISUAL POLISH
+- Fix contrast issues (no unreadable text).
+- Ensure buttons, text, and spacing look production-ready.
+- No “Development mode” or debug artifacts should be styled prominently (this is acceptable to show in dev, but layout must not break).
+
+DELIVERABLES
+- Update admin.html with:
+  - Proper auth-driven UI state
+  - Avatar + dropdown Logout
+- Update login.html with:
+  - Single, centered Clerk sign-in
+  - No duplicate widgets
+- Briefly comment changes in code where auth UI is decided.
+
+DO NOT:
+- Add new auth systems.
+- Reintroduce password login.
+- Leave TODOs unfinished.
+- Leave duplicate buttons visible.
+
+EXPECTED RESULT
+- Logged-in admin NEVER sees “Login with Google”.
+- Logged-in admin sees avatar + Logout.
+- Logged-out users see only Sign in.
+- Login page shows ONE clean Clerk modal, centered.
+- UI looks clean, modern, and intentional.
+
+Proceed to implement now.
