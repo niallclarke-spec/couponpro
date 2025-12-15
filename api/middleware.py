@@ -9,6 +9,9 @@ from typing import Callable, Any, Tuple, Optional
 
 from api.routes import Route
 from core.host_context import HostType
+from core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 ENTRYLAB_ONLY_ROUTES = [
@@ -103,32 +106,57 @@ def determine_tenant_id(handler_instance) -> Tuple[Optional[str], Optional[str]]
     """
     Determine the tenant_id for the current request.
     
+    Supports admin impersonation: if an admin sends X-Impersonate-Tenant header,
+    the request is scoped to that tenant instead of the admin's own tenant.
+    
     Returns:
         Tuple of (tenant_id, error_reason):
-        - ('entrylab', None) for admin auth
+        - ('entrylab', None) for admin auth (or impersonated tenant for admins)
         - (tenant_id, None) for mapped Clerk user  
         - (None, 'no_tenant_mapping') for valid Clerk but unmapped
         - (None, None) for unauthenticated
     """
-    if is_entrylab_admin(handler_instance):
-        return ('entrylab', None)
+    from auth.clerk_auth import get_auth_user_from_request, is_admin_email
     
-    auth_header = handler_instance.headers.get('Authorization', '')
-    if auth_header.startswith('Bearer '):
-        token = auth_header[7:]
-        from core.clerk_auth import verify_clerk_jwt
-        claims = verify_clerk_jwt(token)
-        if claims:
-            clerk_user_id = claims['sub']
-            handler_instance.clerk_user_id = clerk_user_id
-            handler_instance.clerk_email = claims.get('email')
-            
-            from core.tenant_credentials import get_tenant_for_user
-            tenant_id = get_tenant_for_user(clerk_user_id)
-            if tenant_id:
-                return (tenant_id, None)
-            else:
-                return (None, 'no_tenant_mapping')
+    auth_user = get_auth_user_from_request(handler_instance)
+    
+    if auth_user:
+        clerk_user_id = auth_user['clerk_user_id']
+        user_email = auth_user.get('email') or handler_instance.headers.get('X-Clerk-User-Email', '')
+        
+        handler_instance.clerk_user_id = clerk_user_id
+        handler_instance.clerk_email = user_email
+        
+        if is_admin_email(user_email):
+            impersonate_tenant = handler_instance.headers.get('X-Impersonate-Tenant')
+            if impersonate_tenant:
+                impersonate_tenant = impersonate_tenant.strip()
+                if impersonate_tenant:
+                    logger.info(f"Admin impersonating tenant: {impersonate_tenant} (admin_email={user_email})")
+                    handler_instance.is_impersonating = True
+                    return (impersonate_tenant, None)
+            return ('entrylab', None)
+        else:
+            impersonate_header = handler_instance.headers.get('X-Impersonate-Tenant')
+            if impersonate_header:
+                logger.warning(f"Non-admin attempted impersonation: {user_email} tried to impersonate {impersonate_header}")
+        
+        from core.tenant_credentials import get_tenant_for_user
+        tenant_id = get_tenant_for_user(clerk_user_id)
+        if tenant_id:
+            return (tenant_id, None)
+        else:
+            return (None, 'no_tenant_mapping')
+    
+    if is_entrylab_admin(handler_instance):
+        impersonate_tenant = handler_instance.headers.get('X-Impersonate-Tenant')
+        if impersonate_tenant:
+            impersonate_tenant = impersonate_tenant.strip()
+            if impersonate_tenant:
+                logger.info(f"Admin impersonating tenant (legacy auth): {impersonate_tenant}")
+                handler_instance.is_impersonating = True
+                return (impersonate_tenant, None)
+        return ('entrylab', None)
     
     return (None, None)
 
