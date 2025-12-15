@@ -40,11 +40,26 @@
             filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
         }
 
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
         #clerk-signin {
             min-height: 200px;
+            min-width: 320px;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        #clerk-signin.clerk-loaded .loading-text {
+            display: none;
         }
 
         .loading-text {
@@ -123,25 +138,27 @@
     </style>
 </head>
 <body>
-    <div class="login-logo">
-        <img src="/assets/promostack-logo.png" alt="PromoStack" />
-    </div>
+    <div class="login-container">
+        <div class="login-logo">
+            <img src="/assets/promostack-logo.png" alt="PromoStack" />
+        </div>
 
-    <div id="clerk-signin">
-        <span class="loading-text">Loading sign-in...</span>
-    </div>
+        <div id="clerk-signin">
+            <span class="loading-text">Loading sign-in...</span>
+        </div>
 
-    <div id="user-info" class="user-info">
-        <span class="user-status">✓ Signed in successfully</span>
-        <span id="user-email" class="user-email"></span>
-        <button id="signout-btn" class="btn-secondary">Sign Out</button>
-    </div>
+        <div id="user-info" class="user-info">
+            <span class="user-status">✓ Signed in successfully</span>
+            <span id="user-email" class="user-email"></span>
+            <button id="signout-btn" class="btn-secondary">Sign Out</button>
+        </div>
 
-    <div id="error-message" class="error-message"></div>
+        <div id="error-message" class="error-message"></div>
 
-    <div class="nav-links">
-        <a href="/admin">Admin Dashboard</a>
-        <a href="/">Home</a>
+        <div class="nav-links">
+            <a href="/admin">Admin Dashboard</a>
+            <a href="/">Home</a>
+        </div>
     </div>
 
     <script>
@@ -219,6 +236,8 @@
                 } else {
                     if (!clerkMounted) {
                         clerkMounted = true;
+                        const loadingText = signinEl.querySelector('.loading-text');
+                        if (loadingText) loadingText.style.display = 'none';
                         clerkInstance.mountSignIn(signinEl, {
                             appearance: {
                                 baseTheme: window.Clerk?.themes?.dark,
@@ -245,6 +264,7 @@
                 signoutBtn.addEventListener('click', async () => {
                     sessionStorage.removeItem('clerk_session_token');
                     sessionStorage.removeItem('clerk_user_email');
+                    sessionStorage.removeItem('clerk_user_avatar');
                     await clerkInstance.signOut();
                     window.location.reload();
                 });
@@ -273,6 +293,10 @@
                 if (token) {
                     sessionStorage.setItem('clerk_session_token', token);
                     sessionStorage.setItem('clerk_user_email', email);
+                    const avatarUrl = user.imageUrl || user.profileImageUrl || '';
+                    if (avatarUrl) {
+                        sessionStorage.setItem('clerk_user_avatar', avatarUrl);
+                    }
                 }
             } catch (err) {
                 console.error('Failed to get session token:', err);

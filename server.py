@@ -384,10 +384,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif parsed_path.path == '/api/check-auth':
             # Check if user is authenticated (for page refresh)
             if self.check_auth():
+                from auth.clerk_auth import get_auth_user_from_request
+                clerk_user = get_auth_user_from_request(self)
+                email = clerk_user.get('email') if clerk_user else None
+                avatar = clerk_user.get('avatar_url') if clerk_user else None
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'authenticated': True}).encode())
+                self.wfile.write(json.dumps({
+                    'authenticated': True,
+                    'email': email,
+                    'avatar': avatar
+                }).encode())
             else:
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
