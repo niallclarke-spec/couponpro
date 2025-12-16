@@ -225,6 +225,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         host_header = self.headers.get('Host', '').lower()
         set_request_context(request_id=None)
         
+        # Normalize trailing slashes for API routes (redirect /api/foo/ to /api/foo)
+        if parsed_path.path.startswith('/api/') and parsed_path.path.endswith('/') and len(parsed_path.path) > 5:
+            normalized = parsed_path.path.rstrip('/')
+            if parsed_path.query:
+                normalized += '?' + parsed_path.query
+            self.send_response(301)
+            self.send_header('Location', normalized)
+            self.end_headers()
+            return
+        
         # Parse host context for routing decisions
         host_context = parse_host_context(host_header)
         self.host_context = host_context
