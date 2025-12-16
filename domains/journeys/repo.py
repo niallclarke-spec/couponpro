@@ -317,7 +317,10 @@ def set_steps(tenant_id: str, journey_id: str, steps: List[Dict]) -> bool:
 
 
 def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str) -> Optional[Dict]:
-    """Find an active journey matching a Telegram deep link trigger."""
+    """Find an active journey matching a Telegram deep link trigger.
+    
+    Supports backward compatibility: queries both 'start_param' (new) and 'param' (old) keys.
+    """
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return None
@@ -335,9 +338,9 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
                   AND j.status = 'active'
                   AND t.trigger_type = 'telegram_deeplink'
                   AND t.is_active = TRUE
-                  AND t.trigger_config->>'param' = %s
+                  AND (t.trigger_config->>'start_param' = %s OR t.trigger_config->>'param' = %s)
                 LIMIT 1
-            """, (tenant_id, bot_id, start_param))
+            """, (tenant_id, bot_id, start_param, start_param))
             row = cursor.fetchone()
             
             if row:

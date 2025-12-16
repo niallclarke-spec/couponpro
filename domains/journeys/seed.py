@@ -45,7 +45,7 @@ def seed_broker_signup_journey(tenant_id: str = 'entrylab', bot_id: str = 'defau
             'step_order': 1,
             'step_type': 'message',
             'config': {
-                'content': "Welcome to EntryLab Signals! We're excited to have you here.\n\nAs a valued partner referral, you'll get access to our premium gold trading signals.",
+                'text': "Welcome to EntryLab Signals! We're excited to have you here.\n\nAs a valued partner referral, you'll get access to our premium gold trading signals.",
                 'delay_seconds': 0
             }
         },
@@ -53,7 +53,7 @@ def seed_broker_signup_journey(tenant_id: str = 'entrylab', bot_id: str = 'defau
             'step_order': 2,
             'step_type': 'question',
             'config': {
-                'content': "Before we get started, we'd love to know: What's your trading experience level?\n\n1. Beginner - Just getting started\n2. Intermediate - A few months of experience\n3. Advanced - Trading for years",
+                'text': "Before we get started, we'd love to know: What's your trading experience level?\n\n1. Beginner - Just getting started\n2. Intermediate - A few months of experience\n3. Advanced - Trading for years",
                 'delay_seconds': 2,
                 'answer_key': 'experience_level'
             }
@@ -62,7 +62,7 @@ def seed_broker_signup_journey(tenant_id: str = 'entrylab', bot_id: str = 'defau
             'step_order': 3,
             'step_type': 'message',
             'config': {
-                'content': "Thanks for sharing! Based on your response, we'll tailor our signals guidance for you.\n\nYou're all set! Use /menu to see available commands.",
+                'text': "Thanks for sharing! Based on your response, we'll tailor our signals guidance for you.\n\nYou're all set! Use /menu to see available commands.",
                 'delay_seconds': 1
             }
         }
@@ -76,7 +76,7 @@ def seed_broker_signup_journey(tenant_id: str = 'entrylab', bot_id: str = 'defau
         journey_id=journey['id'],
         trigger_type='telegram_deeplink',
         trigger_config={
-            'param': 'broker_signup',
+            'start_param': 'broker_signup',
             'bot_id': bot_id
         }
     )
