@@ -900,40 +900,47 @@ def delete_journey(tenant_id: str, journey_id: str) -> bool:
     """Delete a journey and all related data (triggers, steps, sessions)."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
+        logger.error("delete_journey: No database pool available")
         return False
     
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
+            logger.info(f"delete_journey: Looking for journey_id={journey_id}, tenant_id={tenant_id}")
+            
             cursor.execute("""
-                SELECT id FROM journeys WHERE tenant_id = %s AND id = %s
+                SELECT id FROM journeys WHERE tenant_id = %s AND id = %s::uuid
             """, (tenant_id, journey_id))
-            if not cursor.fetchone():
+            row = cursor.fetchone()
+            if not row:
+                logger.warning(f"delete_journey: Journey not found - journey_id={journey_id}, tenant_id={tenant_id}")
                 return False
+            
+            logger.info(f"delete_journey: Found journey {row[0]}, proceeding with deletion")
             
             cursor.execute("""
                 DELETE FROM journey_scheduled_messages 
                 WHERE session_id IN (
                     SELECT id FROM journey_user_sessions 
-                    WHERE tenant_id = %s AND journey_id = %s
+                    WHERE tenant_id = %s AND journey_id = %s::uuid
                 )
             """, (tenant_id, journey_id))
             
             cursor.execute("""
-                DELETE FROM journey_user_sessions WHERE tenant_id = %s AND journey_id = %s
+                DELETE FROM journey_user_sessions WHERE tenant_id = %s AND journey_id = %s::uuid
             """, (tenant_id, journey_id))
             
             cursor.execute("""
-                DELETE FROM journey_steps WHERE tenant_id = %s AND journey_id = %s
+                DELETE FROM journey_steps WHERE tenant_id = %s AND journey_id = %s::uuid
             """, (tenant_id, journey_id))
             
             cursor.execute("""
-                DELETE FROM journey_triggers WHERE tenant_id = %s AND journey_id = %s
+                DELETE FROM journey_triggers WHERE tenant_id = %s AND journey_id = %s::uuid
             """, (tenant_id, journey_id))
             
             cursor.execute("""
-                DELETE FROM journeys WHERE tenant_id = %s AND id = %s
+                DELETE FROM journeys WHERE tenant_id = %s AND id = %s::uuid
             """, (tenant_id, journey_id))
             
             conn.commit()
