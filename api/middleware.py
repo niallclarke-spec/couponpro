@@ -190,8 +190,9 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
     
     path = handler_instance.path.split('?')[0]
     
-    # Skip tenant checks for auth-check endpoint (it handles its own auth)
-    if path == '/api/check-auth':
+    # Skip tenant checks for public endpoints and page routes
+    skip_paths = ['/api/check-auth', '/api/config', '/login', '/admin', '/app', '/setup', '/coupon']
+    if path in skip_paths or path.startswith('/campaign/'):
         return True
     
     # Skip tenant mapping requirement for onboarding endpoints (new users don't have mapping yet)

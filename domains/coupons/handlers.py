@@ -1028,3 +1028,37 @@ def handle_regenerate_index(handler):
         handler.end_headers()
         response = {'success': False, 'error': str(e)}
         handler.wfile.write(json.dumps(response).encode())
+
+
+def handle_day_of_week_stats(handler):
+    """GET /api/day-of-week-stats"""
+    import server
+    try:
+        stats = server.db.get_day_of_week_stats(tenant_id=handler.tenant_id)
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(stats or {}).encode())
+    except Exception as e:
+        logger.exception("Error getting day stats")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_retention_rates(handler):
+    """GET /api/retention-rates"""
+    import server
+    try:
+        rates = server.db.get_retention_rates(tenant_id=handler.tenant_id)
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(rates or {}).encode())
+    except Exception as e:
+        logger.exception("Error getting retention rates")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())

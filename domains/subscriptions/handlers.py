@@ -697,3 +697,26 @@ def handle_telegram_revoke_access(handler):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+
+
+def handle_telegram_channel_stats(handler):
+    """GET /api/telegram-channel-stats"""
+    import server
+    try:
+        from core.config import Config
+        channel_id = Config.get_forex_channel_id()
+        stats = {'channel_id': channel_id, 'available': server.TELEGRAM_BOT_AVAILABLE}
+        if server.TELEGRAM_BOT_AVAILABLE and channel_id:
+            member_count = server.telegram_bot.get_channel_member_count(channel_id)
+            stats['member_count'] = member_count
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(stats).encode())
+    except Exception as e:
+        from core.logging import get_logger
+        get_logger(__name__).exception("Error getting channel stats")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())

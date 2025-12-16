@@ -36,6 +36,9 @@ class Route:
 # ============================================================================
 
 GET_ROUTES: List[Route] = [
+    # Config
+    Route('GET', '/api/config', 'handle_api_config'),
+    
     # Auth
     Route('GET', '/api/check-auth', 'handle_api_check_auth'),
     
@@ -248,14 +251,34 @@ PUT_ROUTES: List[Route] = [
 # ============================================================================
 
 PAGE_ROUTES: List[Route] = [
-    # Note: /admin and /admin/ are NOT in PAGE_ROUTES because they handle
-    # their own auth in server.py and don't need tenant mapping checks
-    Route('GET', '/campaign/', 'handle_campaign_page', is_prefix=True),
+    Route('GET', '/login', 'handle_page_login'),
+    Route('GET', '/admin', 'handle_page_admin'),
+    Route('GET', '/app', 'handle_page_app'),
+    Route('GET', '/setup', 'handle_page_setup'),
+    Route('GET', '/coupon', 'handle_page_coupon'),
+    Route('GET', '/campaign/', 'handle_page_campaign', is_prefix=True),
+    Route('GET', '/auth/me', 'handle_auth_me', db_required=True),
+]
+
+# ============================================================================
+# Auth Routes (not API prefixed)
+# ============================================================================
+
+AUTH_ROUTES: List[Route] = [
+    Route('POST', '/auth/logout', 'handle_auth_logout'),
+]
+
+# ============================================================================
+# Admin Routes
+# ============================================================================
+
+ADMIN_ROUTES: List[Route] = [
+    Route('GET', '/api/admin/tenants', 'handle_api_admin_tenants', auth_required=True, db_required=True),
 ]
 
 
 # Combined routes for easy lookup
-ALL_ROUTES = GET_ROUTES + POST_ROUTES + PUT_ROUTES + PAGE_ROUTES
+ALL_ROUTES = GET_ROUTES + POST_ROUTES + PUT_ROUTES + PAGE_ROUTES + AUTH_ROUTES + ADMIN_ROUTES
 
 
 def match_route(method: str, path: str, routes: List[Route]) -> Optional[Route]:
