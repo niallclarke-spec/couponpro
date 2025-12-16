@@ -5,9 +5,11 @@ Supports: message, question, delay step types.
 V1 does NOT support conditional steps.
 """
 import random
+import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Callable
 from core.logging import get_logger
+from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
 
 logger = get_logger(__name__)
 
@@ -24,10 +26,50 @@ class JourneyEngine:
         Initialize the journey engine.
         
         Args:
-            send_message_fn: Function to send Telegram messages.
-                             Signature: (chat_id: int, text: str, bot_id: str) -> bool
+            send_message_fn: Deprecated - no longer used.
+                             Messages are sent using tenant credentials from database.
         """
         self.send_message_fn = send_message_fn
+    
+    def _send_message(self, tenant_id: str, chat_id: int, text: str) -> bool:
+        """
+        Send a Telegram message using tenant's configured message bot.
+        
+        Args:
+            tenant_id: Tenant ID to look up bot credentials
+            chat_id: Telegram chat ID
+            text: Message text to send
+            
+        Returns:
+            True if sent successfully, False otherwise
+        """
+        try:
+            creds = get_bot_credentials(tenant_id, 'message')
+            bot_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            logger.error(f"Cannot send message - bot not configured: {e}")
+            return False
+        
+        if not bot_token:
+            logger.error(f"No bot token available for tenant {tenant_id}")
+            return False
+        
+        try:
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            response = requests.post(url, json={
+                'chat_id': chat_id,
+                'text': text,
+                'parse_mode': 'HTML'
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                return True
+            else:
+                logger.error(f"Telegram API error: {response.text}")
+                return False
+        except Exception as e:
+            logger.exception(f"Error sending message: {e}")
+            return False
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 
                                 telegram_chat_id: int, telegram_user_id: int) -> Optional[Dict]:
@@ -53,12 +95,11 @@ class JourneyEngine:
         if existing_session:
             if re_entry_policy == 'block':
                 logger.info(f"Blocked re-entry for user {telegram_user_id} in journey {journey_id}")
-                if self.send_message_fn:
-                    self.send_message_fn(
-                        telegram_chat_id,
-                        "You're already in this flow. Please reply to continue.",
-                        journey.get('bot_id')
-                    )
+                self._send_message(
+                    tenant_id,
+                    telegram_chat_id,
+                    "You're already in this flow. Please reply to continue."
+                )
                 return existing_session
             
             elif re_entry_policy == 'restart':
@@ -132,13 +173,10 @@ class JourneyEngine:
             logger.warning(f"Message step {step['id']} has no text")
             return self._advance_to_next_step(session, step, bot_id)
         
-        if self.send_message_fn:
-            success = self.send_message_fn(session['telegram_chat_id'], text, bot_id)
-            if not success:
-                logger.error(f"Failed to send message for step {step['id']}")
-                return False
-        else:
-            logger.warning("No send_message_fn configured, skipping message send")
+        success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
+        if not success:
+            logger.error(f"Failed to send message for step {step['id']}")
+            return False
         
         return self._advance_to_next_step(session, step, bot_id)
     
@@ -150,11 +188,10 @@ class JourneyEngine:
             logger.warning(f"Question step {step['id']} has no text")
             return self._advance_to_next_step(session, step, bot_id)
         
-        if self.send_message_fn:
-            success = self.send_message_fn(session['telegram_chat_id'], text, bot_id)
-            if not success:
-                logger.error(f"Failed to send question for step {step['id']}")
-                return False
+        success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
+        if not success:
+            logger.error(f"Failed to send question for step {step['id']}")
+            return False
         
         return True
     
@@ -252,8 +289,8 @@ class JourneyEngine:
         
         if validated_value is None:
             error_msg = self._get_validation_error_message(validation)
-            if self.send_message_fn and error_msg:
-                self.send_message_fn(session['telegram_chat_id'], error_msg, bot_id)
+            if error_msg:
+                self._send_message(session['tenant_id'], session['telegram_chat_id'], error_msg)
             return False
         
         repo.store_answer(session['id'], answer_key, validated_value)

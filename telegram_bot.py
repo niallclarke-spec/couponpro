@@ -714,7 +714,7 @@ def _broadcast_worker(job_id, users, message, bot_token):
         loop.close()
 
 
-def send_broadcast(users, message):
+def send_broadcast(users, message, tenant_id='entrylab'):
     """
     Send broadcast message to users asynchronously.
     Creates a job and returns immediately while processing in background.
@@ -722,16 +722,23 @@ def send_broadcast(users, message):
     Args:
         users (list): List of user dicts with chat_id
         message (str): Message to broadcast
+        tenant_id (str): Tenant ID for bot credentials (defaults to 'entrylab')
     
     Returns:
         dict: Job info with job_id and total_users
+        
+    Raises:
+        ValueError: If bot token not configured for tenant
     """
     import db
+    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
     
-    # Get bot token (prioritize production token)
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
-    if not bot_token:
-        raise ValueError("No bot token available for broadcasting")
+    # Get bot token from database
+    try:
+        creds = get_bot_credentials(tenant_id, 'message')
+        bot_token = creds['bot_token']
+    except BotNotConfiguredError as e:
+        raise ValueError(f"No bot token available for broadcasting: {e}")
     
     # Create broadcast job
     job_id = db.create_broadcast_job(message, 30, len(users))
@@ -891,14 +898,18 @@ async def create_private_channel_invite_link(channel_id):
         str: Invite link URL or None if error
     """
     try:
-        # Use appropriate bot token based on environment
-        from forex_bot import get_forex_bot_token
-        forex_token = get_forex_bot_token()
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
+            return None
+        
         if not forex_token:
             print("[TELEGRAM] ERROR: Forex bot token not set, cannot create invite link")
             return None
         
-        # Create a temporary bot instance for this operation
         from telegram import Bot
         bot = Bot(token=forex_token)
         
@@ -933,14 +944,18 @@ async def kick_user_from_channel(channel_id, user_id):
         bool: True if successful, False otherwise
     """
     try:
-        # Use appropriate bot token based on environment
-        from forex_bot import get_forex_bot_token
-        forex_token = get_forex_bot_token()
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
+            return False
+        
         if not forex_token:
             print("[TELEGRAM] ERROR: Forex bot token not set, cannot kick user")
             return False
         
-        # Create a temporary bot instance for this operation
         from telegram import Bot
         bot = Bot(token=forex_token)
         
@@ -979,14 +994,18 @@ async def check_user_in_channel(channel_id, user_id):
         dict: {'is_member': bool, 'status': str} or None if error
     """
     try:
-        # Use appropriate bot token based on environment
-        from forex_bot import get_forex_bot_token
-        forex_token = get_forex_bot_token()
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
+            return None
+        
         if not forex_token:
             print("[TELEGRAM] ERROR: Forex bot token not set, cannot check user")
             return None
         
-        # Create a temporary bot instance for this operation
         from telegram import Bot
         bot = Bot(token=forex_token)
         
@@ -1062,8 +1081,14 @@ def sync_check_user_in_channel(channel_id, user_id):
 async def send_message_to_user(user_id, message, parse_mode='Markdown'):
     """Send a direct message to a user via the Forex/EntryLab bot"""
     try:
-        from forex_bot import get_forex_bot_token
-        bot_token = get_forex_bot_token()
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            bot_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
+            return False
+        
         if not bot_token:
             print("[TELEGRAM] ERROR: No forex bot token available")
             return False
@@ -1117,16 +1142,20 @@ async def handle_chat_member_update(update: Update, context: ContextTypes.DEFAUL
         
         chat_member_update = update.chat_member
         
-        # Check if this is the forex signals channel
-        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_channel_id = creds['channel_id']
+        except BotNotConfiguredError:
+            return
+        
         if not forex_channel_id:
             return
         
-        # Convert to int for comparison (channel IDs are negative integers)
         try:
             forex_channel_id = int(forex_channel_id)
-        except ValueError:
-            print(f"[JOIN_TRACKER] Invalid FOREX_CHANNEL_ID format: {forex_channel_id}")
+        except (ValueError, TypeError):
+            print(f"[JOIN_TRACKER] Invalid channel_id format: {forex_channel_id}")
             return
         
         if chat_member_update.chat.id != forex_channel_id:
@@ -1189,23 +1218,28 @@ async def start_join_tracking():
     to subscription records.
     
     Requirements:
-    - FOREX_BOT_TOKEN environment variable must be set
-    - FOREX_CHANNEL_ID environment variable must be set
+    - Bot credentials must be configured in database (tenant_bot_connections table)
     - Bot must be admin in the channel to receive chat member updates
     - Chat member updates must be enabled in BotFather settings
     
     This runs independently via polling in a background task.
     """
     try:
-        forex_bot_token = os.environ.get('FOREX_BOT_TOKEN')
-        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_bot_token = creds['bot_token']
+            forex_channel_id = creds['channel_id']
+        except BotNotConfiguredError as e:
+            print(f"[JOIN_TRACKER] ⚠️ Forex bot not configured: {e} - join tracking disabled")
+            return
         
         if not forex_bot_token:
-            print("[JOIN_TRACKER] ⚠️ FOREX_BOT_TOKEN not set - join tracking disabled")
+            print("[JOIN_TRACKER] ⚠️ Bot token not configured - join tracking disabled")
             return
         
         if not forex_channel_id:
-            print("[JOIN_TRACKER] ⚠️ FOREX_CHANNEL_ID not set - join tracking disabled")
+            print("[JOIN_TRACKER] ⚠️ Channel ID not configured - join tracking disabled")
             return
         
         print("[JOIN_TRACKER] Initializing join tracking bot...")
@@ -1308,15 +1342,20 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         
         chat_member_data = webhook_data['chat_member']
         
-        # Get channel ID
-        forex_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials('entrylab', 'signal')
+            forex_channel_id = creds['channel_id']
+        except BotNotConfiguredError as e:
+            return {'success': False, 'error': f'Forex bot not configured: {e}'}
+        
         if not forex_channel_id:
-            return {'success': False, 'error': 'FOREX_CHANNEL_ID not configured'}
+            return {'success': False, 'error': 'Channel ID not configured in database'}
         
         try:
             forex_channel_id = int(forex_channel_id)
-        except ValueError:
-            return {'success': False, 'error': f'Invalid FOREX_CHANNEL_ID: {forex_channel_id}'}
+        except (ValueError, TypeError):
+            return {'success': False, 'error': f'Invalid channel_id: {forex_channel_id}'}
         
         # Check if this is for our channel
         chat_id = chat_member_data.get('chat', {}).get('id')
@@ -1422,16 +1461,26 @@ def run_bot(bot_token):
 
 
 if __name__ == '__main__':
-    # Use production token first, fall back to test token
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('TELEGRAM_BOT_TOKEN_TEST')
+    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+    
+    # Get bot token from database (default to entrylab tenant)
+    tenant_id = os.getenv('TENANT_ID', 'entrylab')
+    
+    try:
+        creds = get_bot_credentials(tenant_id, 'message')
+        bot_token = creds['bot_token']
+    except BotNotConfiguredError as e:
+        print(f"ERROR: {e}")
+        print(f"Please configure the message bot in the database for tenant '{tenant_id}'")
+        bot_token = None
     
     if not bot_token:
-        print("ERROR: No bot token found. Set TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN_TEST")
+        print("ERROR: No bot token found. Configure bot credentials in database.")
     else:
         print("=" * 60)
         print("PromoStack Conversational Telegram Bot")
         print("=" * 60)
-        print(f"\nBot token: {'TEST' if os.getenv('TELEGRAM_BOT_TOKEN_TEST') else 'PRODUCTION'}")
+        print(f"\nTenant: {tenant_id}")
         print("\nConversational flow:")
         print("1. User: /start")
         print("2. Bot: Please enter your FunderPro coupon code")

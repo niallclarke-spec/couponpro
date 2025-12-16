@@ -9,62 +9,38 @@ from telegram import Bot
 from telegram.error import TelegramError
 from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status
 from core.logging import get_logger
+from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
 
 logger = get_logger(__name__)
 
-def get_forex_bot_token():
-    """
-    Get the appropriate forex bot token based on environment.
-    - Dev (Replit): Uses ENTRYLAB_TEST_BOT for testing
-    - Prod: Uses FOREX_BOT_TOKEN for live signals
-    """
-    # Check if running in Replit (dev environment)
-    is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
-    
-    if is_replit:
-        # Dev: Use test bot
-        test_token = os.environ.get('ENTRYLAB_TEST_BOT')
-        if test_token:
-            logger.info("🧪 Using ENTRYLAB_TEST_BOT (dev mode)")
-            return test_token
-        else:
-            logger.warning("⚠️ ENTRYLAB_TEST_BOT not set, falling back to FOREX_BOT_TOKEN")
-    
-    # Prod: Use real bot
-    return os.environ.get('FOREX_BOT_TOKEN')
-
-def get_forex_channel_id():
-    """
-    Get the appropriate channel ID based on environment.
-    - Dev (Replit): Uses test channel
-    - Prod: Uses real forex channel
-    """
-    # Check if running in Replit (dev environment)
-    is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
-    
-    if is_replit:
-        # Dev: Use test channel
-        test_channel = "-1003343226469"  # EntryLab test channel
-        logger.info("🧪 Using test channel (dev mode)")
-        return test_channel
-    
-    # Prod: Use real channel
-    return os.environ.get('FOREX_CHANNEL_ID')
 
 class ForexTelegramBot:
     def __init__(self, tenant_id: str = None):
-        self.token = get_forex_bot_token()
-        self.channel_id = get_forex_channel_id()
         self.bot = None
-        self.tenant_id = tenant_id
+        self.token = None
+        self.channel_id = None
+        self.tenant_id = tenant_id or 'entrylab'
+        self._configured = False
         
-        if self.token:
-            self.bot = Bot(token=self.token)
-        else:
-            logger.warning("⚠️  Forex bot token not set - forex bot will not work")
-        
-        if not self.channel_id:
-            logger.warning("⚠️  Forex channel ID not set - forex bot will not work")
+        try:
+            creds = get_bot_credentials(self.tenant_id, 'signal')
+            self.token = creds['bot_token']
+            self.channel_id = creds['channel_id']
+            
+            if self.token:
+                self.bot = Bot(token=self.token)
+                self._configured = True
+                logger.info(f"Forex bot configured for tenant '{self.tenant_id}' (bot: {creds.get('bot_username', 'unknown')})")
+            else:
+                logger.warning(f"Bot token missing in credentials for tenant '{self.tenant_id}'")
+                
+            if not self.channel_id:
+                logger.warning(f"Channel ID missing in credentials for tenant '{self.tenant_id}'")
+                self._configured = False
+                
+        except BotNotConfiguredError as e:
+            logger.warning(f"Forex bot not configured: {e}")
+            logger.info("Forex bot will not work until credentials are configured in Connections settings")
     
     async def post_signal(self, signal_data):
         """

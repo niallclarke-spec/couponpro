@@ -48,14 +48,19 @@ class SignalBotScheduler:
         )
         
         self.bot = None
+        self.channel_id = None
         
-        from forex_bot import get_forex_bot_token, get_forex_channel_id
-        self.channel_id = get_forex_channel_id()
-        token = get_forex_bot_token()
-        if token:
-            self.bot = Bot(token=token)
-        else:
-            print("[SCHEDULER] Forex bot token not set")
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials(tenant_id or 'entrylab', 'signal')
+            self.channel_id = creds['channel_id']
+            token = creds['bot_token']
+            if token:
+                self.bot = Bot(token=token)
+            else:
+                print("[SCHEDULER] Forex bot token missing in credentials")
+        except BotNotConfiguredError as e:
+            print(f"[SCHEDULER] Forex bot not configured: {e}")
     
     async def post_to_telegram(self, message: str, parse_mode: str = 'HTML') -> Optional[int]:
         """Post message to Telegram channel, return message ID"""

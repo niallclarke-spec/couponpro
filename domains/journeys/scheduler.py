@@ -108,19 +108,20 @@ def process_due_messages(send_message_fn: Callable[[int, str, str], bool]) -> in
 def _get_tenant_send_fn(tenant_id: str) -> Callable[[int, str, str], bool]:
     """
     Get a send message function for a specific tenant.
-    Uses tenant's configured message bot if available, otherwise falls back to global.
+    Uses tenant's configured message bot from database.
+    
+    Raises:
+        BotNotConfiguredError: If no message bot configured for tenant
     """
-    import db
     import requests
-    from core.config import Config
+    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
     
-    message_bot = db.get_bot_connection(tenant_id, 'message')
-    bot_token = message_bot.get('bot_token') if message_bot else None
-    
-    if not bot_token:
-        bot_token = Config.get_telegram_bot_token()
-        if bot_token:
-            logger.debug(f"Using global bot token for tenant {tenant_id}")
+    try:
+        creds = get_bot_credentials(tenant_id, 'message')
+        bot_token = creds['bot_token']
+    except BotNotConfiguredError as e:
+        logger.error(f"Message bot not configured for tenant {tenant_id}: {e}")
+        bot_token = None
     
     def send_fn(chat_id: int, text: str, bot_id: str) -> bool:
         if not bot_token:
@@ -169,7 +170,11 @@ def _send_scheduled_message(msg: dict, send_message_fn: Callable, engine) -> boo
     bot_id = msg.get('bot_id')
     tenant_id = msg.get('tenant_id')
     
-    tenant_send_fn = _get_tenant_send_fn(tenant_id) if tenant_id else send_message_fn
+    if not tenant_id:
+        logger.error(f"Scheduled message {msg['id']} has no tenant_id, skipping")
+        return False
+    
+    tenant_send_fn = _get_tenant_send_fn(tenant_id)
     
     if text:
         success = tenant_send_fn(chat_id, text, bot_id)
