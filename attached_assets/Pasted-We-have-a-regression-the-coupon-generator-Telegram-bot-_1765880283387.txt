@@ -1,0 +1,85 @@
+We have a regression: the coupon generator Telegram bot webhook is broken.
+
+SYMTOM / PROOF
+POST /api/telegram-webhook currently returns 403:
+
+curl -i -X POST http://localhost:5000/api/telegram-webhook \
+  -H "Content-Type: application/json" \
+  -d '{"update_id":1,"message":{"message_id":1,"date":0,"chat":{"id":123,"type":"private"},"text":"ping"}}'
+
+Response:
+HTTP/1.0 403 Forbidden
+{"error":"This feature is only available for EntryLab"}
+
+THIS IS WRONG. Telegram webhooks must be unauthenticated and must never be blocked by Clerk or “EntryLab-only” checks.
+
+GOAL
+Restore /api/telegram-webhook so the coupon generator bot works again, without re-bloating server.py.
+
+WHAT TO IMPLEMENT (DO EXACTLY THIS)
+
+1) REMOVE ENTRYLAB-ONLY BLOCK
+Find where the string "This feature is only available for EntryLab" is returned (likely in integrations/telegram/webhooks.py or coupon webhook logic).
+Remove this restriction entirely for /api/telegram-webhook.
+This endpoint must never return 403 due to tenant or auth checks.
+
+2) PROPER TENANT RESOLUTION VIA TELEGRAM SECRET TOKEN
+Telegram sends a header:
+X-Telegram-Bot-Api-Secret-Token
+
+Implement:
+- Read this header in the webhook
+- Resolve it to (tenant_id, bot_id) via DB
+- Use that tenant_id for all DB operations
+
+Security:
+- Store ONLY a SHA256 hash of the secret token in DB
+- Compare hashes, never plaintext
+
+Add DB table (create-if-not-exists migration style):
+telegram_webhook_secrets(
+  tenant_id TEXT,
+  bot_id TEXT,
+  secret_token_hash TEXT,
+  created_at TIMESTAMP
+)
+
+Add DB helpers:
+- upsert_telegram_webhook_secret(tenant_id, bot_id, secret_token)
+- resolve_tenant_from_webhook_secret(secret_token) -> (tenant_id, bot_id) | None
+
+3) MISSING SECRET TOKEN BEHAVIOR
+- DEV / LOCAL:
+  fallback to tenant_id="entrylab", bot_id="default" so curl tests work
+- PRODUCTION:
+  return 401 JSON:
+  {"error":"Missing Telegram webhook secret token"}
+
+Use existing is_dev / host_context logic.
+
+4) SET TENANT CONTEXT CORRECTLY
+Once tenant is resolved:
+- call set_request_context(tenant_id=tenant_id)
+- then run existing coupon webhook logic unchanged
+
+5) TELEGRAM REQUIREMENT
+Telegram expects fast 200 responses.
+For non-fatal issues:
+- log the error
+- return HTTP 200 with {"ok": true}
+Never throw or 403 unless absolutely required.
+
+6) REGRESSION TESTS (REQUIRED)
+Add tests to ensure:
+- /api/telegram-webhook no longer returns the “EntryLab only” 403
+- Missing secret token:
+  - dev/local → 200 OK
+  - production → 401
+- Secret token resolves correct tenant_id + bot_id
+- X-Clerk-User-Email is NOT used for webhook auth
+
+ACCEPTANCE CRITERIA
+- The curl command above returns 200 OK locally
+- Coupon generator Telegram bot works again
+- No new auth logic added to server.py
+- No manual if/elif dispatch added back
