@@ -818,10 +818,19 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             if email:
                 # Set HttpOnly cookie with email for server-side auth checks
                 from urllib.parse import quote
+                from auth.clerk_auth import is_admin_email
                 cookie_value = quote(email)
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Set-Cookie', f'clerk_user_email={cookie_value}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax')
+                
+                # For admin users, also set the legacy admin_session cookie as fallback for when JWT expires
+                if is_admin_email(email):
+                    session_token = create_signed_session()
+                    secure_flag = '; Secure' if self.headers.get('X-Forwarded-Proto') == 'https' else ''
+                    self.send_header('Set-Cookie', f'admin_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400{secure_flag}')
+                    logger.info(f"[auth] Set admin_session fallback cookie for: {email}")
+                
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': True, 'email': email}).encode())
                 logger.info(f"[auth] Set auth cookie for: {email}")
