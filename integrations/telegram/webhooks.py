@@ -9,6 +9,7 @@ import sys
 import time
 
 from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+from core.config import Config
 from core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -253,24 +254,14 @@ def handle_coupon_telegram_webhook(handler, telegram_bot_available, telegram_bot
                 handler.wfile.write(json.dumps({'error': 'Missing Telegram webhook secret token'}).encode())
                 return
         
-        # Get bot token from database using tenant_id
-        try:
-            creds = get_bot_credentials(tenant_id, 'message')
-            bot_token = creds['bot_token']
-        except BotNotConfiguredError as e:
-            print(f"[WEBHOOK-ENDPOINT] ❌ Bot not configured in database: {e}", flush=True)
-            handler.send_response(500)
-            handler.send_header('Content-type', 'application/json')
-            handler.end_headers()
-            handler.wfile.write(json.dumps({'error': f'Message bot not configured for tenant {tenant_id}'}).encode())
-            return
-        
+        # Coupon bot uses hard-coded token from environment (NOT tenant-scoped)
+        bot_token = Config.get_telegram_bot_token()
         if not bot_token:
-            print(f"[WEBHOOK-ENDPOINT] ❌ Bot token not configured", flush=True)
+            logger.error("TELEGRAM_BOT_TOKEN not configured")
             handler.send_response(500)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
-            handler.wfile.write(json.dumps({'error': 'Bot token not configured'}).encode())
+            handler.wfile.write(json.dumps({'error': 'Coupon bot not configured'}).encode())
             return
         
         if check_journey_trigger(webhook_data, tenant_id, bot_id):

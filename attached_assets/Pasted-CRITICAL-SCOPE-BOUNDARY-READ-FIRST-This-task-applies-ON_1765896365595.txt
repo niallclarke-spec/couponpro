@@ -1,0 +1,133 @@
+CRITICAL SCOPE BOUNDARY — READ FIRST
+
+This task applies ONLY to the FX Signals dashboard.
+The PromoStack Coupon Bot is OUT OF SCOPE and MUST NOT be modified.
+
+────────────────────────────────────────
+OUT OF SCOPE (DO NOT TOUCH)
+────────────────────────────────────────
+
+• Coupon / PromoStack Telegram bot
+• /api/telegram-webhook coupon logic
+• Hard-coded or env-based coupon bot token
+• PromoStack tenants or assumptions
+• Coupon bot migrations, resolvers, or Connections entries
+
+The coupon bot MUST remain in its original, hard-coded state.
+It is a separate product and intentionally NOT tenant-scoped.
+
+If any change would affect PromoStack or coupon flows — DO NOT DO IT.
+
+────────────────────────────────────────
+IN SCOPE — FX SIGNALS DASHBOARD ONLY
+────────────────────────────────────────
+
+GOAL
+Fix and finalize the Connections + Journeys architecture for the FX Signals dashboard only.
+
+We manage TWO Telegram bots for FX Signals tenants:
+
+1) Signal Bot
+   - Broadcasts FX signals to a Telegram channel
+   - Requires:
+       • bot_token
+       • channel_id
+   - Tenant-scoped
+   - Configured via Connections tab
+
+2) Message Bot
+   - Used for DMs, onboarding, Journey flows
+   - Requires:
+       • bot_token only
+   - NO default
+   - EMPTY until user configures it manually in UI
+   - Tenant-scoped
+   - Configured via Connections tab
+
+DO NOT reuse PromoStack bots or tokens here.
+
+────────────────────────────────────────
+A) CONNECTIONS TAB — SOURCE OF TRUTH
+────────────────────────────────────────
+
+1) Connections tab is the ONLY source of truth for FX Signals bots.
+2) No environment variable fallbacks for Signal or Message bots.
+3) Coupon bot remains hard-coded and excluded.
+
+For each FX Signals bot card:
+• Bot Token input (password field)
+• Never display raw tokens
+• If saved:
+    - Show “Token saved ✅ (••••LAST4)”
+• Add “Test Connection” button:
+    - Calls Telegram getMe
+    - Returns bot username + success/failure
+• Show status badge:
+    - Connected ✅
+    - Not configured ⚪
+    - Error ❌
+
+Channel ID:
+• Signal Bot → REQUIRED
+• Message Bot → OPTIONAL (hidden by default, label as optional)
+
+────────────────────────────────────────
+B) SEEDING & DEFAULTS
+────────────────────────────────────────
+
+1) Seed ONLY the FX Signal Bot for EntryLab if desired.
+2) DO NOT seed Message Bot for any tenant.
+3) Remove any default Message Bot (e.g. promostack_bot).
+4) Ensure DB has NO message_bot row unless user adds it via UI.
+
+────────────────────────────────────────
+C) BOT CREDENTIAL RESOLUTION
+────────────────────────────────────────
+
+• Use DB-only resolution for FX Signal + Message bots.
+• Coupon bot continues using its original hard-coded logic.
+• If Message Bot missing:
+    - Raise BotNotConfiguredError with clear UI-facing message:
+      “Message Bot not configured. Go to Connections → Message Bot.”
+
+────────────────────────────────────────
+D) JOURNEYS (FX SIGNALS ONLY)
+────────────────────────────────────────
+
+• Journeys MUST use Message Bot
+• Tenant-scoped
+• Linear flows only
+• Triggered via deep link (/start <param>)
+• If Message Bot not configured:
+    - Journey execution must fail gracefully with clear error
+    - No crashes, no silent failure
+
+────────────────────────────────────────
+E) TESTS / GUARANTEES
+────────────────────────────────────────
+
+Add or verify tests that ensure:
+
+1) Coupon bot code paths unchanged
+2) No coupon bot credentials in Connections
+3) Message Bot is empty by default
+4) Signal Bot + Message Bot are tenant-scoped
+5) Journeys cannot run without Message Bot configured
+6) PromoStack functionality remains intact
+
+────────────────────────────────────────
+NON-NEGOTIABLE
+────────────────────────────────────────
+
+• Do NOT refactor coupon bot
+• Do NOT migrate coupon bot
+• Do NOT merge PromoStack and FX Signals logic
+• Keep server.py thin
+• Use clean modules (domains/connections, core/bot_credentials, etc.)
+
+DELIVERABLE
+After this:
+• FX Signals Connections tab works cleanly
+• Message Bot is opt-in and empty by default
+• Coupon bot remains stable and untouched
+• Journeys are unblocked but correctly dependent on Message Bot
