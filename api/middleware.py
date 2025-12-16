@@ -34,6 +34,7 @@ FOREX_SAAS_ROUTES = [
 WEBHOOK_EXEMPT_ROUTES = [
     '/api/telegram-webhook',
     '/api/forex-telegram-webhook',
+    '/api/bot-webhook/',
     '/api/stripe/webhook'
 ]
 
@@ -111,7 +112,13 @@ def is_webhook_exempt_route(path: str) -> bool:
     Webhooks are called by external services (Telegram, Stripe) with no browser context.
     """
     for route in WEBHOOK_EXEMPT_ROUTES:
-        if path == route or path.startswith(route + '/') or path.startswith(route + '?'):
+        if path == route or path.startswith(route + '?'):
+            return True
+        # Handle prefix routes (e.g., /api/bot-webhook/)
+        if route.endswith('/') and path.startswith(route):
+            return True
+        # Handle non-prefix routes with path continuation
+        if not route.endswith('/') and path.startswith(route + '/'):
             return True
     return False
 
@@ -212,8 +219,14 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
     
     path = handler_instance.path.split('?')[0]
     
-    # Skip tenant checks for public endpoints and page routes
+    # Skip tenant checks for public endpoints, page routes, and webhooks
     skip_paths = ['/api/check-auth', '/api/config', '/login', '/admin', '/app', '/setup', '/coupon']
+    
+    # Webhook routes bypass ALL auth checks - they're called by external services with no cookies
+    if is_webhook_exempt_route(path):
+        handler_instance.tenant_id = 'entrylab'  # Default tenant for webhooks
+        return True
+    
     if path in skip_paths or path.startswith('/campaign/'):
         return True
     

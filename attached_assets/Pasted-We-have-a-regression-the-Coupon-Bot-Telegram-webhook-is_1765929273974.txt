@@ -1,0 +1,38 @@
+We have a regression: the Coupon Bot Telegram webhook is broken.
+
+Evidence:
+- Logs show repeated: `POST /api/telegram-webhook ... 403` followed by `[AUTH] No cookie header found`
+- Telegram will NEVER send cookies, so this endpoint must not go through auth middleware.
+- This endpoint must remain isolated from the FX Signals “Connections/BotCredentialResolver” system. Coupon bot stays hard-coded (Config.get_telegram_bot_token / env var) and OUT OF SCOPE for tenant connections.
+
+NON-NEGOTIABLE ARCHITECTURE:
+- DO NOT add business logic to server.py. Only thin route registration / handler delegation allowed.
+- Fix must live in the correct middleware/routing layer (api/middleware.py / api/dispatch.py / api/routes.py) and in the coupon webhook handler module if needed.
+
+TASK:
+1) Ensure `/api/telegram-webhook` is fully AUTH-EXEMPT
+   - It must bypass ALL auth checks (cookie/JWT/Clerk/admin_session).
+   - It must not require Host headers.
+   - It must not require tenant selection.
+   - It must never return 401/403 due to auth.
+
+2) Confirm `/api/forex-telegram-webhook` remains auth-exempt too (if it already is).
+
+3) Add a regression test that would have caught this:
+   - Test: POST /api/telegram-webhook with a minimal JSON body (or `{}`) returns 200 (or at least not 401/403).
+   - The test must NOT set cookies or Authorization headers.
+   - If the handler requires a token/config to do real work, it should still return 200 with a JSON like `{"status":"ignored"}` or `{"status":"ok"}` rather than 403.
+
+4) Add a second regression test to ensure auth still works elsewhere:
+   - Example: GET /api/telegram-channel-stats without auth returns 401 (or whatever is expected).
+
+IMPLEMENTATION GUIDANCE:
+- In api/middleware.py (or wherever auth is enforced), make the exemption check run BEFORE auth logic.
+- The exemption should match exact paths (`/api/telegram-webhook`, `/api/forex-telegram-webhook`) and also tolerate trailing slash if relevant.
+- If you have centralized route metadata (Route(auth_required=...)), ensure webhook routes are explicitly marked auth_required=False.
+- Do not “fix” by adding fake cookies, weakening global auth, or moving webhook logic into server.py.
+
+DELIVERABLE:
+- Code changes that restore `/api/telegram-webhook` to return 200 without cookies.
+- New tests passing.
+- Confirm via curl: `curl -i -X POST http://localhost:5000/api/telegram-webhook -H "Content-Type: application/json" -d '{}'` returns HTTP 200 (not 401/403).
