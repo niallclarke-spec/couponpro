@@ -29,6 +29,14 @@ FOREX_SAAS_ROUTES = [
     '/api/forex/xauusd-sparkline'
 ]
 
+# Webhook endpoints must NEVER be blocked by EntryLab-only or Forex SaaS gating
+# These are called by external services (Telegram, Stripe) with no auth headers
+WEBHOOK_EXEMPT_ROUTES = [
+    '/api/telegram-webhook',
+    '/api/forex-telegram-webhook',
+    '/api/stripe/webhook'
+]
+
 
 def send_unauthorized(handler_instance) -> None:
     """Send a 401 Unauthorized response."""
@@ -46,8 +54,11 @@ def send_db_unavailable(handler_instance) -> None:
     handler_instance.wfile.write(json.dumps({'error': 'Database not available'}).encode())
 
 
-def send_forbidden(handler_instance, message: str = 'Forbidden') -> None:
-    """Send a 403 Forbidden response."""
+def send_forbidden(handler_instance, message: str = 'Forbidden', gate_type: str = 'unknown') -> None:
+    """Send a 403 Forbidden response with logging for debugging."""
+    path = getattr(handler_instance, 'path', 'unknown').split('?')[0]
+    tenant_id = getattr(handler_instance, 'tenant_id', None)
+    logger.warning(f"403 Forbidden: path={path}, tenant_id={tenant_id}, gate={gate_type}, message={message}")
     handler_instance.send_response(403)
     handler_instance.send_header('Content-type', 'application/json')
     handler_instance.end_headers()
@@ -89,6 +100,17 @@ def is_entrylab_only_route(path: str) -> bool:
 def is_forex_saas_route(path: str) -> bool:
     """Check if the path is a Forex SaaS route (requires setup completion)."""
     for route in FOREX_SAAS_ROUTES:
+        if path == route or path.startswith(route + '/') or path.startswith(route + '?'):
+            return True
+    return False
+
+
+def is_webhook_exempt_route(path: str) -> bool:
+    """
+    Check if the path is a webhook endpoint that should be exempt from tenant gating.
+    Webhooks are called by external services (Telegram, Stripe) with no browser context.
+    """
+    for route in WEBHOOK_EXEMPT_ROUTES:
         if path == route or path.startswith(route + '/') or path.startswith(route + '?'):
             return True
     return False
@@ -234,7 +256,7 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
             if clerk_email:
                 from auth.clerk_auth import is_admin_email
                 if not is_admin_email(clerk_email):
-                    send_forbidden(handler_instance, 'Admin access required')
+                    send_forbidden(handler_instance, 'Admin access required', gate_type='admin_host')
                     return False
             handler_instance.tenant_id = tenant_id
         else:
@@ -249,9 +271,14 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
         else:
             handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
     
+    # Webhook endpoints are exempt from EntryLab-only and Forex SaaS gating
+    # They are called by external services (Telegram, Stripe) with no browser context
+    if is_webhook_exempt_route(path):
+        return True
+    
     if is_entrylab_only_route(path):
         if tenant_id != 'entrylab':
-            send_forbidden(handler_instance, 'This feature is only available for EntryLab')
+            send_forbidden(handler_instance, 'This feature is only available for EntryLab', gate_type='entrylab_only')
             return False
     
     if is_forex_saas_route(path) and tenant_id and tenant_id != 'entrylab':
