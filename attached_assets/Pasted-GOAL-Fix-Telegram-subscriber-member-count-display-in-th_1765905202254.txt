@@ -1,0 +1,54 @@
+GOAL: Fix Telegram subscriber/member count display in the dashboard so it shows the correct number (not “N/A”), with clear diagnostics when it can’t. Do NOT remove authentication. Do NOT add logic to server.py (keep it thin). Implement this in domain handlers/services + tests.
+
+CONTEXT:
+- Admin UI shows “N/A members” for Telegram subscriptions.
+- /api/telegram-channel-stats is auth-protected and should work in the browser via authedFetch (credentials include).
+- We recently introduced DB-based bot credentials via tenant_bot_connections and BotCredentialResolver.
+- There have been bot_role naming mismatches (e.g. “signal” vs “signal_bot”).
+
+REQUIREMENTS:
+1) Backend: make GET /api/telegram-channel-stats always return a JSON payload with one of:
+   - success: true, member_count: <int>, channel_id, bot_username
+   OR
+   - success: false, error_code, message (actionable), plus debug fields safe to return (e.g. tenant_id, bot_role, missing_fields) but NEVER the token.
+   Use appropriate status codes:
+   - 401 if not authenticated
+   - 503 if bot/channel not configured
+   - 502 if Telegram API fails
+   - 403 if authenticated but not allowed
+
+2) Fix bot_role consistency:
+   - Canonical roles must be exactly: “signal_bot” and “message_bot” in tenant_bot_connections.
+   - Ensure telegram-channel-stats handler queries “signal_bot” (NOT “signal”).
+   - Add a small compatibility shim ONLY if needed (optional): if “signal” exists, migrate/alias to “signal_bot” safely, but prefer a DB migration that normalizes values.
+
+3) Use BotCredentialResolver as source of truth:
+   - For member count use signal_bot credentials: bot_token + channel_id (channel_id required).
+   - If channel_id missing, return 503 with message: “Signal Bot channel_id missing. Add it in Connections → Signal Bot.”
+
+4) Telegram API call:
+   - Use getChatMemberCount (or getChat) depending on best practice; handle Telegram errors cleanly.
+   - If Telegram returns “not enough rights” / “chat not found” / “bot was kicked”, map these to actionable error messages:
+     - “Add the bot to the channel and promote to admin” (or relevant minimum permission)
+     - “Check Channel ID format (-100...)”
+   - Add a short timeout and no retries storms.
+
+5) Frontend (admin.html or shared JS):
+   - When the endpoint returns success: false, show a small inline error badge/tool-tip instead of “N/A”.
+   - Do not hang silently. Keep “N/A” only as a placeholder while loading.
+   - If 401: show “Not authenticated” and prompt to refresh/login.
+
+6) Tests:
+   Add tests that would catch this regression:
+   - Route exists and requires auth.
+   - Handler queries signal_bot role (unit test / repo-level).
+   - If channel_id missing -> 503 with correct error_code.
+   - If Telegram API failure mocked -> 502 with correct error_code.
+   - If success mocked -> returns member_count int.
+   Keep tests fast and isolated (mock requests.get).
+
+OUTPUT:
+- Implement code changes in domains/subscriptions/handlers.py (or a new domains/subscriptions/telegram_stats.py service).
+- Update any repo/helper used to fetch bot creds to enforce canonical role names.
+- Add/adjust tests under tests/ (e.g. tests/test_telegram_channel_stats.py).
+- Do NOT bloat server.py. Keep routing and server wrappers thin.
