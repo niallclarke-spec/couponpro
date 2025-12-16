@@ -1,0 +1,75 @@
+CONTEXT
+We recently refactored server.py down to ~348 lines and moved routing to api/dispatch.py + api/routes.py. Keep server.py thin.
+
+CURRENT BUGS
+1) Journeys exist in DB but steps have empty text (step_config text/content is empty). As a result, Telegram journeys "start" but send nothing.
+2) We need tenant-specific bot connections. Tenants should be able to configure which bot is used for Journeys separately from the Signals bot.
+3) The Journeys UI shows “Deep Link” trigger but does not provide a usable deep link URL (e.g., https://t.me/<bot_username>?start=<param>).
+
+GOAL
+Implement a clean “Connections” system + fix Journeys so they actually work end-to-end, tenant-scoped, and easy to use.
+
+REQUIREMENTS
+A) FILE STRUCTURE / ARCHITECTURE
+- Do NOT add big logic to server.py. Only thin wrapper methods are allowed.
+- Put new logic in appropriate modules under domains/ and integrations/.
+- Keep routing definitions in api/routes.py and dispatch in api/dispatch.py.
+
+B) CONNECTIONS TAB (UI + API)
+- Add a “Connections” tab in the dashboard UI.
+- Allow tenants to configure TWO Telegram bots:
+  1) Signal Bot (existing)
+  2) Message Bot (new, used for Journeys)
+- Each bot slot must support:
+  - Bot token input (masked)
+  - Validate action that calls Telegram getMe to fetch bot username and display it
+  - Save action persists per-tenant bot config
+  - Show webhook status (configured yes/no) and last error if setup fails
+
+C) STORAGE (TENANT SCOPED)
+- Add tenant-scoped storage for bot connections (prefer table: tenant_bot_connections):
+  tenant_id, bot_role ('signal'|'message'), bot_token, bot_username, webhook_secret, updated_at
+- Backwards compatible: if existing Config.get_telegram_bot_token()/get_forex_bot_token() are used for entrylab, keep them working, but migrate toward tenant_bot_connections as source of truth.
+
+D) WEBHOOKS (REUSE EXISTING PATTERN)
+- We already have POST /api/telegram-webhook and /api/forex-telegram-webhook and webhooks.py contains logic to resolve tenant/bot from a secret token.
+- Extend this properly so each tenant + bot_role has its own webhook secret and webhook URL.
+- When a tenant saves a bot token in Connections:
+  1) Call Telegram getMe -> store bot_username
+  2) Generate/store webhook_secret for that tenant+bot_role
+  3) Call Telegram setWebhook with URL containing the secret (use existing webhook resolution logic)
+- Ensure webhook endpoints remain exempt from tenant gating logic (middleware already has WEBHOOK_EXEMPT_ROUTES).
+
+E) JOURNEYS MUST USE MESSAGE BOT
+- Journeys are triggered via Telegram deep link /start <param>.
+- Journey triggering and replies must run on the “Message Bot”, not the Signal bot.
+- If Message Bot is not configured for a tenant, Journeys UI must show a clear blocking message: “Configure Message Bot in Connections”.
+
+F) FIX JOURNEY STEPS (THE IMPORTANT BUG)
+- Investigate why journey_steps step_config has empty text.
+- Ensure creating/editing a journey step always writes step_config.text (and keep compatibility with older content key).
+- Fix seeding or UI save code so seeded steps have actual text content.
+- Update any render logic in assets/js/journeys.js to use text (fallback content).
+
+G) DEEP LINK URL IN UI
+- In Journeys UI, for Deep Link trigger:
+  - Require start_param (slug)
+  - Display the actual deep link URL:
+    https://t.me/<MESSAGE_BOT_USERNAME>?start=<start_param>
+  - Provide Copy button
+  - Provide Test link button
+- Journey cards should display the start_param (not “-”).
+
+H) TESTS (SO THIS DOESN’T REGRESS AGAIN)
+Add regressions:
+1) A journey with steps containing text results in non-empty step text in repo.list_steps().
+2) Simulated Telegram /start <param> creates a journey_user_session row and schedules/sends step 1 (assert DB side-effect).
+3) Deep link URL generator uses message bot username and start_param.
+4) Tenant isolation: one tenant cannot overwrite another tenant’s bot connections.
+
+DELIVERABLE
+- Connections tab working (save, validate, webhook setup)
+- Journeys deep link URL visible and usable
+- Journeys actually send messages (steps not blank)
+- All tests pass
+- server.py stays thin
