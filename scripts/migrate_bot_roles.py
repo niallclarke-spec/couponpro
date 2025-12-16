@@ -114,7 +114,7 @@ if __name__ == "__main__":
     print("Bot Role Migration: signal -> signal_bot, message -> message_bot")
     print("=" * 60)
     
-    db.init_db()
+    db.db_pool.initialize_pool()
     
     if migrate_bot_roles():
         print("\n[SUCCESS] Migration completed successfully")

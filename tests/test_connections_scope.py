@@ -43,18 +43,15 @@ class TestNoCouponBotInConnectionsTable:
     """Verify tenant_bot_connections has no 'coupon' bot_role"""
     
     def test_valid_bot_roles_are_signal_and_message_only(self):
-        """Architecture: Only 'signal' and 'message' are valid bot_role values"""
-        from core.bot_credentials import BotCredentialResolver
+        """Architecture: Only 'signal_bot' and 'message_bot' are valid bot_role values"""
+        from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
         
-        source = inspect.getsource(BotCredentialResolver)
-        
-        assert "'signal'" in source or '"signal"' in source, \
-            "BotCredentialResolver should reference signal bot role"
-        assert "'message'" in source or '"message"' in source, \
-            "BotCredentialResolver should reference message bot role"
-        
-        assert "'coupon'" not in source.lower(), \
-            "BotCredentialResolver should NOT have coupon as a bot role"
+        assert SIGNAL_BOT == 'signal_bot', \
+            "SIGNAL_BOT constant must be 'signal_bot'"
+        assert MESSAGE_BOT == 'message_bot', \
+            "MESSAGE_BOT constant must be 'message_bot'"
+        assert VALID_BOT_ROLES == {'signal_bot', 'message_bot'}, \
+            "VALID_BOT_ROLES should only contain signal_bot and message_bot"
     
     def test_db_get_bot_connection_docstring_mentions_signal_and_message(self):
         """db.get_bot_connection should document signal and message roles only"""
@@ -74,14 +71,14 @@ class TestNoCouponBotInConnectionsTable:
         mock_conn.cursor.return_value = mock_cursor
         
         mock_cursor.fetchall.return_value = [
-            ('entrylab', 'signal'),
-            ('tenant1', 'signal'),
-            ('tenant1', 'message'),
+            ('entrylab', 'signal_bot'),
+            ('tenant1', 'signal_bot'),
+            ('tenant1', 'message_bot'),
         ]
         
         for tenant_id, bot_role in mock_cursor.fetchall.return_value:
-            assert bot_role in ('signal', 'message'), \
-                f"Invalid bot_role '{bot_role}' found - only signal/message allowed"
+            assert bot_role in ('signal_bot', 'message_bot'), \
+                f"Invalid bot_role '{bot_role}' found - only signal_bot/message_bot allowed"
             assert bot_role != 'coupon', \
                 f"coupon bot should never be in tenant_bot_connections"
 
@@ -181,8 +178,8 @@ class TestJourneysRequireMessageBot:
         assert 'get_bot_credentials' in source, \
             "_send_message must use get_bot_credentials"
         
-        assert "'message'" in source or '"message"' in source, \
-            "_send_message must request 'message' bot role"
+        assert "'message_bot'" in source or '"message_bot"' in source, \
+            "_send_message must request 'message_bot' bot role"
     
     def test_journey_engine_handles_bot_not_configured_error(self):
         """JourneyEngine._send_message should handle BotNotConfiguredError"""
@@ -199,7 +196,7 @@ class TestJourneysRequireMessageBot:
         from domains.journeys.engine import JourneyEngine
         from core.bot_credentials import BotNotConfiguredError
         
-        mock_get_creds.side_effect = BotNotConfiguredError('test_tenant', 'message')
+        mock_get_creds.side_effect = BotNotConfiguredError('test_tenant', 'message_bot')
         
         engine = JourneyEngine()
         result = engine._send_message('test_tenant', 12345, 'Test message')
@@ -207,7 +204,7 @@ class TestJourneysRequireMessageBot:
         assert result is False, \
             "_send_message should return False when BotNotConfiguredError raised"
         
-        mock_get_creds.assert_called_once_with('test_tenant', 'message')
+        mock_get_creds.assert_called_once_with('test_tenant', 'message_bot')
     
     @patch('domains.journeys.engine.get_bot_credentials')
     @patch('domains.journeys.engine.requests')
@@ -246,13 +243,13 @@ class TestFxWebhookUsesBotCredentials:
             "Forex webhook must use get_bot_credentials from BotCredentialResolver"
     
     def test_forex_webhook_requests_signal_bot_role(self):
-        """handle_forex_telegram_webhook should request 'signal' bot role"""
+        """handle_forex_telegram_webhook should request 'signal_bot' bot role"""
         from integrations.telegram.webhooks import handle_forex_telegram_webhook
         
         source = inspect.getsource(handle_forex_telegram_webhook)
         
-        assert "'signal'" in source, \
-            "Forex webhook must request 'signal' bot role"
+        assert "'signal_bot'" in source, \
+            "Forex webhook must request 'signal_bot' bot role"
     
     def test_forex_webhook_handles_bot_not_configured_error(self):
         """handle_forex_telegram_webhook should handle BotNotConfiguredError"""

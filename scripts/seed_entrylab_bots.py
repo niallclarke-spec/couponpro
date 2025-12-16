@@ -5,7 +5,7 @@ One-time seed script to migrate EntryLab Signal Bot token from environment varia
 This script reads FOREX_BOT_TOKEN and FOREX_CHANNEL_ID from the environment
 and inserts them into the tenant_bot_connections table for tenant_id='entrylab'.
 
-NOTE: Message Bot (bot_role='message') is intentionally NOT seeded by this script.
+NOTE: Message Bot (bot_role='message_bot') is intentionally NOT seeded by this script.
       Users must configure their Message Bot via the UI to ensure proper setup and validation.
 
 Usage:
@@ -70,7 +70,9 @@ def seed_signal_bot() -> bool:
         print("  [SKIP] FOREX_BOT_TOKEN not set in environment")
         return False
     
-    existing = db.get_bot_connection(TENANT_ID, 'signal')
+    existing = db.get_bot_connection(TENANT_ID, 'signal_bot')
+    if not existing:
+        existing = db.get_bot_connection(TENANT_ID, 'signal')
     if existing and existing.get('bot_token'):
         print(f"  [EXISTS] Signal bot already configured: @{existing.get('bot_username', 'unknown')}")
         print(f"           Channel ID: {existing.get('channel_id', 'not set')}")
@@ -93,7 +95,7 @@ def seed_signal_bot() -> bool:
     
     success = db.upsert_bot_connection(
         tenant_id=TENANT_ID,
-        bot_role='signal',
+        bot_role='signal_bot',
         bot_token=token,
         bot_username=bot_username,
         channel_id=channel_id

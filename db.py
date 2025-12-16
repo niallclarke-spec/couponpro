@@ -874,7 +874,7 @@ class DatabasePool:
                     CREATE TABLE IF NOT EXISTS tenant_bot_connections (
                         id SERIAL PRIMARY KEY,
                         tenant_id VARCHAR(100) NOT NULL REFERENCES tenants(id),
-                        bot_role VARCHAR(20) NOT NULL CHECK (bot_role IN ('signal', 'message')),
+                        bot_role VARCHAR(20) NOT NULL CHECK (bot_role IN ('signal', 'message', 'signal_bot', 'message_bot')),
                         bot_token TEXT,
                         bot_username VARCHAR(100),
                         webhook_secret VARCHAR(100),

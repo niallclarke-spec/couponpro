@@ -7970,19 +7970,32 @@
             updateStrategyCards();
         }
 
+        const UI_TO_API_ROLE = {
+            'signal': 'signal_bot',
+            'message': 'message_bot'
+        };
+        
+        const API_TO_UI_ROLE = {
+            'signal_bot': 'signal',
+            'message_bot': 'message',
+            'signal': 'signal',
+            'message': 'message'
+        };
+        
         async function loadConnections() {
             const headers = await getAuthHeaders();
             try {
                 const response = await authedFetch('/api/connections');
                 const data = await response.json();
                 
-                const roles = ['signal', 'message'];
+                const uiRoles = ['signal', 'message'];
                 const connMap = {};
                 for (const conn of data.connections || []) {
-                    connMap[conn.bot_role] = conn;
+                    const uiRole = API_TO_UI_ROLE[conn.bot_role] || conn.bot_role;
+                    connMap[uiRole] = conn;
                 }
                 
-                for (const role of roles) {
+                for (const role of uiRoles) {
                     const conn = connMap[role];
                     const statusEl = document.getElementById(`${role}-status`);
                     const tokenStatusEl = document.getElementById(`${role}-token-status`);
@@ -8053,8 +8066,9 @@
             const headers = await getAuthHeaders();
             showLoading('Testing connection...');
             
+            const apiRole = UI_TO_API_ROLE[role] || role;
             try {
-                const body = { bot_role: role };
+                const body = { bot_role: apiRole };
                 if (token) {
                     body.bot_token = token;
                 }
@@ -8096,11 +8110,12 @@
             const headers = await getAuthHeaders();
             showLoading('Validating bot token...');
             
+            const apiRole = UI_TO_API_ROLE[role] || role;
             try {
                 const resp = await authedFetch('/api/connections/validate', {
                     method: 'POST',
                     headers: {...headers, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ bot_role: role, bot_token: token })
+                    body: JSON.stringify({ bot_role: apiRole, bot_token: token })
                 });
                 const data = await resp.json();
                 hideLoading();
@@ -8130,11 +8145,12 @@
             const headers = await getAuthHeaders();
             showLoading('Setting up webhook...');
             
+            const apiRole = UI_TO_API_ROLE[role] || role;
             try {
                 const resp = await authedFetch('/api/connections', {
                     method: 'POST',
                     headers: {...headers, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ bot_role: role, bot_token: token, channel_id: channelId || null })
+                    body: JSON.stringify({ bot_role: apiRole, bot_token: token, channel_id: channelId || null })
                 });
                 const data = await resp.json();
                 hideLoading();
@@ -8160,8 +8176,9 @@
             const headers = await getAuthHeaders();
             showLoading('Removing connection...');
             
+            const apiRole = UI_TO_API_ROLE[role] || role;
             try {
-                const resp = await authedFetch(`/api/connections/${role}`, {
+                const resp = await authedFetch(`/api/connections/${apiRole}`, {
                     method: 'DELETE',
                     headers
                 });
