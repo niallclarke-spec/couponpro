@@ -1,0 +1,111 @@
+
+	1.	Introduce a Single Dispatcher (api/dispatch.py)
+Create a new module api/dispatch.py that contains ONE function to handle routing for any HTTP method:
+
+	•	Inputs: handler (MyHTTPRequestHandler instance), method string (“GET”/“POST”/“PUT”/“DELETE”), parsed_path, host_context, and the correct route list (GET_ROUTES + PAGE_ROUTES etc.)
+	•	It should:
+a) match_route(method, parsed_path.path, routes)
+b) if no route match: return False (meaning server.py should fall back to static or legacy handling)
+c) if matched: apply_route_checks(route, handler, DATABASE_AVAILABLE, host_context.host_type). If middleware denies, return True (response already sent)
+d) Dispatch by calling the handler method named in route.handler using getattr(handler, route.handler). Return True.
+
+Important: The dispatcher must be the ONLY place where match_route/apply_route_checks/getattr dispatch happens.
+	2.	Move Page Serving into handlers/pages.py
+Create handlers/pages.py with simple functions for serving pages:
+
+	•	serve_login(handler)
+	•	serve_admin(handler)
+	•	serve_app(handler)
+	•	serve_setup(handler)
+	•	serve_coupon(handler)
+	•	serve_campaign(handler, campaign_id_or_path)
+Anything that currently reads an HTML file in server.py should be moved here.
+These functions must:
+	•	set correct headers (Content-type, cache headers as currently done)
+	•	preserve Clerk publishable key injection for login.html (replace {{CLERK_PUBLISHABLE_KEY}})
+	•	preserve any existing redirect logic (e.g. /admin/ -> /admin, etc.)
+	•	preserve “access denied” behavior on admin page for non-admin email.
+
+	3.	Convert ALL manual endpoint dispatch blocks into route-based handlers
+Right now server.py manually dispatches many endpoints (subscriptions, coupons, forex, tenant, onboarding, stripe products, journeys, auth endpoints). Replace this pattern completely:
+
+	•	For every API path handled in server.py with if/elif blocks, ensure there is a corresponding route entry in api/routes.py (GET_ROUTES/POST_ROUTES/PUT_ROUTES/DELETE_ROUTES if you have it; if not, add DELETE_ROUTES).
+	•	For each route entry, the route.handler should map to a thin wrapper method on MyHTTPRequestHandler.
+
+	4.	Add Thin Wrapper Methods on MyHTTPRequestHandler
+In server.py, inside MyHTTPRequestHandler class, add small wrapper methods that call the correct module-level handler functions.
+Example pattern (do not change logic, just move it):
+
+	•	handle_api_campaigns_list -> calls coupon_handlers.handle_campaigns_list(self)
+	•	handle_api_forex_config_get/post -> calls forex_handlers…
+	•	handle_api_onboarding_state -> calls onboarding_handlers…
+	•	handle_api_stripe_products -> calls stripe_products_handlers…
+	•	handle_api_journeys_list -> calls journey_handlers…
+	•	handle_api_check_auth -> preserve the exact host-aware logic currently in /api/check-auth
+	•	handle_api_set_auth_cookie -> preserve exact behavior currently in /api/set-auth-cookie
+	•	handle_api_auth_me -> preserve exact /auth/me behavior
+	•	handle_page_admin/login/app/setup/coupon/campaign -> call handlers/pages.py
+
+Key: server.py should NOT contain the business logic bodies for these endpoints; only wrapper methods.
+	5.	Rewrite do_GET/do_POST/do_PUT/do_DELETE to be tiny
+In server.py, simplify each method to:
+
+	•	Parse path and host_context once
+	•	Apply root “/” redirect logic exactly as now (admin -> /admin, dash -> /app, else -> /login)
+	•	Normalize trailing slashes consistently (but do not break existing endpoints; keep redirects minimal)
+	•	Call api.dispatch.dispatch_request(…) with the correct route list:
+	•	GET uses GET_ROUTES + PAGE_ROUTES
+	•	POST uses POST_ROUTES
+	•	PUT uses PUT_ROUTES
+	•	DELETE uses DELETE_ROUTES (create if missing)
+If dispatch_request returns True: return
+Else fall back to super().do_GET() for static files (GET) or 404 for non-GET methods.
+
+Then DELETE the old giant if/elif dispatch sections entirely.
+	6.	Ensure api/routes.py is the single source of truth
+Clean up api/routes.py so:
+
+	•	Every API endpoint and page endpoint is represented as a Route with:
+	•	path pattern (exact or prefix patterns as your router supports)
+	•	handler method name (must exist on MyHTTPRequestHandler)
+	•	middleware requirements (auth required, db required, admin required, host type rules)
+	•	Remove duplicates like ‘/api/journeys/’ vs ‘/api/journeys’ if your matcher treats them differently. Standardize on no trailing slash and add a redirect normalization for the opposite.
+	•	Validate with validate_routes() and fail fast if handlers are missing.
+
+	7.	Keep host-aware rules exactly the same
+Critical: keep the current behavior that:
+
+	•	/admin on dash host redirects to https://admin.promostack.io/admin (in prod)
+	•	/app on admin host redirects to https://dash.promostack.io/app (in prod)
+	•	/login works on both
+	•	/api/check-auth requires admin email on admin host, but accepts any authenticated user on dash host
+	•	Admin-only endpoints remain admin-only
+
+	8.	Add a regression guard so server.py can’t bloat again
+Add one of the following tests (prefer pytest if you already use it; otherwise a simple python script):
+
+	•	tests/test_server_size.py:
+	•	Read server.py
+	•	Assert total lines <= 450 (or a threshold you choose)
+	•	Assert server.py does NOT contain large manual dispatch markers like “Dispatch to coupon domain handlers” or repeated “elif parsed_path.path ==”
+This test should run in your normal test command.
+
+	9.	Verification checklist (must perform)
+After refactor, run:
+
+	•	python3 -m py_compile server.py api/dispatch.py handlers/pages.py and key domain handler modules
+	•	Start server locally
+	•	curl checks:
+	•	GET / redirects correctly based on Host header simulation
+	•	/login loads and Clerk publishable key is injected
+	•	/api/check-auth returns 401 when unauthenticated, and respects host type
+	•	/api/journeys returns 401 unauthenticated
+	•	Static assets still load via super().do_GET()
+	•	Confirm no route is being handled by manual if/elif blocks in server.py anymore.
+
+Output requirements
+When done, provide:
+	•	A short summary of what was moved where
+	•	New file list (api/dispatch.py, handlers/pages.py, any new tests)
+	•	The final line count of server.py
+	•	Any behavior changes found (should be NONE; if any are unavoidable, list them explicitly and fix them)
