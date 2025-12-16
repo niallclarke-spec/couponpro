@@ -923,21 +923,21 @@ def delete_journey(tenant_id: str, journey_id: str) -> bool:
                 DELETE FROM journey_scheduled_messages 
                 WHERE session_id IN (
                     SELECT id FROM journey_user_sessions 
-                    WHERE tenant_id = %s AND journey_id = %s::uuid
+                    WHERE journey_id = %s::uuid
                 )
-            """, (tenant_id, journey_id))
+            """, (journey_id,))
             
             cursor.execute("""
-                DELETE FROM journey_user_sessions WHERE tenant_id = %s AND journey_id = %s::uuid
-            """, (tenant_id, journey_id))
+                DELETE FROM journey_user_sessions WHERE journey_id = %s::uuid
+            """, (journey_id,))
             
             cursor.execute("""
-                DELETE FROM journey_steps WHERE tenant_id = %s AND journey_id = %s::uuid
-            """, (tenant_id, journey_id))
+                DELETE FROM journey_steps WHERE journey_id = %s::uuid
+            """, (journey_id,))
             
             cursor.execute("""
-                DELETE FROM journey_triggers WHERE tenant_id = %s AND journey_id = %s::uuid
-            """, (tenant_id, journey_id))
+                DELETE FROM journey_triggers WHERE journey_id = %s::uuid
+            """, (journey_id,))
             
             cursor.execute("""
                 DELETE FROM journeys WHERE tenant_id = %s AND id = %s::uuid
