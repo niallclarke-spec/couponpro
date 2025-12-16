@@ -150,3 +150,61 @@ class TestAuthParsing:
         
         result = get_auth_user_from_request(mock_request)
         assert result is None
+
+
+class TestTelegramWebhookRouting:
+    """Regression tests for telegram webhook routing (no 403, dev fallback)."""
+    
+    def test_telegram_webhook_route_exists(self):
+        """Verify /api/telegram-webhook route is defined."""
+        from api.routes import POST_ROUTES
+        
+        paths = [r.path for r in POST_ROUTES]
+        assert '/api/telegram-webhook' in paths
+    
+    def test_telegram_webhook_no_auth_required(self):
+        """Verify webhook route does NOT require auth (Telegram sends no auth headers)."""
+        from api.routes import POST_ROUTES
+        
+        route = next((r for r in POST_ROUTES if r.path == '/api/telegram-webhook'), None)
+        assert route is not None
+        assert route.auth_required is False
+    
+    def test_telegram_webhook_not_in_entrylab_only_routes(self):
+        """Regression: Webhook must NOT be in ENTRYLAB_ONLY_ROUTES or it returns 403."""
+        from api.middleware import ENTRYLAB_ONLY_ROUTES
+        
+        assert '/api/telegram-webhook' not in ENTRYLAB_ONLY_ROUTES
+    
+    def test_webhook_handler_exists(self):
+        """Verify webhook handler function exists."""
+        from integrations.telegram.webhooks import handle_coupon_telegram_webhook
+        
+        assert callable(handle_coupon_telegram_webhook)
+
+
+class TestWebhookSecretTokenResolution:
+    """Tests for webhook secret token tenant resolution."""
+    
+    def test_db_helper_functions_exist(self):
+        """Verify DB helper functions exist."""
+        import db
+        
+        assert hasattr(db, 'upsert_telegram_webhook_secret')
+        assert hasattr(db, 'resolve_tenant_from_webhook_secret')
+        assert callable(db.upsert_telegram_webhook_secret)
+        assert callable(db.resolve_tenant_from_webhook_secret)
+    
+    def test_resolve_returns_none_for_empty_token(self):
+        """Verify resolve returns (None, None) for empty token."""
+        import db
+        
+        result = db.resolve_tenant_from_webhook_secret('')
+        assert result == (None, None)
+    
+    def test_resolve_returns_none_for_none_token(self):
+        """Verify resolve returns (None, None) for None token."""
+        import db
+        
+        result = db.resolve_tenant_from_webhook_secret(None)
+        assert result == (None, None)
