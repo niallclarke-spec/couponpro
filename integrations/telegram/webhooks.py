@@ -61,17 +61,26 @@ def check_journey_trigger(webhook_data: dict, tenant_id: str, bot_id: str) -> bo
         logger.info(f"Found journey '{journey['name']}' for deeplink param: {start_param}")
         
         from domains.journeys.engine import JourneyEngine
+        import db
+        
+        message_bot = db.get_bot_connection(tenant_id, 'message')
+        message_bot_token = message_bot.get('bot_token') if message_bot else None
+        
+        if not message_bot_token:
+            from core.config import Config
+            message_bot_token = Config.get_telegram_bot_token()
+            if message_bot_token:
+                logger.debug(f"Falling back to global bot token for tenant {tenant_id}")
         
         def send_message_fn(chat_id: int, text: str, bot_id: str) -> bool:
             try:
                 import requests
-                from core.config import Config
-                bot_token = Config.get_telegram_bot_token()
-                if not bot_token:
+                token = message_bot_token
+                if not token:
                     logger.error("No bot token available for journey message")
                     return False
                 
-                url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                url = f"https://api.telegram.org/bot{token}/sendMessage"
                 response = requests.post(url, json={
                     'chat_id': chat_id,
                     'text': text,

@@ -105,13 +105,55 @@ def process_due_messages(send_message_fn: Callable[[int, str, str], bool]) -> in
     return processed
 
 
+def _get_tenant_send_fn(tenant_id: str) -> Callable[[int, str, str], bool]:
+    """
+    Get a send message function for a specific tenant.
+    Uses tenant's configured message bot if available, otherwise falls back to global.
+    """
+    import db
+    import requests
+    from core.config import Config
+    
+    message_bot = db.get_bot_connection(tenant_id, 'message')
+    bot_token = message_bot.get('bot_token') if message_bot else None
+    
+    if not bot_token:
+        bot_token = Config.get_telegram_bot_token()
+        if bot_token:
+            logger.debug(f"Using global bot token for tenant {tenant_id}")
+    
+    def send_fn(chat_id: int, text: str, bot_id: str) -> bool:
+        if not bot_token:
+            logger.error(f"No bot token available for tenant {tenant_id}")
+            return False
+        
+        try:
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            response = requests.post(url, json={
+                'chat_id': chat_id,
+                'text': text,
+                'parse_mode': 'HTML'
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                return True
+            else:
+                logger.error(f"Telegram API error: {response.text}")
+                return False
+        except Exception as e:
+            logger.exception(f"Error sending scheduled message: {e}")
+            return False
+    
+    return send_fn
+
+
 def _send_scheduled_message(msg: dict, send_message_fn: Callable, engine) -> bool:
     """
     Send a single scheduled message and advance the journey.
     
     Args:
         msg: Scheduled message dict
-        send_message_fn: Function to send Telegram messages
+        send_message_fn: Fallback function to send Telegram messages
         engine: JourneyEngine instance
         
     Returns:
@@ -125,9 +167,12 @@ def _send_scheduled_message(msg: dict, send_message_fn: Callable, engine) -> boo
     
     chat_id = msg['telegram_chat_id']
     bot_id = msg.get('bot_id')
+    tenant_id = msg.get('tenant_id')
+    
+    tenant_send_fn = _get_tenant_send_fn(tenant_id) if tenant_id else send_message_fn
     
     if text:
-        success = send_message_fn(chat_id, text, bot_id)
+        success = tenant_send_fn(chat_id, text, bot_id)
         if not success:
             logger.error(f"Failed to send scheduled message to chat {chat_id}")
             return False
