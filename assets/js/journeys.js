@@ -44,7 +44,8 @@
 
     function getDeepLinkUrl(startParam) {
         if (!state.messageBotUsername || !startParam) return null;
-        return `https://t.me/${state.messageBotUsername}?start=${encodeURIComponent(startParam)}`;
+        const username = state.messageBotUsername.replace(/^@/, '');
+        return `https://t.me/${username}?start=${encodeURIComponent(startParam)}`;
     }
 
     async function loadJourneys() {
