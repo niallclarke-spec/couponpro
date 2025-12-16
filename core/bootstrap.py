@@ -123,4 +123,12 @@ def start_app(ctx: AppContext) -> None:
             logger.exception("Stripe initialization failed")
             ctx.stripe_available = False
     
+    if ctx.database_available:
+        try:
+            from domains.journeys.scheduler import start_journey_scheduler
+            start_journey_scheduler(interval_seconds=30)
+            logger.info("Journey scheduler started")
+        except Exception as e:
+            logger.exception("Journey scheduler startup failed")
+    
     logger.info("Application started")

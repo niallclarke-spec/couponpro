@@ -936,3 +936,201 @@ def delete_journey(tenant_id: str, journey_id: str) -> bool:
     except Exception as e:
         logger.exception(f"Error deleting journey: {e}")
         return False
+
+
+def set_session_awaiting_reply(session_id: str, step_id: str, timeout_minutes: int = None) -> bool:
+    """
+    Mark a session as awaiting a user reply.
+    
+    Args:
+        session_id: Session ID
+        step_id: Current step ID (wait_for_reply step)
+        timeout_minutes: Minutes until timeout (None = no timeout)
+        
+    Returns:
+        True if updated successfully
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if timeout_minutes:
+                cursor.execute("""
+                    UPDATE journey_user_sessions
+                    SET status = 'awaiting_reply', 
+                        current_step_id = %s,
+                        wait_timeout_at = NOW() + INTERVAL '%s minutes',
+                        last_activity_at = NOW()
+                    WHERE id = %s
+                """, (step_id, timeout_minutes, session_id))
+            else:
+                cursor.execute("""
+                    UPDATE journey_user_sessions
+                    SET status = 'awaiting_reply', 
+                        current_step_id = %s,
+                        wait_timeout_at = NULL,
+                        last_activity_at = NOW()
+                    WHERE id = %s
+                """, (step_id, session_id))
+            
+            conn.commit()
+            logger.info(f"Session {session_id} now awaiting reply (timeout={timeout_minutes}min)")
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error setting session awaiting reply: {e}")
+        return False
+
+
+def fetch_timed_out_waiting_sessions(limit: int = 50) -> List[Dict]:
+    """
+    Fetch sessions that are awaiting_reply and have timed out.
+    
+    Uses FOR UPDATE SKIP LOCKED for idempotency.
+    
+    Returns:
+        List of timed-out session dicts
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
+                       current_step_id, status, answers, started_at, completed_at, 
+                       last_activity_at, wait_timeout_at
+                FROM journey_user_sessions
+                WHERE status = 'awaiting_reply' 
+                  AND wait_timeout_at IS NOT NULL 
+                  AND wait_timeout_at <= NOW()
+                ORDER BY wait_timeout_at ASC
+                LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            """, (limit,))
+            
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'journey_id': str(row[2]),
+                    'telegram_chat_id': row[3],
+                    'telegram_user_id': row[4],
+                    'current_step_id': str(row[5]) if row[5] else None,
+                    'status': row[6],
+                    'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
+                    'started_at': row[8].isoformat() if row[8] else None,
+                    'completed_at': row[9].isoformat() if row[9] else None,
+                    'last_activity_at': row[10].isoformat() if row[10] else None,
+                    'wait_timeout_at': row[11].isoformat() if row[11] else None
+                })
+            return sessions
+    except Exception as e:
+        logger.exception(f"Error fetching timed-out sessions: {e}")
+        return []
+
+
+def get_awaiting_session_for_user(tenant_id: str, telegram_user_id: int) -> Optional[Dict]:
+    """
+    Get an active or awaiting_reply session for a user.
+    
+    Args:
+        tenant_id: Tenant ID
+        telegram_user_id: Telegram user ID
+        
+    Returns:
+        Session dict or None
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
+                       current_step_id, status, answers, started_at, completed_at, 
+                       last_activity_at, wait_timeout_at
+                FROM journey_user_sessions
+                WHERE tenant_id = %s AND telegram_user_id = %s
+                  AND status IN ('active', 'awaiting_reply', 'waiting_delay')
+                ORDER BY last_activity_at DESC
+                LIMIT 1
+            """, (tenant_id, telegram_user_id))
+            row = cursor.fetchone()
+            
+            if row:
+                return {
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'journey_id': str(row[2]),
+                    'telegram_chat_id': row[3],
+                    'telegram_user_id': row[4],
+                    'current_step_id': str(row[5]) if row[5] else None,
+                    'status': row[6],
+                    'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
+                    'started_at': row[8].isoformat() if row[8] else None,
+                    'completed_at': row[9].isoformat() if row[9] else None,
+                    'last_activity_at': row[10].isoformat() if row[10] else None,
+                    'wait_timeout_at': row[11].isoformat() if row[11] else None
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error getting awaiting session: {e}")
+        return None
+
+
+def store_user_reply(session_id: str, reply_text: str) -> bool:
+    """
+    Store a user's reply in the session answers.
+    
+    Args:
+        session_id: Session ID
+        reply_text: User's reply text
+        
+    Returns:
+        True if stored successfully
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT answers FROM journey_user_sessions WHERE id = %s
+            """, (session_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return False
+            
+            answers = row[0] if isinstance(row[0], dict) else json.loads(row[0]) if row[0] else {}
+            replies = answers.get('_replies', [])
+            replies.append({
+                'text': reply_text,
+                'timestamp': datetime.utcnow().isoformat()
+            })
+            answers['_replies'] = replies
+            answers['_last_reply'] = reply_text
+            
+            cursor.execute("""
+                UPDATE journey_user_sessions
+                SET answers = %s, last_activity_at = NOW()
+                WHERE id = %s
+            """, (json.dumps(answers), session_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error storing user reply: {e}")
+        return False

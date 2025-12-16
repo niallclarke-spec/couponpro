@@ -1366,11 +1366,13 @@ class DatabasePool:
                         answers JSONB DEFAULT '{}',
                         started_at TIMESTAMP DEFAULT NOW(),
                         completed_at TIMESTAMP,
-                        last_activity_at TIMESTAMP DEFAULT NOW()
+                        last_activity_at TIMESTAMP DEFAULT NOW(),
+                        wait_timeout_at TIMESTAMP
                     )
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_tenant ON journey_user_sessions(tenant_id, journey_id, telegram_user_id, status)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_user ON journey_user_sessions(tenant_id, telegram_user_id, status)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_timeout ON journey_user_sessions(status, wait_timeout_at) WHERE status = 'awaiting_reply'")
                 logger.info("journey_user_sessions table ready")
                 
                 # Partial unique index to prevent duplicate active sessions (unless re_entry_policy allows)

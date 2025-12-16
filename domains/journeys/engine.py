@@ -157,6 +157,9 @@ class JourneyEngine:
         elif step_type == 'delay':
             return self._execute_delay_step(session, step, config, bot_id)
         
+        elif step_type == 'wait_for_reply':
+            return self._execute_wait_for_reply_step(session, step, config, bot_id)
+        
         elif step_type == 'conditional':
             logger.warning(f"Conditional steps not supported in V1, skipping step {step['id']}")
             return self._advance_to_next_step(session, step, bot_id)
@@ -234,6 +237,82 @@ class JourneyEngine:
         else:
             logger.error(f"Failed to schedule delayed message for step {step['id']}")
             return False
+    
+    def _execute_wait_for_reply_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
+        """
+        Execute a wait_for_reply step - pause journey until user replies.
+        
+        Optionally sends a prompt message and sets a timeout.
+        Config options:
+            - content/text: Optional message to send before waiting
+            - timeout_minutes: Minutes to wait before auto-advancing (0 = no timeout)
+        """
+        from . import repo
+        
+        text = config.get('content') or config.get('text', '')
+        timeout_minutes = config.get('timeout_minutes', 0)
+        
+        if text:
+            success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
+            if not success:
+                logger.error(f"Failed to send wait_for_reply prompt for step {step['id']}")
+        
+        repo.set_session_awaiting_reply(
+            session_id=session['id'],
+            step_id=step['id'],
+            timeout_minutes=timeout_minutes if timeout_minutes > 0 else None
+        )
+        
+        logger.info(f"Session {session['id']} now waiting for reply (timeout={timeout_minutes}min)")
+        return True
+    
+    def handle_wait_for_reply_response(self, session: Dict, message_text: str, bot_id: str = None) -> bool:
+        """
+        Handle a user's reply to a wait_for_reply step.
+        
+        Stores the reply and advances to the next step.
+        """
+        from . import repo
+        
+        if not session.get('current_step_id'):
+            logger.warning(f"Session {session['id']} has no current step")
+            return False
+        
+        current_step = repo.get_step_by_id(session['current_step_id'])
+        if not current_step:
+            logger.error(f"Step {session['current_step_id']} not found")
+            return False
+        
+        if current_step['step_type'] != 'wait_for_reply':
+            logger.debug(f"Current step is not wait_for_reply, ignoring")
+            return False
+        
+        repo.store_user_reply(session['id'], message_text)
+        
+        repo.update_session_status(session['id'], 'active')
+        
+        logger.info(f"Received reply for wait_for_reply session {session['id']}")
+        return self._advance_to_next_step(session, current_step, bot_id)
+    
+    def timeout_wait_for_reply(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
+        """
+        Handle timeout for a wait_for_reply step.
+        
+        Called by scheduler when wait_timeout_at has passed.
+        Sends optional timeout message and advances to next step.
+        """
+        from . import repo
+        
+        config = step.get('config', {})
+        timeout_message = config.get('timeout_message', '')
+        
+        if timeout_message:
+            self._send_message(session['tenant_id'], session['telegram_chat_id'], timeout_message)
+        
+        repo.update_session_status(session['id'], 'active')
+        
+        logger.info(f"Timeout for wait_for_reply session {session['id']}, advancing")
+        return self._advance_to_next_step(session, step, bot_id)
     
     def _advance_to_next_step(self, session: Dict, current_step: Dict, bot_id: str) -> bool:
         """Advance to the next step in the journey."""
