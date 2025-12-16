@@ -6250,7 +6250,15 @@
             try {
                 const response = await authedFetch('/api/telegram-channel-stats');
                 
-                if (!response.ok) throw new Error('Failed to fetch channel stats');
+                if (!response.ok) {
+                    console.error(`Channel stats fetch failed: ${response.status}`);
+                    if (response.status === 401 || response.status === 403) {
+                        document.getElementById('freeChannelCount').textContent = 'Auth error';
+                        document.getElementById('vipChannelCount').textContent = 'Auth error';
+                        return;
+                    }
+                    throw new Error(`Failed to fetch channel stats: ${response.status}`);
+                }
                 
                 const data = await response.json();
                 
@@ -6268,6 +6276,8 @@
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);
+                document.getElementById('freeChannelCount').textContent = 'Error';
+                document.getElementById('vipChannelCount').textContent = 'Error';
             }
         }
 
