@@ -703,8 +703,8 @@ def handle_telegram_channel_stats(handler):
     """GET /api/telegram-channel-stats
     
     Returns:
-        200: Success with channel stats
-        503: Bot or channel not configured
+        200: Success with channel stats for both free and VIP channels
+        503: Bot not configured
         502: Telegram API failure
     """
     import os
@@ -713,7 +713,8 @@ def handle_telegram_channel_stats(handler):
     logger = get_logger(__name__)
     
     bot_token = os.environ.get('FOREX_BOT_TOKEN')
-    channel_id = os.environ.get('FOREX_CHANNEL_ID')
+    free_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+    vip_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID')
     
     if not bot_token:
         handler.send_response(503)
@@ -726,42 +727,40 @@ def handle_telegram_channel_stats(handler):
         }).encode())
         return
     
-    if not channel_id:
-        handler.send_response(503)
+    def get_member_count(channel_id):
+        if not channel_id:
+            return None
+        try:
+            url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
+            resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
+            data = resp.json()
+            if data.get('ok'):
+                return data.get('result')
+            else:
+                logger.warning(f"Telegram API error for {channel_id}: {data}")
+                return None
+        except Exception as e:
+            logger.warning(f"Failed to get member count for {channel_id}: {e}")
+            return None
+    
+    try:
+        free_count = get_member_count(free_channel_id)
+        vip_count = get_member_count(vip_channel_id)
+        
+        handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'ok': False,
-            'code': 'channel_not_configured',
-            'error': 'Channel ID not configured'
+            'ok': True,
+            'free_channel': {
+                'channel_id': free_channel_id,
+                'member_count': free_count
+            },
+            'vip_channel': {
+                'channel_id': vip_channel_id,
+                'member_count': vip_count
+            }
         }).encode())
-        return
-    
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
-        resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
-        data = resp.json()
-        
-        if data.get('ok'):
-            member_count = data.get('result')
-            handler.send_response(200)
-            handler.send_header('Content-type', 'application/json')
-            handler.end_headers()
-            handler.wfile.write(json.dumps({
-                'ok': True,
-                'member_count': member_count,
-                'channel_id': channel_id
-            }).encode())
-        else:
-            logger.warning(f"Telegram API error: {data}")
-            handler.send_response(502)
-            handler.send_header('Content-type', 'application/json')
-            handler.end_headers()
-            handler.wfile.write(json.dumps({
-                'ok': False,
-                'code': 'telegram_api_error',
-                'error': data.get('description', 'Unknown error')
-            }).encode())
         
     except Exception as e:
         logger.exception("Telegram API error getting channel stats")

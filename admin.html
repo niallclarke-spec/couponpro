@@ -6416,11 +6416,9 @@
         }
 
         async function loadTelegramChannelStats() {
-            const setChannelDisplay = (freeCount, vipCount, freeName = null, vipName = null) => {
+            const setChannelDisplay = (freeCount, vipCount) => {
                 document.getElementById('freeChannelCount').textContent = freeCount;
                 document.getElementById('vipChannelCount').textContent = vipCount;
-                if (freeName) document.getElementById('freeChannelName').textContent = freeName;
-                if (vipName) document.getElementById('vipChannelName').textContent = vipName;
             };
             
             try {
@@ -6433,8 +6431,7 @@
                 }
                 
                 if (response.status === 503) {
-                    const msg = data.code === 'bot_unavailable' ? 'Bot N/A' : 
-                               data.code === 'channel_not_configured' ? 'Not configured' : 'Unavailable';
+                    const msg = data.code === 'bot_unavailable' ? 'Bot N/A' : 'Unavailable';
                     setChannelDisplay(msg, msg);
                     return;
                 }
@@ -6444,10 +6441,13 @@
                     return;
                 }
                 
-                const count = data.member_count !== null && data.member_count !== undefined 
-                    ? data.member_count.toLocaleString() 
+                const freeCount = data.free_channel?.member_count !== null && data.free_channel?.member_count !== undefined 
+                    ? data.free_channel.member_count.toLocaleString() 
                     : '--';
-                setChannelDisplay(count, '--');
+                const vipCount = data.vip_channel?.member_count !== null && data.vip_channel?.member_count !== undefined 
+                    ? data.vip_channel.member_count.toLocaleString() 
+                    : '--';
+                setChannelDisplay(freeCount, vipCount);
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);

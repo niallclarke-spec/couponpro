@@ -25,31 +25,18 @@ class TestTelegramChannelStatsResponses:
         assert response['ok'] is False
         assert response['code'] == 'bot_unavailable'
     
-    def test_returns_503_when_channel_not_configured(self):
-        """503 with code='channel_not_configured' when FOREX_CHANNEL_ID is missing."""
-        import os
-        
-        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': ''}):
-            from domains.subscriptions import handlers
-            
-            handler = MagicMock()
-            handler.wfile = BytesIO()
-            handlers.handle_telegram_channel_stats(handler)
-        
-        handler.send_response.assert_called_with(503)
-        response = json.loads(handler.wfile.getvalue())
-        assert response['ok'] is False
-        assert response['code'] == 'channel_not_configured'
-    
-    def test_returns_200_with_member_count_on_success(self):
-        """200 with ok=true and member_count on successful API call."""
+    def test_returns_200_with_both_channel_counts_on_success(self):
+        """200 with ok=true and member counts for both channels."""
         import os
         
         mock_response = MagicMock()
         mock_response.json.return_value = {'ok': True, 'result': 1234}
         
-        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': '@test_channel'}), \
-             patch('requests.get', return_value=mock_response):
+        with patch.dict(os.environ, {
+            'FOREX_BOT_TOKEN': 'test_token', 
+            'FOREX_CHANNEL_ID': '@free_channel',
+            'TELEGRAM_PRIVATE_CHANNEL_ID': '-100123456'
+        }), patch('requests.get', return_value=mock_response):
             from domains.subscriptions import handlers
             
             handler = MagicMock()
@@ -59,28 +46,34 @@ class TestTelegramChannelStatsResponses:
         handler.send_response.assert_called_with(200)
         response = json.loads(handler.wfile.getvalue())
         assert response['ok'] is True
-        assert response['member_count'] == 1234
-        assert response['channel_id'] == '@test_channel'
+        assert response['free_channel']['member_count'] == 1234
+        assert response['free_channel']['channel_id'] == '@free_channel'
+        assert response['vip_channel']['member_count'] == 1234
+        assert response['vip_channel']['channel_id'] == '-100123456'
     
-    def test_returns_502_on_telegram_api_error(self):
-        """502 with code='telegram_api_error' when API call fails."""
+    def test_returns_null_for_missing_channel_ids(self):
+        """Returns null member_count for channels without IDs configured."""
         import os
         
         mock_response = MagicMock()
-        mock_response.json.return_value = {'ok': False, 'description': 'Bad Request'}
+        mock_response.json.return_value = {'ok': True, 'result': 500}
         
-        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': '@test_channel'}), \
-             patch('requests.get', return_value=mock_response):
+        with patch.dict(os.environ, {
+            'FOREX_BOT_TOKEN': 'test_token', 
+            'FOREX_CHANNEL_ID': '@free_channel',
+            'TELEGRAM_PRIVATE_CHANNEL_ID': ''
+        }), patch('requests.get', return_value=mock_response):
             from domains.subscriptions import handlers
             
             handler = MagicMock()
             handler.wfile = BytesIO()
             handlers.handle_telegram_channel_stats(handler)
         
-        handler.send_response.assert_called_with(502)
+        handler.send_response.assert_called_with(200)
         response = json.loads(handler.wfile.getvalue())
-        assert response['ok'] is False
-        assert response['code'] == 'telegram_api_error'
+        assert response['ok'] is True
+        assert response['free_channel']['member_count'] == 500
+        assert response['vip_channel']['member_count'] is None
 
 
 class TestCheckAuthResponses:
