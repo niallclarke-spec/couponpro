@@ -140,6 +140,16 @@ Journeys enables multi-step conversational flows in Telegram bots, triggered by 
 - `domains/journeys/scheduler.py`: Background processor for delayed messages
 - `domains/journeys/handlers.py`: API handlers for CRUD operations
 - `domains/journeys/seed.py`: Example journey seeding
+- `tests/journeys_smoke_test.py`: Smoke tests for route auth and deeplink lookup
+
+**API Routing:**
+- Journey routes defined in `api/routes.py` with auth/db requirements
+- Wrapper methods in `server.py` delegate to `domains/journeys/handlers.py`
+- Uses standard `apply_route_checks()` middleware pattern
+
+**Schema Keys (Standardized):**
+- Trigger config: `start_param` (new), `param` (legacy, still supported for reads)
+- Step config: `text` (new), `content` (legacy, still supported for reads)
 
 **Webhook Integration:**
 - `integrations/telegram/webhooks.py`: Intercepts `/start <param>` for journey triggers
