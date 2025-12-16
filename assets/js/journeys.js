@@ -186,21 +186,26 @@
         state.steps = [];
         state.selectedStatus = 'draft';
         
+        await loadMessageBotUsername();
+        
         const nameInput = document.getElementById('journey-name-input');
         const triggerValue = document.getElementById('journey-trigger-value');
         const triggerType = document.getElementById('journey-trigger-type');
         const modalTitle = document.getElementById('journey-modal-title');
+        const preview = document.getElementById('deeplink-preview');
         
         if (nameInput) nameInput.value = '';
         if (triggerValue) triggerValue.value = '';
         if (triggerType) triggerType.value = 'deep_link';
         if (modalTitle) modalTitle.textContent = journeyId ? 'Edit Journey' : 'Create Journey';
+        if (preview) preview.style.display = 'none';
         
         selectStatus('draft');
         renderStepsList();
         
         if (journeyId) {
             await fetchJourneyDetail(journeyId);
+            updateDeepLinkPreview();
         }
         
         const backdrop = document.getElementById('journey-modal-backdrop');
@@ -503,6 +508,49 @@
         }
     }
 
+    function updateDeepLinkPreview() {
+        const triggerInput = document.getElementById('journey-trigger-value');
+        const preview = document.getElementById('deeplink-preview');
+        const urlCode = document.getElementById('deeplink-preview-url');
+        const testLink = document.getElementById('deeplink-preview-test');
+        const warning = document.getElementById('deeplink-preview-warning');
+        
+        if (!preview || !triggerInput) return;
+        
+        const triggerValue = triggerInput.value.trim();
+        
+        if (!triggerValue) {
+            preview.style.display = 'none';
+            return;
+        }
+        
+        preview.style.display = 'block';
+        
+        if (!state.messageBotUsername) {
+            if (urlCode) urlCode.textContent = '';
+            if (testLink) testLink.style.display = 'none';
+            if (warning) warning.style.display = 'block';
+            document.querySelector('.deeplink-preview-url').style.display = 'none';
+            return;
+        }
+        
+        const url = getDeepLinkUrl(triggerValue);
+        if (urlCode) urlCode.textContent = url;
+        if (testLink) {
+            testLink.href = url;
+            testLink.style.display = 'flex';
+        }
+        if (warning) warning.style.display = 'none';
+        document.querySelector('.deeplink-preview-url').style.display = 'flex';
+    }
+
+    async function copyDeepLinkFromPreview() {
+        const urlCode = document.getElementById('deeplink-preview-url');
+        if (urlCode && urlCode.textContent) {
+            await copyDeepLink(urlCode.textContent);
+        }
+    }
+
     function initJourneys(options) {
         config.getAuthHeaders = options.getAuthHeaders;
         config.showToast = options.showToast || function(msg) { console.log(msg); };
@@ -526,6 +574,8 @@
             deleteStep,
             moveStep,
             copyDeepLink,
+            copyDeepLinkFromPreview,
+            updateDeepLinkPreview,
             getDeepLinkUrl: () => state.messageBotUsername
         };
         

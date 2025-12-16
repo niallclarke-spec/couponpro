@@ -5811,8 +5811,30 @@
 
                 <div class="form-group">
                     <label class="form-label">Trigger Value</label>
-                    <input type="text" class="form-input" id="journey-trigger-value" placeholder="e.g., welcome_promo">
+                    <input type="text" class="form-input" id="journey-trigger-value" placeholder="e.g., welcome_promo" oninput="window.JourneysModule.updateDeepLinkPreview()">
                     <div class="form-hint">The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)</div>
+                    <div class="deeplink-preview" id="deeplink-preview" style="display: none;">
+                        <div class="deeplink-preview-label">Your Deep Link:</div>
+                        <div class="deeplink-preview-url">
+                            <code id="deeplink-preview-url"></code>
+                            <button class="btn-copy" onclick="window.JourneysModule.copyDeepLinkFromPreview()" title="Copy link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
+                            <a id="deeplink-preview-test" href="#" target="_blank" class="btn-test" title="Test link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="deeplink-preview-warning" id="deeplink-preview-warning" style="display: none;">
+                            Configure Message Bot in Connections tab first
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
