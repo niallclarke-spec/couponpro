@@ -778,6 +778,25 @@
             color: var(--text-muted);
             margin-left: 4px;
         }
+        
+        .channel-item .member-count.has-error {
+            color: var(--danger);
+        }
+        
+        .error-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 4px;
+            cursor: help;
+        }
 
         .stat-info {
             flex: 1;
@@ -4812,24 +4831,14 @@
                     <p>Manage EntryLab subscriber access to private channel</p>
                 </div>
                 <div class="content-body">
-                    <!-- Telegram Channels Row -->
+                    <!-- Telegram Signal Channel -->
                     <div class="channels-row">
-                        <div class="channel-item">
+                        <div class="channel-item" id="signalChannelItem">
                             <svg class="tg-icon" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                             </svg>
-                            <span class="channel-name" id="freeChannelName">@entrylabs</span>
-                            <span class="member-count">(<span id="freeChannelCount">--</span> members)</span>
-                        </div>
-                        <div class="channel-item">
-                            <svg class="tg-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                            </svg>
-                            <span class="channel-name" id="vipChannelName">VIP Signals</span>
-                            <svg class="paid-badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="member-count">(<span id="vipChannelCount">--</span> members)</span>
+                            <span class="channel-name" id="signalChannelName">Signal Channel</span>
+                            <span class="member-count" id="signalChannelMemberCount">(<span id="signalChannelCount">--</span> members)</span>
                         </div>
                     </div>
 
@@ -6728,46 +6737,63 @@
         }
 
         async function loadTelegramChannelStats() {
-            const setChannelDisplay = (freeCount, vipCount, freeError = null, vipError = null) => {
-                const freeEl = document.getElementById('freeChannelCount');
-                const vipEl = document.getElementById('vipChannelCount');
-                freeEl.textContent = freeCount;
-                vipEl.textContent = vipCount;
-                freeEl.title = freeError || '';
-                vipEl.title = vipError || '';
+            const countEl = document.getElementById('signalChannelCount');
+            const memberCountEl = document.getElementById('signalChannelMemberCount');
+            const channelNameEl = document.getElementById('signalChannelName');
+            
+            const setChannelDisplay = (count, error = null, channelId = null, botUsername = null) => {
+                if (error) {
+                    const errorBadge = `<span class="error-badge" title="${error}">!</span>`;
+                    countEl.innerHTML = `N/A ${errorBadge}`;
+                    memberCountEl.classList.add('has-error');
+                } else {
+                    countEl.textContent = count;
+                    countEl.title = '';
+                    memberCountEl.classList.remove('has-error');
+                }
+                
+                if (channelId) {
+                    channelNameEl.textContent = channelId.startsWith('-100') ? 'Signal Channel' : channelId;
+                    channelNameEl.title = `Channel ID: ${channelId}${botUsername ? `, Bot: @${botUsername}` : ''}`;
+                }
             };
             
             try {
                 const response = await authedFetch('/api/telegram-channel-stats');
                 const data = await response.json();
                 
-                if (response.status === 401 || response.status === 403) {
-                    setChannelDisplay('Auth error', 'Auth error');
+                if (response.status === 401) {
+                    setChannelDisplay('--', 'Not authenticated. Please refresh and log in again.');
+                    return;
+                }
+                
+                if (response.status === 403) {
+                    setChannelDisplay('--', 'Access denied.');
                     return;
                 }
                 
                 if (response.status === 503) {
-                    const msg = data.code === 'bot_unavailable' ? 'Bot N/A' : 'Unavailable';
-                    setChannelDisplay(msg, msg);
+                    const msg = data.message || 'Bot not configured';
+                    setChannelDisplay('--', msg);
                     return;
                 }
                 
-                if (response.status === 502 || !data.ok) {
-                    setChannelDisplay('API error', 'API error');
+                if (response.status === 502 || !data.success) {
+                    const msg = data.message || 'Telegram API error';
+                    setChannelDisplay('--', msg, data.channel_id, data.bot_username);
                     return;
                 }
                 
-                const freeCount = data.free_channel?.member_count !== null && data.free_channel?.member_count !== undefined 
-                    ? data.free_channel.member_count.toLocaleString() 
-                    : (data.free_channel?.error ? 'N/A' : '--');
-                const vipCount = data.vip_channel?.member_count !== null && data.vip_channel?.member_count !== undefined 
-                    ? data.vip_channel.member_count.toLocaleString() 
-                    : (data.vip_channel?.error ? 'N/A' : '--');
-                setChannelDisplay(freeCount, vipCount, data.free_channel?.error, data.vip_channel?.error);
+                if (data.success && data.member_count !== null && data.member_count !== undefined) {
+                    const count = data.member_count.toLocaleString();
+                    setChannelDisplay(count, null, data.channel_id, data.bot_username);
+                } else {
+                    setChannelDisplay('--', data.message || 'Unknown error');
+                }
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);
-                setChannelDisplay('Error', 'Error');
+                setChannelDisplay('--', 'Failed to load channel stats');
             }
         }
 

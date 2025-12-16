@@ -702,105 +702,144 @@ def handle_telegram_revoke_access(handler):
 def handle_telegram_channel_stats(handler, tenant_id: str = None):
     """GET /api/telegram-channel-stats
     
-    Returns tenant-specific channel stats for both free and VIP channels.
-    - EntryLab: Uses environment variables
-    - Other tenants: Uses tenant_integrations config
+    Returns channel stats using BotCredentialResolver for signal_bot.
     
     Returns:
-        200: Success with channel stats for both free and VIP channels
-        503: Bot not configured
+        200: Success with member_count, channel_id, bot_username
+        503: Bot not configured or channel_id missing
         502: Telegram API failure
     """
-    import os
     import requests
     from core.logging import get_logger
+    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError, SIGNAL_BOT
+    
     logger = get_logger(__name__)
+    effective_tenant = tenant_id or 'entrylab'
     
-    bot_token = None
-    free_channel_id = None
-    vip_channel_id = None
+    try:
+        credentials = get_bot_credentials(effective_tenant, SIGNAL_BOT)
+    except BotNotConfiguredError as e:
+        logger.warning(f"Signal bot not configured for tenant {effective_tenant}: {e}")
+        handler.send_response(503)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'success': False,
+            'error_code': 'bot_not_configured',
+            'message': f"Signal Bot not configured. Go to Connections → Signal Bot to set it up.",
+            'tenant_id': effective_tenant,
+            'bot_role': SIGNAL_BOT
+        }).encode())
+        return
     
-    if not tenant_id or tenant_id == 'entrylab':
-        bot_token = os.environ.get('FOREX_BOT_TOKEN')
-        free_channel_id = os.environ.get('FOREX_CHANNEL_ID')
-        vip_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID')
-    else:
-        from db import db_pool
-        if db_pool and db_pool.connection_pool:
-            try:
-                with db_pool.get_connection() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT config_json FROM tenant_integrations 
-                        WHERE tenant_id = %s AND provider = 'telegram'
-                    """, (tenant_id,))
-                    row = cursor.fetchone()
-                    if row and row[0]:
-                        config = row[0] if isinstance(row[0], dict) else json.loads(row[0])
-                        bot_token = config.get('bot_token')
-                        free_channel_id = config.get('free_channel_id')
-                        vip_channel_id = config.get('vip_channel_id')
-            except Exception as e:
-                logger.warning(f"Error loading tenant telegram config: {e}")
+    bot_token = credentials.get('bot_token')
+    channel_id = credentials.get('channel_id')
+    bot_username = credentials.get('bot_username')
     
     if not bot_token:
         handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'ok': False,
-            'code': 'bot_unavailable',
-            'error': 'Telegram bot token not configured for this tenant'
+            'success': False,
+            'error_code': 'bot_token_missing',
+            'message': "Signal Bot token missing. Go to Connections → Signal Bot to add it.",
+            'tenant_id': effective_tenant,
+            'bot_role': SIGNAL_BOT
         }).encode())
         return
     
-    def get_member_count(channel_id):
-        if not channel_id:
-            return {'count': None, 'error': None}
-        try:
-            url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
-            resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
-            data = resp.json()
-            if data.get('ok'):
-                return {'count': data.get('result'), 'error': None}
-            else:
-                error_msg = data.get('description', 'Unknown error')
-                logger.warning(f"Telegram API error for {channel_id}: {error_msg}")
-                return {'count': None, 'error': error_msg}
-        except Exception as e:
-            logger.warning(f"Failed to get member count for {channel_id}: {e}")
-            return {'count': None, 'error': str(e)}
-    
-    try:
-        free_result = get_member_count(free_channel_id)
-        vip_result = get_member_count(vip_channel_id)
-        
-        handler.send_response(200)
+    if not channel_id:
+        handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'ok': True,
-            'tenant_id': tenant_id or 'entrylab',
-            'free_channel': {
-                'channel_id': free_channel_id,
-                'member_count': free_result['count'],
-                'error': free_result['error']
-            },
-            'vip_channel': {
-                'channel_id': vip_channel_id,
-                'member_count': vip_result['count'],
-                'error': vip_result['error']
-            }
+            'success': False,
+            'error_code': 'channel_id_missing',
+            'message': "Signal Bot channel_id missing. Add it in Connections → Signal Bot.",
+            'tenant_id': effective_tenant,
+            'bot_role': SIGNAL_BOT,
+            'bot_username': bot_username
         }).encode())
+        return
+    
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
+        resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
+        data = resp.json()
         
-    except Exception as e:
-        logger.exception("Telegram API error getting channel stats")
+        if data.get('ok'):
+            member_count = data.get('result')
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'success': True,
+                'member_count': member_count,
+                'channel_id': channel_id,
+                'bot_username': bot_username,
+                'tenant_id': effective_tenant
+            }).encode())
+        else:
+            error_desc = data.get('description', 'Unknown Telegram error')
+            error_code = data.get('error_code', 0)
+            
+            actionable_message = _get_actionable_telegram_error(error_desc)
+            
+            logger.warning(f"Telegram API error for channel {channel_id}: {error_desc}")
+            handler.send_response(502)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'success': False,
+                'error_code': 'telegram_api_error',
+                'message': actionable_message,
+                'telegram_error': error_desc,
+                'telegram_error_code': error_code,
+                'channel_id': channel_id,
+                'bot_username': bot_username,
+                'tenant_id': effective_tenant
+            }).encode())
+            
+    except requests.Timeout:
+        logger.warning(f"Telegram API timeout for channel {channel_id}")
         handler.send_response(502)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'ok': False,
-            'code': 'telegram_api_error',
-            'error': 'Telegram API failure',
-            'detail': str(e)
+            'success': False,
+            'error_code': 'telegram_timeout',
+            'message': "Telegram API timed out. Please try again.",
+            'channel_id': channel_id,
+            'tenant_id': effective_tenant
         }).encode())
+    except Exception as e:
+        logger.exception(f"Error getting channel stats for {effective_tenant}")
+        handler.send_response(502)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'success': False,
+            'error_code': 'telegram_api_error',
+            'message': "Failed to contact Telegram API. Please try again.",
+            'detail': str(e),
+            'tenant_id': effective_tenant
+        }).encode())
+
+
+def _get_actionable_telegram_error(error_desc: str) -> str:
+    """Map Telegram error descriptions to actionable user messages."""
+    error_lower = error_desc.lower()
+    
+    if 'chat not found' in error_lower:
+        return "Channel not found. Check the Channel ID format (should start with -100 for channels)."
+    elif 'not enough rights' in error_lower or 'not a member' in error_lower:
+        return "Bot doesn't have access. Add the bot to the channel and promote it to admin."
+    elif 'bot was kicked' in error_lower or 'bot was blocked' in error_lower:
+        return "Bot was removed from the channel. Re-add the bot and promote it to admin."
+    elif 'invalid chat id' in error_lower or 'bad request' in error_lower:
+        return "Invalid Channel ID format. Channel IDs for groups/channels should start with -100."
+    elif 'unauthorized' in error_lower:
+        return "Bot token is invalid. Check the token in Connections → Signal Bot."
+    else:
+        return f"Telegram error: {error_desc}"
