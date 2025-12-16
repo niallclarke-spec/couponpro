@@ -208,3 +208,59 @@ class TestWebhookSecretTokenResolution:
         
         result = db.resolve_tenant_from_webhook_secret(None)
         assert result == (None, None)
+
+
+class TestWebhookGatingExemption:
+    """Regression tests to ensure webhooks are never blocked by EntryLab-only gating."""
+    
+    def test_is_entrylab_only_route_false_for_telegram_webhook(self):
+        """Regression: is_entrylab_only_route must return False for /api/telegram-webhook."""
+        from api.middleware import is_entrylab_only_route
+        
+        assert is_entrylab_only_route('/api/telegram-webhook') is False
+    
+    def test_is_entrylab_only_route_false_for_forex_webhook(self):
+        """Regression: is_entrylab_only_route must return False for /api/forex-telegram-webhook."""
+        from api.middleware import is_entrylab_only_route
+        
+        assert is_entrylab_only_route('/api/forex-telegram-webhook') is False
+    
+    def test_is_entrylab_only_route_false_for_stripe_webhook(self):
+        """Regression: is_entrylab_only_route must return False for /api/stripe/webhook."""
+        from api.middleware import is_entrylab_only_route
+        
+        assert is_entrylab_only_route('/api/stripe/webhook') is False
+    
+    def test_is_webhook_exempt_route_true_for_telegram_webhook(self):
+        """Verify is_webhook_exempt_route returns True for /api/telegram-webhook."""
+        from api.middleware import is_webhook_exempt_route
+        
+        assert is_webhook_exempt_route('/api/telegram-webhook') is True
+    
+    def test_is_webhook_exempt_route_true_for_forex_webhook(self):
+        """Verify is_webhook_exempt_route returns True for /api/forex-telegram-webhook."""
+        from api.middleware import is_webhook_exempt_route
+        
+        assert is_webhook_exempt_route('/api/forex-telegram-webhook') is True
+    
+    def test_is_webhook_exempt_route_true_for_stripe_webhook(self):
+        """Verify is_webhook_exempt_route returns True for /api/stripe/webhook."""
+        from api.middleware import is_webhook_exempt_route
+        
+        assert is_webhook_exempt_route('/api/stripe/webhook') is True
+    
+    def test_webhook_exempt_routes_list_contains_all_webhooks(self):
+        """Verify WEBHOOK_EXEMPT_ROUTES contains all webhook endpoints."""
+        from api.middleware import WEBHOOK_EXEMPT_ROUTES
+        
+        assert '/api/telegram-webhook' in WEBHOOK_EXEMPT_ROUTES
+        assert '/api/forex-telegram-webhook' in WEBHOOK_EXEMPT_ROUTES
+        assert '/api/stripe/webhook' in WEBHOOK_EXEMPT_ROUTES
+    
+    def test_entrylab_only_routes_does_not_contain_webhooks(self):
+        """Regression: ENTRYLAB_ONLY_ROUTES must not contain any webhook paths."""
+        from api.middleware import ENTRYLAB_ONLY_ROUTES
+        
+        webhook_paths = ['/api/telegram-webhook', '/api/forex-telegram-webhook', '/api/stripe/webhook']
+        for webhook in webhook_paths:
+            assert webhook not in ENTRYLAB_ONLY_ROUTES, f"{webhook} should not be in ENTRYLAB_ONLY_ROUTES"
