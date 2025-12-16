@@ -15,12 +15,8 @@ def handle_journeys_list(handler):
     try:
         tenant_id = getattr(handler, 'tenant_id', 'entrylab')
         
-        journeys = repo.list_journeys(tenant_id)
-        
-        for j in journeys:
-            j['triggers'] = repo.get_triggers(tenant_id, j['id'])
-            steps = repo.list_steps(tenant_id, j['id'])
-            j['step_count'] = len(steps)
+        # Use optimized batched query (2 queries instead of 2N+1)
+        journeys = repo.list_journeys_with_summary(tenant_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')

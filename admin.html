@@ -6622,6 +6622,55 @@
         let allSubscriptions = [];
         let currentFilter = 'all';
         let currentMetricsPeriod = 'all';
+        
+        // Caching for performance
+        const dataCache = {
+            subscriptions: { loaded: false, lastLoad: null },
+            channelStats: { loaded: false, lastLoad: null },
+            connections: { loaded: false, lastLoad: null },
+            signals: { loaded: false, lastLoad: null },
+            conversions: { loaded: false, lastLoad: null },
+            tenants: { loaded: false, lastLoad: null }
+            // Revenue metrics are cached per-period: revenueMetrics_all, revenueMetrics_7d, etc.
+        };
+        const CACHE_TTL = 60000; // 60 seconds
+        
+        function isCacheValid(cacheKey) {
+            const cache = dataCache[cacheKey];
+            if (!cache || !cache.loaded || !cache.lastLoad) return false;
+            return (Date.now() - cache.lastLoad) < CACHE_TTL;
+        }
+        
+        function setCacheLoaded(cacheKey, data = null) {
+            if (!dataCache[cacheKey]) dataCache[cacheKey] = {};
+            dataCache[cacheKey].loaded = true;
+            dataCache[cacheKey].lastLoad = Date.now();
+            if (data !== null) dataCache[cacheKey].data = data;
+        }
+        
+        function invalidateCache(cacheKey) {
+            if (dataCache[cacheKey]) {
+                dataCache[cacheKey].loaded = false;
+                dataCache[cacheKey].lastLoad = null;
+            }
+        }
+        
+        function isMetricsCacheValid(period) {
+            const key = `revenueMetrics_${period}`;
+            return dataCache[key] && dataCache[key].loaded && 
+                   dataCache[key].lastLoad && 
+                   (Date.now() - dataCache[key].lastLoad) < CACHE_TTL;
+        }
+        
+        function getCachedMetrics(period) {
+            const key = `revenueMetrics_${period}`;
+            return dataCache[key]?.data || null;
+        }
+        
+        function cacheMetrics(period, data) {
+            const key = `revenueMetrics_${period}`;
+            dataCache[key] = { loaded: true, lastLoad: Date.now(), data };
+        }
 
         function setMetricsPeriod(period) {
             currentMetricsPeriod = period;
@@ -6635,8 +6684,13 @@
                 }
             });
             
-            // Fetch new metrics
-            fetchRevenueMetrics(period);
+            // Check if we have cached data for this specific period
+            if (isMetricsCacheValid(period)) {
+                displayRevenueMetrics(getCachedMetrics(period), period);
+            } else {
+                // Fetch fresh metrics for this period
+                fetchRevenueMetrics(period);
+            }
         }
 
         function getDisplayStatus(sub) {
@@ -6645,7 +6699,14 @@
             return 'free_plan';
         }
 
-        async function loadSubscriptions() {
+        async function loadSubscriptions(forceRefresh = false) {
+            // Use cached data if valid
+            if (!forceRefresh && isCacheValid('subscriptions')) {
+                renderSubscriptions();
+                updateSubscriptionStats(false); // Don't re-fetch metrics
+                return;
+            }
+            
             try {
                 const url = `/api/telegram-subscriptions?include_test=true`;
                 const response = await authedFetch(url);
@@ -6653,7 +6714,8 @@
                 
                 const data = await response.json();
                 allSubscriptions = data.subscriptions || [];
-                updateSubscriptionStats();
+                setCacheLoaded('subscriptions');
+                updateSubscriptionStats(true); // Fetch metrics on first load
                 renderSubscriptions();
                 loadTelegramChannelStats();
             } catch (error) {
@@ -6667,7 +6729,7 @@
             }
         }
 
-        function updateSubscriptionStats() {
+        function updateSubscriptionStats(fetchMetrics = true) {
             const paidSubs = allSubscriptions.filter(s => s.amount_paid > 0 && s.status !== 'revoked');
             const paidCount = paidSubs.length;
             const activePaid = paidSubs.filter(s => s.status === 'active').length;
@@ -6675,8 +6737,43 @@
             document.getElementById('paidSubscribers').textContent = paidCount;
             document.getElementById('activeSubscribers').textContent = activePaid;
             
-            // Fetch revenue metrics from Stripe
-            fetchRevenueMetrics();
+            // Only fetch revenue metrics if requested and not already cached for current period
+            if (fetchMetrics && !isMetricsCacheValid(currentMetricsPeriod)) {
+                fetchRevenueMetrics(currentMetricsPeriod);
+            } else if (isMetricsCacheValid(currentMetricsPeriod)) {
+                // Display cached metrics for current period
+                displayRevenueMetrics(getCachedMetrics(currentMetricsPeriod), currentMetricsPeriod);
+            }
+        }
+        
+        function displayRevenueMetrics(metrics, period) {
+            document.getElementById('netRevenue').textContent = `$${metrics.total_revenue.toFixed(0)}`;
+            document.getElementById('monthlyRebill').textContent = `$${metrics.monthly_rebill.toFixed(0)}`;
+            
+            const churnRate = metrics.churn_rate !== undefined ? metrics.churn_rate : 0;
+            document.getElementById('churnRate').textContent = `${churnRate.toFixed(1)}%`;
+            
+            const periodLabels = {
+                'all': { revenue: 'All time (net)', rebill: 'All upcoming', churn: 'All time' },
+                '30d': { revenue: 'Last 30 days', rebill: 'Due in 30 days', churn: 'Last 30 days' },
+                '7d': { revenue: 'Last 7 days', rebill: 'Due in 7 days', churn: 'Last 7 days' },
+                'yesterday': { revenue: 'Yesterday', rebill: 'Due today', churn: 'Yesterday' },
+                'today': { revenue: 'Today', rebill: 'Due tomorrow', churn: 'Today' }
+            };
+            
+            const labels = periodLabels[period] || periodLabels['all'];
+            document.getElementById('netRevenueSubtext').textContent = labels.revenue;
+            
+            const rebillLabel = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-label');
+            if (rebillLabel) {
+                rebillLabel.textContent = period === 'all' ? 'Total Upcoming Rebill' : 'Expected Rebill';
+            }
+            const rebillSubtext = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-subtext');
+            if (rebillSubtext) {
+                rebillSubtext.textContent = labels.rebill;
+            }
+            
+            document.getElementById('churnRateSubtext').textContent = labels.churn;
         }
         
         async function fetchRevenueMetrics(period = 'all') {
@@ -6692,37 +6789,10 @@
                 
                 const metrics = await response.json();
                 
-                document.getElementById('netRevenue').textContent = `$${metrics.total_revenue.toFixed(0)}`;
-                document.getElementById('monthlyRebill').textContent = `$${metrics.monthly_rebill.toFixed(0)}`;
+                // Cache the metrics per period
+                cacheMetrics(period, metrics);
                 
-                // Update churn rate
-                const churnRate = metrics.churn_rate !== undefined ? metrics.churn_rate : 0;
-                document.getElementById('churnRate').textContent = `${churnRate.toFixed(1)}%`;
-                
-                // Update labels based on period
-                const periodLabels = {
-                    'all': { revenue: 'All time (net)', rebill: 'All upcoming', churn: 'All time' },
-                    '30d': { revenue: 'Last 30 days', rebill: 'Due in 30 days', churn: 'Last 30 days' },
-                    '7d': { revenue: 'Last 7 days', rebill: 'Due in 7 days', churn: 'Last 7 days' },
-                    'yesterday': { revenue: 'Yesterday', rebill: 'Due today', churn: 'Yesterday' },
-                    'today': { revenue: 'Today', rebill: 'Due tomorrow', churn: 'Today' }
-                };
-                
-                const labels = periodLabels[period] || periodLabels['all'];
-                document.getElementById('netRevenueSubtext').textContent = labels.revenue;
-                
-                // Update rebill label
-                const rebillLabel = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-label');
-                if (rebillLabel) {
-                    rebillLabel.textContent = period === 'all' ? 'Total Upcoming Rebill' : 'Expected Rebill';
-                }
-                const rebillSubtext = document.querySelector('#monthlyRebill').closest('.stat-content').querySelector('.stat-subtext');
-                if (rebillSubtext) {
-                    rebillSubtext.textContent = labels.rebill;
-                }
-                
-                // Update churn rate subtext
-                document.getElementById('churnRateSubtext').textContent = labels.churn;
+                displayRevenueMetrics(metrics, period);
                 
             } catch (error) {
                 console.error('Error fetching revenue metrics:', error);

@@ -10,7 +10,9 @@
         editingStepIndex: null,
         selectedStatus: 'draft',
         loading: false,
-        messageBotUsername: null
+        messageBotUsername: null,
+        journeysLoaded: false,
+        lastLoadTime: null
     };
 
     let config = {
@@ -48,7 +50,16 @@
         return `https://t.me/${username}?start=${encodeURIComponent(startParam)}`;
     }
 
-    async function loadJourneys() {
+    async function loadJourneys(forceRefresh = false) {
+        // Use cached data if already loaded and not forcing refresh
+        // Cache expires after 60 seconds
+        const cacheExpiry = 60 * 1000;
+        const now = Date.now();
+        if (!forceRefresh && state.journeysLoaded && state.lastLoadTime && (now - state.lastLoadTime < cacheExpiry)) {
+            renderJourneys();
+            return;
+        }
+        
         try {
             state.loading = true;
             const headers = await config.getAuthHeaders();
@@ -59,6 +70,8 @@
             if (resp.ok) {
                 const data = await resp.json();
                 state.journeys = data.journeys || [];
+                state.journeysLoaded = true;
+                state.lastLoadTime = now;
                 renderJourneys();
             } else {
                 config.showToast('Failed to load journeys', 'error');
@@ -69,6 +82,11 @@
         } finally {
             state.loading = false;
         }
+    }
+    
+    function invalidateJourneysCache() {
+        state.journeysLoaded = false;
+        state.lastLoadTime = null;
     }
 
     function renderJourneys() {
@@ -344,7 +362,8 @@
             if (config.hideLoading) config.hideLoading();
             config.showToast(state.currentJourneyId ? 'Journey updated successfully' : 'Journey created successfully', 'success');
             closeJourneyModal();
-            await loadJourneys();
+            invalidateJourneysCache();
+            await loadJourneys(true);
             
         } catch (err) {
             if (config.hideLoading) config.hideLoading();
@@ -378,7 +397,8 @@
             
             if (resp.ok) {
                 config.showToast('Journey deleted successfully', 'success');
-                await loadJourneys();
+                invalidateJourneysCache();
+                await loadJourneys(true);
             } else {
                 let errorMsg = 'Failed to delete journey';
                 try {

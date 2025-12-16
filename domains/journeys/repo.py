@@ -89,6 +89,91 @@ def list_journeys(tenant_id: str) -> List[Dict]:
         return []
 
 
+def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
+    """List all journeys with step counts and triggers in a single batched query.
+    
+    This is an optimized version that avoids N+1 queries by fetching
+    step counts and triggers for all journeys at once.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Single query: journeys with step counts via LEFT JOIN
+            cursor.execute("""
+                SELECT 
+                    j.id, j.tenant_id, j.bot_id, j.name, j.description, 
+                    j.status, j.re_entry_policy, j.created_at, j.updated_at,
+                    COALESCE(step_counts.cnt, 0) as step_count
+                FROM journeys j
+                LEFT JOIN (
+                    SELECT journey_id, COUNT(*) as cnt
+                    FROM journey_steps
+                    GROUP BY journey_id
+                ) step_counts ON step_counts.journey_id = j.id
+                WHERE j.tenant_id = %s
+                ORDER BY j.created_at DESC
+            """, (tenant_id,))
+            
+            journeys = []
+            journey_ids = []
+            for row in cursor.fetchall():
+                journey_id = str(row[0])
+                journey_ids.append(journey_id)
+                journeys.append({
+                    'id': journey_id,
+                    'tenant_id': row[1],
+                    'bot_id': row[2],
+                    'name': row[3],
+                    'description': row[4],
+                    'status': row[5],
+                    're_entry_policy': row[6],
+                    'created_at': row[7].isoformat() if row[7] else None,
+                    'updated_at': row[8].isoformat() if row[8] else None,
+                    'step_count': row[9],
+                    'triggers': []
+                })
+            
+            if not journey_ids:
+                return journeys
+            
+            # Second query: all triggers for these journeys
+            # Cast to uuid[] to avoid type mismatch (journey_ids are strings)
+            cursor.execute("""
+                SELECT t.id, t.journey_id, t.trigger_type, t.trigger_config, t.is_active, t.created_at
+                FROM journey_triggers t
+                WHERE t.journey_id = ANY(%s::uuid[])
+            """, (journey_ids,))
+            
+            # Build triggers map
+            triggers_by_journey = {}
+            for row in cursor.fetchall():
+                journey_id = str(row[1])
+                if journey_id not in triggers_by_journey:
+                    triggers_by_journey[journey_id] = []
+                triggers_by_journey[journey_id].append({
+                    'id': str(row[0]),
+                    'journey_id': journey_id,
+                    'trigger_type': row[2],
+                    'trigger_config': row[3] if isinstance(row[3], dict) else json.loads(row[3]) if row[3] else {},
+                    'is_active': row[4],
+                    'created_at': row[5].isoformat() if row[5] else None
+                })
+            
+            # Assign triggers to journeys
+            for j in journeys:
+                j['triggers'] = triggers_by_journey.get(j['id'], [])
+            
+            return journeys
+    except Exception as e:
+        logger.exception(f"Error listing journeys with summary: {e}")
+        return []
+
+
 def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
     """Get a specific journey by ID."""
     db_pool = _get_db_pool()
