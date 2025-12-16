@@ -25,6 +25,7 @@ class AuthFailureReason:
     INVALID_AUDIENCE = 'invalid_audience'
     MISSING_CLAIMS = 'missing_claims'
     COOKIE_PARSE_FAILED = 'cookie_parse_failed'
+    ADMIN_SESSION_INVALID = 'admin_session_invalid'
     UNKNOWN_ERROR = 'unknown_error'
 
 

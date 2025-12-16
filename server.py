@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Thin HTTP server - all request dispatching goes through api/dispatch.py"""
-import http.server, socketserver, os, json, mimetypes, time, hmac, hashlib
+import http.server, socketserver, os, json, mimetypes, time
 from urllib.parse import urlparse
 from http import cookies
 from dotenv import load_dotenv
@@ -36,23 +36,7 @@ mimetypes.add_type('text/yaml', '.yml')
 mimetypes.add_type('text/yaml', '.yaml')
 mimetypes.add_type('application/json', '.json')
 
-def create_signed_session():
-    expiry = int(time.time()) + SESSION_TTL
-    secret = Config.get_admin_password()
-    if not secret: raise ValueError("ADMIN_PASSWORD required")
-    sig = hmac.new(secret.encode(), str(expiry).encode(), hashlib.sha256).hexdigest()
-    return f"{expiry}.{sig}"
-
-def verify_signed_session(token):
-    try:
-        if not token or '.' not in token: return False
-        payload, sig = token.rsplit('.', 1)
-        if time.time() > int(payload): return False
-        secret = Config.get_admin_password()
-        if not secret: return False
-        expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
-        return hmac.compare_digest(sig, expected)
-    except: return False
+from auth.clerk_auth import create_admin_session, verify_admin_session
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -72,15 +56,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def check_auth(self):
         from auth.clerk_auth import get_auth_user_from_request, is_admin_email
-        u = get_auth_user_from_request(self)
+        u = get_auth_user_from_request(self, record_failure=False)
         if u:
             email = u.get('email') or self.headers.get('X-Clerk-User-Email')
             return is_admin_email(email)
-        ch = self.headers.get('Cookie')
-        if not ch: return False
-        c = cookies.SimpleCookie()
-        c.load(ch)
-        return verify_signed_session(c['admin_session'].value) if 'admin_session' in c else False
+        return False
 
     # Page handlers
     def handle_page_login(self): pages.serve_login(self)
@@ -113,20 +93,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_api_check_auth(self):
         from auth.clerk_auth import get_auth_user_from_request, is_admin_email
-        u = get_auth_user_from_request(self)
+        u = get_auth_user_from_request(self, record_failure=False)
         if u:
             email = u.get('email') or self.headers.get('X-Clerk-User-Email')
             if is_admin_email(email):
                 return self._json(200, {'authenticated': True, 'email': email, 'avatar': u.get('avatar_url')})
             else:
                 return self._json(200, {'authenticated': False, 'email': email})
-        ch = self.headers.get('Cookie')
-        if ch:
-            c = cookies.SimpleCookie()
-            c.load(ch)
-            if 'admin_session' in c and verify_signed_session(c['admin_session'].value):
-                email = self.headers.get('X-Clerk-User-Email')
-                return self._json(200, {'authenticated': True, 'email': email})
         self._json(200, {'authenticated': False})
 
     def handle_api_auth_debug(self):
@@ -292,7 +265,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             d = json.loads(self.rfile.read(cl).decode())
             pw = Config.get_admin_password() or ''
             if d.get('password') == pw and pw:
-                tok = create_signed_session()
+                tok = create_admin_session()
                 sec = '; Secure' if PORT == 8080 or Config.get_app_url().startswith('https') else ''
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -322,7 +295,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             email = u.get('email') or self.headers.get('X-Clerk-User-Email')
             log.info(f"set-auth-cookie: email = {email}, is_admin = {is_admin_email(email)}")
             if is_admin_email(email):
-                tok = create_signed_session()
+                tok = create_admin_session()
                 sec = '; Secure' if PORT == 8080 or Config.get_app_url().startswith('https') else ''
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

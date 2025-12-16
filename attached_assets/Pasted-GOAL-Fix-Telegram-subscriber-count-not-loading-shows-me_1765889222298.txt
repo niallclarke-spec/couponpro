@@ -1,0 +1,52 @@
+GOAL: Fix Telegram subscriber count not loading (shows “-- members”) after refactor. This is caused by authenticated requests to GET /api/telegram-channel-stats returning 401 in real use. Implement a definitive fix and add regression tests that would have failed before.
+
+CRITICAL CONSTRAINTS
+- DO NOT add code to server.py beyond thin wrapper methods.
+- Implement changes in the appropriate modules (auth/, api/, domains/, assets/js/) with a clean file structure.
+- Preserve existing security: X-Clerk-User-Email header must NEVER authenticate.
+- Keep multi-tenant/host rules intact.
+
+WHAT TO FIX (REQUIRED)
+1) Frontend: ensure authenticated API calls send cookies
+   - Locate the shared authedFetch helper (admin.html or assets/js shared module, likely assets/js/journeys.js or another shared JS util).
+   - Ensure ALL authenticated fetches include: credentials: "include"
+   - Ensure it continues to send Authorization: Bearer <jwt> when present, BUT cookies must still be included because admin_session is a valid fallback.
+   - Confirm the exact call in admin UI that loads Telegram stats (admin.html references /api/telegram-channel-stats). Make sure it uses the fixed authedFetch.
+
+2) Backend: ensure cookie-based auth works for /api/telegram-channel-stats and /api/auth/debug
+   - /api/telegram-channel-stats has auth_required=True. It must accept:
+     a) Authorization: Bearer (Clerk JWT) when valid
+     b) admin_session cookie (HMAC signed) when valid
+     c) __session cookie (Clerk session) if that’s supported in your auth layer
+   - Ensure /api/check-auth returns authenticated:true when a valid admin_session cookie is present.
+   - Ensure /api/auth/debug (admin-only) returns 200 for authenticated admin users using either Bearer JWT OR admin_session cookie.
+
+3) Add real regression tests that would have caught this
+   Add tests that simulate BOTH auth modes and prove these endpoints return 200:
+   - A) With valid admin_session cookie:
+       - GET /api/check-auth -> authenticated true
+       - GET /api/telegram-channel-stats -> not 401 (200 OR 503/502 depending on config, but MUST pass auth)
+       - GET /api/auth/debug -> 200
+   - B) With Bearer token auth (mock/patch token verification in tests):
+       - Same endpoints should pass.
+   - C) Negative control:
+       - X-Clerk-User-Email alone must still fail (401).
+
+   Implementation guidance:
+   - Patch/monkeypatch the admin cookie verification function to return a user object in tests (don’t require real secrets).
+   - Patch Clerk JWT verification similarly.
+   - Do NOT rely on live network or real Telegram API in tests; mock the Telegram call in domains/subscriptions/handlers.py so the test focuses on AUTH, not Telegram availability.
+   - Tests should live in tests/ (e.g., tests/test_telegram_stats_auth.py) and must fail on the current broken behavior and pass after fixes.
+
+DELIVERABLES
+- Minimal code changes in correct modules (not server.py).
+- Updated authedFetch to include credentials.
+- Updated backend auth handling (if needed) so cookie auth is honored.
+- New tests verifying cookie auth + bearer auth + negative controls.
+- Run pytest -q and ensure all tests pass.
+
+ACCEPTANCE CRITERIA
+- In the actual admin dashboard UI, Telegram subscriber count displays real numbers (or a meaningful configured error), not “-- members”.
+- curl without auth returns 401 (unchanged).
+- browser session (cookie) works without requiring Bearer JWT.
+- test suite includes coverage that would have caught this exact regression.

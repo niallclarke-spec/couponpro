@@ -4,21 +4,72 @@ Clerk JWT verification and authentication functions.
 Provides JWT verification using JWKS, request authentication helpers,
 and role-based access control. Does NOT call DB on import - all DB
 lookups happen inside request handler functions.
+
+Also provides admin_session cookie verification for legacy/fallback auth.
 """
 import os
 import re
 import jwt
+import hmac
+import hashlib
+import time
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWKClientError
 from http import cookies
 from typing import Optional, Dict, Any, Tuple
 
 from core.logging import get_logger
+from core.config import Config
 from auth.auth_debug import record_auth_failure, AuthFailureReason
 
 logger = get_logger(__name__)
 
+SESSION_TTL = 86400
+
 _jwks_client = None
+
+
+def create_admin_session() -> str:
+    """
+    Create an HMAC-signed admin session token.
+    
+    Returns:
+        Signed token string in format "{expiry}.{signature}"
+        
+    Raises:
+        ValueError: If ADMIN_PASSWORD not configured
+    """
+    expiry = int(time.time()) + SESSION_TTL
+    secret = Config.get_admin_password()
+    if not secret:
+        raise ValueError("ADMIN_PASSWORD required")
+    sig = hmac.new(secret.encode(), str(expiry).encode(), hashlib.sha256).hexdigest()
+    return f"{expiry}.{sig}"
+
+
+def verify_admin_session(token: str) -> bool:
+    """
+    Verify an HMAC-signed admin session token.
+    
+    Args:
+        token: The token string from admin_session cookie
+        
+    Returns:
+        True if valid and not expired, False otherwise
+    """
+    try:
+        if not token or '.' not in token:
+            return False
+        payload, sig = token.rsplit('.', 1)
+        if time.time() > int(payload):
+            return False
+        secret = Config.get_admin_password()
+        if not secret:
+            return False
+        expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, expected)
+    except Exception:
+        return False
 
 
 class AuthenticationError(Exception):
@@ -140,10 +191,14 @@ def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[s
 
 def get_auth_user_from_request(request, record_failure: bool = True) -> Optional[Dict[str, Any]]:
     """
-    Extract and verify Clerk token from request.
+    Extract and verify authentication from request.
     
-    Checks Authorization header first (Bearer token), then falls back
-    to __session cookie. Records auth failures to ring buffer for diagnostics.
+    Checks in order:
+    1. Authorization: Bearer header (Clerk JWT)
+    2. __session cookie (Clerk session cookie)
+    3. admin_session cookie (HMAC-signed legacy/fallback auth)
+    
+    Records auth failures to ring buffer for diagnostics.
     
     Args:
         request: HTTP request handler with headers attribute
@@ -164,7 +219,8 @@ def get_auth_user_from_request(request, record_failure: bool = True) -> Optional
     
     token = None
     token_source = None
-    failure_reason = None
+    jwt_failure_reason = None
+    admin_session_token = None
     
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
@@ -172,49 +228,57 @@ def get_auth_user_from_request(request, record_failure: bool = True) -> Optional
         token_source = 'bearer'
         logger.debug("Auth: Found Bearer token in Authorization header")
     elif auth_header and not auth_header.startswith('Bearer '):
-        failure_reason = AuthFailureReason.MALFORMED_BEARER
+        jwt_failure_reason = AuthFailureReason.MALFORMED_BEARER
         token_source = 'bearer_malformed'
     
-    if not token:
-        cookie_header = request.headers.get('Cookie', '')
-        if cookie_header:
-            c = cookies.SimpleCookie()
-            try:
-                c.load(cookie_header)
-                if '__session' in c:
-                    token = c['__session'].value
-                    token_source = 'cookie'
-                    logger.debug("Auth: Found token in __session cookie")
-            except Exception as e:
-                logger.debug(f"Failed to parse cookies: {e}")
-                failure_reason = AuthFailureReason.COOKIE_PARSE_FAILED
-                token_source = 'cookie_error'
+    cookie_header = request.headers.get('Cookie', '')
+    parsed_cookies = None
+    if cookie_header:
+        parsed_cookies = cookies.SimpleCookie()
+        try:
+            parsed_cookies.load(cookie_header)
+        except Exception as e:
+            logger.debug(f"Failed to parse cookies: {e}")
+            parsed_cookies = None
     
-    if not token and not failure_reason:
+    if not token and parsed_cookies:
+        if '__session' in parsed_cookies:
+            token = parsed_cookies['__session'].value
+            token_source = 'cookie'
+            logger.debug("Auth: Found token in __session cookie")
+    
+    if parsed_cookies and 'admin_session' in parsed_cookies:
+        admin_session_token = parsed_cookies['admin_session'].value
+    
+    if token:
+        result, verify_failure = verify_clerk_token(token)
+        if result:
+            logger.debug(f"Auth: Token verified successfully (source={token_source}, email={result.get('email')})")
+            return result
+        jwt_failure_reason = verify_failure
+    
+    if admin_session_token and verify_admin_session(admin_session_token):
+        email = request.headers.get('X-Clerk-User-Email', '')
+        logger.debug(f"Auth: admin_session cookie verified successfully (email={email})")
+        return {
+            'clerk_user_id': 'admin_session',
+            'email': email if email else None,
+            'name': 'Admin',
+            'avatar_url': None
+        }
+    
+    if not token and not admin_session_token:
         failure_reason = AuthFailureReason.MISSING_AUTH_HEADER
         token_source = 'none'
+    else:
+        failure_reason = jwt_failure_reason or AuthFailureReason.ADMIN_SESSION_INVALID
+        if admin_session_token and not token:
+            token_source = 'admin_session'
     
-    if not token:
-        if record_failure and failure_reason:
-            logger.warning(f"Auth failure: reason={failure_reason} path={path} host={host} source={token_source}")
-            record_auth_failure(
-                reason=failure_reason,
-                path=path,
-                host=host,
-                token_source=token_source
-            )
-        return None
-    
-    result, verify_failure = verify_clerk_token(token)
-    
-    if result:
-        logger.debug(f"Auth: Token verified successfully (source={token_source}, email={result.get('email')})")
-        return result
-    
-    if record_failure and verify_failure:
-        logger.warning(f"Auth failure: reason={verify_failure} path={path} host={host} source={token_source}")
+    if record_failure and failure_reason:
+        logger.warning(f"Auth failure: reason={failure_reason} path={path} host={host} source={token_source}")
         record_auth_failure(
-            reason=verify_failure,
+            reason=failure_reason,
             path=path,
             host=host,
             token_source=token_source
