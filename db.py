@@ -854,6 +854,21 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_stripe_prices_tenant_id ON tenant_stripe_prices(tenant_id)")
                 logger.info("tenant_stripe_prices table ready")
                 
+                # Create telegram_webhook_secrets table (secure webhook authentication)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS telegram_webhook_secrets (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(50) NOT NULL REFERENCES tenants(id),
+                        bot_id VARCHAR(255) NOT NULL,
+                        secret_token_hash VARCHAR(64) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (tenant_id, bot_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_telegram_webhook_secrets_hash ON telegram_webhook_secrets(secret_token_hash)")
+                logger.info("telegram_webhook_secrets table ready")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================
