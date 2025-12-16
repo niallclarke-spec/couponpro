@@ -4110,6 +4110,147 @@
             font-weight: 500;
         }
 
+        .connections-header { margin-bottom: 24px; }
+        .connections-header h2 { margin: 0 0 8px 0; }
+        .connections-description { color: var(--text-secondary); margin: 0; }
+
+        .connections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .connection-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .connection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .connection-header h3 { margin: 0; }
+
+        .connection-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .connection-badge.connected {
+            background: var(--status-online-bg);
+            color: var(--status-online);
+        }
+
+        .connection-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0 0 20px 0;
+        }
+
+        .connection-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .token-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .token-input-group input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .btn-toggle-visibility {
+            padding: 10px 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            background: var(--bg-card);
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .connection-info {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .info-row:last-child { margin-bottom: 0; }
+
+        .info-row strong, .info-row code {
+            color: var(--text-primary);
+        }
+
+        .info-row code {
+            font-size: 11px;
+            background: var(--bg-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .connection-error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .connection-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .connection-actions button {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-validate {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary) !important;
+        }
+
+        .btn-save {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-delete {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
     </style>
 </head>
 <body>
@@ -5390,6 +5531,88 @@
                 </div>
             </div>
 
+            <!-- Connections View -->
+            <div id="forex-connections" class="view-container">
+                <div class="content-header">
+                    <h1>Bot Connections</h1>
+                    <p>Configure Telegram bots for signals and messages</p>
+                </div>
+                <div class="content-body">
+                    <div class="connections-header">
+                        <h2>Bot Connections</h2>
+                        <p class="connections-description">Configure Telegram bots for signals and messages. Each bot needs a unique token.</p>
+                    </div>
+                    
+                    <div class="connections-grid">
+                        <!-- Signal Bot Card -->
+                        <div class="connection-card" data-role="signal">
+                            <div class="connection-header">
+                                <h3>Signal Bot</h3>
+                                <span class="connection-badge" id="signal-status">Not Connected</span>
+                            </div>
+                            <p class="connection-desc">Used for sending forex signals to channels</p>
+                            
+                            <div class="connection-form">
+                                <label>Bot Token</label>
+                                <div class="token-input-group">
+                                    <input type="password" id="signal-bot-token" placeholder="Enter bot token from @BotFather" />
+                                    <button class="btn-toggle-visibility" onclick="toggleTokenVisibility('signal')">
+                                        <span class="eye-icon">👁</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="connection-info" id="signal-info" style="display:none">
+                                    <div class="info-row"><span>Bot Username:</span> <strong id="signal-username">-</strong></div>
+                                    <div class="info-row"><span>Webhook URL:</span> <code id="signal-webhook">-</code></div>
+                                    <div class="info-row"><span>Last Updated:</span> <span id="signal-updated">-</span></div>
+                                </div>
+                                
+                                <div class="connection-error" id="signal-error" style="display:none"></div>
+                                
+                                <div class="connection-actions">
+                                    <button class="btn-validate" onclick="validateConnection('signal')">Validate</button>
+                                    <button class="btn-save" onclick="saveConnection('signal')">Save & Setup Webhook</button>
+                                    <button class="btn-delete" onclick="deleteConnection('signal')" style="display:none" id="signal-delete">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Message Bot Card -->
+                        <div class="connection-card" data-role="message">
+                            <div class="connection-header">
+                                <h3>Message Bot</h3>
+                                <span class="connection-badge" id="message-status">Not Connected</span>
+                            </div>
+                            <p class="connection-desc">Used for Journeys and user messaging</p>
+                            
+                            <div class="connection-form">
+                                <label>Bot Token</label>
+                                <div class="token-input-group">
+                                    <input type="password" id="message-bot-token" placeholder="Enter bot token from @BotFather" />
+                                    <button class="btn-toggle-visibility" onclick="toggleTokenVisibility('message')">
+                                        <span class="eye-icon">👁</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="connection-info" id="message-info" style="display:none">
+                                    <div class="info-row"><span>Bot Username:</span> <strong id="message-username">-</strong></div>
+                                    <div class="info-row"><span>Webhook URL:</span> <code id="message-webhook">-</code></div>
+                                    <div class="info-row"><span>Last Updated:</span> <span id="message-updated">-</span></div>
+                                </div>
+                                
+                                <div class="connection-error" id="message-error" style="display:none"></div>
+                                
+                                <div class="connection-actions">
+                                    <button class="btn-validate" onclick="validateConnection('message')">Validate</button>
+                                    <button class="btn-save" onclick="saveConnection('message')">Save & Setup Webhook</button>
+                                    <button class="btn-delete" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tenants Management Views -->
             <div id="tenants-list" class="view-container">
                 <div class="content-header">
@@ -5659,6 +5882,7 @@
                 { id: 'conversions', label: 'Conversions', icon: 'M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
                 { id: 'signals', label: 'Signals Monitor', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
                 { id: 'journeys', label: 'Journeys', icon: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M12 11h4 M12 16h4 M8 11h.01 M8 16h.01' },
+                { id: 'connections', label: 'Connections', icon: 'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244' },
                 { id: 'settings', label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' }
             ],
             tenants: [
@@ -5919,6 +6143,8 @@
                     loadForexSettings();
                 } else if (viewId === 'forex-journeys') {
                     window.JourneysModule.loadJourneys();
+                } else if (viewId === 'forex-connections') {
+                    loadConnections();
                 } else if (viewId === 'tenants-list') {
                     loadTenants();
                 }
@@ -7693,6 +7919,133 @@
                 loadGuardrailSettings()
             ]);
             updateStrategyCards();
+        }
+
+        async function loadConnections() {
+            const headers = await getAuthHeaders();
+            try {
+                const response = await authedFetch('/api/connections');
+                const data = await response.json();
+                
+                for (const conn of data.connections || []) {
+                    const role = conn.bot_role;
+                    document.getElementById(`${role}-status`).textContent = 'Connected';
+                    document.getElementById(`${role}-status`).classList.add('connected');
+                    document.getElementById(`${role}-username`).textContent = '@' + conn.bot_username;
+                    document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
+                    document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
+                    document.getElementById(`${role}-info`).style.display = 'block';
+                    document.getElementById(`${role}-delete`).style.display = 'inline-block';
+                    if (conn.last_error) {
+                        document.getElementById(`${role}-error`).textContent = conn.last_error;
+                        document.getElementById(`${role}-error`).style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading connections:', e);
+            }
+        }
+
+        function toggleTokenVisibility(role) {
+            const input = document.getElementById(`${role}-bot-token`);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function validateConnection(role) {
+            const token = document.getElementById(`${role}-bot-token`).value.trim();
+            if (!token) {
+                showModalAlert('Error', 'Please enter a bot token');
+                return;
+            }
+            
+            const headers = await getAuthHeaders();
+            showLoading('Validating bot token...');
+            
+            try {
+                const resp = await authedFetch('/api/connections/validate', {
+                    method: 'POST',
+                    headers: {...headers, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bot_role: role, bot_token: token })
+                });
+                const data = await resp.json();
+                hideLoading();
+                
+                if (data.valid) {
+                    showModalAlert('Success', `Valid! Bot username: @${data.bot_username}`);
+                    document.getElementById(`${role}-error`).style.display = 'none';
+                } else {
+                    document.getElementById(`${role}-error`).textContent = data.error || 'Invalid token';
+                    document.getElementById(`${role}-error`).style.display = 'block';
+                    showModalAlert('Error', 'Invalid bot token');
+                }
+            } catch (e) {
+                hideLoading();
+                showModalAlert('Error', 'Failed to validate token');
+            }
+        }
+
+        async function saveConnection(role) {
+            const token = document.getElementById(`${role}-bot-token`).value.trim();
+            if (!token) {
+                showModalAlert('Error', 'Please enter a bot token');
+                return;
+            }
+            
+            const headers = await getAuthHeaders();
+            showLoading('Setting up webhook...');
+            
+            try {
+                const resp = await authedFetch('/api/connections', {
+                    method: 'POST',
+                    headers: {...headers, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bot_role: role, bot_token: token })
+                });
+                const data = await resp.json();
+                hideLoading();
+                
+                if (data.success) {
+                    showModalAlert('Success', 'Bot connected and webhook configured!');
+                    await loadConnections();
+                    document.getElementById(`${role}-bot-token`).value = '';
+                } else {
+                    document.getElementById(`${role}-error`).textContent = data.error || 'Failed to save';
+                    document.getElementById(`${role}-error`).style.display = 'block';
+                    showModalAlert('Error', data.error || 'Failed to save connection');
+                }
+            } catch (e) {
+                hideLoading();
+                showModalAlert('Error', 'Failed to save connection');
+            }
+        }
+
+        async function deleteConnection(role) {
+            if (!confirm('Are you sure you want to remove this bot connection?')) return;
+            
+            const headers = await getAuthHeaders();
+            showLoading('Removing connection...');
+            
+            try {
+                const resp = await authedFetch(`/api/connections/${role}`, {
+                    method: 'DELETE',
+                    headers
+                });
+                const data = await resp.json();
+                hideLoading();
+                
+                if (data.success) {
+                    showModalAlert('Success', 'Connection removed');
+                    document.getElementById(`${role}-status`).textContent = 'Not Connected';
+                    document.getElementById(`${role}-status`).classList.remove('connected');
+                    document.getElementById(`${role}-info`).style.display = 'none';
+                    document.getElementById(`${role}-delete`).style.display = 'none';
+                    document.getElementById(`${role}-error`).style.display = 'none';
+                } else {
+                    showModalAlert('Error', data.error || 'Failed to remove');
+                }
+            } catch (e) {
+                hideLoading();
+                showModalAlert('Error', 'Failed to remove connection');
+            }
         }
 
         async function loadTenants() {
