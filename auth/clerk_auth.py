@@ -138,10 +138,13 @@ def get_auth_user_from_request(request) -> Optional[Dict[str, Any]]:
         None if not authenticated
     """
     token = None
+    token_source = None
     
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
         token = auth_header[7:]
+        token_source = 'bearer'
+        logger.debug("Auth: Found Bearer token in Authorization header")
     
     if not token:
         cookie_header = request.headers.get('Cookie', '')
@@ -151,13 +154,22 @@ def get_auth_user_from_request(request) -> Optional[Dict[str, Any]]:
                 c.load(cookie_header)
                 if '__session' in c:
                     token = c['__session'].value
+                    token_source = 'cookie'
+                    logger.debug("Auth: Found token in __session cookie")
             except Exception as e:
                 logger.debug(f"Failed to parse cookies: {e}")
     
     if not token:
+        logger.debug("Auth: No token found (checked Authorization header and __session cookie)")
         return None
     
-    return verify_clerk_token(token)
+    result = verify_clerk_token(token)
+    if result:
+        logger.debug(f"Auth: Token verified successfully (source={token_source}, email={result.get('email')})")
+    else:
+        logger.debug(f"Auth: Token verification failed (source={token_source})")
+    
+    return result
 
 
 def require_auth(request) -> Dict[str, Any]:
