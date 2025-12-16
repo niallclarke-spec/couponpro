@@ -21,12 +21,13 @@ logger = get_logger(__name__)
 
 from core.config import Config
 from core.host_context import parse_host_context, HostType
-from api.routes import GET_ROUTES, POST_ROUTES, PAGE_ROUTES, match_route, validate_routes
+from api.routes import GET_ROUTES, POST_ROUTES, PUT_ROUTES, PAGE_ROUTES, match_route, validate_routes
 from api.middleware import apply_route_checks
 from domains.subscriptions import handlers as subscription_handlers
 from domains.coupons import handlers as coupon_handlers
 from domains.forex import handlers as forex_handlers
 from domains.tenant import handlers as tenant_handlers
+from domains.journeys import handlers as journey_handlers
 from handlers import onboarding_handlers
 from handlers import stripe_products_handlers
 from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
@@ -292,6 +293,22 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         elif parsed_path.path == '/api/stripe/products':
             stripe_products_handlers.handle_stripe_products(self)
+            return
+        
+        # Dispatch to journey handlers (GET)
+        if parsed_path.path == '/api/journeys':
+            journey_handlers.handle_journeys_list(self)
+            return
+        elif parsed_path.path == '/api/journeys/debug/sessions':
+            journey_handlers.handle_journey_sessions_debug(self)
+            return
+        elif parsed_path.path.startswith('/api/journeys/') and '/steps' in parsed_path.path:
+            journey_id = parsed_path.path.split('/')[3]
+            journey_handlers.handle_journey_steps_get(self, journey_id)
+            return
+        elif parsed_path.path.startswith('/api/journeys/'):
+            journey_id = parsed_path.path.split('/')[3]
+            journey_handlers.handle_journey_get(self, journey_id)
             return
         
         # Dispatch to admin handlers (GET)
@@ -945,6 +962,15 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             stripe_products_handlers.handle_stripe_set_vip_price(self)
             return
         
+        # Dispatch to journey handlers (POST)
+        if parsed_path.path == '/api/journeys':
+            journey_handlers.handle_journey_create(self)
+            return
+        elif parsed_path.path.startswith('/api/journeys/') and '/triggers' in parsed_path.path:
+            journey_id = parsed_path.path.split('/')[3]
+            journey_handlers.handle_journey_triggers(self, journey_id)
+            return
+        
         # Dispatch to telegram webhook handlers
         if parsed_path.path == '/api/telegram-webhook':
             handle_coupon_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
@@ -1081,6 +1107,42 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_PUT(self):
         parsed_path = urlparse(self.path)
         set_request_context(request_id=None)
+        
+        # Dispatch to journey handlers (PUT)
+        if parsed_path.path.startswith('/api/journeys/') and '/steps' in parsed_path.path:
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            journey_id = parsed_path.path.split('/')[3]
+            journey_handlers.handle_journey_steps_set(self, journey_id)
+            clear_request_context()
+            return
+        elif parsed_path.path.startswith('/api/journeys/'):
+            if not DATABASE_AVAILABLE:
+                self.send_response(503)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+                return
+            if not self.check_auth():
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                return
+            journey_id = parsed_path.path.split('/')[3]
+            journey_handlers.handle_journey_update(self, journey_id)
+            clear_request_context()
+            return
         
         if parsed_path.path.startswith('/api/campaigns/'):
             if not DATABASE_AVAILABLE:

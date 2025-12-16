@@ -115,6 +115,16 @@ GET_ROUTES: List[Route] = [
           auth_required=True, db_required=True),
     Route('GET', '/api/stripe/products', 'handle_api_stripe_products',
           auth_required=True, db_required=True),
+    
+    # Journeys
+    Route('GET', '/api/journeys/debug/sessions', 'handle_api_journeys_debug_sessions',
+          auth_required=True, db_required=True),
+    Route('GET', '/api/journeys/', 'handle_api_journey_steps_get',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps'),
+    Route('GET', '/api/journeys/', 'handle_api_journey_get',
+          auth_required=True, db_required=True, is_prefix=True),
+    Route('GET', '/api/journeys', 'handle_api_journeys_list',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -211,6 +221,25 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True),
     Route('POST', '/api/onboarding/complete', 'handle_api_onboarding_complete',
           auth_required=True, db_required=True),
+    
+    # Journeys
+    Route('POST', '/api/journeys/', 'handle_api_journey_triggers',
+          auth_required=True, db_required=True, is_prefix=True, contains='/triggers'),
+    Route('POST', '/api/journeys', 'handle_api_journey_create',
+          auth_required=True, db_required=True),
+]
+
+
+# ============================================================================
+# PUT Routes
+# ============================================================================
+
+PUT_ROUTES: List[Route] = [
+    # Journeys
+    Route('PUT', '/api/journeys/', 'handle_api_journey_steps_set',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps'),
+    Route('PUT', '/api/journeys/', 'handle_api_journey_update',
+          auth_required=True, db_required=True, is_prefix=True),
 ]
 
 
@@ -226,7 +255,7 @@ PAGE_ROUTES: List[Route] = [
 
 
 # Combined routes for easy lookup
-ALL_ROUTES = GET_ROUTES + POST_ROUTES + PAGE_ROUTES
+ALL_ROUTES = GET_ROUTES + POST_ROUTES + PUT_ROUTES + PAGE_ROUTES
 
 
 def match_route(method: str, path: str, routes: List[Route]) -> Optional[Route]:
