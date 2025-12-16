@@ -3,12 +3,16 @@ Telegram webhook HTTP handlers.
 
 Extracted from server.py - these handle incoming Telegram webhook POST requests.
 Handlers receive dependencies as parameters to avoid stale module globals.
+
+ARCHITECTURAL NOTE:
+- Coupon bot (PromoStack): Uses Config.get_telegram_bot_token() - hard-coded, NOT tenant-scoped
+- FX Signals bots: Use BotCredentialResolver (get_bot_credentials) - tenant-scoped, database-only
+- Journey functions import BotCredentialResolver locally to maintain separation
 """
 import json
 import sys
 import time
 
-from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
 from core.config import Config
 from core.logging import get_logger
 
@@ -62,6 +66,7 @@ def check_journey_trigger(webhook_data: dict, tenant_id: str, bot_id: str) -> bo
         logger.info(f"Found journey '{journey['name']}' for deeplink param: {start_param}")
         
         from domains.journeys.engine import JourneyEngine
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         import db
         
         try:
@@ -164,6 +169,7 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
         logger.info(f"Processing journey reply for session {session['id']}")
         
         from domains.journeys.engine import JourneyEngine
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         
         try:
             creds = get_bot_credentials(tenant_id, 'message')
@@ -325,6 +331,7 @@ def handle_forex_telegram_webhook(handler, telegram_bot_available, telegram_bot_
         content_length = int(handler.headers.get('Content-Length', 0))
         post_data = handler.rfile.read(content_length)
         
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
             creds = get_bot_credentials('entrylab', 'signal')
             forex_bot_token = creds['bot_token']
