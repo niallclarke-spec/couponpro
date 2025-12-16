@@ -1255,6 +1255,108 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE tenants ADD COLUMN last_seen_at TIMESTAMP")
                     logger.info("last_seen_at column added to tenants")
                 
+                # ============================================================
+                # Journeys: Event-triggered conversational flows
+                # ============================================================
+                logger.info("Checking for journeys tables...")
+                
+                # journeys - Core journey/flow definition
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journeys (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        tenant_id VARCHAR NOT NULL,
+                        bot_id VARCHAR NOT NULL,
+                        name VARCHAR NOT NULL,
+                        description TEXT,
+                        status VARCHAR NOT NULL DEFAULT 'draft',
+                        re_entry_policy VARCHAR NOT NULL DEFAULT 'block',
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journeys_tenant_status ON journeys(tenant_id, status)")
+                logger.info("journeys table ready")
+                
+                # journey_triggers - What starts a journey
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_triggers (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        journey_id UUID NOT NULL REFERENCES journeys(id) ON DELETE CASCADE,
+                        trigger_type VARCHAR NOT NULL,
+                        trigger_config JSONB NOT NULL DEFAULT '{}',
+                        is_active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_triggers_journey ON journey_triggers(journey_id, trigger_type, is_active)")
+                logger.info("journey_triggers table ready")
+                
+                # journey_steps - Ordered steps in a journey
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_steps (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        journey_id UUID NOT NULL REFERENCES journeys(id) ON DELETE CASCADE,
+                        step_order INT NOT NULL,
+                        step_type VARCHAR NOT NULL,
+                        config JSONB NOT NULL DEFAULT '{}',
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_steps_order ON journey_steps(journey_id, step_order)")
+                logger.info("journey_steps table ready")
+                
+                # journey_user_sessions - Per-user journey state
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_user_sessions (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        tenant_id VARCHAR NOT NULL,
+                        journey_id UUID NOT NULL REFERENCES journeys(id) ON DELETE CASCADE,
+                        telegram_chat_id BIGINT NOT NULL,
+                        telegram_user_id BIGINT NOT NULL,
+                        current_step_id UUID REFERENCES journey_steps(id),
+                        status VARCHAR NOT NULL DEFAULT 'active',
+                        answers JSONB DEFAULT '{}',
+                        started_at TIMESTAMP DEFAULT NOW(),
+                        completed_at TIMESTAMP,
+                        last_activity_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_tenant ON journey_user_sessions(tenant_id, journey_id, telegram_user_id, status)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_user ON journey_user_sessions(tenant_id, telegram_user_id, status)")
+                logger.info("journey_user_sessions table ready")
+                
+                # Partial unique index to prevent duplicate active sessions (unless re_entry_policy allows)
+                cursor.execute("""
+                    SELECT 1 FROM pg_indexes WHERE indexname = 'idx_journey_sessions_active_unique'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        CREATE UNIQUE INDEX idx_journey_sessions_active_unique 
+                        ON journey_user_sessions(journey_id, telegram_user_id) 
+                        WHERE status IN ('active', 'waiting_delay')
+                    """)
+                    logger.info("idx_journey_sessions_active_unique partial unique index created")
+                
+                # journey_scheduled_messages - Delayed sends
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_scheduled_messages (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        tenant_id VARCHAR NOT NULL,
+                        session_id UUID NOT NULL REFERENCES journey_user_sessions(id) ON DELETE CASCADE,
+                        step_id UUID NOT NULL REFERENCES journey_steps(id),
+                        telegram_chat_id BIGINT NOT NULL,
+                        message_content JSONB NOT NULL DEFAULT '{}',
+                        scheduled_for TIMESTAMP NOT NULL,
+                        status VARCHAR NOT NULL DEFAULT 'pending',
+                        sent_at TIMESTAMP,
+                        error TEXT,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_scheduled_status ON journey_scheduled_messages(status, scheduled_for)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_scheduled_tenant ON journey_scheduled_messages(tenant_id, status, scheduled_for)")
+                logger.info("journey_scheduled_messages table ready")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 

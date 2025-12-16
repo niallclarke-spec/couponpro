@@ -1,0 +1,332 @@
+"""
+Journey engine - linear state machine for step execution.
+
+Supports: message, question, delay step types.
+V1 does NOT support conditional steps.
+"""
+import random
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, Callable
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+class JourneyEngine:
+    """
+    Engine for executing journey steps.
+    
+    This is a linear state machine that processes steps in order.
+    """
+    
+    def __init__(self, send_message_fn: Callable[[int, str, str], bool] = None):
+        """
+        Initialize the journey engine.
+        
+        Args:
+            send_message_fn: Function to send Telegram messages.
+                             Signature: (chat_id: int, text: str, bot_id: str) -> bool
+        """
+        self.send_message_fn = send_message_fn
+    
+    def start_journey_for_user(self, tenant_id: str, journey: Dict, 
+                                telegram_chat_id: int, telegram_user_id: int) -> Optional[Dict]:
+        """
+        Start a journey for a user, handling re-entry policy.
+        
+        Args:
+            tenant_id: Tenant ID
+            journey: Journey dict (must include id, re_entry_policy)
+            telegram_chat_id: Telegram chat ID
+            telegram_user_id: Telegram user ID
+            
+        Returns:
+            New or existing session dict, or None on failure
+        """
+        from . import repo
+        
+        journey_id = journey['id']
+        re_entry_policy = journey.get('re_entry_policy', 'block')
+        
+        existing_session = repo.get_active_session(tenant_id, journey_id, telegram_user_id)
+        
+        if existing_session:
+            if re_entry_policy == 'block':
+                logger.info(f"Blocked re-entry for user {telegram_user_id} in journey {journey_id}")
+                if self.send_message_fn:
+                    self.send_message_fn(
+                        telegram_chat_id,
+                        "You're already in this flow. Please reply to continue.",
+                        journey.get('bot_id')
+                    )
+                return existing_session
+            
+            elif re_entry_policy == 'restart':
+                logger.info(f"Restarting session for user {telegram_user_id} in journey {journey_id}")
+                repo.cancel_session(existing_session['id'])
+            
+            elif re_entry_policy == 'allow':
+                logger.warning(f"re_entry_policy='allow' not fully supported yet, treating as restart")
+                repo.cancel_session(existing_session['id'])
+        
+        first_step = repo.get_first_step(journey_id)
+        if not first_step:
+            logger.error(f"Journey {journey_id} has no steps")
+            return None
+        
+        session = repo.create_session(
+            tenant_id=tenant_id,
+            journey_id=journey_id,
+            telegram_chat_id=telegram_chat_id,
+            telegram_user_id=telegram_user_id,
+            first_step_id=first_step['id']
+        )
+        
+        if session:
+            logger.info(f"Started journey {journey_id} for user {telegram_user_id}, session {session['id']}")
+            self.execute_step(session, first_step, journey.get('bot_id'))
+        
+        return session
+    
+    def execute_step(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
+        """
+        Execute a single step.
+        
+        Args:
+            session: Session dict
+            step: Step dict
+            bot_id: Bot ID for sending messages
+            
+        Returns:
+            True if step was executed (or queued), False on failure
+        """
+        from . import repo
+        
+        step_type = step['step_type']
+        config = step.get('config', {})
+        
+        logger.info(f"Executing step {step['id']} (type={step_type}) for session {session['id']}")
+        
+        if step_type == 'message':
+            return self._execute_message_step(session, step, config, bot_id)
+        
+        elif step_type == 'question':
+            return self._execute_question_step(session, step, config, bot_id)
+        
+        elif step_type == 'delay':
+            return self._execute_delay_step(session, step, config, bot_id)
+        
+        elif step_type == 'conditional':
+            logger.warning(f"Conditional steps not supported in V1, skipping step {step['id']}")
+            return self._advance_to_next_step(session, step, bot_id)
+        
+        else:
+            logger.error(f"Unknown step type: {step_type}")
+            return False
+    
+    def _execute_message_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
+        """Execute a message step - send immediately and advance."""
+        text = config.get('text', '')
+        
+        if not text:
+            logger.warning(f"Message step {step['id']} has no text")
+            return self._advance_to_next_step(session, step, bot_id)
+        
+        if self.send_message_fn:
+            success = self.send_message_fn(session['telegram_chat_id'], text, bot_id)
+            if not success:
+                logger.error(f"Failed to send message for step {step['id']}")
+                return False
+        else:
+            logger.warning("No send_message_fn configured, skipping message send")
+        
+        return self._advance_to_next_step(session, step, bot_id)
+    
+    def _execute_question_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
+        """Execute a question step - send question and wait for reply."""
+        text = config.get('text', '')
+        
+        if not text:
+            logger.warning(f"Question step {step['id']} has no text")
+            return self._advance_to_next_step(session, step, bot_id)
+        
+        if self.send_message_fn:
+            success = self.send_message_fn(session['telegram_chat_id'], text, bot_id)
+            if not success:
+                logger.error(f"Failed to send question for step {step['id']}")
+                return False
+        
+        return True
+    
+    def _execute_delay_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
+        """Execute a delay step - schedule next step for later."""
+        from . import repo
+        
+        min_minutes = config.get('min_minutes', 60)
+        max_minutes = config.get('max_minutes', 120)
+        
+        delay_minutes = random.randint(min_minutes, max_minutes)
+        scheduled_for = datetime.utcnow() + timedelta(minutes=delay_minutes)
+        
+        next_step = repo.get_next_step(session['journey_id'], step['step_order'])
+        
+        if not next_step:
+            logger.info(f"Delay step {step['id']} is last step, completing journey")
+            repo.update_session_status(session['id'], 'completed')
+            return True
+        
+        next_step_config = next_step.get('config', {})
+        message_content = {
+            'text': next_step_config.get('text', ''),
+            'step_type': next_step['step_type']
+        }
+        
+        message_id = repo.schedule_message(
+            tenant_id=session['tenant_id'],
+            session_id=session['id'],
+            step_id=next_step['id'],
+            telegram_chat_id=session['telegram_chat_id'],
+            message_content=message_content,
+            scheduled_for=scheduled_for
+        )
+        
+        if message_id:
+            repo.update_session_status(session['id'], 'waiting_delay')
+            logger.info(f"Scheduled message {message_id} for {scheduled_for} ({delay_minutes} min delay)")
+            return True
+        else:
+            logger.error(f"Failed to schedule delayed message for step {step['id']}")
+            return False
+    
+    def _advance_to_next_step(self, session: Dict, current_step: Dict, bot_id: str) -> bool:
+        """Advance to the next step in the journey."""
+        from . import repo
+        
+        next_step = repo.get_next_step(session['journey_id'], current_step['step_order'])
+        
+        if not next_step:
+            logger.info(f"Journey complete for session {session['id']}")
+            repo.update_session_status(session['id'], 'completed')
+            return True
+        
+        repo.update_session_current_step(session['id'], next_step['id'])
+        
+        updated_session = repo.get_session_by_id(session['id'])
+        if updated_session:
+            return self.execute_step(updated_session, next_step, bot_id)
+        
+        return False
+    
+    def handle_user_reply(self, session: Dict, message_text: str, bot_id: str = None) -> bool:
+        """
+        Handle a user's reply to a question step.
+        
+        Args:
+            session: Active session dict
+            message_text: User's reply text
+            bot_id: Bot ID for responses
+            
+        Returns:
+            True if reply was processed, False otherwise
+        """
+        from . import repo
+        
+        if not session.get('current_step_id'):
+            logger.warning(f"Session {session['id']} has no current step")
+            return False
+        
+        current_step = repo.get_step_by_id(session['current_step_id'])
+        if not current_step:
+            logger.error(f"Step {session['current_step_id']} not found")
+            return False
+        
+        if current_step['step_type'] != 'question':
+            logger.debug(f"Current step is not a question, ignoring reply")
+            return False
+        
+        config = current_step.get('config', {})
+        answer_key = config.get('answer_key', 'answer')
+        validation = config.get('validation', 'text')
+        
+        validated_value = self._validate_answer(message_text, validation)
+        
+        if validated_value is None:
+            error_msg = self._get_validation_error_message(validation)
+            if self.send_message_fn and error_msg:
+                self.send_message_fn(session['telegram_chat_id'], error_msg, bot_id)
+            return False
+        
+        repo.store_answer(session['id'], answer_key, validated_value)
+        logger.info(f"Stored answer '{answer_key}' = '{validated_value}' for session {session['id']}")
+        
+        updated_session = repo.get_session_by_id(session['id'])
+        if updated_session:
+            return self._advance_to_next_step(updated_session, current_step, bot_id)
+        
+        return False
+    
+    def _validate_answer(self, text: str, validation: str) -> Any:
+        """
+        Validate and convert an answer based on validation type.
+        
+        Returns:
+            Converted value if valid, None if invalid
+        """
+        text = text.strip()
+        
+        if not text:
+            return None
+        
+        if validation == 'text':
+            return text
+        
+        elif validation == 'number':
+            try:
+                text_clean = text.replace(',', '').replace(' ', '')
+                if '.' in text_clean:
+                    return float(text_clean)
+                return int(text_clean)
+            except ValueError:
+                return None
+        
+        elif validation == 'money':
+            try:
+                text_clean = text.replace('$', '').replace('€', '').replace('£', '')
+                text_clean = text_clean.replace(',', '').replace(' ', '')
+                return float(text_clean)
+            except ValueError:
+                return None
+        
+        elif validation == 'country':
+            if len(text) == 2 and text.isalpha():
+                return text.upper()
+            return text
+        
+        else:
+            return text
+    
+    def _get_validation_error_message(self, validation: str) -> Optional[str]:
+        """Get an error message for a validation failure."""
+        messages = {
+            'number': "Please enter a valid number.",
+            'money': "Please enter a valid amount (e.g., 500 or $500).",
+            'country': "Please enter a valid country name or code."
+        }
+        return messages.get(validation)
+    
+    def resume_after_delay(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
+        """
+        Resume a session after a delay step completes.
+        
+        Called by the scheduler when a delayed message is sent.
+        """
+        from . import repo
+        
+        repo.update_session_status(session['id'], 'active')
+        repo.update_session_current_step(session['id'], step['id'])
+        
+        updated_session = repo.get_session_by_id(session['id'])
+        if updated_session:
+            return self.execute_step(updated_session, step, bot_id)
+        
+        return False
