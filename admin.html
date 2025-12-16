@@ -6447,8 +6447,7 @@
                 const count = data.member_count !== null && data.member_count !== undefined 
                     ? data.member_count.toLocaleString() 
                     : '--';
-                const channelName = data.channel_id || '@entrylabs';
-                setChannelDisplay(count, '--', channelName, 'VIP Signals');
+                setChannelDisplay(count, '--');
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);
