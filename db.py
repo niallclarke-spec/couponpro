@@ -1372,7 +1372,6 @@ class DatabasePool:
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_tenant ON journey_user_sessions(tenant_id, journey_id, telegram_user_id, status)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_user ON journey_user_sessions(tenant_id, telegram_user_id, status)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_timeout ON journey_user_sessions(status, wait_timeout_at) WHERE status = 'awaiting_reply'")
                 logger.info("journey_user_sessions table ready")
                 
                 # Partial unique index to prevent duplicate active sessions (unless re_entry_policy allows)
@@ -1414,8 +1413,8 @@ class DatabasePool:
                 """)
                 if not cursor.fetchone():
                     cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN wait_timeout_at TIMESTAMP")
-                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_timeout ON journey_user_sessions(status, wait_timeout_at) WHERE status = 'awaiting_reply'")
                     logger.info("Added wait_timeout_at column to journey_user_sessions")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_timeout ON journey_user_sessions(status, wait_timeout_at) WHERE status = 'awaiting_reply'")
                 
                 conn.commit()
                 logger.info("Database schema initialized")
