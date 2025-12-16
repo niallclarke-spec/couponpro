@@ -77,6 +77,57 @@
     flex-shrink: 0;
 }
 
+.journey-deeplink {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-elevated, rgba(0,0,0,0.2));
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.deeplink-url {
+    flex: 1;
+    font-size: 12px;
+    color: var(--accent-primary, #6366f1);
+    word-break: break-all;
+    background: none;
+    padding: 0;
+}
+
+.journey-deeplink .btn-copy,
+.journey-deeplink .btn-test {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border-primary, #2d3748);
+    background: var(--bg-card, #1a1f36);
+    color: var(--text-secondary, #a0aec0);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.journey-deeplink .btn-copy:hover,
+.journey-deeplink .btn-test:hover {
+    background: var(--accent-primary, #6366f1);
+    color: white;
+    border-color: var(--accent-primary, #6366f1);
+}
+
+.journey-deeplink-warning {
+    font-size: 12px;
+    color: var(--status-warning, #eab308);
+    background: var(--status-warning-bg, rgba(234, 179, 8, 0.1));
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
 .journey-actions {
     display: flex;
     gap: 8px;

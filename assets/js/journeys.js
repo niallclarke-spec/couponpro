@@ -9,7 +9,8 @@
         steps: [],
         editingStepIndex: null,
         selectedStatus: 'draft',
-        loading: false
+        loading: false,
+        messageBotUsername: null
     };
 
     let config = {
@@ -27,10 +28,32 @@
         return div.innerHTML;
     }
 
+    async function loadMessageBotUsername() {
+        try {
+            const headers = await config.getAuthHeaders();
+            const resp = await fetch('/api/connections', { headers, credentials: 'include' });
+            if (resp.ok) {
+                const data = await resp.json();
+                const messageBot = (data.connections || []).find(c => c.bot_role === 'message');
+                state.messageBotUsername = messageBot?.bot_username || null;
+            }
+        } catch (err) {
+            console.error('Failed to load message bot:', err);
+        }
+    }
+
+    function getDeepLinkUrl(startParam) {
+        if (!state.messageBotUsername || !startParam) return null;
+        return `https://t.me/${state.messageBotUsername}?start=${encodeURIComponent(startParam)}`;
+    }
+
     async function loadJourneys() {
         try {
             state.loading = true;
             const headers = await config.getAuthHeaders();
+            
+            await loadMessageBotUsername();
+            
             const resp = await fetch('/api/journeys', { headers, credentials: 'include' });
             if (resp.ok) {
                 const data = await resp.json();
@@ -83,7 +106,36 @@
             const triggers = journey.triggers || [];
             const firstTrigger = triggers[0];
             const triggerType = firstTrigger?.trigger_type || 'deep_link';
-            const triggerValue = firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '-';
+            const triggerValue = firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '';
+            const deepLinkUrl = getDeepLinkUrl(triggerValue);
+            
+            let deepLinkHtml = '';
+            if (triggerValue && (triggerType === 'telegram_deeplink' || triggerType === 'deep_link')) {
+                if (deepLinkUrl) {
+                    deepLinkHtml = `
+                        <div class="journey-deeplink">
+                            <code class="deeplink-url">${escapeHtml(deepLinkUrl)}</code>
+                            <button class="btn-copy" onclick="window.JourneysModule.copyDeepLink('${escapeHtml(deepLinkUrl)}')" title="Copy link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
+                            <a href="${escapeHtml(deepLinkUrl)}" target="_blank" class="btn-test" title="Test link">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        </div>`;
+                } else {
+                    deepLinkHtml = `
+                        <div class="journey-deeplink-warning">
+                            Configure Message Bot in Connections to get deep link URL
+                        </div>`;
+                }
+            }
             
             return `
                 <div class="journey-card">
@@ -97,7 +149,7 @@
                                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                             </svg>
-                            <span>${triggerType === 'telegram_deeplink' || triggerType === 'deep_link' ? 'Deep Link' : triggerType}: <strong>${escapeHtml(triggerValue)}</strong></span>
+                            <span>Trigger: <strong>${escapeHtml(triggerValue || '-')}</strong></span>
                         </div>
                         <div class="journey-meta-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -109,6 +161,7 @@
                             <span>${journey.step_count || 0} step${journey.step_count !== 1 ? 's' : ''}</span>
                         </div>
                     </div>
+                    ${deepLinkHtml}
                     <div class="journey-actions">
                         <button class="btn-icon" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -434,6 +487,22 @@
         renderStepsList();
     }
 
+    async function copyDeepLink(url) {
+        try {
+            await navigator.clipboard.writeText(url);
+            config.showToast('Deep link copied to clipboard!', 'success');
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            const input = document.createElement('input');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            config.showToast('Deep link copied to clipboard!', 'success');
+        }
+    }
+
     function initJourneys(options) {
         config.getAuthHeaders = options.getAuthHeaders;
         config.showToast = options.showToast || function(msg) { console.log(msg); };
@@ -455,7 +524,9 @@
             closeStepModal,
             saveStep,
             deleteStep,
-            moveStep
+            moveStep,
+            copyDeepLink,
+            getDeepLinkUrl: () => state.messageBotUsername
         };
         
         return window.JourneysModule;
