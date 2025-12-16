@@ -37,3 +37,5 @@ pytest==9.0.2
 # Async testing
 pytest-asyncio
 cryptography
+pytz
+python-telegram-bot[rate-limiter]
