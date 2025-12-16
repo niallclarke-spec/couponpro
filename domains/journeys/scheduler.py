@@ -137,6 +137,10 @@ def _send_scheduled_message(msg: dict, send_message_fn: Callable, engine) -> boo
         logger.error(f"Session {msg['session_id']} not found for scheduled message")
         return True
     
+    if session['tenant_id'] != msg['tenant_id']:
+        logger.error(f"Tenant mismatch: session={session['tenant_id']}, message={msg['tenant_id']}")
+        return False
+    
     step = repo.get_step_by_id(msg['step_id'])
     if not step:
         logger.error(f"Step {msg['step_id']} not found for scheduled message")

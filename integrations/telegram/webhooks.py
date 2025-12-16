@@ -20,7 +20,13 @@ def check_journey_trigger(webhook_data: dict, tenant_id: str, bot_id: str) -> bo
     
     Returns True if a journey was started (and we should skip normal processing),
     Returns False if no journey matched (continue normal processing).
+    
+    Security: tenant_id must be validated by the caller (from bot token mapping).
     """
+    if not tenant_id:
+        logger.warning("No tenant_id provided for journey trigger check")
+        return False
+    
     try:
         message = webhook_data.get('message', {})
         text = message.get('text', '')
@@ -46,6 +52,10 @@ def check_journey_trigger(webhook_data: dict, tenant_id: str, bot_id: str) -> bo
         
         if not journey:
             logger.debug(f"No active journey found for deeplink param: {start_param}")
+            return False
+        
+        if journey['tenant_id'] != tenant_id:
+            logger.error(f"Journey tenant mismatch: expected {tenant_id}, got {journey['tenant_id']}")
             return False
         
         logger.info(f"Found journey '{journey['name']}' for deeplink param: {start_param}")
@@ -102,7 +112,13 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
     
     Returns True if we handled the reply (skip normal processing),
     Returns False otherwise.
+    
+    Security: tenant_id must be validated by the caller (from bot token mapping).
     """
+    if not tenant_id:
+        logger.warning("No tenant_id provided for journey reply check")
+        return False
+    
     try:
         message = webhook_data.get('message', {})
         text = message.get('text', '')
@@ -123,6 +139,10 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
         session = repo.get_session_for_user_reply(tenant_id, user_id, chat_id)
         
         if not session:
+            return False
+        
+        if session['tenant_id'] != tenant_id:
+            logger.error(f"Session tenant mismatch: expected {tenant_id}, got {session['tenant_id']}")
             return False
         
         if session['status'] != 'active':
@@ -198,9 +218,12 @@ def handle_coupon_telegram_webhook(handler, telegram_bot_available, telegram_bot
         update_id = webhook_data.get('update_id', 'unknown')
         print(f"[WEBHOOK-ENDPOINT] Processing update_id: {update_id}", flush=True)
         
-        # Check for journey triggers first (hardcoded to entrylab for now)
-        # TODO: In future, determine tenant_id from bot token mapping
-        tenant_id = 'entrylab'
+        # Resolve tenant from bot token
+        # Currently hardcoded to entrylab - in production, this should be looked up
+        # from a bot_token -> tenant_id mapping table (tenant_integrations)
+        # Security note: The tenant_id is trusted because it comes from our internal
+        # mapping, not from the webhook payload itself
+        tenant_id = 'entrylab'  # TODO: lookup from bot token mapping
         bot_id = 'default'
         
         if check_journey_trigger(webhook_data, tenant_id, bot_id):

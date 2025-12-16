@@ -335,7 +335,7 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
                   AND j.status = 'active'
                   AND t.trigger_type = 'telegram_deeplink'
                   AND t.is_active = TRUE
-                  AND t.trigger_config->>'start_param' = %s
+                  AND t.trigger_config->>'param' = %s
                 LIMIT 1
             """, (tenant_id, bot_id, start_param))
             row = cursor.fetchone()

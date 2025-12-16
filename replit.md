@@ -117,6 +117,42 @@ Indicators are centrally configured in `indicator_config.py` with `enabled`, `si
 ### Forex Bot Timing Configuration
 Timing constants for scheduler intervals (e.g., `SIGNAL_CHECK_INTERVAL`: 15min), morning schedule (e.g., 6:20 AM UTC briefing), signal lifecycle (e.g., `HARD_TIMEOUT_MINUTES`: 180min), and guidance zones are defined in `forex_signals.py` and `forex_scheduler.py`.
 
+### Journeys System (Event-Triggered Conversational Flows)
+Journeys enables multi-step conversational flows in Telegram bots, triggered by deep links.
+
+**V1 Constraints:**
+- Linear flows only (no conditional branching)
+- Max 5 journeys per tenant, 10 steps per journey
+- Text-only messages, delays max 7 days
+- Single trigger type: Telegram deep links (`t.me/bot?start=<param>`)
+
+**Database Tables:**
+- `journeys`: Journey definitions with tenant isolation
+- `journey_triggers`: Deep link triggers with JSONB config
+- `journey_steps`: Ordered steps (message, question, delay types)
+- `journey_user_sessions`: Active user sessions with re-entry prevention (partial unique constraint)
+- `journey_scheduled_messages`: Delayed message queue
+
+**Key Files:**
+- `domains/journeys/repo.py`: Tenant-scoped CRUD operations
+- `domains/journeys/engine.py`: Linear state machine for step execution
+- `domains/journeys/triggers.py`: Telegram deep link parsing
+- `domains/journeys/scheduler.py`: Background processor for delayed messages
+- `domains/journeys/handlers.py`: API handlers for CRUD operations
+- `domains/journeys/seed.py`: Example journey seeding
+
+**Webhook Integration:**
+- `integrations/telegram/webhooks.py`: Intercepts `/start <param>` for journey triggers
+- Falls back to normal bot handling if no journey matches
+
+**Security Note:**
+- Tenant resolution currently hardcoded to 'entrylab' (single-tenant V1)
+- All operations validate tenant_id matches before processing
+- TODO: Proper bot token -> tenant mapping for multi-tenant support
+
+**Example Deep Link:**
+- `t.me/promostack_bot?start=broker_signup` triggers 'Broker Sign Up' journey
+
 ### System Design Choices
 Stateless HMAC-signed cookie authentication is used for ephemeral environments. Digital Ocean Spaces serves as the primary persistent storage for templates. The system employs a hybrid storage model with local `meta.json` and object storage backups. The architecture is modular and configured via environment variables. Telegram image generation uses Pillow. Coupon validation is enforced at the API level. Production robustness for the Telegram bot includes `asyncio.to_thread()`, `AIORateLimiter`, and a single-process webhook architecture. Stripe API is the source of truth for revenue metrics.
 

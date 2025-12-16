@@ -126,7 +126,7 @@ class JourneyEngine:
     
     def _execute_message_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
         """Execute a message step - send immediately and advance."""
-        text = config.get('text', '')
+        text = config.get('content') or config.get('text', '')
         
         if not text:
             logger.warning(f"Message step {step['id']} has no text")
@@ -144,7 +144,7 @@ class JourneyEngine:
     
     def _execute_question_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
         """Execute a question step - send question and wait for reply."""
-        text = config.get('text', '')
+        text = config.get('content') or config.get('text', '')
         
         if not text:
             logger.warning(f"Question step {step['id']} has no text")
@@ -177,7 +177,7 @@ class JourneyEngine:
         
         next_step_config = next_step.get('config', {})
         message_content = {
-            'text': next_step_config.get('text', ''),
+            'text': next_step_config.get('content') or next_step_config.get('text', ''),
             'step_type': next_step['step_type']
         }
         
