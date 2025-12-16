@@ -6416,9 +6416,13 @@
         }
 
         async function loadTelegramChannelStats() {
-            const setChannelDisplay = (freeCount, vipCount) => {
-                document.getElementById('freeChannelCount').textContent = freeCount;
-                document.getElementById('vipChannelCount').textContent = vipCount;
+            const setChannelDisplay = (freeCount, vipCount, freeError = null, vipError = null) => {
+                const freeEl = document.getElementById('freeChannelCount');
+                const vipEl = document.getElementById('vipChannelCount');
+                freeEl.textContent = freeCount;
+                vipEl.textContent = vipCount;
+                freeEl.title = freeError || '';
+                vipEl.title = vipError || '';
             };
             
             try {
@@ -6443,11 +6447,11 @@
                 
                 const freeCount = data.free_channel?.member_count !== null && data.free_channel?.member_count !== undefined 
                     ? data.free_channel.member_count.toLocaleString() 
-                    : '--';
+                    : (data.free_channel?.error ? 'N/A' : '--');
                 const vipCount = data.vip_channel?.member_count !== null && data.vip_channel?.member_count !== undefined 
                     ? data.vip_channel.member_count.toLocaleString() 
-                    : '--';
-                setChannelDisplay(freeCount, vipCount);
+                    : (data.vip_channel?.error ? 'N/A' : '--');
+                setChannelDisplay(freeCount, vipCount, data.free_channel?.error, data.vip_channel?.error);
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);

@@ -699,8 +699,12 @@ def handle_telegram_revoke_access(handler):
         handler.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
 
 
-def handle_telegram_channel_stats(handler):
+def handle_telegram_channel_stats(handler, tenant_id: str = None):
     """GET /api/telegram-channel-stats
+    
+    Returns tenant-specific channel stats for both free and VIP channels.
+    - EntryLab: Uses environment variables
+    - Other tenants: Uses tenant_integrations config
     
     Returns:
         200: Success with channel stats for both free and VIP channels
@@ -712,9 +716,32 @@ def handle_telegram_channel_stats(handler):
     from core.logging import get_logger
     logger = get_logger(__name__)
     
-    bot_token = os.environ.get('FOREX_BOT_TOKEN')
-    free_channel_id = os.environ.get('FOREX_CHANNEL_ID')
-    vip_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID')
+    bot_token = None
+    free_channel_id = None
+    vip_channel_id = None
+    
+    if not tenant_id or tenant_id == 'entrylab':
+        bot_token = os.environ.get('FOREX_BOT_TOKEN')
+        free_channel_id = os.environ.get('FOREX_CHANNEL_ID')
+        vip_channel_id = os.environ.get('TELEGRAM_PRIVATE_CHANNEL_ID')
+    else:
+        from db import db_pool
+        if db_pool and db_pool.connection_pool:
+            try:
+                with db_pool.get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT config_json FROM tenant_integrations 
+                        WHERE tenant_id = %s AND provider = 'telegram'
+                    """, (tenant_id,))
+                    row = cursor.fetchone()
+                    if row and row[0]:
+                        config = row[0] if isinstance(row[0], dict) else json.loads(row[0])
+                        bot_token = config.get('bot_token')
+                        free_channel_id = config.get('free_channel_id')
+                        vip_channel_id = config.get('vip_channel_id')
+            except Exception as e:
+                logger.warning(f"Error loading tenant telegram config: {e}")
     
     if not bot_token:
         handler.send_response(503)
@@ -723,42 +750,46 @@ def handle_telegram_channel_stats(handler):
         handler.wfile.write(json.dumps({
             'ok': False,
             'code': 'bot_unavailable',
-            'error': 'Telegram bot token not configured'
+            'error': 'Telegram bot token not configured for this tenant'
         }).encode())
         return
     
     def get_member_count(channel_id):
         if not channel_id:
-            return None
+            return {'count': None, 'error': None}
         try:
             url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
             resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
             data = resp.json()
             if data.get('ok'):
-                return data.get('result')
+                return {'count': data.get('result'), 'error': None}
             else:
-                logger.warning(f"Telegram API error for {channel_id}: {data}")
-                return None
+                error_msg = data.get('description', 'Unknown error')
+                logger.warning(f"Telegram API error for {channel_id}: {error_msg}")
+                return {'count': None, 'error': error_msg}
         except Exception as e:
             logger.warning(f"Failed to get member count for {channel_id}: {e}")
-            return None
+            return {'count': None, 'error': str(e)}
     
     try:
-        free_count = get_member_count(free_channel_id)
-        vip_count = get_member_count(vip_channel_id)
+        free_result = get_member_count(free_channel_id)
+        vip_result = get_member_count(vip_channel_id)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
             'ok': True,
+            'tenant_id': tenant_id or 'entrylab',
             'free_channel': {
                 'channel_id': free_channel_id,
-                'member_count': free_count
+                'member_count': free_result['count'],
+                'error': free_result['error']
             },
             'vip_channel': {
                 'channel_id': vip_channel_id,
-                'member_count': vip_count
+                'member_count': vip_result['count'],
+                'error': vip_result['error']
             }
         }).encode())
         

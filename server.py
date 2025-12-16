@@ -159,7 +159,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_api_signal_bot_cancel_queue(self): forex_h.handle_signal_bot_cancel_queue(self)
 
     # Telegram handlers
-    def handle_api_telegram_channel_stats(self): sub_h.handle_telegram_channel_stats(self)
+    def handle_api_telegram_channel_stats(self):
+        tid = getattr(self, 'tenant_id', 'entrylab')
+        sub_h.handle_telegram_channel_stats(self, tid)
     def handle_api_telegram_check_access(self): sub_h.handle_telegram_check_access(self)
     def handle_api_telegram_subscriptions(self): sub_h.handle_telegram_subscriptions(self)
     def handle_api_telegram_revenue_metrics(self): sub_h.handle_telegram_revenue_metrics(self)

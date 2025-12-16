@@ -18,7 +18,7 @@ class TestTelegramChannelStatsResponses:
             
             handler = MagicMock()
             handler.wfile = BytesIO()
-            handlers.handle_telegram_channel_stats(handler)
+            handlers.handle_telegram_channel_stats(handler, tenant_id='entrylab')
         
         handler.send_response.assert_called_with(503)
         response = json.loads(handler.wfile.getvalue())
@@ -41,11 +41,12 @@ class TestTelegramChannelStatsResponses:
             
             handler = MagicMock()
             handler.wfile = BytesIO()
-            handlers.handle_telegram_channel_stats(handler)
+            handlers.handle_telegram_channel_stats(handler, tenant_id='entrylab')
         
         handler.send_response.assert_called_with(200)
         response = json.loads(handler.wfile.getvalue())
         assert response['ok'] is True
+        assert response['tenant_id'] == 'entrylab'
         assert response['free_channel']['member_count'] == 1234
         assert response['free_channel']['channel_id'] == '@free_channel'
         assert response['vip_channel']['member_count'] == 1234
@@ -67,7 +68,7 @@ class TestTelegramChannelStatsResponses:
             
             handler = MagicMock()
             handler.wfile = BytesIO()
-            handlers.handle_telegram_channel_stats(handler)
+            handlers.handle_telegram_channel_stats(handler, tenant_id='entrylab')
         
         handler.send_response.assert_called_with(200)
         response = json.loads(handler.wfile.getvalue())
