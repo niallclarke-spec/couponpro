@@ -1,0 +1,93 @@
+You are working in an existing Python Telegram automation platform with a Journeys feature already implemented.
+
+GOAL
+Fix journey delays and add proper “wait for user reply” functionality, without touching or bloating server.py.
+
+DO NOT:
+- Add logic to server.py
+- Break existing coupon bot (PromoStack) or forex signal bot
+- Introduce branching, A/B tests, or analytics
+- Change authentication architecture
+
+━━━━━━━━━━━━━━━━━━━━━━
+CURRENT PROBLEMS TO FIX
+━━━━━━━━━━━━━━━━━━━━━━
+
+1) Journey step delays do not work
+Steps with delays are written to journey_scheduled_messages, but no worker is executing them.
+
+2) Journeys cannot pause and wait for user input
+There is no way to send a message, then wait until the user replies (optionally with a timeout).
+
+━━━━━━━━━━━━━━━━━━━━━━
+REQUIRED FEATURES
+━━━━━━━━━━━━━━━━━━━━━━
+
+1) Journey Scheduler Worker (MANDATORY)
+
+- Implement a background worker that:
+  - Polls journey_scheduled_messages
+  - Sends messages when due_at <= now
+  - Marks messages as sent or failed
+- Must start automatically at app boot (same pattern as forex scheduler)
+- Must be tenant-safe
+- Must be idempotent (no double sends)
+- Use DB locking (FOR UPDATE SKIP LOCKED or equivalent)
+
+Place this in a clean module, e.g.:
+domains/journeys/scheduler.py
+
+NO logic in server.py.
+
+━━━━━━━━━━━━━━━━━━━━━━
+2) WAIT FOR USER REPLY STEP
+━━━━━━━━━━━━━━━━━━━━━━
+
+Add a new journey step type: wait_for_reply
+
+Behavior:
+- When reached:
+  - Mark journey_user_session as awaiting_reply
+  - Store awaiting_step_id
+- When user sends a Telegram message:
+  - If session is awaiting_reply:
+    - Store reply text
+    - Advance to next step immediately
+- Optional timeout:
+  - wait_for_reply steps may define timeout_minutes
+  - If timeout expires before reply:
+    - Auto-advance to next step
+    - OR send a follow-up message if configured
+
+━━━━━━━━━━━━━━━━━━━━━━
+DATA & SAFETY REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━
+
+- Journeys remain tenant-scoped
+- Message Bot credentials must be used (via BotCredentialResolver)
+- If Message Bot is not configured:
+  - Fail gracefully with actionable error
+- Do NOT affect:
+  - Coupon bot (PromoStack)
+  - Forex signal delivery
+
+━━━━━━━━━━━━━━━━━━━━━━
+TESTING (IMPORTANT)
+━━━━━━━━━━━━━━━━━━━━━━
+
+Add regression tests that:
+- Fail if scheduler is not running
+- Verify delayed steps send after delay
+- Verify wait_for_reply pauses journey
+- Verify reply resumes journey
+- Verify timeout resumes journey
+- Verify tenant isolation
+
+━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT EXPECTATION
+━━━━━━━━━━━━━━━━━━━━━━
+
+- Clean file structure
+- Clear logs for scheduler actions
+- No server.py bloat
+- Journeys feel interactive and reliable
