@@ -41,6 +41,8 @@ GET_ROUTES: List[Route] = [
     
     # Auth
     Route('GET', '/api/check-auth', 'handle_api_check_auth'),
+    Route('GET', '/api/auth/debug', 'handle_api_auth_debug',
+          auth_required=True),
     
     # Campaigns (order matters: more specific patterns first)
     Route('GET', '/api/campaigns/', 'handle_api_campaign_submissions',

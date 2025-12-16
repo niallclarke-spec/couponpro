@@ -129,6 +129,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return self._json(200, {'authenticated': True, 'email': email})
         self._json(200, {'authenticated': False})
 
+    def handle_api_auth_debug(self):
+        from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+        from auth.auth_debug import get_recent_failures, get_failure_count
+        u = get_auth_user_from_request(self, record_failure=False)
+        if not u:
+            return self._json(401, {'error': 'Authentication required'})
+        email = u.get('email') or self.headers.get('X-Clerk-User-Email', '')
+        if not is_admin_email(email):
+            return self._json(403, {'error': 'Admin access required'})
+        failures = get_recent_failures(50)
+        self._json(200, {'failures': failures, 'total_in_buffer': get_failure_count()})
+
     def handle_api_config(self):
         from urllib.parse import parse_qs
         qs = parse_qs(urlparse(self.path).query)

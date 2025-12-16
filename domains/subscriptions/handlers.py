@@ -700,23 +700,63 @@ def handle_telegram_revoke_access(handler):
 
 
 def handle_telegram_channel_stats(handler):
-    """GET /api/telegram-channel-stats"""
+    """GET /api/telegram-channel-stats
+    
+    Returns:
+        200: Success with channel stats
+        503: Bot or channel not configured
+        502: Telegram API failure
+    """
     import server
+    from core.logging import get_logger
+    logger = get_logger(__name__)
+    
+    from core.config import Config
+    channel_id = Config.get_forex_channel_id()
+    
+    if not server.TELEGRAM_BOT_AVAILABLE:
+        handler.send_response(503)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'error': 'Telegram bot not available',
+            'code': 'bot_unavailable'
+        }).encode())
+        return
+    
+    if not channel_id:
+        handler.send_response(503)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'error': 'Channel ID not configured',
+            'code': 'channel_not_configured'
+        }).encode())
+        return
+    
+    stats = {'channel_id': channel_id, 'available': True}
+    
     try:
-        from core.config import Config
-        channel_id = Config.get_forex_channel_id()
-        stats = {'channel_id': channel_id, 'available': server.TELEGRAM_BOT_AVAILABLE}
-        if server.TELEGRAM_BOT_AVAILABLE and channel_id:
-            member_count = server.telegram_bot.get_channel_member_count(channel_id)
+        if hasattr(server, 'forex_bot') and server.forex_bot:
+            member_count = server.forex_bot.get_chat_member_count(channel_id)
             stats['member_count'] = member_count
+        elif hasattr(server, 'telegram_bot') and server.telegram_bot:
+            if hasattr(server.telegram_bot, 'get_chat_member_count'):
+                member_count = server.telegram_bot.get_chat_member_count(channel_id)
+                stats['member_count'] = member_count
+        
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps(stats).encode())
+        
     except Exception as e:
-        from core.logging import get_logger
-        get_logger(__name__).exception("Error getting channel stats")
-        handler.send_response(500)
+        logger.exception("Telegram API error getting channel stats")
+        handler.send_response(502)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+        handler.wfile.write(json.dumps({
+            'error': 'Telegram API failure',
+            'code': 'telegram_api_error',
+            'detail': str(e)
+        }).encode())

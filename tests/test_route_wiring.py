@@ -71,6 +71,7 @@ class TestAuthParsing:
             'Authorization': 'Bearer test.jwt.token',
             'Cookie': ''
         }
+        mock_request.path = '/api/check-auth'
         
         mock_user = {
             'clerk_user_id': 'user_123',
@@ -79,7 +80,7 @@ class TestAuthParsing:
             'avatar_url': None
         }
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user) as mock_verify:
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)) as mock_verify:
             result = get_auth_user_from_request(mock_request)
             mock_verify.assert_called_once_with('test.jwt.token')
             assert result == mock_user
@@ -94,6 +95,7 @@ class TestAuthParsing:
             'Authorization': '',
             'Cookie': '__session=cookie.jwt.token'
         }
+        mock_request.path = '/api/check-auth'
         
         mock_user = {
             'clerk_user_id': 'user_456',
@@ -102,7 +104,7 @@ class TestAuthParsing:
             'avatar_url': None
         }
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user) as mock_verify:
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)) as mock_verify:
             result = get_auth_user_from_request(mock_request)
             mock_verify.assert_called_once_with('cookie.jwt.token')
             assert result == mock_user
@@ -117,8 +119,11 @@ class TestAuthParsing:
             'Authorization': 'Bearer bearer.token',
             'Cookie': '__session=cookie.token'
         }
+        mock_request.path = '/api/check-auth'
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value={'clerk_user_id': 'test'}) as mock_verify:
+        mock_user = {'clerk_user_id': 'test'}
+        
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)) as mock_verify:
             get_auth_user_from_request(mock_request)
             mock_verify.assert_called_once_with('bearer.token')
     
@@ -132,8 +137,9 @@ class TestAuthParsing:
             'Authorization': '',
             'Cookie': ''
         }
+        mock_request.path = '/api/check-auth'
         
-        result = get_auth_user_from_request(mock_request)
+        result = get_auth_user_from_request(mock_request, record_failure=False)
         assert result is None
     
     def test_x_clerk_user_email_alone_not_valid(self):
@@ -147,8 +153,9 @@ class TestAuthParsing:
             'Cookie': '',
             'X-Clerk-User-Email': 'attacker@example.com'
         }
+        mock_request.path = '/api/check-auth'
         
-        result = get_auth_user_from_request(mock_request)
+        result = get_auth_user_from_request(mock_request, record_failure=False)
         assert result is None
 
 

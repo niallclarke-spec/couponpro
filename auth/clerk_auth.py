@@ -9,10 +9,12 @@ import os
 import re
 import jwt
 from jwt import PyJWKClient
+from jwt.exceptions import PyJWKClientError
 from http import cookies
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 from core.logging import get_logger
+from auth.auth_debug import record_auth_failure, AuthFailureReason
 
 logger = get_logger(__name__)
 
@@ -48,7 +50,7 @@ def _get_jwks_client() -> Optional[PyJWKClient]:
     return _jwks_client
 
 
-def verify_clerk_token(token: str) -> Optional[Dict[str, Any]]:
+def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """
     Verify a Clerk JWT and return claims if valid.
     
@@ -59,25 +61,28 @@ def verify_clerk_token(token: str) -> Optional[Dict[str, Any]]:
         token: The JWT string from Authorization: Bearer header or __session cookie
         
     Returns:
-        dict with clerk user claims if valid:
+        Tuple of (user_dict, failure_reason):
+        - (user_dict, None) if valid
+        - (None, failure_reason) if invalid
+        
+        user_dict contains:
         {
             'clerk_user_id': str,
             'email': str | None,
             'name': str | None,
             'avatar_url': str | None
         }
-        None if invalid, expired, or not configured
     """
     jwks_url = _get_clerk_jwks_url()
     if not jwks_url:
         logger.warning("CLERK_JWKS_URL not configured - Clerk auth disabled")
-        return None
+        return None, AuthFailureReason.JWKS_NOT_CONFIGURED
     
     try:
         client = _get_jwks_client()
         if not client:
             logger.error("Failed to create JWKS client")
-            return None
+            return None, AuthFailureReason.JWKS_FETCH_FAILED
         
         signing_key = client.get_signing_key_from_jwt(token)
         
@@ -105,27 +110,44 @@ def verify_clerk_token(token: str) -> Optional[Dict[str, Any]]:
             'email': email,
             'name': name,
             'avatar_url': claims.get('image_url') or claims.get('profile_image_url')
-        }
+        }, None
+        
     except jwt.ExpiredSignatureError:
         logger.warning("Token expired")
-        return None
+        return None, AuthFailureReason.TOKEN_EXPIRED
+    except jwt.InvalidIssuerError:
+        logger.warning("Invalid issuer")
+        return None, AuthFailureReason.INVALID_ISSUER
+    except jwt.InvalidAudienceError:
+        logger.warning("Invalid audience")
+        return None, AuthFailureReason.INVALID_AUDIENCE
+    except jwt.MissingRequiredClaimError as e:
+        logger.warning(f"Missing required claim: {e}")
+        return None, AuthFailureReason.MISSING_CLAIMS
+    except jwt.InvalidSignatureError:
+        logger.warning("Invalid signature")
+        return None, AuthFailureReason.INVALID_SIGNATURE
+    except PyJWKClientError as e:
+        logger.warning(f"JWKS fetch failed: {e}")
+        return None, AuthFailureReason.JWKS_FETCH_FAILED
     except jwt.InvalidTokenError as e:
         logger.warning(f"Invalid token: {e}")
-        return None
+        return None, AuthFailureReason.INVALID_SIGNATURE
     except Exception as e:
         logger.exception("Unexpected error verifying JWT")
-        return None
+        return None, AuthFailureReason.UNKNOWN_ERROR
 
 
-def get_auth_user_from_request(request) -> Optional[Dict[str, Any]]:
+def get_auth_user_from_request(request, record_failure: bool = True) -> Optional[Dict[str, Any]]:
     """
     Extract and verify Clerk token from request.
     
     Checks Authorization header first (Bearer token), then falls back
-    to __session cookie.
+    to __session cookie. Records auth failures to ring buffer for diagnostics.
     
     Args:
         request: HTTP request handler with headers attribute
+        record_failure: Whether to record failures to debug buffer (default True)
         
     Returns:
         Normalized user dict if authenticated:
@@ -137,14 +159,21 @@ def get_auth_user_from_request(request) -> Optional[Dict[str, Any]]:
         }
         None if not authenticated
     """
+    path = getattr(request, 'path', 'unknown')
+    host = request.headers.get('Host', 'unknown')
+    
     token = None
     token_source = None
+    failure_reason = None
     
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
         token = auth_header[7:]
         token_source = 'bearer'
         logger.debug("Auth: Found Bearer token in Authorization header")
+    elif auth_header and not auth_header.startswith('Bearer '):
+        failure_reason = AuthFailureReason.MALFORMED_BEARER
+        token_source = 'bearer_malformed'
     
     if not token:
         cookie_header = request.headers.get('Cookie', '')
@@ -158,18 +187,40 @@ def get_auth_user_from_request(request) -> Optional[Dict[str, Any]]:
                     logger.debug("Auth: Found token in __session cookie")
             except Exception as e:
                 logger.debug(f"Failed to parse cookies: {e}")
+                failure_reason = AuthFailureReason.COOKIE_PARSE_FAILED
+                token_source = 'cookie_error'
+    
+    if not token and not failure_reason:
+        failure_reason = AuthFailureReason.MISSING_AUTH_HEADER
+        token_source = 'none'
     
     if not token:
-        logger.debug("Auth: No token found (checked Authorization header and __session cookie)")
+        if record_failure and failure_reason:
+            logger.warning(f"Auth failure: reason={failure_reason} path={path} host={host} source={token_source}")
+            record_auth_failure(
+                reason=failure_reason,
+                path=path,
+                host=host,
+                token_source=token_source
+            )
         return None
     
-    result = verify_clerk_token(token)
+    result, verify_failure = verify_clerk_token(token)
+    
     if result:
         logger.debug(f"Auth: Token verified successfully (source={token_source}, email={result.get('email')})")
-    else:
-        logger.debug(f"Auth: Token verification failed (source={token_source})")
+        return result
     
-    return result
+    if record_failure and verify_failure:
+        logger.warning(f"Auth failure: reason={verify_failure} path={path} host={host} source={token_source}")
+        record_auth_failure(
+            reason=verify_failure,
+            path=path,
+            host=host,
+            token_source=token_source
+        )
+    
+    return None
 
 
 def require_auth(request) -> Dict[str, Any]:

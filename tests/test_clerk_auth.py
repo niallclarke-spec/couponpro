@@ -16,9 +16,10 @@ class TestVerifyClerkToken:
             if 'CLERK_JWKS_URL' in os.environ:
                 del os.environ['CLERK_JWKS_URL']
             
-            from auth.clerk_auth import verify_clerk_token
-            result = verify_clerk_token("fake.jwt.token")
+            from auth.clerk_auth import verify_clerk_token, AuthFailureReason
+            result, failure_reason = verify_clerk_token("fake.jwt.token")
             assert result is None
+            assert failure_reason == AuthFailureReason.JWKS_NOT_CONFIGURED
     
     def test_returns_user_info_on_valid_token(self):
         """Should return user info when token is valid."""
@@ -40,9 +41,10 @@ class TestVerifyClerkToken:
                 
                 with patch('jwt.decode', return_value=mock_claims):
                     from auth.clerk_auth import verify_clerk_token
-                    result = verify_clerk_token("valid.jwt.token")
+                    result, failure_reason = verify_clerk_token("valid.jwt.token")
                     
                     assert result is not None
+                    assert failure_reason is None
                     assert result['clerk_user_id'] == 'user_123'
                     assert result['email'] == 'test@example.com'
                     assert result['name'] == 'Test User'
@@ -59,9 +61,10 @@ class TestVerifyClerkToken:
                 mock_client.return_value.get_signing_key_from_jwt.return_value = mock_key
                 
                 with patch('jwt.decode', side_effect=jwt.ExpiredSignatureError("Token expired")):
-                    from auth.clerk_auth import verify_clerk_token
-                    result = verify_clerk_token("expired.jwt.token")
+                    from auth.clerk_auth import verify_clerk_token, AuthFailureReason
+                    result, failure_reason = verify_clerk_token("expired.jwt.token")
                     assert result is None
+                    assert failure_reason == AuthFailureReason.TOKEN_EXPIRED
 
 
 class TestGenerateTenantId:
@@ -180,9 +183,12 @@ class TestGetAuthUserFromRequest:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': 'Bearer test.jwt.token', 'Cookie': ''}
+        mock_request.path = '/api/check-auth'
+        
+        mock_user = {'clerk_user_id': 'user_123', 'email': 'test@example.com'}
         
         with patch('auth.clerk_auth.verify_clerk_token') as mock_verify:
-            mock_verify.return_value = {'clerk_user_id': 'user_123', 'email': 'test@example.com'}
+            mock_verify.return_value = (mock_user, None)
             
             result = get_auth_user_from_request(mock_request)
             
@@ -195,9 +201,12 @@ class TestGetAuthUserFromRequest:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': '', 'Cookie': '__session=cookie.jwt.token'}
+        mock_request.path = '/api/check-auth'
+        
+        mock_user = {'clerk_user_id': 'user_456', 'email': 'cookie@example.com'}
         
         with patch('auth.clerk_auth.verify_clerk_token') as mock_verify:
-            mock_verify.return_value = {'clerk_user_id': 'user_456', 'email': 'cookie@example.com'}
+            mock_verify.return_value = (mock_user, None)
             
             result = get_auth_user_from_request(mock_request)
             
@@ -210,6 +219,7 @@ class TestGetAuthUserFromRequest:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': '', 'Cookie': ''}
+        mock_request.path = '/api/check-auth'
         
-        result = get_auth_user_from_request(mock_request)
+        result = get_auth_user_from_request(mock_request, record_failure=False)
         assert result is None

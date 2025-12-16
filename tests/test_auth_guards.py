@@ -14,6 +14,7 @@ class TestRequireAuth:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': '', 'Cookie': ''}
+        mock_request.path = '/api/check-auth'
         
         with pytest.raises(AuthenticationError) as exc_info:
             require_auth(mock_request)
@@ -23,12 +24,13 @@ class TestRequireAuth:
     
     def test_raises_401_when_token_invalid(self):
         """Should raise AuthenticationError when token verification fails."""
-        from auth.clerk_auth import require_auth, AuthenticationError
+        from auth.clerk_auth import require_auth, AuthenticationError, AuthFailureReason
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': 'Bearer invalid.token', 'Cookie': ''}
+        mock_request.path = '/api/check-auth'
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=None):
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(None, AuthFailureReason.INVALID_SIGNATURE)):
             with pytest.raises(AuthenticationError) as exc_info:
                 require_auth(mock_request)
             
@@ -40,6 +42,7 @@ class TestRequireAuth:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': 'Bearer valid.token', 'Cookie': ''}
+        mock_request.path = '/api/check-auth'
         
         mock_user = {
             'clerk_user_id': 'user_123',
@@ -48,7 +51,7 @@ class TestRequireAuth:
             'avatar_url': None
         }
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user):
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)):
             result = require_auth(mock_request)
             
             assert result['clerk_user_id'] == 'user_123'
@@ -64,6 +67,7 @@ class TestRequireAdmin:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': '', 'Cookie': ''}
+        mock_request.path = '/api/admin/tenants'
         
         with pytest.raises(AuthenticationError) as exc_info:
             require_admin(mock_request)
@@ -76,6 +80,7 @@ class TestRequireAdmin:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': 'Bearer valid.token', 'Cookie': ''}
+        mock_request.path = '/api/admin/tenants'
         
         mock_user = {
             'clerk_user_id': 'user_123',
@@ -90,7 +95,7 @@ class TestRequireAdmin:
             'tenant_id': 'testuser'
         }
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user):
+        with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)):
             with patch('db.get_user_by_clerk_id', return_value=mock_db_user):
                 with pytest.raises(AuthorizationError) as exc_info:
                     require_admin(mock_request)
@@ -105,6 +110,7 @@ class TestRequireAdmin:
         
         mock_request = MagicMock()
         mock_request.headers = {'Authorization': 'Bearer valid.token', 'Cookie': ''}
+        mock_request.path = '/api/admin/tenants'
         
         mock_user = {
             'clerk_user_id': 'admin_123',
@@ -120,7 +126,7 @@ class TestRequireAdmin:
         }
         
         with patch.dict(os.environ, {'ADMIN_EMAILS': 'admin@company.com'}):
-            with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user):
+            with patch('auth.clerk_auth.verify_clerk_token', return_value=(mock_user, None)):
                 with patch('db.get_user_by_clerk_id', return_value=mock_db_user):
                     result = require_admin(mock_request)
                     
