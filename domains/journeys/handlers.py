@@ -282,15 +282,26 @@ def handle_journey_steps_set(handler, journey_id: str):
 
 
 def handle_journey_sessions_debug(handler):
-    """GET /api/journeys/debug/sessions - List sessions for debugging."""
+    """GET /api/journeys/debug/sessions - List sessions for debugging.
+    
+    Admin-only endpoint. Uses handler.tenant_id for tenant scoping.
+    Admins can optionally pass ?all=true to see all tenants.
+    """
     from . import repo
+    from auth.clerk_auth import is_admin_email
     
     try:
         parsed_path = urlparse(handler.path)
         query_params = parse_qs(parsed_path.query)
         
-        tenant_id = query_params.get('tenant_id', [None])[0]
         limit = int(query_params.get('limit', [50])[0])
+        
+        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        
+        show_all = query_params.get('all', ['false'])[0].lower() == 'true'
+        clerk_email = getattr(handler, 'clerk_email', None)
+        if show_all and clerk_email and is_admin_email(clerk_email):
+            tenant_id = None
         
         sessions = repo.list_sessions_debug(tenant_id=tenant_id, limit=limit)
         
