@@ -5625,6 +5625,25 @@
             isLoggedIn: false,
             isMobileMenuOpen: false
         };
+        
+        // Loading overlay functions
+        function showLoading(message = 'Loading...') {
+            let overlay = document.getElementById('loadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+                overlay.innerHTML = `<div style="background:#1e293b;color:#fff;padding:20px 40px;border-radius:8px;font-size:16px;">${message}</div>`;
+                document.body.appendChild(overlay);
+            }
+            overlay.querySelector('div').textContent = message;
+            overlay.style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
 
         // Product Navigation Structure
         const productNavigation = {
@@ -5689,7 +5708,7 @@
                     return;
                 }
             } catch (error) {
-                console.error('Auth check failed:', error);
+                console.error('Auth check failed:', error?.message || error);
                 window.location.href = '/login';
                 return;
             }
