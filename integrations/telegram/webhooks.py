@@ -158,15 +158,15 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
             logger.error(f"Session tenant mismatch: expected {tenant_id}, got {session['tenant_id']}")
             return False
         
-        if session['status'] != 'active':
+        if session['status'] not in ('active', 'awaiting_reply'):
             return False
         
         current_step = repo.get_step_by_id(session['current_step_id']) if session['current_step_id'] else None
         
-        if not current_step or current_step['step_type'] != 'question':
+        if not current_step or current_step['step_type'] not in ('question', 'wait_for_reply'):
             return False
         
-        logger.info(f"Processing journey reply for session {session['id']}")
+        logger.info(f"Processing journey reply for session {session['id']} (step_type={current_step['step_type']})")
         
         from domains.journeys.engine import JourneyEngine
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
@@ -195,7 +195,13 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
                 return False
         
         engine = JourneyEngine(send_message_fn=send_message_fn)
-        result = engine.handle_user_reply(session, text, bot_id)
+        
+        if current_step['step_type'] == 'question':
+            result = engine.handle_user_reply(session, text, bot_id)
+        elif current_step['step_type'] == 'wait_for_reply':
+            result = engine.handle_wait_for_reply_response(session, text, bot_id)
+        else:
+            result = False
         
         return result
         

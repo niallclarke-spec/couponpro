@@ -830,7 +830,7 @@ def get_first_step(journey_id: str) -> Optional[Dict]:
 
 
 def get_session_for_user_reply(tenant_id: str, telegram_user_id: int, telegram_chat_id: int) -> Optional[Dict]:
-    """Get the active session for a user who is replying (for answer collection)."""
+    """Get the active or awaiting_reply session for a user who is replying (for answer collection)."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return None
@@ -845,7 +845,7 @@ def get_session_for_user_reply(tenant_id: str, telegram_user_id: int, telegram_c
                 WHERE s.tenant_id = %s 
                   AND s.telegram_user_id = %s 
                   AND s.telegram_chat_id = %s
-                  AND s.status = 'active'
+                  AND s.status IN ('active', 'awaiting_reply')
                 ORDER BY s.last_activity_at DESC
                 LIMIT 1
             """, (tenant_id, telegram_user_id, telegram_chat_id))
