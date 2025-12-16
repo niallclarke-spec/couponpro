@@ -376,3 +376,66 @@ def handle_forex_telegram_webhook(handler, telegram_bot_available, telegram_bot_
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_bot_webhook(handler, webhook_secret: str):
+    """POST /api/bot-webhook/<secret> - Generic bot webhook for tenant-scoped bots (Message Bot)."""
+    start_time = time.time()
+    
+    try:
+        import db
+        connection = db.resolve_bot_connection_from_webhook_secret(webhook_secret)
+        
+        if not connection:
+            logger.warning("Bot webhook: invalid or unknown webhook secret")
+            handler.send_response(401)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Invalid webhook secret'}).encode())
+            return
+        
+        tenant_id = connection['tenant_id']
+        bot_role = connection['bot_role']
+        bot_username = connection['bot_username']
+        
+        logger.info(f"Bot webhook: tenant={tenant_id}, role={bot_role}")
+        
+        content_length = int(handler.headers.get('Content-Length', 0))
+        post_data = handler.rfile.read(content_length)
+        
+        webhook_data = json.loads(post_data.decode('utf-8'))
+        update_id = webhook_data.get('update_id', 'unknown')
+        logger.debug(f"Bot webhook: processing update_id={update_id}")
+        
+        if check_journey_trigger(webhook_data, tenant_id, bot_username):
+            elapsed = time.time() - start_time
+            logger.info(f"Bot webhook: journey trigger handled in {elapsed:.2f}s")
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'status': 'ok', 'handler': 'journey'}).encode())
+            return
+        
+        if check_journey_reply(webhook_data, tenant_id, bot_username):
+            elapsed = time.time() - start_time
+            logger.info(f"Bot webhook: journey reply handled in {elapsed:.2f}s")
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'status': 'ok', 'handler': 'journey_reply'}).encode())
+            return
+        
+        elapsed = time.time() - start_time
+        logger.debug(f"Bot webhook: no handler matched in {elapsed:.2f}s")
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'status': 'ok', 'handler': 'none'}).encode())
+        
+    except Exception as e:
+        elapsed = time.time() - start_time
+        logger.exception(f"Bot webhook error after {elapsed:.2f}s: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Internal server error'}).encode())

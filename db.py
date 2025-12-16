@@ -6875,3 +6875,42 @@ def get_all_bot_connections(tenant_id: str) -> list:
     except Exception as e:
         logger.exception(f"Error getting all bot connections for tenant={tenant_id}: {e}")
         return []
+
+
+def resolve_bot_connection_from_webhook_secret(webhook_secret: str) -> dict:
+    """
+    Resolve bot connection from webhook_secret stored in tenant_bot_connections.
+    
+    Args:
+        webhook_secret: Plain text webhook secret from URL path
+        
+    Returns:
+        Dict with tenant_id, bot_role, bot_token, bot_username or None if not found
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    if not webhook_secret:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id, bot_role, bot_token, bot_username
+                FROM tenant_bot_connections
+                WHERE webhook_secret = %s
+            """, (webhook_secret,))
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'tenant_id': row[0],
+                    'bot_role': row[1],
+                    'bot_token': row[2],
+                    'bot_username': row[3]
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error resolving bot connection from webhook secret: {e}")
+        return None

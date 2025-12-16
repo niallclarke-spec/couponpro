@@ -181,6 +181,7 @@ POST_ROUTES: List[Route] = [
     # Telegram webhooks (no auth - webhook endpoints)
     Route('POST', '/api/telegram-webhook', 'handle_api_telegram_webhook'),
     Route('POST', '/api/forex-telegram-webhook', 'handle_api_forex_telegram_webhook'),
+    Route('POST', '/api/bot-webhook/', 'handle_api_bot_webhook', is_prefix=True),
     
     # Telegram management
     Route('POST', '/api/telegram/grant-access', 'handle_api_telegram_grant_access'),

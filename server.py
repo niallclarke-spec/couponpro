@@ -17,7 +17,7 @@ from domains.coupons import handlers as coupon_h
 from domains.forex import handlers as forex_h
 from domains.tenant import handlers as tenant_h
 from handlers import onboarding_handlers as onboard_h, stripe_products_handlers as stripe_h, pages
-from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook
+from integrations.telegram.webhooks import handle_coupon_telegram_webhook, handle_forex_telegram_webhook, handle_bot_webhook
 from integrations.stripe.webhooks import handle_stripe_webhook
 
 OBJECT_STORAGE_AVAILABLE = TELEGRAM_BOT_AVAILABLE = DATABASE_AVAILABLE = False
@@ -175,6 +175,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_api_telegram_revoke_access(self): sub_h.handle_telegram_revoke_access(self)
     def handle_api_telegram_webhook(self): handle_coupon_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
     def handle_api_forex_telegram_webhook(self): handle_forex_telegram_webhook(self, TELEGRAM_BOT_AVAILABLE, telegram_bot)
+    def handle_api_bot_webhook(self):
+        path = self.path.split('?')[0]
+        secret = path.replace('/api/bot-webhook/', '')
+        handle_bot_webhook(self, secret)
 
     # Stripe handlers
     def handle_api_stripe_webhook(self): handle_stripe_webhook(self, STRIPE_AVAILABLE, TELEGRAM_BOT_AVAILABLE, db)

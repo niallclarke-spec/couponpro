@@ -292,10 +292,11 @@
                     throw new Error(data.error || 'Failed to update journey');
                 }
             } else {
+                const botId = state.messageBotUsername || 'default';
                 const resp = await fetch('/api/journeys', {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ name, status }),
+                    body: JSON.stringify({ name, status, bot_id: botId }),
                     credentials: 'include'
                 });
                 const data = await resp.json();
