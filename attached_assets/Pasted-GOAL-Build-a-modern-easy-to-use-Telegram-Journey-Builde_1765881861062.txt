@@ -1,0 +1,179 @@
+GOAL
+Build a modern, easy-to-use **Telegram Journey Builder (V1)** inside the dashboard that allows tenants to create and manage up to **6 journeys**, using the backend Journeys system that already exists (journeys, journey_steps, journey_triggers, etc.).
+
+This is a PRODUCT FEATURE, not a refactor. The backend journeys engine already works — this task is about exposing it cleanly in the dashboard and wiring it correctly.
+
+────────────────────────────────────────
+🚫 ABSOLUTE HARD CONSTRAINTS (DO NOT VIOLATE)
+────────────────────────────────────────
+
+1) ❌ DO NOT PUT LOGIC IN server.py
+- server.py must remain THIN.
+- No UI logic, no business logic, no dispatch logic.
+- Only allow **thin wrapper methods** (delegate → domain handlers).
+- server.py must stay under ~400 lines.
+- NO if/elif routing chains.
+- ALL routing must go through:
+  - api/routes.py
+  - api/dispatch.py
+  - domain handler modules
+
+2) ❌ DO NOT MIX UI + BACKEND LOGIC
+- UI lives in HTML + JS only.
+- Backend logic lives in domains/journeys/.
+
+3) ❌ DO NOT BREAK EXISTING JOURNEYS
+- Existing seeded journeys must continue working.
+- Telegram deep links like:
+  t.me/YourBot?start=broker_signup
+  must keep working exactly as they do now.
+
+────────────────────────────────────────
+✅ WHAT TO BUILD (FUNCTIONAL REQUIREMENTS)
+────────────────────────────────────────
+
+A) JOURNEY BUILDER UI (Dashboard)
+
+Add a new sidebar item:
+- **“Journeys”**
+
+This opens a **Journeys Management Page** with:
+
+1) Journeys List View
+- Shows all journeys for the tenant (max 6)
+- Columns:
+  - Name
+  - Status (Draft / Active / Paused)
+  - Trigger (e.g. /start broker_signup)
+  - Bot used
+- Actions:
+  - Edit
+  - Pause / Activate
+  - Delete
+
+2) Create / Edit Journey
+Form-based editor (NOT a visual flow builder yet).
+
+Fields:
+- Journey name
+- Description (internal notes)
+- Telegram bot (select from tenant’s connected bots)
+- Trigger type (V1 only):
+  - Telegram Deep Link
+- Deep link param (e.g. broker_signup)
+
+3) Journey Steps Editor
+- Linear steps only (V1)
+- Max 10 steps per journey
+- Step types:
+  - Message (text)
+  - Question (text + answer_key)
+  - Delay (min/max minutes)
+- Ability to:
+  - Add step
+  - Edit step
+  - Reorder steps (up/down)
+  - Delete step
+
+4) Activation Controls
+- Journeys start as Draft
+- Only Active journeys respond to Telegram triggers
+- Clear warning when activating:
+  “This journey will go live immediately for your Telegram bot.”
+
+B) TENANT RULES
+- Each tenant:
+  - Max 6 journeys
+  - Journeys are fully tenant-isolated
+- Bots selectable only from tenant’s connected bots
+- No cross-tenant visibility
+
+────────────────────────────────────────
+🔗 BACKEND INTEGRATION (ALREADY EXISTS — USE IT)
+────────────────────────────────────────
+
+You MUST reuse the existing Journeys backend:
+- journeys
+- journey_triggers
+- journey_steps
+- journey_user_sessions
+- journey_scheduled_messages
+
+Allowed backend work:
+- Add or adjust API endpoints ONLY if needed for UI
+- Place handlers in:
+  domains/journeys/handlers.py
+- DB access via:
+  domains/journeys/repo.py
+
+Routes must be added to:
+- api/routes.py
+
+server.py:
+- Only add thin wrapper methods that call domain handlers.
+- No logic.
+
+────────────────────────────────────────
+📁 REQUIRED FILE STRUCTURE (STRICT)
+────────────────────────────────────────
+
+Frontend:
+- handlers/pages.py (serve the page)
+- journeys.html (or integrated into app.html if that’s the pattern)
+- ui/journeys/journeys.js  ← ALL Journey UI logic
+- ui/journeys/journeys.css ← Journeys styling only
+
+Backend:
+- domains/journeys/handlers.py
+- domains/journeys/repo.py
+- api/routes.py
+- api/dispatch.py (no changes unless required)
+
+Tests:
+- Add or extend tests to ensure:
+  - server.py size does not increase
+  - Journeys routes require auth
+  - Tenant isolation is preserved
+
+────────────────────────────────────────
+🎨 UX EXPECTATIONS
+────────────────────────────────────────
+
+- Clean, modern UI
+- No clutter
+- Simple forms
+- Clear empty states:
+  “You haven’t created any journeys yet.”
+- Friendly copy, not technical language
+- Errors shown in UI (not console-only)
+
+────────────────────────────────────────
+⚠️ V1 LIMITATIONS (DO NOT BUILD YET)
+────────────────────────────────────────
+
+- No branching logic
+- No conditional steps
+- No A/B testing
+- No Stripe-triggered journeys
+- No analytics dashboard
+- No media messages
+- No multi-bot journeys
+
+Linear flows only.
+
+────────────────────────────────────────
+🧪 ACCEPTANCE CHECKLIST
+────────────────────────────────────────
+
+- Journeys appear in dashboard
+- Creating a journey saves correctly
+- Activating a journey makes Telegram deep links work
+- server.py stays thin
+- Coupon bot and existing Telegram bots still work
+- No auth or tenant regressions
+
+────────────────────────────────────────
+Proceed step-by-step.
+Do NOT refactor unrelated systems.
+Do NOT add shortcuts.
+Ask for confirmation ONLY if a decision materially affects architecture.
