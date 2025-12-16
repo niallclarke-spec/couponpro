@@ -1,0 +1,69 @@
+GOAL
+Fix 401 issues for authenticated API calls (specifically GET /api/check-auth and GET /api/telegram-channel-stats) by adding safe, actionable auth diagnostics and ensuring Bearer + __session cookie auth work reliably after the dispatcher refactor.
+
+CRITICAL CONSTRAINTS
+- DO NOT move logic back into server.py.
+- server.py must remain thin (wrappers only). All implementation must live in existing modules under auth/, api/, domains/, handlers/, core/.
+- Do not log raw JWTs, cookies, or secrets.
+
+CURRENT SYMPTOMS
+- GET /api/telegram-channel-stats is auth_required=True and returns 401 even when a Bearer token is provided.
+- Tests pass, so the issue is likely runtime config mismatch or insufficient diagnostics.
+
+TASKS
+
+1) Add safe, structured auth failure diagnostics
+- In auth/clerk_auth.py (or auth layer where JWT is verified), catch and classify verification failures into a small set of reasons:
+  - missing_auth_header
+  - malformed_bearer
+  - jwks_fetch_failed
+  - invalid_signature
+  - token_expired
+  - invalid_issuer
+  - invalid_audience
+  - missing_claims
+  - unknown_error
+- Log one line at WARNING level with:
+  - reason code
+  - request path
+  - host
+  - host_type (if available)
+  - whether auth came from bearer vs cookie
+  - tenant_id extracted (if any)
+  - clerk_user_id extracted (if any)
+- DO NOT include the full token/cookie in logs.
+
+2) Add an AUTH DEBUG endpoint (admin-only) to return sanitized diagnostics for the last N auth failures
+- Create a new module: auth/auth_debug.py that stores a small in-memory ring buffer (e.g., deque(maxlen=50)) of sanitized auth failure records.
+- Add route: GET /api/auth/debug (auth_required=True AND admin-only)
+- This endpoint should return JSON list of the last auth failure records.
+- Wire it through the normal route system (api/routes.py) and middleware checks.
+- Keep any wrapper method (if required) minimal in server.py; actual logic lives in auth/auth_debug.py or a dedicated handler module.
+
+3) Ensure middleware uses the same auth source consistently
+- Review api/middleware.py determine_tenant_id() flow.
+- Ensure that when Authorization: Bearer <jwt> is present, it is always attempted first and produces tenant_id/clerk_user_id consistently.
+- Ensure that the __session cookie path still works (if supported) and produces the same tenant resolution outputs.
+- If host_type affects auth behavior, document it in code comments and ensure /api/check-auth and /api/telegram-channel-stats behave identically across local Host headers.
+
+4) Add focused regression tests (no network)
+- Add tests that patch/mocks the JWT verification function to return a known auth user payload.
+- Verify:
+  - GET /api/check-auth returns 200 with Authorization: Bearer fakejwt (when verifier mocked)
+  - GET /api/telegram-channel-stats passes auth middleware and reaches the handler (mock the handler body or mock Config.get_forex_channel_id + telegram call).
+- Also add a test that confirms the auth debug ring buffer records a failure when verifier raises an exception.
+
+5) Improve the telegram stats handler error surface
+- In domains/subscriptions/handlers.py handle_telegram_channel_stats():
+  - If token/channel ID is missing, return 503 with a clear message (do not 500).
+  - If Telegram API fails, return 502 with a short error and log the full exception.
+
+DELIVERABLES
+- New file(s): auth/auth_debug.py (ring buffer + helper), plus any small handler module if needed.
+- Updated: auth/clerk_auth.py (diagnostics + recording), api/routes.py (debug endpoint), tests for bearer success and debug recording.
+- Keep server.py thin: only wrappers if necessary.
+
+VERIFICATION STEPS (must pass)
+- pytest -q
+- curl (manual): /api/check-auth returns 200 with a valid Bearer token in real environment
+- /api/auth/debug returns useful diagnostics for failures (admin-only)
