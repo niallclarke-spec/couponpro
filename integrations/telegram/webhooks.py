@@ -70,7 +70,7 @@ def check_journey_trigger(webhook_data: dict, tenant_id: str, bot_id: str) -> bo
         import db
         
         try:
-            creds = get_bot_credentials(tenant_id, 'message')
+            creds = get_bot_credentials(tenant_id, 'message_bot')
             message_bot_token = creds['bot_token']
         except BotNotConfiguredError as e:
             logger.warning(f"Message bot not configured for journey trigger: {e}")
@@ -172,7 +172,7 @@ def check_journey_reply(webhook_data: dict, tenant_id: str, bot_id: str) -> bool
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         
         try:
-            creds = get_bot_credentials(tenant_id, 'message')
+            creds = get_bot_credentials(tenant_id, 'message_bot')
             reply_bot_token = creds['bot_token']
         except BotNotConfiguredError as e:
             logger.warning(f"Message bot not configured for journey reply: {e}")
@@ -333,7 +333,7 @@ def handle_forex_telegram_webhook(handler, telegram_bot_available, telegram_bot_
         
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_bot_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[FOREX-WEBHOOK] ❌ Forex bot not configured: {e}", flush=True)

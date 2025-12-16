@@ -9,6 +9,44 @@ from core.logging import get_logger
 
 logger = get_logger(__name__)
 
+# Canonical bot role constants - these are the ONLY valid roles
+SIGNAL_BOT = "signal_bot"
+MESSAGE_BOT = "message_bot"
+
+# Valid canonical roles
+VALID_BOT_ROLES = {SIGNAL_BOT, MESSAGE_BOT}
+
+# Legacy alias mapping for backward compatibility during migration
+# Maps legacy role names to canonical names
+LEGACY_ROLE_ALIASES = {
+    "signal": SIGNAL_BOT,
+    "message": MESSAGE_BOT,
+}
+
+
+def normalize_bot_role(bot_role: str) -> tuple:
+    """
+    Normalize a bot role to its canonical form.
+    
+    Args:
+        bot_role: The bot role string (may be legacy or canonical)
+        
+    Returns:
+        tuple of (canonical_role, was_legacy_alias)
+    """
+    if bot_role in VALID_BOT_ROLES:
+        return bot_role, False
+    
+    if bot_role in LEGACY_ROLE_ALIASES:
+        canonical = LEGACY_ROLE_ALIASES[bot_role]
+        logger.warning(
+            f"Legacy bot_role '{bot_role}' used, mapped to '{canonical}'. "
+            f"Please update to use canonical role names."
+        )
+        return canonical, True
+    
+    return bot_role, False
+
 
 class BotNotConfiguredError(Exception):
     """Raised when bot credentials are not found in the database for a tenant."""
@@ -37,7 +75,7 @@ class BotCredentialResolver:
         
         Args:
             tenant_id: The tenant ID to look up
-            bot_role: The bot role ('signal' or 'message')
+            bot_role: The bot role ('signal_bot' or 'message_bot')
             
         Returns:
             dict with keys: bot_token, bot_username, channel_id, webhook_url
@@ -45,13 +83,18 @@ class BotCredentialResolver:
         Raises:
             BotNotConfiguredError: If no bot connection found for this tenant/role
         """
-        connection = db.get_bot_connection(tenant_id, bot_role)
+        canonical_role, was_legacy = normalize_bot_role(bot_role)
+        
+        connection = db.get_bot_connection(tenant_id, canonical_role)
+        
+        if not connection and was_legacy:
+            connection = db.get_bot_connection(tenant_id, bot_role)
         
         if not connection:
             logger.warning(
-                f"Bot credentials not found: tenant_id={tenant_id}, bot_role={bot_role}"
+                f"Bot credentials not found: tenant_id={tenant_id}, bot_role={canonical_role}"
             )
-            raise BotNotConfiguredError(tenant_id, bot_role)
+            raise BotNotConfiguredError(tenant_id, canonical_role)
         
         logger.info(
             f"Bot credentials retrieved: tenant_id={tenant_id}, "
@@ -78,7 +121,7 @@ class BotCredentialResolver:
         Raises:
             BotNotConfiguredError: If signal bot not configured for tenant
         """
-        return self.get_bot_credentials(tenant_id, 'signal')
+        return self.get_bot_credentials(tenant_id, SIGNAL_BOT)
     
     def get_message_bot(self, tenant_id: str) -> dict:
         """
@@ -93,7 +136,7 @@ class BotCredentialResolver:
         Raises:
             BotNotConfiguredError: If message bot not configured for tenant
         """
-        return self.get_bot_credentials(tenant_id, 'message')
+        return self.get_bot_credentials(tenant_id, MESSAGE_BOT)
 
 
 def get_bot_credentials(tenant_id: str, bot_role: str) -> dict:
@@ -104,7 +147,8 @@ def get_bot_credentials(tenant_id: str, bot_role: str) -> dict:
     
     Args:
         tenant_id: The tenant ID to look up
-        bot_role: The bot role ('signal' or 'message')
+        bot_role: The bot role ('signal_bot' or 'message_bot')
+            Legacy 'signal' and 'message' are also accepted for backward compatibility
         
     Returns:
         dict with keys: bot_token, bot_username, channel_id, webhook_url

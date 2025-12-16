@@ -118,7 +118,7 @@ def _get_tenant_send_fn(tenant_id: str) -> Callable[[int, str, str], bool]:
     
     bot_not_configured = False
     try:
-        creds = get_bot_credentials(tenant_id, 'message')
+        creds = get_bot_credentials(tenant_id, 'message_bot')
         bot_token = creds['bot_token']
     except BotNotConfiguredError:
         logger.error(f"Message Bot not configured. Go to Connections → Message Bot. (tenant={tenant_id})")

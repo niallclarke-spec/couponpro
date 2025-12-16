@@ -44,7 +44,7 @@ class JourneyEngine:
             True if sent successfully, False otherwise
         """
         try:
-            creds = get_bot_credentials(tenant_id, 'message')
+            creds = get_bot_credentials(tenant_id, 'message_bot')
             bot_token = creds['bot_token']
         except BotNotConfiguredError:
             logger.error(f"Message Bot not configured. Go to Connections → Message Bot. (tenant={tenant_id})")

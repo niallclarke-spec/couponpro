@@ -8,6 +8,7 @@ import requests
 
 import db
 from core.logging import get_logger
+from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
 
 logger = get_logger(__name__)
 
@@ -103,8 +104,8 @@ def handle_connection_validate(handler):
     bot_role = data.get('bot_role')
     bot_token = data.get('bot_token')
     
-    if bot_role not in ('signal', 'message'):
-        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+    if bot_role not in VALID_BOT_ROLES:
+        _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
     if not bot_token:
@@ -133,8 +134,8 @@ def handle_connection_test(handler):
     bot_role = data.get('bot_role')
     bot_token = data.get('bot_token')
     
-    if bot_role not in ('signal', 'message'):
-        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+    if bot_role not in VALID_BOT_ROLES:
+        _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
     if not bot_token:
@@ -168,8 +169,8 @@ def handle_connection_save(handler):
     bot_token = data.get('bot_token')
     channel_id = data.get('channel_id')
     
-    if bot_role not in ('signal', 'message'):
-        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+    if bot_role not in VALID_BOT_ROLES:
+        _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
     if not bot_token:
@@ -228,8 +229,8 @@ def handle_connection_delete(handler, bot_role: str):
     """DELETE /api/connections/:bot_role - Remove webhook and delete connection."""
     tenant_id = getattr(handler, 'tenant_id', 'entrylab')
     
-    if bot_role not in ('signal', 'message'):
-        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+    if bot_role not in VALID_BOT_ROLES:
+        _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
     if not db.db_pool or not db.db_pool.connection_pool:

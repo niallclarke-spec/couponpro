@@ -34,7 +34,7 @@
             const resp = await fetch('/api/connections', { headers, credentials: 'include' });
             if (resp.ok) {
                 const data = await resp.json();
-                const messageBot = (data.connections || []).find(c => c.bot_role === 'message');
+                const messageBot = (data.connections || []).find(c => c.bot_role === 'message_bot');
                 state.messageBotUsername = messageBot?.bot_username || null;
             }
         } catch (err) {
