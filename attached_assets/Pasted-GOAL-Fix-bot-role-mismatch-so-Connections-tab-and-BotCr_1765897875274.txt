@@ -1,0 +1,51 @@
+GOAL: Fix bot_role mismatch so Connections tab and BotCredentialResolver agree. Currently DB stores tenant_bot_connections.bot_role as "signal" but backend expects "signal_bot" (and "message_bot"). This breaks journeys and any bot credential lookups.
+
+CONSTRAINTS:
+- Do NOT add logic to server.py (keep server.py thin).
+- Connections tab must remain the single source of truth for tenant bot credentials.
+- Coupon bot (PromoStack) must remain completely separate and continue using its existing env-based logic; do NOT migrate coupon bot to BotCredentialResolver.
+- Must be tenant-scoped.
+
+REQUIRED FIX (do all):
+1) Canonical role names:
+   - Standardize on exactly two roles in DB + backend:
+     - "signal_bot" (for FX signals to channel)
+     - "message_bot" (for journeys + DM messaging)
+   - No other role strings should be used going forward.
+
+2) Database migration / data fix:
+   - Add a migration script or startup-safe migration to update existing rows:
+     - UPDATE tenant_bot_connections SET bot_role='signal_bot' WHERE bot_role='signal';
+     - UPDATE tenant_bot_connections SET bot_role='message_bot' WHERE bot_role='message';
+   - Ensure this is idempotent (safe to run multiple times).
+   - If there is a unique constraint on (tenant_id, bot_role), handle conflicts safely (prefer latest updated_at row, delete older duplicates if needed).
+
+3) Backward compatibility in resolver (temporary safety net):
+   - In core/bot_credentials.py, if lookup for "signal_bot" fails, also try legacy "signal" (same for "message_bot" -> "message").
+   - Log a WARN when legacy alias was used so we can see it and later remove.
+
+4) Fix the Connections UI role values:
+   - Ensure the Connections tab saves bot_role values as "signal_bot" and "message_bot" (not "signal"/"message").
+   - Ensure existing saved rows still load correctly after the migration.
+   - Keep token masking behavior (do not display full token).
+
+5) Journeys must use message_bot credentials:
+   - Wherever journeys send messages, ensure they request credentials using bot_role="message_bot".
+   - If message_bot is not configured, return a clear actionable error (“Message Bot not configured. Go to Connections → Message Bot.”) without crashing.
+
+6) Add regression tests (pytest):
+   - Test migration behavior: given a seeded row with bot_role="signal", resolver(get_bot_credentials('entrylab','signal_bot')) returns creds (either via migration or alias).
+   - Test that UI/backend contract uses canonical roles (at least one unit test verifying allowed roles set).
+   - Test coupon bot is NOT using BotCredentialResolver (ensure coupon webhook path still calls Config.get_telegram_bot_token or its existing code path).
+
+VERIFICATION COMMANDS (you must run in the Replit shell and ensure they pass):
+- pytest -q
+- python3 - <<'PY'
+  from core.bot_credentials import get_bot_credentials
+  print(get_bot_credentials("entrylab","signal_bot")["bot_username"])
+  PY
+- Confirm tenant_bot_connections now contains bot_role="signal_bot" for entrylab.
+
+DELIVERABLES:
+- Clean commit-like changes across appropriate modules (core/bot_credentials.py, any migration script under scripts/ or migrations/, Connections UI JS, and tests).
+- No changes adding large dispatch logic to server.py.
