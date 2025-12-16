@@ -869,6 +869,26 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_telegram_webhook_secrets_hash ON telegram_webhook_secrets(secret_token_hash)")
                 logger.info("telegram_webhook_secrets table ready")
                 
+                # Create tenant_bot_connections table (per-tenant bot credentials)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_bot_connections (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(100) NOT NULL REFERENCES tenants(id),
+                        bot_role VARCHAR(20) NOT NULL CHECK (bot_role IN ('signal', 'message')),
+                        bot_token TEXT,
+                        bot_username VARCHAR(100),
+                        webhook_secret VARCHAR(100),
+                        webhook_url TEXT,
+                        last_validated_at TIMESTAMP,
+                        last_error TEXT,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(tenant_id, bot_role)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_bot_connections_tenant_id ON tenant_bot_connections(tenant_id)")
+                logger.info("tenant_bot_connections table ready")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================
@@ -6695,3 +6715,145 @@ def resolve_tenant_from_webhook_secret(secret_token: str) -> tuple:
     except Exception as e:
         logger.exception(f"Error resolving tenant from webhook secret: {e}")
         return (None, None)
+
+
+# ============================================================
+# Tenant Bot Connections
+# ============================================================
+
+def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
+    """
+    Get bot connection config for a tenant and role.
+    
+    Args:
+        tenant_id: Tenant ID
+        bot_role: Bot role ('signal' or 'message')
+        
+    Returns:
+        Dict with bot config or None if not found
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, tenant_id, bot_role, bot_token, bot_username, 
+                       webhook_secret, webhook_url, last_validated_at, last_error,
+                       created_at, updated_at
+                FROM tenant_bot_connections
+                WHERE tenant_id = %s AND bot_role = %s
+            """, (tenant_id, bot_role))
+            
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'id': row[0],
+                    'tenant_id': row[1],
+                    'bot_role': row[2],
+                    'bot_token': row[3],
+                    'bot_username': row[4],
+                    'webhook_secret': row[5],
+                    'webhook_url': row[6],
+                    'last_validated_at': row[7].isoformat() if row[7] else None,
+                    'last_error': row[8],
+                    'created_at': row[9].isoformat() if row[9] else None,
+                    'updated_at': row[10].isoformat() if row[10] else None
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error getting bot connection for tenant={tenant_id}, role={bot_role}: {e}")
+        return None
+
+
+def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None, 
+                          bot_username: str = None, webhook_secret: str = None, 
+                          webhook_url: str = None, last_error: str = None) -> bool:
+    """
+    Upsert a bot connection for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        bot_role: Bot role ('signal' or 'message')
+        bot_token: Telegram bot token
+        bot_username: Bot username
+        webhook_secret: Webhook secret for validation
+        webhook_url: Webhook URL
+        last_error: Last error message if any
+        
+    Returns:
+        True if upserted successfully
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_bot_connections 
+                    (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, last_error, last_validated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
+                ON CONFLICT (tenant_id, bot_role) DO UPDATE SET
+                    bot_token = COALESCE(EXCLUDED.bot_token, tenant_bot_connections.bot_token),
+                    bot_username = COALESCE(EXCLUDED.bot_username, tenant_bot_connections.bot_username),
+                    webhook_secret = COALESCE(EXCLUDED.webhook_secret, tenant_bot_connections.webhook_secret),
+                    webhook_url = COALESCE(EXCLUDED.webhook_url, tenant_bot_connections.webhook_url),
+                    last_error = EXCLUDED.last_error,
+                    last_validated_at = CASE WHEN EXCLUDED.last_error IS NULL THEN NOW() ELSE tenant_bot_connections.last_validated_at END,
+                    updated_at = NOW()
+            """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, last_error, last_error))
+            conn.commit()
+            logger.info(f"Upserted bot connection for tenant={tenant_id}, role={bot_role}")
+            return True
+    except Exception as e:
+        logger.exception(f"Error upserting bot connection for tenant={tenant_id}, role={bot_role}: {e}")
+        return False
+
+
+def get_all_bot_connections(tenant_id: str) -> list:
+    """
+    Get all bot connections for a tenant.
+    
+    Args:
+        tenant_id: Tenant ID
+        
+    Returns:
+        List of bot connection dicts
+    """
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, tenant_id, bot_role, bot_token, bot_username, 
+                       webhook_secret, webhook_url, last_validated_at, last_error,
+                       created_at, updated_at
+                FROM tenant_bot_connections
+                WHERE tenant_id = %s
+                ORDER BY bot_role
+            """, (tenant_id,))
+            
+            rows = cursor.fetchall()
+            connections = []
+            for row in rows:
+                connections.append({
+                    'id': row[0],
+                    'tenant_id': row[1],
+                    'bot_role': row[2],
+                    'bot_token': row[3],
+                    'bot_username': row[4],
+                    'webhook_secret': row[5],
+                    'webhook_url': row[6],
+                    'last_validated_at': row[7].isoformat() if row[7] else None,
+                    'last_error': row[8],
+                    'created_at': row[9].isoformat() if row[9] else None,
+                    'updated_at': row[10].isoformat() if row[10] else None
+                })
+            return connections
+    except Exception as e:
+        logger.exception(f"Error getting all bot connections for tenant={tenant_id}: {e}")
+        return []

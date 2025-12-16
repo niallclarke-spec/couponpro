@@ -266,9 +266,27 @@ def handle_journey_steps_set(handler, journey_id: str):
         body = handler.rfile.read(content_length)
         data = json.loads(body.decode('utf-8'))
         
-        steps = data.get('steps', [])
+        raw_steps = data.get('steps', [])
         
-        success = repo.set_steps(tenant_id, journey_id, steps)
+        normalized_steps = []
+        for i, step in enumerate(raw_steps):
+            text = step.get('message_template') or step.get('text') or step.get('config', {}).get('text', '')
+            delay = step.get('delay_seconds', 0)
+            if isinstance(delay, str):
+                delay = int(delay) if delay.isdigit() else 0
+            
+            normalized_steps.append({
+                'step_order': step.get('step_order', i + 1),
+                'step_type': step.get('step_type', 'message'),
+                'config': {
+                    'text': text,
+                    'delay_seconds': delay
+                }
+            })
+        
+        logger.info(f"Saving {len(normalized_steps)} steps for journey {journey_id}: {[s['config'].get('text', '')[:50] for s in normalized_steps]}")
+        
+        success = repo.set_steps(tenant_id, journey_id, normalized_steps)
         
         if success:
             updated_steps = repo.list_steps(tenant_id, journey_id)

@@ -1,0 +1,231 @@
+"""
+Connections domain handlers - manages tenant bot configurations.
+"""
+import json
+import os
+import secrets
+import requests
+
+import db
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
+TELEGRAM_API_BASE = "https://api.telegram.org/bot"
+
+
+def _send_json(handler, status: int, data: dict):
+    """Helper to send JSON response."""
+    handler.send_response(status)
+    handler.send_header('Content-type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps(data).encode())
+
+
+def _get_host(handler) -> str:
+    """Get host for webhook URL from DOMAIN env var or Host header."""
+    domain = os.environ.get('DOMAIN')
+    if domain:
+        return domain
+    return handler.headers.get('Host', 'localhost')
+
+
+def _validate_telegram_token(bot_token: str) -> tuple:
+    """
+    Validate a Telegram bot token by calling getMe API.
+    
+    Returns:
+        (success: bool, bot_username: str or None, error: str or None)
+    """
+    try:
+        url = f"{TELEGRAM_API_BASE}{bot_token}/getMe"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        
+        if data.get('ok') and data.get('result'):
+            username = data['result'].get('username', '')
+            return True, f"@{username}" if username else None, None
+        else:
+            error = data.get('description', 'Invalid bot token')
+            return False, None, error
+    except requests.RequestException as e:
+        logger.exception(f"Error validating Telegram token: {e}")
+        return False, None, str(e)
+
+
+def handle_connections_list(handler):
+    """GET /api/connections - List all bot connections for tenant."""
+    try:
+        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        
+        if not db.db_pool or not db.db_pool.connection_pool:
+            _send_json(handler, 503, {'error': 'Database not available'})
+            return
+        
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT bot_role, bot_username, webhook_url, last_validated_at, last_error
+                FROM tenant_bot_connections
+                WHERE tenant_id = %s
+                ORDER BY bot_role
+            """, (tenant_id,))
+            
+            rows = cursor.fetchall()
+            connections = []
+            for row in rows:
+                connections.append({
+                    'bot_role': row[0],
+                    'bot_username': row[1],
+                    'webhook_url': row[2],
+                    'last_validated_at': row[3].isoformat() if row[3] else None,
+                    'last_error': row[4]
+                })
+        
+        _send_json(handler, 200, {'connections': connections})
+        
+    except Exception as e:
+        logger.exception(f"Error listing connections: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_connection_validate(handler):
+    """POST /api/connections/validate - Validate a bot token without saving."""
+    try:
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body.decode('utf-8'))
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+    
+    bot_role = data.get('bot_role')
+    bot_token = data.get('bot_token')
+    
+    if bot_role not in ('signal', 'message'):
+        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+        return
+    
+    if not bot_token:
+        _send_json(handler, 400, {'error': 'bot_token is required'})
+        return
+    
+    valid, bot_username, error = _validate_telegram_token(bot_token)
+    
+    if valid:
+        _send_json(handler, 200, {'valid': True, 'bot_username': bot_username})
+    else:
+        _send_json(handler, 200, {'valid': False, 'error': error})
+
+
+def handle_connection_save(handler):
+    """POST /api/connections - Validate token, set webhook, and save connection."""
+    try:
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body.decode('utf-8'))
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+    
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    bot_role = data.get('bot_role')
+    bot_token = data.get('bot_token')
+    
+    if bot_role not in ('signal', 'message'):
+        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+        return
+    
+    if not bot_token:
+        _send_json(handler, 400, {'error': 'bot_token is required'})
+        return
+    
+    valid, bot_username, error = _validate_telegram_token(bot_token)
+    if not valid:
+        _send_json(handler, 400, {'error': f'Invalid bot token: {error}'})
+        return
+    
+    webhook_secret = secrets.token_urlsafe(32)
+    host = _get_host(handler)
+    webhook_url = f"https://{host}/api/bot-webhook/{webhook_secret}"
+    
+    try:
+        set_webhook_url = f"{TELEGRAM_API_BASE}{bot_token}/setWebhook"
+        response = requests.post(set_webhook_url, json={'url': webhook_url}, timeout=10)
+        webhook_data = response.json()
+        
+        if not webhook_data.get('ok'):
+            error_msg = webhook_data.get('description', 'Failed to set webhook')
+            _send_json(handler, 400, {'error': f'Failed to set webhook: {error_msg}'})
+            return
+    except requests.RequestException as e:
+        logger.exception(f"Error setting webhook: {e}")
+        _send_json(handler, 500, {'error': f'Failed to set webhook: {e}'})
+        return
+    
+    success = db.upsert_bot_connection(
+        tenant_id=tenant_id,
+        bot_role=bot_role,
+        bot_token=bot_token,
+        bot_username=bot_username,
+        webhook_secret=webhook_secret,
+        webhook_url=webhook_url
+    )
+    
+    if success:
+        logger.info(f"Saved bot connection: tenant={tenant_id}, role={bot_role}, username={bot_username}")
+        _send_json(handler, 200, {
+            'success': True,
+            'connection': {
+                'bot_role': bot_role,
+                'bot_username': bot_username,
+                'webhook_url': webhook_url
+            }
+        })
+    else:
+        _send_json(handler, 500, {'error': 'Failed to save connection to database'})
+
+
+def handle_connection_delete(handler, bot_role: str):
+    """DELETE /api/connections/:bot_role - Remove webhook and delete connection."""
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    
+    if bot_role not in ('signal', 'message'):
+        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+        return
+    
+    if not db.db_pool or not db.db_pool.connection_pool:
+        _send_json(handler, 503, {'error': 'Database not available'})
+        return
+    
+    try:
+        connection = db.get_bot_connection(tenant_id, bot_role)
+        if not connection:
+            _send_json(handler, 404, {'error': 'Connection not found'})
+            return
+        
+        bot_token = connection.get('bot_token')
+        if bot_token:
+            try:
+                delete_webhook_url = f"{TELEGRAM_API_BASE}{bot_token}/deleteWebhook"
+                response = requests.post(delete_webhook_url, timeout=10)
+                webhook_data = response.json()
+                if not webhook_data.get('ok'):
+                    logger.warning(f"Failed to delete webhook: {webhook_data.get('description')}")
+            except requests.RequestException as e:
+                logger.warning(f"Error deleting webhook: {e}")
+        
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM tenant_bot_connections
+                WHERE tenant_id = %s AND bot_role = %s
+            """, (tenant_id, bot_role))
+            conn.commit()
+        
+        logger.info(f"Deleted bot connection: tenant={tenant_id}, role={bot_role}")
+        _send_json(handler, 200, {'success': True})
+        
+    except Exception as e:
+        logger.exception(f"Error deleting connection: {e}")
+        _send_json(handler, 500, {'error': str(e)})
