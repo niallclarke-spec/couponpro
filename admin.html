@@ -5595,15 +5595,27 @@
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label>Free Channel ID</label>
-                                <input type="text" id="crosspromo-free-channel" placeholder="e.g., -1001234567890" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card);">
-                                <div class="hint">The channel where promo messages will be posted</div>
+                                <label>Free Channel (destination)</label>
+                                <select id="crosspromo-free-channel" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="">-- Select from Connections --</option>
+                                </select>
+                                <div class="hint">Promos will be posted here (from Signal Bot channel)</div>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label>VIP Channel ID</label>
-                                <input type="text" id="crosspromo-vip-channel" placeholder="e.g., -1001234567891" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card);">
-                                <div class="hint">The VIP channel to copy winning signals from</div>
+                                <label>VIP Channel (source)</label>
+                                <select id="crosspromo-vip-channel" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="">-- Select from Connections --</option>
+                                </select>
+                                <div class="hint">Winning signals will be copied from here</div>
+                            </div>
+                            
+                            <div style="background: var(--bg-hover); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    <strong>Schedule (Mon-Fri only):</strong><br>
+                                    09:00 - Morning news summary<br>
+                                    10:00 - VIP teaser message
+                                </div>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
@@ -8194,19 +8206,21 @@
 
         async function loadCrossPromo() {
             try {
-                const [settingsResp, jobsResp, previewResp] = await Promise.all([
+                const [settingsResp, jobsResp, previewResp, connectionsResp] = await Promise.all([
                     authedFetch('/api/crosspromo/settings'),
                     authedFetch('/api/crosspromo/jobs'),
-                    authedFetch('/api/crosspromo/preview')
+                    authedFetch('/api/crosspromo/preview'),
+                    authedFetch('/api/connections')
                 ]);
                 
                 const settings = await settingsResp.json();
                 const jobs = await jobsResp.json();
                 const preview = await previewResp.json();
+                const connections = await connectionsResp.json();
+                
+                populateCrossPromoChannelDropdowns(connections.connections || [], settings);
                 
                 document.getElementById('crosspromo-enabled').checked = settings.enabled || false;
-                document.getElementById('crosspromo-free-channel').value = settings.free_channel_id || '';
-                document.getElementById('crosspromo-vip-channel').value = settings.vip_channel_id || '';
                 document.getElementById('crosspromo-cta-url').value = settings.cta_url || 'https://entrylab.io/subscribe';
                 
                 document.getElementById('crosspromo-preview').textContent = preview.preview || 'No preview available';
@@ -8214,6 +8228,72 @@
                 renderCrossPromoJobs(jobs.jobs || []);
             } catch (e) {
                 console.error('Error loading cross promo:', e);
+            }
+        }
+        
+        function populateCrossPromoChannelDropdowns(connections, settings) {
+            const freeSelect = document.getElementById('crosspromo-free-channel');
+            const vipSelect = document.getElementById('crosspromo-vip-channel');
+            
+            freeSelect.innerHTML = '<option value="">-- Select from Connections --</option>';
+            vipSelect.innerHTML = '<option value="">-- Select from Connections --</option>';
+            
+            const channels = [];
+            for (const conn of connections) {
+                const channelId = conn.channel_id !== undefined && conn.channel_id !== null ? String(conn.channel_id) : null;
+                if (channelId && channelId.length > 0) {
+                    const label = conn.bot_role === 'signal_bot' ? 'Signal Bot' : 'Message Bot';
+                    const username = conn.bot_username || 'Unknown';
+                    channels.push({
+                        id: channelId,
+                        label: `${label} Channel (@${username}) - ${channelId}`
+                    });
+                }
+            }
+            
+            for (const ch of channels) {
+                const opt1 = document.createElement('option');
+                opt1.value = ch.id;
+                opt1.textContent = ch.label;
+                freeSelect.appendChild(opt1);
+                
+                const opt2 = document.createElement('option');
+                opt2.value = ch.id;
+                opt2.textContent = ch.label;
+                vipSelect.appendChild(opt2);
+            }
+            
+            if (channels.length === 0) {
+                const noChannels = document.createElement('option');
+                noChannels.value = '';
+                noChannels.textContent = 'No channels configured - set up in Connections first';
+                noChannels.disabled = true;
+                freeSelect.appendChild(noChannels.cloneNode(true));
+                vipSelect.appendChild(noChannels);
+            }
+            
+            const savedFree = settings.free_channel_id ? String(settings.free_channel_id) : '';
+            const savedVip = settings.vip_channel_id ? String(settings.vip_channel_id) : '';
+            
+            if (savedFree) {
+                freeSelect.value = savedFree;
+                if (!freeSelect.value && savedFree) {
+                    const customOpt = document.createElement('option');
+                    customOpt.value = savedFree;
+                    customOpt.textContent = `Custom: ${savedFree}`;
+                    freeSelect.appendChild(customOpt);
+                    freeSelect.value = savedFree;
+                }
+            }
+            if (savedVip) {
+                vipSelect.value = savedVip;
+                if (!vipSelect.value && savedVip) {
+                    const customOpt = document.createElement('option');
+                    customOpt.value = savedVip;
+                    customOpt.textContent = `Custom: ${savedVip}`;
+                    vipSelect.appendChild(customOpt);
+                    vipSelect.value = savedVip;
+                }
             }
         }
         
@@ -8266,10 +8346,19 @@
         
         async function saveCrossPromoSettings() {
             try {
+                const enabled = document.getElementById('crosspromo-enabled').checked;
+                const freeChannelId = document.getElementById('crosspromo-free-channel').value;
+                const vipChannelId = document.getElementById('crosspromo-vip-channel').value;
+                
+                if (enabled && (!freeChannelId || !vipChannelId)) {
+                    showToast('Please select both channels when enabling Cross Promo', 'error');
+                    return;
+                }
+                
                 const settings = {
-                    enabled: document.getElementById('crosspromo-enabled').checked,
-                    free_channel_id: document.getElementById('crosspromo-free-channel').value,
-                    vip_channel_id: document.getElementById('crosspromo-vip-channel').value,
+                    enabled: enabled,
+                    free_channel_id: freeChannelId || null,
+                    vip_channel_id: vipChannelId || null,
                     cta_url: document.getElementById('crosspromo-cta-url').value || 'https://entrylab.io/subscribe'
                 };
                 

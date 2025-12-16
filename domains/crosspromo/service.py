@@ -79,20 +79,29 @@ def fetch_xau_news() -> List[Dict[str, Any]]:
 def build_morning_news_message(tenant_id: str) -> str:
     """
     Build the morning news message with greeting and XAU/USD summary.
-    Returns 3-4 line message text.
+    Returns a concise paragraph summarizing what's affecting gold.
     """
     news_items = fetch_xau_news()
     
     if news_items:
-        news_lines = [f"{item['emoji']} {item['title']}" for item in news_items]
-        news_section = "\n".join(news_lines)
+        themes = [item['title'] for item in news_items]
+        combined = ' and '.join(themes[:2]) if len(themes) >= 2 else themes[0] if themes else ''
+        
+        sentiments = [item.get('sentiment', 'Neutral') for item in news_items]
+        if any('Bullish' in s for s in sentiments):
+            outlook = "supporting gold prices"
+        elif any('Bearish' in s for s in sentiments):
+            outlook = "putting pressure on gold"
+        else:
+            outlook = "keeping traders cautious on gold"
+        
+        summary = f"Today's key focus: {combined}, {outlook}."
     else:
-        news_section = "➡️ Markets steady ahead of key data releases"
+        summary = "Markets are steady ahead of key data releases, keeping gold in a holding pattern."
     
     message = f"""☀️ Good morning, traders!
 
-📰 What's moving XAU/USD today:
-{news_section}
+{summary}
 
 Stay sharp for today's signals."""
     
