@@ -119,6 +119,40 @@ def handle_connection_validate(handler):
         _send_json(handler, 200, {'valid': False, 'error': error})
 
 
+def handle_connection_test(handler):
+    """POST /api/connections/test - Test an existing or new connection."""
+    try:
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body.decode('utf-8'))
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+    
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    bot_role = data.get('bot_role')
+    bot_token = data.get('bot_token')
+    
+    if bot_role not in ('signal', 'message'):
+        _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
+        return
+    
+    if not bot_token:
+        connection = db.get_bot_connection(tenant_id, bot_role)
+        if connection and connection.get('bot_token'):
+            bot_token = connection['bot_token']
+        else:
+            _send_json(handler, 400, {'error': 'No token provided and no saved connection found'})
+            return
+    
+    valid, bot_username, error = _validate_telegram_token(bot_token)
+    
+    if valid:
+        _send_json(handler, 200, {'success': True, 'bot_username': bot_username})
+    else:
+        _send_json(handler, 200, {'success': False, 'error': error})
+
+
 def handle_connection_save(handler):
     """POST /api/connections - Validate token, set webhook, and save connection."""
     try:

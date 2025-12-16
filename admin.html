@@ -4140,13 +4140,48 @@
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
-            background: var(--status-error-bg);
-            color: var(--status-error);
+            background: var(--status-offline-bg);
+            color: var(--status-offline);
         }
 
         .connection-badge.connected {
             background: var(--status-online-bg);
             color: var(--status-online);
+        }
+
+        .connection-badge.error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .token-status {
+            font-size: 13px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--status-online-bg);
+            color: var(--status-online);
+            display: none;
+        }
+
+        .token-status.visible {
+            display: block;
+        }
+
+        .channel-id-optional {
+            display: none;
+        }
+
+        .channel-id-optional.visible {
+            display: block;
+        }
+
+        .optional-label {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-left: 4px;
         }
 
         .connection-desc {
@@ -5545,10 +5580,10 @@
                     
                     <div class="connections-grid">
                         <!-- Signal Bot Card -->
-                        <div class="connection-card" data-role="signal">
+                        <div class="connection-card" data-role="signal" data-has-token="false">
                             <div class="connection-header">
                                 <h3>Signal Bot</h3>
-                                <span class="connection-badge" id="signal-status">Not Connected</span>
+                                <span class="connection-badge" id="signal-status">Not configured ⚪</span>
                             </div>
                             <p class="connection-desc">Used for sending forex signals to channels</p>
                             
@@ -5560,8 +5595,9 @@
                                         <span class="eye-icon">👁</span>
                                     </button>
                                 </div>
+                                <div class="token-status" id="signal-token-status"></div>
                                 
-                                <label>Channel ID</label>
+                                <label>Channel ID <span style="color: var(--status-error);">*</span></label>
                                 <input type="text" id="signal-channel-id" placeholder="Enter Telegram channel ID (e.g., -1001234567890)" />
                                 
                                 <div class="connection-info" id="signal-info" style="display:none">
@@ -5575,6 +5611,7 @@
                                 
                                 <div class="connection-actions">
                                     <button class="btn-validate" onclick="validateConnection('signal')">Validate</button>
+                                    <button class="btn-validate" onclick="testConnection('signal')">Test Connection</button>
                                     <button class="btn-save" onclick="saveConnection('signal')">Save & Setup Webhook</button>
                                     <button class="btn-delete" onclick="deleteConnection('signal')" style="display:none" id="signal-delete">Remove</button>
                                 </div>
@@ -5582,10 +5619,10 @@
                         </div>
                         
                         <!-- Message Bot Card -->
-                        <div class="connection-card" data-role="message">
+                        <div class="connection-card" data-role="message" data-has-token="false">
                             <div class="connection-header">
                                 <h3>Message Bot</h3>
-                                <span class="connection-badge" id="message-status">Not Connected</span>
+                                <span class="connection-badge" id="message-status">Not configured ⚪</span>
                             </div>
                             <p class="connection-desc">Used for Journeys and user messaging</p>
                             
@@ -5597,9 +5634,12 @@
                                         <span class="eye-icon">👁</span>
                                     </button>
                                 </div>
+                                <div class="token-status" id="message-token-status"></div>
                                 
-                                <label>Channel ID</label>
-                                <input type="text" id="message-channel-id" placeholder="Enter Telegram channel ID (optional)" />
+                                <div class="channel-id-optional" id="message-channel-wrapper">
+                                    <label>Channel ID <span class="optional-label">(optional)</span></label>
+                                    <input type="text" id="message-channel-id" placeholder="Enter Telegram channel ID (optional)" />
+                                </div>
                                 
                                 <div class="connection-info" id="message-info" style="display:none">
                                     <div class="info-row"><span>Bot Username:</span> <strong id="message-username">-</strong></div>
@@ -5612,6 +5652,7 @@
                                 
                                 <div class="connection-actions">
                                     <button class="btn-validate" onclick="validateConnection('message')">Validate</button>
+                                    <button class="btn-validate" onclick="testConnection('message')">Test Connection</button>
                                     <button class="btn-save" onclick="saveConnection('message')">Save & Setup Webhook</button>
                                     <button class="btn-delete" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
                                 </div>
@@ -7935,26 +7976,108 @@
                 const response = await authedFetch('/api/connections');
                 const data = await response.json();
                 
+                const roles = ['signal', 'message'];
+                const connMap = {};
                 for (const conn of data.connections || []) {
-                    const role = conn.bot_role;
-                    document.getElementById(`${role}-status`).textContent = 'Connected';
-                    document.getElementById(`${role}-status`).classList.add('connected');
-                    document.getElementById(`${role}-username`).textContent = '@' + conn.bot_username;
-                    document.getElementById(`${role}-channel-id-display`).textContent = conn.channel_id || '-';
-                    document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
-                    document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
-                    document.getElementById(`${role}-info`).style.display = 'block';
-                    document.getElementById(`${role}-delete`).style.display = 'inline-block';
-                    if (conn.channel_id) {
-                        document.getElementById(`${role}-channel-id`).value = conn.channel_id;
+                    connMap[conn.bot_role] = conn;
+                }
+                
+                for (const role of roles) {
+                    const conn = connMap[role];
+                    const statusEl = document.getElementById(`${role}-status`);
+                    const tokenStatusEl = document.getElementById(`${role}-token-status`);
+                    const tokenInput = document.getElementById(`${role}-bot-token`);
+                    const card = document.querySelector(`.connection-card[data-role="${role}"]`);
+                    
+                    if (role === 'message') {
+                        const channelWrapper = document.getElementById('message-channel-wrapper');
+                        if (channelWrapper) channelWrapper.classList.add('visible');
                     }
-                    if (conn.last_error) {
-                        document.getElementById(`${role}-error`).textContent = conn.last_error;
-                        document.getElementById(`${role}-error`).style.display = 'block';
+                    
+                    if (conn) {
+                        card.dataset.hasToken = 'true';
+                        tokenInput.value = '';
+                        tokenInput.placeholder = 'Token saved - enter new token to update';
+                        
+                        const username = conn.bot_username || '';
+                        const last4 = username.length > 4 ? username.slice(-4) : username;
+                        tokenStatusEl.textContent = `Token saved ✅ (••••${last4})`;
+                        tokenStatusEl.classList.add('visible');
+                        
+                        if (conn.last_error) {
+                            statusEl.textContent = 'Error ❌';
+                            statusEl.className = 'connection-badge error';
+                            document.getElementById(`${role}-error`).textContent = conn.last_error;
+                            document.getElementById(`${role}-error`).style.display = 'block';
+                        } else {
+                            statusEl.textContent = 'Connected ✅';
+                            statusEl.className = 'connection-badge connected';
+                        }
+                        
+                        document.getElementById(`${role}-username`).textContent = conn.bot_username || '-';
+                        document.getElementById(`${role}-channel-id-display`).textContent = conn.channel_id || '-';
+                        document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
+                        document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
+                        document.getElementById(`${role}-info`).style.display = 'block';
+                        document.getElementById(`${role}-delete`).style.display = 'inline-block';
+                        if (conn.channel_id) {
+                            document.getElementById(`${role}-channel-id`).value = conn.channel_id;
+                        }
+                    } else {
+                        card.dataset.hasToken = 'false';
+                        statusEl.textContent = 'Not configured ⚪';
+                        statusEl.className = 'connection-badge';
+                        tokenStatusEl.classList.remove('visible');
+                        tokenInput.placeholder = 'Enter bot token from @BotFather';
+                        document.getElementById(`${role}-info`).style.display = 'none';
+                        document.getElementById(`${role}-delete`).style.display = 'none';
+                        document.getElementById(`${role}-error`).style.display = 'none';
                     }
                 }
             } catch (e) {
                 console.error('Error loading connections:', e);
+            }
+        }
+        
+        async function testConnection(role) {
+            const tokenInput = document.getElementById(`${role}-bot-token`);
+            const token = tokenInput.value.trim();
+            const card = document.querySelector(`.connection-card[data-role="${role}"]`);
+            const hasToken = card.dataset.hasToken === 'true';
+            
+            if (!token && !hasToken) {
+                showModalAlert('Error', 'Please enter a bot token or save one first');
+                return;
+            }
+            
+            const headers = await getAuthHeaders();
+            showLoading('Testing connection...');
+            
+            try {
+                const body = { bot_role: role };
+                if (token) {
+                    body.bot_token = token;
+                }
+                
+                const resp = await authedFetch('/api/connections/test', {
+                    method: 'POST',
+                    headers: {...headers, 'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                hideLoading();
+                
+                if (data.success) {
+                    showModalAlert('Success', `Connection successful! Bot: ${data.bot_username}`);
+                    document.getElementById(`${role}-error`).style.display = 'none';
+                } else {
+                    document.getElementById(`${role}-error`).textContent = data.error || 'Connection test failed';
+                    document.getElementById(`${role}-error`).style.display = 'block';
+                    showModalAlert('Error', data.error || 'Connection test failed');
+                }
+            } catch (e) {
+                hideLoading();
+                showModalAlert('Error', 'Failed to test connection');
             }
         }
 
@@ -8047,11 +8170,24 @@
                 
                 if (data.success) {
                     showModalAlert('Success', 'Connection removed');
-                    document.getElementById(`${role}-status`).textContent = 'Not Connected';
-                    document.getElementById(`${role}-status`).classList.remove('connected');
+                    const statusEl = document.getElementById(`${role}-status`);
+                    statusEl.textContent = 'Not configured ⚪';
+                    statusEl.className = 'connection-badge';
+                    
+                    const tokenStatusEl = document.getElementById(`${role}-token-status`);
+                    tokenStatusEl.classList.remove('visible');
+                    
+                    const tokenInput = document.getElementById(`${role}-bot-token`);
+                    tokenInput.value = '';
+                    tokenInput.placeholder = 'Enter bot token from @BotFather';
+                    
+                    const card = document.querySelector(`.connection-card[data-role="${role}"]`);
+                    card.dataset.hasToken = 'false';
+                    
                     document.getElementById(`${role}-info`).style.display = 'none';
                     document.getElementById(`${role}-delete`).style.display = 'none';
                     document.getElementById(`${role}-error`).style.display = 'none';
+                    document.getElementById(`${role}-channel-id`).value = '';
                 } else {
                     showModalAlert('Error', data.error || 'Failed to remove');
                 }

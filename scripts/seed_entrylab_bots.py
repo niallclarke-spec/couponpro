@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-One-time seed script to migrate EntryLab tokens from environment variables to the database.
+One-time seed script to migrate EntryLab Signal Bot token from environment variables to the database.
 
-This script reads TELEGRAM_BOT_TOKEN and FOREX_BOT_TOKEN/FOREX_CHANNEL_ID from the environment
+This script reads FOREX_BOT_TOKEN and FOREX_CHANNEL_ID from the environment
 and inserts them into the tenant_bot_connections table for tenant_id='entrylab'.
+
+NOTE: Message Bot (bot_role='message') is intentionally NOT seeded by this script.
+      Users must configure their Message Bot via the UI to ensure proper setup and validation.
 
 Usage:
     python scripts/seed_entrylab_bots.py
@@ -49,50 +52,6 @@ def validate_telegram_token(token: str) -> dict | None:
     except requests.RequestException as e:
         print(f"  [ERROR] Failed to validate token: {e}")
         return None
-
-
-def seed_message_bot() -> bool:
-    """
-    Seed the message bot (TELEGRAM_BOT_TOKEN) for EntryLab.
-    
-    Returns:
-        True if successful or already exists, False on failure
-    """
-    print("\n[MESSAGE BOT] Processing...")
-    
-    token = Config.get_telegram_bot_token()
-    if not token:
-        print("  [SKIP] TELEGRAM_BOT_TOKEN not set in environment")
-        return False
-    
-    existing = db.get_bot_connection(TENANT_ID, 'message')
-    if existing and existing.get('bot_token'):
-        print(f"  [EXISTS] Message bot already configured: @{existing.get('bot_username', 'unknown')}")
-        print(f"           Last validated: {existing.get('last_validated_at', 'never')}")
-        return True
-    
-    print("  [VALIDATE] Checking token with Telegram API...")
-    bot_info = validate_telegram_token(token)
-    if not bot_info:
-        print("  [FAILED] Token validation failed - not inserting into database")
-        return False
-    
-    bot_username = bot_info.get('username', '')
-    print(f"  [VALID] Token is valid for bot: @{bot_username}")
-    
-    success = db.upsert_bot_connection(
-        tenant_id=TENANT_ID,
-        bot_role='message',
-        bot_token=token,
-        bot_username=bot_username
-    )
-    
-    if success:
-        print(f"  [SUCCESS] Message bot @{bot_username} saved for tenant '{TENANT_ID}'")
-    else:
-        print("  [FAILED] Database insert failed")
-    
-    return success
 
 
 def seed_signal_bot() -> bool:
@@ -155,32 +114,27 @@ def main():
     print("=" * 60)
     print(f"Target tenant: {TENANT_ID}")
     
+    print("\n[MESSAGE BOT] Skipped by design - must be configured via UI")
+    
     if not db.db_pool or not db.db_pool.connection_pool:
         print("\n[ERROR] Database not initialized. Cannot proceed.")
         sys.exit(1)
     
-    results = {
-        'message_bot': seed_message_bot(),
-        'signal_bot': seed_signal_bot()
-    }
+    signal_bot_success = seed_signal_bot()
     
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
+    print("  message_bot: SKIPPED (configure via UI)")
+    status = "✓ OK" if signal_bot_success else "✗ FAILED/SKIPPED"
+    print(f"  signal_bot: {status}")
     
-    all_success = True
-    for bot_type, success in results.items():
-        status = "✓ OK" if success else "✗ FAILED/SKIPPED"
-        print(f"  {bot_type}: {status}")
-        if not success:
-            all_success = False
-    
-    if all_success:
-        print("\n[DONE] All bot credentials seeded successfully!")
+    if signal_bot_success:
+        print("\n[DONE] Signal bot credentials seeded successfully!")
     else:
-        print("\n[DONE] Some bot credentials were not seeded (see above for details)")
+        print("\n[DONE] Signal bot credentials were not seeded (see above for details)")
     
-    sys.exit(0 if all_success else 1)
+    sys.exit(0 if signal_bot_success else 1)
 
 
 if __name__ == '__main__':

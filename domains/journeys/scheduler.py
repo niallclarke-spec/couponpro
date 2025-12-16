@@ -116,16 +116,19 @@ def _get_tenant_send_fn(tenant_id: str) -> Callable[[int, str, str], bool]:
     import requests
     from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
     
+    bot_not_configured = False
     try:
         creds = get_bot_credentials(tenant_id, 'message')
         bot_token = creds['bot_token']
-    except BotNotConfiguredError as e:
-        logger.error(f"Message bot not configured for tenant {tenant_id}: {e}")
+    except BotNotConfiguredError:
+        logger.error(f"Message Bot not configured. Go to Connections → Message Bot. (tenant={tenant_id})")
         bot_token = None
+        bot_not_configured = True
     
     def send_fn(chat_id: int, text: str, bot_id: str) -> bool:
         if not bot_token:
-            logger.error(f"No bot token available for tenant {tenant_id}")
+            if not bot_not_configured:
+                logger.error(f"No bot token available for tenant {tenant_id}")
             return False
         
         try:
