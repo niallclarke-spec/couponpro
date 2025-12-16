@@ -130,6 +130,10 @@ GET_ROUTES: List[Route] = [
           auth_required=True, db_required=True, is_prefix=True),
     Route('GET', '/api/journeys', 'handle_api_journeys_list',
           auth_required=True, db_required=True),
+    
+    # Connections
+    Route('GET', '/api/connections', 'handle_api_connections_list',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -232,6 +236,12 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True, is_prefix=True, contains='/triggers'),
     Route('POST', '/api/journeys', 'handle_api_journey_create',
           auth_required=True, db_required=True),
+    
+    # Connections
+    Route('POST', '/api/connections/validate', 'handle_api_connection_validate',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/connections', 'handle_api_connection_save',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -255,6 +265,10 @@ PUT_ROUTES: List[Route] = [
 DELETE_ROUTES: List[Route] = [
     # Journeys
     Route('DELETE', '/api/journeys/', 'handle_api_journey_delete',
+          auth_required=True, db_required=True, is_prefix=True),
+    
+    # Connections
+    Route('DELETE', '/api/connections/', 'handle_api_connection_delete',
           auth_required=True, db_required=True, is_prefix=True),
 ]
 

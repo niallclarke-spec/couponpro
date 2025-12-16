@@ -260,6 +260,24 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.journeys import handlers as jh
         jh.handle_journey_delete(self, urlparse(self.path).path.split('/')[3])
 
+    # Connection handlers
+    def handle_api_connections_list(self):
+        from domains.connections import handlers as conn_h
+        conn_h.handle_connections_list(self)
+
+    def handle_api_connection_validate(self):
+        from domains.connections import handlers as conn_h
+        conn_h.handle_connection_validate(self)
+
+    def handle_api_connection_save(self):
+        from domains.connections import handlers as conn_h
+        conn_h.handle_connection_save(self)
+
+    def handle_api_connection_delete(self):
+        from domains.connections import handlers as conn_h
+        bot_role = urlparse(self.path).path.split('/')[3]
+        conn_h.handle_connection_delete(self, bot_role)
+
     # Legacy auth
     def handle_api_login(self):
         cl = int(self.headers.get('Content-Length', 0))
