@@ -869,3 +869,70 @@ def get_session_for_user_reply(tenant_id: str, telegram_user_id: int, telegram_c
     except Exception as e:
         logger.exception(f"Error getting session for reply: {e}")
         return None
+
+
+def count_journeys(tenant_id: str) -> int:
+    """Count journeys for a tenant (used for max limit enforcement)."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return 0
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM journeys WHERE tenant_id = %s
+            """, (tenant_id,))
+            row = cursor.fetchone()
+            return row[0] if row else 0
+    except Exception as e:
+        logger.exception(f"Error counting journeys: {e}")
+        return 0
+
+
+def delete_journey(tenant_id: str, journey_id: str) -> bool:
+    """Delete a journey and all related data (triggers, steps, sessions)."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id FROM journeys WHERE tenant_id = %s AND id = %s
+            """, (tenant_id, journey_id))
+            if not cursor.fetchone():
+                return False
+            
+            cursor.execute("""
+                DELETE FROM journey_scheduled_messages 
+                WHERE session_id IN (
+                    SELECT id FROM journey_user_sessions 
+                    WHERE tenant_id = %s AND journey_id = %s
+                )
+            """, (tenant_id, journey_id))
+            
+            cursor.execute("""
+                DELETE FROM journey_user_sessions WHERE tenant_id = %s AND journey_id = %s
+            """, (tenant_id, journey_id))
+            
+            cursor.execute("""
+                DELETE FROM journey_steps WHERE tenant_id = %s AND journey_id = %s
+            """, (tenant_id, journey_id))
+            
+            cursor.execute("""
+                DELETE FROM journey_triggers WHERE tenant_id = %s AND journey_id = %s
+            """, (tenant_id, journey_id))
+            
+            cursor.execute("""
+                DELETE FROM journeys WHERE tenant_id = %s AND id = %s
+            """, (tenant_id, journey_id))
+            
+            conn.commit()
+            logger.info(f"Deleted journey {journey_id} for tenant {tenant_id}")
+            return True
+    except Exception as e:
+        logger.exception(f"Error deleting journey: {e}")
+        return False

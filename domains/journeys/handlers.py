@@ -65,12 +65,25 @@ def handle_journey_get(handler, journey_id: str):
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
 
 
+MAX_JOURNEYS_PER_TENANT = 6
+
+
 def handle_journey_create(handler):
     """POST /api/journeys - Create a new journey."""
     from . import repo
     
     try:
         tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        
+        current_count = repo.count_journeys(tenant_id)
+        if current_count >= MAX_JOURNEYS_PER_TENANT:
+            handler.send_response(400)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'error': f'Maximum of {MAX_JOURNEYS_PER_TENANT} journeys allowed per tenant'
+            }).encode())
+            return
         
         content_length = int(handler.headers.get('Content-Length', 0))
         body = handler.rfile.read(content_length)
@@ -311,6 +324,33 @@ def handle_journey_sessions_debug(handler):
         handler.wfile.write(json.dumps({'sessions': sessions}).encode())
     except Exception as e:
         logger.exception(f"Error listing sessions: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_journey_delete(handler, journey_id: str):
+    """DELETE /api/journeys/:id - Delete a journey."""
+    from . import repo
+    
+    try:
+        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        
+        success = repo.delete_journey(tenant_id, journey_id)
+        
+        if success:
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': True}).encode())
+        else:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
+    except Exception as e:
+        logger.exception(f"Error deleting journey: {e}")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()

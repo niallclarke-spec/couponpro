@@ -247,6 +247,17 @@ PUT_ROUTES: List[Route] = [
 
 
 # ============================================================================
+# DELETE Routes
+# ============================================================================
+
+DELETE_ROUTES: List[Route] = [
+    # Journeys
+    Route('DELETE', '/api/journeys/', 'handle_api_journey_delete',
+          auth_required=True, db_required=True, is_prefix=True),
+]
+
+
+# ============================================================================
 # Page Routes (HTML serving)
 # ============================================================================
 
@@ -278,7 +289,7 @@ ADMIN_ROUTES: List[Route] = [
 
 
 # Combined routes for easy lookup
-ALL_ROUTES = GET_ROUTES + POST_ROUTES + PUT_ROUTES + PAGE_ROUTES + AUTH_ROUTES + ADMIN_ROUTES
+ALL_ROUTES = GET_ROUTES + POST_ROUTES + PUT_ROUTES + DELETE_ROUTES + PAGE_ROUTES + AUTH_ROUTES + ADMIN_ROUTES
 
 
 def match_route(method: str, path: str, routes: List[Route]) -> Optional[Route]:

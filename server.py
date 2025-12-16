@@ -10,7 +10,7 @@ from core.logging import get_logger, set_request_context, clear_request_context
 logger = get_logger(__name__)
 from core.config import Config
 from core.host_context import parse_host_context, HostType
-from api.routes import GET_ROUTES, POST_ROUTES, PUT_ROUTES, PAGE_ROUTES, AUTH_ROUTES, ADMIN_ROUTES
+from api.routes import GET_ROUTES, POST_ROUTES, PUT_ROUTES, DELETE_ROUTES, PAGE_ROUTES, AUTH_ROUTES, ADMIN_ROUTES
 from api.dispatch import dispatch_request
 from domains.subscriptions import handlers as sub_h
 from domains.coupons import handlers as coupon_h
@@ -253,6 +253,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.journeys import handlers as jh
         jh.handle_journey_triggers(self, urlparse(self.path).path.split('/')[3])
 
+    def handle_api_journey_delete(self):
+        from domains.journeys import handlers as jh
+        jh.handle_journey_delete(self, urlparse(self.path).path.split('/')[3])
+
     # Legacy auth
     def handle_api_login(self):
         cl = int(self.headers.get('Content-Length', 0))
@@ -324,6 +328,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         set_request_context(request_id=None)
+        hc = parse_host_context(self.headers.get('Host', '').lower())
+        self.host_context = hc
+        if dispatch_request(self, 'DELETE', self.path, DELETE_ROUTES, hc, DATABASE_AVAILABLE):
+            return clear_request_context()
         self.send_error(404, "Not Found")
         clear_request_context()
 
