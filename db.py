@@ -879,6 +879,7 @@ class DatabasePool:
                         bot_username VARCHAR(100),
                         webhook_secret VARCHAR(100),
                         webhook_url TEXT,
+                        channel_id VARCHAR(100),
                         last_validated_at TIMESTAMP,
                         last_error TEXT,
                         created_at TIMESTAMP DEFAULT NOW(),
@@ -888,6 +889,18 @@ class DatabasePool:
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_bot_connections_tenant_id ON tenant_bot_connections(tenant_id)")
                 logger.info("tenant_bot_connections table ready")
+                
+                # Migration: Add channel_id to tenant_bot_connections if it doesn't exist
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='tenant_bot_connections' AND column_name='channel_id'
+                """)
+                if not cursor.fetchone():
+                    logger.info("Adding channel_id to tenant_bot_connections...")
+                    cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN channel_id VARCHAR(100)")
+                    logger.info("channel_id added to tenant_bot_connections")
+                else:
+                    logger.info("channel_id already exists on tenant_bot_connections, skipping")
                 
                 # ============================================================
                 # Add tenant_id to existing tables
@@ -6740,7 +6753,7 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
-                       webhook_secret, webhook_url, last_validated_at, last_error,
+                       webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
                        created_at, updated_at
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s AND bot_role = %s
@@ -6756,10 +6769,11 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
                     'bot_username': row[4],
                     'webhook_secret': row[5],
                     'webhook_url': row[6],
-                    'last_validated_at': row[7].isoformat() if row[7] else None,
-                    'last_error': row[8],
-                    'created_at': row[9].isoformat() if row[9] else None,
-                    'updated_at': row[10].isoformat() if row[10] else None
+                    'channel_id': row[7],
+                    'last_validated_at': row[8].isoformat() if row[8] else None,
+                    'last_error': row[9],
+                    'created_at': row[10].isoformat() if row[10] else None,
+                    'updated_at': row[11].isoformat() if row[11] else None
                 }
             return None
     except Exception as e:
@@ -6769,7 +6783,8 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
 
 def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None, 
                           bot_username: str = None, webhook_secret: str = None, 
-                          webhook_url: str = None, last_error: str = None) -> bool:
+                          webhook_url: str = None, channel_id: str = None,
+                          last_error: str = None) -> bool:
     """
     Upsert a bot connection for a tenant.
     
@@ -6780,6 +6795,7 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
         bot_username: Bot username
         webhook_secret: Webhook secret for validation
         webhook_url: Webhook URL
+        channel_id: Telegram channel ID
         last_error: Last error message if any
         
     Returns:
@@ -6793,17 +6809,18 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO tenant_bot_connections 
-                    (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, last_error, last_validated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
+                    (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, channel_id, last_error, last_validated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
                 ON CONFLICT (tenant_id, bot_role) DO UPDATE SET
                     bot_token = COALESCE(EXCLUDED.bot_token, tenant_bot_connections.bot_token),
                     bot_username = COALESCE(EXCLUDED.bot_username, tenant_bot_connections.bot_username),
                     webhook_secret = COALESCE(EXCLUDED.webhook_secret, tenant_bot_connections.webhook_secret),
                     webhook_url = COALESCE(EXCLUDED.webhook_url, tenant_bot_connections.webhook_url),
+                    channel_id = COALESCE(EXCLUDED.channel_id, tenant_bot_connections.channel_id),
                     last_error = EXCLUDED.last_error,
                     last_validated_at = CASE WHEN EXCLUDED.last_error IS NULL THEN NOW() ELSE tenant_bot_connections.last_validated_at END,
                     updated_at = NOW()
-            """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, last_error, last_error))
+            """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, channel_id, last_error, last_error))
             conn.commit()
             logger.info(f"Upserted bot connection for tenant={tenant_id}, role={bot_role}")
             return True
@@ -6830,7 +6847,7 @@ def get_all_bot_connections(tenant_id: str) -> list:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
-                       webhook_secret, webhook_url, last_validated_at, last_error,
+                       webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
                        created_at, updated_at
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
@@ -6848,10 +6865,11 @@ def get_all_bot_connections(tenant_id: str) -> list:
                     'bot_username': row[4],
                     'webhook_secret': row[5],
                     'webhook_url': row[6],
-                    'last_validated_at': row[7].isoformat() if row[7] else None,
-                    'last_error': row[8],
-                    'created_at': row[9].isoformat() if row[9] else None,
-                    'updated_at': row[10].isoformat() if row[10] else None
+                    'channel_id': row[7],
+                    'last_validated_at': row[8].isoformat() if row[8] else None,
+                    'last_error': row[9],
+                    'created_at': row[10].isoformat() if row[10] else None,
+                    'updated_at': row[11].isoformat() if row[11] else None
                 })
             return connections
     except Exception as e:

@@ -65,7 +65,7 @@ def handle_connections_list(handler):
         with db.db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT bot_role, bot_username, webhook_url, last_validated_at, last_error
+                SELECT bot_role, bot_username, webhook_url, channel_id, last_validated_at, last_error
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
                 ORDER BY bot_role
@@ -78,8 +78,9 @@ def handle_connections_list(handler):
                     'bot_role': row[0],
                     'bot_username': row[1],
                     'webhook_url': row[2],
-                    'last_validated_at': row[3].isoformat() if row[3] else None,
-                    'last_error': row[4]
+                    'channel_id': row[3],
+                    'last_validated_at': row[4].isoformat() if row[4] else None,
+                    'last_error': row[5]
                 })
         
         _send_json(handler, 200, {'connections': connections})
@@ -131,6 +132,7 @@ def handle_connection_save(handler):
     tenant_id = getattr(handler, 'tenant_id', 'entrylab')
     bot_role = data.get('bot_role')
     bot_token = data.get('bot_token')
+    channel_id = data.get('channel_id')
     
     if bot_role not in ('signal', 'message'):
         _send_json(handler, 400, {'error': 'bot_role must be "signal" or "message"'})
@@ -169,7 +171,8 @@ def handle_connection_save(handler):
         bot_token=bot_token,
         bot_username=bot_username,
         webhook_secret=webhook_secret,
-        webhook_url=webhook_url
+        webhook_url=webhook_url,
+        channel_id=channel_id
     )
     
     if success:
@@ -179,7 +182,8 @@ def handle_connection_save(handler):
             'connection': {
                 'bot_role': bot_role,
                 'bot_username': bot_username,
-                'webhook_url': webhook_url
+                'webhook_url': webhook_url,
+                'channel_id': channel_id
             }
         })
     else:
