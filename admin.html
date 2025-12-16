@@ -5898,9 +5898,24 @@
                     <div class="form-hint">The message that will be sent to the user. Supports Telegram markdown.</div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Delay (seconds)</label>
+                    <label class="form-label">Wait Time (seconds)</label>
                     <input type="number" class="form-input" id="step-delay-input" value="0" min="0">
-                    <div class="form-hint">How long to wait before sending this message. Use 0 for immediate delivery.</div>
+                    <div class="form-hint">How long to wait. Use 0 for immediate delivery, or set a delay before sending/checking for reply.</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="step-wait-for-reply" onchange="window.JourneysModule.updateStepModalVisibility()" style="width: 18px; height: 18px;">
+                        <span>Wait for user response</span>
+                    </label>
+                    <div class="form-hint">If checked, the journey will wait for the user to respond within the wait time before continuing.</div>
+                </div>
+                <div class="form-group" id="step-timeout-group" style="display: none;">
+                    <label class="form-label">If no response received</label>
+                    <select class="form-input" id="step-timeout-action">
+                        <option value="continue">Continue to next step</option>
+                        <option value="end">End the journey</option>
+                    </select>
+                    <div class="form-hint">What happens if the user doesn't respond within the wait time.</div>
                 </div>
             </div>
             <div class="modal-footer">

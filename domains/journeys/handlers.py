@@ -275,12 +275,24 @@ def handle_journey_steps_set(handler, journey_id: str):
             if isinstance(delay, str):
                 delay = int(delay) if delay.isdigit() else 0
             
+            wait_for_reply = step.get('wait_for_reply', False)
+            timeout_action = step.get('timeout_action', 'continue')
+            
+            if wait_for_reply:
+                step_type = 'wait_for_reply'
+            elif delay > 0:
+                step_type = 'delay'
+            else:
+                step_type = 'message'
+            
             normalized_steps.append({
                 'step_order': step.get('step_order', i + 1),
-                'step_type': step.get('step_type', 'message'),
+                'step_type': step_type,
                 'config': {
                     'text': text,
-                    'delay_seconds': delay
+                    'delay_seconds': delay,
+                    'wait_for_reply': wait_for_reply,
+                    'timeout_action': timeout_action
                 }
             })
         

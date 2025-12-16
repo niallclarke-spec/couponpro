@@ -270,7 +270,9 @@ class JourneyEngine:
         """
         Handle a user's reply to a wait_for_reply step.
         
-        Stores the reply and advances to the next step.
+        Stores the reply and sets reply_received_at. The scheduler will check
+        at the timeout whether a reply was received and act accordingly.
+        This does NOT immediately advance - we wait for the full wait period.
         """
         from . import repo
         
@@ -289,30 +291,45 @@ class JourneyEngine:
         
         repo.store_user_reply(session['id'], message_text)
         
-        repo.update_session_status(session['id'], 'active')
-        
-        logger.info(f"Received reply for wait_for_reply session {session['id']}")
-        return self._advance_to_next_step(session, current_step, bot_id)
+        logger.info(f"Received reply for wait_for_reply session {session['id']} - will continue at wait timeout")
+        return True
     
     def timeout_wait_for_reply(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
         """
         Handle timeout for a wait_for_reply step.
         
         Called by scheduler when wait_timeout_at has passed.
-        Sends optional timeout message and advances to next step.
+        Checks if reply was received within the wait window:
+        - If reply_received_at is set: Continue to next step (success)
+        - If no reply: Execute timeout_action (continue or end journey)
         """
         from . import repo
         
         config = step.get('config', {})
+        timeout_action = config.get('timeout_action', 'continue')
         timeout_message = config.get('timeout_message', '')
         
-        if timeout_message:
-            self._send_message(session['tenant_id'], session['telegram_chat_id'], timeout_message)
+        reply_received = session.get('reply_received_at') is not None
         
-        repo.update_session_status(session['id'], 'active')
-        
-        logger.info(f"Timeout for wait_for_reply session {session['id']}, advancing")
-        return self._advance_to_next_step(session, step, bot_id)
+        if reply_received:
+            logger.info(f"Wait complete for session {session['id']} - reply received, advancing")
+            repo.update_session_status(session['id'], 'active')
+            repo.clear_reply_received(session['id'])
+            return self._advance_to_next_step(session, step, bot_id)
+        else:
+            logger.info(f"Wait complete for session {session['id']} - no reply, timeout_action={timeout_action}")
+            
+            if timeout_message:
+                self._send_message(session['tenant_id'], session['telegram_chat_id'], timeout_message)
+            
+            if timeout_action == 'end':
+                repo.update_session_status(session['id'], 'completed')
+                logger.info(f"Journey ended due to no reply for session {session['id']}")
+                return True
+            else:
+                repo.update_session_status(session['id'], 'active')
+                repo.clear_reply_received(session['id'])
+                return self._advance_to_next_step(session, step, bot_id)
     
     def _advance_to_next_step(self, session: Dict, current_step: Dict, bot_id: str) -> bool:
         """Advance to the next step in the journey."""

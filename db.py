@@ -1416,6 +1416,15 @@ class DatabasePool:
                     logger.info("Added wait_timeout_at column to journey_user_sessions")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_sessions_timeout ON journey_user_sessions(status, wait_timeout_at) WHERE status = 'awaiting_reply'")
                 
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'journey_user_sessions' 
+                    AND column_name = 'reply_received_at'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN reply_received_at TIMESTAMP")
+                    logger.info("Added reply_received_at column to journey_user_sessions")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 

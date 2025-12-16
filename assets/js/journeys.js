@@ -221,8 +221,15 @@
     }
 
     async function fetchJourneyDetail(journeyId) {
+        let headers;
         try {
-            const headers = await config.getAuthHeaders();
+            headers = await config.getAuthHeaders();
+        } catch (err) {
+            console.warn('Auth headers issue, continuing with cookies:', err);
+            headers = { 'Content-Type': 'application/json' };
+        }
+        
+        try {
             const resp = await fetch(`/api/journeys/${journeyId}`, { headers, credentials: 'include' });
             if (resp.ok) {
                 const data = await resp.json();
@@ -242,10 +249,16 @@
                 }
                 
                 state.steps = (journey.steps || []).map(s => ({
-                    message_template: s.message_template,
-                    delay_seconds: s.delay_seconds
+                    step_type: s.step_type || 'message',
+                    message_template: s.message_template || s.config?.text || '',
+                    delay_seconds: s.delay_seconds || s.config?.delay_seconds || 0,
+                    wait_for_reply: s.wait_for_reply || s.config?.wait_for_reply || false,
+                    timeout_action: s.timeout_action || s.config?.timeout_action || 'continue'
                 }));
                 renderStepsList();
+            } else {
+                console.error('Failed to fetch journey, status:', resp.status);
+                config.showToast('Failed to load journey details', 'error');
             }
         } catch (err) {
             console.error('Failed to fetch journey detail:', err);
@@ -345,9 +358,16 @@
         const confirmed = await confirmFn('Are you sure you want to delete this journey? This action cannot be undone.');
         if (!confirmed) return;
         
+        let headers;
+        try {
+            headers = await config.getAuthHeaders();
+        } catch (err) {
+            console.warn('Auth headers issue, continuing with cookies:', err);
+            headers = { 'Content-Type': 'application/json' };
+        }
+        
         try {
             if (config.showLoading) config.showLoading('Deleting journey...');
-            const headers = await config.getAuthHeaders();
             const resp = await fetch(`/api/journeys/${journeyId}`, {
                 method: 'DELETE',
                 headers,
@@ -360,14 +380,27 @@
                 config.showToast('Journey deleted successfully', 'success');
                 await loadJourneys();
             } else {
-                const data = await resp.json();
-                config.showToast(data.error || 'Failed to delete journey', 'error');
+                let errorMsg = 'Failed to delete journey';
+                try {
+                    const data = await resp.json();
+                    errorMsg = data.error || errorMsg;
+                } catch (e) {}
+                config.showToast(errorMsg, 'error');
             }
         } catch (err) {
             if (config.hideLoading) config.hideLoading();
             console.error('Delete journey error:', err);
             config.showToast('Failed to delete journey', 'error');
         }
+    }
+
+    function getStepTypeLabel(step) {
+        if (step.wait_for_reply) {
+            return `Wait ${step.delay_seconds}s for reply`;
+        } else if (step.delay_seconds > 0) {
+            return `Delay: ${step.delay_seconds}s`;
+        }
+        return 'Send immediately';
     }
 
     function renderStepsList() {
@@ -389,8 +422,8 @@
             <div class="step-item">
                 <div class="step-order">${index + 1}</div>
                 <div class="step-content">
-                    <div class="step-message">${escapeHtml(step.message_template.substring(0, 80))}${step.message_template.length > 80 ? '...' : ''}</div>
-                    <div class="step-delay">Delay: ${step.delay_seconds}s</div>
+                    <div class="step-message">${escapeHtml((step.message_template || '').substring(0, 80))}${(step.message_template || '').length > 80 ? '...' : ''}</div>
+                    <div class="step-delay">${step.wait_for_reply ? '⏳ ' : ''}${getStepTypeLabel(step)}</div>
                 </div>
                 <div class="step-actions">
                     <button class="step-btn" onclick="window.JourneysModule.moveStep(${index}, -1)" ${index === 0 ? 'disabled' : ''} title="Move up">
@@ -420,14 +453,27 @@
         `).join('');
     }
 
+    function updateStepModalVisibility() {
+        const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutGroup = document.getElementById('step-timeout-group');
+        if (timeoutGroup) {
+            timeoutGroup.style.display = waitCheckbox && waitCheckbox.checked ? 'block' : 'none';
+        }
+    }
+
     function addStep() {
         state.editingStepIndex = null;
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutSelect = document.getElementById('step-timeout-action');
         const modalTitle = document.getElementById('step-modal-title');
         if (msgInput) msgInput.value = '';
         if (delayInput) delayInput.value = '0';
+        if (waitCheckbox) waitCheckbox.checked = false;
+        if (timeoutSelect) timeoutSelect.value = 'continue';
         if (modalTitle) modalTitle.textContent = 'Add Step';
+        updateStepModalVisibility();
         const backdrop = document.getElementById('step-modal-backdrop');
         if (backdrop) backdrop.classList.add('show');
     }
@@ -437,10 +483,15 @@
         const step = state.steps[index];
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutSelect = document.getElementById('step-timeout-action');
         const modalTitle = document.getElementById('step-modal-title');
-        if (msgInput) msgInput.value = step.message_template;
-        if (delayInput) delayInput.value = step.delay_seconds;
+        if (msgInput) msgInput.value = step.message_template || '';
+        if (delayInput) delayInput.value = step.delay_seconds || 0;
+        if (waitCheckbox) waitCheckbox.checked = step.wait_for_reply || false;
+        if (timeoutSelect) timeoutSelect.value = step.timeout_action || 'continue';
         if (modalTitle) modalTitle.textContent = 'Edit Step';
+        updateStepModalVisibility();
         const backdrop = document.getElementById('step-modal-backdrop');
         if (backdrop) backdrop.classList.add('show');
     }
@@ -454,8 +505,12 @@
     function saveStep() {
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutSelect = document.getElementById('step-timeout-action');
         const message = msgInput ? msgInput.value.trim() : '';
         const delay = delayInput ? (parseInt(delayInput.value, 10) || 0) : 0;
+        const waitForReply = waitCheckbox ? waitCheckbox.checked : false;
+        const timeoutAction = timeoutSelect ? timeoutSelect.value : 'continue';
         
         if (!message) {
             config.showToast('Please enter a message', 'error');
@@ -464,7 +519,9 @@
         
         const stepData = {
             message_template: message,
-            delay_seconds: delay
+            delay_seconds: delay,
+            wait_for_reply: waitForReply,
+            timeout_action: timeoutAction
         };
         
         if (state.editingStepIndex !== null) {
@@ -578,6 +635,7 @@
             copyDeepLink,
             copyDeepLinkFromPreview,
             updateDeepLinkPreview,
+            updateStepModalVisibility,
             getDeepLinkUrl: () => state.messageBotUsername
         };
         

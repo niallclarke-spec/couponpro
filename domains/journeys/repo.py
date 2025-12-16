@@ -269,13 +269,19 @@ def list_steps(tenant_id: str, journey_id: str) -> List[Dict]:
             
             steps = []
             for row in cursor.fetchall():
+                config = row[4] if isinstance(row[4], dict) else json.loads(row[4]) if row[4] else {}
+                step_type = row[3]
                 steps.append({
                     'id': str(row[0]),
                     'journey_id': str(row[1]),
                     'step_order': row[2],
-                    'step_type': row[3],
-                    'config': row[4] if isinstance(row[4], dict) else json.loads(row[4]) if row[4] else {},
-                    'created_at': row[5].isoformat() if row[5] else None
+                    'step_type': step_type,
+                    'config': config,
+                    'created_at': row[5].isoformat() if row[5] else None,
+                    'message_template': config.get('text', ''),
+                    'delay_seconds': config.get('delay_seconds', 0),
+                    'wait_for_reply': config.get('wait_for_reply', False) or step_type == 'wait_for_reply',
+                    'timeout_action': config.get('timeout_action', 'continue')
                 })
             return steps
     except Exception as e:
@@ -992,7 +998,7 @@ def fetch_timed_out_waiting_sessions(limit: int = 50) -> List[Dict]:
     Uses FOR UPDATE SKIP LOCKED for idempotency.
     
     Returns:
-        List of timed-out session dicts
+        List of timed-out session dicts with reply_received_at included
     """
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -1004,7 +1010,7 @@ def fetch_timed_out_waiting_sessions(limit: int = 50) -> List[Dict]:
             cursor.execute("""
                 SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
                        current_step_id, status, answers, started_at, completed_at, 
-                       last_activity_at, wait_timeout_at
+                       last_activity_at, wait_timeout_at, reply_received_at
                 FROM journey_user_sessions
                 WHERE status = 'awaiting_reply' 
                   AND wait_timeout_at IS NOT NULL 
@@ -1028,7 +1034,8 @@ def fetch_timed_out_waiting_sessions(limit: int = 50) -> List[Dict]:
                     'started_at': row[8].isoformat() if row[8] else None,
                     'completed_at': row[9].isoformat() if row[9] else None,
                     'last_activity_at': row[10].isoformat() if row[10] else None,
-                    'wait_timeout_at': row[11].isoformat() if row[11] else None
+                    'wait_timeout_at': row[11].isoformat() if row[11] else None,
+                    'reply_received_at': row[12].isoformat() if row[12] else None
                 })
             return sessions
     except Exception as e:
@@ -1087,6 +1094,31 @@ def get_awaiting_session_for_user(tenant_id: str, telegram_user_id: int) -> Opti
         return None
 
 
+def clear_reply_received(session_id: str) -> bool:
+    """
+    Clear the reply_received_at timestamp for a session.
+    
+    Called after processing a wait_for_reply timeout.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_user_sessions
+                SET reply_received_at = NULL, wait_timeout_at = NULL
+                WHERE id = %s
+            """, (session_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error clearing reply received: {e}")
+        return False
+
+
 def store_user_reply(session_id: str, reply_text: str) -> bool:
     """
     Store a user's reply in the session answers.
@@ -1125,7 +1157,7 @@ def store_user_reply(session_id: str, reply_text: str) -> bool:
             
             cursor.execute("""
                 UPDATE journey_user_sessions
-                SET answers = %s, last_activity_at = NOW()
+                SET answers = %s, last_activity_at = NOW(), reply_received_at = NOW()
                 WHERE id = %s
             """, (json.dumps(answers), session_id))
             
