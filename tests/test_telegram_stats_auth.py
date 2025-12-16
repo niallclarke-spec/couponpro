@@ -9,15 +9,12 @@ from unittest.mock import MagicMock, patch
 class TestTelegramChannelStatsResponses:
     """Test /api/telegram-channel-stats response shapes."""
     
-    def test_returns_503_when_bot_unavailable(self):
-        """503 with code='bot_unavailable' when TELEGRAM_BOT_AVAILABLE is false."""
-        mock_server = MagicMock()
-        mock_server.TELEGRAM_BOT_AVAILABLE = False
+    def test_returns_503_when_bot_token_missing(self):
+        """503 with code='bot_unavailable' when FOREX_BOT_TOKEN is missing."""
+        import os
         
-        with patch.dict(sys.modules, {'server': mock_server}):
+        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': '', 'FOREX_CHANNEL_ID': '@test'}):
             from domains.subscriptions import handlers
-            import importlib
-            importlib.reload(handlers)
             
             handler = MagicMock()
             handler.wfile = BytesIO()
@@ -29,15 +26,11 @@ class TestTelegramChannelStatsResponses:
         assert response['code'] == 'bot_unavailable'
     
     def test_returns_503_when_channel_not_configured(self):
-        """503 with code='channel_not_configured' when channel_id is missing."""
-        mock_server = MagicMock()
-        mock_server.TELEGRAM_BOT_AVAILABLE = True
+        """503 with code='channel_not_configured' when FOREX_CHANNEL_ID is missing."""
+        import os
         
-        with patch.dict(sys.modules, {'server': mock_server}), \
-             patch('core.config.Config.get_forex_channel_id', return_value=None):
+        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': ''}):
             from domains.subscriptions import handlers
-            import importlib
-            importlib.reload(handlers)
             
             handler = MagicMock()
             handler.wfile = BytesIO()
@@ -50,19 +43,14 @@ class TestTelegramChannelStatsResponses:
     
     def test_returns_200_with_member_count_on_success(self):
         """200 with ok=true and member_count on successful API call."""
-        mock_bot = MagicMock()
-        mock_bot.get_chat_member_count.return_value = 1234
+        import os
         
-        mock_server = MagicMock()
-        mock_server.TELEGRAM_BOT_AVAILABLE = True
-        mock_server.forex_bot = mock_bot
-        mock_server.telegram_bot = None
+        mock_response = MagicMock()
+        mock_response.json.return_value = {'ok': True, 'result': 1234}
         
-        with patch.dict(sys.modules, {'server': mock_server}), \
-             patch('core.config.Config.get_forex_channel_id', return_value='@test_channel'):
+        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': '@test_channel'}), \
+             patch('requests.get', return_value=mock_response):
             from domains.subscriptions import handlers
-            import importlib
-            importlib.reload(handlers)
             
             handler = MagicMock()
             handler.wfile = BytesIO()
@@ -76,19 +64,14 @@ class TestTelegramChannelStatsResponses:
     
     def test_returns_502_on_telegram_api_error(self):
         """502 with code='telegram_api_error' when API call fails."""
-        mock_bot = MagicMock()
-        mock_bot.get_chat_member_count.side_effect = Exception("API timeout")
+        import os
         
-        mock_server = MagicMock()
-        mock_server.TELEGRAM_BOT_AVAILABLE = True
-        mock_server.forex_bot = mock_bot
-        mock_server.telegram_bot = None
+        mock_response = MagicMock()
+        mock_response.json.return_value = {'ok': False, 'description': 'Bad Request'}
         
-        with patch.dict(sys.modules, {'server': mock_server}), \
-             patch('core.config.Config.get_forex_channel_id', return_value='@test_channel'):
+        with patch.dict(os.environ, {'FOREX_BOT_TOKEN': 'test_token', 'FOREX_CHANNEL_ID': '@test_channel'}), \
+             patch('requests.get', return_value=mock_response):
             from domains.subscriptions import handlers
-            import importlib
-            importlib.reload(handlers)
             
             handler = MagicMock()
             handler.wfile = BytesIO()

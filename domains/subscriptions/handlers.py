@@ -707,21 +707,22 @@ def handle_telegram_channel_stats(handler):
         503: Bot or channel not configured
         502: Telegram API failure
     """
-    import server
+    import os
+    import requests
     from core.logging import get_logger
     logger = get_logger(__name__)
     
-    from core.config import Config
-    channel_id = Config.get_forex_channel_id()
+    bot_token = os.environ.get('FOREX_BOT_TOKEN')
+    channel_id = os.environ.get('FOREX_CHANNEL_ID')
     
-    if not server.TELEGRAM_BOT_AVAILABLE:
+    if not bot_token:
         handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
             'ok': False,
             'code': 'bot_unavailable',
-            'error': 'Telegram bot not available'
+            'error': 'Telegram bot token not configured'
         }).encode())
         return
     
@@ -737,21 +738,30 @@ def handle_telegram_channel_stats(handler):
         return
     
     try:
-        member_count = None
-        if hasattr(server, 'forex_bot') and server.forex_bot:
-            member_count = server.forex_bot.get_chat_member_count(channel_id)
-        elif hasattr(server, 'telegram_bot') and server.telegram_bot:
-            if hasattr(server.telegram_bot, 'get_chat_member_count'):
-                member_count = server.telegram_bot.get_chat_member_count(channel_id)
+        url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
+        resp = requests.get(url, params={'chat_id': channel_id}, timeout=10)
+        data = resp.json()
         
-        handler.send_response(200)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({
-            'ok': True,
-            'member_count': member_count,
-            'channel_id': channel_id
-        }).encode())
+        if data.get('ok'):
+            member_count = data.get('result')
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'ok': True,
+                'member_count': member_count,
+                'channel_id': channel_id
+            }).encode())
+        else:
+            logger.warning(f"Telegram API error: {data}")
+            handler.send_response(502)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'ok': False,
+                'code': 'telegram_api_error',
+                'error': data.get('description', 'Unknown error')
+            }).encode())
         
     except Exception as e:
         logger.exception("Telegram API error getting channel stats")
