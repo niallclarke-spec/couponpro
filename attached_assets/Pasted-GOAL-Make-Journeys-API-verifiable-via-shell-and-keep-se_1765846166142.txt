@@ -1,0 +1,51 @@
+GOAL: Make Journeys API verifiable via shell and keep server.py thin. Right now curl with X-Clerk-User-Email returns 401 because real Clerk auth requires __session cookie or Authorization Bearer token. We need a reliable way to test auth + journeys endpoints from terminal without relying on browser state, while preserving production security.
+
+REQUIREMENTS:
+
+1) Add first-class Authorization: Bearer <JWT> support in auth.clerk_auth.get_auth_user_from_request()
+   - If Authorization header starts with "Bearer ", validate that JWT exactly as Clerk expects (same verification as current cookie-based auth).
+   - This must work in dev/local and prod.
+   - Do NOT accept X-Clerk-User-Email as authentication. That header may only be used as a display hint AFTER auth succeeds.
+
+2) Ensure cookie-based auth is also supported for local curl testing:
+   - If Clerk uses a cookie like "__session", read it from the Cookie header and validate it (if not already supported).
+   - Make sure localhost/dev paths can read it. Do not weaken production security.
+   - Add a small helper in auth.clerk_auth to extract the Clerk session from cookies and/or Authorization.
+
+3) Fix duplicate routes in api/routes.py:
+   - Ensure only ONE canonical GET route exists for listing journeys (prefer "/api/journeys" without trailing slash).
+   - Ensure POST route is canonical ("/api/journeys").
+   - Ensure PUT routes are canonical ("/api/journeys/{id}" and "/api/journeys/{id}/steps" if applicable).
+   - Avoid registering both "/api/journeys" and "/api/journeys/" unless you explicitly normalize paths.
+
+4) Keep server.py thin:
+   - server.py should not contain manual if/elif blocks for journeys routes.
+   - Journeys endpoints should be served via the routes table + handler wrapper methods (or a generic dispatcher).
+   - If any journey dispatch blocks remain, remove them.
+
+5) Add a terminal-friendly verification script:
+   - Create tests/journeys_auth_smoke.sh (or python) that:
+     a) proves unauthenticated GET /api/journeys returns 401
+     b) proves authenticated GET /api/journeys returns 200 when passing either:
+        - Authorization: Bearer <token> (read token from env JOURNEYS_TEST_JWT)
+        OR
+        - Cookie: __session=... (read from env CLERK_SESSION_COOKIE)
+     c) prints a clear PASS/FAIL summary
+   - The script must not hardcode secrets.
+
+6) OPTIONAL (nice): normalize trailing slashes at the router level:
+   - If request path is "/api/journeys/" redirect or treat as "/api/journeys" to avoid duplicates.
+
+DELIVERABLES:
+- Updated auth/clerk_auth.py with Bearer + cookie session extraction support.
+- Cleaned api/routes.py with no duplicates for journeys routes.
+- server.py remains thin (no manual journeys dispatch).
+- Added tests/journeys_auth_smoke.sh (or python) and instructions in replit.md on how to run:
+    export JOURNEYS_TEST_JWT=...
+    export CLERK_SESSION_COOKIE=...
+    bash tests/journeys_auth_smoke.sh
+
+DO NOT:
+- Do not weaken prod auth.
+- Do not treat email headers as authentication.
+- Do not add more bloated if/elif blocks in server.py.
