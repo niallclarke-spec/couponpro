@@ -5561,8 +5561,12 @@
                                     </button>
                                 </div>
                                 
+                                <label>Channel ID</label>
+                                <input type="text" id="signal-channel-id" placeholder="Enter Telegram channel ID (e.g., -1001234567890)" />
+                                
                                 <div class="connection-info" id="signal-info" style="display:none">
                                     <div class="info-row"><span>Bot Username:</span> <strong id="signal-username">-</strong></div>
+                                    <div class="info-row"><span>Channel ID:</span> <code id="signal-channel-id-display">-</code></div>
                                     <div class="info-row"><span>Webhook URL:</span> <code id="signal-webhook">-</code></div>
                                     <div class="info-row"><span>Last Updated:</span> <span id="signal-updated">-</span></div>
                                 </div>
@@ -5594,8 +5598,12 @@
                                     </button>
                                 </div>
                                 
+                                <label>Channel ID</label>
+                                <input type="text" id="message-channel-id" placeholder="Enter Telegram channel ID (optional)" />
+                                
                                 <div class="connection-info" id="message-info" style="display:none">
                                     <div class="info-row"><span>Bot Username:</span> <strong id="message-username">-</strong></div>
+                                    <div class="info-row"><span>Channel ID:</span> <code id="message-channel-id-display">-</code></div>
                                     <div class="info-row"><span>Webhook URL:</span> <code id="message-webhook">-</code></div>
                                     <div class="info-row"><span>Last Updated:</span> <span id="message-updated">-</span></div>
                                 </div>
@@ -7932,10 +7940,14 @@
                     document.getElementById(`${role}-status`).textContent = 'Connected';
                     document.getElementById(`${role}-status`).classList.add('connected');
                     document.getElementById(`${role}-username`).textContent = '@' + conn.bot_username;
+                    document.getElementById(`${role}-channel-id-display`).textContent = conn.channel_id || '-';
                     document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
                     document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
                     document.getElementById(`${role}-info`).style.display = 'block';
                     document.getElementById(`${role}-delete`).style.display = 'inline-block';
+                    if (conn.channel_id) {
+                        document.getElementById(`${role}-channel-id`).value = conn.channel_id;
+                    }
                     if (conn.last_error) {
                         document.getElementById(`${role}-error`).textContent = conn.last_error;
                         document.getElementById(`${role}-error`).style.display = 'block';
@@ -7986,6 +7998,7 @@
 
         async function saveConnection(role) {
             const token = document.getElementById(`${role}-bot-token`).value.trim();
+            const channelId = document.getElementById(`${role}-channel-id`).value.trim();
             if (!token) {
                 showModalAlert('Error', 'Please enter a bot token');
                 return;
@@ -7998,7 +8011,7 @@
                 const resp = await authedFetch('/api/connections', {
                     method: 'POST',
                     headers: {...headers, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ bot_role: role, bot_token: token })
+                    body: JSON.stringify({ bot_role: role, bot_token: token, channel_id: channelId || null })
                 });
                 const data = await resp.json();
                 hideLoading();
