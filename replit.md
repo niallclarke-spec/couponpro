@@ -174,3 +174,27 @@ Stateless HMAC-signed cookie authentication is used for ephemeral environments. 
 - **Python Packages**: `boto3`, `psycopg2-binary`, `Pillow`, `python-dotenv`, `python-telegram-bot[rate-limiter]`, `aiolimiter`.
 - **Environment Secrets**: `TELEGRAM_BOT_TOKEN`, `DATABASE_URL`, `SPACES_ACCESS_KEY`, `ADMIN_PASSWORD`, `FUNDERPRO_PRODUCT_ID`, `FOREX_BOT_TOKEN`, `TWELVE_DATA_API_KEY`, and others.
 - **.do/app.yaml**: Digital Ocean application configuration.
+
+## Testing
+
+### Journeys API Auth Smoke Test
+Terminal-friendly script to verify authentication works for the Journeys API:
+
+```bash
+# Test with Bearer token (get from browser DevTools > Network > Authorization header):
+export JOURNEYS_TEST_JWT="your_clerk_jwt_token"
+bash tests/journeys_auth_smoke.sh
+
+# Or test with session cookie (get from browser DevTools > Application > Cookies > __session):
+export CLERK_SESSION_COOKIE="your_clerk_session_cookie"
+bash tests/journeys_auth_smoke.sh
+
+# Test against a different host:
+BASE_URL=https://admin.promostack.io bash tests/journeys_auth_smoke.sh
+```
+
+The script verifies:
+1. Unauthenticated requests return 401
+2. Bearer token auth returns 200 (if JOURNEYS_TEST_JWT set)
+3. Cookie auth returns 200 (if CLERK_SESSION_COOKIE set)
+4. X-Clerk-User-Email header alone does NOT authenticate (security check)
