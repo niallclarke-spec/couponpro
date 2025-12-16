@@ -218,13 +218,37 @@ def handle_coupon_telegram_webhook(handler, telegram_bot_available, telegram_bot
         update_id = webhook_data.get('update_id', 'unknown')
         print(f"[WEBHOOK-ENDPOINT] Processing update_id: {update_id}", flush=True)
         
-        # Resolve tenant from bot token
-        # Currently hardcoded to entrylab - in production, this should be looked up
-        # from a bot_token -> tenant_id mapping table (tenant_integrations)
-        # Security note: The tenant_id is trusted because it comes from our internal
-        # mapping, not from the webhook payload itself
-        tenant_id = 'entrylab'  # TODO: lookup from bot token mapping
+        # Resolve tenant from X-Telegram-Bot-Api-Secret-Token header
+        # This is a secure way to identify which tenant/bot this webhook is for
+        secret_token = handler.headers.get('X-Telegram-Bot-Api-Secret-Token', '')
+        
+        tenant_id = None
         bot_id = 'default'
+        
+        if secret_token:
+            import db
+            tenant_id, bot_id = db.resolve_tenant_from_webhook_secret(secret_token)
+            if tenant_id:
+                print(f"[WEBHOOK-ENDPOINT] Resolved tenant={tenant_id}, bot={bot_id} from secret token", flush=True)
+        
+        # Fallback behavior based on environment
+        if not tenant_id:
+            import os
+            is_dev = os.environ.get('REPL_ID') or os.environ.get('REPLIT_DEV_DOMAIN')
+            
+            if is_dev or not secret_token:
+                # Dev/local: fallback to entrylab for testing
+                tenant_id = 'entrylab'
+                bot_id = 'default'
+                print(f"[WEBHOOK-ENDPOINT] Dev fallback: tenant={tenant_id}, bot={bot_id}", flush=True)
+            else:
+                # Production without secret token: reject
+                print(f"[WEBHOOK-ENDPOINT] ❌ Missing secret token in production", flush=True)
+                handler.send_response(401)
+                handler.send_header('Content-type', 'application/json')
+                handler.end_headers()
+                handler.wfile.write(json.dumps({'error': 'Missing Telegram webhook secret token'}).encode())
+                return
         
         if check_journey_trigger(webhook_data, tenant_id, bot_id):
             print(f"[WEBHOOK-ENDPOINT] ✅ Handled by journey trigger", flush=True)
