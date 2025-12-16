@@ -6617,3 +6617,81 @@ def clear_tenant_stripe_cache(tenant_id: str) -> bool:
     except Exception as e:
         logger.exception(f"Error clearing tenant stripe cache: {e}")
         return False
+
+
+# ============================================================
+# Telegram Webhook Secrets
+# ============================================================
+
+def upsert_telegram_webhook_secret(tenant_id: str, bot_id: str, secret_token: str) -> bool:
+    """
+    Store or update a hashed webhook secret token for a tenant's bot.
+    
+    Args:
+        tenant_id: Tenant ID
+        bot_id: Bot identifier (e.g., 'coupon_bot', 'forex_bot')
+        secret_token: Plain text secret token (will be hashed with SHA256)
+        
+    Returns:
+        True if upserted successfully
+    """
+    import hashlib
+    
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        secret_hash = hashlib.sha256(secret_token.encode()).hexdigest()
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO telegram_webhook_secrets (tenant_id, bot_id, secret_token_hash, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, bot_id) 
+                DO UPDATE SET secret_token_hash = EXCLUDED.secret_token_hash, updated_at = CURRENT_TIMESTAMP
+            """, (tenant_id, bot_id, secret_hash))
+            conn.commit()
+            logger.info(f"Upserted webhook secret for tenant={tenant_id}, bot={bot_id}")
+            return True
+    except Exception as e:
+        logger.exception(f"Error upserting telegram webhook secret: {e}")
+        return False
+
+
+def resolve_tenant_from_webhook_secret(secret_token: str) -> tuple:
+    """
+    Resolve tenant_id and bot_id from a webhook secret token.
+    
+    Args:
+        secret_token: Plain text secret token from X-Telegram-Bot-Api-Secret-Token header
+        
+    Returns:
+        Tuple of (tenant_id, bot_id) if found, (None, None) otherwise
+    """
+    import hashlib
+    
+    if not db_pool or not db_pool.connection_pool:
+        return (None, None)
+    
+    if not secret_token:
+        return (None, None)
+    
+    try:
+        secret_hash = hashlib.sha256(secret_token.encode()).hexdigest()
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id, bot_id 
+                FROM telegram_webhook_secrets 
+                WHERE secret_token_hash = %s
+            """, (secret_hash,))
+            row = cursor.fetchone()
+            
+            if row:
+                return (row[0], row[1])
+            return (None, None)
+    except Exception as e:
+        logger.exception(f"Error resolving tenant from webhook secret: {e}")
+        return (None, None)
