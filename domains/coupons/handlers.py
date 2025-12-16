@@ -107,7 +107,7 @@ def handle_bot_stats(handler):
         else:
             days = int(days_param)
         
-        stats = server.db.get_bot_stats(days, template_filter=template, tenant_id=handler.tenant_id)
+        stats = server.db.get_bot_stats(handler.tenant_id, days=days, template_filter=template)
         
         if stats:
             handler.send_response(200)
