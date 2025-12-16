@@ -1,0 +1,74 @@
+ Stop server.py from growing. Refactor the Journeys integration so server.py stays a thin router and all journey logic (routing + request parsing) lives in the existing API routing + handler modules. Do NOT change functionality. Only reorganize for maintainability and consistency with the existing architecture.
+
+Context:
+	•	We already use api/routes.py + api/middleware.py for route definitions and auth/db requirements.
+	•	We already have domains/journeys/handlers.py, domains/journeys/repo.py, domains/journeys/engine.py, domains/journeys/scheduler.py, and integrations/telegram/webhooks.py.
+	•	server.py is currently bloated with many if/elif dispatch blocks across do_GET/do_POST/do_PUT.
+
+Requirements:
+	1.	server.py must not add any new feature-specific dispatch blocks for journeys (or other domains). It should only:
+	•	parse Host context
+	•	do match_route() against GET_ROUTES/POST_ROUTES/PUT_ROUTES/PAGE_ROUTES
+	•	run apply_route_checks()
+	•	dispatch to the route’s handler function
+	•	serve static pages (login/admin/app/setup/campaign etc.)
+	2.	Move Journeys API routing fully into api/routes.py using the same pattern used for other endpoints:
+	•	Define the journey routes in GET_ROUTES / POST_ROUTES / PUT_ROUTES with correct auth/db requirements
+	•	Ensure route matching works for:
+	•	GET /api/journeys
+	•	GET /api/journeys/{id}
+	•	GET /api/journeys/{id}/steps
+	•	POST /api/journeys
+	•	PUT /api/journeys/{id}
+	•	PUT /api/journeys/{id}/steps
+	•	POST /api/journeys/{id}/triggers
+	•	GET /api/journeys/debug/sessions (admin only)
+	3.	Ensure handlers are called only from domains/journeys/handlers.py and those handlers are responsible for:
+	•	reading request body / query params
+	•	extracting tenant_id in a consistent way (same as other domain handlers)
+	•	calling repo/engine/scheduler
+	•	returning JSON responses
+	4.	Eliminate schema drift:
+	•	Standardize trigger_config key name: use start_param everywhere (DB seed, repo query, webhook extraction).
+	•	Standardize step config key name: use text everywhere (DB seed + engine + UI).
+	•	Add a small compatibility layer so that if older rows exist with “param” or “content”, they still work (read fallback), but all newly created rows must write start_param and text.
+	5.	Tighten security consistency:
+	•	Ensure the admin-only endpoints are protected by the same middleware auth checks used elsewhere.
+	•	Ensure tenant_id is always scoped and cannot be overridden via query params for admin routes.
+	6.	Add a minimal test script / sanity checks:
+	•	Provide curl commands to verify the routes return expected status codes (401 when unauthenticated; 200 when authenticated).
+	•	Add a short Python smoke test that calls repo.get_active_journey_by_deeplink() and verifies it finds the seeded journey.
+
+Deliverable:
+	•	A clean refactor commit where server.py shrinks (no new journey if/elif blocks), journeys are routed through api/routes.py, schema key names are standardized with backward-compatible reads, and the seeded Broker Sign Up journey still works via Telegram /start broker_signup.
+
+Important constraints:
+	•	Do not remove legacy auth endpoints yet.
+	•	Do not change host routing (admin.promostack.io vs dash.promostack.io).
+	•	Keep behavior identical; this is a refactor + schema key standardization only.
+
+PROMPT END
+
+⸻
+
+Why this prompt works (without turning into “Replit spaghetti”)
+
+It tells Replit exactly what it’s allowed to touch, what it’s not, and what the end state should look like:
+	•	server.py becomes boring again (that’s a compliment)
+	•	api/routes.py becomes the source of truth
+	•	handlers become consistent
+	•	schema keys stop randomly changing between files
+
+⸻
+
+Quick sanity checks you can run after it finishes
+
+(These are “shell commands”, not code snippets you need to paste in a prompt.)
+	•	Routes exist and require auth:
+	•	curl -i http://localhost:5000/api/journeys
+	•	Expect: 401
+	•	curl -i http://localhost:5000/api/journeys -H "X-Clerk-User-Email: niallclarkefs@gmail.com" -H "Authorization: Bearer <JWT>"
+	•	Expect: 200
+
+And confirm the seeded journey is findable:
+	•	python3 -c "from domains.journeys import repo; print(repo.get_active_journey_by_deeplink('entrylab','default','broker_signup'))"
