@@ -143,19 +143,24 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
     if not settings.get('enabled'):
         return {"success": False, "error": "Cross promo is disabled for this tenant"}
     
-    free_channel_id = settings.get('free_channel_id')
-    vip_channel_id = settings.get('vip_channel_id')
-    bot_role = settings.get('bot_role', 'signal_bot')
+    bot_role = 'signal_bot'
     cta_url = settings.get('cta_url', 'https://entrylab.io/subscribe')
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel ID not configured"}
     
     try:
         credentials = get_bot_credentials(tenant_id, bot_role)
         bot_token = credentials['bot_token']
+        vip_channel_id = credentials.get('vip_channel_id')
+        free_channel_id = credentials.get('free_channel_id')
     except BotNotConfiguredError as e:
         return {"success": False, "error": str(e)}
+    
+    if not vip_channel_id:
+        vip_channel_id = settings.get('vip_channel_id')
+    if not free_channel_id:
+        free_channel_id = settings.get('free_channel_id')
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel ID not configured. Set it in the Connections page under Signal Bot."}
     
     if job_type == 'morning_news':
         message = build_morning_news_message(tenant_id)

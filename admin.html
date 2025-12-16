@@ -4151,9 +4151,43 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
+            gap: 8px;
         }
 
-        .connection-header h3 { margin: 0; }
+        .connection-header h3 { margin: 0; flex: 1; }
+        
+        .bot-icon {
+            font-size: 20px;
+            margin-right: 4px;
+        }
+        
+        .channel-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        
+        .channel-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .channel-group label {
+            margin-bottom: 6px;
+        }
+        
+        .channel-group .hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        @media (max-width: 600px) {
+            .channel-section {
+                grid-template-columns: 1fr;
+            }
+        }
 
         .connection-badge {
             padding: 4px 12px;
@@ -5594,20 +5628,25 @@
                                 </label>
                             </div>
                             
-                            <div class="form-group" style="margin-bottom: 16px;">
-                                <label>Free Channel (destination)</label>
-                                <select id="crosspromo-free-channel" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="">-- Select from Connections --</option>
-                                </select>
-                                <div class="hint">Promos will be posted here (from Signal Bot channel)</div>
-                            </div>
-                            
-                            <div class="form-group" style="margin-bottom: 16px;">
-                                <label>VIP Channel (source)</label>
-                                <select id="crosspromo-vip-channel" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card); color: var(--text-primary);">
-                                    <option value="">-- Select from Connections --</option>
-                                </select>
-                                <div class="hint">Winning signals will be copied from here</div>
+                            <div class="crosspromo-bot-info" id="crosspromo-bot-info" style="background: var(--bg-hover); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <span style="font-size: 20px;">🤖</span>
+                                    <strong id="crosspromo-bot-name">Signal Bot</strong>
+                                    <span id="crosspromo-bot-status" class="connection-badge" style="font-size: 11px;">Not configured</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">VIP Channel (source)</div>
+                                        <code id="crosspromo-vip-display" style="font-size: 13px;">Not configured</code>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">FREE Channel (destination)</div>
+                                        <code id="crosspromo-free-display" style="font-size: 13px;">Not configured</code>
+                                    </div>
+                                </div>
+                                <div id="crosspromo-channels-missing" style="margin-top: 12px; padding: 8px; background: rgba(255,193,7,0.1); border-radius: 6px; display: none;">
+                                    <span style="color: #ffc107;">Configure VIP and FREE channels in the <a href="#" onclick="switchView('forex-connections'); return false;" style="color: var(--accent-primary);">Connections</a> page</span>
+                                </div>
                             </div>
                             
                             <div style="background: var(--bg-hover); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
@@ -5689,10 +5728,11 @@
                         <!-- Signal Bot Card -->
                         <div class="connection-card" data-role="signal" data-has-token="false">
                             <div class="connection-header">
+                                <span class="bot-icon">🤖</span>
                                 <h3>Signal Bot</h3>
                                 <span class="connection-badge" id="signal-status">Not configured ⚪</span>
                             </div>
-                            <p class="connection-desc">Used for sending forex signals to channels</p>
+                            <p class="connection-desc">Used for sending forex signals and cross-promo content to channels</p>
                             
                             <div class="connection-form">
                                 <label>Bot Token</label>
@@ -5704,12 +5744,23 @@
                                 </div>
                                 <div class="token-status" id="signal-token-status"></div>
                                 
-                                <label>Channel ID <span style="color: var(--status-error);">*</span></label>
-                                <input type="text" id="signal-channel-id" placeholder="Enter Telegram channel ID (e.g., -1001234567890)" />
+                                <div class="channel-section">
+                                    <div class="channel-group">
+                                        <label>VIP Channel ID <span style="color: var(--status-error);">*</span></label>
+                                        <input type="text" id="signal-vip-channel-id" placeholder="VIP/Paid channel (e.g., -1001234567890)" />
+                                        <div class="hint">Source channel for winning signals</div>
+                                    </div>
+                                    <div class="channel-group">
+                                        <label>FREE Channel ID <span style="color: var(--status-error);">*</span></label>
+                                        <input type="text" id="signal-free-channel-id" placeholder="FREE/Public channel (e.g., -1001234567890)" />
+                                        <div class="hint">Destination for cross-promo messages</div>
+                                    </div>
+                                </div>
                                 
                                 <div class="connection-info" id="signal-info" style="display:none">
                                     <div class="info-row"><span>Bot Username:</span> <strong id="signal-username">-</strong></div>
-                                    <div class="info-row"><span>Channel ID:</span> <code id="signal-channel-id-display">-</code></div>
+                                    <div class="info-row"><span>VIP Channel:</span> <code id="signal-vip-channel-display">-</code></div>
+                                    <div class="info-row"><span>FREE Channel:</span> <code id="signal-free-channel-display">-</code></div>
                                     <div class="info-row"><span>Webhook URL:</span> <code id="signal-webhook">-</code></div>
                                     <div class="info-row"><span>Last Updated:</span> <span id="signal-updated">-</span></div>
                                 </div>
@@ -5728,6 +5779,7 @@
                         <!-- Message Bot Card -->
                         <div class="connection-card" data-role="message" data-has-token="false">
                             <div class="connection-header">
+                                <span class="bot-icon">🤖</span>
                                 <h3>Message Bot</h3>
                                 <span class="connection-badge" id="message-status">Not configured ⚪</span>
                             </div>
@@ -8218,7 +8270,7 @@
                 const preview = await previewResp.json();
                 const connections = await connectionsResp.json();
                 
-                populateCrossPromoChannelDropdowns(connections.connections || [], settings);
+                updateCrossPromoBotDisplay(connections.connections || []);
                 
                 document.getElementById('crosspromo-enabled').checked = settings.enabled || false;
                 document.getElementById('crosspromo-cta-url').value = settings.cta_url || 'https://entrylab.io/subscribe';
@@ -8231,69 +8283,40 @@
             }
         }
         
-        function populateCrossPromoChannelDropdowns(connections, settings) {
-            const freeSelect = document.getElementById('crosspromo-free-channel');
-            const vipSelect = document.getElementById('crosspromo-vip-channel');
+        function updateCrossPromoBotDisplay(connections) {
+            const signalBot = connections.find(c => c.bot_role === 'signal_bot');
             
-            freeSelect.innerHTML = '<option value="">-- Select from Connections --</option>';
-            vipSelect.innerHTML = '<option value="">-- Select from Connections --</option>';
+            const botNameEl = document.getElementById('crosspromo-bot-name');
+            const botStatusEl = document.getElementById('crosspromo-bot-status');
+            const vipDisplayEl = document.getElementById('crosspromo-vip-display');
+            const freeDisplayEl = document.getElementById('crosspromo-free-display');
+            const missingWarning = document.getElementById('crosspromo-channels-missing');
             
-            const channels = [];
-            for (const conn of connections) {
-                const channelId = conn.channel_id !== undefined && conn.channel_id !== null ? String(conn.channel_id) : null;
-                if (channelId && channelId.length > 0) {
-                    const label = conn.bot_role === 'signal_bot' ? 'Signal Bot' : 'Message Bot';
-                    const username = conn.bot_username || 'Unknown';
-                    channels.push({
-                        id: channelId,
-                        label: `${label} Channel (@${username}) - ${channelId}`
-                    });
-                }
-            }
-            
-            for (const ch of channels) {
-                const opt1 = document.createElement('option');
-                opt1.value = ch.id;
-                opt1.textContent = ch.label;
-                freeSelect.appendChild(opt1);
+            if (signalBot && signalBot.bot_username) {
+                botNameEl.textContent = `Signal Bot (@${signalBot.bot_username})`;
                 
-                const opt2 = document.createElement('option');
-                opt2.value = ch.id;
-                opt2.textContent = ch.label;
-                vipSelect.appendChild(opt2);
-            }
-            
-            if (channels.length === 0) {
-                const noChannels = document.createElement('option');
-                noChannels.value = '';
-                noChannels.textContent = 'No channels configured - set up in Connections first';
-                noChannels.disabled = true;
-                freeSelect.appendChild(noChannels.cloneNode(true));
-                vipSelect.appendChild(noChannels);
-            }
-            
-            const savedFree = settings.free_channel_id ? String(settings.free_channel_id) : '';
-            const savedVip = settings.vip_channel_id ? String(settings.vip_channel_id) : '';
-            
-            if (savedFree) {
-                freeSelect.value = savedFree;
-                if (!freeSelect.value && savedFree) {
-                    const customOpt = document.createElement('option');
-                    customOpt.value = savedFree;
-                    customOpt.textContent = `Custom: ${savedFree}`;
-                    freeSelect.appendChild(customOpt);
-                    freeSelect.value = savedFree;
+                if (signalBot.vip_channel_id && signalBot.free_channel_id) {
+                    botStatusEl.textContent = 'Configured ✅';
+                    botStatusEl.className = 'connection-badge connected';
+                    vipDisplayEl.textContent = signalBot.vip_channel_id;
+                    freeDisplayEl.textContent = signalBot.free_channel_id;
+                    missingWarning.style.display = 'none';
+                } else {
+                    botStatusEl.textContent = 'Channels missing ⚠️';
+                    botStatusEl.className = 'connection-badge';
+                    botStatusEl.style.background = 'rgba(255,193,7,0.2)';
+                    botStatusEl.style.color = '#ffc107';
+                    vipDisplayEl.textContent = signalBot.vip_channel_id || 'Not set';
+                    freeDisplayEl.textContent = signalBot.free_channel_id || 'Not set';
+                    missingWarning.style.display = 'block';
                 }
-            }
-            if (savedVip) {
-                vipSelect.value = savedVip;
-                if (!vipSelect.value && savedVip) {
-                    const customOpt = document.createElement('option');
-                    customOpt.value = savedVip;
-                    customOpt.textContent = `Custom: ${savedVip}`;
-                    vipSelect.appendChild(customOpt);
-                    vipSelect.value = savedVip;
-                }
+            } else {
+                botNameEl.textContent = 'Signal Bot';
+                botStatusEl.textContent = 'Not configured ⚪';
+                botStatusEl.className = 'connection-badge';
+                vipDisplayEl.textContent = 'Not configured';
+                freeDisplayEl.textContent = 'Not configured';
+                missingWarning.style.display = 'block';
             }
         }
         
@@ -8347,18 +8370,9 @@
         async function saveCrossPromoSettings() {
             try {
                 const enabled = document.getElementById('crosspromo-enabled').checked;
-                const freeChannelId = document.getElementById('crosspromo-free-channel').value;
-                const vipChannelId = document.getElementById('crosspromo-vip-channel').value;
-                
-                if (enabled && (!freeChannelId || !vipChannelId)) {
-                    showToast('Please select both channels when enabling Cross Promo', 'error');
-                    return;
-                }
                 
                 const settings = {
                     enabled: enabled,
-                    free_channel_id: freeChannelId || null,
-                    vip_channel_id: vipChannelId || null,
                     cta_url: document.getElementById('crosspromo-cta-url').value || 'https://entrylab.io/subscribe'
                 };
                 
@@ -8369,14 +8383,14 @@
                 });
                 
                 if (resp.ok) {
-                    showToast('Settings saved');
+                    showModalAlert('Success', 'Settings saved');
                 } else {
                     const err = await resp.json();
-                    showToast(err.error || 'Failed to save', 'error');
+                    showModalAlert('Error', err.error || 'Failed to save');
                 }
             } catch (e) {
                 console.error('Error saving settings:', e);
-                showToast('Error saving settings', 'error');
+                showModalAlert('Error', 'Error saving settings');
             }
         }
         
@@ -8506,13 +8520,28 @@
                         }
                         
                         document.getElementById(`${role}-username`).textContent = conn.bot_username || '-';
-                        document.getElementById(`${role}-channel-id-display`).textContent = conn.channel_id || '-';
                         document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
                         document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
                         document.getElementById(`${role}-info`).style.display = 'block';
                         document.getElementById(`${role}-delete`).style.display = 'inline-block';
-                        if (conn.channel_id) {
-                            document.getElementById(`${role}-channel-id`).value = conn.channel_id;
+                        
+                        if (role === 'signal') {
+                            const vipDisplay = document.getElementById('signal-vip-channel-display');
+                            const freeDisplay = document.getElementById('signal-free-channel-display');
+                            const vipInput = document.getElementById('signal-vip-channel-id');
+                            const freeInput = document.getElementById('signal-free-channel-id');
+                            
+                            if (vipDisplay) vipDisplay.textContent = conn.vip_channel_id || '-';
+                            if (freeDisplay) freeDisplay.textContent = conn.free_channel_id || '-';
+                            if (vipInput && conn.vip_channel_id) vipInput.value = conn.vip_channel_id;
+                            if (freeInput && conn.free_channel_id) freeInput.value = conn.free_channel_id;
+                        } else {
+                            const channelDisplay = document.getElementById(`${role}-channel-id-display`);
+                            if (channelDisplay) channelDisplay.textContent = conn.channel_id || '-';
+                            if (conn.channel_id) {
+                                const channelInput = document.getElementById(`${role}-channel-id`);
+                                if (channelInput) channelInput.value = conn.channel_id;
+                            }
                         }
                     } else {
                         card.dataset.hasToken = 'false';
@@ -8614,7 +8643,6 @@
 
         async function saveConnection(role) {
             const token = document.getElementById(`${role}-bot-token`).value.trim();
-            const channelId = document.getElementById(`${role}-channel-id`).value.trim();
             if (!token) {
                 showModalAlert('Error', 'Please enter a bot token');
                 return;
@@ -8624,11 +8652,24 @@
             showLoading('Setting up webhook...');
             
             const apiRole = UI_TO_API_ROLE[role] || role;
+            
+            let bodyData = { bot_role: apiRole, bot_token: token };
+            
+            if (role === 'signal') {
+                const vipChannelId = document.getElementById('signal-vip-channel-id').value.trim();
+                const freeChannelId = document.getElementById('signal-free-channel-id').value.trim();
+                bodyData.vip_channel_id = vipChannelId || null;
+                bodyData.free_channel_id = freeChannelId || null;
+            } else {
+                const channelId = document.getElementById(`${role}-channel-id`).value.trim();
+                bodyData.channel_id = channelId || null;
+            }
+            
             try {
                 const resp = await authedFetch('/api/connections', {
                     method: 'POST',
                     headers: {...headers, 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ bot_role: apiRole, bot_token: token, channel_id: channelId || null })
+                    body: JSON.stringify(bodyData)
                 });
                 const data = await resp.json();
                 hideLoading();

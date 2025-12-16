@@ -902,6 +902,25 @@ class DatabasePool:
                 else:
                     logger.info("channel_id already exists on tenant_bot_connections, skipping")
                 
+                # Migration: Add vip_channel_id and free_channel_id to tenant_bot_connections
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='tenant_bot_connections' AND column_name='vip_channel_id'
+                """)
+                if not cursor.fetchone():
+                    logger.info("Adding vip_channel_id to tenant_bot_connections...")
+                    cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN vip_channel_id VARCHAR(100)")
+                    logger.info("vip_channel_id added to tenant_bot_connections")
+                
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='tenant_bot_connections' AND column_name='free_channel_id'
+                """)
+                if not cursor.fetchone():
+                    logger.info("Adding free_channel_id to tenant_bot_connections...")
+                    cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN free_channel_id VARCHAR(100)")
+                    logger.info("free_channel_id added to tenant_bot_connections")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================
@@ -6809,7 +6828,7 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
                        webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
-                       created_at, updated_at
+                       created_at, updated_at, vip_channel_id, free_channel_id
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s AND bot_role = %s
             """, (tenant_id, bot_role))
@@ -6828,7 +6847,9 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
                     'last_validated_at': row[8].isoformat() if row[8] else None,
                     'last_error': row[9],
                     'created_at': row[10].isoformat() if row[10] else None,
-                    'updated_at': row[11].isoformat() if row[11] else None
+                    'updated_at': row[11].isoformat() if row[11] else None,
+                    'vip_channel_id': row[12],
+                    'free_channel_id': row[13]
                 }
             return None
     except Exception as e:
@@ -6839,6 +6860,7 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
 def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None, 
                           bot_username: str = None, webhook_secret: str = None, 
                           webhook_url: str = None, channel_id: str = None,
+                          vip_channel_id: str = None, free_channel_id: str = None,
                           last_error: str = None) -> bool:
     """
     Upsert a bot connection for a tenant.
@@ -6850,7 +6872,9 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
         bot_username: Bot username
         webhook_secret: Webhook secret for validation
         webhook_url: Webhook URL
-        channel_id: Telegram channel ID
+        channel_id: Telegram channel ID (legacy, for message_bot)
+        vip_channel_id: VIP channel ID (for signal_bot cross promo)
+        free_channel_id: FREE channel ID (for signal_bot cross promo)
         last_error: Last error message if any
         
     Returns:
@@ -6864,18 +6888,22 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO tenant_bot_connections 
-                    (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, channel_id, last_error, last_validated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
+                    (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, 
+                     channel_id, vip_channel_id, free_channel_id, last_error, last_validated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
                 ON CONFLICT (tenant_id, bot_role) DO UPDATE SET
                     bot_token = COALESCE(EXCLUDED.bot_token, tenant_bot_connections.bot_token),
                     bot_username = COALESCE(EXCLUDED.bot_username, tenant_bot_connections.bot_username),
                     webhook_secret = COALESCE(EXCLUDED.webhook_secret, tenant_bot_connections.webhook_secret),
                     webhook_url = COALESCE(EXCLUDED.webhook_url, tenant_bot_connections.webhook_url),
                     channel_id = COALESCE(EXCLUDED.channel_id, tenant_bot_connections.channel_id),
+                    vip_channel_id = COALESCE(EXCLUDED.vip_channel_id, tenant_bot_connections.vip_channel_id),
+                    free_channel_id = COALESCE(EXCLUDED.free_channel_id, tenant_bot_connections.free_channel_id),
                     last_error = EXCLUDED.last_error,
                     last_validated_at = CASE WHEN EXCLUDED.last_error IS NULL THEN NOW() ELSE tenant_bot_connections.last_validated_at END,
                     updated_at = NOW()
-            """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, channel_id, last_error, last_error))
+            """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, 
+                  channel_id, vip_channel_id, free_channel_id, last_error, last_error))
             conn.commit()
             logger.info(f"Upserted bot connection for tenant={tenant_id}, role={bot_role}")
             return True

@@ -66,7 +66,8 @@ def handle_connections_list(handler):
         with db.db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT bot_role, bot_username, webhook_url, channel_id, last_validated_at, last_error
+                SELECT bot_role, bot_username, webhook_url, channel_id, last_validated_at, last_error,
+                       vip_channel_id, free_channel_id
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
                 ORDER BY bot_role
@@ -81,7 +82,9 @@ def handle_connections_list(handler):
                     'webhook_url': row[2],
                     'channel_id': row[3],
                     'last_validated_at': row[4].isoformat() if row[4] else None,
-                    'last_error': row[5]
+                    'last_error': row[5],
+                    'vip_channel_id': row[6],
+                    'free_channel_id': row[7]
                 })
         
         _send_json(handler, 200, {'connections': connections})
@@ -168,6 +171,8 @@ def handle_connection_save(handler):
     bot_role = data.get('bot_role')
     bot_token = data.get('bot_token')
     channel_id = data.get('channel_id')
+    vip_channel_id = data.get('vip_channel_id')
+    free_channel_id = data.get('free_channel_id')
     
     if bot_role not in VALID_BOT_ROLES:
         _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
@@ -207,7 +212,9 @@ def handle_connection_save(handler):
         bot_username=bot_username,
         webhook_secret=webhook_secret,
         webhook_url=webhook_url,
-        channel_id=channel_id
+        channel_id=channel_id,
+        vip_channel_id=vip_channel_id,
+        free_channel_id=free_channel_id
     )
     
     if success:
@@ -218,7 +225,9 @@ def handle_connection_save(handler):
                 'bot_role': bot_role,
                 'bot_username': bot_username,
                 'webhook_url': webhook_url,
-                'channel_id': channel_id
+                'channel_id': channel_id,
+                'vip_channel_id': vip_channel_id,
+                'free_channel_id': free_channel_id
             }
         })
     else:

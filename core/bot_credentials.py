@@ -78,7 +78,7 @@ class BotCredentialResolver:
             bot_role: The bot role ('signal_bot' or 'message_bot')
             
         Returns:
-            dict with keys: bot_token, bot_username, channel_id, webhook_url
+            dict with keys: bot_token, bot_username, channel_id, webhook_url, vip_channel_id, free_channel_id
             
         Raises:
             BotNotConfiguredError: If no bot connection found for this tenant/role
@@ -106,6 +106,8 @@ class BotCredentialResolver:
             'bot_username': connection.get('bot_username'),
             'channel_id': connection.get('channel_id'),
             'webhook_url': connection.get('webhook_url'),
+            'vip_channel_id': connection.get('vip_channel_id'),
+            'free_channel_id': connection.get('free_channel_id'),
         }
     
     def get_signal_bot(self, tenant_id: str) -> dict:
