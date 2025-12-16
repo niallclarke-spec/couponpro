@@ -134,6 +134,14 @@ GET_ROUTES: List[Route] = [
     # Connections
     Route('GET', '/api/connections', 'handle_api_connections_list',
           auth_required=True, db_required=True),
+    
+    # Cross Promo
+    Route('GET', '/api/crosspromo/settings', 'handle_api_crosspromo_settings_get',
+          auth_required=True, db_required=True),
+    Route('GET', '/api/crosspromo/jobs', 'handle_api_crosspromo_jobs',
+          auth_required=True, db_required=True),
+    Route('GET', '/api/crosspromo/preview', 'handle_api_crosspromo_preview',
+          auth_required=True, db_required=True),
 ]
 
 
@@ -244,6 +252,16 @@ POST_ROUTES: List[Route] = [
     Route('POST', '/api/connections/test', 'handle_api_connection_test',
           auth_required=True, db_required=True),
     Route('POST', '/api/connections', 'handle_api_connection_save',
+          auth_required=True, db_required=True),
+    
+    # Cross Promo
+    Route('POST', '/api/crosspromo/settings', 'handle_api_crosspromo_settings_post',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/run-daily-seq', 'handle_api_crosspromo_run_daily',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/publish-win', 'handle_api_crosspromo_publish_win',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/send-test', 'handle_api_crosspromo_send_test',
           auth_required=True, db_required=True),
 ]
 

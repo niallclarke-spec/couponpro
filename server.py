@@ -286,6 +286,35 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         bot_role = urlparse(self.path).path.split('/')[3]
         conn_h.handle_connection_delete(self, bot_role)
 
+    # Cross Promo handlers
+    def handle_api_crosspromo_settings_get(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_get_settings(self)
+
+    def handle_api_crosspromo_settings_post(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_save_settings(self)
+
+    def handle_api_crosspromo_jobs(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_list_jobs(self)
+
+    def handle_api_crosspromo_run_daily(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_run_daily_sequence(self)
+
+    def handle_api_crosspromo_publish_win(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_publish_win(self)
+
+    def handle_api_crosspromo_send_test(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_send_test(self)
+
+    def handle_api_crosspromo_preview(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_get_preview(self)
+
     # Legacy auth
     def handle_api_login(self):
         cl = int(self.headers.get('Content-Length', 0))

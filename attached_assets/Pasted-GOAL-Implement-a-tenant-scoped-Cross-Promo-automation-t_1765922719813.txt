@@ -1,0 +1,50 @@
+GOAL
+Implement a tenant-scoped Cross Promo automation that runs ONLY Monday–Friday (no Saturday/Sunday flows). This is for promoting VIP from the free channel using: (1) Good morning + XAU/USD news summary, (2) “VIP signals soon” message 1 hour later, (3) copy/forward a previously-won VIP signal, (4) 60 minutes later, copy/forward the “TP HIT / win” follow-up plus an attached CTA message linking to https://entrylab.io/subscribe.
+
+SCHEDULING RULES
+- Run Mon–Fri only. On Sat/Sun do nothing: do not enqueue jobs, do not send catch-up posts.
+- Use a single timezone for “day of week”: tenant timezone if available, otherwise default to UTC (or Europe/Dublin). Apply consistently.
+
+MESSAGE FLOW (PER TENANT, PER DAY)
+1) 09:00 Good morning + AlphaVantage news (3–4 lines) relevant to XAU/USD
+2) 10:00 “First signals of the day are about to be sent in the VIP. Join today’s session.”
+3) After step 2, post a “proof” signal by copying/forwarding a previously-won VIP signal message into the free channel
+4) +60 minutes: copy/forward the VIP “TP HIT / win” follow-up into free channel, then send a SECOND message immediately after with:
+   “Congrats to all VIP members ✅ … Join here: https://entrylab.io/subscribe”
+   (Telegram cannot attach custom text to forwarded messages reliably; do it as a second message.)
+
+IMPORTANT TELEGRAM DETAILS
+- Prefer copyMessage over forwardMessage (no “Forwarded from …” attribution). If copyMessage is unavailable, fall back to forwardMessage.
+- All Telegram posts must be tenant-scoped and use credentials from the Connections tab (DB). Do NOT modify the PromoStack coupon bot logic or its env-based token; keep it separate/out of scope.
+
+ARCHITECTURE REQUIREMENTS
+- Do NOT add large logic to server.py. Keep server.py thin wrappers only.
+- Create a new domain module:
+  - domains/crosspromo/repo.py (settings + job queue; atomic claiming with FOR UPDATE SKIP LOCKED)
+  - domains/crosspromo/service.py (build messages, fetch news via existing Alpha Vantage integration, execute jobs)
+  - domains/crosspromo/handlers.py (CRUD settings, list jobs, manual “Run now” button)
+  - scheduler/crosspromo_worker.py (poll due jobs every ~10s; safe to run concurrently)
+- Add DB tables (migration-safe):
+  - tenant_crosspromo_settings (tenant_id, enabled, free_channel_id, vip_channel_id, schedule_time, etc.)
+  - crosspromo_jobs (id, tenant_id, job_type, run_at, status, payload json, dedupe_key, error, created_at, updated_at)
+
+RELIABILITY / DEDUPE
+- No duplicate sends: enforce dedupe per tenant per day per job_type via dedupe_key (e.g., tenant|YYYY-MM-DD|job_type).
+- Jobs must end in status: scheduled -> sent OR failed (with error text stored).
+- If bot/channel not configured, mark job failed with actionable error.
+
+UI REQUIREMENTS
+- Add a “Cross Promo” tab in the dashboard:
+  - Enable/disable toggle
+  - Inputs for Free channel ID + VIP channel ID (tenant-scoped)
+  - Preview of “Good morning” message
+  - Jobs table: scheduled/sent/failed, with error details on failed
+  - Buttons: “Run today now” (creates today’s jobs if Mon–Fri), “Send test morning message” (does not enqueue full flow)
+
+TESTS (MINIMAL BUT IMPORTANT)
+Add tests to cover:
+- Mon–Fri gating (Sat/Sun creates 0 jobs)
+- Tenant isolation (cannot read/write other tenant settings)
+- Dedupe (running scheduler twice does not create duplicates)
+- Atomic claiming (two workers cannot send same job)
+- Failure path stores error message and status=failed

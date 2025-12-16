@@ -1,0 +1,153 @@
+You are working in an existing Python repo with a thin server.py and route/handler modules. Implement a tenant-specific “VIP Cross Promo” automation for Telegram. Do NOT implement anything in server.py besides any tiny one-line imports/wire-ups already used in this repo pattern. Create clean domain modules + scheduler worker. Keep PromoStack coupon bot fully separate and unchanged.
+
+FEATURE: Cross Promo Automation (Tenant Scoped)
+We want to cross-promote VIP signals into the FREE channel with a fixed daily sequence:
+
+Sequence (all times relative, configurable per tenant):
+1) Morning Post (immediate when triggered / scheduled daily)
+   - Message content:
+     - “Good morning” greeting
+     - 3–4 lines summarizing the most relevant news item of the day affecting XAU/USD
+   - News source:
+     - Use existing Alpha Vantage news feed integration in the codebase (do not add a new provider).
+     - Fetch the most recent news item “today” and choose one most relevant to XAU/USD (Gold).
+     - Heuristic: prioritize items whose title/summary contains any of: "gold", "xau", "bullion", "usd", "dollar", "fed", "rates", "inflation", "cpi", "jobs", "nfp".
+     - Output must be short: 3–4 lines max.
+
+2) 1 hour later
+   - Send a NEW message:
+     “First signals of the day are about to be sent in the VIP. Join today’s session.”
+
+3) Later (manual trigger or automated when a WIN exists) — forward a WINNING VIP signal
+   - Forward/copy the VIP signal message that has already won into the FREE channel.
+   - This requires knowing:
+     - vip_channel_id
+     - free_channel_id
+     - vip_signal_message_id (the VIP message id to forward/copy)
+
+4) 60 minutes after step (3)
+   - Forward/copy the VIP “WIN” follow-up message into the FREE channel (vip_win_message_id)
+   - Also send a NEW text message (same time) that says congrats + includes CTA link at bottom:
+     - Must include an HTML hyperlink to https://entrylab.io/subscribe
+     - Example CTA line at bottom: Join VIP here: <a href="https://entrylab.io/subscribe">https://entrylab.io/subscribe</a>
+   - IMPORTANT: Telegram forwardMessage cannot attach extra text. Implement as:
+     - send_message(congrats + CTA) AND copy/forward the win message (2 API calls).
+     - Use parse_mode="HTML" for hyperlink.
+
+CONNECTIONS / BOT TOKENS
+- Must use the existing tenant bot connections database as source of truth.
+- Cross promo should send to channels using the tenant’s Signal Bot by default (bot_role = "signal_bot").
+- NEVER touch or change PromoStack coupon bot token flow.
+
+DATA MODEL
+Add tenant-scoped configuration + queue so this is reliable and debuggable.
+
+1) tenant_crosspromo_settings
+- tenant_id TEXT PRIMARY KEY
+- enabled BOOLEAN DEFAULT FALSE
+- bot_role TEXT DEFAULT 'signal_bot'
+- vip_channel_id TEXT NULL
+- free_channel_id TEXT NULL
+- cta_url TEXT NOT NULL DEFAULT 'https://entrylab.io/subscribe'
+- morning_post_time_utc TEXT NULL (e.g. '08:30') optional
+- created_at, updated_at TIMESTAMP
+Schema must be added via existing migration pattern with schema-tolerant checks.
+
+2) crosspromo_jobs (queue)
+- id UUID PK
+- tenant_id TEXT NOT NULL
+- status TEXT NOT NULL (queued|sending|sent|failed)
+- run_at TIMESTAMP NOT NULL
+- job_type TEXT NOT NULL:
+    'morning_news'
+    'vip_soon'
+    'forward_winning_signal'
+    'forward_win_followup'
+- payload JSONB (or TEXT json if your codebase uses TEXT) including:
+    - vip_signal_message_id (optional)
+    - vip_win_message_id (optional)
+    - news_cache (optional) so morning post uses the fetched summary deterministically
+- dedupe_key TEXT NULL (prevent duplicates per tenant per day per job_type)
+- error TEXT NULL
+- created_at, updated_at TIMESTAMP
+Indexes: (tenant_id, status, run_at), (tenant_id, dedupe_key)
+
+IMPLEMENTATION MODULES (new files, do not bloat server.py)
+- domains/crosspromo/repo.py
+  - get_settings(tenant_id)
+  - upsert_settings(tenant_id, ...)
+  - enqueue_job(tenant_id, job_type, run_at, payload, dedupe_key)
+  - list_jobs(tenant_id, limit=50)
+  - claim_due_jobs(batch_size=20): atomic claim queued jobs due now -> set sending
+  - mark_sent(job_id), mark_failed(job_id, error)
+
+- domains/crosspromo/service.py
+  - build_morning_news_message(tenant_id): fetch Alpha Vantage news, choose best item, produce 3–4 line summary
+  - send_job(job):
+      - load settings; validate enabled, vip_channel_id/free_channel_id present where required
+      - resolve bot_token via BotCredentialResolver for settings.bot_role
+      - for job_type:
+         morning_news -> send to free_channel_id
+         vip_soon -> send to free_channel_id
+         forward_winning_signal -> copy/forward from vip_channel_id to free_channel_id using vip_signal_message_id
+         forward_win_followup -> copy/forward vip_win_message_id AND send congrats+CTA message (HTML parse_mode)
+
+- integrations/telegram/client.py (or extend existing telegram client if present)
+  - send_message(bot_token, chat_id, text, parse_mode=None, disable_web_page_preview=True)
+  - forward_message(bot_token, from_chat_id, to_chat_id, message_id)
+  - Prefer copyMessage if available in your existing stack; otherwise forwardMessage is ok.
+  - Return structured errors (status + response body) for logs.
+
+- scheduler/crosspromo_worker.py
+  - Background worker loop runs every 10 seconds:
+     claim_due_jobs()
+     send_job() each
+     mark_sent/failed
+  - Must be safe for multi-instance: claiming must be atomic.
+
+API ROUTES + HANDLERS
+Add routes in api/routes.py and implement handlers in domains/crosspromo/handlers.py:
+GET  /api/crosspromo/settings         (auth required)
+POST /api/crosspromo/settings         (auth required)
+GET  /api/crosspromo/jobs             (auth required)
+POST /api/crosspromo/run-daily-seq    (auth required) -> enqueues today’s morning_news immediately AND vip_soon at +60m
+POST /api/crosspromo/publish-win      (auth required) -> body includes vip_signal_message_id and vip_win_message_id, enqueues:
+      forward_winning_signal at now
+      forward_win_followup at now+60m
+
+Rules:
+- Never accept tenant_id from client; use middleware tenant_id
+- Return actionable errors: 400 missing ids, 409 disabled, 503 bot not configured
+- Log job execution results.
+
+FRONTEND UI (minimal, admin/client dashboard)
+Add a “Cross Promo” tab:
+- Toggle enabled
+- Inputs: VIP Channel ID, Free Channel ID, CTA URL (default prefilled)
+- Buttons:
+   - Save
+   - Run Today Sequence (enqueues steps 1 & 2)
+   - Publish Winning Promo (inputs: vip_signal_message_id, vip_win_message_id; enqueues steps 3 & 4)
+- Jobs list table with status/run_at/job_type/error.
+
+TESTS
+Add tests that would catch the exact failures:
+- Settings CRUD tenant scoped
+- Dedupe behavior (one morning_news per tenant per day)
+- Queue claim atomicity (two workers don’t double-send)
+- service formatting: morning news output is <= 4 lines and includes greeting
+- Telegram client calls mocked; no real external calls.
+
+NON-GOALS
+- No image generation
+- No branching logic beyond these job types
+- No changes to PromoStack coupon bot
+- No server.py bloat
+
+DELIVERABLE
+A working tenant-scoped cross promo system that can:
+- Save settings
+- Enqueue daily sequence (morning + VIP soon)
+- Publish a winning promo sequence (forward signal now + forward win + congrats CTA at +60m)
+- Show jobs and errors in UI
+- Pass all tests

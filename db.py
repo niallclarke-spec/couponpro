@@ -1425,6 +1425,41 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN reply_received_at TIMESTAMP")
                     logger.info("Added reply_received_at column to journey_user_sessions")
                 
+                # Cross Promo tables
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_crosspromo_settings (
+                        tenant_id VARCHAR PRIMARY KEY,
+                        enabled BOOLEAN NOT NULL DEFAULT FALSE,
+                        bot_role VARCHAR NOT NULL DEFAULT 'signal_bot',
+                        vip_channel_id VARCHAR,
+                        free_channel_id VARCHAR,
+                        cta_url VARCHAR NOT NULL DEFAULT 'https://entrylab.io/subscribe',
+                        morning_post_time_utc VARCHAR DEFAULT '09:00',
+                        timezone VARCHAR DEFAULT 'UTC',
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                logger.info("tenant_crosspromo_settings table ready")
+                
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS crosspromo_jobs (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        tenant_id VARCHAR NOT NULL,
+                        status VARCHAR NOT NULL DEFAULT 'queued',
+                        run_at TIMESTAMP NOT NULL,
+                        job_type VARCHAR NOT NULL,
+                        payload JSONB DEFAULT '{}',
+                        dedupe_key VARCHAR,
+                        error TEXT,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_crosspromo_jobs_tenant_status ON crosspromo_jobs(tenant_id, status, run_at)")
+                cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_crosspromo_jobs_dedupe ON crosspromo_jobs(tenant_id, dedupe_key) WHERE dedupe_key IS NOT NULL")
+                logger.info("crosspromo_jobs table ready")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 
