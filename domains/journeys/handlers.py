@@ -285,6 +285,10 @@ def handle_journey_steps_set(handler, journey_id: str):
             else:
                 step_type = 'message'
             
+            timeout_minutes = 0
+            if wait_for_reply and delay > 0:
+                timeout_minutes = max(1, delay // 60)
+            
             normalized_steps.append({
                 'step_order': step.get('step_order', i + 1),
                 'step_type': step_type,
@@ -292,7 +296,8 @@ def handle_journey_steps_set(handler, journey_id: str):
                     'text': text,
                     'delay_seconds': delay,
                     'wait_for_reply': wait_for_reply,
-                    'timeout_action': timeout_action
+                    'timeout_action': timeout_action,
+                    'timeout_minutes': timeout_minutes
                 }
             })
         
