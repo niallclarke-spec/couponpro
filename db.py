@@ -1788,14 +1788,18 @@ def get_bot_stats(tenant_id, days=30, template_filter=None):
             cursor = conn.cursor()
             
             # Build WHERE clause based on filter type
+            # Use bu. prefix for joined queries
             if days == 'today':
                 where_clause = "tenant_id = %s AND created_at >= CURRENT_DATE AND created_at < CURRENT_DATE + INTERVAL '1 day'"
+                where_clause_bu = "bu.tenant_id = %s AND bu.created_at >= CURRENT_DATE AND bu.created_at < CURRENT_DATE + INTERVAL '1 day'"
                 where_params = (tenant_id,)
             elif days == 'yesterday':
                 where_clause = "tenant_id = %s AND created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE"
+                where_clause_bu = "bu.tenant_id = %s AND bu.created_at >= CURRENT_DATE - INTERVAL '1 day' AND bu.created_at < CURRENT_DATE"
                 where_params = (tenant_id,)
             else:
                 where_clause = "tenant_id = %s AND created_at >= CURRENT_TIMESTAMP - %s::interval"
+                where_clause_bu = "bu.tenant_id = %s AND bu.created_at >= CURRENT_TIMESTAMP - %s::interval"
                 where_params = (tenant_id, f"{days} days")
             
             # Total usage count
@@ -1855,14 +1859,14 @@ def get_bot_stats(tenant_id, days=30, template_filter=None):
                     COALESCE(u.username, u.first_name, u.last_name, 'Unknown') as generated_by
                 FROM bot_usage bu
                 LEFT JOIN first_usage fu ON bu.coupon_code = fu.coupon_code
-                LEFT JOIN bot_users u ON fu.chat_id = u.chat_id
-                WHERE {where_clause}
+                LEFT JOIN bot_users u ON fu.chat_id = u.chat_id AND u.tenant_id = %s
+                WHERE {where_clause_bu}
                 AND bu.coupon_code IS NOT NULL
                 AND bu.success = true
                 {template_where}
                 GROUP BY bu.coupon_code, COALESCE(u.username, u.first_name, u.last_name, 'Unknown')
                 ORDER BY total_uses DESC
-            """, tuple(cte_params + template_params))
+            """, tuple(cte_params + [tenant_id] + template_params))
             popular_coupons = [{'coupon': row[0], 'count': row[1], 'unique_users': row[2], 'generated_by': row[3]} for row in cursor.fetchall()]
             
             # Error breakdown
