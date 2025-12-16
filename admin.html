@@ -6416,37 +6416,43 @@
         }
 
         async function loadTelegramChannelStats() {
+            const setChannelDisplay = (freeCount, vipCount, freeName = null, vipName = null) => {
+                document.getElementById('freeChannelCount').textContent = freeCount;
+                document.getElementById('vipChannelCount').textContent = vipCount;
+                if (freeName) document.getElementById('freeChannelName').textContent = freeName;
+                if (vipName) document.getElementById('vipChannelName').textContent = vipName;
+            };
+            
             try {
                 const response = await authedFetch('/api/telegram-channel-stats');
-                
-                if (!response.ok) {
-                    console.error(`Channel stats fetch failed: ${response.status}`);
-                    if (response.status === 401 || response.status === 403) {
-                        document.getElementById('freeChannelCount').textContent = 'Auth error';
-                        document.getElementById('vipChannelCount').textContent = 'Auth error';
-                        return;
-                    }
-                    throw new Error(`Failed to fetch channel stats: ${response.status}`);
-                }
-                
                 const data = await response.json();
                 
-                if (data.free_channel) {
-                    document.getElementById('freeChannelName').textContent = data.free_channel.name || '@entrylabs';
-                    document.getElementById('freeChannelCount').textContent = 
-                        data.free_channel.member_count !== null ? data.free_channel.member_count : '--';
+                if (response.status === 401 || response.status === 403) {
+                    setChannelDisplay('Auth error', 'Auth error');
+                    return;
                 }
                 
-                if (data.vip_channel) {
-                    document.getElementById('vipChannelName').textContent = data.vip_channel.name || 'VIP Signals';
-                    document.getElementById('vipChannelCount').textContent = 
-                        data.vip_channel.member_count !== null ? data.vip_channel.member_count : '--';
+                if (response.status === 503) {
+                    const msg = data.code === 'bot_unavailable' ? 'Bot N/A' : 
+                               data.code === 'channel_not_configured' ? 'Not configured' : 'Unavailable';
+                    setChannelDisplay(msg, msg);
+                    return;
                 }
+                
+                if (response.status === 502 || !data.ok) {
+                    setChannelDisplay('API error', 'API error');
+                    return;
+                }
+                
+                const count = data.member_count !== null && data.member_count !== undefined 
+                    ? data.member_count.toLocaleString() 
+                    : '--';
+                const channelName = data.channel_id || '@entrylabs';
+                setChannelDisplay(count, '--', channelName, 'VIP Signals');
                 
             } catch (error) {
                 console.error('Error loading channel stats:', error);
-                document.getElementById('freeChannelCount').textContent = 'Error';
-                document.getElementById('vipChannelCount').textContent = 'Error';
+                setChannelDisplay('Error', 'Error');
             }
         }
 

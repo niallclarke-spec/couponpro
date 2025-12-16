@@ -719,8 +719,9 @@ def handle_telegram_channel_stats(handler):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'error': 'Telegram bot not available',
-            'code': 'bot_unavailable'
+            'ok': False,
+            'code': 'bot_unavailable',
+            'error': 'Telegram bot not available'
         }).encode())
         return
     
@@ -729,26 +730,28 @@ def handle_telegram_channel_stats(handler):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'error': 'Channel ID not configured',
-            'code': 'channel_not_configured'
+            'ok': False,
+            'code': 'channel_not_configured',
+            'error': 'Channel ID not configured'
         }).encode())
         return
     
-    stats = {'channel_id': channel_id, 'available': True}
-    
     try:
+        member_count = None
         if hasattr(server, 'forex_bot') and server.forex_bot:
             member_count = server.forex_bot.get_chat_member_count(channel_id)
-            stats['member_count'] = member_count
         elif hasattr(server, 'telegram_bot') and server.telegram_bot:
             if hasattr(server.telegram_bot, 'get_chat_member_count'):
                 member_count = server.telegram_bot.get_chat_member_count(channel_id)
-                stats['member_count'] = member_count
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps(stats).encode())
+        handler.wfile.write(json.dumps({
+            'ok': True,
+            'member_count': member_count,
+            'channel_id': channel_id
+        }).encode())
         
     except Exception as e:
         logger.exception("Telegram API error getting channel stats")
@@ -756,7 +759,8 @@ def handle_telegram_channel_stats(handler):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
-            'error': 'Telegram API failure',
+            'ok': False,
             'code': 'telegram_api_error',
+            'error': 'Telegram API failure',
             'detail': str(e)
         }).encode())
