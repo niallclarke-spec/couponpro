@@ -798,6 +798,414 @@
         body.impersonating .loading-overlay {
             top: 40px;
         }
+
+        .journeys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .journey-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .journey-card:hover {
+            border-color: var(--border-secondary);
+            background: var(--bg-card-hover);
+        }
+
+        .journey-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .journey-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .journey-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .journey-status.draft {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+        }
+
+        .journey-status.active {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+        }
+
+        .journey-status.paused {
+            background: var(--status-warning-bg);
+            color: var(--status-warning);
+        }
+
+        .journey-meta {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .journey-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .journey-meta-item svg {
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+        }
+
+        .journey-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-icon.danger:hover {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .journey-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-backdrop.show .journey-modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .status-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-option {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .status-option:hover {
+            border-color: var(--border-secondary);
+        }
+
+        .status-option.selected {
+            border-color: var(--accent-primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .status-option-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .active-warning {
+            display: none;
+            padding: 12px;
+            background: var(--status-warning-bg);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-md);
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--status-warning);
+        }
+
+        .active-warning.show {
+            display: block;
+        }
+
+        .steps-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-primary);
+        }
+
+        .steps-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .steps-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+        }
+
+        .step-order {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-message {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .step-delay {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .step-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .step-btn {
+            padding: 6px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .step-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .step-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .step-btn.danger:hover {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .step-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .steps-empty {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .step-modal {
+            max-width: 480px;
+        }
+
+        .limit-badge {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .journeys-grid {
+                grid-template-columns: 1fr;
+            }
+            .journey-modal {
+                width: 95%;
+                max-height: 90vh;
+            }
+            .status-options {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -849,6 +1257,16 @@
                         <line x1="12" y1="22.08" x2="12" y2="12"/>
                     </svg>
                     Products
+                </a>
+                <a href="#journeys" class="nav-item" data-page="journeys">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <path d="M12 11h4"/>
+                        <path d="M12 16h4"/>
+                        <path d="M8 11h.01"/>
+                        <path d="M8 16h.01"/>
+                    </svg>
+                    Journeys
                 </a>
             </nav>
 
@@ -963,8 +1381,140 @@
                         <div class="products-grid" id="products-grid" style="display: none;"></div>
                     </div>
                 </section>
+
+                <section id="page-journeys" class="page-section">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h1 class="page-title">Journeys</h1>
+                            <span class="limit-badge" id="journeys-limit-badge">0 / 6</span>
+                        </div>
+                        <button class="btn btn-primary" id="create-journey-btn" onclick="openJourneyModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Create Journey
+                        </button>
+                    </div>
+
+                    <div id="journeys-empty-state" class="empty-state">
+                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <path d="M12 11h4"/>
+                            <path d="M12 16h4"/>
+                            <path d="M8 11h.01"/>
+                            <path d="M8 16h.01"/>
+                        </svg>
+                        <h3 class="empty-state-title">No journeys yet</h3>
+                        <p class="empty-state-text">Create your first automated messaging journey to engage users when they join via deep links.</p>
+                    </div>
+
+                    <div class="journeys-grid" id="journeys-grid" style="display: none;"></div>
+                </section>
             </div>
         </main>
+    </div>
+
+    <div class="modal-backdrop" id="journey-modal-backdrop">
+        <div class="journey-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="journey-modal-title">Create Journey</h2>
+                <button class="modal-close" onclick="closeJourneyModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Journey Name</label>
+                    <input type="text" class="form-input" id="journey-name-input" placeholder="e.g., Welcome Sequence">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Trigger Type</label>
+                    <select class="form-select" id="journey-trigger-type">
+                        <option value="deep_link">Deep Link</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Trigger Value</label>
+                    <input type="text" class="form-input" id="journey-trigger-value" placeholder="e.g., welcome_promo">
+                    <p class="form-hint">Users who join via t.me/yourbot?start=<strong>welcome_promo</strong> will enter this journey</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <div class="status-options">
+                        <div class="status-option selected" data-status="draft" onclick="selectStatus('draft')">
+                            <span class="status-option-label">Draft</span>
+                        </div>
+                        <div class="status-option" data-status="active" onclick="selectStatus('active')">
+                            <span class="status-option-label">Active</span>
+                        </div>
+                        <div class="status-option" data-status="paused" onclick="selectStatus('paused')">
+                            <span class="status-option-label">Paused</span>
+                        </div>
+                    </div>
+                    <div class="active-warning" id="active-warning">
+                        <strong>Warning:</strong> Activating this journey will immediately start sending messages to users who match the trigger.
+                    </div>
+                </div>
+
+                <div class="steps-section">
+                    <div class="steps-header">
+                        <span class="steps-title">Steps</span>
+                        <button class="btn btn-secondary btn-sm" onclick="addStep()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Step
+                        </button>
+                    </div>
+                    <div id="steps-list-container">
+                        <div class="steps-empty" id="steps-empty">No steps added yet. Add a step to define what messages to send.</div>
+                        <div class="steps-list" id="steps-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeJourneyModal()">Cancel</button>
+                <button class="btn btn-primary" id="save-journey-btn" onclick="saveJourney()">Save Journey</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="step-modal-backdrop">
+        <div class="journey-modal step-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="step-modal-title">Add Step</h2>
+                <button class="modal-close" onclick="closeStepModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Message Template</label>
+                    <textarea class="form-textarea" id="step-message-input" placeholder="Enter the message to send..."></textarea>
+                    <p class="form-hint">You can use variables like {first_name} for personalization</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Delay (seconds)</label>
+                    <input type="number" class="form-input" id="step-delay-input" value="0" min="0">
+                    <p class="form-hint">How long to wait before sending this message (0 = immediately after previous step)</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStepModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveStep()">Save Step</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -972,6 +1522,16 @@
         let clerkInstance = null;
         let stripeStatus = { connected: false, vip_price_id: null };
         let productsData = [];
+
+        const journeysState = {
+            journeys: [],
+            currentJourneyId: null,
+            steps: [],
+            editingStepIndex: null,
+            selectedStatus: 'draft',
+            loading: false
+        };
+        const MAX_JOURNEYS = 6;
 
         async function getAuthHeaders(includeContentType = false) {
             const headers = {};
@@ -1165,6 +1725,9 @@
             if (page === 'products') {
                 loadStripeStatus();
                 loadProducts();
+            }
+            if (page === 'journeys') {
+                loadJourneys();
             }
         }
 
@@ -1371,6 +1934,378 @@
                 console.error('Set VIP error:', err);
                 showToast('Failed to set VIP plan', 'error');
             }
+        }
+
+        async function loadJourneys() {
+            try {
+                journeysState.loading = true;
+                const headers = await getAuthHeaders();
+                const resp = await fetch('/api/journeys', { headers, credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    journeysState.journeys = data.journeys || [];
+                    renderJourneys();
+                } else {
+                    showToast('Failed to load journeys', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to load journeys:', err);
+                showToast('Failed to load journeys', 'error');
+            } finally {
+                journeysState.loading = false;
+            }
+        }
+
+        function renderJourneys() {
+            const container = document.getElementById('journeys-grid');
+            const emptyState = document.getElementById('journeys-empty-state');
+            const createBtn = document.getElementById('create-journey-btn');
+            const limitBadge = document.getElementById('journeys-limit-badge');
+            
+            const count = journeysState.journeys.length;
+            limitBadge.textContent = `${count} / ${MAX_JOURNEYS}`;
+            
+            if (count >= MAX_JOURNEYS) {
+                createBtn.disabled = true;
+                createBtn.title = 'Maximum journeys reached';
+            } else {
+                createBtn.disabled = false;
+                createBtn.title = '';
+            }
+
+            if (count === 0) {
+                emptyState.style.display = 'block';
+                container.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.style.display = 'grid';
+
+            container.innerHTML = journeysState.journeys.map(journey => {
+                const triggers = journey.triggers || [];
+                const firstTrigger = triggers[0];
+                const triggerType = firstTrigger?.trigger_type || 'deep_link';
+                const triggerValue = firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '-';
+                
+                return `
+                    <div class="journey-card">
+                        <div class="journey-card-header">
+                            <div class="journey-name">${escapeHtml(journey.name)}</div>
+                            <span class="journey-status ${journey.status}">${journey.status}</span>
+                        </div>
+                        <div class="journey-meta">
+                            <div class="journey-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                <span>${triggerType === 'telegram_deeplink' || triggerType === 'deep_link' ? 'Deep Link' : triggerType}: <strong>${escapeHtml(triggerValue)}</strong></span>
+                            </div>
+                            <div class="journey-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                <span>${journey.step_count || 0} step${journey.step_count !== 1 ? 's' : ''}</span>
+                            </div>
+                        </div>
+                        <div class="journey-actions">
+                            <button class="btn-icon" onclick="openJourneyModal('${journey.id}')" title="Edit">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon danger" onclick="deleteJourney('${journey.id}')" title="Delete">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3,6 5,6 21,6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function openJourneyModal(journeyId = null) {
+            journeysState.currentJourneyId = journeyId;
+            journeysState.steps = [];
+            journeysState.selectedStatus = 'draft';
+            
+            document.getElementById('journey-name-input').value = '';
+            document.getElementById('journey-trigger-value').value = '';
+            document.getElementById('journey-trigger-type').value = 'deep_link';
+            document.getElementById('journey-modal-title').textContent = journeyId ? 'Edit Journey' : 'Create Journey';
+            
+            selectStatus('draft');
+            renderStepsList();
+            
+            if (journeyId) {
+                await fetchJourneyDetail(journeyId);
+            }
+            
+            document.getElementById('journey-modal-backdrop').classList.add('show');
+        }
+
+        function closeJourneyModal() {
+            document.getElementById('journey-modal-backdrop').classList.remove('show');
+            journeysState.currentJourneyId = null;
+            journeysState.steps = [];
+        }
+
+        async function fetchJourneyDetail(journeyId) {
+            try {
+                const headers = await getAuthHeaders();
+                const resp = await fetch(`/api/journeys/${journeyId}`, { headers, credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const journey = data.journey;
+                    
+                    document.getElementById('journey-name-input').value = journey.name || '';
+                    selectStatus(journey.status || 'draft');
+                    
+                    const triggers = journey.triggers || [];
+                    if (triggers.length > 0) {
+                        const trigger = triggers[0];
+                        document.getElementById('journey-trigger-type').value = 'deep_link';
+                        document.getElementById('journey-trigger-value').value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
+                    }
+                    
+                    journeysState.steps = (journey.steps || []).map(s => ({
+                        message_template: s.message_template,
+                        delay_seconds: s.delay_seconds
+                    }));
+                    renderStepsList();
+                }
+            } catch (err) {
+                console.error('Failed to fetch journey detail:', err);
+                showToast('Failed to load journey details', 'error');
+            }
+        }
+
+        function selectStatus(status) {
+            journeysState.selectedStatus = status;
+            document.querySelectorAll('.status-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.status === status);
+            });
+            document.getElementById('active-warning').classList.toggle('show', status === 'active');
+        }
+
+        async function saveJourney() {
+            const name = document.getElementById('journey-name-input').value.trim();
+            const triggerValue = document.getElementById('journey-trigger-value').value.trim();
+            const status = journeysState.selectedStatus;
+            
+            if (!name) {
+                showToast('Please enter a journey name', 'error');
+                return;
+            }
+            
+            try {
+                showLoading('Saving journey...');
+                const headers = await getAuthHeaders(true);
+                
+                let journeyId = journeysState.currentJourneyId;
+                
+                if (journeyId) {
+                    const resp = await fetch(`/api/journeys/${journeyId}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ name, status }),
+                        credentials: 'include'
+                    });
+                    if (!resp.ok) {
+                        const data = await resp.json();
+                        throw new Error(data.error || 'Failed to update journey');
+                    }
+                } else {
+                    const resp = await fetch('/api/journeys', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ name, status }),
+                        credentials: 'include'
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) {
+                        throw new Error(data.error || 'Failed to create journey');
+                    }
+                    journeyId = data.journey.id;
+                }
+                
+                if (triggerValue) {
+                    await fetch(`/api/journeys/${journeyId}/triggers`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            trigger_type: 'telegram_deeplink',
+                            trigger_config: { start_param: triggerValue },
+                            is_active: true
+                        }),
+                        credentials: 'include'
+                    });
+                }
+                
+                if (journeysState.steps.length > 0) {
+                    await fetch(`/api/journeys/${journeyId}/steps`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ steps: journeysState.steps }),
+                        credentials: 'include'
+                    });
+                }
+                
+                hideLoading();
+                showToast(journeysState.currentJourneyId ? 'Journey updated successfully' : 'Journey created successfully', 'success');
+                closeJourneyModal();
+                await loadJourneys();
+                
+            } catch (err) {
+                hideLoading();
+                console.error('Save journey error:', err);
+                showToast(err.message || 'Failed to save journey', 'error');
+            }
+        }
+
+        async function deleteJourney(journeyId) {
+            if (!confirm('Are you sure you want to delete this journey? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                showLoading('Deleting journey...');
+                const headers = await getAuthHeaders();
+                const resp = await fetch(`/api/journeys/${journeyId}`, {
+                    method: 'DELETE',
+                    headers,
+                    credentials: 'include'
+                });
+                
+                hideLoading();
+                
+                if (resp.ok) {
+                    showToast('Journey deleted successfully', 'success');
+                    await loadJourneys();
+                } else {
+                    const data = await resp.json();
+                    showToast(data.error || 'Failed to delete journey', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                console.error('Delete journey error:', err);
+                showToast('Failed to delete journey', 'error');
+            }
+        }
+
+        function renderStepsList() {
+            const container = document.getElementById('steps-list');
+            const emptyState = document.getElementById('steps-empty');
+            
+            if (journeysState.steps.length === 0) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            container.innerHTML = journeysState.steps.map((step, index) => `
+                <div class="step-item">
+                    <div class="step-order">${index + 1}</div>
+                    <div class="step-content">
+                        <div class="step-message">${escapeHtml(step.message_template.substring(0, 80))}${step.message_template.length > 80 ? '...' : ''}</div>
+                        <div class="step-delay">Delay: ${step.delay_seconds}s</div>
+                    </div>
+                    <div class="step-actions">
+                        <button class="step-btn" onclick="moveStep(${index}, -1)" ${index === 0 ? 'disabled' : ''} title="Move up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="18,15 12,9 6,15"/>
+                            </svg>
+                        </button>
+                        <button class="step-btn" onclick="moveStep(${index}, 1)" ${index === journeysState.steps.length - 1 ? 'disabled' : ''} title="Move down">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"/>
+                            </svg>
+                        </button>
+                        <button class="step-btn" onclick="editStep(${index})" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="step-btn danger" onclick="deleteStep(${index})" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3,6 5,6 21,6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addStep() {
+            journeysState.editingStepIndex = null;
+            document.getElementById('step-message-input').value = '';
+            document.getElementById('step-delay-input').value = '0';
+            document.getElementById('step-modal-title').textContent = 'Add Step';
+            document.getElementById('step-modal-backdrop').classList.add('show');
+        }
+
+        function editStep(index) {
+            journeysState.editingStepIndex = index;
+            const step = journeysState.steps[index];
+            document.getElementById('step-message-input').value = step.message_template;
+            document.getElementById('step-delay-input').value = step.delay_seconds;
+            document.getElementById('step-modal-title').textContent = 'Edit Step';
+            document.getElementById('step-modal-backdrop').classList.add('show');
+        }
+
+        function closeStepModal() {
+            document.getElementById('step-modal-backdrop').classList.remove('show');
+            journeysState.editingStepIndex = null;
+        }
+
+        function saveStep() {
+            const message = document.getElementById('step-message-input').value.trim();
+            const delay = parseInt(document.getElementById('step-delay-input').value, 10) || 0;
+            
+            if (!message) {
+                showToast('Please enter a message', 'error');
+                return;
+            }
+            
+            const stepData = {
+                message_template: message,
+                delay_seconds: delay
+            };
+            
+            if (journeysState.editingStepIndex !== null) {
+                journeysState.steps[journeysState.editingStepIndex] = stepData;
+            } else {
+                journeysState.steps.push(stepData);
+            }
+            
+            closeStepModal();
+            renderStepsList();
+        }
+
+        function deleteStep(index) {
+            if (!confirm('Delete this step?')) return;
+            journeysState.steps.splice(index, 1);
+            renderStepsList();
+        }
+
+        function moveStep(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= journeysState.steps.length) return;
+            
+            const temp = journeysState.steps[index];
+            journeysState.steps[index] = journeysState.steps[newIndex];
+            journeysState.steps[newIndex] = temp;
+            renderStepsList();
         }
 
         async function checkAuthAndInit() {
