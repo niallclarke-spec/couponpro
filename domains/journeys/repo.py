@@ -306,6 +306,12 @@ def set_steps(tenant_id: str, journey_id: str, steps: List[Dict]) -> bool:
                 logger.warning(f"Journey {journey_id} not found for tenant {tenant_id}")
                 return False
             
+            cursor.execute("""
+                UPDATE journey_user_sessions 
+                SET current_step_id = NULL 
+                WHERE journey_id = %s
+            """, (journey_id,))
+            
             cursor.execute("DELETE FROM journey_steps WHERE journey_id = %s", (journey_id,))
             
             for step in steps:
