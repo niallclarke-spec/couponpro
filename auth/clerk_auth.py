@@ -235,8 +235,9 @@ def require_admin(request) -> Dict[str, Any]:
     """
     auth_user = require_auth(request)
     
-    if not is_admin_email(auth_user.get('email')):
-        logger.warning(f"Admin access denied for email: {auth_user.get('email')}")
+    email = auth_user.get('email') or ''
+    if not is_admin_email(email):
+        logger.warning(f"Admin access denied for email: {email}")
         raise AuthorizationError("Admin access required", 403)
     
     import db as db_module
@@ -267,7 +268,8 @@ def get_effective_tenant_id(user_dict: Dict[str, Any]) -> Optional[str]:
     """
     import db as db_module
     
-    user_row = db_module.get_user_by_clerk_id(user_dict.get('clerk_user_id'))
+    clerk_user_id = user_dict.get('clerk_user_id') or ''
+    user_row = db_module.get_user_by_clerk_id(clerk_user_id)
     if not user_row:
         return None
     

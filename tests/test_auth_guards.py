@@ -100,6 +100,7 @@ class TestRequireAdmin:
     
     def test_returns_user_when_admin(self):
         """Should return user when admin role."""
+        import os
         from auth.clerk_auth import require_admin
         
         mock_request = MagicMock()
@@ -118,12 +119,13 @@ class TestRequireAdmin:
             'tenant_id': None
         }
         
-        with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user):
-            with patch('db.get_user_by_clerk_id', return_value=mock_db_user):
-                result = require_admin(mock_request)
-                
-                assert result['clerk_user_id'] == 'admin_123'
-                assert result['role'] == 'admin'
+        with patch.dict(os.environ, {'ADMIN_EMAILS': 'admin@company.com'}):
+            with patch('auth.clerk_auth.verify_clerk_token', return_value=mock_user):
+                with patch('db.get_user_by_clerk_id', return_value=mock_db_user):
+                    result = require_admin(mock_request)
+                    
+                    assert result['clerk_user_id'] == 'admin_123'
+                    assert result['role'] == 'admin'
 
 
 class TestGetEffectiveTenantId:
