@@ -1,0 +1,127 @@
+PROMPT TO PASTE INTO REPLIT (STEP 1 — ARCHITECTURE & FOUNDATIONS ONLY)
+
+I want you to act as a senior SaaS architect and product engineer.
+
+We are extending an existing multi-tenant platform that already uses:
+	•	Clerk for authentication
+	•	Telegram bots per tenant
+	•	Stripe integrations
+	•	A working admin dashboard and client dashboard
+	•	Tenant-scoped database tables
+
+Your task in this step is NOT to write UI code yet, but to:
+	1.	Design the correct data models
+	2.	Define the event + flow architecture
+	3.	Identify backend responsibilities
+	4.	Produce a clear implementation plan that we will execute in later steps
+
+Do NOT implement anything yet.
+Do NOT refactor unrelated code.
+This step is architecture, schemas, and system design only.
+
+⸻
+
+PRODUCT GOAL (VERY IMPORTANT)
+
+We are adding a new major feature called Journeys (also called Flows or Automations).
+
+Journeys allow each tenant to define event-triggered conversational flows that are delivered through their connected Telegram bots.
+
+The system must be:
+	•	Tenant-specific
+	•	Bot-specific
+	•	Editable from the dashboard
+	•	Honest (bot is a bot, not pretending to be human)
+	•	Capable of delayed, scheduled responses
+
+⸻
+
+CORE USE CASE (V1 — MUST SUPPORT)
+
+Journey Name: Broker Sign Up
+
+Trigger
+	•	A Telegram user clicks a deep link that starts a bot with a parameter
+Example conceptually: /start broker_access
+	•	This trigger must be deterministic (not free-text matching)
+
+Flow
+	1.	Bot asks qualification questions:
+	•	Age (number)
+	•	Country (string / ISO)
+	•	Intended deposit amount (number)
+	2.	Bot responds immediately:
+“Thanks for reaching out — we review broker-sponsored access requests manually to make sure it’s a good fit.
+We’ll get back to you within 1–2 hours.”
+	3.	After a configurable delay window (example: 45–120 minutes), the bot sends:
+	•	Eligibility result
+	•	Offer tier
+	•	Referral link
+
+All text must be tenant-editable later.
+
+⸻
+
+IMPORTANT CONSTRAINTS
+	•	Telegram bots are already connected per tenant
+	•	Each tenant can have up to 3 bots
+	•	Only one bot can be marked as “Signal Bot”
+	•	Other bots are allowed for Journeys
+	•	Journeys must only use bots belonging to that tenant
+
+We will later add:
+	•	Stripe-based journeys
+	•	Subscription revoked flows
+	•	Free → VIP nudges
+But DO NOT design for everything yet — just don’t block future expansion.
+
+⸻
+
+WHAT I WANT FROM YOU IN THIS STEP
+
+Produce the following, in order:
+	1.	Proposed database tables
+	•	Journeys / Flows
+	•	Journey steps
+	•	Triggers
+	•	User journey state (per Telegram user)
+	•	Delayed / scheduled messages
+	•	Any junction tables needed
+Include:
+	•	Table purpose
+	•	Key columns
+	•	Relationships
+	•	Tenant scoping strategy
+	2.	Event model
+	•	What is an “event”
+	•	How triggers are detected (example: Telegram deep link)
+	•	How events start journeys
+	•	How re-entry or duplicate triggers are prevented
+	3.	Execution model
+	•	How step-by-step flow progression works
+	•	How answers are stored
+	•	How delays are scheduled
+	•	How messages are eventually sent
+	4.	Tenant isolation rules
+	•	What must be tenant-scoped
+	•	What must never leak across tenants
+	5.	Clear v1 limitations
+	•	What we are explicitly NOT building yet
+	•	What assumptions are safe for v1
+	6.	Next implementation steps
+	•	Step 2: Backend scaffolding
+	•	Step 3: Admin UI
+	•	Step 4: Bot wiring
+
+⸻
+
+STYLE & OUTPUT REQUIREMENTS
+	•	Be explicit, structured, and practical
+	•	No filler, no generic SaaS talk
+	•	No code yet
+	•	Use clear headings
+	•	Treat this as a design document that engineers will implement next
+
+If any assumption is unclear, state it explicitly instead of guessing.
+
+Begin.

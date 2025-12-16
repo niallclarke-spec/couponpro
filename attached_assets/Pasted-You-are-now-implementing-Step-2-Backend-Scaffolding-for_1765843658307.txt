@@ -1,0 +1,267 @@
+You are now implementing Step 2: Backend Scaffolding for the Journeys feature, based EXACTLY on the design document we just produced.
+
+IMPORTANT RULES
+	•	Implement backend + DB only in this step. NO admin UI changes yet, NO client UI changes yet.
+	•	Do not refactor unrelated areas.
+	•	Everything must be tenant-scoped.
+	•	Reuse existing project patterns (db pool, tenant context, scheduler thread, telegram webhook handling, auth/clerk middleware).
+	•	Add clear logs for debugging.
+	•	Make the system safe-by-default: if anything is missing, fail gracefully without crashing the server.
+
+GOAL OF THIS STEP
+After this step, we should have:
+	1.	Database tables + migrations for journeys
+	2.	Backend modules to create/read/update journeys and steps (server endpoints)
+	3.	Backend runtime engine skeleton:
+	•	Detect Telegram deep link trigger (/start broker_access)
+	•	Create a journey session
+	•	Ask questions and store answers
+	•	Schedule delayed messages
+	4.	A scheduler job that sends due scheduled messages
+
+NO UI is required, but endpoints must exist so UI can call them later.
+
+—
+
+A) DATABASE / MIGRATIONS
+
+Create tables (Postgres) exactly as designed:
+	1.	journeys
+
+	•	id UUID PK (gen_random_uuid())
+	•	tenant_id VARCHAR NOT NULL
+	•	bot_id VARCHAR NOT NULL  (references tenant bot integration id or key you already use)
+	•	name VARCHAR NOT NULL
+	•	description TEXT
+	•	status VARCHAR NOT NULL DEFAULT ‘draft’  (draft|active|paused|archived)
+	•	re_entry_policy VARCHAR NOT NULL DEFAULT ‘block’ (allow|block|restart)
+	•	created_at TIMESTAMP DEFAULT now()
+	•	updated_at TIMESTAMP DEFAULT now()
+
+	2.	journey_triggers
+
+	•	id UUID PK
+	•	journey_id UUID NOT NULL FK journeys(id) ON DELETE CASCADE
+	•	trigger_type VARCHAR NOT NULL  (telegram_deeplink|stripe_event|manual)
+	•	trigger_config JSONB NOT NULL
+	•	is_active BOOLEAN DEFAULT true
+
+	3.	journey_steps
+
+	•	id UUID PK
+	•	journey_id UUID NOT NULL FK journeys(id) ON DELETE CASCADE
+	•	step_order INT NOT NULL
+	•	step_type VARCHAR NOT NULL (message|question|delay|conditional)
+	•	config JSONB NOT NULL
+	•	created_at TIMESTAMP DEFAULT now()
+
+	4.	journey_user_sessions
+
+	•	id UUID PK
+	•	tenant_id VARCHAR NOT NULL
+	•	journey_id UUID NOT NULL FK journeys(id) ON DELETE CASCADE
+	•	telegram_chat_id BIGINT NOT NULL
+	•	telegram_user_id BIGINT NOT NULL
+	•	current_step_id UUID NULL FK journey_steps(id)
+	•	status VARCHAR NOT NULL DEFAULT ‘active’ (active|completed|expired|cancelled|waiting_delay)
+	•	answers JSONB DEFAULT ‘{}’::jsonb
+	•	started_at TIMESTAMP DEFAULT now()
+	•	completed_at TIMESTAMP NULL
+	•	last_activity_at TIMESTAMP DEFAULT now()
+
+Add helpful indexes:
+	•	journeys(tenant_id, status)
+	•	journey_triggers(journey_id, trigger_type, is_active)
+	•	journey_steps(journey_id, step_order)
+	•	journey_user_sessions(tenant_id, journey_id, telegram_user_id, status)
+	•	journey_user_sessions(tenant_id, telegram_user_id, status)
+	•	Unique constraint to prevent two ACTIVE sessions for same user/journey unless re_entry_policy allows:
+Add partial unique index on (journey_id, telegram_user_id) WHERE status IN (‘active’,‘waiting_delay’)
+
+	5.	journey_scheduled_messages
+
+	•	id UUID PK
+	•	tenant_id VARCHAR NOT NULL
+	•	session_id UUID NOT NULL FK journey_user_sessions(id) ON DELETE CASCADE
+	•	step_id UUID NOT NULL FK journey_steps(id)
+	•	telegram_chat_id BIGINT NOT NULL
+	•	message_content JSONB NOT NULL
+	•	scheduled_for TIMESTAMP NOT NULL
+	•	status VARCHAR NOT NULL DEFAULT ‘pending’ (pending|sent|failed|cancelled)
+	•	sent_at TIMESTAMP NULL
+	•	error TEXT NULL
+
+Indexes:
+	•	journey_scheduled_messages(status, scheduled_for)
+	•	journey_scheduled_messages(tenant_id, status, scheduled_for)
+
+SECURITY NOTE:
+Do NOT store bot_token_encrypted in journey_scheduled_messages. Use bot credentials from existing tenant integrations at send time.
+
+Implement migrations in the same style as existing “checking column exists” logic in server.py / db init. If project has a migrations helper, use it. Otherwise, add create-table-if-not-exists logic at startup, same pattern as other schema checks.
+
+—
+
+B) BACKEND MODULES (CREATE A NEW DOMAIN MODULE)
+
+Create a new module folder if consistent with project structure, e.g.:
+	•	domains/journeys/
+	•	init.py
+	•	repo.py (db queries)
+	•	engine.py (state machine execution)
+	•	scheduler.py (send due messages)
+	•	triggers.py (telegram trigger parsing)
+
+Or use an existing structure if the codebase has “modules/” already. Keep it clean.
+
+Repo functions must be tenant-scoped, including:
+	•	create_journey(tenant_id, bot_id, name, description, status, re_entry_policy)
+	•	list_journeys(tenant_id)
+	•	get_journey(tenant_id, journey_id)
+	•	update_journey(tenant_id, journey_id, fields)
+	•	upsert_trigger(tenant_id, journey_id, trigger_type, trigger_config, is_active)
+	•	list_steps(tenant_id, journey_id)
+	•	set_steps(tenant_id, journey_id, steps[])  (will replace all steps for now)
+	•	get_active_journey_by_deeplink(tenant_id, bot_id, start_param)
+	•	get_active_session(tenant_id, journey_id, telegram_user_id) where status active/waiting_delay
+	•	create_or_apply_reentry_policy(tenant_id, journey_id, telegram_user_id, telegram_chat_id)
+	•	store_answer_and_advance(tenant_id, session_id, answer_key, value)
+	•	schedule_message(tenant_id, session_id, step_id, telegram_chat_id, payload, scheduled_for)
+	•	fetch_due_scheduled_messages(limit=50)
+	•	mark_scheduled_message_sent(id) / failed(id, error)
+	•	update_session_status(session_id, status)
+	•	update_session_current_step(session_id, step_id)
+All queries MUST include tenant_id filters where applicable.
+
+—
+
+C) RUNTIME JOURNEY ENGINE (LINEAR FLOWS ONLY)
+
+Implement a minimal linear state machine:
+
+Supported step types:
+	1.	message:
+
+	•	config: { “text”: “…” }
+	•	Action: send immediately to telegram_chat_id then advance
+
+	2.	question:
+
+	•	config: { “text”: “…”, “answer_key”: “user_age”, “validation”: “number|text|country|money” }
+	•	Action: send question text, then STOP advancing until user replies
+	•	When user replies: validate, save to answers JSONB under answer_key, then advance to next step
+
+	3.	delay:
+
+	•	config: { “min_minutes”: 45, “max_minutes”: 120 }
+	•	Action: compute random delay between min/max
+	•	Insert journey_scheduled_messages with scheduled_for
+	•	Mark session status = waiting_delay
+	•	DO NOT advance until scheduler fires
+	•	When scheduler sends the delayed message for the next step, it should advance session back to active and continue
+
+V1 does NOT need conditionals, but keep step_type enum and simply ignore conditionals.
+
+Also implement:
+	•	Variable substitution is NOT required in V1, but design message_content JSON so we can later add it. For now message_content can be {“text”: “…”}.
+
+—
+
+D) TELEGRAM TRIGGER WIRES (DEEPLINK /start PARAM)
+
+In the existing Telegram webhook handler:
+	•	Detect updates that are /start commands
+	•	Parse param: “/start broker_access” → “broker_access”
+	•	Determine tenant_id + bot_id from the webhook route / token mapping that already exists in this app (use existing patterns)
+	•	Look up an active journey trigger:
+trigger_type = telegram_deeplink
+trigger_config.start_param == param
+journey.status == active
+journey.bot_id == this bot
+journey.tenant_id == this tenant
+	•	If found, call engine.start_journey_for_user(…)
+
+Re-entry policy:
+	•	block: if active session exists, send “You’re already in this flow. Reply to continue.” and do NOT create a new one
+	•	restart: cancel existing and create new session
+	•	allow: can create new session (skip for now if too complex; implement block + restart only in v1 and log allow as “not supported yet”)
+
+Keep it robust:
+	•	If no journey found, do nothing special (do not break existing bot behavior)
+
+—
+
+E) SCHEDULER: SEND DUE MESSAGES
+
+Add a background scheduler job (like the existing forex scheduler pattern):
+	•	Every 30–60 seconds:
+	•	fetch due messages where status=‘pending’ and scheduled_for <= now()
+	•	for each:
+	•	send telegram message using the right bot integration (by session -> journey -> bot_id)
+	•	mark as sent or failed
+	•	update session to active and advance to next step if appropriate
+Important: protect against double-send (use SELECT … FOR UPDATE SKIP LOCKED if possible, or an atomic update claim approach)
+
+—
+
+F) MINIMAL API ENDPOINTS (FOR UI LATER)
+
+Add JSON API endpoints (auth required; use existing auth patterns):
+Admin-only endpoints should be restricted to admin.promostack if host-routing exists.
+
+Endpoints (names can vary to match your server style):
+	•	GET /api/journeys
+	•	POST /api/journeys
+	•	GET /api/journeys/:id
+	•	PUT /api/journeys/:id
+	•	POST /api/journeys/:id/triggers
+	•	GET /api/journeys/:id/steps
+	•	PUT /api/journeys/:id/steps
+
+Also add:
+	•	GET /api/journeys/debug/sessions?limit=50 (admin only) for troubleshooting during development.
+
+These endpoints should just read/write the DB. No UI.
+
+—
+
+G) DEFAULT SEED DATA (OPTIONAL BUT HELPFUL FOR TESTING)
+
+If tenant_id=entrylab exists, seed one example journey:
+	•	name: “Broker Sign Up”
+	•	status: active
+	•	trigger: telegram_deeplink start_param=broker_access
+	•	steps:
+1 question age (answer_key user_age, validation number)
+2 question country (answer_key country, validation text)
+3 question intended deposit (answer_key deposit_amount, validation money/number)
+4 message: “Thanks for reaching out — we review broker-sponsored access requests manually… we’ll get back to you within 1–2 hours.”
+5 delay: min_minutes 60 max_minutes 120
+6 message: “You’re eligible. Deposit X using link Y.” (hardcoded for now)
+
+Only seed if it does not already exist.
+
+—
+
+H) TESTING: PROVIDE SHELL COMMANDS TO VERIFY
+
+At the end, give me a small set of shell commands I can run to validate:
+	1.	Tables exist
+	2.	Seed journey exists
+	3.	Trigger lookup works
+	4.	A fake /start broker_access webhook payload creates a session
+	5.	Answering questions advances steps
+	6.	Delay inserts a scheduled message
+	7.	Scheduler sends when scheduled_for is set to now()
+
+These tests must be runnable locally in Replit without external dependencies beyond what we already use.
+
+—
+
+DELIVERABLES
+	1.	Implement all backend changes
+	2.	Keep logs readable
+	3.	Report exactly what files you changed
+	4.	Provide the test commands
+
+Proceed now.
