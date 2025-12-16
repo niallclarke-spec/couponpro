@@ -1,0 +1,84 @@
+We refactored server.py down to ~348 lines with api/dispatch.py, and routing is now clean. However we have a regression:
+
+1) Pytest failure:
+FAILED tests/test_auth_guards.py::TestRequireAdmin::test_returns_user_when_admin
+auth/clerk_auth.py:240 require_admin raises AuthorizationError("Admin access required", 403)
+Log says: Admin access denied for email: admin@company.com
+
+2) In the UI, Telegram stats are not loading since the refactor. The endpoint appears wired:
+- Route exists: GET /api/telegram-channel-stats -> handle_api_telegram_channel_stats (api/routes.py)
+- Wrapper exists: server.py handle_api_telegram_channel_stats delegates to domains/subscriptions/handlers.py: handle_telegram_channel_stats
+- Frontend calls it: admin.html uses authedFetch('/api/telegram-channel-stats')
+
+But the endpoint returns 401 when unauthenticated (correct). We need to confirm it returns 200 when authenticated via Clerk (JWT or __session cookie) and make the UI stop hanging.
+
+GOALS
+A) Fix the failing auth unit test by making require_admin behave correctly.
+B) Ensure Clerk-authenticated requests (Bearer JWT and/or __session cookie) are accepted by the server for protected API endpoints.
+C) Ensure /api/telegram-channel-stats returns 200 for authenticated users (or 403 if admin-only, but then UI must not call it for non-admin).
+D) Add regression tests so we catch this next time.
+
+CONSTRAINTS
+- Do NOT re-bloat server.py.
+- Keep X-Clerk-User-Email as NON-AUTH (never accept it alone).
+- Follow the existing route+middleware system.
+- Keep behavior host-aware: admin host requires admin; dash host allows normal users where intended.
+
+TASKS (DO IN ORDER)
+
+1) Fix tests/test_auth_guards.py failure
+- Open tests/test_auth_guards.py and see how it expects require_admin to work.
+- The test uses email admin@company.com. Ensure require_admin returns the user when the email is considered admin.
+- Determine how admin is decided in auth/clerk_auth.py (ADMIN_EMAILS env var? Config? hardcoded list?).
+- Update require_admin / is_admin_email so tests pass reliably WITHOUT depending on real env vars.
+  Preferred approach:
+  - In tests, allow setting ADMIN_EMAILS or provide a default that includes admin@company.com when running tests.
+  - Or modify is_admin_email to accept a configurable list from Config with a sensible test fallback when ENV not set and pytest is running.
+- Do NOT loosen security in production. Only provide test-friendly defaults when env indicates test mode.
+
+2) Verify Clerk auth parsing for API requests
+- In auth/clerk_auth.py, confirm get_auth_user_from_request reads:
+  - Authorization: Bearer <JWT>
+  - OR __session cookie (Clerk)
+- Add structured debug logs (only in dev/test) showing:
+  - whether Authorization header exists
+  - whether __session cookie exists
+  - whether JWT verification succeeded/failed (without printing secrets)
+This will help diagnose why authenticated UI calls are failing.
+
+3) Reproduce and fix /api/telegram-channel-stats auth behavior
+- Identify whether /api/telegram-channel-stats is intended to be:
+  (a) admin-only, or (b) available to any authenticated dash user.
+- If admin-only:
+  - Ensure admin.html only runs on admin host and uses admin auth.
+  - Ensure dash UI does not call this endpoint or handles 403 gracefully.
+- If not admin-only:
+  - Ensure middleware for this route requires authentication but NOT admin role.
+- Add a small improvement to the frontend:
+  - If the response is 401/403, render an error state instead of infinite loading.
+  - Log the status code in console for dev.
+
+4) Add regression tests
+Add tests that cover BOTH auth and endpoint wiring:
+- Fix existing failing test in tests/test_auth_guards.py (must pass).
+- Add new test file tests/test_telegram_channel_stats_route.py that verifies:
+  - Unauthenticated request is rejected (401).
+  - Authenticated request is accepted (200) using the existing test auth utilities / mocks (do not require real Clerk).
+If full HTTP testing is hard in this environment, at minimum test that:
+  - Route exists in api/routes.py for /api/telegram-channel-stats
+  - server.py (or the handler class) contains handle_api_telegram_channel_stats method
+  - domains/subscriptions/handlers.py has handle_telegram_channel_stats(handler) callable
+And add a unit test for get_auth_user_from_request that proves it recognizes Bearer tokens and __session cookies when provided (mock verification as needed).
+
+5) Verify by running:
+python3 -m compileall .
+pytest -q
+Then restart server and confirm /api/telegram-channel-stats:
+- returns 401 unauthenticated
+- returns 200 when authenticated via Clerk in browser
+- UI loads stats without hanging
+
+DELIVERABLES
+- List all files modified
+- Explain why the auth test broke and what was changed
+- Provide exact commands to verify locally (pytest and curl)
