@@ -1,0 +1,65 @@
+IMPLEMENT CLERK AUTH OPTION A (ISSUER-DERIVED JWKS)
+
+Goal:
+Fix JWKS verification failures by deriving the JWKS URL from the token issuer (iss) instead of using any configured jwks_url like *.clerk.accounts.dev.
+
+Root cause:
+Tokens have iss=https://clerk.promostack.io but backend fetches JWKS from https://working-raptor-51.clerk.accounts.dev/.well-known/jwks.json, so kid never matches.
+
+Non-negotiables:
+- Do NOT hardcode any Clerk JWKS URL.
+- JWKS URL MUST be derived from the token issuer.
+- Keep changes isolated in auth/clerk_auth.py (or equivalent auth module). server.py only wires routes.
+
+Implementation requirements:
+
+1) Parse JWT WITHOUT verification first (read header + payload):
+- Extract:
+  - issuer = payload["iss"]
+  - kid = header["kid"]
+- If issuer missing -> fail with 401 and clear log.
+
+2) Derive JWKS URL from issuer:
+- jwks_url = f"{issuer.rstrip('/')}/.well-known/jwks.json"
+Examples:
+- issuer https://clerk.promostack.io -> https://clerk.promostack.io/.well-known/jwks.json
+
+3) Cache JWKS clients PER issuer:
+- Maintain an in-memory dict cache:
+  JWKS_CLIENTS[issuer] = PyJWKClient(jwks_url)
+- Also keep a small TTL cache of fetched key sets if your library supports it; otherwise just reuse PyJWKClient per issuer.
+- Add a “force_refresh” path if key lookup fails.
+
+4) Verification flow:
+- Try verify using cached client for issuer.
+- If key not found for kid:
+  - refresh/recreate client for issuer once
+  - retry verification once
+- If still failing:
+  - return 401 (NOT 200)
+  - log structured data:
+    issuer, jwks_url, kid, reason
+
+5) Optional safety allowlist (recommended):
+- Add env var CLERK_ALLOWED_ISSUERS as comma-separated list (e.g. "https://clerk.promostack.io")
+- If set, block any token whose issuer is not in allowlist (401).
+This prevents a random issuer from being accepted in prod while still using dynamic JWKS.
+
+6) Fix /api/set-auth-cookie behavior:
+- Right now it logs “user from JWT = None” and still returns 200.
+- Change it so:
+  - if JWT invalid -> return 401 with {"error":"unauthorized"}
+  - only return 200 if cookie was actually set and user is authorized admin
+- Keep response bodies short and safe.
+
+7) Tests:
+Add regression tests for:
+- token with issuer A but jwks derived from A succeeds
+- token with issuer A but missing kid fails with explicit reason
+- token with issuer not in allowlist fails (when allowlist enabled)
+
+Acceptance criteria:
+- Logs show jwks_url derived from token_iss (never *.clerk.accounts.dev unless issuer is that)
+- No more “Unable to find a signing key that matches kid=…”
+- /api/set-auth-cookie returns 401 on auth failure (not 200)
+- /admin loads normally after login
