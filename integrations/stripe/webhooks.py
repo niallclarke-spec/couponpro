@@ -167,7 +167,7 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
         
         print(f"[STRIPE WEBHOOK] Received event: {event_type} ({event_id})")
         
-        if event_id and db_module.is_webhook_event_processed(event_id):
+        if event_id and db_module.is_webhook_event_processed(event_id, tenant_id='stripe'):
             print(f"[STRIPE WEBHOOK] ⏭️ Event {event_id} already processed, skipping")
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
@@ -402,7 +402,7 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                     print(f"[STRIPE WEBHOOK] Could not find subscription {subscription_id} to mark as failed")
         
         if event_id:
-            db_module.record_webhook_event_processed(event_id, event_source='stripe')
+            db_module.record_webhook_event_processed(event_id, tenant_id='stripe', event_source='stripe')
             print(f"[STRIPE WEBHOOK] ✅ Event {event_id} recorded as processed")
         
         import random
