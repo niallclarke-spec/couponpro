@@ -1,0 +1,43 @@
+You are working on PromoStack (Python backend) and need to implement the production-safe version of Option A for Clerk JWT verification and stop the “JWKS signing key not found” failures.
+
+Goal
+
+JWT verification must succeed for tokens whose iss is https://clerk.promostack.io (prod) and any valid Clerk dev issuers during development, while still allowing us to lock down issuers in production.
+
+Required behavior
+	1.	Dynamic issuer mode
+	•	If CLERK_ALLOWED_ISSUERS is NOT set, enable “dynamic issuer mode”:
+	•	Read token_iss from the JWT iss claim (without verifying signature yet).
+	•	Derive JWKS URL from the issuer: jwks_url = f"{token_iss}/.well-known/jwks.json"
+	•	Fetch keys from that JWKS and verify the token signature using the token’s kid.
+	•	Cache JWKS keys in-memory with TTL (e.g., 10 minutes).
+	2.	Allowlist mode (production)
+	•	If CLERK_ALLOWED_ISSUERS IS set (comma-separated list), then:
+	•	Reject tokens whose iss is not in the allowlist (401).
+	•	Derive JWKS only from the matching allowed issuer.
+	•	Log a clear warning if allowlist is missing in production environments.
+	3.	Fix the current mismatch
+	•	Do NOT use any hardcoded jwks_url like https://working-raptor-51.clerk.accounts.dev/.well-known/jwks.json unless it matches the token issuer.
+	•	The old bug is: token issuer is https://clerk.promostack.io but JWKS URL points to a different clerk dev domain → kid mismatch. This must be impossible after the change.
+	4.	Retry-on-rotation
+	•	If verification fails because kid not found:
+	•	Force-refresh JWKS once, retry verification once.
+	•	If still fails, return 401 and log: token_iss, configured issuer/allowlist state, jwks_url used, and kid.
+	5.	HTTP behavior
+	•	Any auth failure (jwks fetch failed, kid not found after refresh, invalid signature, issuer not allowed) must return 401 (NOT 200), except for endpoints explicitly designed to be public.
+	•	/api/set-auth-cookie must return 401 when JWT verification fails, and must not set any cookie.
+	6.	Logging
+	•	Add structured logs like:
+	•	[JWKS] Dynamic issuer mode ENABLED
+	•	[JWKS] Allowlist mode ENABLED issuers=[...]
+	•	[JWKS] Creating client for URL: ... (force_refresh=...)
+	•	[JWKS] Fetched N signing keys from ...
+	•	On failure: kid=..., token_iss=..., configured_issuer(s)=..., jwks_url=...
+
+Deliverables
+	•	Update the Clerk auth module to implement the above.
+	•	Ensure all call sites that verify JWTs pass through this single verifier.
+	•	Add a minimal unit test or test helper that verifies:
+	•	A token with issuer https://clerk.promostack.io uses JWKS from https://clerk.promostack.io/.well-known/jwks.json
+	•	Allowlist rejects unknown issuers with 401
+	•	Do not break existing login flow or cookie-setting logic; only harden it.
