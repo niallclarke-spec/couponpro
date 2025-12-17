@@ -398,19 +398,35 @@ async def main():
             await scheduler.run_forever()
 
 
-def start_forex_scheduler(tenant_id: str = None):
+async def start_forex_scheduler(tenant_id: str = None):
     """
-    Start the forex scheduler - backwards compatibility wrapper.
+    Start the forex scheduler - programmatic entry point.
     
-    This function is kept for compatibility with workers/scheduler.py.
-    It wraps the async main() function.
+    When called without arguments (from bootstrap.py), runs in multi-tenant
+    mode for all active tenants. When called with a tenant_id, runs for
+    that specific tenant continuously.
     
     Args:
-        tenant_id: Optional tenant ID (can also be set via TENANT_ID env var)
+        tenant_id: Optional tenant ID. If None, runs for all active tenants.
     """
-    if tenant_id:
-        os.environ['TENANT_ID'] = tenant_id
-    asyncio.run(main())
+    require_db_pool_or_exit()
+    
+    resolved_tenant = tenant_id or os.environ.get('TENANT_ID')
+    
+    if resolved_tenant:
+        logger.info(f"Starting forex scheduler for single tenant: {resolved_tenant}")
+        runtime = TenantRuntime(tenant_id=resolved_tenant)
+        
+        signal_engine = runtime.get_signal_engine()
+        signal_engine.set_tenant_id(runtime.tenant_id)
+        
+        scheduler = ForexSchedulerRunner(runtime)
+        await scheduler.run_forever()
+    else:
+        logger.info("Starting forex scheduler in multi-tenant mode")
+        while True:
+            await run_all_tenants(once=True)
+            await asyncio.sleep(60)
 
 
 if __name__ == '__main__':
