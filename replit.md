@@ -23,6 +23,15 @@ New users accessing `dash.promostack.io` are guided through a 4-step setup wizar
 ### Authentication Architecture
 The platform supports dual authentication: primary Clerk JWT authentication (via `Authorization: Bearer` headers and `X-Clerk-User-Email` header for email) and legacy HMAC-signed `admin_session` cookie authentication. Host-aware rules in `auth/clerk_auth.py` and `core/clerk_auth.py` define access levels for admin and client dashboards, with admin access requiring a whitelisted email.
 
+**Clerk JWKS Configuration (Dec 2025)**:
+- `CLERK_ISSUER`: Primary config (e.g., `https://working-raptor-51.clerk.accounts.dev` for dev)
+- JWKS URL auto-derived as `{issuer}/.well-known/jwks.json` if `CLERK_JWKS_URL` not set
+- Token verification validates `iss` claim matches `CLERK_ISSUER` before checking signature
+- PyJWKClient caches keys for 1 hour; refreshes once on kid mismatch before failing
+- Startup prefetch in `core/bootstrap.py` validates JWKS configuration early
+- Debug endpoint `/api/auth/debug` shows JWKS status (issuer, URL, key count, last refresh)
+- JWT doesn't include email directly; code falls back to `X-Clerk-User-Email` header or `clerk_user_email` cookie
+
 ### Feature Specifications
 - **Web Application**: Dynamic template loading, auto-fitting text, live previews, logo overlays, image download/share, and a password-protected admin panel.
 - **Telegram Bot Integration**: Server-side rendering for promo images, posting to Telegram channels, and coupon validation via FunderPro API.
