@@ -317,7 +317,7 @@ class SignalMonitor:
             else:
                 logger.info(f"Signal #{signal_id} thesis still {thesis_status} - skipping duplicate message")
             
-            db.update_signal_revalidation(signal_id, thesis_status, f"Check: {thesis_status}", tenant_id=self.tenant_id)
+            db.update_signal_revalidation(signal_id, thesis_status, self.tenant_id, notes=f"Check: {thesis_status}")
             
             if should_post:
                 ai_message = generate_revalidation_message(
@@ -342,9 +342,8 @@ class SignalMonitor:
                 
                 if success:
                     db.update_signal_revalidation(
-                        signal_id, thesis_status,
-                        f"Revalidation: {ai_message[:100]}",
-                        tenant_id=self.tenant_id
+                        signal_id, thesis_status, self.tenant_id,
+                        notes=f"Revalidation: {ai_message[:100]}"
                     )
                     
                     if thesis_status == 'broken':

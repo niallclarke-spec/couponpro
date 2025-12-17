@@ -167,8 +167,8 @@ class TenantRuntime:
         return self.db.update_forex_signal_status(
             signal_id=signal_id,
             status=status,
-            pips=pips,
-            exit_price=exit_price,
+            result_pips=pips,
+            close_price=exit_price,
             tenant_id=self.tenant_id
         )
     
