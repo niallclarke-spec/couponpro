@@ -354,25 +354,31 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from core.logging import get_logger
         log = get_logger('set_auth_cookie')
         u = get_auth_user_from_request(self)
-        log.info(f"set-auth-cookie: user from JWT = {u}")
-        if u:
-            email = u.get('email') or self.headers.get('X-Clerk-User-Email')
-            log.info(f"set-auth-cookie: email = {email}, is_admin = {is_admin_email(email)}")
-            if is_admin_email(email):
-                tok = create_admin_session()
-                sec = '; Secure' if PORT == 8080 or Config.get_app_url().startswith('https') else ''
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Set-Cookie', f'admin_session={tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400{sec}')
-                if email:
-                    encoded_email = quote(email, safe='')
-                    self.send_header('Set-Cookie', f'clerk_user_email={encoded_email}; Path=/; SameSite=Lax; Max-Age=86400{sec}')
-                self.end_headers()
-                self.wfile.write(json.dumps({'success': True, 'is_admin': True}).encode())
-                log.info("set-auth-cookie: SUCCESS - cookies set (admin_session + clerk_user_email)")
-                return
-        log.info("set-auth-cookie: NO cookie set (user not found or not admin)")
-        self._json(200, {'success': True, 'is_admin': False})
+        
+        if not u:
+            log.warning("set-auth-cookie: JWT verification failed - no user")
+            self._json(401, {'error': 'unauthorized'})
+            return
+        
+        email = u.get('email') or self.headers.get('X-Clerk-User-Email')
+        log.info(f"set-auth-cookie: user={u.get('clerk_user_id')}, email={email}, is_admin={is_admin_email(email)}")
+        
+        if not is_admin_email(email):
+            log.warning(f"set-auth-cookie: not admin email - {email}")
+            self._json(403, {'error': 'forbidden'})
+            return
+        
+        tok = create_admin_session()
+        sec = '; Secure' if PORT == 8080 or Config.get_app_url().startswith('https') else ''
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Set-Cookie', f'admin_session={tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400{sec}')
+        if email:
+            encoded_email = quote(email, safe='')
+            self.send_header('Set-Cookie', f'clerk_user_email={encoded_email}; Path=/; SameSite=Lax; Max-Age=86400{sec}')
+        self.end_headers()
+        self.wfile.write(json.dumps({'success': True, 'is_admin': True}).encode())
+        log.info("set-auth-cookie: SUCCESS - cookies set")
 
     # Main HTTP methods
     def do_GET(self):
