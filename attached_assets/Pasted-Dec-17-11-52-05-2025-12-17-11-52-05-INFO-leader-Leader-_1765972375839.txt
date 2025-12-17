@@ -1,0 +1,49 @@
+Dec 17 11:52:05  [2025-12-17 11:52:05] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 17 11:52:15  [2025-12-17 11:52:15] [INFO] [leader] Retrying leader lock acquisition...
+Dec 17 11:52:15  [2025-12-17 11:52:15] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 17 11:52:25  [2025-12-17 11:52:25] [INFO] [leader] Retrying leader lock acquisition...
+Dec 17 11:52:25  [2025-12-17 11:52:25] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Checking forex_config unique constraint (tenant_id, setting_key)...
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] uq_forex_config_tenant_key already exists, skipping
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Checking bot_config unique constraint (tenant_id, setting_key)...
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] uq_bot_config_tenant_key already exists, skipping
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Checking telegram_subscriptions unique constraint (tenant_id, email)...
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] uq_telegram_subscriptions_tenant_email already exists, skipping
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Checking for clerk_users table...
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] clerk_users table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Checking for journeys tables...
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] journeys table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] journey_triggers table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] journey_steps table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] journey_user_sessions table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] journey_scheduled_messages table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] tenant_crosspromo_settings table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] crosspromo_jobs table ready
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Database schema initialized
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Forex config initialized with defaults
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [db] Bot config initialized with defaults
+Dec 17 11:51:59  [2025-12-17 11:51:59] [INFO] [bootstrap] Database schema initialized
+Dec 17 11:52:00  [2025-12-17 11:52:00] [INFO] [bootstrap] Initializing coupon bot webhook...
+Dec 17 11:52:01  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 17 11:52:01  [TELEGRAM] Webhook bot initialized and ready
+Dec 17 11:52:01  [2025-12-17 11:52:01] [INFO] [bootstrap] Coupon bot webhook started
+Dec 17 11:52:01  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 17 11:52:01  [2025-12-17 11:52:01] [INFO] [bootstrap] Forex bot webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [leader] Leader lock using DB_HOST/DB_* vars
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [leader] Database connection established
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Leader lock acquired, starting scheduler
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Forex scheduler started in background thread
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [clerk_auth] [JWKS] Dynamic issuer mode ENABLED (no allowlist - accepting any issuer)
+Dec 17 11:52:03  [2025-12-17 11:52:03] [WARNING] [clerk_auth] [JWKS] Consider setting CLERK_ALLOWED_ISSUERS for production security
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [clerk_auth] [JWKS] JWKS URL will be derived from each token's issuer claim
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Clerk JWKS prefetch complete
+Dec 17 11:52:03  [2025-12-17 11:52:03] [ERROR] [forex_scheduler] [SCHEDULER] No tenant_id provided. Set TENANT_ID env var in production (e.g., TENANT_ID=entrylab). For CLI usage, use: python forex_scheduler.py --tenant <tenant_id>
+Dec 17 11:52:03  [STRIPE] Using LIVE (no test keys found) mode
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Stripe client initialized
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [scheduler] [JOURNEY-SCHEDULER] Started (interval=30s)
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [scheduler] [JOURNEY-SCHEDULER] Background thread started
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Journey scheduler started
+Dec 17 11:52:03  [2025-12-17 11:52:03] [INFO] [bootstrap] Application started
+Dec 17 11:52:03  Server running at http://0.0.0.0:8080/
+Dec 17 11:52:35  [2025-12-17 11:52:35] [INFO] [leader] Retrying leader lock acquisition...
+Dec 17 11:52:35  [2025-12-17 11:52:35] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
