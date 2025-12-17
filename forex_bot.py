@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 class ForexTelegramBot:
-    def __init__(self, tenant_id: str = None):
+    def __init__(self, tenant_id: str | None = None):
         self.bot = None
         self.token = None
         self.channel_id = None
@@ -58,7 +58,7 @@ class ForexTelegramBot:
             return None
         
         try:
-            pending_signals = get_forex_signals(status='pending')
+            pending_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
             if pending_signals and len(pending_signals) > 0:
                 existing = pending_signals[0]
                 logger.error(f"❌ Cannot post new signal - signal #{existing['id']} is still pending")
@@ -117,6 +117,7 @@ class ForexTelegramBot:
                 pair=pair,
                 timeframe=timeframe,
                 entry_price=entry,
+                tenant_id=self.tenant_id,
                 take_profit=tp1,
                 stop_loss=sl,
                 rsi_value=rsi,
@@ -144,12 +145,12 @@ class ForexTelegramBot:
                     parse_mode='HTML'
                 )
                 
-                if update_signal_status(signal_id, 'pending', telegram_message_id=sent_message.message_id):
+                if update_signal_status(signal_id, 'pending', tenant_id=self.tenant_id, telegram_message_id=sent_message.message_id):
                     logger.info(f"✅ Signal #{signal_id} status updated to pending (Telegram msg: {sent_message.message_id})")
                 else:
                     logger.error(f"❌ Failed to update signal #{signal_id} status to pending after Telegram broadcast")
                     logger.warning(f"⚠️ Ghost signal detected: Telegram message sent but DB update failed")
-                    fallback_success = update_signal_status(signal_id, 'broadcast_failed')
+                    fallback_success = update_signal_status(signal_id, 'broadcast_failed', tenant_id=self.tenant_id)
                     if fallback_success:
                         logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed (fallback)")
                     else:
@@ -158,7 +159,7 @@ class ForexTelegramBot:
                     
             except TelegramError as e:
                 logger.error(f"❌ Failed to post signal to Telegram: {e}")
-                update_signal_status(signal_id, 'broadcast_failed')
+                update_signal_status(signal_id, 'broadcast_failed', tenant_id=self.tenant_id)
                 logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed")
                 return None
             
@@ -174,7 +175,7 @@ class ForexTelegramBot:
             indicators_dict = {k: v for k, v in indicators_dict.items() if v is not None}
             
             if signal_id and indicators_dict:
-                update_signal_original_indicators(signal_id, indicators_dict=indicators_dict)
+                update_signal_original_indicators(signal_id, tenant_id=self.tenant_id, indicators_dict=indicators_dict)
                 logger.info(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
                 
                 add_signal_narrative(
@@ -649,12 +650,12 @@ Signal closed after maximum hold time."""
             # Get YESTERDAY's signals for morning recap
             from datetime import timedelta
             yesterday = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d')
-            signals_yesterday = get_forex_signals_by_period(period='yesterday')
+            signals_yesterday = get_forex_signals_by_period(tenant_id=self.tenant_id, period='yesterday')
             
             if not signals_yesterday or len(signals_yesterday) == 0:
                 message = f"📊 <b>Daily Recap - {yesterday}</b>\n\nNo signals posted yesterday."
             else:
-                stats = get_forex_stats_by_period(period='yesterday') or {}
+                stats = get_forex_stats_by_period(tenant_id=self.tenant_id, period='yesterday') or {}
                 total_pips = stats.get('total_pips', 0)
                 
                 # Build signal list
@@ -709,12 +710,12 @@ Signal closed after maximum hold time."""
             from db import get_forex_signals_by_period
             from collections import defaultdict
             
-            signals_week = get_forex_signals_by_period(period='week')
+            signals_week = get_forex_signals_by_period(tenant_id=self.tenant_id, period='week')
             
             if not signals_week or len(signals_week) == 0:
                 message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
             else:
-                stats = get_forex_stats_by_period(period='week') or {}
+                stats = get_forex_stats_by_period(tenant_id=self.tenant_id, period='week') or {}
                 total_pips = stats.get('total_pips', 0)
                 
                 # Group signals by day
