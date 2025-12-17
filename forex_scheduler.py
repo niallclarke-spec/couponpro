@@ -402,31 +402,37 @@ async def start_forex_scheduler(tenant_id: str = None):
     """
     Start the forex scheduler - programmatic entry point.
     
-    When called without arguments (from bootstrap.py), runs in multi-tenant
-    mode for all active tenants. When called with a tenant_id, runs for
-    that specific tenant continuously.
+    Runs the full forex scheduler (signal checks, price monitoring, guidance,
+    briefings) for a single tenant continuously.
     
     Args:
-        tenant_id: Optional tenant ID. If None, runs for all active tenants.
+        tenant_id: Tenant ID. If None, reads from TENANT_ID env var.
+        
+    Note:
+        The scheduler requires a tenant_id because it runs continuously with
+        multiple background tasks (price monitoring, guidance, briefings).
+        For production, set TENANT_ID env var in your deployment config.
     """
     require_db_pool_or_exit()
     
     resolved_tenant = tenant_id or os.environ.get('TENANT_ID')
     
-    if resolved_tenant:
-        logger.info(f"Starting forex scheduler for single tenant: {resolved_tenant}")
-        runtime = TenantRuntime(tenant_id=resolved_tenant)
-        
-        signal_engine = runtime.get_signal_engine()
-        signal_engine.set_tenant_id(runtime.tenant_id)
-        
-        scheduler = ForexSchedulerRunner(runtime)
-        await scheduler.run_forever()
-    else:
-        logger.info("Starting forex scheduler in multi-tenant mode")
-        while True:
-            await run_all_tenants(once=True)
-            await asyncio.sleep(60)
+    if not resolved_tenant:
+        logger.error(
+            "[SCHEDULER] No tenant_id provided. "
+            "Set TENANT_ID env var in production (e.g., TENANT_ID=entrylab). "
+            "For CLI usage, use: python forex_scheduler.py --tenant <tenant_id>"
+        )
+        return
+    
+    logger.info(f"Starting forex scheduler for tenant: {resolved_tenant}")
+    runtime = TenantRuntime(tenant_id=resolved_tenant)
+    
+    signal_engine = runtime.get_signal_engine()
+    signal_engine.set_tenant_id(runtime.tenant_id)
+    
+    scheduler = ForexSchedulerRunner(runtime)
+    await scheduler.run_forever()
 
 
 if __name__ == '__main__':
