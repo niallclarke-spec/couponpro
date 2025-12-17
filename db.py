@@ -2954,7 +2954,7 @@ def update_forex_signal_status(signal_id, status, tenant_id, result_pips=None, c
             conn.commit()
             
             if status in ('won', 'lost', 'expired', 'cancelled'):
-                promoted = promote_queued_bot()
+                promoted = promote_queued_bot(tenant_id)
                 if promoted:
                     logger.info(f"[SIGNAL CLOSE] Automatically activated queued bot: {promoted}")
             
@@ -3719,12 +3719,13 @@ def get_active_bot(tenant_id):
         logger.exception(f"Error getting active bot: {e}")
         return 'aggressive'
 
-def set_active_bot(bot_type):
+def set_active_bot(bot_type, tenant_id='entrylab'):
     """
     Set the active bot type.
     
     Args:
         bot_type (str): Bot type ('aggressive', 'conservative', or 'custom')
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         bool: True if successful
@@ -3741,12 +3742,12 @@ def set_active_bot(bot_type):
             
             cursor.execute("""
                 INSERT INTO bot_config (tenant_id, setting_key, setting_value, updated_at)
-                VALUES ('entrylab', 'active_bot', %s, CURRENT_TIMESTAMP)
+                VALUES (%s, 'active_bot', %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (tenant_id, setting_key) 
                 DO UPDATE SET 
                     setting_value = EXCLUDED.setting_value,
                     updated_at = CURRENT_TIMESTAMP
-            """, (bot_type,))
+            """, (tenant_id, bot_type,))
             
             conn.commit()
             logger.info(f"Active bot set to: {bot_type}")
@@ -3854,20 +3855,23 @@ def clear_queued_bot(tenant_id):
         return False
 
 
-def promote_queued_bot():
+def promote_queued_bot(tenant_id='entrylab'):
     """
     Promote queued bot to active (called when signal closes).
+    
+    Args:
+        tenant_id (str): Tenant ID (default: 'entrylab')
     
     Returns:
         str or None: The bot type that was promoted, or None if no queued bot
     """
     try:
-        queued = get_queued_bot()
+        queued = get_queued_bot(tenant_id)
         if not queued:
             return None
         
-        set_active_bot(queued)
-        clear_queued_bot()
+        set_active_bot(queued, tenant_id)
+        clear_queued_bot(tenant_id)
         
         logger.info(f"Promoted queued bot to active: {queued}")
         return queued
