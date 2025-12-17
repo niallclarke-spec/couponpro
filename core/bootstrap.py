@@ -114,6 +114,13 @@ def start_app(ctx: AppContext) -> None:
         except Exception as e:
             logger.exception("Forex scheduler startup failed")
     
+    try:
+        from auth.clerk_auth import prefetch_jwks
+        prefetch_jwks()
+        logger.info("Clerk JWKS prefetch complete")
+    except Exception as e:
+        logger.warning(f"Clerk JWKS prefetch failed: {e}")
+    
     if ctx.stripe_available:
         try:
             from stripe_client import get_stripe_client

@@ -13,10 +13,13 @@ import jwt
 import hmac
 import hashlib
 import time
+import base64
+import json
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWKClientError
 from http import cookies
 from typing import Optional, Dict, Any, Tuple
+from datetime import datetime
 
 from core.logging import get_logger
 from core.config import Config
@@ -27,6 +30,9 @@ logger = get_logger(__name__)
 SESSION_TTL = 86400
 
 _jwks_client = None
+_jwks_client_url = None
+_jwks_last_refresh: Optional[datetime] = None
+_jwks_key_count: int = 0
 
 
 def create_admin_session() -> str:
@@ -86,19 +92,129 @@ class AuthorizationError(Exception):
         self.status_code = status_code
 
 
+def _get_clerk_issuer() -> Optional[str]:
+    """Get Clerk issuer URL from environment (e.g., https://clerk.promostack.io)."""
+    return os.environ.get('CLERK_ISSUER')
+
+
 def _get_clerk_jwks_url() -> Optional[str]:
-    """Get Clerk JWKS URL from environment."""
-    return os.environ.get('CLERK_JWKS_URL')
+    """
+    Get Clerk JWKS URL, deriving from CLERK_ISSUER if CLERK_JWKS_URL not set.
+    
+    Priority:
+    1. CLERK_JWKS_URL (explicit)
+    2. CLERK_ISSUER + /.well-known/jwks.json (derived)
+    """
+    explicit_url = os.environ.get('CLERK_JWKS_URL')
+    if explicit_url:
+        return explicit_url
+    
+    issuer = _get_clerk_issuer()
+    if issuer:
+        return issuer.rstrip('/') + '/.well-known/jwks.json'
+    
+    return None
 
 
-def _get_jwks_client() -> Optional[PyJWKClient]:
-    """Get or create cached JWKS client."""
-    global _jwks_client
-    if _jwks_client is None:
-        jwks_url = _get_clerk_jwks_url()
-        if jwks_url:
-            _jwks_client = PyJWKClient(jwks_url, cache_keys=True, lifespan=3600)
+def _decode_jwt_unverified(token: str) -> Tuple[Optional[Dict], Optional[Dict]]:
+    """
+    Decode JWT without verification to inspect header and payload.
+    
+    Returns:
+        Tuple of (header, payload) or (None, None) on error
+    """
+    try:
+        parts = token.split('.')
+        if len(parts) != 3:
+            return None, None
+        
+        def decode_part(part: str) -> Dict:
+            padding = 4 - len(part) % 4
+            if padding != 4:
+                part += '=' * padding
+            decoded = base64.urlsafe_b64decode(part)
+            return json.loads(decoded)
+        
+        header = decode_part(parts[0])
+        payload = decode_part(parts[1])
+        return header, payload
+    except Exception:
+        return None, None
+
+
+def _get_jwks_client(force_refresh: bool = False) -> Optional[PyJWKClient]:
+    """
+    Get or create cached JWKS client.
+    
+    Args:
+        force_refresh: If True, recreate the client to fetch fresh keys
+    """
+    global _jwks_client, _jwks_client_url, _jwks_last_refresh, _jwks_key_count
+    
+    jwks_url = _get_clerk_jwks_url()
+    if not jwks_url:
+        return None
+    
+    if _jwks_client is None or _jwks_client_url != jwks_url or force_refresh:
+        logger.info(f"[JWKS] Creating client for URL: {jwks_url} (force_refresh={force_refresh})")
+        _jwks_client = PyJWKClient(jwks_url, cache_keys=True, lifespan=1800)
+        _jwks_client_url = jwks_url
+        _jwks_last_refresh = datetime.utcnow()
+        
+        try:
+            keys = _jwks_client.get_signing_keys()
+            _jwks_key_count = len(keys) if keys else 0
+            logger.info(f"[JWKS] Fetched {_jwks_key_count} signing keys from {jwks_url}")
+        except Exception as e:
+            logger.warning(f"[JWKS] Could not pre-fetch keys: {e}")
+            _jwks_key_count = 0
+    
     return _jwks_client
+
+
+def get_jwks_status() -> Dict[str, Any]:
+    """
+    Get current JWKS client status for debugging.
+    
+    Returns:
+        Dict with configured_issuer, jwks_url, last_refresh, key_count
+    """
+    return {
+        'configured_issuer': _get_clerk_issuer(),
+        'jwks_url': _get_clerk_jwks_url(),
+        'last_refresh': _jwks_last_refresh.isoformat() + 'Z' if _jwks_last_refresh else None,
+        'key_count': _jwks_key_count,
+        'client_initialized': _jwks_client is not None
+    }
+
+
+def prefetch_jwks() -> bool:
+    """
+    Prefetch JWKS keys on startup. Call this during bootstrap.
+    
+    Returns:
+        True if keys were successfully fetched, False otherwise
+    """
+    jwks_url = _get_clerk_jwks_url()
+    issuer = _get_clerk_issuer()
+    
+    if not jwks_url:
+        logger.warning("[JWKS] No CLERK_ISSUER or CLERK_JWKS_URL configured - Clerk auth disabled")
+        return False
+    
+    logger.info(f"[JWKS] Startup check - Issuer: {issuer}, JWKS URL: {jwks_url}")
+    
+    try:
+        client = _get_jwks_client(force_refresh=True)
+        if client:
+            status = get_jwks_status()
+            logger.info(f"[JWKS] Startup prefetch successful - {status['key_count']} keys loaded")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"[JWKS] Startup prefetch FAILED: {e}")
+        logger.warning("[JWKS] Possible causes: wrong CLERK_ISSUER, frontend using different Clerk instance")
+        return False
 
 
 def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
@@ -106,7 +222,7 @@ def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[s
     Verify a Clerk JWT and return claims if valid.
     
     Fetches the signing key from Clerk's JWKS endpoint at runtime.
-    Keys are cached for 1 hour to minimize network calls.
+    Keys are cached for 30 minutes. On kid mismatch, refreshes JWKS once.
     
     Args:
         token: The JWT string from Authorization: Bearer header or __session cookie
@@ -126,67 +242,124 @@ def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[s
     """
     jwks_url = _get_clerk_jwks_url()
     if not jwks_url:
-        logger.warning("CLERK_JWKS_URL not configured - Clerk auth disabled")
+        logger.warning("No CLERK_ISSUER or CLERK_JWKS_URL configured - Clerk auth disabled")
         return None, AuthFailureReason.JWKS_NOT_CONFIGURED
     
-    try:
-        client = _get_jwks_client()
-        if not client:
-            logger.error("Failed to create JWKS client")
-            return None, AuthFailureReason.JWKS_FETCH_FAILED
-        
-        signing_key = client.get_signing_key_from_jwt(token)
-        
-        claims = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=['RS256'],
-            options={
+    header, unverified_payload = _decode_jwt_unverified(token)
+    if not header or not unverified_payload:
+        logger.warning("[JWKS] Could not decode token header/payload")
+        return None, AuthFailureReason.INVALID_SIGNATURE
+    
+    token_kid = header.get('kid')
+    token_iss = unverified_payload.get('iss')
+    configured_issuer = _get_clerk_issuer()
+    
+    if configured_issuer and token_iss:
+        token_iss_normalized = token_iss.rstrip('/')
+        configured_iss_normalized = configured_issuer.rstrip('/')
+        if token_iss_normalized != configured_iss_normalized:
+            logger.error(
+                f"[JWKS] ISSUER MISMATCH! Token iss={token_iss}, configured CLERK_ISSUER={configured_issuer}. "
+                "This usually means frontend and backend are using different Clerk instances (dev vs prod)."
+            )
+            return None, AuthFailureReason.INVALID_ISSUER
+    
+    def try_verify(force_refresh: bool = False) -> Tuple[Optional[Dict], Optional[str]]:
+        try:
+            client = _get_jwks_client(force_refresh=force_refresh)
+            if not client:
+                logger.error("[JWKS] Failed to create JWKS client")
+                return None, AuthFailureReason.JWKS_FETCH_FAILED
+            
+            signing_key = client.get_signing_key_from_jwt(token)
+            
+            decode_options = {
                 'require': ['sub', 'exp', 'iat'],
                 'verify_exp': True,
                 'verify_iat': True
             }
-        )
-        
-        first_name = claims.get('first_name', '')
-        last_name = claims.get('last_name', '')
-        name = f"{first_name} {last_name}".strip() if first_name or last_name else claims.get('name')
-        
-        email = claims.get('email')
-        if not email and claims.get('email_addresses'):
-            email = claims.get('email_addresses', [{}])[0].get('email_address')
-        
-        return {
-            'clerk_user_id': claims['sub'],
-            'email': email,
-            'name': name,
-            'avatar_url': claims.get('image_url') or claims.get('profile_image_url')
-        }, None
-        
-    except jwt.ExpiredSignatureError:
-        logger.warning("Token expired")
-        return None, AuthFailureReason.TOKEN_EXPIRED
-    except jwt.InvalidIssuerError:
-        logger.warning("Invalid issuer")
-        return None, AuthFailureReason.INVALID_ISSUER
-    except jwt.InvalidAudienceError:
-        logger.warning("Invalid audience")
-        return None, AuthFailureReason.INVALID_AUDIENCE
-    except jwt.MissingRequiredClaimError as e:
-        logger.warning(f"Missing required claim: {e}")
-        return None, AuthFailureReason.MISSING_CLAIMS
-    except jwt.InvalidSignatureError:
-        logger.warning("Invalid signature")
-        return None, AuthFailureReason.INVALID_SIGNATURE
-    except PyJWKClientError as e:
-        logger.warning(f"JWKS fetch failed: {e}")
-        return None, AuthFailureReason.JWKS_FETCH_FAILED
-    except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid token: {e}")
-        return None, AuthFailureReason.INVALID_SIGNATURE
-    except Exception as e:
-        logger.exception("Unexpected error verifying JWT")
-        return None, AuthFailureReason.UNKNOWN_ERROR
+            
+            if configured_issuer:
+                claims = jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=['RS256'],
+                    issuer=configured_issuer,
+                    options=decode_options
+                )
+            else:
+                claims = jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=['RS256'],
+                    options=decode_options
+                )
+            
+            first_name = claims.get('first_name', '')
+            last_name = claims.get('last_name', '')
+            name = f"{first_name} {last_name}".strip() if first_name or last_name else claims.get('name')
+            
+            email = claims.get('email')
+            if not email and claims.get('email_addresses'):
+                email = claims.get('email_addresses', [{}])[0].get('email_address')
+            
+            return {
+                'clerk_user_id': claims['sub'],
+                'email': email,
+                'name': name,
+                'avatar_url': claims.get('image_url') or claims.get('profile_image_url')
+            }, None
+            
+        except PyJWKClientError as e:
+            error_msg = str(e)
+            if 'Unable to find a signing key' in error_msg and not force_refresh:
+                logger.warning(
+                    f"[JWKS] Key not found (kid={token_kid}), refreshing JWKS and retrying... "
+                    f"token_iss={token_iss}, jwks_url={jwks_url}"
+                )
+                return None, 'RETRY_WITH_REFRESH'
+            
+            logger.warning(
+                f"[JWKS] Fetch failed: {e} | kid={token_kid} | token_iss={token_iss} | "
+                f"configured_issuer={configured_issuer} | jwks_url={jwks_url}"
+            )
+            return None, AuthFailureReason.JWKS_FETCH_FAILED
+        except jwt.ExpiredSignatureError:
+            logger.warning("Token expired")
+            return None, AuthFailureReason.TOKEN_EXPIRED
+        except jwt.InvalidIssuerError:
+            logger.warning(
+                f"[JWKS] Invalid issuer: token_iss={token_iss}, expected={configured_issuer}"
+            )
+            return None, AuthFailureReason.INVALID_ISSUER
+        except jwt.InvalidAudienceError:
+            logger.warning("Invalid audience")
+            return None, AuthFailureReason.INVALID_AUDIENCE
+        except jwt.MissingRequiredClaimError as e:
+            logger.warning(f"Missing required claim: {e}")
+            return None, AuthFailureReason.MISSING_CLAIMS
+        except jwt.InvalidSignatureError:
+            logger.warning("Invalid signature")
+            return None, AuthFailureReason.INVALID_SIGNATURE
+        except jwt.InvalidTokenError as e:
+            logger.warning(f"Invalid token: {e}")
+            return None, AuthFailureReason.INVALID_SIGNATURE
+        except Exception as e:
+            logger.exception("Unexpected error verifying JWT")
+            return None, AuthFailureReason.UNKNOWN_ERROR
+    
+    result, failure = try_verify(force_refresh=False)
+    
+    if failure == 'RETRY_WITH_REFRESH':
+        logger.info("[JWKS] Retrying verification with refreshed keys...")
+        result, failure = try_verify(force_refresh=True)
+        if failure:
+            logger.error(
+                f"[JWKS] Verification still failed after refresh. kid={token_kid}, "
+                f"token_iss={token_iss}, configured_issuer={configured_issuer}, jwks_url={jwks_url}"
+            )
+    
+    return result, failure
 
 
 def get_auth_user_from_request(request, record_failure: bool = True) -> Optional[Dict[str, Any]]:
