@@ -78,6 +78,7 @@ SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
 MONITOR_INTERVAL = 60            # 1 minute - monitor active signals for TP/SL
 GUIDANCE_INTERVAL = 60           # 1 minute - check for guidance updates
 STAGNANT_CHECK_INTERVAL = 300    # 5 minutes - check stagnant signals for revalidation
+CREDENTIAL_REFRESH_INTERVAL = 300  # 5 minutes - hot-reload bot credentials
 
 
 class ForexSchedulerRunner:
@@ -198,9 +199,11 @@ class ForexSchedulerRunner:
         logger.info("📅 Daily recap: 6:30 AM UTC")
         logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")
         logger.info("⏰ Trading hours: 8AM-10PM GMT")
+        logger.info("🔄 Bot credential refresh: Every 5 minutes")
         logger.info("=" * 60)
         
         signal_check_counter = 0
+        credential_refresh_cycles = max(1, CREDENTIAL_REFRESH_INTERVAL // self.monitor_interval)
         
         while True:
             try:
@@ -222,6 +225,11 @@ class ForexSchedulerRunner:
                     await self.check_morning_briefing()
                     await self.check_daily_recap()
                     await self.check_weekly_recap()
+                    
+                    # Hot-reload bot credentials (every 5 minutes)
+                    if signal_check_counter % credential_refresh_cycles == 0 and signal_check_counter > 0:
+                        if self.runtime.refresh_bot_credentials():
+                            logger.info("🔄 Bot credentials refreshed from database")
                 
                 signal_check_counter += 1
                 await asyncio.sleep(self.monitor_interval)

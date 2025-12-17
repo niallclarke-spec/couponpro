@@ -42,6 +42,76 @@ class ForexTelegramBot:
             logger.warning(f"Forex bot not configured: {e}")
             logger.info("Forex bot will not work until credentials are configured in Connections settings")
     
+    def refresh_credentials(self) -> bool:
+        """
+        Hot-reload bot credentials from the database.
+        
+        This allows the scheduler to pick up token updates without restart.
+        Called periodically by the scheduler to detect configuration changes.
+        
+        Returns:
+            True if credentials were updated, False if unchanged or failed
+        """
+        old_token = self.token
+        old_channel = self.channel_id
+        old_bot = self.bot
+        old_configured = self._configured
+        
+        try:
+            creds = get_bot_credentials(self.tenant_id, 'signal')
+            new_token = creds.get('bot_token')
+            new_channel = creds.get('channel_id')
+            
+            if not new_token or not new_channel:
+                if self._configured:
+                    logger.warning(f"Hot-reload: Credentials removed for tenant '{self.tenant_id}', disabling bot")
+                    self.token = None
+                    self.channel_id = None
+                    self.bot = None
+                    self._configured = False
+                    return True
+                return False
+            
+            if new_token == self.token and new_channel == self.channel_id:
+                return False
+            
+            old_bot_id = self.token.split(':')[0] if self.token else 'none'
+            new_bot_id = new_token.split(':')[0]
+            
+            try:
+                new_bot = Bot(token=new_token)
+            except TelegramError as e:
+                logger.error(f"Hot-reload: Invalid token for tenant '{self.tenant_id}': {e}")
+                return False
+            
+            self.token = new_token
+            self.channel_id = new_channel
+            self.bot = new_bot
+            self._configured = True
+            
+            logger.info(
+                f"Hot-reloaded bot credentials for tenant '{self.tenant_id}' "
+                f"(bot_id: {old_bot_id} -> {new_bot_id})"
+            )
+            return True
+            
+        except BotNotConfiguredError:
+            if self._configured:
+                logger.info(f"Hot-reload: Bot unconfigured for tenant '{self.tenant_id}', disabling")
+                self.token = None
+                self.channel_id = None
+                self.bot = None
+                self._configured = False
+                return True
+            return False
+        except Exception as e:
+            logger.exception(f"Hot-reload error for tenant '{self.tenant_id}': {e}")
+            self.token = old_token
+            self.channel_id = old_channel
+            self.bot = old_bot
+            self._configured = old_configured
+            return False
+    
     async def post_signal(self, signal_data):
         """
         Post a trading signal to the Telegram channel with multi-TP support

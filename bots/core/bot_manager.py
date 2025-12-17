@@ -58,7 +58,7 @@ class BotManager:
             logger.warning(f"Invalid bot type: {bot_type}")
             return False
         
-        return set_active_bot(bot_type)
+        return set_active_bot(bot_type, tenant_id=self.tenant_id)
     
     def get_available_bots(self) -> list:
         """Get list of available bot types"""
