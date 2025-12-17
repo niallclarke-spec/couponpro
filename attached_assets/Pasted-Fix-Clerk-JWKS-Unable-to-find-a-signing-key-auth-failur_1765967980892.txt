@@ -1,0 +1,66 @@
+Fix Clerk JWKS “Unable to find a signing key” auth failures
+
+We are seeing repeated auth failures:
+
+JWKS fetch failed: Unable to find a signing key that matches: "<kid>"
+This causes /api/set-auth-cookie to log user from JWT = None and no cookie is set, resulting in login redirects.
+
+Goal: Fix Clerk JWT verification so admin auth works on admin.promostack.io.
+
+Constraints:
+	•	Do NOT disable JWT verification.
+	•	Do NOT add insecure fallbacks that bypass auth.
+	•	Keep server.py thin (routing only). Implement logic in existing auth modules/middleware.
+
+Tasks:
+	1.	Locate Clerk auth verification code
+	•	Find where we fetch JWKS and verify JWTs (likely clerk_auth module or middleware).
+	•	Identify what environment variables/config values it uses for:
+	•	Clerk Issuer (iss)
+	•	JWKS URL
+	•	Publishable key / secret key (if relevant)
+	2.	Implement strict issuer + JWKS alignment
+	•	Parse the incoming bearer JWT (and cookie JWT if used) and read:
+	•	unverified header (kid)
+	•	unverified payload iss, aud
+	•	Ensure the backend’s configured CLERK_ISSUER matches the token’s iss exactly.
+	•	Ensure JWKS is fetched from the correct Clerk issuer domain for that iss:
+	•	Prefer using iss to derive JWKS, or validate config and fail fast with a clear error.
+	•	If we currently hardcode a JWKS URL, update it so it always matches the configured issuer.
+	3.	Add caching + refresh for JWKS
+	•	Cache JWKS in memory with a TTL (e.g., 10–30 minutes).
+	•	On verification failure due to missing kid, refresh JWKS once and retry verification (handles key rotation).
+	•	If still missing, fail with a clear log message that includes:
+	•	token iss
+	•	expected CLERK_ISSUER
+	•	requested kid
+	•	JWKS URL used
+	4.	Add a startup sanity check
+	•	On boot, if CLERK_ISSUER is set, fetch JWKS once and log:
+	•	issuer used
+	•	JWKS URL used
+	•	number of keys found
+	•	If fetch fails, log a single high-signal warning explaining likely causes:
+	•	frontend using different Clerk instance than backend
+	•	wrong env vars
+	•	wrong domain (dev vs prod)
+	5.	Add a lightweight debug endpoint (admin-protected or internal)
+	•	Create GET /api/auth-debug (must be protected or restricted to local/dev) returning:
+	•	configured issuer + jwks url
+	•	last jwks refresh time
+	•	number of keys cached
+	•	Do NOT return secrets or full tokens.
+	6.	Re-test with shell commands
+Provide exact commands to confirm fix:
+	•	Print configured issuer/jwks:
+python3 - <<'PY' ... PY
+	•	Hit /api/set-auth-cookie and confirm user is resolved and cookie set.
+	•	Confirm /admin no longer redirects.
+
+Deliverables:
+	•	Code changes in the appropriate auth module(s), not server.py.
+	•	Clear logs for issuer mismatch vs JWKS missing key.
+	•	Robust JWKS refresh on key rotation.
+	•	Minimal tests (unit test for issuer mismatch + kid refresh path if test framework exists).
+
+Important: The fix must ensure frontend and backend use the SAME Clerk instance/environment (prod-prod or dev-dev). If mismatch is detected, log it explicitly and refuse auth.
