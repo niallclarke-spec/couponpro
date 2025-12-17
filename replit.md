@@ -23,14 +23,15 @@ New users accessing `dash.promostack.io` are guided through a 4-step setup wizar
 ### Authentication Architecture
 The platform supports dual authentication: primary Clerk JWT authentication (via `Authorization: Bearer` headers and `X-Clerk-User-Email` header for email) and legacy HMAC-signed `admin_session` cookie authentication. Host-aware rules in `auth/clerk_auth.py` and `core/clerk_auth.py` define access levels for admin and client dashboards, with admin access requiring a whitelisted email.
 
-**Clerk JWKS Configuration (Dec 2025)**:
-- `CLERK_ISSUER`: Primary config (e.g., `https://working-raptor-51.clerk.accounts.dev` for dev)
-- JWKS URL auto-derived as `{issuer}/.well-known/jwks.json` if `CLERK_JWKS_URL` not set
-- Token verification validates `iss` claim matches `CLERK_ISSUER` before checking signature
-- PyJWKClient caches keys for 1 hour; refreshes once on kid mismatch before failing
-- Startup prefetch in `core/bootstrap.py` validates JWKS configuration early
-- Debug endpoint `/api/auth/debug` shows JWKS status (issuer, URL, key count, last refresh)
+**Clerk JWKS Configuration (Dec 2025 - Dynamic Issuer Mode)**:
+- JWKS URL dynamically derived from each token's `iss` claim: `{token_iss}/.well-known/jwks.json`
+- No environment variables required for JWKS configuration (fully automatic)
+- Per-issuer PyJWKClient cache with thread-safe refresh-on-miss logic
+- PyJWKClient caches keys for 30 minutes per issuer; refreshes once on kid mismatch before failing
+- Optional `CLERK_ALLOWED_ISSUERS` env var for production security (comma-separated allowlist)
+- Debug endpoint `/api/auth/debug` shows cached issuers, their JWKS URLs, key counts, and refresh times
 - JWT doesn't include email directly; code falls back to `X-Clerk-User-Email` header or `clerk_user_email` cookie
+- `/api/set-auth-cookie` returns 401 on auth failure, 403 on non-admin (not 200)
 
 ### Feature Specifications
 - **Web Application**: Dynamic template loading, auto-fitting text, live previews, logo overlays, image download/share, and a password-protected admin panel.
