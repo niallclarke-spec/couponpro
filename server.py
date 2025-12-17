@@ -344,11 +344,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.send_header('Set-Cookie', f'admin_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{sec}')
+        self.send_header('Set-Cookie', f'clerk_user_email=; Path=/; SameSite=Lax; Max-Age=0{sec}')
         self.end_headers()
         self.wfile.write(json.dumps({'success': True}).encode())
 
     def handle_api_set_auth_cookie(self):
         from auth.clerk_auth import get_auth_user_from_request, is_admin_email
+        from urllib.parse import quote
         from core.logging import get_logger
         log = get_logger('set_auth_cookie')
         u = get_auth_user_from_request(self)
@@ -362,9 +364,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Set-Cookie', f'admin_session={tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400{sec}')
+                if email:
+                    encoded_email = quote(email, safe='')
+                    self.send_header('Set-Cookie', f'clerk_user_email={encoded_email}; Path=/; SameSite=Lax; Max-Age=86400{sec}')
                 self.end_headers()
                 self.wfile.write(json.dumps({'success': True, 'is_admin': True}).encode())
-                log.info("set-auth-cookie: SUCCESS - cookie set")
+                log.info("set-auth-cookie: SUCCESS - cookies set (admin_session + clerk_user_email)")
                 return
         log.info("set-auth-cookie: NO cookie set (user not found or not admin)")
         self._json(200, {'success': True, 'is_admin': False})
