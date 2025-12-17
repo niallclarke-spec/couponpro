@@ -1,5 +1,13 @@
 # PromoStack Promo Gen
 
+## Documentation
+For detailed technical documentation, see the `docs/` folder:
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture, request flow, directory structure
+- **[docs/DATABASE.md](docs/DATABASE.md)** - Complete database schema reference with all tables
+- **[docs/DOMAIN_MODULES.md](docs/DOMAIN_MODULES.md)** - Domain modules (Journeys, Connections, CrossPromo, Forex)
+- **[docs/ENV_REFERENCE.md](docs/ENV_REFERENCE.md)** - All environment variables with descriptions
+- **[docs/MULTI_TENANT_FOREX_ROADMAP.md](docs/MULTI_TENANT_FOREX_ROADMAP.md)** - Future multi-tenant forex scheduler design
+
 ## Overview
 PromoStack is a platform designed for the rapid generation of branded promotional images, specifically coupons, for social media and messaging. It offers both a web application (dash.promostack.io) and a Telegram bot (@promostack_bot), aiming to streamline marketing asset creation. The platform also includes a Forex Signals Bot, showcasing a multi-bot architecture, with future plans for a multi-tenant SaaS Bot Hub marketplace.
 
