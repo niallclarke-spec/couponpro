@@ -7,6 +7,8 @@ import json
 from urllib.parse import urlparse, parse_qs
 
 from core.logging import get_logger
+from strategies.strategy_loader import get_valid_bot_types, is_valid_bot_type
+
 logger = get_logger(__name__)
 
 
@@ -144,7 +146,7 @@ def handle_signal_bot_status(handler):
         status = {
             'active_bot': active_bot or 'aggressive',
             'queued_bot': queued_bot,
-            'available_bots': ['aggressive', 'conservative', 'custom', 'raja_banks'],
+            'available_bots': get_valid_bot_types(),
             'open_signal': open_signal,
             'current_price': current_price,
             'current_pips': current_pips,
@@ -364,8 +366,8 @@ def handle_signal_bot_set_active(handler):
             handler.wfile.write(json.dumps({'error': 'bot_type is required'}).encode())
             return
         
-        valid_bots = ['aggressive', 'conservative', 'custom', 'raja_banks']
-        if bot_type not in valid_bots:
+        if not is_valid_bot_type(bot_type):
+            valid_bots = get_valid_bot_types()
             handler.send_response(400)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()

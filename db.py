@@ -3750,7 +3750,8 @@ def set_active_bot(bot_type, tenant_id='entrylab'):
         if not db_pool.connection_pool:
             return False
         
-        if bot_type not in ('aggressive', 'conservative', 'custom', 'raja_banks'):
+        from strategies.strategy_loader import is_valid_bot_type
+        if not is_valid_bot_type(bot_type):
             raise ValueError(f"Invalid bot type: {bot_type}")
         
         with db_pool.get_connection() as conn:
@@ -3818,7 +3819,8 @@ def set_queued_bot(bot_type):
         if not db_pool.connection_pool:
             return False
         
-        if bot_type not in ('aggressive', 'conservative', 'custom', 'raja_banks'):
+        from strategies.strategy_loader import is_valid_bot_type
+        if not is_valid_bot_type(bot_type):
             raise ValueError(f"Invalid bot type: {bot_type}")
         
         with db_pool.get_connection() as conn:

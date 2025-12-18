@@ -68,3 +68,13 @@ def get_active_strategy(bot_type: str = 'aggressive', tenant_id: Optional[str] =
 def get_strategy_by_type(bot_type: str, tenant_id: Optional[str] = None) -> Optional[BaseStrategy]:
     """Get a specific strategy by its bot_type"""
     return get_active_strategy(bot_type, tenant_id=tenant_id)
+
+
+def get_valid_bot_types() -> List[str]:
+    """Get list of all valid bot types from the strategy registry"""
+    return list(STRATEGY_REGISTRY.keys())
+
+
+def is_valid_bot_type(bot_type: str) -> bool:
+    """Check if a bot_type is valid (registered in the strategy registry)"""
+    return bot_type in STRATEGY_REGISTRY
