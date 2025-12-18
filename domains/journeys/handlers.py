@@ -8,12 +8,23 @@ from core.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _send_no_tenant_context(handler):
+    """Send 403 when tenant context is missing."""
+    handler.send_response(403)
+    handler.send_header('Content-type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps({'error': 'No tenant context available'}).encode())
+
+
 def handle_journeys_list(handler):
     """GET /api/journeys - List all journeys for tenant."""
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         # Use optimized batched query (2 queries instead of 2N+1)
         journeys = repo.list_journeys_with_summary(tenant_id)
@@ -35,7 +46,10 @@ def handle_journey_get(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         journey = repo.get_journey(tenant_id, journey_id)
         
@@ -69,7 +83,10 @@ def handle_journey_create(handler):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         current_count = repo.count_journeys(tenant_id)
         if current_count >= MAX_JOURNEYS_PER_TENANT:
@@ -135,7 +152,10 @@ def handle_journey_update(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         content_length = int(handler.headers.get('Content-Length', 0))
         body = handler.rfile.read(content_length)
@@ -171,7 +191,10 @@ def handle_journey_triggers(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         journey = repo.get_journey(tenant_id, journey_id)
         if not journey:
@@ -219,7 +242,10 @@ def handle_journey_steps_get(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         journey = repo.get_journey(tenant_id, journey_id)
         if not journey:
@@ -248,7 +274,10 @@ def handle_journey_steps_set(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         journey = repo.get_journey(tenant_id, journey_id)
         if not journey:
@@ -340,7 +369,10 @@ def handle_journey_sessions_debug(handler):
         
         limit = int(query_params.get('limit', [50])[0])
         
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         show_all = query_params.get('all', ['false'])[0].lower() == 'true'
         clerk_email = getattr(handler, 'clerk_email', None)
@@ -366,7 +398,10 @@ def handle_journey_delete(handler, journey_id: str):
     from . import repo
     
     try:
-        tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
         
         success = repo.delete_journey(tenant_id, journey_id)
         

@@ -8,6 +8,14 @@ from domains.crosspromo import repo, service
 logger = get_logger(__name__)
 
 
+def _send_no_tenant_context(handler):
+    """Send 403 when tenant context is missing."""
+    handler.send_response(403)
+    handler.send_header('Content-type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps({'error': 'No tenant context available'}).encode())
+
+
 def _send_json(handler, status: int, data: dict):
     """Helper to send JSON response."""
     handler.send_response(status)
@@ -27,7 +35,10 @@ def _read_json_body(handler) -> dict:
 
 def handle_get_settings(handler):
     """GET /api/crosspromo/settings - Get cross promo settings for tenant."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     
     settings = repo.get_settings(tenant_id)
     
@@ -49,7 +60,10 @@ def handle_get_settings(handler):
 
 def handle_save_settings(handler):
     """POST /api/crosspromo/settings - Create/update cross promo settings."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     data = _read_json_body(handler)
     
     result = repo.upsert_settings(
@@ -72,7 +86,10 @@ def handle_save_settings(handler):
 
 def handle_list_jobs(handler):
     """GET /api/crosspromo/jobs - List cross promo jobs for tenant."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     
     jobs = repo.list_jobs(tenant_id, limit=50)
     _send_json(handler, 200, {"jobs": jobs})
@@ -80,7 +97,10 @@ def handle_list_jobs(handler):
 
 def handle_run_daily_sequence(handler):
     """POST /api/crosspromo/run-daily-seq - Enqueue today's daily sequence."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     
     result = service.enqueue_daily_sequence(tenant_id)
     
@@ -101,7 +121,10 @@ def handle_run_daily_sequence(handler):
 
 def handle_publish_win(handler):
     """POST /api/crosspromo/publish-win - Enqueue win promo sequence."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     data = _read_json_body(handler)
     
     vip_signal_message_id = data.get('vip_signal_message_id')
@@ -137,7 +160,10 @@ def handle_publish_win(handler):
 
 def handle_send_test(handler):
     """POST /api/crosspromo/send-test - Send test morning message."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     
     result = service.send_test_morning_message(tenant_id)
     
@@ -154,7 +180,10 @@ def handle_send_test(handler):
 
 def handle_get_preview(handler):
     """GET /api/crosspromo/preview - Get morning message preview."""
-    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
     
     preview = service.get_morning_preview(tenant_id)
     _send_json(handler, 200, {"preview": preview})

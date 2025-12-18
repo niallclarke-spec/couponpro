@@ -257,7 +257,7 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
                 handler_instance.clerk_email = auth_user.get('email') or handler_instance.headers.get('X-Clerk-User-Email', '')
             handler_instance.tenant_id = tenant_id
         else:
-            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+            handler_instance.tenant_id = tenant_id
     elif host_type == HostType.ADMIN:
         # Admin subdomain: require both valid JWT AND admin email
         if route.auth_required:
@@ -273,7 +273,7 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
                     return False
             handler_instance.tenant_id = tenant_id
         else:
-            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+            handler_instance.tenant_id = tenant_id
     else:
         # Default host (None): keep existing behavior - admin email required for backwards compatibility
         if route.auth_required:
@@ -282,7 +282,7 @@ def apply_route_checks(route: Route, handler_instance, db_available: bool, host_
                 return False
             handler_instance.tenant_id = tenant_id
         else:
-            handler_instance.tenant_id = tenant_id if tenant_id else 'entrylab'
+            handler_instance.tenant_id = tenant_id
     
     # Webhook endpoints are exempt from EntryLab-only and Forex SaaS gating
     # They are called by external services (Telegram, Stripe) with no browser context
