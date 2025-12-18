@@ -16,6 +16,11 @@ class DatabaseUnavailableError(Exception):
     pass
 
 
+class DatabaseOperationError(Exception):
+    """Raised when a database operation fails."""
+    pass
+
+
 def _get_db_pool():
     """Get the database pool, importing lazily to avoid circular imports."""
     from db import db_pool
@@ -70,7 +75,7 @@ def list_connections(tenant_id: str) -> List[Dict[str, Any]]:
             return connections
     except Exception as e:
         logger.exception(f"Error listing connections for tenant {tenant_id}: {e}")
-        return []
+        raise DatabaseOperationError(f"Failed to list connections: {e}") from e
 
 
 def get_connection(tenant_id: str, bot_role: str) -> Optional[Dict[str, Any]]:
@@ -110,7 +115,8 @@ def upsert_connection(
     _require_db_pool()
     
     from db import upsert_bot_connection as db_upsert_bot_connection
-    return db_upsert_bot_connection(
+    # Pass optional channel IDs as-is - db function accepts None and stores NULL
+    return db_upsert_bot_connection(  # type: ignore[arg-type]
         tenant_id=tenant_id,
         bot_role=bot_role,
         bot_token=bot_token,
@@ -150,4 +156,4 @@ def delete_connection(tenant_id: str, bot_role: str) -> bool:
             return True
     except Exception as e:
         logger.exception(f"Error deleting connection for tenant {tenant_id}, role {bot_role}: {e}")
-        return False
+        raise DatabaseOperationError(f"Failed to delete connection: {e}") from e

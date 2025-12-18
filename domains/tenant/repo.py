@@ -16,6 +16,11 @@ class DatabaseUnavailableError(Exception):
     pass
 
 
+class DatabaseOperationError(Exception):
+    """Raised when a database operation fails."""
+    pass
+
+
 def _get_db_pool():
     """Get the database pool, importing lazily to avoid circular imports."""
     from db import db_pool
@@ -48,7 +53,7 @@ def tenant_exists(tenant_id: str) -> bool:
             return cursor.fetchone() is not None
     except Exception as e:
         logger.exception(f"Error checking tenant exists {tenant_id}: {e}")
-        return False
+        raise DatabaseOperationError(f"Failed to check tenant exists: {e}") from e
 
 
 def upsert_integration(tenant_id: str, provider: str, config: Dict[str, Any]) -> bool:
@@ -83,7 +88,7 @@ def upsert_integration(tenant_id: str, provider: str, config: Dict[str, Any]) ->
             return True
     except Exception as e:
         logger.exception(f"Error upserting integration for tenant {tenant_id}: {e}")
-        return False
+        raise DatabaseOperationError(f"Failed to upsert integration: {e}") from e
 
 
 def map_user_to_tenant(

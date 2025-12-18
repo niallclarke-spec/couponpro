@@ -2,7 +2,7 @@
 import json
 from core.tenant_credentials import get_tenant_setup_status
 from domains.tenant import repo as tenant_repo
-from domains.tenant.repo import DatabaseUnavailableError
+from domains.tenant.repo import DatabaseUnavailableError, DatabaseOperationError
 
 from core.logging import get_logger
 logger = get_logger(__name__)
@@ -65,13 +65,7 @@ def handle_tenant_integrations(handler, tenant_id):
         return
     
     try:
-        success = tenant_repo.upsert_integration(tenant_id, provider, config)
-        if not success:
-            handler.send_response(500)
-            handler.send_header('Content-type', 'application/json')
-            handler.end_headers()
-            handler.wfile.write(json.dumps({'error': 'Failed to save integration'}).encode())
-            return
+        tenant_repo.upsert_integration(tenant_id, provider, config)
         
         handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
@@ -82,6 +76,12 @@ def handle_tenant_integrations(handler, tenant_id):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
+    except DatabaseOperationError as e:
+        logger.exception(f"Database error saving integration: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Database operation failed'}).encode())
 
 
 VALID_ROLES = {'admin', 'member'}
@@ -159,3 +159,6 @@ def handle_tenant_map_user(handler):
         _send_json(handler, 200, response)
     except DatabaseUnavailableError:
         _send_json(handler, 503, {'error': 'Database not available'})
+    except DatabaseOperationError as e:
+        logger.exception(f"Database error mapping user: {e}")
+        _send_json(handler, 500, {'error': 'Database operation failed'})

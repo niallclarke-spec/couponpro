@@ -12,7 +12,7 @@ from core.logging import get_logger
 from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
 from core.telegram_sender import invalidate_connection_cache, validate_bot_credentials
 from domains.connections import repo as connections_repo
-from domains.connections.repo import DatabaseUnavailableError
+from domains.connections.repo import DatabaseUnavailableError, DatabaseOperationError
 
 logger = get_logger(__name__)
 
@@ -67,6 +67,9 @@ def handle_connections_list(handler):
         
     except DatabaseUnavailableError:
         _send_json(handler, 503, {'error': 'Database not available'})
+    except DatabaseOperationError as e:
+        logger.exception(f"Database error listing connections: {e}")
+        _send_json(handler, 500, {'error': 'Database operation failed'})
     except Exception as e:
         logger.exception(f"Error listing connections: {e}")
         _send_json(handler, 500, {'error': str(e)})
@@ -259,6 +262,9 @@ def handle_connection_delete(handler, bot_role: str):
         
     except DatabaseUnavailableError:
         _send_json(handler, 503, {'error': 'Database not available'})
+    except DatabaseOperationError as e:
+        logger.exception(f"Database error deleting connection: {e}")
+        _send_json(handler, 500, {'error': 'Database operation failed'})
     except Exception as e:
         logger.exception(f"Error deleting connection: {e}")
         _send_json(handler, 500, {'error': str(e)})
