@@ -3623,13 +3623,14 @@ def get_last_recap_date(recap_type, tenant_id):
         return None
 
 
-def set_last_recap_date(recap_type, value):
+def set_last_recap_date(recap_type, value, tenant_id='entrylab'):
     """
     Set the last date a recap was posted (persisted to survive restarts).
     
     Args:
         recap_type: 'daily' or 'weekly'
         value: Date string or week number
+        tenant_id: Tenant ID for multi-tenant support
     
     Returns:
         bool: Success
@@ -3644,12 +3645,12 @@ def set_last_recap_date(recap_type, value):
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO forex_config (tenant_id, setting_key, setting_value, updated_at)
-                VALUES ('entrylab', %s, %s, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (tenant_id, setting_key) 
                 DO UPDATE SET 
                     setting_value = EXCLUDED.setting_value,
                     updated_at = CURRENT_TIMESTAMP
-            """, (key, str(value)))
+            """, (tenant_id, key, str(value)))
             conn.commit()
             return True
     except Exception as e:

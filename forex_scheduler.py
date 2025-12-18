@@ -137,7 +137,7 @@ class ForexSchedulerRunner:
                 if last_posted != current_date_str:
                     logger.info("Generating daily recap...")
                     
-                    ai_recap = generate_daily_recap()
+                    ai_recap = generate_daily_recap(tenant_id=self.tenant_id)
                     bot = self.runtime.get_telegram_bot()
                     await bot.post_daily_recap(ai_recap)
                     
@@ -163,7 +163,7 @@ class ForexSchedulerRunner:
                 if last_posted != week_number:
                     logger.info("Generating weekly recap...")
                     
-                    ai_recap = generate_weekly_recap()
+                    ai_recap = generate_weekly_recap(tenant_id=self.tenant_id)
                     bot = self.runtime.get_telegram_bot()
                     await bot.post_weekly_recap(ai_recap)
                     

@@ -184,9 +184,9 @@ class TenantRuntime:
         """Get last recap date for this tenant."""
         return self.db.get_last_recap_date(recap_type=recap_type, tenant_id=self.tenant_id)
     
-    def set_last_recap_date(self, recap_type: str):
+    def set_last_recap_date(self, recap_type: str, value: str):
         """Set last recap date for this tenant."""
-        return self.db.set_last_recap_date(recap_type=recap_type, tenant_id=self.tenant_id)
+        return self.db.set_last_recap_date(recap_type=recap_type, value=value, tenant_id=self.tenant_id)
     
     def reload_config(self):
         """Reload configuration for signal engine."""

@@ -199,15 +199,18 @@ TP HIT:
 
 Another profitable trade! 🎊"""
 
-def generate_daily_recap():
+def generate_daily_recap(tenant_id='entrylab'):
     """
     Generate AI recap of today's trading signals
+    
+    Args:
+        tenant_id: Tenant ID for multi-tenant support
     
     Returns:
         str: AI-generated daily recap with signal list
     """
     try:
-        signals_today = get_forex_signals_by_period(period='today')
+        signals_today = get_forex_signals_by_period(tenant_id=tenant_id, period='today')
         
         if not signals_today or len(signals_today) == 0:
             return None
@@ -231,7 +234,7 @@ def generate_daily_recap():
         
         signal_list = "\n".join(signal_summaries)
         
-        stats = get_forex_stats_by_period(period='today') or {}
+        stats = get_forex_stats_by_period(tenant_id=tenant_id, period='today') or {}
         total_pips = stats.get('total_pips', 0)
         won_signals = stats.get('won_signals', 0)
         total_signals = stats.get('total_signals', 0)
@@ -323,15 +326,18 @@ Generate the morning message:"""
         logger.exception("Error generating morning summary")
         return "Stay sharp out there."
 
-def generate_weekly_recap():
+def generate_weekly_recap(tenant_id='entrylab'):
     """
     Generate AI recap of this week's trading performance
+    
+    Args:
+        tenant_id: Tenant ID for multi-tenant support
     
     Returns:
         str: AI-generated weekly recap with insights
     """
     try:
-        stats = get_forex_stats_by_period(period='week')
+        stats = get_forex_stats_by_period(tenant_id=tenant_id, period='week')
         
         if not stats or stats.get('total_signals', 0) == 0:
             return None
