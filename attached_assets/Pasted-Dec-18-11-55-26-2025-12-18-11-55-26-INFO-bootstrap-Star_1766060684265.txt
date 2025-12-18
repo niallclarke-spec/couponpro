@@ -1,0 +1,258 @@
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [bootstrap] Starting application...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking if bot_usage.error_type column exists...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] error_type column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking if bot_usage.device_type column exists...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] device_type column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking if bot_users user profile columns exist...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] username column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] first_name column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] last_name column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals table for new signal bot columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] bot_type column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] telegram_message_id column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] breakeven_set column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] breakeven_price column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] guidance_count column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] last_guidance_at column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] indicators_used column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] notes column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for indicator re-validation columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] original_indicators_json column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for guidance zone columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] last_progress_zone column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] last_caution_zone column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking telegram_subscriptions for conversion tracking columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] free_signup_at column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] is_converted column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] converted_at column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] conversion_days column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] UTM columns already exist, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking for tenants table...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenants table ready, 'entrylab' tenant seeded
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_users table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_integrations table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] onboarding_state table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_stripe_settings table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_stripe_products table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_stripe_prices table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] telegram_webhook_secrets table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_bot_connections table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] channel_id already exists on tenant_bot_connections, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] No signal_bot rows needed legacy channel_id migration (already migrated or no data)
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on forex_signals, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on forex_config, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on telegram_subscriptions, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on recent_phrases, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on campaigns, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on bot_usage, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on bot_users, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on broadcast_jobs, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_id already exists on bot_config, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking processed_webhook_events migration...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] processed_webhook_events swap already done or skipped
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for multi-TP columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for milestone tracking columns...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for close_price column...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] close_price column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_signals for effective_sl column...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] effective_sl column already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking bot_users unique constraint (tenant_id, chat_id)...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] uq_bot_users_tenant_chat already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking forex_config unique constraint (tenant_id, setting_key)...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] uq_forex_config_tenant_key already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking bot_config unique constraint (tenant_id, setting_key)...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] uq_bot_config_tenant_key already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking telegram_subscriptions unique constraint (tenant_id, email)...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] uq_telegram_subscriptions_tenant_email already exists, skipping
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking for clerk_users table...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] clerk_users table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Checking for journeys tables...
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] journeys table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] journey_triggers table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] journey_steps table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] journey_user_sessions table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] journey_scheduled_messages table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] tenant_crosspromo_settings table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] crosspromo_jobs table ready
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Database schema initialized
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Forex config initialized with defaults
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [db] Bot config initialized with defaults
+Dec 18 11:55:26  [2025-12-18 11:55:26] [INFO] [bootstrap] Database schema initialized
+Dec 18 11:55:27  [2025-12-18 11:55:27] [INFO] [bootstrap] Initializing coupon bot webhook...
+Dec 18 11:55:28  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Dec 18 11:55:28  [TELEGRAM] Webhook bot initialized and ready
+Dec 18 11:55:28  [2025-12-18 11:55:28] [INFO] [bootstrap] Coupon bot webhook started
+Dec 18 11:55:28  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 18 11:55:28  [2025-12-18 11:55:28] [INFO] [bootstrap] Forex bot webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [leader] Leader lock using DB_HOST/DB_* vars
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [leader] Database connection established
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [bootstrap] Leader lock not acquired, waiting for leader to terminate
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [leader] Started leader retry loop (every 10s)
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [clerk_auth] [JWKS] Dynamic issuer mode ENABLED (no allowlist - accepting any issuer)
+Dec 18 11:55:32  [2025-12-18 11:55:32] [WARNING] [clerk_auth] [JWKS] Consider setting CLERK_ALLOWED_ISSUERS for production security
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [clerk_auth] [JWKS] JWKS URL will be derived from each token's issuer claim
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [bootstrap] Clerk JWKS prefetch complete
+Dec 18 11:55:32  [STRIPE] Using LIVE (no test keys found) mode
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [bootstrap] Stripe client initialized
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [scheduler] [JOURNEY-SCHEDULER] Started (interval=30s)
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [scheduler] [JOURNEY-SCHEDULER] Background thread started
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [bootstrap] Journey scheduler started
+Dec 18 11:55:32  [2025-12-18 11:55:32] [INFO] [bootstrap] Application started
+Dec 18 11:55:32  Server running at http://0.0.0.0:8080/
+Dec 18 11:55:42  [2025-12-18 11:55:42] [INFO] [leader] Retrying leader lock acquisition...
+Dec 18 11:55:42  [2025-12-18 11:55:42] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 18 11:55:52  [2025-12-18 11:55:52] [INFO] [leader] Retrying leader lock acquisition...
+Dec 18 11:55:52  [2025-12-18 11:55:52] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [leader] Retrying leader lock acquisition...
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [leader] Leader lock acquired on retry
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [bootstrap] Forex scheduler started in background thread
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] Starting forex scheduler for tenant: entrylab
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded strategy: Aggressive (aggressive)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded strategy: Aggressive (aggressive)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] Loaded strategy: Aggressive (aggressive)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ============================================================
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 🚀 FOREX SIGNALS SCHEDULER STARTED
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler]    Tenant: entrylab
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ============================================================
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 📊 Signal checks: 15min timeframe every 15 minutes
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 1 minute
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 💡 Signal guidance: Every 1 minute (with 10min cooldown)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_scheduler] ============================================================
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [forex_signals] [tenant:entrylab] [req:8624ad9e] Using strategy: Aggressive (aggressive)
+Dec 18 11:56:02  [2025-12-18 11:56:02] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] Checking for signals on XAU/USD 15min...
+Dec 18 11:56:04  [2025-12-18 11:56:04] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] Price: 4326.23, RSI: 44.17, MACD: -1.7546, ADX: 17.44
+Dec 18 11:56:04  [2025-12-18 11:56:04] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] No signal - RSI=44.17 (thresholds: 40/60)
+Dec 18 11:56:04  [2025-12-18 11:56:04] [INFO] [generator] [tenant:entrylab] [req:8624ad9e] 📊 Checking 1-hour timeframe...
+Dec 18 11:56:04  [2025-12-18 11:56:04] [INFO] [forex_signals] [tenant:entrylab] [req:8624ad9e] Using strategy: Aggressive (aggressive)
+Dec 18 11:56:04  [2025-12-18 11:56:04] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] Checking for signals on XAU/USD 1h...
+Dec 18 11:56:06  [2025-12-18 11:56:06] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] Price: 4326.23, RSI: 47.05, MACD: 0.5320, ADX: 17.26
+Dec 18 11:56:06  [2025-12-18 11:56:06] [INFO] [aggressive] [tenant:entrylab] [req:8624ad9e] No signal - RSI=47.05 (thresholds: 40/60)
+Dec 18 12:11:06  [2025-12-18 12:11:06] [INFO] [forex_signals] [tenant:entrylab] [req:e473a4ea] Using strategy: Aggressive (aggressive)
+Dec 18 12:11:06  [2025-12-18 12:11:06] [INFO] [aggressive] [tenant:entrylab] [req:e473a4ea] Checking for signals on XAU/USD 15min...
+Dec 18 12:11:08  [2025-12-18 12:11:08] [INFO] [aggressive] [tenant:entrylab] [req:e473a4ea] Price: 4323.94, RSI: 39.28, MACD: -1.8671, ADX: 18.13
+Dec 18 12:11:08  [2025-12-18 12:11:08] [INFO] [aggressive] [tenant:entrylab] [req:e473a4ea] No signal - RSI=39.28 (thresholds: 40/60)
+Dec 18 12:18:52  [2025-12-18 12:18:52] [INFO] [clerk_auth] [req:232ae078] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Dec 18 12:18:52  [2025-12-18 12:18:52] [INFO] [clerk_auth] [req:232ae078] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Dec 18 12:18:52  [2025-12-18 12:18:52] [INFO] [clerk_auth] [req:232ae078] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:232ae078] Token expired
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:232ae078] Auth failure: reason=token_expired path=/api/forex-signals?limit=100 host=admin.promostack.io source=bearer
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:232ae078] Token expired
+Dec 18 12:18:52  10.244.5.120 - - [18/Dec/2025 12:18:52] "GET /api/forex-signals?limit=100 HTTP/1.1" 401 -
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:e718b6f7] Token expired
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:e718b6f7] Auth failure: reason=token_expired path=/api/forex-signals?limit=100 host=admin.promostack.io source=bearer
+Dec 18 12:18:52  [2025-12-18 12:18:52] [WARNING] [clerk_auth] [req:e718b6f7] Token expired
+Dec 18 12:18:52  10.244.5.120 - - [18/Dec/2025 12:18:52] "GET /api/forex-signals?limit=100 HTTP/1.1" 401 -
+Dec 18 12:18:55  [2025-12-18 12:18:55] [WARNING] [clerk_auth] [req:b8d4cbd7] Token expired
+Dec 18 12:18:55  [2025-12-18 12:18:55] [WARNING] [clerk_auth] [req:b8d4cbd7] Auth failure: reason=token_expired path=/admin host=admin.promostack.io source=cookie
+Dec 18 12:18:55  10.244.7.234 - - [18/Dec/2025 12:18:55] "GET /admin HTTP/1.1" 302 -
+Dec 18 12:18:55  10.244.7.234 - - [18/Dec/2025 12:18:55] "GET /login HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.4.179 - - [18/Dec/2025 12:18:56] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.4.179 - - [18/Dec/2025 12:18:56] "GET /api/config HTTP/1.1" 200 -
+Dec 18 12:18:56  [2025-12-18 12:18:56] [INFO] [set_auth_cookie] [req:ebbb4e54] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Dec 18 12:18:56  10.244.6.25 - - [18/Dec/2025 12:18:56] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Dec 18 12:18:56  [2025-12-18 12:18:56] [INFO] [set_auth_cookie] [req:ebbb4e54] set-auth-cookie: SUCCESS - cookies set
+Dec 18 12:18:56  10.244.4.179 - - [18/Dec/2025 12:18:56] "GET /api/config HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.7.234 - - [18/Dec/2025 12:18:56] "GET /admin HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.6.25 - - [18/Dec/2025 12:18:56] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.4.179 - - [18/Dec/2025 12:18:56] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.6.25 - - [18/Dec/2025 12:18:56] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Dec 18 12:18:56  10.244.4.179 - - [18/Dec/2025 12:18:56] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Dec 18 12:18:57  10.244.4.179 - - [18/Dec/2025 12:18:57] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Dec 18 12:18:57  [2025-12-18 12:18:57] [INFO] [db] [req:f7b53a44] get_all_telegram_subscriptions: found 12 rows
+Dec 18 12:18:57  10.244.7.234 - - [18/Dec/2025 12:18:57] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Dec 18 12:18:57  [2025-12-18 12:18:57] [INFO] [db] [req:23788546] get_all_telegram_subscriptions: found 12 rows
+Dec 18 12:18:57  [2025-12-18 12:18:57] [INFO] [handlers] [req:23788546] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Dec 18 12:18:57  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Dec 18 12:18:57  [Stripe] Fetching all paid invoices...
+Dec 18 12:18:57  [2025-12-18 12:18:57] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Dec 18 12:18:58  [Stripe] Total revenue from 12 VIP invoices: $88.14000000000001
+Dec 18 12:18:58  [Stripe] Found 0 subscription IDs from invoices
+Dec 18 12:18:58  [Stripe] Also fetching active subscriptions directly from Stripe...
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Dec 18 12:18:58  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Dec 18 12:18:58  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Dec 18 12:18:58  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Dec 18 12:18:58  [2025-12-18 12:18:58] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Dec 18 12:18:59  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Dec 18 12:18:59  [Stripe] Total subscription IDs to check: 4
+Dec 18 12:18:59  [Stripe] Checking 4 subscriptions for rebill (period: 2025-12-18 to 2027-12-31)...
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Dec 18 12:18:59  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Dec 18 12:18:59  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Dec 18 12:18:59  [Stripe] ✓ Rebill in period: $0.78 on 2025-12-24
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Dec 18 12:18:59  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Dec 18 12:18:59  [2025-12-18 12:18:59] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Dec 18 12:19:00  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Dec 18 12:19:00  [Stripe] ✓ Rebill in period: $39.0 on 2025-12-22
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Dec 18 12:19:00  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Dec 18 12:19:00  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Dec 18 12:19:00  [Stripe] ✓ Rebill in period: $0.78 on 2025-12-21
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Dec 18 12:19:00  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Dec 18 12:19:00  [2025-12-18 12:19:00] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Dec 18 12:19:01  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Dec 18 12:19:01  [Stripe] ✓ Rebill in period: $0.78 on 2025-12-24
+Dec 18 12:19:01  [Stripe] Active: 4, Rebill in period: $41.34
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [stripe] [req:23788546] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [stripe] [req:23788546] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Dec 18 12:19:01  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [handlers] [req:23788546] Stripe returned: revenue=$88.14, rebill=$41.34
+Dec 18 12:19:01  10.244.5.120 - - [18/Dec/2025 12:19:01] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [bot_credentials] [req:3eff39da] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Dec 18 12:19:01  [2025-12-18 12:19:01] [INFO] [telegram_sender] [req:3eff39da] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, channel=None
+Dec 18 12:19:01  [2025-12-18 12:19:01] [WARNING] [handlers] [req:3eff39da] [STATS] Channel not configured: tenant=entrylab, channel_type=vip, vip=None, free=-1003055722817
+Dec 18 12:19:01  10.244.5.120 - - [18/Dec/2025 12:19:01] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 400 -
+Dec 18 12:19:01  10.244.5.120 - - [18/Dec/2025 12:19:01] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 18 12:19:01  10.244.5.120 - - [18/Dec/2025 12:19:01] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Dec 18 12:19:01  10.244.4.179 - - [18/Dec/2025 12:19:01] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Dec 18 12:19:01  10.244.4.179 - - [18/Dec/2025 12:19:01] "GET /api/signal-bot/status HTTP/1.1" 200 -
