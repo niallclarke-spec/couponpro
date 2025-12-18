@@ -131,9 +131,37 @@ class SignalMonitor:
             logger.info(f"❌ Signal #{signal_id} closed at SL: {pips} pips")
         
         elif event == 'timeout':
-            # 4-hour timeout with pips calculated
-            await self.messenger.post_signal_expired(signal_id, pips, signal_type)
-            logger.info(f"✅ Posted timeout notification for signal #{signal_id} (status: {status})")
+            # 4-hour timeout with AI-generated message
+            current_price = update.get('exit_price', 0)
+            entry_price = update.get('entry_price', 0)
+            tp_price = update.get('tp_price', 0)
+            sl_price = update.get('sl_price', 0)
+            timeout_signal_type = update.get('signal_type', signal_type)
+            minutes_elapsed = update.get('minutes_elapsed', 240)
+            
+            try:
+                ai_message = generate_timeout_message(
+                    signal_id=signal_id,
+                    signal_type=timeout_signal_type,
+                    minutes_elapsed=minutes_elapsed,
+                    current_price=current_price,
+                    entry_price=entry_price,
+                    tp_price=tp_price,
+                    sl_price=sl_price
+                )
+                
+                await self.messenger.post_signal_timeout(
+                    signal_id=signal_id,
+                    message=ai_message,
+                    current_price=current_price,
+                    entry_price=entry_price
+                )
+                logger.info(f"✅ Posted AI timeout notification for signal #{signal_id} (status: {status})")
+            except Exception as e:
+                # Fallback to generic expired message if AI generation fails
+                logger.warning(f"⚠️ AI timeout message failed for signal #{signal_id}: {e}, using fallback")
+                await self.messenger.post_signal_expired(signal_id, pips, signal_type)
+                logger.info(f"✅ Posted fallback timeout notification for signal #{signal_id} (status: {status})")
         
         elif status == 'won' and not already_closed:
             # Fallback for won events without specific event type (shouldn't happen anymore)

@@ -328,6 +328,7 @@ class ForexSignalEngine:
                 if hours_elapsed >= 4:
                     pips = round((current_price - entry) * 100, 1) if is_buy else round((entry - current_price) * 100, 1)
                     final_status = 'won' if pips > 0 else 'expired'
+                    minutes_elapsed = hours_elapsed * 60
                     logger.info(f"⏱️  Signal #{signal_id} timed out after 4 hours - closing as {final_status} ({pips:+.1f} pips)")
                     # ATOMIC: Close signal in DB BEFORE emitting event
                     update_forex_signal_status(signal_id, final_status, self.tenant_id, result_pips=pips, close_price=current_price)
@@ -337,6 +338,11 @@ class ForexSignalEngine:
                         'status': final_status,
                         'pips': pips,
                         'exit_price': current_price,
+                        'entry_price': entry,
+                        'tp_price': tp1,
+                        'sl_price': original_sl,
+                        'signal_type': signal_type,
+                        'minutes_elapsed': minutes_elapsed,
                         'closed': True  # Signal already closed in DB
                     })
                     continue
