@@ -1,0 +1,69 @@
+Act as a senior (10+ years) Python backend engineer. Implement a new XAU/USD trading strategy module with explicit, testable rules and tenant isolation. No hacks, no global state.
+
+CONTEXT
+- This is a multi-tenant forex signals platform.
+- Each tenant has its own config + bot connections (tenant_id scoped).
+- The scheduler runs per-tenant and selects a strategy by key (e.g. "aggressive", etc.).
+- We need to add a new strategy that generates ~3–5 signals/day by using 15m entries with a 1h trend filter, plus multi-TP management.
+
+GOAL
+Create strategy key: "trend_pullback_multi_tp"
+Applies to XAU/USD, timeframes 15m + 1h.
+Outputs: entry_price, stop_loss, tp1, tp2, tp3, plus metadata on which mode triggered (pullback vs squeeze).
+
+INDICATORS
+- EMA(200) on 1h as trend filter
+- EMA(20) on 15m for pullback zone
+- RSI(14) on 15m for pullback confirmation
+- ADX(14) on 15m to avoid chop
+- ATR(14) on 15m for volatility stop sizing
+- Optional: Bollinger Bands(20,2) on 15m for squeeze breakout mode
+
+RULES
+Session Filter:
+- Only evaluate entries during 07:00–17:00 UTC (make this configurable).
+
+Mode A: Trend Pullback Entry
+LONG:
+- 1h: price > EMA200 AND EMA200 slope positive over last N bars (configurable)
+- 15m: ADX(14) >= adx_min (default 20)
+- 15m: pullback touches/near EMA20 (distance threshold configurable)
+- 15m: RSI dipped into [38..48] and then crosses back above 50
+- Trigger: close breaks above previous candle high OR bullish engulfing
+SHORT: mirrored logic.
+
+Mode B: Bollinger Squeeze Breakout (optional, can be enabled via config)
+- Detect squeeze when BB width in lowest percentile of last N bars (configurable).
+- Enter on close outside upper/lower band with ADX rising (or ADX >= adx_min).
+
+STOPS + TAKE PROFITS
+- Compute swing stop (lowest low/highest high over last swing_lookback bars, default 8)
+- Compute ATR stop = ATR(14) * atr_mult (default 1.2)
+- Choose SL distance = min(swing_stop_distance, atr_stop_distance) but enforce min_stop_usd (configurable)
+- Define R = abs(entry - SL)
+- TP1 = entry + 1.0R
+- TP2 = entry + 2.0R
+- TP3 = entry + 3.0R (or allow “trail_after_tp2” option)
+- When TP1 hit: move SL to breakeven + be_buffer (default 0.1R)
+- When TP2 hit: enable trailing stop (EMA20 trail OR Supertrend trail, configurable)
+
+IMPLEMENTATION REQUIREMENTS
+1) Add new strategy file under the existing strategies structure (no modifications that break existing strategies).
+2) Strategy must be deterministic and side-effect free: given candles/config → returns signal or None.
+3) All DB reads must be tenant-scoped; no cross-tenant shared caches beyond existing safe patterns.
+4) Add config defaults for new parameters (adx_min, atr_mult, swing_lookback, session window, etc.) using existing config system.
+5) Add unit tests for:
+   - trend filter logic
+   - pullback trigger
+   - ATR/swing SL selection
+   - TP calculations (1R/2R/3R)
+6) Add a minimal backtest runner script (offline) that can be pointed at stored candle data and prints:
+   - signals/day
+   - win rate by TP1/TP2/TP3 hit
+   - average R, max drawdown (approx)
+   - distribution of SL size in USD
+
+DELIVERABLES
+- Code PR implementing strategy + tests + backtest runner
+- Ensure it works for tenant_id="entrylab" and does not change other tenants.
+- Log only non-sensitive metadata (never log full tokens).

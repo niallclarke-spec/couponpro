@@ -197,6 +197,78 @@ class TwelveDataClient:
             print(f"Error fetching EMA for {symbol}: {e}")
             return None
     
+    def get_ema_series(self, symbol='XAU/USD', interval='1h', period=50, outputsize=10):
+        """
+        Get EMA series (multiple historical values)
+        
+        Returns:
+            list: List of EMA values [newest, ..., oldest] or None
+        """
+        try:
+            data = self._make_request('ema', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'series_type': 'close',
+                'outputsize': outputsize
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                return [float(v['ema']) for v in data['values']]
+            return None
+        except Exception as e:
+            print(f"Error fetching EMA series for {symbol}: {e}")
+            return None
+    
+    def get_rsi_series(self, symbol='XAU/USD', interval='15min', period=14, outputsize=5):
+        """
+        Get RSI series (multiple historical values)
+        
+        Returns:
+            list: List of RSI values [newest, ..., oldest] or None
+        """
+        try:
+            data = self._make_request('rsi', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'outputsize': outputsize
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                return [float(v['rsi']) for v in data['values']]
+            return None
+        except Exception as e:
+            print(f"Error fetching RSI series for {symbol}: {e}")
+            return None
+    
+    def get_bbands_series(self, symbol='XAU/USD', interval='15min', period=20, outputsize=20):
+        """
+        Get Bollinger Bands series (multiple historical values)
+        
+        Returns:
+            list: List of BB dicts [newest, ..., oldest] or None
+        """
+        try:
+            data = self._make_request('bbands', {
+                'symbol': symbol,
+                'interval': interval,
+                'time_period': period,
+                'series_type': 'close',
+                'outputsize': outputsize
+            })
+            
+            if 'values' in data and len(data['values']) > 0:
+                return [{
+                    'upper': float(v['upper_band']),
+                    'middle': float(v['middle_band']),
+                    'lower': float(v['lower_band'])
+                } for v in data['values']]
+            return None
+        except Exception as e:
+            print(f"Error fetching BB series for {symbol}: {e}")
+            return None
+    
     def get_adx(self, symbol='XAU/USD', interval='15min', period=14):
         """
         Get ADX (Average Directional Index) - measures trend strength

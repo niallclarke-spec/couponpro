@@ -23,10 +23,12 @@ def _load_strategies():
     from strategies.aggressive import AggressiveStrategy
     from strategies.conservative import ConservativeStrategy
     from strategies.raja_banks import RajaBanksStrategy
+    from strategies.trend_pullback_multi_tp import TrendPullbackStrategy
     
     register_strategy(AggressiveStrategy)
     register_strategy(ConservativeStrategy)
     register_strategy(RajaBanksStrategy)
+    register_strategy(TrendPullbackStrategy)
 
 
 _load_strategies()
