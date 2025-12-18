@@ -52,7 +52,7 @@ class SignalBotScheduler:
         
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials(tenant_id or 'entrylab', 'signal')
+            creds = get_bot_credentials(tenant_id or 'entrylab', 'signal_bot')
             self.channel_id = creds['channel_id']
             token = creds['bot_token']
             if token:

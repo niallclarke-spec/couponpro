@@ -900,7 +900,7 @@ async def create_private_channel_invite_link(channel_id):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -946,7 +946,7 @@ async def kick_user_from_channel(channel_id, user_id):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -996,7 +996,7 @@ async def check_user_in_channel(channel_id, user_id):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -1083,7 +1083,7 @@ async def send_message_to_user(user_id, message, parse_mode='Markdown'):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             bot_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -1144,7 +1144,7 @@ async def handle_chat_member_update(update: Update, context: ContextTypes.DEFAUL
         
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_channel_id = creds['channel_id']
         except BotNotConfiguredError:
             return
@@ -1227,7 +1227,7 @@ async def start_join_tracking():
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_bot_token = creds['bot_token']
             forex_channel_id = creds['channel_id']
         except BotNotConfiguredError as e:
@@ -1344,7 +1344,7 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal')
+            creds = get_bot_credentials('entrylab', 'signal_bot')
             forex_channel_id = creds['channel_id']
         except BotNotConfiguredError as e:
             return {'success': False, 'error': f'Forex bot not configured: {e}'}

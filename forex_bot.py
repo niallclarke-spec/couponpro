@@ -23,7 +23,7 @@ class ForexTelegramBot:
         self._configured = False
         
         try:
-            creds = get_bot_credentials(self.tenant_id, 'signal')
+            creds = get_bot_credentials(self.tenant_id, 'signal_bot')
             self.token = creds['bot_token']
             self.channel_id = creds['channel_id']
             
@@ -58,7 +58,7 @@ class ForexTelegramBot:
         old_configured = self._configured
         
         try:
-            creds = get_bot_credentials(self.tenant_id, 'signal')
+            creds = get_bot_credentials(self.tenant_id, 'signal_bot')
             new_token = creds.get('bot_token')
             new_channel = creds.get('channel_id')
             
