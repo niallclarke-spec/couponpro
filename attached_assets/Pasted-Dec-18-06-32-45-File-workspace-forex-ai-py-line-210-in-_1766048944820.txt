@@ -1,0 +1,124 @@
+Dec 18 06:32:45    File "/workspace/forex_ai.py", line 210, in generate_daily_recap
+Dec 18 06:32:45      signals_today = get_forex_signals_by_period(period='today')
+Dec 18 06:32:45                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dec 18 06:32:45  TypeError: get_forex_signals_by_period() missing 1 required positional argument: 'tenant_id'
+Dec 18 06:32:45  [2025-12-18 06:32:45] [ERROR] [forex_scheduler] ❌ Error posting daily recap: set_last_recap_date() got an unexpected keyword argument 'tenant_id'
+Dec 18 06:33:45  [2025-12-18 06:33:45] [INFO] [forex_scheduler] Generating daily recap...
+Dec 18 06:33:45  [2025-12-18 06:33:45] [ERROR] [forex_ai] Error generating daily recap
+Dec 18 06:33:45  Traceback (most recent call last):
+Dec 18 06:33:45    File "/workspace/forex_ai.py", line 210, in generate_daily_recap
+Dec 18 06:33:45      signals_today = get_forex_signals_by_period(period='today')
+Dec 18 06:33:45                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dec 18 06:33:45  TypeError: get_forex_signals_by_period() missing 1 required positional argument: 'tenant_id'
+Dec 18 06:33:45  [2025-12-18 06:33:45] [ERROR] [forex_scheduler] ❌ Error posting daily recap: set_last_recap_date() got an unexpected keyword argument 'tenant_id'
+Dec 18 06:34:45  [2025-12-18 06:34:45] [INFO] [forex_scheduler] Generating daily recap...
+Dec 18 06:34:45  [2025-12-18 06:34:45] [ERROR] [forex_ai] Error generating daily recap
+Dec 18 06:34:45  Traceback (most recent call last):
+Dec 18 06:34:45    File "/workspace/forex_ai.py", line 210, in generate_daily_recap
+Dec 18 06:34:45      signals_today = get_forex_signals_by_period(period='today')
+Dec 18 06:34:45                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dec 18 06:34:45  TypeError: get_forex_signals_by_period() missing 1 required positional argument: 'tenant_id'
+Dec 18 06:34:45  [2025-12-18 06:34:45] [ERROR] [forex_scheduler] ❌ Error posting daily recap: set_last_recap_date() got an unexpected keyword argument 'tenant_id'
+Dec 18 06:36:45  [2025-12-18 06:36:45] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 06:36:45  [2025-12-18 06:36:45] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 06:41:45  [2025-12-18 06:41:45] [INFO] [generator] [tenant:entrylab] [req:44437225] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 06:41:45  [2025-12-18 06:41:45] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 06:41:45  [2025-12-18 06:41:45] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 06:46:45  [2025-12-18 06:46:45] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 06:46:45  [2025-12-18 06:46:45] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 06:51:46  [2025-12-18 06:51:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 06:51:46  [2025-12-18 06:51:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 06:56:46  [2025-12-18 06:56:46] [INFO] [generator] [tenant:entrylab] [req:fea2c907] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 06:56:46  [2025-12-18 06:56:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 06:56:46  [2025-12-18 06:56:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:01:46  [2025-12-18 07:01:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:01:46  [2025-12-18 07:01:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:06:46  [2025-12-18 07:06:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:06:46  [2025-12-18 07:06:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:11:46  [2025-12-18 07:11:46] [INFO] [generator] [tenant:entrylab] [req:962bad59] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 07:11:46  [2025-12-18 07:11:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:11:46  [2025-12-18 07:11:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:16:46  [2025-12-18 07:16:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:16:46  [2025-12-18 07:16:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:21:46  [2025-12-18 07:21:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:21:46  [2025-12-18 07:21:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:26:46  [2025-12-18 07:26:46] [INFO] [generator] [tenant:entrylab] [req:9cd57b92] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 07:26:46  [2025-12-18 07:26:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:26:46  [2025-12-18 07:26:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:31:46  [2025-12-18 07:31:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:31:46  [2025-12-18 07:31:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:36:46  [2025-12-18 07:36:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:36:46  [2025-12-18 07:36:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:41:46  [2025-12-18 07:41:46] [INFO] [generator] [tenant:entrylab] [req:2f45e484] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 07:41:46  [2025-12-18 07:41:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:41:46  [2025-12-18 07:41:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:46:46  [2025-12-18 07:46:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:46:46  [2025-12-18 07:46:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:51:46  [2025-12-18 07:51:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:51:46  [2025-12-18 07:51:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 07:56:46  [2025-12-18 07:56:46] [INFO] [generator] [tenant:entrylab] [req:1670a13a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Dec 18 07:56:46  [2025-12-18 07:56:46] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 07:56:46  [2025-12-18 07:56:46] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:01:47  [2025-12-18 08:01:47] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:01:47  [2025-12-18 08:01:47] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:06:47  [2025-12-18 08:06:47] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:06:47  [2025-12-18 08:06:47] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:11:47  [2025-12-18 08:11:47] [INFO] [forex_signals] [tenant:entrylab] [req:bb3e4e47] Using strategy: Aggressive (aggressive)
+Dec 18 08:11:47  [2025-12-18 08:11:47] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] Checking for signals on XAU/USD 15min...
+Dec 18 08:11:49  [2025-12-18 08:11:49] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] Price: 4329.84, RSI: 42.60, MACD: -0.5632, ADX: 9.89
+Dec 18 08:11:49  [2025-12-18 08:11:49] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] Weak trend - ADX 9.89 < 15
+Dec 18 08:11:49  [2025-12-18 08:11:49] [INFO] [generator] [tenant:entrylab] [req:bb3e4e47] 📊 Checking 1-hour timeframe...
+Dec 18 08:11:49  [2025-12-18 08:11:49] [INFO] [forex_signals] [tenant:entrylab] [req:bb3e4e47] Using strategy: Aggressive (aggressive)
+Dec 18 08:11:49  [2025-12-18 08:11:49] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] Checking for signals on XAU/USD 1h...
+Dec 18 08:11:51  [2025-12-18 08:11:51] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] Price: 4329.84, RSI: 49.71, MACD: 2.6728, ADX: 21.36
+Dec 18 08:11:51  [2025-12-18 08:11:51] [INFO] [aggressive] [tenant:entrylab] [req:bb3e4e47] No signal - RSI=49.71 (thresholds: 40/60)
+Dec 18 08:11:51  [2025-12-18 08:11:51] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:11:51  [2025-12-18 08:11:51] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:16:51  [2025-12-18 08:16:51] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:16:51  [2025-12-18 08:16:51] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:21:51  [2025-12-18 08:21:51] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:21:51  [2025-12-18 08:21:51] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:26:51  [2025-12-18 08:26:51] [INFO] [forex_signals] [tenant:entrylab] [req:c0331977] Using strategy: Aggressive (aggressive)
+Dec 18 08:26:51  [2025-12-18 08:26:51] [INFO] [aggressive] [tenant:entrylab] [req:c0331977] Checking for signals on XAU/USD 15min...
+Dec 18 08:26:54  [2025-12-18 08:26:54] [INFO] [aggressive] [tenant:entrylab] [req:c0331977] Price: 4328.60, RSI: 40.68, MACD: -0.9232, ADX: 11.16
+Dec 18 08:26:54  [2025-12-18 08:26:54] [INFO] [aggressive] [tenant:entrylab] [req:c0331977] Weak trend - ADX 11.16 < 15
+Dec 18 08:26:54  [2025-12-18 08:26:54] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:26:54  [2025-12-18 08:26:54] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:31:54  [2025-12-18 08:31:54] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:31:54  [2025-12-18 08:31:54] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:36:54  [2025-12-18 08:36:54] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:36:54  [2025-12-18 08:36:54] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:41:54  [2025-12-18 08:41:54] [INFO] [forex_signals] [tenant:entrylab] [req:ac8da161] Using strategy: Aggressive (aggressive)
+Dec 18 08:41:54  [2025-12-18 08:41:54] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] Checking for signals on XAU/USD 15min...
+Dec 18 08:41:56  [2025-12-18 08:41:56] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] Price: 4327.88, RSI: 40.36, MACD: -1.2963, ADX: 12.47
+Dec 18 08:41:56  [2025-12-18 08:41:56] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] Weak trend - ADX 12.47 < 15
+Dec 18 08:41:56  [2025-12-18 08:41:56] [INFO] [generator] [tenant:entrylab] [req:ac8da161] 📊 Checking 1-hour timeframe...
+Dec 18 08:41:56  [2025-12-18 08:41:56] [INFO] [forex_signals] [tenant:entrylab] [req:ac8da161] Using strategy: Aggressive (aggressive)
+Dec 18 08:41:56  [2025-12-18 08:41:56] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] Checking for signals on XAU/USD 1h...
+Dec 18 08:41:58  [2025-12-18 08:41:58] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] Price: 4327.88, RSI: 47.86, MACD: 2.5161, ADX: 21.27
+Dec 18 08:41:58  [2025-12-18 08:41:58] [INFO] [aggressive] [tenant:entrylab] [req:ac8da161] No signal - RSI=47.86 (thresholds: 40/60)
+Dec 18 08:41:58  [2025-12-18 08:41:58] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:41:58  [2025-12-18 08:41:58] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:43:42  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Dec 18 08:43:42  [WEBHOOK-ENDPOINT] Received 375 bytes
+Dec 18 08:43:42  [WEBHOOK-ENDPOINT] Processing update_id: 325865791
+Dec 18 08:43:42  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Dec 18 08:43:42  [WEBHOOK] Received update_id: 325865791
+Dec 18 08:43:42  [WEBHOOK] Processing: type=Message, text=/start
+Dec 18 08:43:42  [WEBHOOK] ✅ Update processed successfully
+Dec 18 08:43:42  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325865791 in 0.07s, result: {'status': 'ok'}
+Dec 18 08:43:42  10.244.5.120 - - [18/Dec/2025 08:43:42] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Dec 18 08:46:58  [2025-12-18 08:46:58] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:46:58  [2025-12-18 08:46:58] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:51:58  [2025-12-18 08:51:58] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:51:58  [2025-12-18 08:51:58] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 08:56:58  [2025-12-18 08:56:58] [INFO] [forex_signals] [tenant:entrylab] [req:ed3061da] Using strategy: Aggressive (aggressive)
+Dec 18 08:56:58  [2025-12-18 08:56:58] [INFO] [aggressive] [tenant:entrylab] [req:ed3061da] Checking for signals on XAU/USD 15min...
+Dec 18 08:57:00  [2025-12-18 08:57:00] [INFO] [aggressive] [tenant:entrylab] [req:ed3061da] Price: 4326.40, RSI: 37.83, MACD: -1.6144, ADX: 13.21
+Dec 18 08:57:00  [2025-12-18 08:57:00] [INFO] [aggressive] [tenant:entrylab] [req:ed3061da] Weak trend - ADX 13.21 < 15
+Dec 18 08:57:00  [2025-12-18 08:57:00] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 08:57:00  [2025-12-18 08:57:00] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 09:02:00  [2025-12-18 09:02:00] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 09:02:00  [2025-12-18 09:02:00] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
+Dec 18 09:07:00  [2025-12-18 09:07:00] [WARNING] [bot_credentials] Legacy bot_role 'signal' used, mapped to 'signal_bot'. Please update to use canonical role names.
+Dec 18 09:07:00  [2025-12-18 09:07:00] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal, bot_username=@entrylab_bot
