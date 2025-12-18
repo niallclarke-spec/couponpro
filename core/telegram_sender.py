@@ -149,11 +149,18 @@ def _resolve_bot_connection(tenant_id: str, bot_role: str, force_refresh: bool =
     
     _connection_cache.set(connection)
     
-    logger.info(
-        f"Connection resolved: tenant={tenant_id}, role={bot_role}, "
-        f"bot={connection.bot_username}, token={connection.mask_token()}, "
-        f"channel={connection.channel_id}"
-    )
+    if bot_role == 'signal_bot':
+        logger.info(
+            f"Connection resolved: tenant={tenant_id}, role={bot_role}, "
+            f"bot={connection.bot_username}, token={connection.mask_token()}, "
+            f"vip_channel={connection.vip_channel_id}, free_channel={connection.free_channel_id}"
+        )
+    else:
+        logger.info(
+            f"Connection resolved: tenant={tenant_id}, role={bot_role}, "
+            f"bot={connection.bot_username}, token={connection.mask_token()}, "
+            f"channel={connection.channel_id}"
+        )
     
     return connection
 

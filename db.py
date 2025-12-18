@@ -6957,7 +6957,7 @@ def get_all_bot_connections(tenant_id: str) -> list:
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
                        webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
-                       created_at, updated_at
+                       created_at, updated_at, vip_channel_id, free_channel_id
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
                 ORDER BY bot_role
@@ -6978,7 +6978,9 @@ def get_all_bot_connections(tenant_id: str) -> list:
                     'last_validated_at': row[8].isoformat() if row[8] else None,
                     'last_error': row[9],
                     'created_at': row[10].isoformat() if row[10] else None,
-                    'updated_at': row[11].isoformat() if row[11] else None
+                    'updated_at': row[11].isoformat() if row[11] else None,
+                    'vip_channel_id': row[12],
+                    'free_channel_id': row[13]
                 })
             return connections
     except Exception as e:

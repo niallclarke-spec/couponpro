@@ -166,6 +166,12 @@ def handle_connection_save(handler):
         _send_json(handler, 400, {'error': 'bot_token is required'})
         return
     
+    if bot_role == SIGNAL_BOT:
+        if not vip_channel_id or not free_channel_id:
+            _send_json(handler, 400, {'error': 'Signal Bot requires both VIP Channel ID and FREE Channel ID'})
+            return
+        logger.info(f"Signal Bot save request: vip={vip_channel_id}, free={free_channel_id}")
+    
     valid, bot_username, error = _validate_telegram_token(bot_token)
     if not valid:
         _send_json(handler, 400, {'error': f'Invalid bot token: {error}'})

@@ -4139,30 +4139,106 @@
 
         .connections-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
         }
 
         .connection-card {
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: 12px;
-            padding: 24px;
+            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .connection-card:hover {
+            border-color: var(--border-secondary);
+        }
+
+        .connection-card.connected {
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .connection-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
-            gap: 8px;
+            padding: 16px 20px;
+            cursor: pointer;
+            gap: 12px;
+            user-select: none;
+            transition: background 0.15s ease;
         }
 
-        .connection-header h3 { margin: 0; flex: 1; }
+        .connection-header:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .connection-header h3 { 
+            margin: 0; 
+            flex: 1; 
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .connection-header .bot-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 2px;
+        }
         
         .bot-icon {
-            font-size: 20px;
-            margin-right: 4px;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 8px;
+        }
+
+        .expand-chevron {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+            transition: transform 0.2s ease;
+        }
+
+        .connection-card.expanded .expand-chevron {
+            transform: rotate(180deg);
+        }
+
+        .connection-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .connection-card.expanded .connection-body {
+            max-height: 600px;
+        }
+
+        .connection-form {
+            padding: 0 20px 20px;
+        }
+
+        .connection-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .connection-badge.connected {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10B981;
+        }
+
+        .connection-badge.disconnected {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9CA3AF;
         }
         
         .channel-section {
@@ -4315,16 +4391,172 @@
 
         .connection-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-primary);
+            margin-top: 16px;
         }
 
         .connection-actions button {
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
             font-weight: 500;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-validate {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+        }
+
+        .connection-info-v2 {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 16px;
+        }
+
+        .webhook-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .webhook-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #10B981;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .btn-copy-webhook {
+            background: transparent;
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-copy-webhook:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 13px;
+            transition: border-color 0.15s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .token-input-wrapper {
+            position: relative;
+        }
+
+        .token-input-wrapper input {
+            padding-right: 40px;
+        }
+
+        .token-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+        }
+
+        .token-toggle:hover {
+            opacity: 1;
+        }
+
+        .channel-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 500px) {
+            .channel-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-primary);
+        }
+
+        .btn-danger-outline {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #EF4444;
+        }
+
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .connection-desc {
+            display: none;
         }
 
         .btn-validate {
@@ -5741,106 +5973,134 @@
                     
                     <div class="connections-grid">
                         <!-- Signal Bot Card -->
-                        <div class="connection-card" data-role="signal" data-has-token="false">
-                            <div class="connection-header">
-                                <span class="bot-icon">🤖</span>
-                                <h3>Signal Bot</h3>
-                                <span class="connection-badge" id="signal-status">Not configured ⚪</span>
+                        <div class="connection-card" data-role="signal" data-has-token="false" id="signal-card">
+                            <div class="connection-header" onclick="toggleConnectionCard('signal')">
+                                <span class="bot-icon">📡</span>
+                                <div style="flex: 1;">
+                                    <h3>Signal Bot</h3>
+                                    <div class="bot-subtitle" id="signal-subtitle">Forex signals & cross-promo</div>
+                                </div>
+                                <span class="connection-badge disconnected" id="signal-status">Not configured</span>
+                                <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
                             </div>
-                            <p class="connection-desc">Used for sending forex signals and cross-promo content to channels</p>
                             
-                            <div class="connection-form">
-                                <label>Bot Token</label>
-                                <div class="token-input-group">
-                                    <input type="password" id="signal-bot-token" placeholder="Enter bot token from @BotFather" />
-                                    <button class="btn-toggle-visibility" onclick="toggleTokenVisibility('signal')">
-                                        <span class="eye-icon">👁</span>
-                                    </button>
-                                </div>
-                                <div class="token-status" id="signal-token-status"></div>
-                                
-                                <div class="channel-section">
-                                    <div class="channel-group">
-                                        <label>VIP Channel ID <span style="color: var(--status-error);">*</span></label>
-                                        <input type="text" id="signal-vip-channel-id" placeholder="VIP/Paid channel (e.g., -1001234567890)" />
-                                        <div class="hint">Source channel for winning signals</div>
-                                    </div>
-                                    <div class="channel-group">
-                                        <label>FREE Channel ID <span style="color: var(--status-error);">*</span></label>
-                                        <input type="text" id="signal-free-channel-id" placeholder="FREE/Public channel (e.g., -1001234567890)" />
-                                        <div class="hint">Destination for cross-promo messages</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="connection-info" id="signal-info" style="display:none">
-                                    <div class="info-row"><span>Bot Username:</span> <strong id="signal-username">-</strong></div>
-                                    <div class="info-row"><span>VIP Channel:</span> <code id="signal-vip-channel-display">-</code></div>
-                                    <div class="info-row"><span>FREE Channel:</span> <code id="signal-free-channel-display">-</code></div>
-                                    <div class="info-row"><span>Webhook URL:</span> <code id="signal-webhook">-</code></div>
-                                    <div class="info-row"><span>Last Updated:</span> <span id="signal-updated">-</span></div>
-                                    
-                                    <div class="channel-test-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
-                                        <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Test Channel Access</label>
-                                        <div style="display: flex; gap: 8px; align-items: center;">
-                                            <select id="signal-channel-test-select" style="padding: 6px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 13px;">
-                                                <option value="vip">VIP Channel</option>
-                                                <option value="free">FREE Channel</option>
-                                            </select>
-                                            <button class="btn-validate" onclick="testChannelStats('signal')" style="margin: 0;">Test Stats</button>
-                                            <span id="signal-channel-test-result" style="font-size: 12px; color: var(--text-secondary);"></span>
+                            <div class="connection-body">
+                                <div class="connection-form">
+                                    <div class="form-group">
+                                        <label>Bot Token</label>
+                                        <div class="token-input-wrapper">
+                                            <input type="password" id="signal-bot-token" placeholder="Paste token from @BotFather" />
+                                            <button class="token-toggle" onclick="toggleTokenVisibility('signal')" type="button">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="connection-error" id="signal-error" style="display:none"></div>
-                                
-                                <div class="connection-actions">
-                                    <button class="btn-validate" onclick="validateConnection('signal')">Validate</button>
-                                    <button class="btn-validate" onclick="testConnection('signal')">Test Connection</button>
-                                    <button class="btn-save" onclick="saveConnection('signal')">Save & Setup Webhook</button>
-                                    <button class="btn-delete" onclick="deleteConnection('signal')" style="display:none" id="signal-delete">Remove</button>
+                                    <div class="token-status" id="signal-token-status"></div>
+                                    
+                                    <div class="channel-inputs">
+                                        <div class="form-group">
+                                            <label>VIP Channel ID *</label>
+                                            <input type="text" id="signal-vip-channel-id" placeholder="-100..." />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>FREE Channel ID *</label>
+                                            <input type="text" id="signal-free-channel-id" placeholder="-100..." />
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="connection-info-v2" id="signal-info" style="display:none">
+                                        <div class="webhook-row">
+                                            <span class="webhook-badge">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                                </svg>
+                                                Webhook configured
+                                            </span>
+                                            <button class="btn-copy-webhook" onclick="copyWebhook('signal')">Copy URL</button>
+                                        </div>
+                                        <input type="hidden" id="signal-webhook" value="" />
+                                        <input type="hidden" id="signal-username" value="" />
+                                        <input type="hidden" id="signal-vip-channel-display" value="" />
+                                        <input type="hidden" id="signal-free-channel-display" value="" />
+                                        <input type="hidden" id="signal-updated" value="" />
+                                    </div>
+                                    
+                                    <div class="connection-error" id="signal-error" style="display:none"></div>
+                                    
+                                    <div class="connection-actions">
+                                        <button class="btn-secondary" onclick="testConnection('signal')">Test</button>
+                                        <button class="btn-primary" onclick="saveConnection('signal')">Save</button>
+                                        <button class="btn-danger-outline" onclick="deleteConnection('signal')" style="display:none" id="signal-delete">Remove</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Message Bot Card -->
-                        <div class="connection-card" data-role="message" data-has-token="false">
-                            <div class="connection-header">
-                                <span class="bot-icon">🤖</span>
-                                <h3>Message Bot</h3>
-                                <span class="connection-badge" id="message-status">Not configured ⚪</span>
+                        <div class="connection-card" data-role="message" data-has-token="false" id="message-card">
+                            <div class="connection-header" onclick="toggleConnectionCard('message')">
+                                <span class="bot-icon">💬</span>
+                                <div style="flex: 1;">
+                                    <h3>Message Bot</h3>
+                                    <div class="bot-subtitle" id="message-subtitle">Journeys & user messaging</div>
+                                </div>
+                                <span class="connection-badge disconnected" id="message-status">Not configured</span>
+                                <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
                             </div>
-                            <p class="connection-desc">Used for Journeys and user messaging</p>
                             
-                            <div class="connection-form">
-                                <label>Bot Token</label>
-                                <div class="token-input-group">
-                                    <input type="password" id="message-bot-token" placeholder="Enter bot token from @BotFather" />
-                                    <button class="btn-toggle-visibility" onclick="toggleTokenVisibility('message')">
-                                        <span class="eye-icon">👁</span>
-                                    </button>
-                                </div>
-                                <div class="token-status" id="message-token-status"></div>
-                                
-                                <div class="channel-id-optional" id="message-channel-wrapper">
-                                    <label>Channel ID <span class="optional-label">(optional)</span></label>
-                                    <input type="text" id="message-channel-id" placeholder="Enter Telegram channel ID (optional)" />
-                                </div>
-                                
-                                <div class="connection-info" id="message-info" style="display:none">
-                                    <div class="info-row"><span>Bot Username:</span> <strong id="message-username">-</strong></div>
-                                    <div class="info-row"><span>Channel ID:</span> <code id="message-channel-id-display">-</code></div>
-                                    <div class="info-row"><span>Webhook URL:</span> <code id="message-webhook">-</code></div>
-                                    <div class="info-row"><span>Last Updated:</span> <span id="message-updated">-</span></div>
-                                </div>
-                                
-                                <div class="connection-error" id="message-error" style="display:none"></div>
-                                
-                                <div class="connection-actions">
-                                    <button class="btn-validate" onclick="validateConnection('message')">Validate</button>
-                                    <button class="btn-validate" onclick="testConnection('message')">Test Connection</button>
-                                    <button class="btn-save" onclick="saveConnection('message')">Save & Setup Webhook</button>
-                                    <button class="btn-delete" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
+                            <div class="connection-body">
+                                <div class="connection-form">
+                                    <div class="form-group">
+                                        <label>Bot Token</label>
+                                        <div class="token-input-wrapper">
+                                            <input type="password" id="message-bot-token" placeholder="Paste token from @BotFather" />
+                                            <button class="token-toggle" onclick="toggleTokenVisibility('message')" type="button">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="token-status" id="message-token-status"></div>
+                                    
+                                    <div class="form-group" id="message-channel-wrapper">
+                                        <label>Channel ID <span style="opacity: 0.5;">(optional)</span></label>
+                                        <input type="text" id="message-channel-id" placeholder="-100..." />
+                                    </div>
+                                    
+                                    <div class="connection-info-v2" id="message-info" style="display:none">
+                                        <div class="webhook-row">
+                                            <span class="webhook-badge">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                                </svg>
+                                                Webhook configured
+                                            </span>
+                                            <button class="btn-copy-webhook" onclick="copyWebhook('message')">Copy URL</button>
+                                        </div>
+                                        <input type="hidden" id="message-webhook" value="" />
+                                        <input type="hidden" id="message-username" value="" />
+                                        <input type="hidden" id="message-channel-id-display" value="" />
+                                        <input type="hidden" id="message-updated" value="" />
+                                    </div>
+                                    
+                                    <div class="connection-error" id="message-error" style="display:none"></div>
+                                    
+                                    <div class="connection-actions">
+                                        <button class="btn-secondary" onclick="testConnection('message')">Test</button>
+                                        <button class="btn-primary" onclick="saveConnection('message')">Save</button>
+                                        <button class="btn-danger-outline" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -8539,27 +8799,37 @@
                     
                     if (conn) {
                         card.dataset.hasToken = 'true';
+                        card.classList.add('connected');
                         tokenInput.value = '';
-                        tokenInput.placeholder = 'Token saved - enter new token to update';
+                        tokenInput.placeholder = 'Token saved - enter new to update';
                         
                         const username = conn.bot_username || '';
-                        const last4 = username.length > 4 ? username.slice(-4) : username;
-                        tokenStatusEl.textContent = `Token saved ✅ (••••${last4})`;
+                        tokenStatusEl.textContent = `Token saved (${username})`;
                         tokenStatusEl.classList.add('visible');
+                        
+                        const subtitleEl = document.getElementById(`${role}-subtitle`);
+                        if (subtitleEl && username) {
+                            subtitleEl.textContent = username;
+                        }
                         
                         if (conn.last_error) {
                             statusEl.textContent = 'Error ❌';
-                            statusEl.className = 'connection-badge error';
+                            statusEl.className = 'connection-badge disconnected';
                             document.getElementById(`${role}-error`).textContent = conn.last_error;
                             document.getElementById(`${role}-error`).style.display = 'block';
                         } else {
-                            statusEl.textContent = 'Connected ✅';
+                            statusEl.textContent = 'Connected ✓';
                             statusEl.className = 'connection-badge connected';
                         }
                         
-                        document.getElementById(`${role}-username`).textContent = conn.bot_username || '-';
-                        document.getElementById(`${role}-webhook`).textContent = conn.webhook_url || '-';
-                        document.getElementById(`${role}-updated`).textContent = conn.last_validated_at ? new Date(conn.last_validated_at).toLocaleString() : '-';
+                        const usernameEl = document.getElementById(`${role}-username`);
+                        const webhookEl = document.getElementById(`${role}-webhook`);
+                        const updatedEl = document.getElementById(`${role}-updated`);
+                        
+                        if (usernameEl) usernameEl.value = conn.bot_username || '';
+                        if (webhookEl) webhookEl.value = conn.webhook_url || '';
+                        if (updatedEl) updatedEl.value = conn.last_validated_at || '';
+                        
                         document.getElementById(`${role}-info`).style.display = 'block';
                         document.getElementById(`${role}-delete`).style.display = 'inline-block';
                         
@@ -8569,13 +8839,13 @@
                             const vipInput = document.getElementById('signal-vip-channel-id');
                             const freeInput = document.getElementById('signal-free-channel-id');
                             
-                            if (vipDisplay) vipDisplay.textContent = conn.vip_channel_id || '-';
-                            if (freeDisplay) freeDisplay.textContent = conn.free_channel_id || '-';
+                            if (vipDisplay) vipDisplay.value = conn.vip_channel_id || '';
+                            if (freeDisplay) freeDisplay.value = conn.free_channel_id || '';
                             if (vipInput && conn.vip_channel_id) vipInput.value = conn.vip_channel_id;
                             if (freeInput && conn.free_channel_id) freeInput.value = conn.free_channel_id;
                         } else {
                             const channelDisplay = document.getElementById(`${role}-channel-id-display`);
-                            if (channelDisplay) channelDisplay.textContent = conn.channel_id || '-';
+                            if (channelDisplay) channelDisplay.value = conn.channel_id || '';
                             if (conn.channel_id) {
                                 const channelInput = document.getElementById(`${role}-channel-id`);
                                 if (channelInput) channelInput.value = conn.channel_id;
@@ -8583,10 +8853,12 @@
                         }
                     } else {
                         card.dataset.hasToken = 'false';
-                        statusEl.textContent = 'Not configured ⚪';
-                        statusEl.className = 'connection-badge';
+                        card.classList.remove('connected');
+                        card.classList.add('expanded');
+                        statusEl.textContent = 'Not configured ○';
+                        statusEl.className = 'connection-badge disconnected';
                         tokenStatusEl.classList.remove('visible');
-                        tokenInput.placeholder = 'Enter bot token from @BotFather';
+                        tokenInput.placeholder = 'Paste token from @BotFather';
                         document.getElementById(`${role}-info`).style.display = 'none';
                         document.getElementById(`${role}-delete`).style.display = 'none';
                         document.getElementById(`${role}-error`).style.display = 'none';
@@ -8683,6 +8955,25 @@
         function toggleTokenVisibility(role) {
             const input = document.getElementById(`${role}-bot-token`);
             input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function toggleConnectionCard(role) {
+            const card = document.getElementById(`${role}-card`);
+            if (card) {
+                card.classList.toggle('expanded');
+            }
+        }
+
+        function copyWebhook(role) {
+            const webhookEl = document.getElementById(`${role}-webhook`);
+            const webhookUrl = webhookEl.value || webhookEl.textContent;
+            if (webhookUrl && webhookUrl !== '-') {
+                navigator.clipboard.writeText(webhookUrl).then(() => {
+                    showToast('Webhook URL copied!');
+                }).catch(() => {
+                    showToast('Failed to copy', 'error');
+                });
+            }
         }
 
         async function validateConnection(role) {
