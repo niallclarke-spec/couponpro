@@ -921,6 +921,21 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN free_channel_id VARCHAR(100)")
                     logger.info("free_channel_id added to tenant_bot_connections")
                 
+                # Migration: Copy legacy channel_id to vip_channel_id for signal_bot (one-time, idempotent)
+                # Only runs where vip_channel_id is NULL and channel_id has a value
+                cursor.execute("""
+                    UPDATE tenant_bot_connections
+                    SET vip_channel_id = channel_id
+                    WHERE bot_role = 'signal_bot'
+                      AND vip_channel_id IS NULL
+                      AND channel_id IS NOT NULL
+                """)
+                migrated_count = cursor.rowcount
+                if migrated_count > 0:
+                    logger.info(f"Migrated {migrated_count} signal_bot row(s): copied legacy channel_id to vip_channel_id")
+                else:
+                    logger.info("No signal_bot rows needed legacy channel_id migration (already migrated or no data)")
+                
                 # ============================================================
                 # Add tenant_id to existing tables
                 # ============================================================

@@ -5763,6 +5763,18 @@
                                     <div class="info-row"><span>FREE Channel:</span> <code id="signal-free-channel-display">-</code></div>
                                     <div class="info-row"><span>Webhook URL:</span> <code id="signal-webhook">-</code></div>
                                     <div class="info-row"><span>Last Updated:</span> <span id="signal-updated">-</span></div>
+                                    
+                                    <div class="channel-test-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                        <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Test Channel Access</label>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <select id="signal-channel-test-select" style="padding: 6px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 13px;">
+                                                <option value="vip">VIP Channel</option>
+                                                <option value="free">FREE Channel</option>
+                                            </select>
+                                            <button class="btn-validate" onclick="testChannelStats('signal')" style="margin: 0;">Test Stats</button>
+                                            <span id="signal-channel-test-result" style="font-size: 12px; color: var(--text-secondary);"></span>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="connection-error" id="signal-error" style="display:none"></div>
@@ -6982,7 +6994,8 @@
             };
             
             try {
-                const response = await authedFetch('/api/telegram-channel-stats');
+                // Default to VIP channel for dashboard stats (the paid channel is primary)
+                const response = await authedFetch('/api/telegram-channel-stats?channel=vip');
                 const data = await response.json();
                 
                 if (response.status === 401) {
@@ -6992,6 +7005,12 @@
                 
                 if (response.status === 403) {
                     setChannelDisplay('--', 'Access denied.');
+                    return;
+                }
+                
+                if (response.status === 400) {
+                    const msg = data.message || 'Channel not configured';
+                    setChannelDisplay('--', msg);
                     return;
                 }
                 
@@ -7009,7 +7028,11 @@
                 
                 if (data.success && data.member_count !== null && data.member_count !== undefined) {
                     const count = data.member_count.toLocaleString();
-                    setChannelDisplay(count, null, data.channel_id, data.bot_username);
+                    const channelLabel = data.channel_type === 'vip' ? 'VIP Channel' : 'FREE Channel';
+                    channelNameEl.textContent = channelLabel;
+                    channelNameEl.title = `Channel ID: ${data.channel_id}${data.bot_username ? `, Bot: ${data.bot_username}` : ''}`;
+                    countEl.textContent = count;
+                    memberCountEl.classList.remove('has-error');
                 } else {
                     setChannelDisplay('--', data.message || 'Unknown error');
                 }
@@ -8599,6 +8622,46 @@
             } catch (e) {
                 hideLoading();
                 showModalAlert('Error', 'Failed to test connection');
+            }
+        }
+        
+        async function testChannelStats(role) {
+            if (role !== 'signal') {
+                showModalAlert('Error', 'Channel stats only available for Signal Bot');
+                return;
+            }
+            
+            const card = document.querySelector(`.connection-card[data-role="${role}"]`);
+            const hasToken = card.dataset.hasToken === 'true';
+            
+            if (!hasToken) {
+                showModalAlert('Error', 'Please save the Signal Bot connection first');
+                return;
+            }
+            
+            const channelType = document.getElementById('signal-channel-test-select').value;
+            const resultEl = document.getElementById('signal-channel-test-result');
+            resultEl.textContent = 'Testing...';
+            resultEl.style.color = 'var(--text-secondary)';
+            
+            try {
+                const response = await authedFetch(`/api/telegram-channel-stats?channel=${channelType}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultEl.textContent = `✅ ${data.member_count.toLocaleString()} members`;
+                    resultEl.style.color = 'var(--status-success)';
+                } else if (response.status === 400) {
+                    resultEl.textContent = `⚠️ ${data.message || 'Channel not configured'}`;
+                    resultEl.style.color = 'var(--status-warning)';
+                } else {
+                    resultEl.textContent = `❌ ${data.message || 'Error'}`;
+                    resultEl.style.color = 'var(--status-error)';
+                }
+            } catch (e) {
+                console.error('Error testing channel stats:', e);
+                resultEl.textContent = '❌ Failed to test';
+                resultEl.style.color = 'var(--status-error)';
             }
         }
 

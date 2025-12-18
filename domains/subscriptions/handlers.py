@@ -700,43 +700,76 @@ def handle_telegram_revoke_access(handler):
 
 
 def handle_telegram_channel_stats(handler, tenant_id: str = None):
-    """GET /api/telegram-channel-stats
+    """GET /api/telegram-channel-stats?channel=vip|free
     
-    Returns channel stats using BotCredentialResolver for signal_bot.
+    Returns channel stats using the canonical signal bot connection resolver.
+    Uses vip_channel_id or free_channel_id from tenant_bot_connections - NEVER legacy channel_id.
+    
+    Query params:
+        channel: Required. 'vip' or 'free' - which channel to check stats for
     
     Returns:
-        200: Success with member_count, channel_id, bot_username
-        503: Bot not configured or channel_id missing
+        200: Success with member_count, channel_id, channel_type, bot_username
+        400: Missing/invalid channel param or channel not configured
+        503: Bot not configured
         502: Telegram API failure
     """
     import requests
+    from urllib.parse import urlparse, parse_qs
     from core.logging import get_logger
-    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError, SIGNAL_BOT
+    from core.telegram_sender import resolve_signal_bot_connection, get_signal_channel_id, BotConnection
+    from core.bot_credentials import BotNotConfiguredError, SIGNAL_BOT
     
     logger = get_logger(__name__)
     effective_tenant = tenant_id or 'entrylab'
     
+    parsed = urlparse(handler.path)
+    query_params = parse_qs(parsed.query)
+    channel_type = query_params.get('channel', [None])[0]
+    
+    if not channel_type or channel_type not in ('vip', 'free'):
+        logger.warning(
+            f"[STATS] Invalid request: tenant={effective_tenant}, "
+            f"channel_param={channel_type!r} (must be 'vip' or 'free')"
+        )
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'success': False,
+            'error_code': 'missing_channel_param',
+            'message': "Required query param 'channel' missing or invalid. Use ?channel=vip or ?channel=free",
+            'tenant_id': effective_tenant
+        }).encode())
+        return
+    
     try:
-        credentials = get_bot_credentials(effective_tenant, SIGNAL_BOT)
+        connection = resolve_signal_bot_connection(effective_tenant)
     except BotNotConfiguredError as e:
-        logger.warning(f"Signal bot not configured for tenant {effective_tenant}: {e}")
+        logger.warning(
+            f"[STATS] Bot not configured: tenant={effective_tenant}, channel_type={channel_type}"
+        )
         handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
             'success': False,
             'error_code': 'bot_not_configured',
-            'message': f"Signal Bot not configured. Go to Connections → Signal Bot to set it up.",
+            'message': "Signal Bot not configured. Go to Connections → Signal Bot to set it up.",
             'tenant_id': effective_tenant,
-            'bot_role': SIGNAL_BOT
+            'channel_type': channel_type
         }).encode())
         return
     
-    bot_token = credentials.get('bot_token')
-    channel_id = credentials.get('channel_id')
-    bot_username = credentials.get('bot_username')
+    bot_token = connection.token
+    bot_username = connection.bot_username
+    channel_id = get_signal_channel_id(connection, channel_type)
+    token_last4 = connection.token[-4:] if connection.token else 'None'
     
     if not bot_token:
+        logger.warning(
+            f"[STATS] Token missing: tenant={effective_tenant}, channel_type={channel_type}"
+        )
         handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -745,23 +778,32 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
             'error_code': 'bot_token_missing',
             'message': "Signal Bot token missing. Go to Connections → Signal Bot to add it.",
             'tenant_id': effective_tenant,
-            'bot_role': SIGNAL_BOT
+            'channel_type': channel_type
         }).encode())
         return
     
     if not channel_id:
-        handler.send_response(503)
+        logger.warning(
+            f"[STATS] Channel not configured: tenant={effective_tenant}, "
+            f"channel_type={channel_type}, vip={connection.vip_channel_id}, free={connection.free_channel_id}"
+        )
+        handler.send_response(400)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({
             'success': False,
-            'error_code': 'channel_id_missing',
-            'message': "Signal Bot channel_id missing. Add it in Connections → Signal Bot.",
+            'error_code': 'channel_not_configured',
+            'message': f"{channel_type.upper()} channel not configured. Add it in Connections → Signal Bot.",
             'tenant_id': effective_tenant,
-            'bot_role': SIGNAL_BOT,
+            'channel_type': channel_type,
             'bot_username': bot_username
         }).encode())
         return
+    
+    logger.info(
+        f"[STATS] Fetching stats: tenant={effective_tenant}, channel_type={channel_type}, "
+        f"channel_id={channel_id}, bot={bot_username}, token_last4=****{token_last4}"
+    )
     
     try:
         url = f"https://api.telegram.org/bot{bot_token}/getChatMemberCount"
@@ -770,6 +812,10 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
         
         if data.get('ok'):
             member_count = data.get('result')
+            logger.info(
+                f"[STATS] Success: tenant={effective_tenant}, channel_type={channel_type}, "
+                f"channel_id={channel_id}, members={member_count}"
+            )
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -777,16 +823,19 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
                 'success': True,
                 'member_count': member_count,
                 'channel_id': channel_id,
+                'channel_type': channel_type,
                 'bot_username': bot_username,
                 'tenant_id': effective_tenant
             }).encode())
         else:
             error_desc = data.get('description', 'Unknown Telegram error')
             error_code = data.get('error_code', 0)
-            
             actionable_message = _get_actionable_telegram_error(error_desc)
             
-            logger.warning(f"Telegram API error for channel {channel_id}: {error_desc}")
+            logger.warning(
+                f"[STATS] Telegram error: tenant={effective_tenant}, channel_type={channel_type}, "
+                f"channel_id={channel_id}, error_code={error_code}, error={error_desc}"
+            )
             handler.send_response(502)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
@@ -797,12 +846,15 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
                 'telegram_error': error_desc,
                 'telegram_error_code': error_code,
                 'channel_id': channel_id,
+                'channel_type': channel_type,
                 'bot_username': bot_username,
                 'tenant_id': effective_tenant
             }).encode())
             
     except requests.Timeout:
-        logger.warning(f"Telegram API timeout for channel {channel_id}")
+        logger.warning(
+            f"[STATS] Timeout: tenant={effective_tenant}, channel_type={channel_type}, channel_id={channel_id}"
+        )
         handler.send_response(502)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -811,10 +863,13 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
             'error_code': 'telegram_timeout',
             'message': "Telegram API timed out. Please try again.",
             'channel_id': channel_id,
+            'channel_type': channel_type,
             'tenant_id': effective_tenant
         }).encode())
     except Exception as e:
-        logger.exception(f"Error getting channel stats for {effective_tenant}")
+        logger.exception(
+            f"[STATS] Unexpected error: tenant={effective_tenant}, channel_type={channel_type}"
+        )
         handler.send_response(502)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
@@ -823,6 +878,7 @@ def handle_telegram_channel_stats(handler, tenant_id: str = None):
             'error_code': 'telegram_api_error',
             'message': "Failed to contact Telegram API. Please try again.",
             'detail': str(e),
+            'channel_type': channel_type,
             'tenant_id': effective_tenant
         }).encode())
 

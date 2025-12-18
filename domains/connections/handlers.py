@@ -221,7 +221,11 @@ def handle_connection_save(handler):
     
     if success:
         invalidate_connection_cache(tenant_id, bot_role)
-        logger.info(f"Saved bot connection: tenant={tenant_id}, role={bot_role}, username={bot_username}")
+        logger.info(
+            f"Saved bot connection: tenant={tenant_id}, role={bot_role}, "
+            f"username={bot_username}, vip_channel={vip_channel_id}, free_channel={free_channel_id}"
+        )
+        from datetime import datetime
         _send_json(handler, 200, {
             'success': True,
             'connection': {
@@ -230,7 +234,8 @@ def handle_connection_save(handler):
                 'webhook_url': webhook_url,
                 'channel_id': channel_id,
                 'vip_channel_id': vip_channel_id,
-                'free_channel_id': free_channel_id
+                'free_channel_id': free_channel_id,
+                'updated_at': datetime.utcnow().isoformat() + 'Z'
             }
         })
     else:

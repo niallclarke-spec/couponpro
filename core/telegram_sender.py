@@ -426,3 +426,47 @@ def get_connection_for_send(tenant_id: str, bot_role: str) -> Optional[BotConnec
         return _resolve_bot_connection(tenant_id, bot_role)
     except BotNotConfiguredError:
         return None
+
+
+def resolve_signal_bot_connection(tenant_id: str, force_refresh: bool = False) -> BotConnection:
+    """
+    Resolve signal bot connection for a tenant.
+    
+    This is the canonical way to get signal bot credentials including both
+    VIP and FREE channel IDs. Uses TTL cache for efficiency.
+    
+    Args:
+        tenant_id: Tenant ID (required)
+        force_refresh: Skip cache and fetch fresh from DB
+        
+    Returns:
+        BotConnection with token, vip_channel_id, free_channel_id, bot_username
+        
+    Raises:
+        BotNotConfiguredError: If signal bot not configured for tenant
+    """
+    return _resolve_bot_connection(tenant_id, SIGNAL_BOT, force_refresh=force_refresh)
+
+
+def get_signal_channel_id(connection: BotConnection, channel_type: str) -> Optional[str]:
+    """
+    Get specific channel ID from a signal bot connection.
+    
+    Separates "what is the connection?" from "which channel are we using?"
+    
+    Args:
+        connection: Resolved BotConnection
+        channel_type: 'vip' or 'free'
+        
+    Returns:
+        Channel ID string, or None if not configured
+        
+    Raises:
+        ValueError: If channel_type is not 'vip' or 'free'
+    """
+    if channel_type == 'vip':
+        return connection.vip_channel_id
+    elif channel_type == 'free':
+        return connection.free_channel_id
+    else:
+        raise ValueError(f"Invalid channel_type '{channel_type}'. Must be 'vip' or 'free'.")
