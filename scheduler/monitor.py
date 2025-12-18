@@ -74,12 +74,18 @@ class SignalMonitor:
             return []
     
     async def _process_signal_update(self, update: Dict[str, Any]):
-        """Process a single signal update event."""
+        """
+        Process a single signal update event.
+        
+        IMPORTANT: Events with 'closed': True have already been closed atomically
+        in the database by forex_signals.py. We only handle messaging here.
+        """
         signal_id = update['id']
         event = update.get('event')
         status = update.get('status')
         pips = update.get('pips', 0)
         close_price = update.get('exit_price') or update.get('current_price')
+        already_closed = update.get('closed', False)  # Signal already closed in DB
         
         signals_data = self.runtime.get_forex_signals(status=None, limit=10)
         matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
@@ -109,36 +115,37 @@ class SignalMonitor:
         
         elif event == 'tp3_hit':
             await self.messenger.send_tp3_celebration(signal_type, pips)
-            if status == 'won':
-                self.runtime.update_forex_signal_status(signal_id, 'won', pips, close_price)
-                logger.info(f"✅ Signal #{signal_id} completed - all TPs hit!")
+            # DB already closed atomically - just log
+            logger.info(f"✅ Signal #{signal_id} completed - all TPs hit!")
         
         elif event == 'sl_hit_profit_locked':
-            self.runtime.update_forex_signal_status(signal_id, 'won', pips, close_price)
             await self.messenger.send_profit_locked_message(pips)
+            logger.info(f"✅ Signal #{signal_id} closed with locked profit: +{pips} pips")
         
         elif event == 'sl_hit_breakeven':
-            self.runtime.update_forex_signal_status(signal_id, 'won', pips, close_price)
             await self.messenger.send_breakeven_exit_message()
+            logger.info(f"✅ Signal #{signal_id} closed at breakeven")
         
         elif event == 'sl_hit':
-            self.runtime.update_forex_signal_status(signal_id, status, pips, close_price)
             await self.messenger.send_sl_hit_message(pips)
+            logger.info(f"❌ Signal #{signal_id} closed at SL: {pips} pips")
         
-        elif status == 'won':
-            self.runtime.update_forex_signal_status(signal_id, status, pips, close_price)
+        elif event == 'timeout':
+            # 4-hour timeout with pips calculated
+            await self.messenger.post_signal_expired(signal_id, pips, signal_type)
+            logger.info(f"✅ Posted timeout notification for signal #{signal_id} (status: {status})")
+        
+        elif status == 'won' and not already_closed:
+            # Fallback for won events without specific event type (shouldn't happen anymore)
+            self.runtime.update_forex_signal_status(signal_id, status, pips, close_price or 0.0)
             await self.messenger.send_tp1_celebration(signal_type, pips, 0)
             
-        elif status == 'lost':
-            self.runtime.update_forex_signal_status(signal_id, status, pips, close_price)
+        elif status == 'lost' and not already_closed:
+            # Fallback for lost events (shouldn't happen anymore)
+            self.runtime.update_forex_signal_status(signal_id, status, pips, close_price or 0.0)
             await self.messenger.send_sl_hit_message(pips)
-            
-        elif status == 'expired':
-            final_status = 'won' if pips > 0 else 'expired'
-            self.runtime.update_forex_signal_status(signal_id, final_status, pips, close_price)
-            await self.messenger.post_signal_expired(signal_id, pips, signal_type)
-            logger.info(f"✅ Posted expiry notification for signal #{signal_id} (status: {final_status})")
         
+        # Reload strategy after any terminal event
         if status in ('won', 'lost', 'expired'):
             self.signal_engine.load_active_strategy()
             logger.info(f"Strategy reloaded after signal #{signal_id} closed")

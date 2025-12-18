@@ -321,16 +321,23 @@ class ForexSignalEngine:
                 
                 hours_elapsed = (now - posted_at).total_seconds() / 3600
                 
+                is_buy = signal_type == 'BUY'
+                
                 if hours_elapsed >= 4:
-                    logger.info(f"⏱️  Signal #{signal_id} expired after 4 hours")
+                    pips = round((current_price - entry) * 100, 1) if is_buy else round((entry - current_price) * 100, 1)
+                    final_status = 'won' if pips > 0 else 'expired'
+                    logger.info(f"⏱️  Signal #{signal_id} timed out after 4 hours - closing as {final_status} ({pips:+.1f} pips)")
+                    # ATOMIC: Close signal in DB BEFORE emitting event
+                    update_forex_signal_status(signal_id, final_status, self.tenant_id, result_pips=pips, close_price=current_price)
                     updates.append({
                         'id': signal_id,
-                        'status': 'expired',
-                        'pips': 0
+                        'event': 'timeout',
+                        'status': final_status,
+                        'pips': pips,
+                        'exit_price': current_price,
+                        'closed': True  # Signal already closed in DB
                     })
                     continue
-                
-                is_buy = signal_type == 'BUY'
                 has_tp2 = tp2 > 0
                 has_tp3 = tp3 > 0
                 tp_count = 1 + (1 if has_tp2 else 0) + (1 if has_tp3 else 0)
@@ -350,10 +357,14 @@ class ForexSignalEngine:
                             'remaining': remaining
                         })
                         if tp_count == 1:
+                            # ATOMIC: Single-TP signal closed on TP1 hit
+                            update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
-                                'pips': pips
+                                'pips': pips,
+                                'exit_price': current_price,
+                                'closed': True
                             })
                             continue
                     
@@ -370,10 +381,14 @@ class ForexSignalEngine:
                             'remaining': remaining
                         })
                         if tp_count == 2:
+                            # ATOMIC: 2-TP signal closed on TP2 hit
+                            update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
-                                'pips': pips
+                                'pips': pips,
+                                'exit_price': current_price,
+                                'closed': True
                             })
                             continue
                     
@@ -381,12 +396,16 @@ class ForexSignalEngine:
                         pips = round((tp3 - entry) * 100, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
+                        # ATOMIC: 3-TP signal closed on TP3 hit
+                        update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp3_hit',
                             'status': 'won',
                             'pips': pips,
-                            'percentage': tp3_pct
+                            'exit_price': current_price,
+                            'percentage': tp3_pct,
+                            'closed': True
                         })
                         continue
                     
@@ -405,12 +424,15 @@ class ForexSignalEngine:
                             status = 'lost'
                             event = 'sl_hit'
                             logger.error(f"❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
+                        # ATOMIC: Close signal in DB on SL hit
+                        update_forex_signal_status(signal_id, status, self.tenant_id, result_pips=pips, close_price=current_price)
                         updates.append({
                             'id': signal_id,
                             'event': event,
                             'status': status,
                             'pips': pips,
-                            'exit_price': current_price
+                            'exit_price': current_price,
+                            'closed': True
                         })
                     
                 else:
@@ -428,10 +450,14 @@ class ForexSignalEngine:
                             'remaining': remaining
                         })
                         if tp_count == 1:
+                            # ATOMIC: Single-TP signal closed on TP1 hit
+                            update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
-                                'pips': pips
+                                'pips': pips,
+                                'exit_price': current_price,
+                                'closed': True
                             })
                             continue
                     
@@ -448,10 +474,14 @@ class ForexSignalEngine:
                             'remaining': remaining
                         })
                         if tp_count == 2:
+                            # ATOMIC: 2-TP signal closed on TP2 hit
+                            update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                             updates.append({
                                 'id': signal_id,
                                 'status': 'won',
-                                'pips': pips
+                                'pips': pips,
+                                'exit_price': current_price,
+                                'closed': True
                             })
                             continue
                     
@@ -459,12 +489,16 @@ class ForexSignalEngine:
                         pips = round((entry - tp3) * 100, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
+                        # ATOMIC: 3-TP signal closed on TP3 hit
+                        update_forex_signal_status(signal_id, 'won', self.tenant_id, result_pips=pips, close_price=current_price)
                         updates.append({
                             'id': signal_id,
                             'event': 'tp3_hit',
                             'status': 'won',
                             'pips': pips,
-                            'percentage': tp3_pct
+                            'exit_price': current_price,
+                            'percentage': tp3_pct,
+                            'closed': True
                         })
                         continue
                     
@@ -483,12 +517,15 @@ class ForexSignalEngine:
                             status = 'lost'
                             event = 'sl_hit'
                             logger.error(f"❌ Signal #{signal_id} SL ({sl_type}) HIT @ ${sl:.2f}! Loss: {pips} pips")
+                        # ATOMIC: Close signal in DB on SL hit
+                        update_forex_signal_status(signal_id, status, self.tenant_id, result_pips=pips, close_price=current_price)
                         updates.append({
                             'id': signal_id,
                             'event': event,
                             'status': status,
                             'pips': pips,
-                            'exit_price': current_price
+                            'exit_price': current_price,
+                            'closed': True
                         })
             
             return updates
