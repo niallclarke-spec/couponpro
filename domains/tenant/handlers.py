@@ -2,6 +2,7 @@
 import json
 from core.tenant_credentials import get_tenant_setup_status
 from domains.tenant import repo as tenant_repo
+from domains.tenant.repo import DatabaseUnavailableError
 
 from core.logging import get_logger
 logger = get_logger(__name__)
@@ -63,18 +64,24 @@ def handle_tenant_integrations(handler, tenant_id):
         handler.wfile.write(json.dumps({'error': f'Missing fields: {missing}'}).encode())
         return
     
-    success = tenant_repo.upsert_integration(tenant_id, provider, config)
-    if not success:
-        handler.send_response(500)
+    try:
+        success = tenant_repo.upsert_integration(tenant_id, provider, config)
+        if not success:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Failed to save integration'}).encode())
+            return
+        
+        handler.send_response(200)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Failed to save integration'}).encode())
-        return
-    
-    handler.send_response(200)
-    handler.send_header('Content-type', 'application/json')
-    handler.end_headers()
-    handler.wfile.write(json.dumps({'success': True}).encode())
+        handler.wfile.write(json.dumps({'success': True}).encode())
+    except DatabaseUnavailableError:
+        handler.send_response(503)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
 
 
 VALID_ROLES = {'admin', 'member'}
@@ -124,28 +131,31 @@ def handle_tenant_map_user(handler):
         _send_json(handler, 400, {'error': f'Invalid role. Must be one of: {", ".join(VALID_ROLES)}'})
         return
     
-    if not tenant_repo.tenant_exists(tenant_id):
-        _send_json(handler, 400, {'error': f'Tenant not found: {tenant_id}'})
-        return
-    
-    success, action, previous_tenant_id = tenant_repo.map_user_to_tenant(
-        clerk_user_id, tenant_id, role
-    )
-    
-    if not success:
-        if action == 'conflict':
-            _send_json(handler, 409, {'error': 'User mapping conflict - constraint violation'})
-        else:
-            _send_json(handler, 500, {'error': 'Failed to create user mapping'})
-        return
-    
-    response = {
-        'success': True,
-        'action': action,
-        'tenant_id': tenant_id,
-        'previous_tenant_id': previous_tenant_id,
-        'clerk_user_id': clerk_user_id,
-        'role': role
-    }
-    
-    _send_json(handler, 200, response)
+    try:
+        if not tenant_repo.tenant_exists(tenant_id):
+            _send_json(handler, 400, {'error': f'Tenant not found: {tenant_id}'})
+            return
+        
+        success, action, previous_tenant_id = tenant_repo.map_user_to_tenant(
+            clerk_user_id, tenant_id, role
+        )
+        
+        if not success:
+            if action == 'conflict':
+                _send_json(handler, 409, {'error': 'User mapping conflict - constraint violation'})
+            else:
+                _send_json(handler, 500, {'error': 'Failed to create user mapping'})
+            return
+        
+        response = {
+            'success': True,
+            'action': action,
+            'tenant_id': tenant_id,
+            'previous_tenant_id': previous_tenant_id,
+            'clerk_user_id': clerk_user_id,
+            'role': role
+        }
+        
+        _send_json(handler, 200, response)
+    except DatabaseUnavailableError:
+        _send_json(handler, 503, {'error': 'Database not available'})

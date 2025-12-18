@@ -11,9 +11,22 @@ from core.logging import get_logger
 logger = get_logger(__name__)
 
 
+class DatabaseUnavailableError(Exception):
+    """Raised when the database pool is not available."""
+    pass
+
+
 def _get_db_pool():
     """Get the database pool, importing lazily to avoid circular imports."""
     from db import db_pool
+    return db_pool
+
+
+def _require_db_pool():
+    """Get database pool or raise DatabaseUnavailableError."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        raise DatabaseUnavailableError("Database pool not available")
     return db_pool
 
 
@@ -25,10 +38,11 @@ def list_connections(tenant_id: str) -> List[Dict[str, Any]]:
     - bot_role, bot_username, webhook_url, channel_id
     - vip_channel_id, free_channel_id
     - last_validated_at, last_error
+    
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
     """
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return []
+    db_pool = _require_db_pool()
     
     try:
         with db_pool.get_connection() as conn:
@@ -59,16 +73,67 @@ def list_connections(tenant_id: str) -> List[Dict[str, Any]]:
         return []
 
 
+def get_connection(tenant_id: str, bot_role: str) -> Optional[Dict[str, Any]]:
+    """
+    Get a bot connection for a tenant by role.
+    
+    Returns connection dict with bot_token, or None if not found.
+    
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
+    """
+    _require_db_pool()
+    
+    from db import get_bot_connection as db_get_bot_connection
+    return db_get_bot_connection(tenant_id, bot_role)
+
+
+def upsert_connection(
+    tenant_id: str,
+    bot_role: str,
+    bot_token: str,
+    bot_username: str,
+    webhook_secret: str,
+    webhook_url: str,
+    channel_id: Optional[str] = None,
+    vip_channel_id: Optional[str] = None,
+    free_channel_id: Optional[str] = None
+) -> bool:
+    """
+    Create or update a bot connection for a tenant.
+    
+    Returns True if upsert succeeded, False on database error.
+    
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
+    """
+    _require_db_pool()
+    
+    from db import upsert_bot_connection as db_upsert_bot_connection
+    return db_upsert_bot_connection(
+        tenant_id=tenant_id,
+        bot_role=bot_role,
+        bot_token=bot_token,
+        bot_username=bot_username,
+        webhook_secret=webhook_secret,
+        webhook_url=webhook_url,
+        channel_id=channel_id,
+        vip_channel_id=vip_channel_id,
+        free_channel_id=free_channel_id
+    )
+
+
 def delete_connection(tenant_id: str, bot_role: str) -> bool:
     """
     Delete a bot connection for a tenant.
     
     Returns True if deletion succeeded (including if no row existed).
     Returns False on database error.
+    
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
     """
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return False
+    db_pool = _require_db_pool()
     
     try:
         with db_pool.get_connection() as conn:

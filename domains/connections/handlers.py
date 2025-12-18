@@ -12,6 +12,7 @@ from core.logging import get_logger
 from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
 from core.telegram_sender import invalidate_connection_cache, validate_bot_credentials
 from domains.connections import repo as connections_repo
+from domains.connections.repo import DatabaseUnavailableError
 
 logger = get_logger(__name__)
 
@@ -64,6 +65,8 @@ def handle_connections_list(handler):
         connections = connections_repo.list_connections(tenant_id)
         _send_json(handler, 200, {'connections': connections})
         
+    except DatabaseUnavailableError:
+        _send_json(handler, 503, {'error': 'Database not available'})
     except Exception as e:
         logger.exception(f"Error listing connections: {e}")
         _send_json(handler, 500, {'error': str(e)})
@@ -116,20 +119,23 @@ def handle_connection_test(handler):
         _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
-    if not bot_token:
-        connection = db.get_bot_connection(tenant_id, bot_role)
-        if connection and connection.get('bot_token'):
-            bot_token = connection['bot_token']
+    try:
+        if not bot_token:
+            connection = connections_repo.get_connection(tenant_id, bot_role)
+            if connection and connection.get('bot_token'):
+                bot_token = connection['bot_token']
+            else:
+                _send_json(handler, 400, {'error': 'No token provided and no saved connection found'})
+                return
+        
+        valid, bot_username, error = _validate_telegram_token(bot_token)
+        
+        if valid:
+            _send_json(handler, 200, {'success': True, 'bot_username': bot_username})
         else:
-            _send_json(handler, 400, {'error': 'No token provided and no saved connection found'})
-            return
-    
-    valid, bot_username, error = _validate_telegram_token(bot_token)
-    
-    if valid:
-        _send_json(handler, 200, {'success': True, 'bot_username': bot_username})
-    else:
-        _send_json(handler, 200, {'success': False, 'error': error})
+            _send_json(handler, 200, {'success': False, 'error': error})
+    except DatabaseUnavailableError:
+        _send_json(handler, 503, {'error': 'Database not available'})
 
 
 def handle_connection_save(handler):
@@ -180,39 +186,42 @@ def handle_connection_save(handler):
         _send_json(handler, 500, {'error': f'Failed to set webhook: {e}'})
         return
     
-    success = db.upsert_bot_connection(
-        tenant_id=tenant_id,
-        bot_role=bot_role,
-        bot_token=bot_token,
-        bot_username=bot_username,
-        webhook_secret=webhook_secret,
-        webhook_url=webhook_url,
-        channel_id=channel_id,
-        vip_channel_id=vip_channel_id,
-        free_channel_id=free_channel_id
-    )
-    
-    if success:
-        invalidate_connection_cache(tenant_id, bot_role)
-        logger.info(
-            f"Saved bot connection: tenant={tenant_id}, role={bot_role}, "
-            f"username={bot_username}, vip_channel={vip_channel_id}, free_channel={free_channel_id}"
+    try:
+        success = connections_repo.upsert_connection(
+            tenant_id=tenant_id,
+            bot_role=bot_role,
+            bot_token=bot_token,
+            bot_username=bot_username,
+            webhook_secret=webhook_secret,
+            webhook_url=webhook_url,
+            channel_id=channel_id,
+            vip_channel_id=vip_channel_id,
+            free_channel_id=free_channel_id
         )
-        from datetime import datetime
-        _send_json(handler, 200, {
-            'success': True,
-            'connection': {
-                'bot_role': bot_role,
-                'bot_username': bot_username,
-                'webhook_url': webhook_url,
-                'channel_id': channel_id,
-                'vip_channel_id': vip_channel_id,
-                'free_channel_id': free_channel_id,
-                'updated_at': datetime.utcnow().isoformat() + 'Z'
-            }
-        })
-    else:
-        _send_json(handler, 500, {'error': 'Failed to save connection to database'})
+        
+        if success:
+            invalidate_connection_cache(tenant_id, bot_role)
+            logger.info(
+                f"Saved bot connection: tenant={tenant_id}, role={bot_role}, "
+                f"username={bot_username}, vip_channel={vip_channel_id}, free_channel={free_channel_id}"
+            )
+            from datetime import datetime
+            _send_json(handler, 200, {
+                'success': True,
+                'connection': {
+                    'bot_role': bot_role,
+                    'bot_username': bot_username,
+                    'webhook_url': webhook_url,
+                    'channel_id': channel_id,
+                    'vip_channel_id': vip_channel_id,
+                    'free_channel_id': free_channel_id,
+                    'updated_at': datetime.utcnow().isoformat() + 'Z'
+                }
+            })
+        else:
+            _send_json(handler, 500, {'error': 'Failed to save connection to database'})
+    except DatabaseUnavailableError:
+        _send_json(handler, 503, {'error': 'Database not available'})
 
 
 def handle_connection_delete(handler, bot_role: str):
@@ -224,7 +233,7 @@ def handle_connection_delete(handler, bot_role: str):
         return
     
     try:
-        connection = db.get_bot_connection(tenant_id, bot_role)
+        connection = connections_repo.get_connection(tenant_id, bot_role)
         if not connection:
             _send_json(handler, 404, {'error': 'Connection not found'})
             return
@@ -248,6 +257,8 @@ def handle_connection_delete(handler, bot_role: str):
         invalidate_connection_cache(tenant_id, bot_role)
         _send_json(handler, 200, {'success': True})
         
+    except DatabaseUnavailableError:
+        _send_json(handler, 503, {'error': 'Database not available'})
     except Exception as e:
         logger.exception(f"Error deleting connection: {e}")
         _send_json(handler, 500, {'error': str(e)})

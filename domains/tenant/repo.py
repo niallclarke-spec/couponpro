@@ -11,9 +11,22 @@ from core.logging import get_logger
 logger = get_logger(__name__)
 
 
+class DatabaseUnavailableError(Exception):
+    """Raised when the database pool is not available."""
+    pass
+
+
 def _get_db_pool():
     """Get the database pool, importing lazily to avoid circular imports."""
     from db import db_pool
+    return db_pool
+
+
+def _require_db_pool():
+    """Get database pool or raise DatabaseUnavailableError."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        raise DatabaseUnavailableError("Database pool not available")
     return db_pool
 
 
@@ -22,10 +35,11 @@ def tenant_exists(tenant_id: str) -> bool:
     Check if a tenant exists in the database.
     
     Returns True if tenant exists, False otherwise.
+    
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
     """
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return False
+    db_pool = _require_db_pool()
     
     try:
         with db_pool.get_connection() as conn:
@@ -48,10 +62,11 @@ def upsert_integration(tenant_id: str, provider: str, config: Dict[str, Any]) ->
         
     Returns:
         True if upsert succeeded, False on error.
+        
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
     """
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return False
+    db_pool = _require_db_pool()
     
     try:
         with db_pool.get_connection() as conn:
@@ -92,10 +107,11 @@ def map_user_to_tenant(
         - success: True if operation succeeded
         - action: One of 'created', 'updated', 'moved', 'unchanged', 'error'
         - previous_tenant_id: Set only when action is 'moved'
+        
+    Raises:
+        DatabaseUnavailableError: If database pool is not available
     """
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return False, 'error', None
+    db_pool = _require_db_pool()
     
     try:
         with db_pool.get_connection() as conn:
