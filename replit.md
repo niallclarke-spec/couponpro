@@ -61,6 +61,18 @@ The platform supports dual authentication: primary Clerk JWT authentication (via
 ### Server Architecture
 The server employs a dispatcher pattern with thin request handlers (`server.py`), centralized routing in `api/dispatch.py` and `api/routes.py`, and middleware for authentication and database checks (`api/middleware.py`). This ensures a clean separation of concerns and maintainability.
 
+### Repository Pattern (Dec 2025)
+Domain-specific repository modules centralize database access with consistent error handling:
+- **domains/connections/repo.py**: `list_connections()`, `get_connection()`, `upsert_connection()`, `delete_connection()`
+- **domains/tenant/repo.py**: `tenant_exists()`, `upsert_integration()`, `map_user_to_tenant()`
+- **domains/journeys/repo.py**: Journey-specific database operations
+- **domains/crosspromo/repo.py**: Cross-promo job and settings operations
+
+**Database Availability Pattern**: All repository functions use `_require_db_pool()` guard that raises `DatabaseUnavailableError` when `db.db_pool` is None. Handlers catch this exception and return consistent 503 responses with `{'error': 'Database not available'}`. This ensures:
+- Fail-fast behavior when database is unavailable
+- Consistent error responses across all API endpoints
+- No silent failures or fallback data
+
 ### System Design Choices
 Stateless HMAC-signed cookie authentication is used for ephemeral environments. Digital Ocean Spaces provides persistent storage for templates. The system uses a hybrid storage model, is modular, and configured via environment variables. Image generation for Telegram uses Pillow, and coupon validation is enforced at the API level. Production robustness for the Telegram bot includes `asyncio.to_thread()`, `AIORateLimiter`, and a single-process webhook architecture. Stripe API is the source of truth for revenue metrics.
 
