@@ -5,12 +5,9 @@ Uses the active bot strategy and enforces one-signal-at-a-time rule
 
 NOTE: This module is deprecated. Use forex_scheduler.py instead.
 """
-import os
 import asyncio
 from datetime import datetime
 from typing import Optional
-from telegram import Bot
-from telegram.error import TelegramError
 
 from bots.core.bot_manager import BotManager, create_bot_manager
 from bots.core.signal_generator import SignalGenerator, create_signal_generator
@@ -19,6 +16,11 @@ from db import (
     get_forex_signals_by_period,
     get_forex_stats_by_period
 )
+from core.logging import get_logger
+from core.bot_credentials import SIGNAL_BOT
+from core.telegram_sender import send_to_channel
+
+logger = get_logger(__name__)
 
 
 class SignalBotScheduler:
@@ -35,6 +37,8 @@ class SignalBotScheduler:
     """
     
     def __init__(self, tenant_id: Optional[str] = None):
+        if not tenant_id:
+            raise ValueError("tenant_id is required - no implicit tenant inference allowed")
         self.tenant_id = tenant_id
         self.signal_check_interval = 900
         self.monitor_interval = 300
@@ -46,37 +50,20 @@ class SignalBotScheduler:
             bot_manager=self.bot_manager,
             tenant_id=tenant_id
         )
-        
-        self.bot = None
-        self.channel_id = None
-        
-        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
-        try:
-            creds = get_bot_credentials(tenant_id or 'entrylab', 'signal_bot')
-            self.channel_id = creds['channel_id']
-            token = creds['bot_token']
-            if token:
-                self.bot = Bot(token=token)
-            else:
-                print("[SCHEDULER] Forex bot token missing in credentials")
-        except BotNotConfiguredError as e:
-            print(f"[SCHEDULER] Forex bot not configured: {e}")
     
     async def post_to_telegram(self, message: str, parse_mode: str = 'HTML') -> Optional[int]:
         """Post message to Telegram channel, return message ID"""
-        if not self.bot or not self.channel_id:
-            print("[SCHEDULER] Telegram not configured")
-            return None
+        result = await send_to_channel(
+            tenant_id=self.tenant_id,
+            bot_role=SIGNAL_BOT,
+            text=message,
+            parse_mode=parse_mode
+        )
         
-        try:
-            sent = await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode=parse_mode
-            )
-            return sent.message_id
-        except TelegramError as e:
-            print(f"[SCHEDULER] Telegram error: {e}")
+        if result.success:
+            return result.message_id
+        else:
+            logger.warning(f"[SCHEDULER] Telegram send failed: {result.error}")
             return None
     
     async def run_signal_check(self):
@@ -85,7 +72,7 @@ class SignalBotScheduler:
             strategy = self.bot_manager.get_active_strategy()
             
             if not strategy or not strategy.is_trading_hours():
-                print(f"[SCHEDULER] Outside trading hours, skipping signal check")
+                logger.debug(f"[SCHEDULER] Outside trading hours, skipping signal check")
                 return
             
             signal_data = await self.signal_generator.generate_signal()
@@ -99,12 +86,12 @@ class SignalBotScheduler:
                         signal_data['id'],
                         message_id
                     )
-                    print(f"[SCHEDULER] Signal posted to Telegram: {message_id}")
+                    logger.info(f"[SCHEDULER] Signal posted to Telegram: {message_id}")
         
         except Exception as e:
-            print(f"[SCHEDULER] Error in signal check: {e}")
+            logger.exception(f"[SCHEDULER] Error in signal check: {e}")
 
 
-def create_scheduler(tenant_id: Optional[str] = None) -> SignalBotScheduler:
+def create_scheduler(tenant_id: str) -> SignalBotScheduler:
     """Factory function to create a SignalBotScheduler instance"""
     return SignalBotScheduler(tenant_id=tenant_id)

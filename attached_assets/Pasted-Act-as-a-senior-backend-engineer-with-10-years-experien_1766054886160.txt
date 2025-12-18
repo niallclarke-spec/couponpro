@@ -1,0 +1,50 @@
+Act as a senior backend engineer with 10+ years experience building multi-tenant, production systems.
+
+I have a multi-tenant Telegram bot platform. Right now, Telegram Bot instances are created once at process startup and cached. This causes a correctness bug: when a tenant updates their bot token via the Connections page, the new token is not used until the server restarts.
+
+This is not acceptable in a multi-tenant system.
+
+Requirements (non-negotiable)
+	1.	Bot tokens must be treated as tenant-scoped data, not configuration
+	•	No bot token may be cached across requests
+	•	No bot instance may survive across token changes
+	2.	Bot credentials must be fetched from the database at send-time
+	•	Fetch credentials only when a message is about to be sent
+	•	Do not fetch credentials during signal checks, price monitoring, or scheduler loops unless a send occurs
+	3.	No global or long-lived Bot instances
+	•	Remove any cached self.bot
+	•	Create short-lived telegram.Bot instances per send
+	•	The lifetime of a Bot instance should not exceed a single send operation
+	4.	Tenant isolation is mandatory
+	•	tenant_id must be explicitly passed into the send path
+	•	No implicit tenant inference
+	•	No dev fallbacks in production paths
+	•	If tenant resolution fails, fail fast and log loudly
+	5.	Failure must be safe
+	•	Missing or invalid credentials must not crash the process
+	•	Log clearly and return a failed send result
+	•	Never retry with a different tenant or default bot
+
+Architecture Guidance (preferred)
+	•	Implement a BotProvider or equivalent abstraction responsible for:
+	•	Fetching tenant-scoped credentials from the DB
+	•	Constructing a short-lived telegram.Bot instance
+	•	Implement a _send_message(tenant_id, ...) wrapper that:
+	•	Retrieves fresh credentials
+	•	Constructs the bot
+	•	Sends the message
+	•	Handles expected failures gracefully
+	•	This should be a surgical refactor, not a rewrite
+
+Explicitly do NOT do the following
+	•	Do NOT cache bot instances
+	•	Do NOT store bot tokens in globals or module scope
+	•	Do NOT add “refresh every X minutes” logic
+	•	Do NOT rely on process restarts
+	•	Do NOT add dev-only fallbacks that leak into production
+
+Definition of Done
+	•	Updating a tenant’s bot token in the UI takes effect immediately without restart
+	•	All sends use the correct tenant’s bot
+	•	Code is readable, intentional, and production-grade
+	•	No hidden caches or side effects

@@ -249,6 +249,8 @@ POST_ROUTES: List[Route] = [
     # Connections
     Route('POST', '/api/connections/validate', 'handle_api_connection_validate',
           auth_required=True, db_required=True),
+    Route('POST', '/api/connections/validate-saved', 'handle_api_connection_validate_saved',
+          auth_required=True, db_required=True),
     Route('POST', '/api/connections/test', 'handle_api_connection_test',
           auth_required=True, db_required=True),
     Route('POST', '/api/connections', 'handle_api_connection_save',

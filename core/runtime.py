@@ -193,31 +193,6 @@ class TenantRuntime:
         if self._signal_engine:
             self._signal_engine.reload_config()
             logger.info("Config hot-reloaded for signal engine")
-    
-    def refresh_bot_credentials(self) -> bool:
-        """
-        Hot-reload Telegram bot credentials from the database.
-        
-        Allows the scheduler to pick up token updates without restart.
-        Forces bot instantiation if not yet created to detect late configuration.
-        
-        Returns:
-            True if credentials were updated, False if unchanged or failed
-        """
-        try:
-            if self._telegram_bot is None:
-                from forex_bot import ForexTelegramBot
-                self._telegram_bot = ForexTelegramBot(tenant_id=self.tenant_id)
-                if self._telegram_bot._configured:
-                    logger.info(f"Late bot initialization succeeded for tenant: {self.tenant_id}")
-                    return True
-                logger.debug(f"Bot not configured for tenant: {self.tenant_id}")
-                return False
-            return self._telegram_bot.refresh_credentials()
-        except Exception as e:
-            logger.error(f"Bot credential refresh failed for tenant {self.tenant_id}: {e}")
-            self._telegram_bot = None
-            return False
 
 
 def create_tenant_runtime(tenant_id: Optional[str] = None) -> TenantRuntime:

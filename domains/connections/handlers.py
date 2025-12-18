@@ -6,9 +6,11 @@ import os
 import secrets
 import requests
 
+import asyncio
 import db
 from core.logging import get_logger
 from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
+from core.telegram_sender import invalidate_connection_cache, validate_bot_credentials
 
 logger = get_logger(__name__)
 
@@ -218,6 +220,7 @@ def handle_connection_save(handler):
     )
     
     if success:
+        invalidate_connection_cache(tenant_id, bot_role)
         logger.info(f"Saved bot connection: tenant={tenant_id}, role={bot_role}, username={bot_username}")
         _send_json(handler, 200, {
             'success': True,
@@ -271,9 +274,64 @@ def handle_connection_delete(handler, bot_role: str):
             """, (tenant_id, bot_role))
             conn.commit()
         
+        invalidate_connection_cache(tenant_id, bot_role)
         logger.info(f"Deleted bot connection: tenant={tenant_id}, role={bot_role}")
         _send_json(handler, 200, {'success': True})
         
     except Exception as e:
         logger.exception(f"Error deleting connection: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_connection_validate_saved(handler):
+    """POST /api/connections/validate-saved - Validate a saved bot connection using Telegram API.
+    
+    This is a dry-run validation that:
+    1. Fetches credentials from DB (fresh, not cached)
+    2. Calls Telegram getMe() to validate the token
+    3. Calls Telegram getChat() to validate channel access
+    
+    Returns JSON with validation results:
+    {
+        'ok': bool,
+        'bot_username': str or None,
+        'bot_id': int or None,
+        'channel_valid': bool or None,
+        'channel_title': str or None,
+        'error': str or None
+    }
+    """
+    try:
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body.decode('utf-8'))
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+    
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    bot_role = data.get('bot_role')
+    
+    if bot_role not in VALID_BOT_ROLES:
+        _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
+        return
+    
+    try:
+        result = asyncio.get_event_loop().run_until_complete(
+            validate_bot_credentials(tenant_id, bot_role)
+        )
+        _send_json(handler, 200, result)
+        
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(
+                validate_bot_credentials(tenant_id, bot_role)
+            )
+            _send_json(handler, 200, result)
+        finally:
+            loop.close()
+    except Exception as e:
+        logger.exception(f"Error validating connection: {e}")
         _send_json(handler, 500, {'error': str(e)})

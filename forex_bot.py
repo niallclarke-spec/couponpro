@@ -1,116 +1,48 @@
 """
 Telegram bot for posting forex signals to channel
-Uses python-telegram-bot library
+Uses the new send infrastructure from core/telegram_sender.py
+
+No cached bot instances - each send resolves fresh credentials.
 """
-import os
 import asyncio
 from datetime import datetime
-from telegram import Bot
-from telegram.error import TelegramError
 from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status
 from core.logging import get_logger
-from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+from core.bot_credentials import BotNotConfiguredError, SIGNAL_BOT
+from core.telegram_sender import send_to_channel, get_connection_for_send, SendResult
 
 logger = get_logger(__name__)
 
 
 class ForexTelegramBot:
-    def __init__(self, tenant_id: str | None = None):
-        self.bot = None
-        self.token = None
-        self.channel_id = None
-        self.tenant_id = tenant_id or 'entrylab'
-        self._configured = False
-        
-        try:
-            creds = get_bot_credentials(self.tenant_id, 'signal_bot')
-            self.token = creds['bot_token']
-            self.channel_id = creds['channel_id']
-            
-            if self.token:
-                self.bot = Bot(token=self.token)
-                self._configured = True
-                logger.info(f"Forex bot configured for tenant '{self.tenant_id}' (bot: {creds.get('bot_username', 'unknown')})")
-            else:
-                logger.warning(f"Bot token missing in credentials for tenant '{self.tenant_id}'")
-                
-            if not self.channel_id:
-                logger.warning(f"Channel ID missing in credentials for tenant '{self.tenant_id}'")
-                self._configured = False
-                
-        except BotNotConfiguredError as e:
-            logger.warning(f"Forex bot not configured: {e}")
-            logger.info("Forex bot will not work until credentials are configured in Connections settings")
+    """
+    Forex signal posting bot with no cached credentials.
     
-    def refresh_credentials(self) -> bool:
-        """
-        Hot-reload bot credentials from the database.
-        
-        This allows the scheduler to pick up token updates without restart.
-        Called periodically by the scheduler to detect configuration changes.
-        
-        Returns:
-            True if credentials were updated, False if unchanged or failed
-        """
-        old_token = self.token
-        old_channel = self.channel_id
-        old_bot = self.bot
-        old_configured = self._configured
-        
-        try:
-            creds = get_bot_credentials(self.tenant_id, 'signal_bot')
-            new_token = creds.get('bot_token')
-            new_channel = creds.get('channel_id')
-            
-            if not new_token or not new_channel:
-                if self._configured:
-                    logger.warning(f"Hot-reload: Credentials removed for tenant '{self.tenant_id}', disabling bot")
-                    self.token = None
-                    self.channel_id = None
-                    self.bot = None
-                    self._configured = False
-                    return True
-                return False
-            
-            if new_token == self.token and new_channel == self.channel_id:
-                return False
-            
-            old_bot_id = self.token.split(':')[0] if self.token else 'none'
-            new_bot_id = new_token.split(':')[0]
-            
-            try:
-                new_bot = Bot(token=new_token)
-            except TelegramError as e:
-                logger.error(f"Hot-reload: Invalid token for tenant '{self.tenant_id}': {e}")
-                return False
-            
-            self.token = new_token
-            self.channel_id = new_channel
-            self.bot = new_bot
-            self._configured = True
-            
-            logger.info(
-                f"Hot-reloaded bot credentials for tenant '{self.tenant_id}' "
-                f"(bot_id: {old_bot_id} -> {new_bot_id})"
-            )
-            return True
-            
-        except BotNotConfiguredError:
-            if self._configured:
-                logger.info(f"Hot-reload: Bot unconfigured for tenant '{self.tenant_id}', disabling")
-                self.token = None
-                self.channel_id = None
-                self.bot = None
-                self._configured = False
-                return True
-            return False
-        except Exception as e:
-            logger.exception(f"Hot-reload error for tenant '{self.tenant_id}': {e}")
-            self.token = old_token
-            self.channel_id = old_channel
-            self.bot = old_bot
-            self._configured = old_configured
-            return False
+    All sends go through core/telegram_sender.py which:
+    - Resolves fresh credentials from DB (with short TTL cache)
+    - Constructs short-lived Bot per send
+    - Fails fast if credentials missing
+    """
+    
+    def __init__(self, tenant_id: str | None = None):
+        if not tenant_id:
+            raise ValueError("tenant_id is required - no implicit tenant inference allowed")
+        self.tenant_id = tenant_id
+    
+    def is_configured(self) -> bool:
+        """Check if bot credentials are configured (without caching)."""
+        connection = get_connection_for_send(self.tenant_id, SIGNAL_BOT)
+        return connection is not None and connection.channel_id is not None
+    
+    async def _send(self, text: str, channel_type: str = 'default') -> SendResult:
+        """Internal send helper - all channel sends go through here."""
+        return await send_to_channel(
+            tenant_id=self.tenant_id,
+            bot_role=SIGNAL_BOT,
+            text=text,
+            parse_mode='HTML',
+            channel_type=channel_type
+        )
     
     async def post_signal(self, signal_data):
         """
@@ -123,15 +55,15 @@ class ForexTelegramBot:
         Returns:
             int: Signal ID from database or None if failed
         """
-        if not self.bot or not self.channel_id:
-            logger.error("❌ Forex bot not configured properly")
+        if not self.is_configured():
+            logger.error(f"SEND BLOCKED: Signal bot not configured for tenant '{self.tenant_id}'")
             return None
         
         try:
             pending_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
             if pending_signals and len(pending_signals) > 0:
                 existing = pending_signals[0]
-                logger.error(f"❌ Cannot post new signal - signal #{existing['id']} is still pending")
+                logger.error(f"Cannot post new signal - signal #{existing['id']} is still pending")
                 logger.error(f"   Entry: ${existing['entry_price']}, created at: {existing.get('posted_at')}")
                 return None
             
@@ -159,7 +91,6 @@ class ForexTelegramBot:
             if tp3:
                 tp_section += f"\n🎯 <b>TP3:</b> ${tp3:.2f} ({tp3_pct}%)"
             
-            # Build indicator line only for available indicators
             indicator_parts = []
             if rsi is not None:
                 indicator_parts.append(f"RSI: {rsi:.2f}")
@@ -203,34 +134,29 @@ class ForexTelegramBot:
             )
             
             if not signal_id:
-                logger.error("❌ Failed to create draft signal in database")
+                logger.error("Failed to create draft signal in database")
                 return None
             
-            logger.info(f"📝 Created draft signal #{signal_id}, posting to Telegram...")
+            logger.info(f"Created draft signal #{signal_id}, posting to Telegram...")
             
-            try:
-                sent_message = await self.bot.send_message(
-                    chat_id=self.channel_id,
-                    text=message,
-                    parse_mode='HTML'
-                )
-                
-                if update_signal_status(signal_id, 'pending', tenant_id=self.tenant_id, telegram_message_id=sent_message.message_id):
-                    logger.info(f"✅ Signal #{signal_id} status updated to pending (Telegram msg: {sent_message.message_id})")
+            result = await self._send(message)
+            
+            if result.success:
+                if update_signal_status(signal_id, 'pending', tenant_id=self.tenant_id, telegram_message_id=result.message_id):
+                    logger.info(f"Signal #{signal_id} status updated to pending (Telegram msg: {result.message_id})")
                 else:
-                    logger.error(f"❌ Failed to update signal #{signal_id} status to pending after Telegram broadcast")
-                    logger.warning(f"⚠️ Ghost signal detected: Telegram message sent but DB update failed")
+                    logger.error(f"Failed to update signal #{signal_id} status to pending after Telegram broadcast")
+                    logger.warning(f"Ghost signal detected: Telegram message sent but DB update failed")
                     fallback_success = update_signal_status(signal_id, 'broadcast_failed', tenant_id=self.tenant_id)
                     if fallback_success:
-                        logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed (fallback)")
+                        logger.info(f"Signal #{signal_id} marked as broadcast_failed (fallback)")
                     else:
-                        logger.error(f"🚨 CRITICAL: Could not mark signal #{signal_id} as broadcast_failed - manual cleanup required")
+                        logger.error(f"CRITICAL: Could not mark signal #{signal_id} as broadcast_failed - manual cleanup required")
                     return None
-                    
-            except TelegramError as e:
-                logger.error(f"❌ Failed to post signal to Telegram: {e}")
+            else:
+                logger.error(f"Failed to post signal to Telegram: {result.error}")
                 update_signal_status(signal_id, 'broadcast_failed', tenant_id=self.tenant_id)
-                logger.info(f"📝 Signal #{signal_id} marked as broadcast_failed")
+                logger.info(f"Signal #{signal_id} marked as broadcast_failed")
                 return None
             
             indicators_dict = signal_data.get('all_indicators', {})
@@ -246,7 +172,7 @@ class ForexTelegramBot:
             
             if signal_id and indicators_dict:
                 update_signal_original_indicators(signal_id, tenant_id=self.tenant_id, indicators_dict=indicators_dict)
-                logger.info(f"✅ Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
+                logger.info(f"Stored original indicators for signal #{signal_id}: {list(indicators_dict.keys())}")
                 
                 add_signal_narrative(
                     signal_id=signal_id,
@@ -257,11 +183,11 @@ class ForexTelegramBot:
                     notes=f"{signal_type} signal entry at ${entry:.2f}"
                 )
             
-            logger.info(f"✅ Posted {signal_type} signal to Telegram (ID: {signal_id})")
+            logger.info(f"Posted {signal_type} signal to Telegram (ID: {signal_id})")
             return signal_id
             
         except Exception as e:
-            logger.error(f"❌ Unexpected error posting signal: {e}")
+            logger.exception(f"Unexpected error posting signal: {e}")
             return None
     
     async def post_tp_hit(self, signal_id, tp_number, pips_profit, position_percentage, remaining_percentage=None):
@@ -275,7 +201,7 @@ class ForexTelegramBot:
             position_percentage: Percentage of position closed at this TP
             remaining_percentage: Percentage of position still open (optional)
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return
         
         try:
@@ -295,22 +221,20 @@ class ForexTelegramBot:
 
 {status_msg}"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type=f'tp{tp_number}_hit',
-                notes=f"TP{tp_number} hit: +${pips_profit:.2f} ({position_percentage}% closed)"
-            )
-            
-            logger.info(f"✅ Posted TP{tp_number} notification for signal #{signal_id}")
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type=f'tp{tp_number}_hit',
+                    notes=f"TP{tp_number} hit: +${pips_profit:.2f} ({position_percentage}% closed)"
+                )
+                logger.info(f"Posted TP{tp_number} notification for signal #{signal_id}")
+            else:
+                logger.error(f"Failed to post TP{tp_number} notification: {result.error}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to post TP{tp_number} notification: {e}")
+            logger.exception(f"Failed to post TP{tp_number} notification: {e}")
     
     async def post_breakeven_alert(self, signal_id, entry_price, current_price):
         """
@@ -321,11 +245,10 @@ class ForexTelegramBot:
             entry_price: Original entry price
             current_price: Current price
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return
         
         try:
-            # XAU/USD: 1 pip = $0.01, multiply by 100
             pips_profit = abs(current_price - entry_price) * 100
             
             message = f"""⚡ <b>BREAKEVEN ALERT</b>
@@ -336,24 +259,22 @@ class ForexTelegramBot:
 
 🔒 Move SL to entry @ ${entry_price:.2f}"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            dollar_profit = abs(current_price - entry_price)
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='breakeven_alert',
-                current_price=current_price,
-                notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.0f} pips (${dollar_profit:.2f})"
-            )
-            
-            logger.info(f"✅ Posted breakeven alert for signal #{signal_id}")
+            if result.success:
+                dollar_profit = abs(current_price - entry_price)
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='breakeven_alert',
+                    current_price=current_price,
+                    notes=f"Breakeven alert at ${current_price:.2f}, +{pips_profit:.0f} pips (${dollar_profit:.2f})"
+                )
+                logger.info(f"Posted breakeven alert for signal #{signal_id}")
+            else:
+                logger.error(f"Failed to post breakeven alert: {result.error}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to post breakeven alert: {e}")
+            logger.exception(f"Failed to post breakeven alert: {e}")
     
     async def post_tp_celebration(self, signal_id, pips_profit, ai_message=None):
         """
@@ -364,7 +285,7 @@ class ForexTelegramBot:
             pips_profit: Total profit in pips
             ai_message: Optional AI-generated motivational message (ignored)
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return
         
         try:
@@ -372,23 +293,21 @@ class ForexTelegramBot:
 
 Total profit: <b>+${pips_profit:.2f}</b>"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='tp_hit',
-                progress_percent=100,
-                notes=f"Trade complete: +${pips_profit:.2f}"
-            )
-            
-            logger.info(f"✅ Posted TP celebration for signal #{signal_id}")
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='tp_hit',
+                    progress_percent=100,
+                    notes=f"Trade complete: +${pips_profit:.2f}"
+                )
+                logger.info(f"Posted TP celebration for signal #{signal_id}")
+            else:
+                logger.error(f"Failed to post TP celebration: {result.error}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to post TP celebration: {e}")
+            logger.exception(f"Failed to post TP celebration: {e}")
     
     async def post_sl_hit(self, signal_id, pips_loss, signal_type='BUY'):
         """
@@ -399,7 +318,7 @@ Total profit: <b>+${pips_profit:.2f}</b>"""
             pips_loss: Loss in pips (should be negative)
             signal_type: 'BUY' or 'SELL'
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return
         
         try:
@@ -409,24 +328,21 @@ Total profit: <b>+${pips_profit:.2f}</b>"""
 
 Risk was managed. Onwards to the next opportunity."""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            # Record SL hit narrative event
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='sl_hit',
-                progress_percent=-100,
-                notes=f"Stop loss hit: -${abs(pips_loss):.2f}"
-            )
-            
-            logger.info(f"✅ Posted SL notification for signal #{signal_id}")
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='sl_hit',
+                    progress_percent=-100,
+                    notes=f"Stop loss hit: -${abs(pips_loss):.2f}"
+                )
+                logger.info(f"Posted SL notification for signal #{signal_id}")
+            else:
+                logger.error(f"Failed to post SL notification: {result.error}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to post SL notification: {e}")
+            logger.exception(f"Failed to post SL notification: {e}")
     
     async def post_signal_expired(self, signal_id, pips, signal_type='BUY'):
         """
@@ -437,7 +353,7 @@ Risk was managed. Onwards to the next opportunity."""
             pips: Current P/L in pips
             signal_type: 'BUY' or 'SELL'
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return
         
         try:
@@ -449,16 +365,15 @@ Risk was managed. Onwards to the next opportunity."""
 
 Signal closed after maximum hold time."""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            logger.info(f"✅ Posted expiry notification for signal #{signal_id}")
+            if result.success:
+                logger.info(f"Posted expiry notification for signal #{signal_id}")
+            else:
+                logger.error(f"Failed to post expiry notification: {result.error}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to post expiry notification: {e}")
+            logger.exception(f"Failed to post expiry notification: {e}")
     
     async def post_signal_guidance(self, signal_id, guidance_type, message, signal_data):
         """
@@ -470,7 +385,7 @@ Signal closed after maximum hold time."""
             message: AI-generated or fallback guidance message
             signal_data: Dict with current signal info (entry, tp, sl, current_price)
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return False
         
         try:
@@ -497,35 +412,33 @@ Signal closed after maximum hold time."""
 <b>Current:</b> ${current:.2f}
 <b>Entry:</b> ${entry:.2f} | <b>TP:</b> ${tp:.2f} | <b>SL:</b> ${sl:.2f}"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=full_message,
-                parse_mode='HTML'
-            )
+            result = await self._send(full_message)
             
-            # Calculate progress toward TP for narrative
-            progress = signal_data.get('progress_percent', 0)
-            current_indicators = signal_data.get('current_indicators', {})
-            indicator_deltas = signal_data.get('indicator_deltas', {})
-            
-            # Record guidance narrative event
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='guidance_sent',
-                current_price=current,
-                progress_percent=progress,
-                indicators=current_indicators if current_indicators else None,
-                indicator_deltas=indicator_deltas if indicator_deltas else None,
-                guidance_type=guidance_type,
-                message_sent=message[:500] if message else None,
-                notes=f"{guidance_type.title()} guidance at {progress:.1f}% progress"
-            )
-            
-            logger.info(f"✅ Posted {guidance_type} guidance for signal #{signal_id}")
-            return True
+            if result.success:
+                progress = signal_data.get('progress_percent', 0)
+                current_indicators = signal_data.get('current_indicators', {})
+                indicator_deltas = signal_data.get('indicator_deltas', {})
+                
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='guidance_sent',
+                    current_price=current,
+                    progress_percent=progress,
+                    indicators=current_indicators if current_indicators else None,
+                    indicator_deltas=indicator_deltas if indicator_deltas else None,
+                    guidance_type=guidance_type,
+                    message_sent=message[:500] if message else None,
+                    notes=f"{guidance_type.title()} guidance at {progress:.1f}% progress"
+                )
+                
+                logger.info(f"Posted {guidance_type} guidance for signal #{signal_id}")
+                return True
+            else:
+                logger.error(f"Failed to post signal guidance: {result.error}")
+                return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to post signal guidance: {e}")
+            logger.exception(f"Failed to post signal guidance: {e}")
             return False
     
     async def post_revalidation_update(self, signal_id, thesis_status, message, current_price, entry_price):
@@ -539,7 +452,7 @@ Signal closed after maximum hold time."""
             current_price: Current market price
             entry_price: Signal entry price
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return False
         
         try:
@@ -558,32 +471,31 @@ Signal closed after maximum hold time."""
 
 <b>Current:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=full_message,
-                parse_mode='HTML'
-            )
+            result = await self._send(full_message)
             
-            # Record thesis check narrative event
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='thesis_check',
-                current_price=current_price,
-                guidance_type=thesis_status,
-                message_sent=message[:500] if message else None,
-                notes=f"Thesis re-validation: {thesis_status}"
-            )
-            
-            logger.info(f"✅ Posted revalidation ({thesis_status}) for signal #{signal_id}")
-            return True
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='thesis_check',
+                    current_price=current_price,
+                    guidance_type=thesis_status,
+                    message_sent=message[:500] if message else None,
+                    notes=f"Thesis re-validation: {thesis_status}"
+                )
+                
+                logger.info(f"Posted revalidation ({thesis_status}) for signal #{signal_id}")
+                return True
+            else:
+                logger.error(f"Failed to post revalidation update: {result.error}")
+                return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to post revalidation update: {e}")
+            logger.exception(f"Failed to post revalidation update: {e}")
             return False
     
     async def post_signal_timeout(self, signal_id, message, current_price, entry_price):
         """
-        Post a timeout notification when signal reaches 3-hour limit.
+        Post a timeout notification when signal reaches maximum hold time.
         
         Args:
             signal_id: Database signal ID
@@ -591,248 +503,243 @@ Signal closed after maximum hold time."""
             current_price: Current market price
             entry_price: Signal entry price
         """
-        if not self.bot or not self.channel_id:
+        if not self.is_configured():
             return False
         
         try:
-            full_message = f"""⏰ <b>Trade Timeout</b>
+            pnl = current_price - entry_price
+            pnl_display = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
+            
+            full_message = f"""⏰ <b>Signal Timeout</b>
 <b>Signal #{signal_id}</b>
 
 {message}
 
-<b>Current:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}"""
+<b>Exit:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}
+<b>Result:</b> {pnl_display}"""
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=full_message,
-                parse_mode='HTML'
-            )
+            result = await self._send(full_message)
             
-            # Record close advisory narrative event
-            add_signal_narrative(
-                signal_id=signal_id,
-                event_type='close_advisory',
-                current_price=current_price,
-                message_sent=message[:500] if message else None,
-                notes="Signal closed due to timeout"
-            )
-            
-            logger.info(f"✅ Posted timeout notification for signal #{signal_id}")
-            return True
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='timeout',
+                    current_price=current_price,
+                    message_sent=message[:500] if message else None,
+                    notes=f"Signal timeout at ${current_price:.2f}, P/L: {pnl_display}"
+                )
+                
+                logger.info(f"Posted timeout notification for signal #{signal_id}")
+                return True
+            else:
+                logger.error(f"Failed to post timeout notification: {result.error}")
+                return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to post timeout notification: {e}")
+            logger.exception(f"Failed to post timeout notification: {e}")
             return False
     
-    async def post_morning_briefing(self):
+    async def post_thesis_broken(self, signal_id, message, current_price, entry_price):
         """
-        Post morning briefing at 6:20 AM UTC with news and market levels
-        """
-        if not self.bot or not self.channel_id:
-            return
-        
-        try:
-            import os
-            import requests
-            from forex_api import twelve_data_client
-            
-            # Fetch current gold price and overnight range
-            current_price = twelve_data_client.get_current_price('XAU/USD')
-            
-            # Fetch news from Alpha Vantage
-            api_key = os.environ.get('ALPHA_NEWS_API')
-            news_items = []
-            
-            if api_key:
-                try:
-                    url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=economy_monetary&limit=10&apikey={api_key}'
-                    response = requests.get(url, timeout=10)
-                    data = response.json()
-                    
-                    if 'feed' in data:
-                        # Filter for gold/forex/fed relevant news
-                        keywords = ['gold', 'fed', 'dollar', 'rate', 'inflation', 'treasury', 'fomc', 'powell', 'monetary']
-                        for article in data['feed']:
-                            title = article.get('title', '').lower()
-                            if any(kw in title for kw in keywords):
-                                sentiment = article.get('overall_sentiment_label', 'Neutral')
-                                sentiment_emoji = '📈' if 'Bullish' in sentiment else '📉' if 'Bearish' in sentiment else '➡️'
-                                news_items.append({
-                                    'title': article.get('title', '')[:60],
-                                    'sentiment': sentiment,
-                                    'emoji': sentiment_emoji
-                                })
-                                if len(news_items) >= 2:
-                                    break
-                except Exception as e:
-                    logger.error(f"Error fetching news: {e}")
-            
-            # Build message
-            date_str = datetime.utcnow().strftime('%b %d')
-            
-            # News section
-            if news_items:
-                news_lines = [f"{item['emoji']} {item['title']}" for item in news_items]
-                news_section = "\n".join(news_lines)
-            else:
-                news_section = "➡️ Markets quiet ahead of key data"
-            
-            # Use AI to generate a personalized summary
-            try:
-                from forex_ai import generate_morning_summary
-                ai_summary = generate_morning_summary(current_price, news_items)
-            except:
-                ai_summary = "Stay sharp out there."
-            
-            message = f"""☀️ <b>Good Morning, Gold Traders</b>
-
-📰 <b>What's Moving Gold:</b>
-{news_section}
-
-📍 <b>Gold Now:</b> ${current_price:.2f}
-
-{ai_summary} 🏆"""
-            
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
-            
-            logger.info("✅ Posted morning briefing")
-            
-        except Exception as e:
-            logger.exception("❌ Failed to post morning briefing")
-    
-    async def post_daily_recap(self, ai_recap=None):
-        """
-        Post daily performance recap at 6:30 AM UTC (yesterday's signals)
+        Post a thesis broken notification when signal is invalidated.
         
         Args:
-            ai_recap: Optional AI-generated recap message (ignored)
+            signal_id: Database signal ID
+            message: AI-generated thesis broken message
+            current_price: Current market price
+            entry_price: Signal entry price
         """
-        if not self.bot or not self.channel_id:
-            return
+        if not self.is_configured():
+            return False
         
         try:
-            from db import get_forex_signals_by_period
+            pnl = current_price - entry_price
+            pnl_display = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
             
-            # Get YESTERDAY's signals for morning recap
-            from datetime import timedelta
-            yesterday = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d')
-            signals_yesterday = get_forex_signals_by_period(tenant_id=self.tenant_id, period='yesterday')
+            full_message = f"""🚨 <b>Trade Alert - Thesis Invalidated</b>
+<b>Signal #{signal_id}</b>
+
+{message}
+
+<b>Exit:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}
+<b>Result:</b> {pnl_display}"""
             
-            if not signals_yesterday or len(signals_yesterday) == 0:
-                message = f"📊 <b>Daily Recap - {yesterday}</b>\n\nNo signals posted yesterday."
+            result = await self._send(full_message)
+            
+            if result.success:
+                add_signal_narrative(
+                    signal_id=signal_id,
+                    event_type='thesis_broken',
+                    current_price=current_price,
+                    message_sent=message[:500] if message else None,
+                    notes=f"Thesis broken at ${current_price:.2f}, P/L: {pnl_display}"
+                )
+                
+                logger.info(f"Posted thesis broken notification for signal #{signal_id}")
+                return True
             else:
-                stats = get_forex_stats_by_period(tenant_id=self.tenant_id, period='yesterday') or {}
-                total_pips = stats.get('total_pips', 0)
-                
-                # Build signal list
-                signal_lines = []
-                for signal in signals_yesterday:
-                    entry = signal.get('entry_price', 0)
-                    posted_at = datetime.fromisoformat(signal['posted_at'])
-                    time_str = posted_at.strftime('%H:%M')
-                    
-                    if signal['status'] == 'won':
-                        pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.1f} pips")
-                    elif signal['status'] == 'lost':
-                        pips = signal.get('result_pips', 0)
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -{abs(pips):.1f} pips")
-                    elif signal['status'] == 'pending':
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
-                    elif signal['status'] == 'expired':
-                        signal_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏱️")
-                
-                signal_list = "\n".join(signal_lines)
-                
-                total_display = f"+{total_pips:.1f}" if total_pips >= 0 else f"{total_pips:.1f}"
-                message = f"""📊 <b>Daily Recap - {yesterday}</b>
-
-{signal_list}
-
-<b>Total: {total_display} pips</b>"""
-            
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
-            
-            logger.info("✅ Posted daily recap")
+                logger.error(f"Failed to post thesis broken notification: {result.error}")
+                return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to post daily recap: {e}")
+            logger.exception(f"Failed to post thesis broken notification: {e}")
+            return False
     
-    async def post_weekly_recap(self, ai_recap=None):
+    async def post_daily_recap(self, recap_data, date_str=None, ai_message=None):
         """
-        Post weekly performance recap on Sunday
+        Post daily performance recap to channel.
         
         Args:
-            ai_recap: Optional AI-generated recap (ignored)
+            recap_data: Dict with total_signals, wins, losses, total_pnl
+            date_str: Date string for the recap
+            ai_message: Optional AI-generated summary
         """
-        if not self.bot or not self.channel_id:
-            return
+        if not self.is_configured():
+            return False
         
         try:
-            from db import get_forex_signals_by_period
-            from collections import defaultdict
+            total = recap_data.get('total_signals', 0)
+            wins = recap_data.get('wins', 0)
+            losses = recap_data.get('losses', 0)
+            pnl = recap_data.get('total_pnl', 0)
             
-            signals_week = get_forex_signals_by_period(tenant_id=self.tenant_id, period='week')
-            
-            if not signals_week or len(signals_week) == 0:
-                message = "📊 <b>Weekly Recap</b>\n\nNo signals this week."
+            if total == 0:
+                message = f"""📊 <b>Daily Recap</b> - {date_str or 'Today'}
+
+No signals posted today. Markets were quiet."""
             else:
-                stats = get_forex_stats_by_period(tenant_id=self.tenant_id, period='week') or {}
-                total_pips = stats.get('total_pips', 0)
+                win_rate = (wins / total * 100) if total > 0 else 0
+                pnl_emoji = "📈" if pnl >= 0 else "📉"
+                pnl_display = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
                 
-                # Group signals by day
-                signals_by_day = defaultdict(list)
-                for signal in signals_week:
-                    posted_at = datetime.fromisoformat(signal['posted_at'])
-                    day_key = posted_at.strftime('%b %d')
-                    signals_by_day[day_key].append(signal)
+                message = f"""📊 <b>Daily Recap</b> - {date_str or 'Today'}
+
+<b>Signals:</b> {total}
+<b>Wins:</b> {wins} | <b>Losses:</b> {losses}
+<b>Win Rate:</b> {win_rate:.1f}%
+
+{pnl_emoji} <b>P/L:</b> {pnl_display}"""
                 
-                # Build message with daily breakdown
-                message_lines = ["📊 <b>Weekly Recap</b>\n"]
-                
-                for day in sorted(signals_by_day.keys()):
-                    day_signals = signals_by_day[day]
-                    message_lines.append(f"<b>{day}</b>")
-                    
-                    for signal in day_signals:
-                        entry = signal.get('entry_price', 0)
-                        posted_at = datetime.fromisoformat(signal['posted_at'])
-                        time_str = posted_at.strftime('%H:%M')
-                        
-                        if signal['status'] == 'won':
-                            pips = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ✅ +{pips:.1f} pips")
-                        elif signal['status'] == 'lost':
-                            pips = signal.get('result_pips', 0)
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ❌ -{abs(pips):.1f} pips")
-                        elif signal['status'] == 'pending':
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏳")
-                        elif signal['status'] == 'expired':
-                            message_lines.append(f"{signal['signal_type']}@{entry:.2f} | {time_str} ⏱️")
-                    
-                    message_lines.append("")  # Blank line between days
-                
-                total_display = f"+{total_pips:.1f}" if total_pips >= 0 else f"{total_pips:.1f}"
-                message_lines.append(f"<b>Weekly Total: {total_display} pips</b>")
-                message = "\n".join(message_lines)
+                if ai_message:
+                    message += f"\n\n{ai_message}"
             
-            await self.bot.send_message(
-                chat_id=self.channel_id,
-                text=message,
-                parse_mode='HTML'
-            )
+            result = await self._send(message)
             
-            logger.info("✅ Posted weekly recap")
+            if result.success:
+                logger.info(f"Posted daily recap for {date_str or 'today'}")
+                return True
+            else:
+                logger.error(f"Failed to post daily recap: {result.error}")
+                return False
             
         except Exception as e:
-            logger.error(f"❌ Failed to post weekly recap: {e}")
+            logger.exception(f"Failed to post daily recap: {e}")
+            return False
+    
+    async def post_weekly_recap(self, recap_data, week_str=None, ai_message=None):
+        """
+        Post weekly performance recap to channel.
+        
+        Args:
+            recap_data: Dict with total_signals, wins, losses, total_pnl
+            week_str: Week string for the recap
+            ai_message: Optional AI-generated summary
+        """
+        if not self.is_configured():
+            return False
+        
+        try:
+            total = recap_data.get('total_signals', 0)
+            wins = recap_data.get('wins', 0)
+            losses = recap_data.get('losses', 0)
+            pnl = recap_data.get('total_pnl', 0)
+            
+            if total == 0:
+                message = f"""📅 <b>Weekly Recap</b> - {week_str or 'This Week'}
 
-forex_telegram_bot = ForexTelegramBot()
+No signals posted this week."""
+            else:
+                win_rate = (wins / total * 100) if total > 0 else 0
+                pnl_emoji = "📈" if pnl >= 0 else "📉"
+                pnl_display = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
+                
+                message = f"""📅 <b>Weekly Recap</b> - {week_str or 'This Week'}
+
+<b>Total Signals:</b> {total}
+<b>Wins:</b> {wins} | <b>Losses:</b> {losses}
+<b>Win Rate:</b> {win_rate:.1f}%
+
+{pnl_emoji} <b>Weekly P/L:</b> {pnl_display}"""
+                
+                if ai_message:
+                    message += f"\n\n{ai_message}"
+            
+            result = await self._send(message)
+            
+            if result.success:
+                logger.info(f"Posted weekly recap for {week_str or 'this week'}")
+                return True
+            else:
+                logger.error(f"Failed to post weekly recap: {result.error}")
+                return False
+            
+        except Exception as e:
+            logger.exception(f"Failed to post weekly recap: {e}")
+            return False
+    
+    async def post_morning_briefing(self, briefing_data, ai_message=None):
+        """
+        Post morning market briefing to channel.
+        
+        Args:
+            briefing_data: Dict with market context data
+            ai_message: AI-generated briefing message
+        """
+        if not self.is_configured():
+            return False
+        
+        try:
+            if not ai_message:
+                ai_message = "Good morning! Markets are open. Stay disciplined and follow the signals."
+            
+            message = f"""☀️ <b>Morning Briefing</b>
+
+{ai_message}"""
+            
+            result = await self._send(message)
+            
+            if result.success:
+                logger.info("Posted morning briefing")
+                return True
+            else:
+                logger.error(f"Failed to post morning briefing: {result.error}")
+                return False
+            
+        except Exception as e:
+            logger.exception(f"Failed to post morning briefing: {e}")
+            return False
+    
+    async def send_custom_message(self, message: str):
+        """
+        Send a custom message to the channel.
+        
+        Args:
+            message: Message text (HTML format)
+            
+        Returns:
+            True if sent successfully, False otherwise
+        """
+        if not self.is_configured():
+            return False
+        
+        try:
+            result = await self._send(message)
+            return result.success
+        except Exception as e:
+            logger.exception(f"Failed to send custom message: {e}")
+            return False
+
+
+def create_forex_bot(tenant_id: str) -> ForexTelegramBot:
+    """Factory function to create a ForexTelegramBot instance."""
+    return ForexTelegramBot(tenant_id=tenant_id)

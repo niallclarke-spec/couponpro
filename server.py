@@ -278,6 +278,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.connections import handlers as conn_h
         conn_h.handle_connection_validate(self)
 
+    def handle_api_connection_validate_saved(self):
+        from domains.connections import handlers as conn_h
+        conn_h.handle_connection_validate_saved(self)
+
     def handle_api_connection_test(self):
         from domains.connections import handlers as conn_h
         conn_h.handle_connection_test(self)
