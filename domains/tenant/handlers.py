@@ -1,6 +1,7 @@
 """Tenant domain handlers."""
 import json
 from core.tenant_credentials import get_tenant_setup_status
+from domains.tenant import repo as tenant_repo
 
 from core.logging import get_logger
 logger = get_logger(__name__)
@@ -62,31 +63,12 @@ def handle_tenant_integrations(handler, tenant_id):
         handler.wfile.write(json.dumps({'error': f'Missing fields: {missing}'}).encode())
         return
     
-    from db import db_pool
-    if not db_pool or not db_pool.connection_pool:
-        handler.send_response(503)
-        handler.send_header('Content-type', 'application/json')
-        handler.end_headers()
-        handler.wfile.write(json.dumps({'error': 'Database not available'}).encode())
-        return
-    
-    try:
-        with db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO tenant_integrations (tenant_id, provider, config_json, updated_at)
-                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (tenant_id, provider) 
-                DO UPDATE SET config_json = EXCLUDED.config_json, updated_at = CURRENT_TIMESTAMP
-            """, (tenant_id, provider, json.dumps(config)))
-            conn.commit()
-        logger.info(f"Saved {provider} integration for tenant {tenant_id}")
-    except Exception as e:
-        logger.exception("Error saving integration")
+    success = tenant_repo.upsert_integration(tenant_id, provider, config)
+    if not success:
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+        handler.wfile.write(json.dumps({'error': 'Failed to save integration'}).encode())
         return
     
     handler.send_response(200)
@@ -142,70 +124,28 @@ def handle_tenant_map_user(handler):
         _send_json(handler, 400, {'error': f'Invalid role. Must be one of: {", ".join(VALID_ROLES)}'})
         return
     
-    from db import db_pool
-    if not db_pool or not db_pool.connection_pool:
-        _send_json(handler, 503, {'error': 'Database not available'})
+    if not tenant_repo.tenant_exists(tenant_id):
+        _send_json(handler, 400, {'error': f'Tenant not found: {tenant_id}'})
         return
     
-    try:
-        with db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute("SELECT id FROM tenants WHERE id = %s", (tenant_id,))
-            if not cursor.fetchone():
-                _send_json(handler, 400, {'error': f'Tenant not found: {tenant_id}'})
-                return
-            
-            cursor.execute("""
-                WITH prev AS (
-                    SELECT tenant_id, role FROM tenant_users WHERE clerk_user_id = %s
-                )
-                INSERT INTO tenant_users (clerk_user_id, tenant_id, role)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (clerk_user_id) 
-                DO UPDATE SET tenant_id = EXCLUDED.tenant_id, role = EXCLUDED.role
-                RETURNING 
-                    (SELECT tenant_id FROM prev) AS prev_tenant,
-                    (SELECT role FROM prev) AS prev_role,
-                    (xmax = 0) AS is_insert
-            """, (clerk_user_id, clerk_user_id, tenant_id, role))
-            
-            row = cursor.fetchone()
-            conn.commit()
-            
-            prev_tenant, prev_role, is_insert = row
-            
-            if is_insert:
-                action = 'created'
-                previous_tenant_id = None
-            elif prev_tenant == tenant_id and prev_role == role:
-                action = 'unchanged'
-                previous_tenant_id = None
-            elif prev_tenant == tenant_id:
-                action = 'updated'
-                previous_tenant_id = None
-            else:
-                action = 'moved'
-                previous_tenant_id = prev_tenant
-        
-        logger.info(f"User mapping {action}: user={clerk_user_id}, tenant={tenant_id}")
-        
-        response = {
-            'success': True,
-            'action': action,
-            'tenant_id': tenant_id,
-            'previous_tenant_id': previous_tenant_id,
-            'clerk_user_id': clerk_user_id,
-            'role': role
-        }
-        
-        _send_json(handler, 200, response)
-        
-    except Exception as e:
-        error_str = str(e).lower()
-        if 'unique' in error_str or 'duplicate' in error_str or 'constraint' in error_str:
-            logger.warning(f"Constraint violation: {e}")
+    success, action, previous_tenant_id = tenant_repo.map_user_to_tenant(
+        clerk_user_id, tenant_id, role
+    )
+    
+    if not success:
+        if action == 'conflict':
             _send_json(handler, 409, {'error': 'User mapping conflict - constraint violation'})
         else:
-            logger.error(f"Error mapping user: {e}")
-            _send_json(handler, 400, {'error': 'Failed to create user mapping'})
+            _send_json(handler, 500, {'error': 'Failed to create user mapping'})
+        return
+    
+    response = {
+        'success': True,
+        'action': action,
+        'tenant_id': tenant_id,
+        'previous_tenant_id': previous_tenant_id,
+        'clerk_user_id': clerk_user_id,
+        'role': role
+    }
+    
+    _send_json(handler, 200, response)

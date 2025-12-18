@@ -11,6 +11,7 @@ import db
 from core.logging import get_logger
 from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
 from core.telegram_sender import invalidate_connection_cache, validate_bot_credentials
+from domains.connections import repo as connections_repo
 
 logger = get_logger(__name__)
 
@@ -60,35 +61,7 @@ def handle_connections_list(handler):
     """GET /api/connections - List all bot connections for tenant."""
     try:
         tenant_id = getattr(handler, 'tenant_id', 'entrylab')
-        
-        if not db.db_pool or not db.db_pool.connection_pool:
-            _send_json(handler, 503, {'error': 'Database not available'})
-            return
-        
-        with db.db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT bot_role, bot_username, webhook_url, channel_id, last_validated_at, last_error,
-                       vip_channel_id, free_channel_id
-                FROM tenant_bot_connections
-                WHERE tenant_id = %s
-                ORDER BY bot_role
-            """, (tenant_id,))
-            
-            rows = cursor.fetchall()
-            connections = []
-            for row in rows:
-                connections.append({
-                    'bot_role': row[0],
-                    'bot_username': row[1],
-                    'webhook_url': row[2],
-                    'channel_id': row[3],
-                    'last_validated_at': row[4].isoformat() if row[4] else None,
-                    'last_error': row[5],
-                    'vip_channel_id': row[6],
-                    'free_channel_id': row[7]
-                })
-        
+        connections = connections_repo.list_connections(tenant_id)
         _send_json(handler, 200, {'connections': connections})
         
     except Exception as e:
@@ -250,10 +223,6 @@ def handle_connection_delete(handler, bot_role: str):
         _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
         return
     
-    if not db.db_pool or not db.db_pool.connection_pool:
-        _send_json(handler, 503, {'error': 'Database not available'})
-        return
-    
     try:
         connection = db.get_bot_connection(tenant_id, bot_role)
         if not connection:
@@ -271,16 +240,12 @@ def handle_connection_delete(handler, bot_role: str):
             except requests.RequestException as e:
                 logger.warning(f"Error deleting webhook: {e}")
         
-        with db.db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                DELETE FROM tenant_bot_connections
-                WHERE tenant_id = %s AND bot_role = %s
-            """, (tenant_id, bot_role))
-            conn.commit()
+        success = connections_repo.delete_connection(tenant_id, bot_role)
+        if not success:
+            _send_json(handler, 500, {'error': 'Failed to delete connection from database'})
+            return
         
         invalidate_connection_cache(tenant_id, bot_role)
-        logger.info(f"Deleted bot connection: tenant={tenant_id}, role={bot_role}")
         _send_json(handler, 200, {'success': True})
         
     except Exception as e:
