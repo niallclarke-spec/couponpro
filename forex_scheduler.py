@@ -194,7 +194,7 @@ class ForexSchedulerRunner:
         logger.info("🔍 Price monitoring: Every 1 minute")
         logger.info("💡 Signal guidance: Every 1 minute (with 10min cooldown)")
         logger.info("🔄 Stagnant re-validation: First at 90min, then every 30min")
-        logger.info("⏰ Hard timeout: 3 hours")
+        logger.info("⏰ Signal timeout: 4 hours (atomic close in price monitor)")
         logger.info("☀️ Morning briefing: 6:20 AM UTC")
         logger.info("📅 Daily recap: 6:30 AM UTC")
         logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")

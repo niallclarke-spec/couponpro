@@ -27,7 +27,9 @@ logger = get_logger(__name__)
 # Timing constants (in minutes)
 FIRST_REVALIDATION_MINUTES = 90   # First indicator recheck at 90 min
 REVALIDATION_INTERVAL_MINUTES = 30  # Subsequent rechecks every 30 min  
-HARD_TIMEOUT_MINUTES = 180        # 3-hour hard timeout
+# DEPRECATED: Hard timeout is now handled in monitor_active_signals (4 hours)
+# This constant is kept for reference but not used
+HARD_TIMEOUT_MINUTES = 240        # 4-hour timeout (handled atomically in monitor_active_signals)
 
 # Guidance zone thresholds (percentage toward TP)
 PROGRESS_ZONE_THRESHOLD = 30      # 30% toward TP - progress update
@@ -764,13 +766,14 @@ class ForexSignalEngine:
     
     async def check_stagnant_signals(self):
         """
-        Check for stagnant signals that need indicator re-validation or timeout.
-        Returns list of events for signals that need updates.
+        Check for stagnant signals that need indicator re-validation.
+        Returns list of revalidation events for signals that need thesis checks.
         
         Timing:
         - First re-check at 90 minutes if still < 30% progress
         - Subsequent re-checks every 30 minutes
-        - Hard timeout at 3 hours
+        
+        Note: Hard timeout (4 hours) is handled atomically in monitor_active_signals.
         """
         try:
             active_signals = get_forex_signals(tenant_id=self.tenant_id, status='pending')
@@ -788,7 +791,7 @@ class ForexSignalEngine:
                 last_caution_zone = signal.get('last_caution_zone', 0)
                 last_revalidation_at = signal.get('last_revalidation_at')
                 thesis_status = signal.get('thesis_status', 'intact')
-                timeout_notified = signal.get('timeout_notified', False)
+                # NOTE: timeout_notified is no longer used - timeout is handled in monitor_active_signals
                 
                 # Parse timestamps
                 if isinstance(posted_at, str):
@@ -801,17 +804,8 @@ class ForexSignalEngine:
                 
                 minutes_elapsed = (now - posted_at).total_seconds() / 60
                 
-                # Check for hard timeout (3 hours = 180 minutes)
-                if minutes_elapsed >= self.hard_timeout_minutes and not timeout_notified:
-                    revalidation_events.append({
-                        'signal_id': signal_id,
-                        'event_type': 'timeout',
-                        'signal': signal,
-                        'minutes_elapsed': minutes_elapsed,
-                        'reason': f"Trade has been open for {minutes_elapsed/60:.1f} hours without resolution"
-                    })
-                    logger.info(f"Signal #{signal_id}: Hard timeout after {minutes_elapsed:.0f} minutes")
-                    continue
+                # NOTE: Hard timeout is handled atomically in monitor_active_signals (4 hours)
+                # This function only handles revalidation checks for stagnant trades
                 
                 # Only check stagnant trades (not yet hit progress threshold in either direction)
                 if last_progress_zone >= PROGRESS_ZONE_THRESHOLD or last_caution_zone >= PROGRESS_ZONE_THRESHOLD:

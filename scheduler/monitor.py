@@ -199,12 +199,15 @@ class SignalMonitor:
             logger.exception("❌ Error in signal guidance")
     
     async def run_stagnant_signal_checks(self):
-        """Check stagnant signals for re-validation and timeout."""
+        """
+        Check stagnant signals for indicator re-validation.
+        
+        Note: Hard timeout (4 hours) is handled atomically in monitor_active_signals.
+        This function only handles revalidation events for thesis checking.
+        """
         try:
             with self.runtime.request_context():
                 revalidation_events = await self.signal_engine.check_stagnant_signals()
-                
-                db = self.runtime.db
                 
                 for event in revalidation_events:
                     signal_id = event['signal_id']
@@ -222,17 +225,14 @@ class SignalMonitor:
                         logger.warning(f"⚠️ Could not fetch price for revalidation of signal #{signal_id}")
                         continue
                     
-                    if event_type == 'timeout':
-                        await self._handle_signal_timeout(
-                            signal_id, signal, signal_type, entry, tp, sl,
-                            current_price, minutes_elapsed
-                        )
-                    
-                    elif event_type == 'revalidation':
+                    if event_type == 'revalidation':
                         await self._handle_signal_revalidation(
                             signal_id, signal, event, signal_type, entry, tp, sl,
                             current_price, minutes_elapsed
                         )
+                    else:
+                        # Timeout events are now handled atomically in monitor_active_signals
+                        logger.warning(f"⚠️ Unexpected event type '{event_type}' for signal #{signal_id} - ignoring")
                 
         except Exception as e:
             logger.exception("❌ Error in stagnant signal checks")
@@ -248,50 +248,15 @@ class SignalMonitor:
         current_price: float,
         minutes_elapsed: float
     ):
-        """Handle signal timeout."""
-        db = self.runtime.db
-        
-        current_indicators = None
-        original_indicators = signal.get('original_indicators_json') or {}
-        
-        try:
-            validation = await self.signal_engine.perform_revalidation(signal)
-            if validation:
-                current_indicators = validation.get('current_indicators', {})
-        except Exception as e:
-            logger.warning(f"Could not fetch current indicators for timeout: {e}")
-        
-        ai_message = generate_timeout_message(
-            signal_id=signal_id,
-            signal_type=signal_type,
-            minutes_elapsed=minutes_elapsed,
-            current_price=current_price,
-            entry_price=entry,
-            tp_price=tp,
-            sl_price=sl,
-            current_indicators=current_indicators,
-            original_indicators=original_indicators
-        )
-        
-        success = await self.messenger.post_signal_timeout(
-            signal_id=signal_id,
-            message=ai_message,
-            current_price=current_price,
-            entry_price=entry
-        )
-        
-        if success:
-            db.update_signal_timeout_notified(signal_id, tenant_id=self.tenant_id)
-            
-            if signal_type == 'BUY':
-                pips = round((current_price - entry) * 100, 1)
-            else:
-                pips = round((entry - current_price) * 100, 1)
-            
-            final_status = 'won' if pips > 0 else 'expired'
-            self.runtime.update_forex_signal_status(signal_id, final_status, pips, current_price)
-            self.signal_engine.load_active_strategy()
-            logger.info(f"✅ Posted close advisory for signal #{signal_id} after {minutes_elapsed/60:.1f}h (status: {final_status})")
+        """
+        DEPRECATED: Signal timeouts are now handled atomically in monitor_active_signals.
+        This method should NOT be called - timeout events are no longer emitted by check_stagnant_signals.
+        """
+        # Log warning and return early - do NOT close the signal here
+        # The 4-hour atomic timeout in monitor_active_signals is the only close path
+        logger.error(f"❌ _handle_signal_timeout called for signal #{signal_id} - THIS SHOULD NOT HAPPEN!")
+        logger.error("   Timeout handling has been moved to monitor_active_signals (4-hour atomic close)")
+        return  # Do nothing - prevent any legacy close path
     
     async def _handle_signal_revalidation(
         self,
@@ -360,6 +325,7 @@ class SignalMonitor:
                             pips = round((entry - current_price) * 100, 1)
                         
                         final_status = 'won' if pips > 0 else 'expired'
+                        # ATOMIC: Close signal immediately after detecting broken thesis
                         self.runtime.update_forex_signal_status(signal_id, final_status, pips, current_price)
                         self.signal_engine.load_active_strategy()
-                        logger.info(f"Signal #{signal_id} closed due to broken thesis (status: {final_status})")
+                        logger.info(f"✅ Signal #{signal_id} closed due to broken thesis (status: {final_status}, {pips:+.1f} pips)")
