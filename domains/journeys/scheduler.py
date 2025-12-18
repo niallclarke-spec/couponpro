@@ -11,59 +11,17 @@ Starts automatically at app boot via bootstrap.py.
 """
 import threading
 import time
-import requests
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Optional
 
 from core.logging import get_logger
-from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+from core.telegram_sender import send_message_sync
 
 logger = get_logger(__name__)
 
 _scheduler_thread: Optional[threading.Thread] = None
 _scheduler_running = False
 _scheduler_lock = threading.Lock()
-
-
-def send_telegram_message(tenant_id: str, chat_id: int, text: str) -> bool:
-    """
-    Send a Telegram message using tenant's configured message bot.
-    
-    Args:
-        tenant_id: Tenant ID to look up bot credentials
-        chat_id: Telegram chat ID
-        text: Message text to send
-        
-    Returns:
-        True if sent successfully, False otherwise
-    """
-    try:
-        creds = get_bot_credentials(tenant_id, 'message_bot')
-        bot_token = creds['bot_token']
-    except BotNotConfiguredError:
-        logger.error(f"[JOURNEY-SCHEDULER] Message Bot not configured for tenant {tenant_id}")
-        return False
-    
-    if not bot_token:
-        logger.error(f"[JOURNEY-SCHEDULER] No bot token for tenant {tenant_id}")
-        return False
-    
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        response = requests.post(url, json={
-            'chat_id': chat_id,
-            'text': text,
-            'parse_mode': 'HTML'
-        }, timeout=10)
-        
-        if response.status_code == 200:
-            return True
-        else:
-            logger.error(f"[JOURNEY-SCHEDULER] Telegram API error: {response.text}")
-            return False
-    except Exception as e:
-        logger.exception(f"[JOURNEY-SCHEDULER] Error sending message: {e}")
-        return False
 
 
 def process_due_messages() -> int:
@@ -167,7 +125,7 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
         return False
     
     if text:
-        success = send_telegram_message(tenant_id, chat_id, text)
+        success = send_message_sync(tenant_id, chat_id, text)
         if not success:
             logger.error(f"[JOURNEY-SCHEDULER] Failed to send to chat {chat_id}")
             return False

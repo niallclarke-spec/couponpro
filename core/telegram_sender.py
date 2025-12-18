@@ -12,7 +12,9 @@ Architecture:
 - _resolve_bot_connection(tenant_id, bot_role) -> connection dict with token, channel_id, etc.
 - _send_message(tenant_id, bot_role, chat_id, text, ...) -> sends message using fresh credentials
 - TTL cache (60s) prevents DB hammering during bursts while ensuring near-instant token updates
+- send_message_sync() - sync wrapper for use in non-async contexts (e.g., scheduler, engine)
 """
+import asyncio
 import time
 import threading
 from dataclasses import dataclass
@@ -250,6 +252,43 @@ async def send_message(
             f"tenant={tenant_id}, role={bot_role}, chat={chat_id}, error={e}"
         )
         return SendResult(success=False, error=str(e))
+
+
+def send_message_sync(
+    tenant_id: str,
+    chat_id: int,
+    text: str,
+    bot_role: str = 'message_bot',
+    parse_mode: str = 'HTML'
+) -> bool:
+    """
+    Synchronous wrapper for send_message - for use in non-async contexts.
+    
+    This is the canonical way to send messages from sync code like the
+    journey scheduler and engine. Uses asyncio.run() internally.
+    
+    Args:
+        tenant_id: Tenant ID (required)
+        chat_id: Telegram chat ID
+        text: Message text
+        bot_role: Bot role, defaults to 'message_bot'
+        parse_mode: 'HTML' or 'Markdown'
+        
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    try:
+        result = asyncio.run(send_message(
+            tenant_id=tenant_id,
+            bot_role=bot_role,
+            chat_id=str(chat_id),
+            text=text,
+            parse_mode=parse_mode
+        ))
+        return result.success
+    except Exception as e:
+        logger.exception(f"send_message_sync failed: tenant={tenant_id}, chat={chat_id}, error={e}")
+        return False
 
 
 async def send_to_channel(

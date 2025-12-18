@@ -5,11 +5,10 @@ Supports: message, question, delay step types.
 V1 does NOT support conditional steps.
 """
 import random
-import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Callable
 from core.logging import get_logger
-from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+from core.telegram_sender import send_message_sync
 
 logger = get_logger(__name__)
 
@@ -35,6 +34,9 @@ class JourneyEngine:
         """
         Send a Telegram message using tenant's configured message bot.
         
+        Delegates to core.telegram_sender.send_message_sync for centralized
+        credential resolution and caching.
+        
         Args:
             tenant_id: Tenant ID to look up bot credentials
             chat_id: Telegram chat ID
@@ -43,33 +45,7 @@ class JourneyEngine:
         Returns:
             True if sent successfully, False otherwise
         """
-        try:
-            creds = get_bot_credentials(tenant_id, 'message_bot')
-            bot_token = creds['bot_token']
-        except BotNotConfiguredError:
-            logger.error(f"Message Bot not configured. Go to Connections → Message Bot. (tenant={tenant_id})")
-            return False
-        
-        if not bot_token:
-            logger.error(f"No bot token available for tenant {tenant_id}")
-            return False
-        
-        try:
-            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            response = requests.post(url, json={
-                'chat_id': chat_id,
-                'text': text,
-                'parse_mode': 'HTML'
-            }, timeout=10)
-            
-            if response.status_code == 200:
-                return True
-            else:
-                logger.error(f"Telegram API error: {response.text}")
-                return False
-        except Exception as e:
-            logger.exception(f"Error sending message: {e}")
-            return False
+        return send_message_sync(tenant_id, chat_id, text)
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 
                                 telegram_chat_id: int, telegram_user_id: int) -> Optional[Dict]:
