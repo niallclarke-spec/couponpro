@@ -174,6 +174,38 @@ class ForexSchedulerRunner:
         except Exception as e:
             logger.error(f"❌ Error posting weekly recap: {e}")
     
+    async def check_crosspromo_daily(self):
+        """Enqueue cross promo daily sequence at 9:00 AM UTC (Mon-Fri only)"""
+        try:
+            now = datetime.utcnow()
+            
+            # Only run at 9:00-9:05 AM UTC on weekdays (Mon=0, Fri=4)
+            if now.weekday() > 4:
+                return
+            
+            if now.hour == 9 and 0 <= now.minute < 5:
+                current_date_str = now.date().isoformat()
+                
+                db = self.runtime.db
+                last_enqueued = db.get_last_recap_date('crosspromo_daily', tenant_id=self.tenant_id)
+                
+                if last_enqueued != current_date_str:
+                    logger.info("Enqueueing cross promo daily sequence...")
+                    
+                    from domains.crosspromo import service as crosspromo_service
+                    result = crosspromo_service.enqueue_daily_sequence(self.tenant_id)
+                    
+                    if result.get('success'):
+                        db.set_last_recap_date('crosspromo_daily', current_date_str, tenant_id=self.tenant_id)
+                        jobs = result.get('jobs_created', [])
+                        logger.info(f"✅ Cross promo daily sequence enqueued: {jobs}")
+                    else:
+                        error = result.get('error', 'Unknown error')
+                        logger.warning(f"Cross promo daily sequence skipped: {error}")
+        
+        except Exception as e:
+            logger.error(f"❌ Error enqueueing cross promo daily: {e}")
+    
     async def run_once(self):
         """Run a single signal check cycle and exit."""
         with self.runtime.request_context():
@@ -197,6 +229,7 @@ class ForexSchedulerRunner:
         logger.info("☀️ Morning briefing: 6:20 AM UTC")
         logger.info("📅 Daily recap: 6:30 AM UTC")
         logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")
+        logger.info("📣 Cross promo daily: 9:00 AM UTC (Mon-Fri)")
         logger.info("⏰ Trading hours: 8AM-10PM GMT")
         logger.info("=" * 60)
         
@@ -222,6 +255,7 @@ class ForexSchedulerRunner:
                     await self.check_morning_briefing()
                     await self.check_daily_recap()
                     await self.check_weekly_recap()
+                    await self.check_crosspromo_daily()
                 
                 signal_check_counter += 1
                 await asyncio.sleep(self.monitor_interval)

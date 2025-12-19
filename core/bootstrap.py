@@ -137,5 +137,12 @@ def start_app(ctx: AppContext) -> None:
             logger.info("Journey scheduler started")
         except Exception as e:
             logger.exception("Journey scheduler startup failed")
+        
+        try:
+            from scheduler.crosspromo_worker import start_worker_thread
+            start_worker_thread()
+            logger.info("Cross promo worker started")
+        except Exception as e:
+            logger.exception("Cross promo worker startup failed")
     
     logger.info("Application started")
