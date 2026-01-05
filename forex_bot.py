@@ -6,7 +6,7 @@ No cached bot instances - each send resolves fresh credentials.
 """
 import asyncio
 from datetime import datetime
-from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status
+from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period, update_signal_original_indicators, add_signal_narrative, get_active_bot, update_signal_status, update_tp_message_id
 from core.logging import get_logger
 from core.bot_credentials import BotNotConfiguredError, SIGNAL_BOT
 from core.telegram_sender import send_to_channel, get_connection_for_send, SendResult
@@ -203,7 +203,7 @@ class ForexTelegramBot:
             logger.exception(f"Unexpected error posting signal: {e}")
             return None
     
-    async def post_tp_hit(self, signal_id, tp_number, pips_profit, position_percentage, remaining_percentage=None):
+    async def post_tp_hit(self, signal_id, tp_number, pips_profit, position_percentage, remaining_percentage=None) -> int | None:
         """
         Post notification when an individual TP is hit (multi-TP system)
         
@@ -213,9 +213,12 @@ class ForexTelegramBot:
             pips_profit: Profit in pips for this TP
             position_percentage: Percentage of position closed at this TP
             remaining_percentage: Percentage of position still open (optional)
+        
+        Returns:
+            int: Telegram message ID if successful (for TP1/TP3 cross-promo), None otherwise
         """
         if not self.is_configured():
-            return
+            return None
         
         try:
             if tp_number == 1:
@@ -242,12 +245,21 @@ class ForexTelegramBot:
                     event_type=f'tp{tp_number}_hit',
                     notes=f"TP{tp_number} hit: +${pips_profit:.2f} ({position_percentage}% closed)"
                 )
-                logger.info(f"Posted TP{tp_number} notification for signal #{signal_id}")
+                logger.info(f"Posted TP{tp_number} notification for signal #{signal_id} (msg_id: {result.message_id})")
+                
+                # Store message ID for cross-promo (TP1 and TP3 only)
+                if tp_number in [1, 3] and result.message_id:
+                    update_tp_message_id(signal_id, tp_number, result.message_id, self.tenant_id)
+                    logger.debug(f"Stored TP{tp_number} message ID {result.message_id} for signal #{signal_id}")
+                
+                return result.message_id
             else:
                 logger.error(f"Failed to post TP{tp_number} notification: {result.error}")
+                return None
             
         except Exception as e:
             logger.exception(f"Failed to post TP{tp_number} notification: {e}")
+            return None
     
     async def post_breakeven_alert(self, signal_id, entry_price, current_price):
         """

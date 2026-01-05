@@ -230,6 +230,32 @@ def mark_failed(job_id: str, error: str) -> bool:
         return False
 
 
+def cancel_pending_jobs_by_dedupe(dedupe_key: str) -> int:
+    """
+    Cancel (mark as 'cancelled') all pending jobs with a given dedupe_key.
+    Used to reschedule CTA jobs when TP3 is hit.
+    
+    Returns the number of jobs cancelled.
+    """
+    try:
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE crosspromo_jobs
+                SET status = 'cancelled', updated_at = NOW()
+                WHERE dedupe_key = %s AND status = 'queued'
+            """, (dedupe_key,))
+            count = cursor.rowcount
+            conn.commit()
+            
+            if count > 0:
+                logger.info(f"Cancelled {count} job(s) with dedupe_key={dedupe_key}")
+            return count
+    except Exception as e:
+        logger.exception(f"Error cancelling jobs by dedupe: {e}")
+        return 0
+
+
 def _row_to_job(row) -> Dict[str, Any]:
     """Convert a database row to a job dict."""
     import json

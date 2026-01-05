@@ -1224,6 +1224,22 @@ class DatabasePool:
                 else:
                     logger.info("effective_sl column already exists, skipping")
                 
+                # Migration: Add cross-promo tracking columns
+                logger.info("Checking forex_signals for cross-promo columns...")
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name='forex_signals' AND column_name = 'tp1_message_id'
+                """)
+                if not cursor.fetchone():
+                    logger.info("Adding cross-promo columns to forex_signals...")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp1_message_id BIGINT")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp3_message_id BIGINT")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN crosspromo_status VARCHAR(20) DEFAULT 'none'")
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN crosspromo_started_at TIMESTAMP")
+                    logger.info("Cross-promo columns added successfully")
+                else:
+                    logger.info("Cross-promo columns already exist, skipping")
+                
                 # ============================================================
                 # Phase 2B: Add unique constraints (tenant_id + natural_key)
                 # ============================================================
@@ -4125,6 +4141,155 @@ def update_signal_telegram_message_id(signal_id, message_id, tenant_id):
     except Exception as e:
         logger.exception(f"Error updating signal telegram message ID: {e}")
         return False
+
+
+def update_tp_message_id(signal_id: int, tp_level: int, message_id: int, tenant_id: str) -> bool:
+    """
+    Store the Telegram message ID for a TP hit notification.
+    
+    Args:
+        signal_id: Signal ID
+        tp_level: 1 or 3 (only TP1 and TP3 are stored for cross-promo)
+        message_id: Telegram message ID from the TP hit notification
+        tenant_id: Tenant ID
+    
+    Returns:
+        bool: True if successful
+    """
+    if tp_level not in [1, 3]:
+        return False
+    
+    column = 'tp1_message_id' if tp_level == 1 else 'tp3_message_id'
+    
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"""
+                UPDATE forex_signals
+                SET {column} = %s
+                WHERE id = %s AND tenant_id = %s
+            """, (message_id, signal_id, tenant_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error updating {column} for signal {signal_id}: {e}")
+        return False
+
+
+def update_crosspromo_status(signal_id: int, status: str, tenant_id: str) -> bool:
+    """
+    Update the cross-promo status for a signal.
+    
+    Args:
+        signal_id: Signal ID
+        status: 'none', 'started', or 'complete'
+        tenant_id: Tenant ID
+    
+    Returns:
+        bool: True if successful
+    """
+    if status not in ['none', 'started', 'complete']:
+        logger.warning(f"Invalid crosspromo status: {status}")
+        return False
+    
+    try:
+        if not db_pool.connection_pool:
+            return False
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if status == 'started':
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET crosspromo_status = %s, crosspromo_started_at = NOW()
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, signal_id, tenant_id))
+            else:
+                cursor.execute("""
+                    UPDATE forex_signals
+                    SET crosspromo_status = %s
+                    WHERE id = %s AND tenant_id = %s
+                """, (status, signal_id, tenant_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error updating crosspromo status for signal {signal_id}: {e}")
+        return False
+
+
+def get_crosspromo_status(signal_id: int, tenant_id: str) -> dict | None:
+    """
+    Get the cross-promo status and message IDs for a signal.
+    
+    Returns:
+        dict with status, tp1_message_id, tp3_message_id, crosspromo_started_at
+        or None if signal not found
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT telegram_message_id, tp1_message_id, tp3_message_id, 
+                       crosspromo_status, crosspromo_started_at
+                FROM forex_signals
+                WHERE id = %s AND tenant_id = %s
+            """, (signal_id, tenant_id))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'signal_message_id': row[0],
+                'tp1_message_id': row[1],
+                'tp3_message_id': row[2],
+                'crosspromo_status': row[3] or 'none',
+                'crosspromo_started_at': row[4].isoformat() if row[4] else None
+            }
+    except Exception as e:
+        logger.exception(f"Error getting crosspromo status for signal {signal_id}: {e}")
+        return None
+
+
+def get_today_crosspromo_count(tenant_id: str, timezone: str = 'UTC') -> int:
+    """
+    Get count of signals that have had cross-promo started today.
+    Used for the "max 1 per day" limit.
+    
+    Args:
+        tenant_id: Tenant ID
+        timezone: Timezone for determining "today"
+    
+    Returns:
+        int: Number of signals with crosspromo_status != 'none' started today
+    """
+    try:
+        if not db_pool.connection_pool:
+            return 0
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM forex_signals
+                WHERE tenant_id = %s 
+                  AND crosspromo_status != 'none'
+                  AND crosspromo_started_at >= (CURRENT_DATE AT TIME ZONE %s)
+            """, (tenant_id, timezone))
+            
+            result = cursor.fetchone()
+            return result[0] if result else 0
+    except Exception as e:
+        logger.exception(f"Error getting today's crosspromo count: {e}")
+        return 0
+
 
 def update_signal_breakeven(signal_id, breakeven_price, tenant_id):
     """
