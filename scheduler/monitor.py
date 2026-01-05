@@ -8,6 +8,7 @@ Responsible for monitoring active signals:
 - Signal expiration
 - Milestone progress notifications
 - Stagnant signal revalidation and timeout
+- Cross-promo triggers for winning signals
 """
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -18,6 +19,7 @@ from forex_ai import (
     generate_revalidation_message,
     generate_timeout_message
 )
+from domains.crosspromo.service import trigger_tp_crosspromo
 
 logger = get_logger(__name__)
 
@@ -98,11 +100,34 @@ class SignalMonitor:
         
         elif event == 'tp1_hit':
             remaining = update.get('remaining', 0)
-            await self.messenger.send_tp1_celebration(signal_type, pips, remaining)
+            tp1_message_id = await self.messenger.send_tp1_celebration(signal_type, pips, remaining)
+            
             if remaining > 0 and matching_signal:
                 tp1_price = float(matching_signal.get('take_profit', 0))
                 db.update_effective_sl(signal_id, tp1_price, tenant_id=self.tenant_id)
                 logger.info(f"🔒 Set effective_sl to TP1 (${tp1_price:.2f}) for signal #{signal_id}")
+            
+            # Cross-promo trigger: forward winning signal to FREE channel
+            if tp1_message_id and matching_signal:
+                # Store TP1 message ID for later forwarding
+                db.update_tp_message_id(signal_id, 1, tp1_message_id, tenant_id=self.tenant_id)
+                
+                # Get signal's original Telegram message ID
+                signal_message_id = matching_signal.get('telegram_message_id')
+                if signal_message_id:
+                    crosspromo_result = trigger_tp_crosspromo(
+                        tenant_id=self.tenant_id,
+                        signal_id=signal_id,
+                        tp_number=1,
+                        signal_message_id=signal_message_id,
+                        tp_message_id=tp1_message_id
+                    )
+                    if crosspromo_result.get('success'):
+                        logger.info(f"📢 Cross-promo TP1 triggered for signal #{signal_id}")
+                    elif crosspromo_result.get('skipped'):
+                        logger.info(f"⏭️ Cross-promo skipped: {crosspromo_result.get('reason')}")
+                    else:
+                        logger.warning(f"⚠️ Cross-promo failed: {crosspromo_result.get('error')}")
         
         elif event == 'tp2_hit':
             remaining = update.get('remaining', 0)
@@ -114,9 +139,30 @@ class SignalMonitor:
                 logger.info(f"🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
         
         elif event == 'tp3_hit':
-            await self.messenger.send_tp3_celebration(signal_type, pips)
+            tp3_message_id = await self.messenger.send_tp3_celebration(signal_type, pips)
             # DB already closed atomically - just log
             logger.info(f"✅ Signal #{signal_id} completed - all TPs hit!")
+            
+            # Cross-promo trigger: forward TP3 with AI hype to FREE channel
+            if tp3_message_id and matching_signal:
+                # Store TP3 message ID
+                db.update_tp_message_id(signal_id, 3, tp3_message_id, tenant_id=self.tenant_id)
+                
+                # Get signal's original Telegram message ID
+                signal_message_id = matching_signal.get('telegram_message_id')
+                crosspromo_result = trigger_tp_crosspromo(
+                    tenant_id=self.tenant_id,
+                    signal_id=signal_id,
+                    tp_number=3,
+                    signal_message_id=signal_message_id or 0,
+                    tp_message_id=tp3_message_id
+                )
+                if crosspromo_result.get('success'):
+                    logger.info(f"📢 Cross-promo TP3 update triggered for signal #{signal_id}")
+                elif crosspromo_result.get('skipped'):
+                    logger.info(f"⏭️ Cross-promo TP3 skipped: {crosspromo_result.get('reason')}")
+                else:
+                    logger.warning(f"⚠️ Cross-promo TP3 failed: {crosspromo_result.get('error')}")
         
         elif event == 'sl_hit_profit_locked':
             await self.messenger.send_profit_locked_message(pips)

@@ -81,21 +81,26 @@ class Messenger:
             logger.exception("Failed to post signal to Telegram")
             return None
     
-    async def send_tp1_celebration(self, signal_type: str, pips: float, remaining: float) -> bool:
-        """Send TP1 hit celebration message."""
+    async def send_tp1_celebration(self, signal_type: str, pips: float, remaining: float) -> Optional[int]:
+        """
+        Send TP1 hit celebration message.
+        
+        Returns:
+            Telegram message_id if successful, None otherwise
+        """
         try:
             message = self.milestone_tracker.generate_tp1_celebration(signal_type, pips, remaining)
             result = await self._send_channel_message(message)
             
             if result.success:
-                logger.info(f"Posted TP1 celebration (+{pips} pips)")
-                return True
+                logger.info(f"Posted TP1 celebration (+{pips} pips), message_id={result.message_id}")
+                return result.message_id
             else:
                 logger.error(f"Failed to send TP1 celebration: {result.error}")
-                return False
+                return None
         except Exception as e:
             logger.exception("Failed to send TP1 celebration")
-            return False
+            return None
     
     async def send_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining: float) -> bool:
         """Send TP2 hit celebration message."""
@@ -113,21 +118,26 @@ class Messenger:
             logger.exception("Failed to send TP2 celebration")
             return False
     
-    async def send_tp3_celebration(self, signal_type: str, pips: float) -> bool:
-        """Send TP3 hit (full exit) celebration message."""
+    async def send_tp3_celebration(self, signal_type: str, pips: float) -> Optional[int]:
+        """
+        Send TP3 hit (full exit) celebration message.
+        
+        Returns:
+            Telegram message_id if successful, None otherwise
+        """
         try:
             message = self.milestone_tracker.generate_tp3_celebration(signal_type, pips)
             result = await self._send_channel_message(message)
             
             if result.success:
-                logger.info(f"Posted TP3 celebration - full exit (+{pips} pips)")
-                return True
+                logger.info(f"Posted TP3 celebration - full exit (+{pips} pips), message_id={result.message_id}")
+                return result.message_id
             else:
                 logger.error(f"Failed to send TP3 celebration: {result.error}")
-                return False
+                return None
         except Exception as e:
             logger.exception("Failed to send TP3 celebration")
-            return False
+            return None
     
     async def send_sl_hit_message(self, pips: float) -> bool:
         """Send SL hit message."""
