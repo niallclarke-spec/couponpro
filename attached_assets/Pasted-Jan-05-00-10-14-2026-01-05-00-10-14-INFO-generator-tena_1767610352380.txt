@@ -1,0 +1,547 @@
+Jan 05 00:10:14  [2026-01-05 00:10:14] [INFO] [generator] [tenant:entrylab] [req:cf9b9098] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 00:25:15  [2026-01-05 00:25:15] [INFO] [generator] [tenant:entrylab] [req:eb184dda] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 00:40:15  [2026-01-05 00:40:15] [INFO] [generator] [tenant:entrylab] [req:fabdd78c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 00:55:15  [2026-01-05 00:55:15] [INFO] [generator] [tenant:entrylab] [req:92c8bedf] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 01:10:15  [2026-01-05 01:10:15] [INFO] [generator] [tenant:entrylab] [req:e35083be] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 01:25:15  [2026-01-05 01:25:15] [INFO] [generator] [tenant:entrylab] [req:6fffe3a1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 01:40:16  [2026-01-05 01:40:16] [INFO] [generator] [tenant:entrylab] [req:d7fefba7] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 01:55:16  [2026-01-05 01:55:16] [INFO] [generator] [tenant:entrylab] [req:46c84c12] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 02:10:16  [2026-01-05 02:10:16] [INFO] [generator] [tenant:entrylab] [req:e95ddd6a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 02:25:16  [2026-01-05 02:25:16] [INFO] [generator] [tenant:entrylab] [req:a1e63698] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 02:40:16  [2026-01-05 02:40:16] [INFO] [generator] [tenant:entrylab] [req:035cbe2c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 02:55:16  [2026-01-05 02:55:16] [INFO] [generator] [tenant:entrylab] [req:284226e2] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 03:10:17  [2026-01-05 03:10:17] [INFO] [generator] [tenant:entrylab] [req:d6adbf15] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 03:25:17  [2026-01-05 03:25:17] [INFO] [generator] [tenant:entrylab] [req:526cac04] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 03:40:17  [2026-01-05 03:40:17] [INFO] [generator] [tenant:entrylab] [req:e1c10605] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 03:55:17  [2026-01-05 03:55:17] [INFO] [generator] [tenant:entrylab] [req:a839df14] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 04:10:17  [2026-01-05 04:10:17] [INFO] [generator] [tenant:entrylab] [req:7413d2ef] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 04:25:17  [2026-01-05 04:25:17] [INFO] [generator] [tenant:entrylab] [req:df1b6246] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 04:40:18  [2026-01-05 04:40:18] [INFO] [generator] [tenant:entrylab] [req:fe190db8] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 04:55:18  [2026-01-05 04:55:18] [INFO] [generator] [tenant:entrylab] [req:47f78774] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 05:10:18  [2026-01-05 05:10:18] [INFO] [generator] [tenant:entrylab] [req:442aac69] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 05:25:18  [2026-01-05 05:25:18] [INFO] [generator] [tenant:entrylab] [req:8bf01639] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 05:40:19  [2026-01-05 05:40:19] [INFO] [generator] [tenant:entrylab] [req:87293791] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 05:55:19  [2026-01-05 05:55:19] [INFO] [generator] [tenant:entrylab] [req:5c2cf5be] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 06:10:19  [2026-01-05 06:10:19] [INFO] [generator] [tenant:entrylab] [req:0700a58a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 06:20:19  [2026-01-05 06:20:19] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 05 06:20:19  [2026-01-05 06:20:19] [ERROR] [forex_scheduler] ❌ Error posting morning briefing: ForexTelegramBot.post_morning_briefing() missing 1 required positional argument: 'briefing_data'
+Jan 05 06:21:19  [2026-01-05 06:21:19] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 05 06:21:19  [2026-01-05 06:21:19] [ERROR] [forex_scheduler] ❌ Error posting morning briefing: ForexTelegramBot.post_morning_briefing() missing 1 required positional argument: 'briefing_data'
+Jan 05 06:22:19  [2026-01-05 06:22:19] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 05 06:22:19  [2026-01-05 06:22:19] [ERROR] [forex_scheduler] ❌ Error posting morning briefing: ForexTelegramBot.post_morning_briefing() missing 1 required positional argument: 'briefing_data'
+Jan 05 06:23:19  [2026-01-05 06:23:19] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 05 06:23:19  [2026-01-05 06:23:19] [ERROR] [forex_scheduler] ❌ Error posting morning briefing: ForexTelegramBot.post_morning_briefing() missing 1 required positional argument: 'briefing_data'
+Jan 05 06:24:19  [2026-01-05 06:24:19] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 05 06:24:19  [2026-01-05 06:24:19] [ERROR] [forex_scheduler] ❌ Error posting morning briefing: ForexTelegramBot.post_morning_briefing() missing 1 required positional argument: 'briefing_data'
+Jan 05 06:25:19  [2026-01-05 06:25:19] [INFO] [generator] [tenant:entrylab] [req:c7f1aae7] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 06:30:19  [2026-01-05 06:30:19] [INFO] [forex_scheduler] Generating daily recap...
+Jan 05 06:30:19  [2026-01-05 06:30:19] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 06:30:19  [2026-01-05 06:30:19] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 06:30:19  [2026-01-05 06:30:19] [INFO] [forex_scheduler] ✅ Daily recap posted
+Jan 05 06:31:19  [2026-01-05 06:31:19] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 05 06:32:19  [2026-01-05 06:32:19] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 05 06:33:19  [2026-01-05 06:33:19] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 05 06:34:19  [2026-01-05 06:34:19] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [generator] [tenant:entrylab] [req:06780b1f] 🔄 forex_config change detected (guardrails/indicators)
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [generator] [tenant:entrylab] [req:06780b1f] 🔄 Reloading config...
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [forex_signals] [tenant:entrylab] [req:06780b1f] Reloading configuration...
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [forex_signals] [tenant:entrylab] [req:06780b1f] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [forex_signals] [tenant:entrylab] [req:06780b1f] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [forex_signals] [tenant:entrylab] [req:06780b1f] Strategy unchanged: aggressive
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [runtime] [tenant:entrylab] [req:06780b1f] Config hot-reloaded for signal engine
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [generator] [tenant:entrylab] [req:06780b1f] ✅ Config hot-reloaded successfully
+Jan 05 06:40:19  [2026-01-05 06:40:19] [INFO] [generator] [tenant:entrylab] [req:06780b1f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 06:55:20  [2026-01-05 06:55:20] [INFO] [generator] [tenant:entrylab] [req:6807b55a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 07:10:20  [2026-01-05 07:10:20] [INFO] [generator] [tenant:entrylab] [req:bf8d292d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 07:25:20  [2026-01-05 07:25:20] [INFO] [generator] [tenant:entrylab] [req:d356471a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 07:40:20  [2026-01-05 07:40:20] [INFO] [generator] [tenant:entrylab] [req:fefc50e1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 07:55:20  [2026-01-05 07:55:20] [INFO] [generator] [tenant:entrylab] [req:41680b7c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 05 08:10:21  [2026-01-05 08:10:21] [INFO] [forex_signals] [tenant:entrylab] [req:37347949] Using strategy: Aggressive (aggressive)
+Jan 05 08:10:21  [2026-01-05 08:10:21] [INFO] [aggressive] [tenant:entrylab] [req:37347949] Checking for signals on XAU/USD 15min...
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] Price: 4420.80, RSI: 63.99, MACD: 10.0520, ADX: 49.06
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 📉 SELL signal - Trend=Bearish, RSI=63.99, ADX=49.06
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 🎯 Signal generated: SELL @ 4420.80
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 📊 TP1: 4407.75 (50%), TP2: 4401.22 (30%), TP3: 4394.69 (20%)
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 🛑 SL: 4433.85
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [forex_signals] [tenant:entrylab] [req:37347949] ✅ Signal from Aggressive: SELL @ 4420.80
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [bot_credentials] [tenant:entrylab] [req:37347949] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [telegram_sender] [tenant:entrylab] [req:37347949] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 08:10:22  [2026-01-05 08:10:22] [ERROR] [forex_bot] [tenant:entrylab] [req:37347949] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [generator] [tenant:entrylab] [req:37347949] 📊 Checking 1-hour timeframe...
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [forex_signals] [tenant:entrylab] [req:37347949] Using strategy: Aggressive (aggressive)
+Jan 05 08:10:22  [2026-01-05 08:10:22] [INFO] [aggressive] [tenant:entrylab] [req:37347949] Checking for signals on XAU/USD 1h...
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [aggressive] [tenant:entrylab] [req:37347949] Price: 4420.80, RSI: 88.28, MACD: 22.8240, ADX: 50.44
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 📉 SELL signal - Trend=Bearish, RSI=88.28, ADX=50.44
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 🎯 Signal generated: SELL @ 4420.80
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 📊 TP1: 4401.91 (50%), TP2: 4392.46 (30%), TP3: 4383.02 (20%)
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [aggressive] [tenant:entrylab] [req:37347949] 🛑 SL: 4439.69
+Jan 05 08:10:24  [2026-01-05 08:10:24] [INFO] [forex_signals] [tenant:entrylab] [req:37347949] ✅ Signal from Aggressive: SELL @ 4420.80
+Jan 05 08:10:24  [2026-01-05 08:10:24] [ERROR] [forex_bot] [tenant:entrylab] [req:37347949] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 08:10:24  [2026-01-05 08:10:24] [ERROR] [generator] [tenant:entrylab] [req:37347949] ❌ Failed to post 1h signal to Telegram
+Jan 05 08:25:24  [2026-01-05 08:25:24] [INFO] [forex_signals] [tenant:entrylab] [req:87ce2ae8] Using strategy: Aggressive (aggressive)
+Jan 05 08:25:24  [2026-01-05 08:25:24] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] Checking for signals on XAU/USD 15min...
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] Price: 4427.95, RSI: 69.06, MACD: 10.3242, ADX: 49.15
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] 📉 SELL signal - Trend=Bearish, RSI=69.06, ADX=49.15
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] 🎯 Signal generated: SELL @ 4427.95
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] 📊 TP1: 4414.81 (50%), TP2: 4408.24 (30%), TP3: 4401.67 (20%)
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [aggressive] [tenant:entrylab] [req:87ce2ae8] 🛑 SL: 4441.09
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [forex_signals] [tenant:entrylab] [req:87ce2ae8] ✅ Signal from Aggressive: SELL @ 4427.95
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [bot_credentials] [tenant:entrylab] [req:87ce2ae8] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 08:25:26  [2026-01-05 08:25:26] [INFO] [telegram_sender] [tenant:entrylab] [req:87ce2ae8] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 08:25:26  [2026-01-05 08:25:26] [ERROR] [forex_bot] [tenant:entrylab] [req:87ce2ae8] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 08:40:26  [2026-01-05 08:40:26] [INFO] [forex_signals] [tenant:entrylab] [req:da866ac2] Using strategy: Aggressive (aggressive)
+Jan 05 08:40:26  [2026-01-05 08:40:26] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] Checking for signals on XAU/USD 15min...
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] Price: 4425.81, RSI: 65.53, MACD: 10.0942, ADX: 49.22
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 📉 SELL signal - Trend=Bearish, RSI=65.53, ADX=49.22
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 🎯 Signal generated: SELL @ 4425.81
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 📊 TP1: 4413.02 (50%), TP2: 4406.63 (30%), TP3: 4400.24 (20%)
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 🛑 SL: 4438.59
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [forex_signals] [tenant:entrylab] [req:da866ac2] ✅ Signal from Aggressive: SELL @ 4425.81
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [bot_credentials] [tenant:entrylab] [req:da866ac2] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [telegram_sender] [tenant:entrylab] [req:da866ac2] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 08:40:28  [2026-01-05 08:40:28] [ERROR] [forex_bot] [tenant:entrylab] [req:da866ac2] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [generator] [tenant:entrylab] [req:da866ac2] 📊 Checking 1-hour timeframe...
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [forex_signals] [tenant:entrylab] [req:da866ac2] Using strategy: Aggressive (aggressive)
+Jan 05 08:40:28  [2026-01-05 08:40:28] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] Checking for signals on XAU/USD 1h...
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] Price: 4425.81, RSI: 90.14, MACD: 23.2234, ADX: 50.56
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 📉 SELL signal - Trend=Bearish, RSI=90.14, ADX=50.56
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 🎯 Signal generated: SELL @ 4425.81
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 📊 TP1: 4405.94 (50%), TP2: 4396.01 (30%), TP3: 4386.08 (20%)
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [aggressive] [tenant:entrylab] [req:da866ac2] 🛑 SL: 4445.67
+Jan 05 08:40:30  [2026-01-05 08:40:30] [INFO] [forex_signals] [tenant:entrylab] [req:da866ac2] ✅ Signal from Aggressive: SELL @ 4425.81
+Jan 05 08:40:30  [2026-01-05 08:40:30] [ERROR] [forex_bot] [tenant:entrylab] [req:da866ac2] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 08:40:30  [2026-01-05 08:40:30] [ERROR] [generator] [tenant:entrylab] [req:da866ac2] ❌ Failed to post 1h signal to Telegram
+Jan 05 08:55:30  [2026-01-05 08:55:30] [INFO] [forex_signals] [tenant:entrylab] [req:38612595] Using strategy: Aggressive (aggressive)
+Jan 05 08:55:30  [2026-01-05 08:55:30] [INFO] [aggressive] [tenant:entrylab] [req:38612595] Checking for signals on XAU/USD 15min...
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [aggressive] [tenant:entrylab] [req:38612595] Price: 4431.40, RSI: 71.05, MACD: 10.4497, ADX: 49.58
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [aggressive] [tenant:entrylab] [req:38612595] 📉 SELL signal - Trend=Bearish, RSI=71.05, ADX=49.58
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [aggressive] [tenant:entrylab] [req:38612595] 🎯 Signal generated: SELL @ 4431.40
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [aggressive] [tenant:entrylab] [req:38612595] 📊 TP1: 4418.98 (50%), TP2: 4412.77 (30%), TP3: 4406.56 (20%)
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [aggressive] [tenant:entrylab] [req:38612595] 🛑 SL: 4443.81
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [forex_signals] [tenant:entrylab] [req:38612595] ✅ Signal from Aggressive: SELL @ 4431.40
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [bot_credentials] [tenant:entrylab] [req:38612595] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 08:55:32  [2026-01-05 08:55:32] [INFO] [telegram_sender] [tenant:entrylab] [req:38612595] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 08:55:32  [2026-01-05 08:55:32] [ERROR] [forex_bot] [tenant:entrylab] [req:38612595] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:00:32  [2026-01-05 09:00:32] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence...
+Jan 05 09:00:32  [2026-01-05 09:00:32] [INFO] [repo] Enqueued job 3c1c8906-171c-4e0c-8edc-ce7d18033b61 type=morning_news for tenant entrylab
+Jan 05 09:00:32  [2026-01-05 09:00:32] [INFO] [repo] Enqueued job 026d5a89-9230-4399-a18e-83818a17e5a8 type=vip_soon for tenant entrylab
+Jan 05 09:00:32  [2026-01-05 09:00:32] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon']
+Jan 05 09:00:35  [2026-01-05 09:00:35] [INFO] [repo] Claimed 1 due jobs
+Jan 05 09:00:35  [2026-01-05 09:00:35] [INFO] [crosspromo_worker] Processing job 3c1c8906-171c-4e0c-8edc-ce7d18033b61 type=morning_news tenant=entrylab
+Jan 05 09:00:35  [2026-01-05 09:00:35] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 09:00:35  [2026-01-05 09:00:35] [WARNING] [service] ALPHA_NEWS_API not set, cannot fetch news
+Jan 05 09:00:36  [2026-01-05 09:00:36] [INFO] [client] Message sent to -1003055722817
+Jan 05 09:00:36  [2026-01-05 09:00:36] [INFO] [repo] Job 3c1c8906-171c-4e0c-8edc-ce7d18033b61 marked as sent
+Jan 05 09:00:36  [2026-01-05 09:00:36] [INFO] [crosspromo_worker] Job 3c1c8906-171c-4e0c-8edc-ce7d18033b61 completed successfully
+Jan 05 09:00:36  [2026-01-05 09:00:36] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [generator] [tenant:entrylab] [req:9458cffb] 🔄 forex_config change detected (guardrails/indicators)
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [generator] [tenant:entrylab] [req:9458cffb] 🔄 Reloading config...
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Reloading configuration...
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Strategy unchanged: aggressive
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [runtime] [tenant:entrylab] [req:9458cffb] Config hot-reloaded for signal engine
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [generator] [tenant:entrylab] [req:9458cffb] ✅ Config hot-reloaded successfully
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Using strategy: Aggressive (aggressive)
+Jan 05 09:10:32  [2026-01-05 09:10:32] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] Checking for signals on XAU/USD 15min...
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] Price: 4428.12, RSI: 66.64, MACD: 10.0463, ADX: 48.99
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 📉 SELL signal - Trend=Bearish, RSI=66.64, ADX=48.99
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 🎯 Signal generated: SELL @ 4428.12
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 📊 TP1: 4415.87 (50%), TP2: 4409.74 (30%), TP3: 4403.62 (20%)
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 🛑 SL: 4440.38
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] ✅ Signal from Aggressive: SELL @ 4428.12
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [bot_credentials] [tenant:entrylab] [req:9458cffb] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [telegram_sender] [tenant:entrylab] [req:9458cffb] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 09:10:34  [2026-01-05 09:10:34] [ERROR] [forex_bot] [tenant:entrylab] [req:9458cffb] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [generator] [tenant:entrylab] [req:9458cffb] 📊 Checking 1-hour timeframe...
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] Using strategy: Aggressive (aggressive)
+Jan 05 09:10:34  [2026-01-05 09:10:34] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] Checking for signals on XAU/USD 1h...
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] Price: 4428.12, RSI: 87.28, MACD: 24.3193, ADX: 52.48
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 📉 SELL signal - Trend=Bearish, RSI=87.28, ADX=52.48
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 🎯 Signal generated: SELL @ 4428.12
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 📊 TP1: 4408.62 (50%), TP2: 4398.86 (30%), TP3: 4389.11 (20%)
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [aggressive] [tenant:entrylab] [req:9458cffb] 🛑 SL: 4447.63
+Jan 05 09:10:35  [2026-01-05 09:10:35] [INFO] [forex_signals] [tenant:entrylab] [req:9458cffb] ✅ Signal from Aggressive: SELL @ 4428.12
+Jan 05 09:10:35  [2026-01-05 09:10:35] [ERROR] [forex_bot] [tenant:entrylab] [req:9458cffb] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:10:35  [2026-01-05 09:10:35] [ERROR] [generator] [tenant:entrylab] [req:9458cffb] ❌ Failed to post 1h signal to Telegram
+Jan 05 09:25:36  [2026-01-05 09:25:36] [INFO] [forex_signals] [tenant:entrylab] [req:d49218a3] Using strategy: Aggressive (aggressive)
+Jan 05 09:25:36  [2026-01-05 09:25:36] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] Checking for signals on XAU/USD 15min...
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] Price: 4433.51, RSI: 71.85, MACD: 10.2047, ADX: 48.48
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] 📉 SELL signal - Trend=Bearish, RSI=71.85, ADX=48.48
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] 🎯 Signal generated: SELL @ 4433.51
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] 📊 TP1: 4421.46 (50%), TP2: 4415.43 (30%), TP3: 4409.40 (20%)
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [aggressive] [tenant:entrylab] [req:d49218a3] 🛑 SL: 4445.57
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [forex_signals] [tenant:entrylab] [req:d49218a3] ✅ Signal from Aggressive: SELL @ 4433.51
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [bot_credentials] [tenant:entrylab] [req:d49218a3] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 09:25:37  [2026-01-05 09:25:37] [INFO] [telegram_sender] [tenant:entrylab] [req:d49218a3] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 09:25:37  [2026-01-05 09:25:37] [ERROR] [forex_bot] [tenant:entrylab] [req:d49218a3] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:32:59  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:32:59  [WEBHOOK-ENDPOINT] Received 345 bytes
+Jan 05 09:32:59  [WEBHOOK-ENDPOINT] Processing update_id: 325866165
+Jan 05 09:32:59  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:32:59  [WEBHOOK] Received update_id: 325866165
+Jan 05 09:32:59  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 05 09:32:59  [TELEGRAM] Cache miss, downloading index.json
+Jan 05 09:33:00  [TELEGRAM] Index cached for 300s
+Jan 05 09:33:00  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 09:33:00  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:33:00  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866165 in 0.21s, result: {'status': 'ok'}
+Jan 05 09:33:00  10.244.7.234 - - [05/Jan/2026 09:33:00] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 09:33:00  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:33:00  [WEBHOOK-ENDPOINT] Received 284 bytes
+Jan 05 09:33:00  [WEBHOOK-ENDPOINT] Processing update_id: 325866166
+Jan 05 09:33:00  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:33:00  [WEBHOOK] Received update_id: 325866166
+Jan 05 09:33:00  [WEBHOOK] Processing: type=Message, text=EMELDA
+Jan 05 09:33:00  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 05 09:33:00  [COUPON-HANDLER] Processing coupon: EMELDA, chat_id: 5710716868
+Jan 05 09:33:00  [COUPON] Validating 'EMELDA' (attempt 1/3)...
+Jan 05 09:33:01  [COUPON] API response: status=400, body_length=107
+Jan 05 09:33:01  [COUPON] ⚠️ Unexpected status 400: {"message":"Coupon code EMELDA is invalid","status":400,"requestId":"70668395-79ac-4a80-ae54-00112d3731d6"}
+Jan 05 09:33:01  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=5710716868, template=None, coupon=EMELDA, success=False, device=unknown
+Jan 05 09:33:01  [2026-01-05 09:33:01] [INFO] [db] [req:8be07761] Attempting to log: chat_id=5710716868, template=None, coupon=EMELDA, success=False, error=invalid_coupon, device=unknown
+Jan 05 09:33:01  [2026-01-05 09:33:01] [INFO] [db] [req:8be07761] Successfully logged usage
+Jan 05 09:33:01  [BOT_USAGE] ✅ Successfully logged usage to database
+Jan 05 09:33:01  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:33:01  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866166 in 0.25s, result: {'status': 'ok'}
+Jan 05 09:33:01  10.244.7.234 - - [05/Jan/2026 09:33:01] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 09:33:07  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:33:07  [WEBHOOK-ENDPOINT] Received 285 bytes
+Jan 05 09:33:07  [WEBHOOK-ENDPOINT] Processing update_id: 325866167
+Jan 05 09:33:07  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:33:07  [WEBHOOK] Received update_id: 325866167
+Jan 05 09:33:07  [WEBHOOK] Processing: type=Message, text=Emelder
+Jan 05 09:33:07  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 05 09:33:07  [COUPON-HANDLER] Processing coupon: EMELDER, chat_id: 5710716868
+Jan 05 09:33:07  [COUPON] Validating 'EMELDER' (attempt 1/3)...
+Jan 05 09:33:08  [COUPON] API response: status=200, body_length=306
+Jan 05 09:33:08  [COUPON] 💾 Cached validation for 'EMELDER'
+Jan 05 09:33:08  [COUPON] ✅ 'EMELDER' is VALID
+Jan 05 09:33:08  [COUPON-HANDLER] ✅ Stored coupon 'EMELDER' in cache for chat_id 5710716868
+Jan 05 09:33:08  [TELEGRAM] ✅ User 5710716868 tracked successfully in database (username=Tjaygalapate, name=Tjay None)
+Jan 05 09:33:08  [TELEGRAM] Cache hit, using cached index
+Jan 05 09:33:08  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 09:33:08  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:33:08  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866167 in 0.24s, result: {'status': 'ok'}
+Jan 05 09:33:08  10.244.7.234 - - [05/Jan/2026 09:33:08] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 09:40:38  [2026-01-05 09:40:38] [INFO] [forex_signals] [tenant:entrylab] [req:b0d582f8] Using strategy: Aggressive (aggressive)
+Jan 05 09:40:38  [2026-01-05 09:40:38] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] Checking for signals on XAU/USD 15min...
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] Price: 4432.19, RSI: 69.91, MACD: 9.9579, ADX: 48.11
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 📉 SELL signal - Trend=Bearish, RSI=69.91, ADX=48.11
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 🎯 Signal generated: SELL @ 4432.19
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 📊 TP1: 4420.72 (50%), TP2: 4414.98 (30%), TP3: 4409.25 (20%)
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 🛑 SL: 4443.66
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [forex_signals] [tenant:entrylab] [req:b0d582f8] ✅ Signal from Aggressive: SELL @ 4432.19
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [bot_credentials] [tenant:entrylab] [req:b0d582f8] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [telegram_sender] [tenant:entrylab] [req:b0d582f8] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 09:40:39  [2026-01-05 09:40:39] [ERROR] [forex_bot] [tenant:entrylab] [req:b0d582f8] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [generator] [tenant:entrylab] [req:b0d582f8] 📊 Checking 1-hour timeframe...
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [forex_signals] [tenant:entrylab] [req:b0d582f8] Using strategy: Aggressive (aggressive)
+Jan 05 09:40:39  [2026-01-05 09:40:39] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] Checking for signals on XAU/USD 1h...
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] Price: 4432.19, RSI: 90.96, MACD: 24.6437, ADX: 52.51
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 📉 SELL signal - Trend=Bearish, RSI=90.96, ADX=52.51
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 🎯 Signal generated: SELL @ 4432.19
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 📊 TP1: 4412.34 (50%), TP2: 4402.42 (30%), TP3: 4392.50 (20%)
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [aggressive] [tenant:entrylab] [req:b0d582f8] 🛑 SL: 4452.04
+Jan 05 09:40:41  [2026-01-05 09:40:41] [INFO] [forex_signals] [tenant:entrylab] [req:b0d582f8] ✅ Signal from Aggressive: SELL @ 4432.19
+Jan 05 09:40:41  [2026-01-05 09:40:41] [ERROR] [forex_bot] [tenant:entrylab] [req:b0d582f8] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:40:41  [2026-01-05 09:40:41] [ERROR] [generator] [tenant:entrylab] [req:b0d582f8] ❌ Failed to post 1h signal to Telegram
+Jan 05 09:55:41  [2026-01-05 09:55:41] [INFO] [forex_signals] [tenant:entrylab] [req:25507a69] Using strategy: Aggressive (aggressive)
+Jan 05 09:55:41  [2026-01-05 09:55:41] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] Checking for signals on XAU/USD 15min...
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] Price: 4435.67, RSI: 71.26, MACD: 10.2682, ADX: 48.48
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] 📉 SELL signal - Trend=Bearish, RSI=71.26, ADX=48.48
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] 🎯 Signal generated: SELL @ 4435.67
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] 📊 TP1: 4424.10 (50%), TP2: 4418.32 (30%), TP3: 4412.54 (20%)
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [aggressive] [tenant:entrylab] [req:25507a69] 🛑 SL: 4447.23
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [forex_signals] [tenant:entrylab] [req:25507a69] ✅ Signal from Aggressive: SELL @ 4435.67
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [bot_credentials] [tenant:entrylab] [req:25507a69] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 09:55:43  [2026-01-05 09:55:43] [INFO] [telegram_sender] [tenant:entrylab] [req:25507a69] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 09:55:43  [2026-01-05 09:55:43] [ERROR] [forex_bot] [tenant:entrylab] [req:25507a69] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 09:59:37  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:59:37  [WEBHOOK-ENDPOINT] Received 363 bytes
+Jan 05 09:59:37  [WEBHOOK-ENDPOINT] Processing update_id: 325866168
+Jan 05 09:59:37  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:59:37  [WEBHOOK] Received update_id: 325866168
+Jan 05 09:59:37  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 05 09:59:37  [TELEGRAM] Cache miss, downloading index.json
+Jan 05 09:59:37  [TELEGRAM] Index cached for 300s
+Jan 05 09:59:37  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 09:59:37  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:59:37  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866168 in 0.21s, result: {'status': 'ok'}
+Jan 05 09:59:37  10.244.5.120 - - [05/Jan/2026 09:59:37] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 09:59:45  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:59:45  [WEBHOOK-ENDPOINT] Received 359 bytes
+Jan 05 09:59:45  [WEBHOOK-ENDPOINT] Processing update_id: 325866169
+Jan 05 09:59:45  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:59:45  [WEBHOOK] Received update_id: 325866169
+Jan 05 09:59:45  [WEBHOOK] Processing: type=Message, text=/help
+Jan 05 09:59:45  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:59:45  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866169 in 0.17s, result: {'status': 'ok'}
+Jan 05 09:59:45  10.244.5.120 - - [05/Jan/2026 09:59:45] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 09:59:49  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 09:59:49  [WEBHOOK-ENDPOINT] Received 363 bytes
+Jan 05 09:59:49  [WEBHOOK-ENDPOINT] Processing update_id: 325866170
+Jan 05 09:59:49  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 09:59:49  [WEBHOOK] Received update_id: 325866170
+Jan 05 09:59:49  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 05 09:59:49  [TELEGRAM] Cache hit, using cached index
+Jan 05 09:59:49  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 09:59:49  [WEBHOOK] ✅ Update processed successfully
+Jan 05 09:59:49  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866170 in 0.08s, result: {'status': 'ok'}
+Jan 05 09:59:49  10.244.5.120 - - [05/Jan/2026 09:59:49] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 10:00:30  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 10:00:30  [WEBHOOK-ENDPOINT] Received 360 bytes
+Jan 05 10:00:30  [WEBHOOK-ENDPOINT] Processing update_id: 325866171
+Jan 05 10:00:30  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 10:00:30  [WEBHOOK] Received update_id: 325866171
+Jan 05 10:00:30  [WEBHOOK] Processing: type=Message, text=/start
+Jan 05 10:00:30  [WEBHOOK] ✅ Update processed successfully
+Jan 05 10:00:30  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866171 in 0.10s, result: {'status': 'ok'}
+Jan 05 10:00:30  10.244.5.120 - - [05/Jan/2026 10:00:30] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 10:00:35  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 10:00:35  [WEBHOOK-ENDPOINT] Received 301 bytes
+Jan 05 10:00:35  [WEBHOOK-ENDPOINT] Processing update_id: 325866172
+Jan 05 10:00:35  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 10:00:35  [WEBHOOK] Received update_id: 325866172
+Jan 05 10:00:35  [WEBHOOK] Processing: type=Message, text=USAMA
+Jan 05 10:00:35  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 05 10:00:35  [COUPON-HANDLER] Processing coupon: USAMA, chat_id: 1912176288
+Jan 05 10:00:35  [COUPON] Validating 'USAMA' (attempt 1/3)...
+Jan 05 10:00:35  [COUPON] API response: status=200, body_length=273
+Jan 05 10:00:35  [COUPON] 💾 Cached validation for 'USAMA'
+Jan 05 10:00:35  [COUPON] ✅ 'USAMA' is VALID
+Jan 05 10:00:35  [COUPON-HANDLER] ✅ Stored coupon 'USAMA' in cache for chat_id 1912176288
+Jan 05 10:00:35  [TELEGRAM] ✅ User 1912176288 tracked successfully in database (username=Usaama7, name=Usama ♾️ None)
+Jan 05 10:00:35  [TELEGRAM] Cache hit, using cached index
+Jan 05 10:00:35  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 10:00:35  [WEBHOOK] ✅ Update processed successfully
+Jan 05 10:00:35  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866172 in 0.31s, result: {'status': 'ok'}
+Jan 05 10:00:35  10.244.5.120 - - [05/Jan/2026 10:00:35] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [repo] Claimed 1 due jobs
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [crosspromo_worker] Processing job 026d5a89-9230-4399-a18e-83818a17e5a8 type=vip_soon tenant=entrylab
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [client] Message sent to -1003055722817
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [repo] Job 026d5a89-9230-4399-a18e-83818a17e5a8 marked as sent
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [crosspromo_worker] Job 026d5a89-9230-4399-a18e-83818a17e5a8 completed successfully
+Jan 05 10:00:38  [2026-01-05 10:00:38] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 05 10:00:38  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 10:00:38  [WEBHOOK-ENDPOINT] Received 1457 bytes
+Jan 05 10:00:38  [WEBHOOK-ENDPOINT] Processing update_id: 325866173
+Jan 05 10:00:38  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 10:00:38  [WEBHOOK] Received update_id: 325866173
+Jan 05 10:00:38  [WEBHOOK] Processing: type=CallbackQuery, text=template:december-22-off
+Jan 05 10:00:38  [HANDLER] handle_template_selection called! data=template:december-22-off
+Jan 05 10:00:38  [HANDLER] chat_id=1912176288, coupon_code=USAMA
+Jan 05 10:00:38  [HANDLER] Coupon code: USAMA
+Jan 05 10:00:38  [TELEGRAM] Generating single template: december-22-off
+Jan 05 10:00:38  [TELEGRAM] _generate_and_send called: template=december-22-off, coupon=USAMA, chat_id=1912176288
+Jan 05 10:00:38  [TELEGRAM] Starting image generation...
+Jan 05 10:00:39  [TELEGRAM] Image generation finished: error=None
+Jan 05 10:00:39  [TELEGRAM] About to log SUCCESS usage: chat_id=1912176288
+Jan 05 10:00:39  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=1912176288, template=december-22-off, coupon=USAMA, success=True, device=unknown
+Jan 05 10:00:39  [2026-01-05 10:00:39] [INFO] [db] [req:cbb13fca] Attempting to log: chat_id=1912176288, template=december-22-off, coupon=USAMA, success=True, error=None, device=unknown
+Jan 05 10:00:39  [2026-01-05 10:00:39] [INFO] [db] [req:cbb13fca] Successfully logged usage
+Jan 05 10:00:39  [BOT_USAGE] ✅ Successfully logged usage to database
+Jan 05 10:00:39  [TELEGRAM] Finished logging SUCCESS usage
+Jan 05 10:00:39  [TELEGRAM] Generation complete for december-22-off
+Jan 05 10:00:39  [WEBHOOK] ✅ Update processed successfully
+Jan 05 10:00:39  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866173 in 1.07s, result: {'status': 'ok'}
+Jan 05 10:00:39  10.244.5.120 - - [05/Jan/2026 10:00:39] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 10:00:55  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 05 10:00:55  [WEBHOOK-ENDPOINT] Received 363 bytes
+Jan 05 10:00:55  [WEBHOOK-ENDPOINT] Processing update_id: 325866174
+Jan 05 10:00:55  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 05 10:00:55  [WEBHOOK] Received update_id: 325866174
+Jan 05 10:00:55  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 05 10:00:55  [TELEGRAM] Cache hit, using cached index
+Jan 05 10:00:55  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 05 10:00:55  [WEBHOOK] ✅ Update processed successfully
+Jan 05 10:00:55  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866174 in 0.12s, result: {'status': 'ok'}
+Jan 05 10:00:55  10.244.5.120 - - [05/Jan/2026 10:00:55] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 05 10:10:43  [2026-01-05 10:10:43] [INFO] [forex_signals] [tenant:entrylab] [req:d07654bc] Using strategy: Aggressive (aggressive)
+Jan 05 10:10:43  [2026-01-05 10:10:43] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] Checking for signals on XAU/USD 15min...
+Jan 05 10:10:45  [2026-01-05 10:10:45] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] Price: 4432.82, RSI: 66.82, MACD: 9.8027, ADX: 47.70
+Jan 05 10:10:45  [2026-01-05 10:10:45] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] No signal - RSI=66.82 (thresholds: 40/60)
+Jan 05 10:10:45  [2026-01-05 10:10:45] [INFO] [generator] [tenant:entrylab] [req:d07654bc] 📊 Checking 1-hour timeframe...
+Jan 05 10:10:45  [2026-01-05 10:10:45] [INFO] [forex_signals] [tenant:entrylab] [req:d07654bc] Using strategy: Aggressive (aggressive)
+Jan 05 10:10:45  [2026-01-05 10:10:45] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] Checking for signals on XAU/USD 1h...
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] Price: 4432.82, RSI: 88.39, MACD: 25.3826, ADX: 54.40
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] 📉 SELL signal - Trend=Bearish, RSI=88.39, ADX=54.40
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] 🎯 Signal generated: SELL @ 4432.82
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] 📊 TP1: 4413.46 (50%), TP2: 4403.78 (30%), TP3: 4394.09 (20%)
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [aggressive] [tenant:entrylab] [req:d07654bc] 🛑 SL: 4452.18
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [forex_signals] [tenant:entrylab] [req:d07654bc] ✅ Signal from Aggressive: SELL @ 4432.82
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [bot_credentials] [tenant:entrylab] [req:d07654bc] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 10:10:47  [2026-01-05 10:10:47] [INFO] [telegram_sender] [tenant:entrylab] [req:d07654bc] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 10:10:47  [2026-01-05 10:10:47] [ERROR] [forex_bot] [tenant:entrylab] [req:d07654bc] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 10:10:47  [2026-01-05 10:10:47] [ERROR] [generator] [tenant:entrylab] [req:d07654bc] ❌ Failed to post 1h signal to Telegram
+Jan 05 10:25:47  [2026-01-05 10:25:47] [INFO] [forex_signals] [tenant:entrylab] [req:297e22ac] Using strategy: Aggressive (aggressive)
+Jan 05 10:25:47  [2026-01-05 10:25:47] [INFO] [aggressive] [tenant:entrylab] [req:297e22ac] Checking for signals on XAU/USD 15min...
+Jan 05 10:25:48  [2026-01-05 10:25:48] [INFO] [aggressive] [tenant:entrylab] [req:297e22ac] Price: 4433.24, RSI: 67.42, MACD: 9.4332, ADX: 46.95
+Jan 05 10:25:48  [2026-01-05 10:25:48] [INFO] [aggressive] [tenant:entrylab] [req:297e22ac] No signal - RSI=67.42 (thresholds: 40/60)
+Jan 05 10:40:49  [2026-01-05 10:40:49] [INFO] [forex_signals] [tenant:entrylab] [req:e26909fe] Using strategy: Aggressive (aggressive)
+Jan 05 10:40:49  [2026-01-05 10:40:49] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] Checking for signals on XAU/USD 15min...
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] Price: 4437.70, RSI: 71.00, MACD: 9.3752, ADX: 46.92
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 📉 SELL signal - Trend=Bearish, RSI=71.00, ADX=46.92
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 🎯 Signal generated: SELL @ 4437.70
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 📊 TP1: 4426.55 (50%), TP2: 4420.98 (30%), TP3: 4415.40 (20%)
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 🛑 SL: 4448.85
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [forex_signals] [tenant:entrylab] [req:e26909fe] ✅ Signal from Aggressive: SELL @ 4437.70
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [bot_credentials] [tenant:entrylab] [req:e26909fe] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [telegram_sender] [tenant:entrylab] [req:e26909fe] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 10:40:50  [2026-01-05 10:40:50] [ERROR] [forex_bot] [tenant:entrylab] [req:e26909fe] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [generator] [tenant:entrylab] [req:e26909fe] 📊 Checking 1-hour timeframe...
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [forex_signals] [tenant:entrylab] [req:e26909fe] Using strategy: Aggressive (aggressive)
+Jan 05 10:40:50  [2026-01-05 10:40:50] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] Checking for signals on XAU/USD 1h...
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] Price: 4437.70, RSI: 91.62, MACD: 25.7719, ADX: 54.40
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 📉 SELL signal - Trend=Bearish, RSI=91.62, ADX=54.40
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 🎯 Signal generated: SELL @ 4437.70
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 📊 TP1: 4417.94 (50%), TP2: 4408.06 (30%), TP3: 4398.18 (20%)
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [aggressive] [tenant:entrylab] [req:e26909fe] 🛑 SL: 4457.46
+Jan 05 10:40:52  [2026-01-05 10:40:52] [INFO] [forex_signals] [tenant:entrylab] [req:e26909fe] ✅ Signal from Aggressive: SELL @ 4437.70
+Jan 05 10:40:52  [2026-01-05 10:40:52] [ERROR] [forex_bot] [tenant:entrylab] [req:e26909fe] SEND BLOCKED: Signal bot not configured for tenant 'entrylab'
+Jan 05 10:40:52  [2026-01-05 10:40:52] [ERROR] [generator] [tenant:entrylab] [req:e26909fe] ❌ Failed to post 1h signal to Telegram
+Jan 05 10:48:56  [2026-01-05 10:48:56] [WARNING] [clerk_auth] [req:b1a1d61d] Token expired
+Jan 05 10:48:56  [2026-01-05 10:48:56] [WARNING] [clerk_auth] [req:b1a1d61d] Auth failure: reason=token_expired path=/api/forex-config host=admin.promostack.io source=bearer
+Jan 05 10:48:56  [2026-01-05 10:48:56] [WARNING] [clerk_auth] [req:b1a1d61d] Token expired
+Jan 05 10:48:56  10.244.5.120 - - [05/Jan/2026 10:48:56] "GET /api/forex-config HTTP/1.1" 401 -
+Jan 05 10:48:56  [2026-01-05 10:48:56] [WARNING] [clerk_auth] [req:7a5a869b] Token expired
+Jan 05 10:48:57  [2026-01-05 10:48:56] [WARNING] [clerk_auth] [req:7a5a869b] Auth failure: reason=token_expired path=/api/signal-bot/status host=admin.promostack.io source=bearer
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:7a5a869b] Token expired
+Jan 05 10:48:57  10.244.6.25 - - [05/Jan/2026 10:48:57] "GET /api/signal-bot/status HTTP/1.1" 401 -
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a7cd6579] Token expired
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a7cd6579] Auth failure: reason=token_expired path=/api/forex-tp-config host=admin.promostack.io source=bearer
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a7cd6579] Token expired
+Jan 05 10:48:57  10.244.7.234 - - [05/Jan/2026 10:48:57] "GET /api/forex-tp-config HTTP/1.1" 401 -
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:3594ecf9] Token expired
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:3594ecf9] Auth failure: reason=token_expired path=/api/forex-config host=admin.promostack.io source=bearer
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:3594ecf9] Token expired
+Jan 05 10:48:57  10.244.5.120 - - [05/Jan/2026 10:48:57] "GET /api/forex-config HTTP/1.1" 401 -
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:f786b79c] Token expired
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:f786b79c] Auth failure: reason=token_expired path=/api/signal-bot/status host=admin.promostack.io source=bearer
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:f786b79c] Token expired
+Jan 05 10:48:57  10.244.6.25 - - [05/Jan/2026 10:48:57] "GET /api/signal-bot/status HTTP/1.1" 401 -
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a2018bcc] Token expired
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a2018bcc] Auth failure: reason=token_expired path=/api/forex-tp-config host=admin.promostack.io source=bearer
+Jan 05 10:48:57  [2026-01-05 10:48:57] [WARNING] [clerk_auth] [req:a2018bcc] Token expired
+Jan 05 10:48:57  10.244.7.234 - - [05/Jan/2026 10:48:57] "GET /api/forex-tp-config HTTP/1.1" 401 -
+Jan 05 10:49:02  [2026-01-05 10:49:02] [WARNING] [clerk_auth] [req:9ba2fad6] Token expired
+Jan 05 10:49:02  [2026-01-05 10:49:02] [WARNING] [clerk_auth] [req:9ba2fad6] Auth failure: reason=token_expired path=/admin host=admin.promostack.io source=cookie
+Jan 05 10:49:02  10.244.5.120 - - [05/Jan/2026 10:49:02] "GET /admin HTTP/1.1" 302 -
+Jan 05 10:49:02  10.244.5.120 - - [05/Jan/2026 10:49:02] "GET /login HTTP/1.1" 200 -
+Jan 05 10:49:02  10.244.6.25 - - [05/Jan/2026 10:49:02] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Jan 05 10:49:02  10.244.6.25 - - [05/Jan/2026 10:49:02] "GET /api/config HTTP/1.1" 200 -
+Jan 05 10:49:08  10.244.7.234 - - [05/Jan/2026 10:49:08] "GET / HTTP/1.1" 302 -
+Jan 05 10:49:08  [2026-01-05 10:49:08] [WARNING] [clerk_auth] [req:921c4e93] Token expired
+Jan 05 10:49:08  [2026-01-05 10:49:08] [WARNING] [clerk_auth] [req:921c4e93] Auth failure: reason=token_expired path=/admin host=admin.promostack.io source=cookie
+Jan 05 10:49:08  10.244.5.120 - - [05/Jan/2026 10:49:08] "GET /admin HTTP/1.1" 302 -
+Jan 05 10:49:08  10.244.5.120 - - [05/Jan/2026 10:49:08] "GET /login HTTP/1.1" 200 -
+Jan 05 10:49:08  10.244.6.25 - - [05/Jan/2026 10:49:08] "GET /api/config HTTP/1.1" 200 -
+Jan 05 10:49:08  10.244.6.25 - - [05/Jan/2026 10:49:08] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Jan 05 10:49:08  [2026-01-05 10:49:08] [INFO] [set_auth_cookie] [req:94ecb028] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Jan 05 10:49:08  10.244.6.25 - - [05/Jan/2026 10:49:08] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Jan 05 10:49:08  [2026-01-05 10:49:08] [INFO] [set_auth_cookie] [req:94ecb028] set-auth-cookie: SUCCESS - cookies set
+Jan 05 10:49:08  10.244.6.25 - - [05/Jan/2026 10:49:08] "GET /api/config HTTP/1.1" 200 -
+Jan 05 10:49:08  10.244.5.120 - - [05/Jan/2026 10:49:08] "GET /admin HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.5.120 - - [05/Jan/2026 10:49:09] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.6.25 - - [05/Jan/2026 10:49:09] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.7.234 - - [05/Jan/2026 10:49:09] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.4.179 - - [05/Jan/2026 10:49:09] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.6.25 - - [05/Jan/2026 10:49:09] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.5.120 - - [05/Jan/2026 10:49:09] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Jan 05 10:49:09  10.244.4.179 - - [05/Jan/2026 10:49:09] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Jan 05 10:49:09  [2026-01-05 10:49:09] [INFO] [db] [req:fcc5ad17] get_all_telegram_subscriptions: found 13 rows
+Jan 05 10:49:09  10.244.7.234 - - [05/Jan/2026 10:49:09] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Jan 05 10:49:09  [2026-01-05 10:49:09] [INFO] [db] [req:e34435ef] get_all_telegram_subscriptions: found 13 rows
+Jan 05 10:49:09  [2026-01-05 10:49:09] [INFO] [handlers] [req:e34435ef] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Jan 05 10:49:09  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Jan 05 10:49:09  [Stripe] Fetching all paid invoices...
+Jan 05 10:49:09  [2026-01-05 10:49:09] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Jan 05 10:49:10  [2026-01-05 10:49:10] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 05 10:49:10  [Stripe] Total revenue from 21 VIP invoices: $171.60000000000002
+Jan 05 10:49:10  [Stripe] Found 0 subscription IDs from invoices
+Jan 05 10:49:10  [Stripe] Also fetching active subscriptions directly from Stripe...
+Jan 05 10:49:10  [2026-01-05 10:49:10] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Jan 05 10:49:10  [2026-01-05 10:49:10] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Jan 05 10:49:10  [2026-01-05 10:49:10] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 05 10:49:11  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 05 10:49:11  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 05 10:49:11  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 05 10:49:11  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Jan 05 10:49:11  [Stripe] Total subscription IDs to check: 4
+Jan 05 10:49:11  [Stripe] Checking 4 subscriptions for rebill (period: 2026-01-05 to 2028-12-31)...
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Jan 05 10:49:11  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 05 10:49:11  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Jan 05 10:49:11  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-11
+Jan 05 10:49:11  [2026-01-05 10:49:11] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Jan 05 10:49:12  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 05 10:49:12  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Jan 05 10:49:12  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-07
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Jan 05 10:49:12  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 05 10:49:12  [2026-01-05 10:49:12] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 05 10:49:13  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Jan 05 10:49:13  [Stripe] ✓ Rebill in period: $39.0 on 2026-01-05
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Jan 05 10:49:13  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 05 10:49:13  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Jan 05 10:49:13  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-07
+Jan 05 10:49:13  [Stripe] Active: 4, Rebill in period: $41.34
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [stripe] [req:e34435ef] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 05 10:49:13  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [handlers] [req:e34435ef] Stripe returned: revenue=$171.6, rebill=$41.34
+Jan 05 10:49:13  10.244.4.179 - - [05/Jan/2026 10:49:13] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [bot_credentials] [req:85677108] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [telegram_sender] [req:85677108] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [handlers] [req:85677108] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, bot=@entrylab_bot, token_last4=****nFjE
+Jan 05 10:49:13  [2026-01-05 10:49:13] [INFO] [handlers] [req:85677108] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, members=2
+Jan 05 10:49:13  10.244.6.25 - - [05/Jan/2026 10:49:13] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Jan 05 10:49:13  10.244.5.120 - - [05/Jan/2026 10:49:13] "GET /api/forex-config HTTP/1.1" 200 -
+Jan 05 10:49:14  10.244.6.25 - - [05/Jan/2026 10:49:14] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Jan 05 10:49:14  10.244.7.234 - - [05/Jan/2026 10:49:14] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Jan 05 10:49:14  10.244.5.120 - - [05/Jan/2026 10:49:14] "GET /api/forex-config HTTP/1.1" 200 -
+Jan 05 10:49:14  10.244.6.25 - - [05/Jan/2026 10:49:14] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Jan 05 10:49:14  10.244.7.234 - - [05/Jan/2026 10:49:14] "GET /api/forex-tp-config HTTP/1.1" 200 -

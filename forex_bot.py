@@ -30,12 +30,16 @@ class ForexTelegramBot:
         self.tenant_id = tenant_id
     
     def is_configured(self) -> bool:
-        """Check if bot credentials are configured (without caching)."""
+        """Check if signal bot has VIP channel configured."""
         connection = get_connection_for_send(self.tenant_id, SIGNAL_BOT)
-        return connection is not None and connection.channel_id is not None
+        # Signal bot uses vip_channel_id (not legacy channel_id which is for message_bot)
+        is_ready = connection is not None and connection.vip_channel_id is not None
+        if not is_ready and connection:
+            logger.debug(f"is_configured=False: vip_channel_id={connection.vip_channel_id}")
+        return is_ready
     
-    async def _send(self, text: str, channel_type: str = 'default') -> SendResult:
-        """Internal send helper - all channel sends go through here."""
+    async def _send(self, text: str, channel_type: str = 'vip') -> SendResult:
+        """Internal send helper - all channel sends go through VIP channel by default."""
         return await send_to_channel(
             tenant_id=self.tenant_id,
             bot_role=SIGNAL_BOT,
@@ -687,12 +691,12 @@ No signals posted this week."""
             logger.exception(f"Failed to post weekly recap: {e}")
             return False
     
-    async def post_morning_briefing(self, briefing_data, ai_message=None):
+    async def post_morning_briefing(self, briefing_data=None, ai_message=None):
         """
         Post morning market briefing to channel.
         
         Args:
-            briefing_data: Dict with market context data
+            briefing_data: Dict with market context data (optional, for future use)
             ai_message: AI-generated briefing message
         """
         if not self.is_configured():
