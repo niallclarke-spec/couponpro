@@ -16,7 +16,16 @@ logger = get_logger(__name__)
 
 class ForexTelegramBot:
     """
-    Forex signal posting bot with no cached credentials.
+    Forex signal posting bot for VIP channel operations.
+    
+    This class is exclusively for VIP channel sends:
+    - Trading signals (post_signal)
+    - TP/SL notifications (post_tp_hit, post_stop_loss, post_stagnant_close)
+    - Milestone celebrations (post_signal_closed_winner)
+    - Recaps (post_daily_recap, post_weekly_recap, post_morning_briefing)
+    
+    For FREE channel operations (cross-promo), use domains/crosspromo/client.py
+    which calls send_to_channel() directly with channel_type='free'.
     
     All sends go through core/telegram_sender.py which:
     - Resolves fresh credentials from DB (with short TTL cache)
