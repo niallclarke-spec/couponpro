@@ -270,6 +270,167 @@ Generate the analytical recap commentary (don't repeat the numbers, focus on ins
         logger.exception("Error generating daily recap")
         return None
 
+
+def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'yesterday') -> dict:
+    """
+    Generate a fully transparent detailed daily recap with individual signal breakdowns.
+    
+    Args:
+        tenant_id: Tenant ID
+        period: 'yesterday' (default for morning recap) or 'today'
+    
+    Returns:
+        dict with 'message' (formatted Telegram message) and 'stats' (summary stats)
+    """
+    from db import get_forex_signals_detailed, get_forex_stats_by_period
+    from datetime import datetime, timedelta
+    
+    def safe_price(val, default="N/A"):
+        """Safely format a price value."""
+        if val is None:
+            return default
+        try:
+            return f"${float(val):.2f}"
+        except (TypeError, ValueError):
+            return default
+    
+    try:
+        signals = get_forex_signals_detailed(tenant_id, period=period)
+        stats = get_forex_stats_by_period(tenant_id, period=period) or {}
+        
+        if not signals:
+            if period == 'yesterday':
+                date_label = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d, %Y')
+            else:
+                date_label = datetime.utcnow().strftime('%b %d, %Y')
+            
+            return {
+                'message': f"📊 <b>Daily Performance</b> - {date_label}\n\nNo signals were posted.",
+                'stats': {'total_signals': 0, 'wins': 0, 'losses': 0, 'total_pips': 0}
+            }
+        
+        if period == 'yesterday':
+            first_signal_date = signals[0].get('posted_at')
+            if first_signal_date:
+                date_label = first_signal_date.strftime('%b %d, %Y')
+            else:
+                date_label = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d, %Y')
+        else:
+            date_label = datetime.utcnow().strftime('%b %d, %Y')
+        
+        signal_blocks = []
+        total_pips = 0
+        wins = 0
+        losses = 0
+        
+        for signal in signals:
+            signal_id = signal['id']
+            signal_type = signal['signal_type']
+            entry_price = signal.get('entry_price')
+            close_price = signal.get('close_price') or entry_price
+            status = signal['status']
+            result_pips = signal.get('result_pips') or 0
+            duration = signal.get('duration') or 'ongoing'
+            highest_tp = signal.get('highest_tp')
+            
+            if status == 'won':
+                status_emoji = '✅'
+                wins += 1
+                if highest_tp:
+                    result_label = f"TP{highest_tp} HIT"
+                else:
+                    result_label = "WIN"
+                pips_display = f"+{abs(result_pips):.1f} pips"
+            elif status == 'lost':
+                status_emoji = '❌'
+                losses += 1
+                result_label = "SL HIT"
+                pips_display = f"-{abs(result_pips):.1f} pips"
+            elif status == 'expired':
+                status_emoji = '⏱️'
+                result_label = "EXPIRED"
+                pips_display = f"{result_pips:+.1f} pips" if result_pips else "0 pips"
+            else:
+                status_emoji = '⏳'
+                result_label = "PENDING"
+                pips_display = "in progress"
+            
+            total_pips += result_pips
+            
+            entry_str = safe_price(entry_price)
+            exit_str = safe_price(close_price)
+            
+            block = f"""<b>Signal #{signal_id}</b> - {signal_type}
+• Entry: {entry_str} → Exit: {exit_str}
+• Result: {status_emoji} {result_label} ({pips_display})
+• Duration: {duration}"""
+            
+            signal_blocks.append(block)
+        
+        signals_section = "\n\n".join(signal_blocks)
+        
+        total_signals = len(signals)
+        win_rate = (wins / total_signals * 100) if total_signals > 0 else 0
+        pips_emoji = "📈" if total_pips >= 0 else "📉"
+        pips_display = f"+{total_pips:.1f}" if total_pips >= 0 else f"{total_pips:.1f}"
+        
+        summary_line = f"""───────────────────
+{pips_emoji} <b>Summary:</b> {total_signals} Signal{'s' if total_signals != 1 else ''} | {wins} Win{'s' if wins != 1 else ''} | {losses} Loss{'es' if losses != 1 else ''}
+💰 <b>Total:</b> {pips_display} pips | Win Rate: {win_rate:.0f}%"""
+        
+        ai_commentary = None
+        try:
+            if total_signals > 0:
+                prompt = f"""Write 1-2 sentences of professional market commentary for a daily forex recap.
+
+Results: {wins} wins, {losses} losses, {total_pips:+.1f} pips total.
+Win rate: {win_rate:.0f}%
+
+Style: Analytical and insightful. Reference market conditions or strategy performance. No emojis. Keep it brief."""
+                
+                response = _get_client().chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional forex analyst providing brief daily commentary."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=100,
+                    temperature=0.7
+                )
+                content = response.choices[0].message.content
+                if content:
+                    ai_commentary = content.strip()
+        except Exception as e:
+            logger.warning(f"AI commentary generation failed: {e}")
+        
+        message = f"""📊 <b>Daily Performance</b> - {date_label}
+
+{signals_section}
+
+{summary_line}"""
+        
+        if ai_commentary:
+            message += f"\n\n<i>{ai_commentary}</i>"
+        
+        return {
+            'message': message,
+            'stats': {
+                'total_signals': total_signals,
+                'wins': wins,
+                'losses': losses,
+                'total_pips': total_pips,
+                'win_rate': win_rate
+            }
+        }
+        
+    except Exception as e:
+        logger.exception("Error generating detailed daily recap")
+        return {
+            'message': "📊 <b>Daily Performance</b>\n\nUnable to generate recap at this time.",
+            'stats': {'total_signals': 0, 'wins': 0, 'losses': 0, 'total_pips': 0}
+        }
+
+
 def generate_morning_summary(current_price, news_items=None):
     """
     Generate a personalized morning summary for the trading day.

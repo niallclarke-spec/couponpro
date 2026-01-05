@@ -3179,6 +3179,97 @@ def get_forex_signals_by_period(tenant_id, period='today'):
         logger.exception(f"Error getting forex signals by period: {e}")
         return []
 
+
+def get_forex_signals_detailed(tenant_id: str, period: str = 'yesterday') -> list:
+    """
+    Get detailed forex signals for recap with full price and TP hit information.
+    
+    Args:
+        tenant_id: Tenant ID
+        period: Time period - 'today', 'yesterday', 'week'
+    
+    Returns:
+        list: List of signals with detailed breakdown fields
+    """
+    try:
+        if not db_pool.connection_pool:
+            return []
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if period == 'today':
+                time_filter = "posted_at >= CURRENT_DATE"
+            elif period == 'yesterday':
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '1 day' AND posted_at < CURRENT_DATE"
+            elif period == 'week':
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '7 days'"
+            else:
+                time_filter = "posted_at >= CURRENT_DATE - INTERVAL '1 day' AND posted_at < CURRENT_DATE"
+            
+            query = f"""
+                SELECT id, signal_type, pair, entry_price, take_profit, stop_loss, 
+                       close_price, status, result_pips, posted_at, closed_at,
+                       tp1_hit, tp2_hit, tp3_hit, 
+                       take_profit_2, take_profit_3,
+                       tp1_hit_at, tp2_hit_at, tp3_hit_at
+                FROM forex_signals
+                WHERE {time_filter} AND tenant_id = %s
+                ORDER BY posted_at ASC
+            """
+            
+            cursor.execute(query, (tenant_id,))
+            
+            signals = []
+            for row in cursor.fetchall():
+                posted_at = row[9]
+                closed_at = row[10]
+                
+                duration_str = None
+                if posted_at and closed_at:
+                    duration = closed_at - posted_at
+                    total_minutes = int(duration.total_seconds() / 60)
+                    hours = total_minutes // 60
+                    minutes = total_minutes % 60
+                    if hours > 0:
+                        duration_str = f"{hours}h {minutes}m"
+                    else:
+                        duration_str = f"{minutes}m"
+                
+                highest_tp = None
+                if row[13]:  # tp3_hit
+                    highest_tp = 3
+                elif row[12]:  # tp2_hit
+                    highest_tp = 2
+                elif row[11]:  # tp1_hit
+                    highest_tp = 1
+                
+                signals.append({
+                    'id': row[0],
+                    'signal_type': row[1],
+                    'pair': row[2],
+                    'entry_price': float(row[3]) if row[3] else None,
+                    'take_profit': float(row[4]) if row[4] else None,
+                    'stop_loss': float(row[5]) if row[5] else None,
+                    'close_price': float(row[6]) if row[6] else None,
+                    'status': row[7],
+                    'result_pips': float(row[8]) if row[8] else 0,
+                    'posted_at': posted_at,
+                    'closed_at': closed_at,
+                    'tp1_hit': row[11] or False,
+                    'tp2_hit': row[12] or False,
+                    'tp3_hit': row[13] or False,
+                    'take_profit_2': float(row[14]) if row[14] else None,
+                    'take_profit_3': float(row[15]) if row[15] else None,
+                    'highest_tp': highest_tp,
+                    'duration': duration_str
+                })
+            return signals
+    except Exception as e:
+        logger.exception(f"Error getting detailed forex signals: {e}")
+        return []
+
+
 def get_forex_stats_by_period(tenant_id, period='today'):
     """
     Get forex statistics for a specific time period.

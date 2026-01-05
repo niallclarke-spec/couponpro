@@ -14,7 +14,7 @@ from core.logging import get_logger
 from core.runtime import require_tenant_runtime, TenantRuntime
 from core.alerts import notify_error
 from scheduler import SignalGenerator, SignalMonitor, Messenger
-from forex_ai import generate_daily_recap, generate_weekly_recap
+from forex_ai import generate_daily_recap, generate_weekly_recap, generate_detailed_daily_recap
 
 logger = get_logger(__name__)
 
@@ -134,14 +134,18 @@ class ForexSchedulerRunner:
                 last_posted = db.get_last_recap_date('daily', tenant_id=self.tenant_id)
                 
                 if last_posted != current_date_str:
-                    logger.info("Generating daily recap...")
+                    logger.info("Generating detailed daily recap for yesterday...")
                     
-                    ai_recap = generate_daily_recap(tenant_id=self.tenant_id)
+                    recap_result = generate_detailed_daily_recap(
+                        tenant_id=self.tenant_id, 
+                        period='yesterday'
+                    )
                     bot = self.runtime.get_telegram_bot()
-                    await bot.post_daily_recap(ai_recap)
+                    await bot.post_detailed_recap(recap_result['message'])
                     
                     db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
-                    logger.info("✅ Daily recap posted")
+                    stats = recap_result.get('stats', {})
+                    logger.info(f"✅ Daily recap posted: {stats.get('total_signals', 0)} signals, {stats.get('total_pips', 0):+.1f} pips")
                 else:
                     logger.info("Daily recap already posted today, skipping")
         

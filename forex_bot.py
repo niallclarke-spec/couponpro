@@ -661,6 +661,33 @@ No signals posted today. Markets were quiet."""
             logger.exception(f"Failed to post daily recap: {e}")
             return False
     
+    async def post_detailed_recap(self, message: str) -> bool:
+        """
+        Post a pre-formatted detailed recap message to the VIP channel.
+        
+        Args:
+            message: Pre-formatted HTML message from generate_detailed_daily_recap()
+        
+        Returns:
+            bool: True if posted successfully
+        """
+        if not self.is_configured():
+            return False
+        
+        try:
+            result = await self._send(message)
+            
+            if result.success:
+                logger.info("Posted detailed daily recap to VIP channel")
+                return True
+            else:
+                logger.error(f"Failed to post detailed recap: {result.error}")
+                return False
+            
+        except Exception as e:
+            logger.exception(f"Failed to post detailed recap: {e}")
+            return False
+    
     async def post_weekly_recap(self, recap_data, week_str=None, ai_message=None):
         """
         Post weekly performance recap to channel.
