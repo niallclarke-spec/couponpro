@@ -1,0 +1,381 @@
+Jan 06 00:00:56  [2026-01-06 00:00:56] [INFO] [forex_signals] [tenant:entrylab] [req:343e00dc] Checking 1 active signals...
+Jan 06 00:00:56  [2026-01-06 00:00:56] [INFO] [forex_signals] [tenant:entrylab] [req:343e00dc] Current XAU/USD price: 4441.01
+Jan 06 00:01:57  [2026-01-06 00:01:57] [INFO] [forex_signals] [tenant:entrylab] [req:726ed644] Checking 1 active signals...
+Jan 06 00:01:57  [2026-01-06 00:01:57] [INFO] [forex_signals] [tenant:entrylab] [req:726ed644] Current XAU/USD price: 4439.17
+Jan 06 00:02:57  [2026-01-06 00:02:57] [INFO] [forex_signals] [tenant:entrylab] [req:c80758b0] Checking 1 active signals...
+Jan 06 00:02:58  [2026-01-06 00:02:58] [INFO] [forex_signals] [tenant:entrylab] [req:c80758b0] Current XAU/USD price: 4437.73
+Jan 06 00:03:58  [2026-01-06 00:03:58] [INFO] [forex_signals] [tenant:entrylab] [req:08577feb] Checking 1 active signals...
+Jan 06 00:03:58  [2026-01-06 00:03:58] [INFO] [forex_signals] [tenant:entrylab] [req:08577feb] Current XAU/USD price: 4438.10
+Jan 06 00:04:59  [2026-01-06 00:04:59] [INFO] [forex_signals] [tenant:entrylab] [req:32300e7b] Checking 1 active signals...
+Jan 06 00:04:59  [2026-01-06 00:04:59] [INFO] [forex_signals] [tenant:entrylab] [req:32300e7b] Current XAU/USD price: 4438.14
+Jan 06 00:05:59  [2026-01-06 00:05:59] [INFO] [forex_signals] [tenant:entrylab] [req:4f7b9604] Checking 1 active signals...
+Jan 06 00:05:59  [2026-01-06 00:05:59] [INFO] [forex_signals] [tenant:entrylab] [req:4f7b9604] Current XAU/USD price: 4439.13
+Jan 06 00:07:00  [2026-01-06 00:07:00] [INFO] [forex_signals] [tenant:entrylab] [req:c07dab55] Checking 1 active signals...
+Jan 06 00:07:00  [2026-01-06 00:07:00] [INFO] [forex_signals] [tenant:entrylab] [req:c07dab55] Current XAU/USD price: 4438.56
+Jan 06 00:08:00  [2026-01-06 00:08:00] [INFO] [forex_signals] [tenant:entrylab] [req:d75a9f9e] Checking 1 active signals...
+Jan 06 00:08:01  [2026-01-06 00:08:01] [INFO] [forex_signals] [tenant:entrylab] [req:d75a9f9e] Current XAU/USD price: 4438.40
+Jan 06 00:09:01  [2026-01-06 00:09:01] [INFO] [forex_signals] [tenant:entrylab] [req:e2289d62] Checking 1 active signals...
+Jan 06 00:09:01  [2026-01-06 00:09:01] [INFO] [forex_signals] [tenant:entrylab] [req:e2289d62] Current XAU/USD price: 4439.16
+Jan 06 00:10:02  [2026-01-06 00:10:02] [INFO] [forex_signals] [tenant:entrylab] [req:b6ce25dd] Checking 1 active signals...
+Jan 06 00:10:02  [2026-01-06 00:10:02] [INFO] [forex_signals] [tenant:entrylab] [req:b6ce25dd] Current XAU/USD price: 4439.70
+Jan 06 00:11:03  [2026-01-06 00:11:03] [INFO] [forex_signals] [tenant:entrylab] [req:a68b5a26] Checking 1 active signals...
+Jan 06 00:11:03  [2026-01-06 00:11:03] [INFO] [forex_signals] [tenant:entrylab] [req:a68b5a26] Current XAU/USD price: 4440.78
+Jan 06 00:12:03  [2026-01-06 00:12:03] [INFO] [forex_signals] [tenant:entrylab] [req:0edb6293] Checking 1 active signals...
+Jan 06 00:12:04  [2026-01-06 00:12:04] [INFO] [forex_signals] [tenant:entrylab] [req:0edb6293] Current XAU/USD price: 4438.90
+Jan 06 00:13:04  [2026-01-06 00:13:04] [INFO] [generator] [tenant:entrylab] [req:ee9bd128] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 00:13:04  [2026-01-06 00:13:04] [INFO] [forex_signals] [tenant:entrylab] [req:fd1d3294] Checking 1 active signals...
+Jan 06 00:13:04  [2026-01-06 00:13:04] [INFO] [forex_signals] [tenant:entrylab] [req:fd1d3294] Current XAU/USD price: 4438.88
+Jan 06 00:14:05  [2026-01-06 00:14:05] [INFO] [forex_signals] [tenant:entrylab] [req:83bbc829] Checking 1 active signals...
+Jan 06 00:14:05  [2026-01-06 00:14:05] [INFO] [forex_signals] [tenant:entrylab] [req:83bbc829] Current XAU/USD price: 4439.03
+Jan 06 00:15:05  [2026-01-06 00:15:05] [INFO] [forex_signals] [tenant:entrylab] [req:3cd44531] Checking 1 active signals...
+Jan 06 00:15:06  [2026-01-06 00:15:06] [INFO] [forex_signals] [tenant:entrylab] [req:3cd44531] Current XAU/USD price: 4439.43
+Jan 06 00:16:06  [2026-01-06 00:16:06] [INFO] [forex_signals] [tenant:entrylab] [req:7f65d052] Checking 1 active signals...
+Jan 06 00:16:06  [2026-01-06 00:16:06] [INFO] [forex_signals] [tenant:entrylab] [req:7f65d052] Current XAU/USD price: 4440.50
+Jan 06 00:17:07  [2026-01-06 00:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:2ca5e5b6] Checking 1 active signals...
+Jan 06 00:17:07  [2026-01-06 00:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:2ca5e5b6] Current XAU/USD price: 4441.22
+Jan 06 00:18:07  [2026-01-06 00:18:07] [INFO] [forex_signals] [tenant:entrylab] [req:3d3230c9] Checking 1 active signals...
+Jan 06 00:18:07  [2026-01-06 00:18:07] [INFO] [forex_signals] [tenant:entrylab] [req:3d3230c9] Current XAU/USD price: 4441.54
+Jan 06 00:19:08  [2026-01-06 00:19:08] [INFO] [forex_signals] [tenant:entrylab] [req:7515b3d7] Checking 1 active signals...
+Jan 06 00:19:08  [2026-01-06 00:19:08] [INFO] [forex_signals] [tenant:entrylab] [req:7515b3d7] Current XAU/USD price: 4440.78
+Jan 06 00:20:08  [2026-01-06 00:20:08] [INFO] [forex_signals] [tenant:entrylab] [req:3c2a6360] Checking 1 active signals...
+Jan 06 00:20:09  [2026-01-06 00:20:09] [INFO] [forex_signals] [tenant:entrylab] [req:3c2a6360] Current XAU/USD price: 4442.49
+Jan 06 00:21:09  [2026-01-06 00:21:09] [INFO] [forex_signals] [tenant:entrylab] [req:475eb580] Checking 1 active signals...
+Jan 06 00:21:09  [2026-01-06 00:21:09] [INFO] [forex_signals] [tenant:entrylab] [req:475eb580] Current XAU/USD price: 4442.57
+Jan 06 00:22:10  [2026-01-06 00:22:10] [INFO] [forex_signals] [tenant:entrylab] [req:3628988b] Checking 1 active signals...
+Jan 06 00:22:10  [2026-01-06 00:22:10] [INFO] [forex_signals] [tenant:entrylab] [req:3628988b] Current XAU/USD price: 4441.32
+Jan 06 00:23:10  [2026-01-06 00:23:10] [INFO] [forex_signals] [tenant:entrylab] [req:74382ebe] Checking 1 active signals...
+Jan 06 00:23:10  [2026-01-06 00:23:10] [INFO] [forex_signals] [tenant:entrylab] [req:74382ebe] Current XAU/USD price: 4440.91
+Jan 06 00:24:11  [2026-01-06 00:24:11] [INFO] [forex_signals] [tenant:entrylab] [req:60576ec7] Checking 1 active signals...
+Jan 06 00:24:11  [2026-01-06 00:24:11] [INFO] [forex_signals] [tenant:entrylab] [req:60576ec7] Current XAU/USD price: 4441.66
+Jan 06 00:24:33  10.244.6.25 - - [06/Jan/2026 00:24:33] "GET / HTTP/1.1" 302 -
+Jan 06 00:24:33  10.244.7.234 - - [06/Jan/2026 00:24:33] "GET /app HTTP/1.1" 200 -
+Jan 06 00:25:11  [2026-01-06 00:25:11] [INFO] [forex_signals] [tenant:entrylab] [req:1f8dd829] Checking 1 active signals...
+Jan 06 00:25:12  [2026-01-06 00:25:12] [INFO] [forex_signals] [tenant:entrylab] [req:1f8dd829] Current XAU/USD price: 4440.66
+Jan 06 00:26:12  [2026-01-06 00:26:12] [INFO] [forex_signals] [tenant:entrylab] [req:e4aa3500] Checking 1 active signals...
+Jan 06 00:26:12  [2026-01-06 00:26:12] [INFO] [forex_signals] [tenant:entrylab] [req:e4aa3500] Current XAU/USD price: 4440.89
+Jan 06 00:26:12  [2026-01-06 00:26:12] [INFO] [forex_signals] [tenant:entrylab] [req:e4aa3500] ⏱️  Signal #67 timed out after 4 hours - closing as won (+390.0 pips)
+Jan 06 00:26:15  [2026-01-06 00:26:15] [INFO] [bot_credentials] [tenant:entrylab] [req:e4aa3500] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 00:26:15  [2026-01-06 00:26:15] [INFO] [telegram_sender] [tenant:entrylab] [req:e4aa3500] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [telegram_sender] [tenant:entrylab] [req:e4aa3500] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=272
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [forex_bot] [tenant:entrylab] [req:e4aa3500] Posted timeout notification for signal #67
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [messenger] [tenant:entrylab] [req:e4aa3500] Posted timeout notification for signal #67
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [monitor] [tenant:entrylab] [req:e4aa3500] ✅ Posted AI timeout notification for signal #67 (status: won)
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [forex_signals] [tenant:entrylab] [req:e4aa3500] Loaded strategy: Aggressive (aggressive)
+Jan 06 00:26:16  [2026-01-06 00:26:16] [INFO] [monitor] [tenant:entrylab] [req:e4aa3500] Strategy reloaded after signal #67 closed
+Jan 06 00:28:16  [2026-01-06 00:28:16] [INFO] [generator] [tenant:entrylab] [req:7af3a887] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 00:43:16  [2026-01-06 00:43:16] [INFO] [generator] [tenant:entrylab] [req:93cede1a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 00:58:16  [2026-01-06 00:58:16] [INFO] [generator] [tenant:entrylab] [req:cce6bc66] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 01:13:16  [2026-01-06 01:13:16] [INFO] [generator] [tenant:entrylab] [req:c99e54f9] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 01:28:17  [2026-01-06 01:28:17] [INFO] [generator] [tenant:entrylab] [req:9ae6551e] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 01:43:17  [2026-01-06 01:43:17] [INFO] [generator] [tenant:entrylab] [req:09ebc681] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 01:58:17  [2026-01-06 01:58:17] [INFO] [generator] [tenant:entrylab] [req:a9c93c18] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 02:13:17  [2026-01-06 02:13:17] [INFO] [generator] [tenant:entrylab] [req:3eed40b2] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 02:28:17  [2026-01-06 02:28:17] [INFO] [generator] [tenant:entrylab] [req:bcfa1497] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 02:43:18  [2026-01-06 02:43:18] [INFO] [generator] [tenant:entrylab] [req:0127ae08] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 02:58:18  [2026-01-06 02:58:18] [INFO] [generator] [tenant:entrylab] [req:3e5823da] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 03:13:18  [2026-01-06 03:13:18] [INFO] [generator] [tenant:entrylab] [req:c5242959] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 03:28:18  [2026-01-06 03:28:18] [INFO] [generator] [tenant:entrylab] [req:fb9bf43f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 03:43:18  [2026-01-06 03:43:18] [INFO] [generator] [tenant:entrylab] [req:1bd8daad] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 03:58:19  [2026-01-06 03:58:19] [INFO] [generator] [tenant:entrylab] [req:36d6f428] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 04:13:19  [2026-01-06 04:13:19] [INFO] [generator] [tenant:entrylab] [req:632d91f2] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 04:28:19  [2026-01-06 04:28:19] [INFO] [generator] [tenant:entrylab] [req:d5f6ea3d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 04:43:19  [2026-01-06 04:43:19] [INFO] [generator] [tenant:entrylab] [req:3cfa5fbd] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 04:58:19  [2026-01-06 04:58:19] [INFO] [generator] [tenant:entrylab] [req:68908a52] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 05:13:20  [2026-01-06 05:13:20] [INFO] [generator] [tenant:entrylab] [req:243466ed] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 05:28:20  [2026-01-06 05:28:20] [INFO] [generator] [tenant:entrylab] [req:2f967648] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 05:43:20  [2026-01-06 05:43:20] [INFO] [generator] [tenant:entrylab] [req:1496647a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 05:58:20  [2026-01-06 05:58:20] [INFO] [generator] [tenant:entrylab] [req:db948484] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 06:13:21  [2026-01-06 06:13:21] [INFO] [generator] [tenant:entrylab] [req:8f593e09] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=273
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [forex_bot] Posted morning briefing
+Jan 06 06:20:21  [2026-01-06 06:20:21] [INFO] [forex_scheduler] ✅ Morning briefing posted
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [generator] [tenant:entrylab] [req:fdbb03a7] 🔄 forex_config change detected (guardrails/indicators)
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [generator] [tenant:entrylab] [req:fdbb03a7] 🔄 Reloading config...
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [forex_signals] [tenant:entrylab] [req:fdbb03a7] Reloading configuration...
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [forex_signals] [tenant:entrylab] [req:fdbb03a7] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [forex_signals] [tenant:entrylab] [req:fdbb03a7] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [forex_signals] [tenant:entrylab] [req:fdbb03a7] Strategy unchanged: aggressive
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [runtime] [tenant:entrylab] [req:fdbb03a7] Config hot-reloaded for signal engine
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [generator] [tenant:entrylab] [req:fdbb03a7] ✅ Config hot-reloaded successfully
+Jan 06 06:28:21  [2026-01-06 06:28:21] [INFO] [generator] [tenant:entrylab] [req:fdbb03a7] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 06:30:21  [2026-01-06 06:30:21] [INFO] [forex_scheduler] Generating detailed daily recap for yesterday...
+Jan 06 06:30:24  [2026-01-06 06:30:24] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 06:30:24  [2026-01-06 06:30:24] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 06 06:30:24  [2026-01-06 06:30:24] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=274
+Jan 06 06:30:24  [2026-01-06 06:30:24] [INFO] [forex_bot] Posted detailed daily recap to VIP channel
+Jan 06 06:30:24  [2026-01-06 06:30:24] [INFO] [forex_scheduler] ✅ Daily recap posted: 3 signals, -348.9 pips
+Jan 06 06:31:24  [2026-01-06 06:31:24] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 06 06:32:24  [2026-01-06 06:32:24] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 06 06:33:24  [2026-01-06 06:33:24] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 06 06:34:24  [2026-01-06 06:34:24] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [generator] [tenant:entrylab] [req:bd40e890] 🔄 forex_config change detected (guardrails/indicators)
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [generator] [tenant:entrylab] [req:bd40e890] 🔄 Reloading config...
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [forex_signals] [tenant:entrylab] [req:bd40e890] Reloading configuration...
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [forex_signals] [tenant:entrylab] [req:bd40e890] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [forex_signals] [tenant:entrylab] [req:bd40e890] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [forex_signals] [tenant:entrylab] [req:bd40e890] Strategy unchanged: aggressive
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [runtime] [tenant:entrylab] [req:bd40e890] Config hot-reloaded for signal engine
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [generator] [tenant:entrylab] [req:bd40e890] ✅ Config hot-reloaded successfully
+Jan 06 06:43:24  [2026-01-06 06:43:24] [INFO] [generator] [tenant:entrylab] [req:bd40e890] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 06:58:24  [2026-01-06 06:58:24] [INFO] [generator] [tenant:entrylab] [req:da566e50] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 07:13:25  [2026-01-06 07:13:25] [INFO] [generator] [tenant:entrylab] [req:06469c74] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 07:28:25  [2026-01-06 07:28:25] [INFO] [generator] [tenant:entrylab] [req:507557a4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 07:43:25  [2026-01-06 07:43:25] [INFO] [generator] [tenant:entrylab] [req:ea7bdfa5] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 07:58:25  [2026-01-06 07:58:25] [INFO] [generator] [tenant:entrylab] [req:07eaa5ab] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 06 08:13:25  [2026-01-06 08:13:25] [INFO] [forex_signals] [tenant:entrylab] [req:939cb438] Using strategy: Aggressive (aggressive)
+Jan 06 08:13:25  [2026-01-06 08:13:25] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] Checking for signals on XAU/USD 15min...
+Jan 06 08:13:27  [2026-01-06 08:13:27] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] Price: 4461.31, RSI: 51.54, MACD: 2.6531, ADX: 12.08
+Jan 06 08:13:27  [2026-01-06 08:13:27] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] Weak trend - ADX 12.08 < 15
+Jan 06 08:13:27  [2026-01-06 08:13:27] [INFO] [generator] [tenant:entrylab] [req:939cb438] 📊 Checking 1-hour timeframe...
+Jan 06 08:13:27  [2026-01-06 08:13:27] [INFO] [forex_signals] [tenant:entrylab] [req:939cb438] Using strategy: Aggressive (aggressive)
+Jan 06 08:13:27  [2026-01-06 08:13:27] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] Checking for signals on XAU/USD 1h...
+Jan 06 08:13:29  [2026-01-06 08:13:29] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] Price: 4461.31, RSI: 63.32, MACD: 15.9768, ADX: 41.04
+Jan 06 08:13:29  [2026-01-06 08:13:29] [INFO] [aggressive] [tenant:entrylab] [req:939cb438] No signal - RSI=63.32 (thresholds: 40/60)
+Jan 06 08:28:30  [2026-01-06 08:28:30] [INFO] [forex_signals] [tenant:entrylab] [req:3e8fb881] Using strategy: Aggressive (aggressive)
+Jan 06 08:28:30  [2026-01-06 08:28:30] [INFO] [aggressive] [tenant:entrylab] [req:3e8fb881] Checking for signals on XAU/USD 15min...
+Jan 06 08:28:31  [2026-01-06 08:28:31] [INFO] [aggressive] [tenant:entrylab] [req:3e8fb881] Price: 4474.09, RSI: 62.13, MACD: 3.3910, ADX: 12.57
+Jan 06 08:28:31  [2026-01-06 08:28:31] [INFO] [aggressive] [tenant:entrylab] [req:3e8fb881] Weak trend - ADX 12.57 < 15
+Jan 06 08:43:32  [2026-01-06 08:43:32] [INFO] [forex_signals] [tenant:entrylab] [req:e65db3a2] Using strategy: Aggressive (aggressive)
+Jan 06 08:43:32  [2026-01-06 08:43:32] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] Checking for signals on XAU/USD 15min...
+Jan 06 08:43:34  [2026-01-06 08:43:34] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] Price: 4466.32, RSI: 54.63, MACD: 3.1829, ADX: 13.03
+Jan 06 08:43:34  [2026-01-06 08:43:34] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] Weak trend - ADX 13.03 < 15
+Jan 06 08:43:34  [2026-01-06 08:43:34] [INFO] [generator] [tenant:entrylab] [req:e65db3a2] 📊 Checking 1-hour timeframe...
+Jan 06 08:43:34  [2026-01-06 08:43:34] [INFO] [forex_signals] [tenant:entrylab] [req:e65db3a2] Using strategy: Aggressive (aggressive)
+Jan 06 08:43:34  [2026-01-06 08:43:34] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] Checking for signals on XAU/USD 1h...
+Jan 06 08:43:36  [2026-01-06 08:43:36] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] Price: 4466.32, RSI: 65.13, MACD: 16.3761, ADX: 41.44
+Jan 06 08:43:36  [2026-01-06 08:43:36] [INFO] [aggressive] [tenant:entrylab] [req:e65db3a2] No signal - RSI=65.13 (thresholds: 40/60)
+Jan 06 08:58:36  [2026-01-06 08:58:36] [INFO] [forex_signals] [tenant:entrylab] [req:2b4157d2] Using strategy: Aggressive (aggressive)
+Jan 06 08:58:36  [2026-01-06 08:58:36] [INFO] [aggressive] [tenant:entrylab] [req:2b4157d2] Checking for signals on XAU/USD 15min...
+Jan 06 08:58:38  [2026-01-06 08:58:38] [INFO] [aggressive] [tenant:entrylab] [req:2b4157d2] Price: 4467.60, RSI: 55.64, MACD: 3.1640, ADX: 13.45
+Jan 06 08:58:38  [2026-01-06 08:58:38] [INFO] [aggressive] [tenant:entrylab] [req:2b4157d2] Weak trend - ADX 13.45 < 15
+Jan 06 09:00:38  [2026-01-06 09:00:38] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence...
+Jan 06 09:00:38  [2026-01-06 09:00:38] [INFO] [repo] Enqueued job 65e8b4ec-405d-4ff2-b9fd-422fcf83b0cd type=morning_news for tenant entrylab
+Jan 06 09:00:38  [2026-01-06 09:00:38] [INFO] [repo] Enqueued job a36475da-d28b-46a1-907b-d85363b1e39c type=vip_soon for tenant entrylab
+Jan 06 09:00:38  [2026-01-06 09:00:38] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon']
+Jan 06 09:00:42  [2026-01-06 09:00:42] [INFO] [repo] Claimed 1 due jobs
+Jan 06 09:00:42  [2026-01-06 09:00:42] [INFO] [crosspromo_worker] Processing job 65e8b4ec-405d-4ff2-b9fd-422fcf83b0cd type=morning_news tenant=entrylab
+Jan 06 09:00:42  [2026-01-06 09:00:42] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 09:00:43  [2026-01-06 09:00:43] [INFO] [client] Message sent to -1003055722817
+Jan 06 09:00:43  [2026-01-06 09:00:43] [INFO] [repo] Job 65e8b4ec-405d-4ff2-b9fd-422fcf83b0cd marked as sent
+Jan 06 09:00:43  [2026-01-06 09:00:43] [INFO] [crosspromo_worker] Job 65e8b4ec-405d-4ff2-b9fd-422fcf83b0cd completed successfully
+Jan 06 09:00:43  [2026-01-06 09:00:43] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [generator] [tenant:entrylab] [req:37b166cf] 🔄 forex_config change detected (guardrails/indicators)
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [generator] [tenant:entrylab] [req:37b166cf] 🔄 Reloading config...
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Reloading configuration...
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Strategy unchanged: aggressive
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [runtime] [tenant:entrylab] [req:37b166cf] Config hot-reloaded for signal engine
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [generator] [tenant:entrylab] [req:37b166cf] ✅ Config hot-reloaded successfully
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Using strategy: Aggressive (aggressive)
+Jan 06 09:13:38  [2026-01-06 09:13:38] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] Checking for signals on XAU/USD 15min...
+Jan 06 09:13:40  [2026-01-06 09:13:40] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] Price: 4456.34, RSI: 45.89, MACD: 2.3105, ADX: 13.24
+Jan 06 09:13:40  [2026-01-06 09:13:40] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] Weak trend - ADX 13.24 < 15
+Jan 06 09:13:40  [2026-01-06 09:13:40] [INFO] [generator] [tenant:entrylab] [req:37b166cf] 📊 Checking 1-hour timeframe...
+Jan 06 09:13:40  [2026-01-06 09:13:40] [INFO] [forex_signals] [tenant:entrylab] [req:37b166cf] Using strategy: Aggressive (aggressive)
+Jan 06 09:13:40  [2026-01-06 09:13:40] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] Checking for signals on XAU/USD 1h...
+Jan 06 09:13:42  [2026-01-06 09:13:42] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] Price: 4456.34, RSI: 58.39, MACD: 15.3921, ADX: 40.62
+Jan 06 09:13:42  [2026-01-06 09:13:42] [INFO] [aggressive] [tenant:entrylab] [req:37b166cf] No signal - RSI=58.39 (thresholds: 40/60)
+Jan 06 09:28:42  [2026-01-06 09:28:42] [INFO] [forex_signals] [tenant:entrylab] [req:20fb8a64] Using strategy: Aggressive (aggressive)
+Jan 06 09:28:42  [2026-01-06 09:28:42] [INFO] [aggressive] [tenant:entrylab] [req:20fb8a64] Checking for signals on XAU/USD 15min...
+Jan 06 09:28:44  [2026-01-06 09:28:44] [INFO] [aggressive] [tenant:entrylab] [req:20fb8a64] Price: 4455.37, RSI: 45.20, MACD: 1.4415, ADX: 13.05
+Jan 06 09:28:44  [2026-01-06 09:28:44] [INFO] [aggressive] [tenant:entrylab] [req:20fb8a64] Weak trend - ADX 13.05 < 15
+Jan 06 09:43:44  [2026-01-06 09:43:44] [INFO] [forex_signals] [tenant:entrylab] [req:79b2f8b2] Using strategy: Aggressive (aggressive)
+Jan 06 09:43:44  [2026-01-06 09:43:44] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] Checking for signals on XAU/USD 15min...
+Jan 06 09:43:46  [2026-01-06 09:43:46] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] Price: 4455.26, RSI: 45.12, MACD: 0.8221, ADX: 12.87
+Jan 06 09:43:46  [2026-01-06 09:43:46] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] Weak trend - ADX 12.87 < 15
+Jan 06 09:43:46  [2026-01-06 09:43:46] [INFO] [generator] [tenant:entrylab] [req:79b2f8b2] 📊 Checking 1-hour timeframe...
+Jan 06 09:43:46  [2026-01-06 09:43:46] [INFO] [forex_signals] [tenant:entrylab] [req:79b2f8b2] Using strategy: Aggressive (aggressive)
+Jan 06 09:43:46  [2026-01-06 09:43:46] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] Checking for signals on XAU/USD 1h...
+Jan 06 09:43:48  [2026-01-06 09:43:48] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] Price: 4455.26, RSI: 57.82, MACD: 15.3061, ADX: 40.62
+Jan 06 09:43:48  [2026-01-06 09:43:48] [INFO] [aggressive] [tenant:entrylab] [req:79b2f8b2] No signal - RSI=57.82 (thresholds: 40/60)
+Jan 06 09:58:48  [2026-01-06 09:58:48] [INFO] [forex_signals] [tenant:entrylab] [req:bd6ff8a2] Using strategy: Aggressive (aggressive)
+Jan 06 09:58:48  [2026-01-06 09:58:48] [INFO] [aggressive] [tenant:entrylab] [req:bd6ff8a2] Checking for signals on XAU/USD 15min...
+Jan 06 09:58:50  [2026-01-06 09:58:50] [INFO] [aggressive] [tenant:entrylab] [req:bd6ff8a2] Price: 4449.05, RSI: 40.53, MACD: -0.2425, ADX: 13.75
+Jan 06 09:58:50  [2026-01-06 09:58:50] [INFO] [aggressive] [tenant:entrylab] [req:bd6ff8a2] Weak trend - ADX 13.75 < 15
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [repo] Claimed 1 due jobs
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [crosspromo_worker] Processing job a36475da-d28b-46a1-907b-d85363b1e39c type=vip_soon tenant=entrylab
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [client] Message sent to -1003055722817
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [repo] Job a36475da-d28b-46a1-907b-d85363b1e39c marked as sent
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [crosspromo_worker] Job a36475da-d28b-46a1-907b-d85363b1e39c completed successfully
+Jan 06 10:00:45  [2026-01-06 10:00:45] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 06 10:13:50  [2026-01-06 10:13:50] [INFO] [forex_signals] [tenant:entrylab] [req:ccfdeaf2] Using strategy: Aggressive (aggressive)
+Jan 06 10:13:50  [2026-01-06 10:13:50] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] Checking for signals on XAU/USD 15min...
+Jan 06 10:13:52  [2026-01-06 10:13:52] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] Price: 4451.79, RSI: 43.62, MACD: -0.9329, ADX: 14.84
+Jan 06 10:13:52  [2026-01-06 10:13:52] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] Weak trend - ADX 14.84 < 15
+Jan 06 10:13:52  [2026-01-06 10:13:52] [INFO] [generator] [tenant:entrylab] [req:ccfdeaf2] 📊 Checking 1-hour timeframe...
+Jan 06 10:13:52  [2026-01-06 10:13:52] [INFO] [forex_signals] [tenant:entrylab] [req:ccfdeaf2] Using strategy: Aggressive (aggressive)
+Jan 06 10:13:52  [2026-01-06 10:13:52] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] Checking for signals on XAU/USD 1h...
+Jan 06 10:13:54  [2026-01-06 10:13:54] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] Price: 4451.79, RSI: 55.76, MACD: 13.3928, ADX: 38.35
+Jan 06 10:13:54  [2026-01-06 10:13:54] [INFO] [aggressive] [tenant:entrylab] [req:ccfdeaf2] No signal - RSI=55.76 (thresholds: 40/60)
+Jan 06 10:28:54  [2026-01-06 10:28:54] [INFO] [forex_signals] [tenant:entrylab] [req:21963683] Using strategy: Aggressive (aggressive)
+Jan 06 10:28:54  [2026-01-06 10:28:54] [INFO] [aggressive] [tenant:entrylab] [req:21963683] Checking for signals on XAU/USD 15min...
+Jan 06 10:28:56  [2026-01-06 10:28:56] [INFO] [aggressive] [tenant:entrylab] [req:21963683] Price: 4450.09, RSI: 42.04, MACD: -1.6171, ADX: 15.61
+Jan 06 10:28:56  [2026-01-06 10:28:56] [INFO] [aggressive] [tenant:entrylab] [req:21963683] No signal - RSI=42.04 (thresholds: 40/60)
+Jan 06 10:43:57  [2026-01-06 10:43:57] [INFO] [forex_signals] [tenant:entrylab] [req:7b84c6b7] Using strategy: Aggressive (aggressive)
+Jan 06 10:43:57  [2026-01-06 10:43:57] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] Checking for signals on XAU/USD 15min...
+Jan 06 10:43:59  [2026-01-06 10:43:59] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] Price: 4452.30, RSI: 44.62, MACD: -1.9079, ADX: 15.78
+Jan 06 10:43:59  [2026-01-06 10:43:59] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] No signal - RSI=44.62 (thresholds: 40/60)
+Jan 06 10:43:59  [2026-01-06 10:43:59] [INFO] [generator] [tenant:entrylab] [req:7b84c6b7] 📊 Checking 1-hour timeframe...
+Jan 06 10:43:59  [2026-01-06 10:43:59] [INFO] [forex_signals] [tenant:entrylab] [req:7b84c6b7] Using strategy: Aggressive (aggressive)
+Jan 06 10:43:59  [2026-01-06 10:43:59] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] Checking for signals on XAU/USD 1h...
+Jan 06 10:44:01  [2026-01-06 10:44:01] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] Price: 4452.30, RSI: 55.96, MACD: 13.4336, ADX: 38.35
+Jan 06 10:44:01  [2026-01-06 10:44:01] [INFO] [aggressive] [tenant:entrylab] [req:7b84c6b7] No signal - RSI=55.96 (thresholds: 40/60)
+Jan 06 10:59:01  [2026-01-06 10:59:01] [INFO] [forex_signals] [tenant:entrylab] [req:382a92f0] Using strategy: Aggressive (aggressive)
+Jan 06 10:59:01  [2026-01-06 10:59:01] [INFO] [aggressive] [tenant:entrylab] [req:382a92f0] Checking for signals on XAU/USD 15min...
+Jan 06 10:59:03  [2026-01-06 10:59:03] [INFO] [aggressive] [tenant:entrylab] [req:382a92f0] Price: 4452.98, RSI: 45.50, MACD: -2.1410, ADX: 15.95
+Jan 06 10:59:03  [2026-01-06 10:59:03] [INFO] [aggressive] [tenant:entrylab] [req:382a92f0] No signal - RSI=45.50 (thresholds: 40/60)
+Jan 06 11:14:03  [2026-01-06 11:14:03] [INFO] [forex_signals] [tenant:entrylab] [req:ff4d60e3] Using strategy: Aggressive (aggressive)
+Jan 06 11:14:03  [2026-01-06 11:14:03] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] Checking for signals on XAU/USD 15min...
+Jan 06 11:14:05  [2026-01-06 11:14:05] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] Price: 4452.00, RSI: 44.47, MACD: -2.3028, ADX: 16.09
+Jan 06 11:14:05  [2026-01-06 11:14:05] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] No signal - RSI=44.47 (thresholds: 40/60)
+Jan 06 11:14:05  [2026-01-06 11:14:05] [INFO] [generator] [tenant:entrylab] [req:ff4d60e3] 📊 Checking 1-hour timeframe...
+Jan 06 11:14:05  [2026-01-06 11:14:05] [INFO] [forex_signals] [tenant:entrylab] [req:ff4d60e3] Using strategy: Aggressive (aggressive)
+Jan 06 11:14:05  [2026-01-06 11:14:05] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] Checking for signals on XAU/USD 1h...
+Jan 06 11:14:07  [2026-01-06 11:14:07] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] Price: 4452.00, RSI: 55.85, MACD: 12.2408, ADX: 36.85
+Jan 06 11:14:07  [2026-01-06 11:14:07] [INFO] [aggressive] [tenant:entrylab] [req:ff4d60e3] No signal - RSI=55.85 (thresholds: 40/60)
+Jan 06 11:29:07  [2026-01-06 11:29:07] [INFO] [forex_signals] [tenant:entrylab] [req:375a8697] Using strategy: Aggressive (aggressive)
+Jan 06 11:29:07  [2026-01-06 11:29:07] [INFO] [aggressive] [tenant:entrylab] [req:375a8697] Checking for signals on XAU/USD 15min...
+Jan 06 11:29:09  [2026-01-06 11:29:09] [INFO] [aggressive] [tenant:entrylab] [req:375a8697] Price: 4453.04, RSI: 45.94, MACD: -2.3099, ADX: 16.53
+Jan 06 11:29:09  [2026-01-06 11:29:09] [INFO] [aggressive] [tenant:entrylab] [req:375a8697] No signal - RSI=45.94 (thresholds: 40/60)
+Jan 06 11:44:10  [2026-01-06 11:44:10] [INFO] [forex_signals] [tenant:entrylab] [req:4afba70e] Using strategy: Aggressive (aggressive)
+Jan 06 11:44:10  [2026-01-06 11:44:10] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] Checking for signals on XAU/USD 15min...
+Jan 06 11:44:12  [2026-01-06 11:44:12] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] Price: 4460.69, RSI: 53.85, MACD: -1.5167, ADX: 14.81
+Jan 06 11:44:12  [2026-01-06 11:44:12] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] Weak trend - ADX 14.81 < 15
+Jan 06 11:44:12  [2026-01-06 11:44:12] [INFO] [generator] [tenant:entrylab] [req:4afba70e] 📊 Checking 1-hour timeframe...
+Jan 06 11:44:12  [2026-01-06 11:44:12] [INFO] [forex_signals] [tenant:entrylab] [req:4afba70e] Using strategy: Aggressive (aggressive)
+Jan 06 11:44:12  [2026-01-06 11:44:12] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] Checking for signals on XAU/USD 1h...
+Jan 06 11:44:13  [2026-01-06 11:44:13] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] Price: 4460.69, RSI: 59.21, MACD: 12.9335, ADX: 37.27
+Jan 06 11:44:13  [2026-01-06 11:44:13] [INFO] [aggressive] [tenant:entrylab] [req:4afba70e] No signal - RSI=59.21 (thresholds: 40/60)
+Jan 06 11:59:14  [2026-01-06 11:59:14] [INFO] [forex_signals] [tenant:entrylab] [req:7837ae0d] Using strategy: Aggressive (aggressive)
+Jan 06 11:59:14  [2026-01-06 11:59:14] [INFO] [aggressive] [tenant:entrylab] [req:7837ae0d] Checking for signals on XAU/USD 15min...
+Jan 06 11:59:16  [2026-01-06 11:59:16] [INFO] [aggressive] [tenant:entrylab] [req:7837ae0d] Price: 4463.73, RSI: 56.59, MACD: -0.7181, ADX: 14.43
+Jan 06 11:59:16  [2026-01-06 11:59:16] [INFO] [aggressive] [tenant:entrylab] [req:7837ae0d] Weak trend - ADX 14.43 < 15
+Jan 06 12:14:16  [2026-01-06 12:14:16] [INFO] [forex_signals] [tenant:entrylab] [req:b550178c] Using strategy: Aggressive (aggressive)
+Jan 06 12:14:16  [2026-01-06 12:14:16] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] Checking for signals on XAU/USD 15min...
+Jan 06 12:14:18  [2026-01-06 12:14:18] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] Price: 4462.64, RSI: 55.50, MACD: -0.2387, ADX: 14.21
+Jan 06 12:14:18  [2026-01-06 12:14:18] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] Weak trend - ADX 14.21 < 15
+Jan 06 12:14:18  [2026-01-06 12:14:18] [INFO] [generator] [tenant:entrylab] [req:b550178c] 📊 Checking 1-hour timeframe...
+Jan 06 12:14:18  [2026-01-06 12:14:18] [INFO] [forex_signals] [tenant:entrylab] [req:b550178c] Using strategy: Aggressive (aggressive)
+Jan 06 12:14:18  [2026-01-06 12:14:18] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] Checking for signals on XAU/USD 1h...
+Jan 06 12:14:20  [2026-01-06 12:14:20] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] Price: 4462.64, RSI: 59.80, MACD: 12.7188, ADX: 36.55
+Jan 06 12:14:20  [2026-01-06 12:14:20] [INFO] [aggressive] [tenant:entrylab] [req:b550178c] No signal - RSI=59.80 (thresholds: 40/60)
+Jan 06 12:14:47  10.244.7.234 - - [06/Jan/2026 12:14:47] "GET /admin HTTP/1.1" 302 -
+Jan 06 12:14:47  [2026-01-06 12:14:47] [WARNING] [clerk_auth] [req:c6102a03] Token expired
+Jan 06 12:14:47  [2026-01-06 12:14:47] [WARNING] [clerk_auth] [req:c6102a03] Auth failure: reason=token_expired path=/admin host=admin.promostack.io source=cookie
+Jan 06 12:14:47  10.244.6.25 - - [06/Jan/2026 12:14:47] "GET /login HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.6.25 - - [06/Jan/2026 12:14:48] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.6.25 - - [06/Jan/2026 12:14:48] "GET /api/config HTTP/1.1" 200 -
+Jan 06 12:14:48  [2026-01-06 12:14:48] [INFO] [set_auth_cookie] [req:2a78d4da] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Jan 06 12:14:48  10.244.7.234 - - [06/Jan/2026 12:14:48] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Jan 06 12:14:48  [2026-01-06 12:14:48] [INFO] [set_auth_cookie] [req:2a78d4da] set-auth-cookie: SUCCESS - cookies set
+Jan 06 12:14:48  10.244.6.25 - - [06/Jan/2026 12:14:48] "GET /api/config HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.7.234 - - [06/Jan/2026 12:14:48] "GET /admin HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.5.120 - - [06/Jan/2026 12:14:48] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.6.25 - - [06/Jan/2026 12:14:48] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.4.179 - - [06/Jan/2026 12:14:48] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.4.179 - - [06/Jan/2026 12:14:48] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Jan 06 12:14:48  10.244.5.120 - - [06/Jan/2026 12:14:48] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Jan 06 12:14:49  [2026-01-06 12:14:49] [INFO] [db] [req:a29eb76c] get_all_telegram_subscriptions: found 13 rows
+Jan 06 12:14:49  10.244.4.179 - - [06/Jan/2026 12:14:49] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Jan 06 12:14:49  10.244.5.120 - - [06/Jan/2026 12:14:49] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Jan 06 12:14:49  10.244.4.179 - - [06/Jan/2026 12:14:49] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Jan 06 12:14:49  [2026-01-06 12:14:49] [INFO] [db] [req:73cc9959] get_all_telegram_subscriptions: found 13 rows
+Jan 06 12:14:49  [2026-01-06 12:14:49] [INFO] [handlers] [req:73cc9959] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Jan 06 12:14:49  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Jan 06 12:14:49  [Stripe] Fetching all paid invoices...
+Jan 06 12:14:49  [2026-01-06 12:14:49] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Jan 06 12:14:50  [Stripe] Total revenue from 21 VIP invoices: $171.60000000000002
+Jan 06 12:14:50  [Stripe] Found 0 subscription IDs from invoices
+Jan 06 12:14:50  [Stripe] Also fetching active subscriptions directly from Stripe...
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 06 12:14:50  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Jan 06 12:14:50  [2026-01-06 12:14:50] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 06 12:14:51  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 06 12:14:51  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 06 12:14:51  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Jan 06 12:14:51  [Stripe] Total subscription IDs to check: 4
+Jan 06 12:14:51  [Stripe] Checking 4 subscriptions for rebill (period: 2026-01-06 to 2028-12-31)...
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Jan 06 12:14:51  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 06 12:14:51  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Jan 06 12:14:51  [Stripe] ✓ Rebill in period: $39.0 on 2026-01-12
+Jan 06 12:14:51  [2026-01-06 12:14:51] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Jan 06 12:14:52  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 06 12:14:52  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Jan 06 12:14:52  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-11
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Jan 06 12:14:52  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 06 12:14:52  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Jan 06 12:14:52  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-07
+Jan 06 12:14:52  [2026-01-06 12:14:52] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Jan 06 12:14:53  [2026-01-06 12:14:53] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Jan 06 12:14:53  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Jan 06 12:14:53  [2026-01-06 12:14:53] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Jan 06 12:14:53  [2026-01-06 12:14:53] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Jan 06 12:14:53  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Jan 06 12:14:53  [Stripe] ✓ Rebill in period: $0.78 on 2026-01-07
+Jan 06 12:14:53  [Stripe] Active: 4, Rebill in period: $41.34
+Jan 06 12:14:53  [2026-01-06 12:14:53] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [stripe] [req:73cc9959] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [stripe] [req:73cc9959] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Jan 06 12:14:54  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Jan 06 12:14:54  10.244.4.179 - - [06/Jan/2026 12:14:54] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [handlers] [req:73cc9959] Stripe returned: revenue=$171.6, rebill=$41.34
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [bot_credentials] [req:1298afdd] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [telegram_sender] [req:1298afdd] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [handlers] [req:1298afdd] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, bot=@entrylab_bot, token_last4=****nFjE
+Jan 06 12:14:54  [2026-01-06 12:14:54] [INFO] [handlers] [req:1298afdd] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, members=2
+Jan 06 12:14:54  10.244.7.234 - - [06/Jan/2026 12:14:54] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Jan 06 12:14:56  10.244.7.234 - - [06/Jan/2026 12:14:56] "GET /api/connections HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.7.234 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.6.25 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.4.179 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.7.234 - - [06/Jan/2026 12:14:57] "GET /api/connections HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.7.234 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.6.25 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Jan 06 12:14:57  10.244.4.179 - - [06/Jan/2026 12:14:57] "GET /api/crosspromo/jobs HTTP/1.1" 200 -

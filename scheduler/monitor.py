@@ -114,6 +114,8 @@ class SignalMonitor:
                 
                 # Get signal's original Telegram message ID
                 signal_message_id = matching_signal.get('telegram_message_id')
+                logger.info(f"📣 Cross-promo check for signal #{signal_id}: tp1_msg={tp1_message_id}, signal_msg={signal_message_id}")
+                
                 if signal_message_id:
                     crosspromo_result = trigger_tp_crosspromo(
                         tenant_id=self.tenant_id,
@@ -128,6 +130,10 @@ class SignalMonitor:
                         logger.info(f"⏭️ Cross-promo skipped: {crosspromo_result.get('reason')}")
                     else:
                         logger.warning(f"⚠️ Cross-promo failed: {crosspromo_result.get('error')}")
+                else:
+                    logger.warning(f"⚠️ Cross-promo skipped: signal #{signal_id} missing telegram_message_id")
+            else:
+                logger.warning(f"⚠️ Cross-promo skipped: tp1_message_id={tp1_message_id}, matching_signal={bool(matching_signal)}")
         
         elif event == 'tp2_hit':
             remaining = update.get('remaining', 0)
@@ -150,19 +156,26 @@ class SignalMonitor:
                 
                 # Get signal's original Telegram message ID
                 signal_message_id = matching_signal.get('telegram_message_id')
-                crosspromo_result = trigger_tp_crosspromo(
-                    tenant_id=self.tenant_id,
-                    signal_id=signal_id,
-                    tp_number=3,
-                    signal_message_id=signal_message_id or 0,
-                    tp_message_id=tp3_message_id
-                )
-                if crosspromo_result.get('success'):
-                    logger.info(f"📢 Cross-promo TP3 update triggered for signal #{signal_id}")
-                elif crosspromo_result.get('skipped'):
-                    logger.info(f"⏭️ Cross-promo TP3 skipped: {crosspromo_result.get('reason')}")
+                logger.info(f"📣 Cross-promo TP3 check for signal #{signal_id}: tp3_msg={tp3_message_id}, signal_msg={signal_message_id}")
+                
+                if signal_message_id:
+                    crosspromo_result = trigger_tp_crosspromo(
+                        tenant_id=self.tenant_id,
+                        signal_id=signal_id,
+                        tp_number=3,
+                        signal_message_id=signal_message_id,
+                        tp_message_id=tp3_message_id
+                    )
+                    if crosspromo_result.get('success'):
+                        logger.info(f"📢 Cross-promo TP3 update triggered for signal #{signal_id}")
+                    elif crosspromo_result.get('skipped'):
+                        logger.info(f"⏭️ Cross-promo TP3 skipped: {crosspromo_result.get('reason')}")
+                    else:
+                        logger.warning(f"⚠️ Cross-promo TP3 failed: {crosspromo_result.get('error')}")
                 else:
-                    logger.warning(f"⚠️ Cross-promo TP3 failed: {crosspromo_result.get('error')}")
+                    logger.warning(f"⚠️ Cross-promo TP3 skipped: signal #{signal_id} missing telegram_message_id")
+            else:
+                logger.warning(f"⚠️ Cross-promo TP3 skipped: tp3_message_id={tp3_message_id}, matching_signal={bool(matching_signal)}")
         
         elif event == 'sl_hit_profit_locked':
             await self.messenger.send_profit_locked_message(pips)

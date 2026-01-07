@@ -136,6 +136,7 @@ def generate_tp3_hype_message() -> str:
         "✨ Perfect execution! Full profit locked in!"
     ]
     
+    import random
     try:
         from openai import OpenAI
         client = OpenAI()
@@ -156,7 +157,8 @@ def generate_tp3_hype_message() -> str:
             temperature=0.9
         )
         
-        message = response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        message = content.strip() if content else random.choice(fallback_messages)
         logger.info(f"AI generated TP3 hype: {message}")
         return message
         
