@@ -1,0 +1,183 @@
+Jan 12 12:47:11  [2026-01-12 12:47:11] [INFO] [forex_signals] [tenant:entrylab] [req:dd6fa97b] Checking 1 active signals...
+Jan 12 12:47:11  [2026-01-12 12:47:11] [INFO] [forex_signals] [tenant:entrylab] [req:dd6fa97b] Current XAU/USD price: 4586.43
+Jan 12 12:47:11  [2026-01-12 12:47:11] [INFO] [monitor] [tenant:entrylab] [req:47ff899c] ⏭️ Milestone sl_60 already claimed for signal #88
+Jan 12 12:48:11  [2026-01-12 12:48:11] [INFO] [forex_signals] [tenant:entrylab] [req:0f4fe11c] Checking 1 active signals...
+Jan 12 12:48:11  [2026-01-12 12:48:11] [INFO] [forex_signals] [tenant:entrylab] [req:0f4fe11c] Current XAU/USD price: 4586.30
+Jan 12 12:48:12  [2026-01-12 12:48:12] [INFO] [monitor] [tenant:entrylab] [req:e2e0defe] ⏭️ Milestone sl_60 already claimed for signal #88
+Jan 12 12:49:12  [2026-01-12 12:49:12] [INFO] [forex_signals] [tenant:entrylab] [req:dcb86e90] Checking 1 active signals...
+Jan 12 12:49:12  [2026-01-12 12:49:12] [INFO] [forex_signals] [tenant:entrylab] [req:dcb86e90] Current XAU/USD price: 4586.33
+Jan 12 12:49:12  [2026-01-12 12:49:12] [INFO] [monitor] [tenant:entrylab] [req:0fe02af5] ⏭️ Milestone sl_60 already claimed for signal #88
+Jan 12 12:50:12  [2026-01-12 12:50:12] [INFO] [forex_signals] [tenant:entrylab] [req:9fa9d4b0] Checking 1 active signals...
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [forex_signals] [tenant:entrylab] [req:9fa9d4b0] Current XAU/USD price: 4586.62
+Jan 12 12:50:13  [2026-01-12 12:50:13] [ERROR] [forex_signals] [tenant:entrylab] [req:9fa9d4b0] ❌ Signal #88 SL (original) HIT @ $4586.45! Loss: -518.0 pips
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [bot_credentials] [tenant:entrylab] [req:9fa9d4b0] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [telegram_sender] [tenant:entrylab] [req:9fa9d4b0] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [telegram_sender] [tenant:entrylab] [req:9fa9d4b0] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=362
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [messenger] [tenant:entrylab] [req:9fa9d4b0] Posted SL hit notification (-518.0 pips)
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [monitor] [tenant:entrylab] [req:9fa9d4b0] ❌ Signal #88 closed at SL: -518.0 pips
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [forex_signals] [tenant:entrylab] [req:9fa9d4b0] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 12:50:13  [2026-01-12 12:50:13] [INFO] [monitor] [tenant:entrylab] [req:9fa9d4b0] Strategy reloaded after signal #88 closed
+Jan 12 12:56:13  [2026-01-12 12:56:13] [INFO] [forex_signals] [tenant:entrylab] [req:25406d87] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 12:56:13  [2026-01-12 12:56:13] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] Checking for signals on XAU/USD 15min...
+Jan 12 12:56:13  [2026-01-12 12:56:13] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] Session: New York
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] With-trend BUY (Bullish)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] 🎯 Signal generated: BUY @ 4588.92
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] 📊 TP1: 4591.51 (50%)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] 📊 TP2: 4603.75 (30%)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] 🛑 SL: 4586.19 (tight candle-based)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [raja_banks] [tenant:entrylab] [req:25406d87] 📈 Signals today: 1/4
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_signals] [tenant:entrylab] [req:25406d87] ✅ Signal from Raja Banks Gold Start: BUY @ 4588.92
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [bot_credentials] [tenant:entrylab] [req:25406d87] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [telegram_sender] [tenant:entrylab] [req:25406d87] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_bot] [tenant:entrylab] [req:25406d87] Created draft signal #89, posting to Telegram...
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [telegram_sender] [tenant:entrylab] [req:25406d87] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=363
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_bot] [tenant:entrylab] [req:25406d87] Signal #89 status updated to pending (Telegram msg: 363)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_bot] [tenant:entrylab] [req:25406d87] Stored original indicators for signal #89: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_bot] [tenant:entrylab] [req:25406d87] Posted BUY signal to Telegram (ID: 89)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [messenger] [tenant:entrylab] [req:25406d87] Signal #89 posted to Telegram
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [generator] [tenant:entrylab] [req:25406d87] ✅ New 15min signal #89 posted successfully
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [generator] [tenant:entrylab] [req:25406d87] ⏭️ Skipped 1h check (signal already active)
+Jan 12 12:56:14  [2026-01-12 12:56:14] [INFO] [forex_signals] [tenant:entrylab] [req:220aa1fc] Checking 1 active signals...
+Jan 12 12:56:15  [2026-01-12 12:56:15] [INFO] [forex_signals] [tenant:entrylab] [req:220aa1fc] Current XAU/USD price: 4588.92
+Jan 12 12:57:15  [2026-01-12 12:57:15] [INFO] [forex_signals] [tenant:entrylab] [req:dd3a3838] Checking 1 active signals...
+Jan 12 12:57:15  [2026-01-12 12:57:15] [INFO] [forex_signals] [tenant:entrylab] [req:dd3a3838] Current XAU/USD price: 4589.09
+Jan 12 12:58:15  [2026-01-12 12:58:15] [INFO] [forex_signals] [tenant:entrylab] [req:30e1a6a1] Checking 1 active signals...
+Jan 12 12:58:16  [2026-01-12 12:58:16] [INFO] [forex_signals] [tenant:entrylab] [req:30e1a6a1] Current XAU/USD price: 4588.70
+Jan 12 12:59:16  [2026-01-12 12:59:16] [INFO] [forex_signals] [tenant:entrylab] [req:1e05aa12] Checking 1 active signals...
+Jan 12 12:59:16  [2026-01-12 12:59:16] [INFO] [forex_signals] [tenant:entrylab] [req:1e05aa12] Current XAU/USD price: 4588.77
+Jan 12 13:00:17  [2026-01-12 13:00:17] [INFO] [forex_signals] [tenant:entrylab] [req:8b400241] Checking 1 active signals...
+Jan 12 13:00:17  [2026-01-12 13:00:17] [INFO] [forex_signals] [tenant:entrylab] [req:8b400241] Current XAU/USD price: 4589.53
+Jan 12 13:01:18  [2026-01-12 13:01:18] [INFO] [forex_signals] [tenant:entrylab] [req:31e6e9dd] Checking 1 active signals...
+Jan 12 13:01:18  [2026-01-12 13:01:18] [INFO] [forex_signals] [tenant:entrylab] [req:31e6e9dd] Current XAU/USD price: 4590.12
+Jan 12 13:01:18  [2026-01-12 13:01:18] [INFO] [bot_credentials] [tenant:entrylab] [req:31f8244f] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:01:18  [2026-01-12 13:01:18] [INFO] [telegram_sender] [tenant:entrylab] [req:31f8244f] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:01:19  [2026-01-12 13:01:19] [INFO] [telegram_sender] [tenant:entrylab] [req:31f8244f] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=364
+Jan 12 13:01:19  [2026-01-12 13:01:19] [INFO] [messenger] [tenant:entrylab] [req:31f8244f] Posted milestone: tp1_40_motivational
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [forex_signals] [tenant:entrylab] [req:71e01777] Checking 1 active signals...
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [forex_signals] [tenant:entrylab] [req:71e01777] Current XAU/USD price: 4591.77
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [forex_signals] [tenant:entrylab] [req:71e01777] ✅ Signal #89 TP1 HIT! +259.0 pips (50% closed)
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [bot_credentials] [tenant:entrylab] [req:71e01777] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [telegram_sender] [tenant:entrylab] [req:71e01777] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [telegram_sender] [tenant:entrylab] [req:71e01777] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=365
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [messenger] [tenant:entrylab] [req:71e01777] Posted TP1 celebration (+259.0 pips), message_id=365
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [db] [tenant:entrylab] [req:71e01777] Updated signal 89 effective_sl to 4591.51
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [monitor] [tenant:entrylab] [req:71e01777] 🔒 Set effective_sl to TP1 ($4591.51) for signal #89
+Jan 12 13:02:19  [2026-01-12 13:02:19] [INFO] [monitor] [tenant:entrylab] [req:71e01777] 📣 Cross-promo check for signal #89: tp1_msg=365, signal_msg=None
+Jan 12 13:02:19  [2026-01-12 13:02:19] [WARNING] [monitor] [tenant:entrylab] [req:71e01777] ⚠️ Cross-promo skipped: signal #89 missing telegram_message_id
+Jan 12 13:03:20  [2026-01-12 13:03:20] [INFO] [forex_signals] [tenant:entrylab] [req:d747e68a] Checking 1 active signals...
+Jan 12 13:03:20  [2026-01-12 13:03:20] [INFO] [forex_signals] [tenant:entrylab] [req:d747e68a] Current XAU/USD price: 4592.50
+Jan 12 13:04:20  [2026-01-12 13:04:20] [INFO] [forex_signals] [tenant:entrylab] [req:40f82cc7] Checking 1 active signals...
+Jan 12 13:04:21  [2026-01-12 13:04:21] [INFO] [forex_signals] [tenant:entrylab] [req:40f82cc7] Current XAU/USD price: 4592.50
+Jan 12 13:05:21  [2026-01-12 13:05:21] [INFO] [forex_signals] [tenant:entrylab] [req:8f01c8cb] Checking 1 active signals...
+Jan 12 13:05:21  [2026-01-12 13:05:21] [INFO] [forex_signals] [tenant:entrylab] [req:8f01c8cb] Current XAU/USD price: 4595.04
+Jan 12 13:06:22  [2026-01-12 13:06:22] [INFO] [forex_signals] [tenant:entrylab] [req:39067644] Checking 1 active signals...
+Jan 12 13:06:23  [2026-01-12 13:06:23] [INFO] [forex_signals] [tenant:entrylab] [req:39067644] Current XAU/USD price: 4596.88
+Jan 12 13:07:23  [2026-01-12 13:07:23] [INFO] [forex_signals] [tenant:entrylab] [req:76d72da8] Checking 1 active signals...
+Jan 12 13:07:24  [2026-01-12 13:07:24] [INFO] [forex_signals] [tenant:entrylab] [req:76d72da8] Current XAU/USD price: 4596.88
+Jan 12 13:08:24  [2026-01-12 13:08:24] [INFO] [forex_signals] [tenant:entrylab] [req:6fe26187] Checking 1 active signals...
+Jan 12 13:08:24  [2026-01-12 13:08:24] [INFO] [forex_signals] [tenant:entrylab] [req:6fe26187] Current XAU/USD price: 4597.99
+Jan 12 13:08:24  [2026-01-12 13:08:24] [INFO] [bot_credentials] [tenant:entrylab] [req:b777eec0] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:08:24  [2026-01-12 13:08:24] [INFO] [telegram_sender] [tenant:entrylab] [req:b777eec0] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:08:25  [2026-01-12 13:08:25] [INFO] [telegram_sender] [tenant:entrylab] [req:b777eec0] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=366
+Jan 12 13:08:25  [2026-01-12 13:08:25] [INFO] [messenger] [tenant:entrylab] [req:b777eec0] Posted milestone: tp2_50_celebration
+Jan 12 13:09:25  [2026-01-12 13:09:25] [INFO] [forex_signals] [tenant:entrylab] [req:df4b0ae4] Checking 1 active signals...
+Jan 12 13:09:25  [2026-01-12 13:09:25] [INFO] [forex_signals] [tenant:entrylab] [req:df4b0ae4] Current XAU/USD price: 4601.38
+Jan 12 13:09:25  [2026-01-12 13:09:25] [INFO] [monitor] [tenant:entrylab] [req:906b2002] ⏭️ Milestone tp2_50 already claimed for signal #89
+Jan 12 13:10:25  [2026-01-12 13:10:25] [INFO] [forex_signals] [tenant:entrylab] [req:4e040858] Checking 1 active signals...
+Jan 12 13:10:25  [2026-01-12 13:10:25] [INFO] [forex_signals] [tenant:entrylab] [req:4e040858] Current XAU/USD price: 4601.38
+Jan 12 13:10:26  [2026-01-12 13:10:26] [INFO] [monitor] [tenant:entrylab] [req:bad55c03] ⏭️ Milestone tp2_50 already claimed for signal #89
+Jan 12 13:11:26  [2026-01-12 13:11:26] [INFO] [generator] [tenant:entrylab] [req:19bfb08b] ⏸️ Active signal #89 still pending - skipping new signal check
+Jan 12 13:11:26  [2026-01-12 13:11:26] [INFO] [generator] [tenant:entrylab] [req:19bfb08b] Entry: $4588.92, TP: $4591.51, SL: $4586.19
+Jan 12 13:11:26  [2026-01-12 13:11:26] [INFO] [forex_signals] [tenant:entrylab] [req:e7574310] Checking 1 active signals...
+Jan 12 13:11:26  [2026-01-12 13:11:26] [INFO] [forex_signals] [tenant:entrylab] [req:e7574310] Current XAU/USD price: 4602.85
+Jan 12 13:11:26  [2026-01-12 13:11:26] [INFO] [monitor] [tenant:entrylab] [req:a2ea4df9] ⏭️ Milestone tp2_50 already claimed for signal #89
+Jan 12 13:12:26  [2026-01-12 13:12:26] [INFO] [forex_signals] [tenant:entrylab] [req:7715b200] Checking 1 active signals...
+Jan 12 13:12:27  [2026-01-12 13:12:27] [INFO] [forex_signals] [tenant:entrylab] [req:7715b200] Current XAU/USD price: 4602.85
+Jan 12 13:12:27  [2026-01-12 13:12:27] [INFO] [monitor] [tenant:entrylab] [req:94d70810] ⏭️ Milestone tp2_50 already claimed for signal #89
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [forex_signals] [tenant:entrylab] [req:73dc781a] Checking 1 active signals...
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [forex_signals] [tenant:entrylab] [req:73dc781a] Current XAU/USD price: 4604.47
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [forex_signals] [tenant:entrylab] [req:73dc781a] ✅ Signal #89 TP2 HIT! +1483.0 pips (30% closed)
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [bot_credentials] [tenant:entrylab] [req:73dc781a] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [telegram_sender] [tenant:entrylab] [req:73dc781a] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [telegram_sender] [tenant:entrylab] [req:73dc781a] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=367
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [messenger] [tenant:entrylab] [req:73dc781a] Posted TP2 celebration (+1483.0 pips)
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [db] [tenant:entrylab] [req:73dc781a] Updated signal 89 effective_sl to 4603.75
+Jan 12 13:13:27  [2026-01-12 13:13:27] [INFO] [monitor] [tenant:entrylab] [req:73dc781a] 🔒 Set effective_sl to TP2 ($4603.75) for signal #89
+Jan 12 13:14:28  [2026-01-12 13:14:28] [INFO] [forex_signals] [tenant:entrylab] [req:8390c7d9] Checking 1 active signals...
+Jan 12 13:14:28  [2026-01-12 13:14:28] [INFO] [forex_signals] [tenant:entrylab] [req:8390c7d9] Current XAU/USD price: 4607.45
+Jan 12 13:15:28  [2026-01-12 13:15:28] [INFO] [forex_signals] [tenant:entrylab] [req:917226c2] Checking 1 active signals...
+Jan 12 13:15:29  [2026-01-12 13:15:29] [INFO] [forex_signals] [tenant:entrylab] [req:917226c2] Current XAU/USD price: 4607.45
+Jan 12 13:16:29  [2026-01-12 13:16:29] [INFO] [forex_signals] [tenant:entrylab] [req:0e69bf2b] Checking 1 active signals...
+Jan 12 13:16:29  [2026-01-12 13:16:29] [INFO] [forex_signals] [tenant:entrylab] [req:0e69bf2b] Current XAU/USD price: 4607.54
+Jan 12 13:17:30  [2026-01-12 13:17:30] [INFO] [forex_signals] [tenant:entrylab] [req:152e753e] Checking 1 active signals...
+Jan 12 13:17:30  [2026-01-12 13:17:30] [INFO] [forex_signals] [tenant:entrylab] [req:152e753e] Current XAU/USD price: 4607.54
+Jan 12 13:18:31  [2026-01-12 13:18:31] [INFO] [forex_signals] [tenant:entrylab] [req:fd08c234] Checking 1 active signals...
+Jan 12 13:18:31  [2026-01-12 13:18:31] [INFO] [forex_signals] [tenant:entrylab] [req:fd08c234] Current XAU/USD price: 4609.89
+Jan 12 13:18:31  [2026-01-12 13:18:31] [INFO] [forex_signals] [tenant:entrylab] [req:fd08c234] 🎯 Signal #89 TP3 HIT! +2076.0 pips - FULL EXIT
+Jan 12 13:18:31  [2026-01-12 13:18:31] [INFO] [bot_credentials] [tenant:entrylab] [req:fd08c234] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:18:31  [2026-01-12 13:18:31] [INFO] [telegram_sender] [tenant:entrylab] [req:fd08c234] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [telegram_sender] [tenant:entrylab] [req:fd08c234] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=368
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [messenger] [tenant:entrylab] [req:fd08c234] Posted TP3 celebration - full exit (+2076.0 pips), message_id=368
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [monitor] [tenant:entrylab] [req:fd08c234] ✅ Signal #89 completed - all TPs hit!
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [monitor] [tenant:entrylab] [req:fd08c234] 📣 Cross-promo TP3 check for signal #89: tp3_msg=368, signal_msg=None
+Jan 12 13:18:32  [2026-01-12 13:18:32] [WARNING] [monitor] [tenant:entrylab] [req:fd08c234] ⚠️ Cross-promo TP3 skipped: signal #89 missing telegram_message_id
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [forex_signals] [tenant:entrylab] [req:fd08c234] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 13:18:32  [2026-01-12 13:18:32] [INFO] [monitor] [tenant:entrylab] [req:fd08c234] Strategy reloaded after signal #89 closed
+Jan 12 13:26:32  [2026-01-12 13:26:32] [INFO] [forex_signals] [tenant:entrylab] [req:4167257f] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 13:26:32  [2026-01-12 13:26:32] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] Checking for signals on XAU/USD 15min...
+Jan 12 13:26:32  [2026-01-12 13:26:32] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] Session: London/NY Overlap
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] With-trend BUY (Bullish)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] 🎯 Signal generated: BUY @ 4609.70
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] 📊 TP1: 4619.58 (50%)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] 📊 TP2: 4626.17 (30%)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] 🛑 SL: 4606.79 (tight candle-based)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [raja_banks] [tenant:entrylab] [req:4167257f] 📈 Signals today: 1/4
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_signals] [tenant:entrylab] [req:4167257f] ✅ Signal from Raja Banks Gold Start: BUY @ 4609.70
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [bot_credentials] [tenant:entrylab] [req:4167257f] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [telegram_sender] [tenant:entrylab] [req:4167257f] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_bot] [tenant:entrylab] [req:4167257f] Created draft signal #90, posting to Telegram...
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [telegram_sender] [tenant:entrylab] [req:4167257f] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=369
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_bot] [tenant:entrylab] [req:4167257f] Signal #90 status updated to pending (Telegram msg: 369)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_bot] [tenant:entrylab] [req:4167257f] Stored original indicators for signal #90: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'support']
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_bot] [tenant:entrylab] [req:4167257f] Posted BUY signal to Telegram (ID: 90)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [messenger] [tenant:entrylab] [req:4167257f] Signal #90 posted to Telegram
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [generator] [tenant:entrylab] [req:4167257f] ✅ New 15min signal #90 posted successfully
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [generator] [tenant:entrylab] [req:4167257f] ⏭️ Skipped 1h check (signal already active)
+Jan 12 13:26:33  [2026-01-12 13:26:33] [INFO] [forex_signals] [tenant:entrylab] [req:dc318e19] Checking 1 active signals...
+Jan 12 13:26:34  [2026-01-12 13:26:34] [INFO] [forex_signals] [tenant:entrylab] [req:dc318e19] Current XAU/USD price: 4609.70
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [forex_signals] [tenant:entrylab] [req:ac708c64] Checking 1 active signals...
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [forex_signals] [tenant:entrylab] [req:ac708c64] Current XAU/USD price: 4606.96
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [bot_credentials] [tenant:entrylab] [req:68e26980] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [telegram_sender] [tenant:entrylab] [req:68e26980] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [telegram_sender] [tenant:entrylab] [req:68e26980] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=370
+Jan 12 13:27:35  [2026-01-12 13:27:35] [INFO] [messenger] [tenant:entrylab] [req:68e26980] Posted milestone: sl_60_warning
+Jan 12 13:28:35  [2026-01-12 13:28:35] [INFO] [forex_signals] [tenant:entrylab] [req:2d4ce992] Checking 1 active signals...
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [forex_signals] [tenant:entrylab] [req:2d4ce992] Current XAU/USD price: 4605.56
+Jan 12 13:28:36  [2026-01-12 13:28:36] [ERROR] [forex_signals] [tenant:entrylab] [req:2d4ce992] ❌ Signal #90 SL (original) HIT @ $4606.79! Loss: -291.0 pips
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [bot_credentials] [tenant:entrylab] [req:2d4ce992] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [telegram_sender] [tenant:entrylab] [req:2d4ce992] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [telegram_sender] [tenant:entrylab] [req:2d4ce992] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=371
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [messenger] [tenant:entrylab] [req:2d4ce992] Posted SL hit notification (-291.0 pips)
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [monitor] [tenant:entrylab] [req:2d4ce992] ❌ Signal #90 closed at SL: -291.0 pips
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [forex_signals] [tenant:entrylab] [req:2d4ce992] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 13:28:36  [2026-01-12 13:28:36] [INFO] [monitor] [tenant:entrylab] [req:2d4ce992] Strategy reloaded after signal #90 closed
+Jan 12 13:41:36  [2026-01-12 13:41:36] [INFO] [forex_signals] [tenant:entrylab] [req:2b61feb6] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 12 13:41:36  [2026-01-12 13:41:36] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] Checking for signals on XAU/USD 15min...
+Jan 12 13:41:36  [2026-01-12 13:41:36] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] Session: London/NY Overlap
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] With-trend BUY (Bullish)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] 🎯 Signal generated: BUY @ 4611.05
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] 📊 TP1: 4621.05 (50%)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] 📊 TP2: 4627.72 (30%)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] 🛑 SL: 4605.19 (tight candle-based)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [raja_banks] [tenant:entrylab] [req:2b61feb6] 📈 Signals today: 1/4
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_signals] [tenant:entrylab] [req:2b61feb6] ✅ Signal from Raja Banks Gold Start: BUY @ 4611.05
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [bot_credentials] [tenant:entrylab] [req:2b61feb6] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [telegram_sender] [tenant:entrylab] [req:2b61feb6] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_bot] [tenant:entrylab] [req:2b61feb6] Created draft signal #91, posting to Telegram...
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [telegram_sender] [tenant:entrylab] [req:2b61feb6] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=372
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_bot] [tenant:entrylab] [req:2b61feb6] Signal #91 status updated to pending (Telegram msg: 372)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_bot] [tenant:entrylab] [req:2b61feb6] Stored original indicators for signal #91: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'support']
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_bot] [tenant:entrylab] [req:2b61feb6] Posted BUY signal to Telegram (ID: 91)
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [messenger] [tenant:entrylab] [req:2b61feb6] Signal #91 posted to Telegram
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [generator] [tenant:entrylab] [req:2b61feb6] ✅ New 15min signal #91 posted successfully
+Jan 12 13:41:37  [2026-01-12 13:41:37] [INFO] [forex_signals] [tenant:entrylab] [req:a110f48d] Checking 1 active signals...

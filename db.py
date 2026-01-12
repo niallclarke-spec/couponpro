@@ -2858,7 +2858,8 @@ def get_forex_signals(tenant_id, status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
+                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl,
+                           telegram_message_id
                     FROM forex_signals
                     WHERE tenant_id = %s AND status = %s
                     ORDER BY posted_at DESC
@@ -2878,7 +2879,8 @@ def get_forex_signals(tenant_id, status=None, limit=100):
                            tp1_percentage, tp2_percentage, tp3_percentage,
                            tp1_hit, tp2_hit, tp3_hit,
                            tp1_hit_at, tp2_hit_at, tp3_hit_at,
-                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl
+                           breakeven_triggered, breakeven_triggered_at, close_price, effective_sl,
+                           telegram_message_id
                     FROM forex_signals
                     WHERE tenant_id = %s AND status NOT IN ('draft', 'broadcast_failed')
                     ORDER BY posted_at DESC
@@ -2932,7 +2934,8 @@ def get_forex_signals(tenant_id, status=None, limit=100):
                     'breakeven_triggered': row[41] or False,
                     'breakeven_triggered_at': row[42].isoformat() if row[42] else None,
                     'close_price': float(row[43]) if row[43] else None,
-                    'effective_sl': float(row[44]) if row[44] else None
+                    'effective_sl': float(row[44]) if row[44] else None,
+                    'telegram_message_id': row[45]
                 })
             return signals
     except Exception as e:
