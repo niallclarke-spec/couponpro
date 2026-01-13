@@ -124,7 +124,13 @@ class ForexSchedulerRunner:
             logger.error(f"❌ Error posting morning briefing: {e}")
     
     async def check_daily_recap(self):
-        """Post daily recap at 6:30 AM UTC (yesterday's signals)"""
+        """Post daily recap at 6:30 AM UTC (yesterday's signals)
+        
+        Skip conditions:
+        - 0 signals yesterday (nothing to recap)
+        - Win rate < 60% (don't advertise poor performance)
+        - Recap generation failed (retry next cycle)
+        """
         try:
             now = datetime.utcnow()
             current_date_str = now.date().isoformat()
@@ -140,12 +146,40 @@ class ForexSchedulerRunner:
                         tenant_id=self.tenant_id, 
                         period='yesterday'
                     )
+                    
+                    if not recap_result or not isinstance(recap_result, dict):
+                        logger.error("❌ Daily recap generation returned invalid result, will retry")
+                        return
+                    
+                    if recap_result.get('error'):
+                        logger.error(f"❌ Daily recap generation failed: {recap_result.get('error')}, will retry")
+                        return
+                    
+                    stats = recap_result.get('stats', {})
+                    total_signals = stats.get('total_signals', 0)
+                    wins = stats.get('wins', 0)
+                    win_rate = (wins / total_signals * 100) if total_signals > 0 else 0
+                    
+                    if total_signals == 0:
+                        logger.info("⏭️ Skipping daily recap: no signals yesterday")
+                        db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
+                        return
+                    
+                    if win_rate < 60:
+                        logger.info(f"⏭️ Skipping daily recap: win rate {win_rate:.0f}% < 60%")
+                        db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
+                        return
+                    
+                    message = recap_result.get('message')
+                    if not message:
+                        logger.error("❌ Daily recap message is empty, will retry")
+                        return
+                    
                     bot = self.runtime.get_telegram_bot()
-                    await bot.post_detailed_recap(recap_result['message'])
+                    await bot.post_detailed_recap(message)
                     
                     db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
-                    stats = recap_result.get('stats', {})
-                    logger.info(f"✅ Daily recap posted: {stats.get('total_signals', 0)} signals, {stats.get('total_pips', 0):+.1f} pips")
+                    logger.info(f"✅ Daily recap posted: {total_signals} signals, {win_rate:.0f}% win rate, {stats.get('total_pips', 0):+.1f} pips")
                 else:
                     logger.info("Daily recap already posted today, skipping")
         
@@ -179,22 +213,35 @@ class ForexSchedulerRunner:
             logger.error(f"❌ Error posting weekly recap: {e}")
     
     async def check_crosspromo_daily(self):
-        """Enqueue cross promo daily sequence at 9:00 AM UTC (Mon-Fri only)"""
+        """Enqueue cross promo daily sequence at configured time (Mon-Fri only)"""
         try:
             now = datetime.utcnow()
             
-            # Only run at 9:00-9:05 AM UTC on weekdays (Mon=0, Fri=4)
             if now.weekday() > 4:
                 return
             
-            if now.hour == 9 and 0 <= now.minute < 5:
+            from domains.crosspromo import repo as crosspromo_repo
+            settings = crosspromo_repo.get_settings(self.tenant_id)
+            
+            if not settings or not settings.get('enabled'):
+                return
+            
+            morning_time_str = settings.get('morning_post_time_utc', '07:00')
+            try:
+                parts = morning_time_str.split(':')
+                target_hour = int(parts[0])
+                target_minute = int(parts[1]) if len(parts) > 1 else 0
+            except (ValueError, IndexError):
+                target_hour, target_minute = 7, 0
+            
+            if now.hour == target_hour and target_minute <= now.minute < target_minute + 5:
                 current_date_str = now.date().isoformat()
                 
                 db = self.runtime.db
                 last_enqueued = db.get_last_recap_date('crosspromo_daily', tenant_id=self.tenant_id)
                 
                 if last_enqueued != current_date_str:
-                    logger.info("Enqueueing cross promo daily sequence...")
+                    logger.info(f"Enqueueing cross promo daily sequence (scheduled for {morning_time_str})...")
                     
                     from domains.crosspromo import service as crosspromo_service
                     result = crosspromo_service.enqueue_daily_sequence(self.tenant_id)
@@ -233,7 +280,7 @@ class ForexSchedulerRunner:
         logger.info("☀️ Morning briefing: 6:20 AM UTC")
         logger.info("📅 Daily recap: 6:30 AM UTC")
         logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")
-        logger.info("📣 Cross promo daily: 9:00 AM UTC (Mon-Fri)")
+        logger.info("📣 Cross promo daily: Configured time from settings (Mon-Fri)")
         logger.info("⏰ Trading hours: 8AM-10PM GMT")
         logger.info("=" * 60)
         

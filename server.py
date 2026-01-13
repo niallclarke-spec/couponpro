@@ -324,6 +324,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.crosspromo import handlers as cp_h
         cp_h.handle_get_preview(self)
 
+    def handle_api_crosspromo_test_cta(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_test_cta(self)
+
     # Legacy auth
     def handle_api_login(self):
         cl = int(self.headers.get('Content-Length', 0))

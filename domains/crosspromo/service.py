@@ -102,9 +102,7 @@ def build_morning_news_message(tenant_id: str) -> str:
     
     message = f"""☀️ Good morning, traders!
 
-{summary}
-
-Stay sharp for today's signals."""
+{summary}"""
     
     return message
 
@@ -120,7 +118,7 @@ def build_congrats_cta_message(cta_url: str) -> str:
 
 This is the kind of precision you can expect every day in VIP.
 
-👉 Join VIP here: <a href="{cta_url}">{cta_url}</a>"""
+👉 <a href="{cta_url}">Join VIP Members – Where Precision Meets Profit</a>"""
 
 
 def generate_tp3_hype_message() -> str:
@@ -324,7 +322,10 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
 
 def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     """
-    Enqueue today's daily sequence (morning_news at 09:00, vip_soon at 10:00).
+    Enqueue today's daily sequence.
+    - morning_news: runs immediately when called
+    - vip_soon: runs after configured delay (default 45 minutes)
+    
     Only works Mon-Fri. Returns result dict.
     """
     settings = repo.get_settings(tenant_id)
@@ -347,6 +348,8 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     now = datetime.now(tz)
     today_str = now.strftime('%Y-%m-%d')
     
+    vip_soon_delay = settings.get('vip_soon_delay_minutes', 45)
+    
     morning_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='morning_news',
@@ -357,7 +360,7 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     vip_soon_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='vip_soon',
-        run_at=datetime.utcnow() + timedelta(hours=1),
+        run_at=datetime.utcnow() + timedelta(minutes=vip_soon_delay),
         dedupe_key=f"{tenant_id}|{today_str}|vip_soon"
     )
     
@@ -452,6 +455,48 @@ def send_test_morning_message(tenant_id: str) -> Dict[str, Any]:
 def get_morning_preview(tenant_id: str) -> str:
     """Get a preview of the morning message without sending."""
     return build_morning_news_message(tenant_id)
+
+
+def send_test_cta(tenant_id: str) -> Dict[str, Any]:
+    """
+    Send a test CTA message with sticker to the free channel.
+    For testing the new CTA styling before production.
+    
+    This endpoint validates the full sticker+CTA presentation.
+    If either component fails, the endpoint reports failure.
+    """
+    settings = repo.get_settings(tenant_id)
+    if not settings:
+        return {"success": False, "error": "Cross promo settings not configured"}
+    
+    free_channel_id = settings.get('free_channel_id')
+    bot_role = settings.get('bot_role', 'signal_bot')
+    cta_url = settings.get('cta_url', 'https://entrylab.io/subscribe')
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel ID not configured"}
+    
+    try:
+        credentials = get_bot_credentials(tenant_id, bot_role)
+        bot_token = credentials['bot_token']
+    except BotNotConfiguredError as e:
+        return {"success": False, "error": str(e)}
+    
+    from integrations.telegram.client import send_sticker
+    
+    pointing_sticker_id = "CAACAgIAAxkBAAEKb2JlMvKAAb6_AAHm8QYKAAFbQYVxoZEVAAI-EQACh7xQSNmjw1oFCfHqMAQ"
+    sticker_result = send_sticker(bot_token, free_channel_id, pointing_sticker_id)
+    
+    if not sticker_result.get('success'):
+        return {"success": False, "error": f"Sticker send failed: {sticker_result.get('error', 'Unknown error')}"}
+    
+    cta_message = build_congrats_cta_message(cta_url)
+    cta_result = send_message(bot_token, free_channel_id, cta_message, parse_mode='HTML')
+    
+    if not cta_result.get('success'):
+        return {"success": False, "error": f"CTA message send failed: {cta_result.get('error', 'Unknown error')}"}
+    
+    return {"success": True, "sticker_sent": True, "cta_sent": True}
 
 
 def trigger_tp_crosspromo(

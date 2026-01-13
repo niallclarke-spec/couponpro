@@ -265,6 +265,8 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True),
     Route('POST', '/api/crosspromo/send-test', 'handle_api_crosspromo_send_test',
           auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/test-cta', 'handle_api_crosspromo_test_cta',
+          auth_required=True, db_required=True),
 ]
 
 

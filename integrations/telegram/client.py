@@ -145,3 +145,43 @@ def forward_message(
     except requests.RequestException as e:
         logger.exception(f"Request error forwarding message: {e}")
         return {"success": False, "error": str(e)}
+
+
+def send_sticker(
+    bot_token: str,
+    chat_id: str,
+    sticker: str
+) -> Dict[str, Any]:
+    """
+    Send a sticker to a chat/channel.
+    
+    Args:
+        bot_token: The bot's API token
+        chat_id: Target chat/channel ID
+        sticker: Sticker file_id, URL, or file path
+        
+    Returns:
+        dict with 'success' bool and 'response' or 'error'
+    """
+    url = f"{TELEGRAM_API_BASE}{bot_token}/sendSticker"
+    
+    payload = {
+        "chat_id": chat_id,
+        "sticker": sticker,
+    }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=30)
+        data = response.json()
+        
+        if data.get("ok"):
+            logger.info(f"Sticker sent to {chat_id}")
+            return {"success": True, "response": data}
+        else:
+            error = data.get("description", "Unknown error")
+            logger.warning(f"Failed to send sticker: {error}")
+            return {"success": False, "error": error}
+            
+    except requests.RequestException as e:
+        logger.exception(f"Request error sending sticker: {e}")
+        return {"success": False, "error": str(e)}

@@ -50,7 +50,8 @@ def handle_get_settings(handler):
             "vip_channel_id": None,
             "free_channel_id": None,
             "cta_url": "https://entrylab.io/subscribe",
-            "morning_post_time_utc": "09:00",
+            "morning_post_time_utc": "07:00",
+            "vip_soon_delay_minutes": 45,
             "timezone": "UTC"
         })
         return
@@ -73,7 +74,8 @@ def handle_save_settings(handler):
         vip_channel_id=data.get('vip_channel_id'),
         free_channel_id=data.get('free_channel_id'),
         cta_url=data.get('cta_url', 'https://entrylab.io/subscribe'),
-        morning_post_time_utc=data.get('morning_post_time_utc', '09:00'),
+        morning_post_time_utc=data.get('morning_post_time_utc', '07:00'),
+        vip_soon_delay_minutes=data.get('vip_soon_delay_minutes', 45),
         timezone=data.get('timezone', 'UTC')
     )
     
@@ -187,3 +189,23 @@ def handle_get_preview(handler):
     
     preview = service.get_morning_preview(tenant_id)
     _send_json(handler, 200, {"preview": preview})
+
+
+def handle_test_cta(handler):
+    """POST /api/crosspromo/test-cta - Send test CTA with optional sticker to free channel."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    
+    result = service.send_test_cta(tenant_id)
+    
+    if not result.get('success'):
+        error = result.get('error', 'Unknown error')
+        if 'not configured' in error.lower():
+            _send_json(handler, 503, {"error": error})
+        else:
+            _send_json(handler, 400, {"error": error})
+        return
+    
+    _send_json(handler, 200, {"success": True, "message": "Test CTA sent to free channel"})

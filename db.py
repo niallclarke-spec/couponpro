@@ -1510,6 +1510,17 @@ class DatabasePool:
                 cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_crosspromo_jobs_dedupe ON crosspromo_jobs(tenant_id, dedupe_key) WHERE dedupe_key IS NOT NULL")
                 logger.info("crosspromo_jobs table ready")
                 
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'tenant_crosspromo_settings' 
+                    AND column_name = 'vip_soon_delay_minutes'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE tenant_crosspromo_settings ADD COLUMN vip_soon_delay_minutes INTEGER DEFAULT 45")
+                    logger.info("Added vip_soon_delay_minutes column to tenant_crosspromo_settings")
+                else:
+                    logger.info("vip_soon_delay_minutes column already exists, skipping")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 
