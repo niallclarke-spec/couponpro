@@ -187,7 +187,7 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
     if not settings.get('enabled'):
         return {"success": False, "error": "Cross promo is disabled for this tenant"}
     
-    bot_role = 'signal_bot'
+    bot_role = settings.get('bot_role', 'signal_bot')
     cta_url = settings.get('cta_url', 'https://entrylab.io/subscribe')
     
     try:
