@@ -121,6 +121,82 @@ This is the kind of precision you can expect every day in VIP.
 👉 <a href="{cta_url}">Join VIP Members – Where Precision Meets Profit</a>"""
 
 
+def generate_forward_promo_message(pips_secured: float = None, tp_number: int = 1) -> str:
+    """
+    Generate an AI-powered promotional message for forwarded VIP signals.
+    Short, motivational, with emojis - emphasizes this was sent earlier in VIP.
+    """
+    import os
+    from openai import OpenAI
+    
+    try:
+        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
+        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
+        
+        if not api_key or not base_url:
+            return _fallback_promo_message(pips_secured, tp_number)
+        
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        
+        pips_context = f" VIP members just secured {pips_secured:+.0f} pips on this signal." if pips_secured else ""
+        
+        prompt = f"""Write a SHORT (2-3 lines max) promotional message for a Telegram forex signals channel.
+
+Context: This message will appear AFTER we forward a winning VIP signal to our FREE channel.{pips_context}
+
+Key points to convey:
+- This signal was sent earlier in our VIP group
+- VIP members are already profiting from signals like this
+- Create FOMO to encourage joining VIP
+- Use 2-3 relevant emojis (fire, money, chart, rocket, trophy)
+- Keep it punchy and motivational
+- Don't use hashtags
+- Don't mention specific prices or exact times
+
+Example tone: "Another win for our VIP fam! 🔥 This signal was live in VIP hours ago. Our members are stacking pips daily 💰"
+
+Write ONLY the message, nothing else:"""
+
+        # the newest OpenAI model is "gpt-5" which was released August 7, 2025.
+        # do not change this unless explicitly requested by the user
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+        
+        message = response.choices[0].message.content.strip()
+        
+        if len(message) > 10:
+            return message
+        else:
+            return _fallback_promo_message(pips_secured, tp_number)
+            
+    except Exception as e:
+        logger.warning(f"AI promo message generation failed: {e}")
+        return _fallback_promo_message(pips_secured, tp_number)
+
+
+def _fallback_promo_message(pips_secured: float = None, tp_number: int = 1) -> str:
+    """Fallback promo messages when AI is unavailable."""
+    import random
+    
+    messages = [
+        "🔥 Another win for VIP! This signal was live in VIP earlier today. Our members are stacking pips daily 💰",
+        "💎 VIP members caught this one early! Join us and never miss a winning signal again 🚀",
+        "🏆 This is what VIP looks like! Our members had this signal hours ago. Ready to join the winners? 💪",
+        "⚡ VIP members are eating GOOD! This signal hit while you were waiting. Time to upgrade? 📈",
+        "🎯 Precision signals, real profits! VIP members secured this win earlier. Don't miss the next one 🔥",
+    ]
+    
+    base = random.choice(messages)
+    
+    if pips_secured and pips_secured > 0:
+        base = f"+{pips_secured:.0f} pips secured! " + base
+    
+    return base
+
+
 def generate_tp3_hype_message() -> str:
     """
     Generate a short AI-powered hype message for TP3 (full target) hit.
@@ -255,6 +331,7 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         signal_id = payload.get('signal_id')
         signal_message_id = payload.get('signal_message_id')
         tp1_message_id = payload.get('tp1_message_id')
+        pips_secured = payload.get('pips_secured')
         
         if not signal_message_id or not tp1_message_id:
             return {"success": False, "error": "Missing signal_message_id or tp1_message_id"}
@@ -269,11 +346,17 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not tp1_result.get('success'):
             return {"success": False, "error": f"Forward TP1 failed: {tp1_result.get('error')}"}
         
+        # Send AI-generated promo message after the forwards
+        promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=1)
+        promo_result = send_message(bot_token, free_channel_id, promo_message)
+        if not promo_result.get('success'):
+            logger.warning(f"Promo message failed but forwards succeeded: {promo_result.get('error')}")
+        
         # Mark signal as cross-promo started
         if signal_id:
             update_crosspromo_status(signal_id, 'started', tenant_id)
         
-        logger.info(f"TP1 sequence forwarded: signal_msg={signal_message_id}, tp1_msg={tp1_message_id}")
+        logger.info(f"TP1 sequence forwarded with promo: signal_msg={signal_message_id}, tp1_msg={tp1_message_id}")
         return {"success": True}
     
     elif job_type == 'forward_tp3_update':
@@ -457,6 +540,35 @@ def get_morning_preview(tenant_id: str) -> str:
     return build_morning_news_message(tenant_id)
 
 
+def send_test_forward_promo(tenant_id: str, pips_secured: float = 179.0) -> Dict[str, Any]:
+    """
+    Send a test AI-generated promo message to the free channel.
+    Simulates what would be sent after forwarding a winning signal.
+    """
+    settings = repo.get_settings(tenant_id)
+    if not settings:
+        return {"success": False, "error": "Cross promo settings not configured"}
+    
+    free_channel_id = settings.get('free_channel_id')
+    bot_role = settings.get('bot_role', 'signal_bot')
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel ID not configured"}
+    
+    try:
+        credentials = get_bot_credentials(tenant_id, bot_role)
+        bot_token = credentials['bot_token']
+    except BotNotConfiguredError as e:
+        return {"success": False, "error": str(e)}
+    
+    promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=1)
+    result = send_message(bot_token, free_channel_id, promo_message)
+    
+    if result.get('success'):
+        return {"success": True, "message_sent": promo_message}
+    return result
+
+
 def send_test_cta(tenant_id: str) -> Dict[str, Any]:
     """
     Send a test CTA message with sticker to the free channel.
@@ -504,7 +616,8 @@ def trigger_tp_crosspromo(
     signal_id: int,
     tp_number: int,
     signal_message_id: int,
-    tp_message_id: int
+    tp_message_id: int,
+    pips_secured: float = None
 ) -> Dict[str, Any]:
     """
     Trigger cross-promo sequence when a TP is hit.
@@ -523,6 +636,7 @@ def trigger_tp_crosspromo(
         tp_number: 1 or 3 (TP2 is ignored)
         signal_message_id: Original signal's Telegram message ID
         tp_message_id: TP hit notification's Telegram message ID
+        pips_secured: Optional pips secured for AI promo message
     
     Returns:
         dict with success status and message
@@ -580,7 +694,8 @@ def trigger_tp_crosspromo(
             payload={
                 'signal_id': signal_id,
                 'signal_message_id': signal_message_id,
-                'tp1_message_id': tp_message_id
+                'tp1_message_id': tp_message_id,
+                'pips_secured': pips_secured
             }
         )
         

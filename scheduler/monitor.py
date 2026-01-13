@@ -122,10 +122,11 @@ class SignalMonitor:
                         signal_id=signal_id,
                         tp_number=1,
                         signal_message_id=signal_message_id,
-                        tp_message_id=tp1_message_id
+                        tp_message_id=tp1_message_id,
+                        pips_secured=pips
                     )
                     if crosspromo_result.get('success'):
-                        logger.info(f"📢 Cross-promo TP1 triggered for signal #{signal_id}")
+                        logger.info(f"📢 Cross-promo TP1 triggered for signal #{signal_id} ({pips:+.0f} pips)")
                     elif crosspromo_result.get('skipped'):
                         logger.info(f"⏭️ Cross-promo skipped: {crosspromo_result.get('reason')}")
                     else:

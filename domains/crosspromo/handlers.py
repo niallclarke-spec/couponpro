@@ -209,3 +209,27 @@ def handle_test_cta(handler):
         return
     
     _send_json(handler, 200, {"success": True, "message": "Test CTA sent to free channel"})
+
+
+def handle_test_forward_promo(handler):
+    """POST /api/crosspromo/test-forward-promo - Send test AI promo message to free channel."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    
+    result = service.send_test_forward_promo(tenant_id, pips_secured=179.0)
+    
+    if not result.get('success'):
+        error = result.get('error', 'Unknown error')
+        if 'not configured' in error.lower():
+            _send_json(handler, 503, {"error": error})
+        else:
+            _send_json(handler, 400, {"error": error})
+        return
+    
+    _send_json(handler, 200, {
+        "success": True, 
+        "message": "Test promo message sent to free channel",
+        "content": result.get('message_sent')
+    })
