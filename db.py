@@ -1521,6 +1521,23 @@ class DatabasePool:
                 else:
                     logger.info("vip_soon_delay_minutes column already exists, skipping")
                 
+                # Migration: Update legacy crosspromo defaults (09:00 -> 07:00)
+                # This ensures both Replit (Neon) and DO (managed DB) have correct settings
+                cursor.execute("""
+                    UPDATE tenant_crosspromo_settings
+                    SET morning_post_time_utc = '07:00',
+                        vip_soon_delay_minutes = COALESCE(NULLIF(vip_soon_delay_minutes, 60), 45),
+                        updated_at = NOW()
+                    WHERE morning_post_time_utc IN ('09:00', '09:00:00')
+                    RETURNING tenant_id
+                """)
+                updated_rows = cursor.fetchall()
+                if updated_rows:
+                    tenant_ids = [row[0] for row in updated_rows]
+                    logger.info(f"Migrated crosspromo settings to 07:00 for tenants: {tenant_ids}")
+                else:
+                    logger.info("Crosspromo settings already up to date (no 09:00 defaults found)")
+                
                 conn.commit()
                 logger.info("Database schema initialized")
                 
