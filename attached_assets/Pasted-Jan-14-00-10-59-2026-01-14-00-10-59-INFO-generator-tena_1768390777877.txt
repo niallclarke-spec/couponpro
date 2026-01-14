@@ -1,0 +1,698 @@
+Jan 14 00:10:59  [2026-01-14 00:10:59] [INFO] [generator] [tenant:entrylab] [req:9889953b] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 00:12:36  10.244.6.25 - - [14/Jan/2026 00:12:36] code 404, message File not found
+Jan 14 00:12:36  10.244.6.25 - - [14/Jan/2026 00:12:36] "GET /robots.txt HTTP/1.1" 404 -
+Jan 14 00:12:37  10.244.6.25 - - [14/Jan/2026 00:12:37] "GET / HTTP/1.1" 302 -
+Jan 14 00:12:37  10.244.5.120 - - [14/Jan/2026 00:12:37] "GET /app HTTP/1.1" 200 -
+Jan 14 00:23:59  [STRIPE WEBHOOK] Received event: customer.subscription.updated (evt_1SpHsQQfYsmULFjZRvKH0APe)
+Jan 14 00:23:59  [STRIPE WEBHOOK] ⚠️ Price not found in any tenant's cache, skipping VIP grant
+Jan 14 00:23:59  [STRIPE WEBHOOK] customer.subscription.updated: sub_1Sa3rUQfYsmULFjZjCq5iq1l, status=active, tenant=None, cancel_at_period_end=False
+Jan 14 00:23:59  [STRIPE WEBHOOK] ✅ Event evt_1SpHsQQfYsmULFjZRvKH0APe recorded as processed
+Jan 14 00:23:59  10.244.4.179 - - [14/Jan/2026 00:23:59] "POST /api/stripe/webhook HTTP/1.1" 200 -
+Jan 14 00:25:59  [2026-01-14 00:25:59] [INFO] [generator] [tenant:entrylab] [req:67db0927] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 00:31:54  10.244.5.120 - - [14/Jan/2026 00:31:54] "GET / HTTP/1.1" 302 -
+Jan 14 00:40:59  [2026-01-14 00:40:59] [INFO] [generator] [tenant:entrylab] [req:d5fd69cc] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 00:56:00  [2026-01-14 00:56:00] [INFO] [generator] [tenant:entrylab] [req:46e11b84] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 01:11:00  [2026-01-14 01:11:00] [INFO] [generator] [tenant:entrylab] [req:1b1b66ae] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 01:26:00  [2026-01-14 01:26:00] [INFO] [generator] [tenant:entrylab] [req:2d5ba36c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 01:41:01  [2026-01-14 01:41:01] [INFO] [generator] [tenant:entrylab] [req:5d9f779d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 01:56:01  [2026-01-14 01:56:01] [INFO] [generator] [tenant:entrylab] [req:152a3c79] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 02:08:22  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 14 02:08:22  [WEBHOOK-ENDPOINT] Received 342 bytes
+Jan 14 02:08:22  [WEBHOOK-ENDPOINT] Processing update_id: 325866258
+Jan 14 02:08:22  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 14 02:08:22  [WEBHOOK] Received update_id: 325866258
+Jan 14 02:08:22  [WEBHOOK] Processing: type=Message, text=/start
+Jan 14 02:08:22  [WEBHOOK] ✅ Update processed successfully
+Jan 14 02:08:22  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866258 in 0.07s, result: {'status': 'ok'}
+Jan 14 02:08:22  10.244.4.179 - - [14/Jan/2026 02:08:22] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 14 02:08:24  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 14 02:08:24  [WEBHOOK-ENDPOINT] Received 280 bytes
+Jan 14 02:08:24  [WEBHOOK-ENDPOINT] Processing update_id: 325866259
+Jan 14 02:08:24  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 14 02:08:24  [WEBHOOK] Received update_id: 325866259
+Jan 14 02:08:24  [WEBHOOK] Processing: type=Message, text=DK
+Jan 14 02:08:24  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 14 02:08:24  [COUPON-HANDLER] Processing coupon: DK, chat_id: 5710716868
+Jan 14 02:08:24  [COUPON] Validating 'DK' (attempt 1/3)...
+Jan 14 02:08:24  [COUPON] API response: status=200, body_length=299
+Jan 14 02:08:24  [COUPON] 💾 Cached validation for 'DK'
+Jan 14 02:08:24  [COUPON] ✅ 'DK' is VALID
+Jan 14 02:08:24  [COUPON-HANDLER] ✅ Stored coupon 'DK' in cache for chat_id 5710716868
+Jan 14 02:08:24  [TELEGRAM] ✅ User 5710716868 tracked successfully in database (username=Tjaygalapate, name=Tjay None)
+Jan 14 02:08:24  [TELEGRAM] Cache miss, downloading index.json
+Jan 14 02:08:25  [TELEGRAM] Index cached for 300s
+Jan 14 02:08:25  [TELEGRAM] Returning 0/0 telegram-enabled templates
+Jan 14 02:08:25  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=5710716868, template=None, coupon=DK, success=False, device=unknown
+Jan 14 02:08:25  [2026-01-14 02:08:25] [INFO] [db] [req:dd3e2285] Attempting to log: chat_id=5710716868, template=None, coupon=DK, success=False, error=templates_error, device=unknown
+Jan 14 02:08:25  [2026-01-14 02:08:25] [INFO] [db] [req:dd3e2285] Successfully logged usage
+Jan 14 02:08:25  [BOT_USAGE] ✅ Successfully logged usage to database
+Jan 14 02:08:25  [WEBHOOK] ✅ Update processed successfully
+Jan 14 02:08:25  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866259 in 0.89s, result: {'status': 'ok'}
+Jan 14 02:08:25  10.244.4.179 - - [14/Jan/2026 02:08:25] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 14 02:11:01  [2026-01-14 02:11:01] [INFO] [generator] [tenant:entrylab] [req:20215320] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 02:26:01  [2026-01-14 02:26:01] [INFO] [generator] [tenant:entrylab] [req:7f584877] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 02:41:02  [2026-01-14 02:41:02] [INFO] [generator] [tenant:entrylab] [req:ed46584c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 02:56:02  [2026-01-14 02:56:02] [INFO] [generator] [tenant:entrylab] [req:8532a6bc] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 03:11:02  [2026-01-14 03:11:02] [INFO] [generator] [tenant:entrylab] [req:8e7819b1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 03:26:02  [2026-01-14 03:26:02] [INFO] [generator] [tenant:entrylab] [req:4308a119] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 03:41:03  [2026-01-14 03:41:03] [INFO] [generator] [tenant:entrylab] [req:d08a41be] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 03:56:03  [2026-01-14 03:56:03] [INFO] [generator] [tenant:entrylab] [req:f460a36d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 04:11:03  [2026-01-14 04:11:03] [INFO] [generator] [tenant:entrylab] [req:2f4b6a4f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 04:11:15  10.244.4.179 - - [14/Jan/2026 04:11:15] "GET / HTTP/1.1" 302 -
+Jan 14 04:11:15  [2026-01-14 04:11:15] [WARNING] [clerk_auth] [req:d762628b] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Jan 14 04:11:15  10.244.5.120 - - [14/Jan/2026 04:11:15] "GET /admin HTTP/1.1" 302 -
+Jan 14 04:11:15  10.244.4.179 - - [14/Jan/2026 04:11:15] "GET /login HTTP/1.1" 200 -
+Jan 14 04:26:03  [2026-01-14 04:26:03] [INFO] [generator] [tenant:entrylab] [req:792745be] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 04:41:04  [2026-01-14 04:41:04] [INFO] [generator] [tenant:entrylab] [req:6f8adaa2] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 04:56:04  [2026-01-14 04:56:04] [INFO] [generator] [tenant:entrylab] [req:4286d1a5] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 05:11:04  [2026-01-14 05:11:04] [INFO] [generator] [tenant:entrylab] [req:13a8c0f6] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 05:26:05  [2026-01-14 05:26:05] [INFO] [generator] [tenant:entrylab] [req:2ab8a4dc] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 05:41:05  [2026-01-14 05:41:05] [INFO] [generator] [tenant:entrylab] [req:e6ce5fed] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 05:56:05  [2026-01-14 05:56:05] [INFO] [generator] [tenant:entrylab] [req:d59aa702] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 06:11:05  [2026-01-14 06:11:05] [INFO] [generator] [tenant:entrylab] [req:e5b95c4c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [forex_scheduler] Generating morning briefing...
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=419
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [forex_bot] Posted morning briefing
+Jan 14 06:20:06  [2026-01-14 06:20:06] [INFO] [forex_scheduler] ✅ Morning briefing posted
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [generator] [tenant:entrylab] [req:74ac0a9f] 🔄 forex_config change detected (guardrails/indicators)
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [generator] [tenant:entrylab] [req:74ac0a9f] 🔄 Reloading config...
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [forex_signals] [tenant:entrylab] [req:74ac0a9f] Reloading configuration...
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [forex_signals] [tenant:entrylab] [req:74ac0a9f] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [forex_signals] [tenant:entrylab] [req:74ac0a9f] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [forex_signals] [tenant:entrylab] [req:74ac0a9f] Strategy unchanged: raja_banks
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [runtime] [tenant:entrylab] [req:74ac0a9f] Config hot-reloaded for signal engine
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [generator] [tenant:entrylab] [req:74ac0a9f] ✅ Config hot-reloaded successfully
+Jan 14 06:26:06  [2026-01-14 06:26:06] [INFO] [generator] [tenant:entrylab] [req:74ac0a9f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 06:30:06  [2026-01-14 06:30:06] [INFO] [forex_scheduler] Generating detailed daily recap for yesterday...
+Jan 14 06:30:10  [2026-01-14 06:30:10] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 06:30:10  [2026-01-14 06:30:10] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 06:30:10  [2026-01-14 06:30:10] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=420
+Jan 14 06:30:10  [2026-01-14 06:30:10] [INFO] [forex_bot] Posted detailed daily recap to VIP channel
+Jan 14 06:30:10  [2026-01-14 06:30:10] [INFO] [forex_scheduler] ✅ Daily recap posted: 8 signals, 62% win rate, +1051.0 pips
+Jan 14 06:31:10  [2026-01-14 06:31:10] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 14 06:32:10  [2026-01-14 06:32:10] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 14 06:33:10  [2026-01-14 06:33:10] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 14 06:33:58  10.244.6.25 - - [14/Jan/2026 06:33:58] "GET / HTTP/1.1" 302 -
+Jan 14 06:33:58  10.244.4.179 - - [14/Jan/2026 06:33:58] "GET /app HTTP/1.1" 200 -
+Jan 14 06:34:00  10.244.5.120 - - [14/Jan/2026 06:34:00] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Jan 14 06:34:10  [2026-01-14 06:34:10] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [generator] [tenant:entrylab] [req:73accf8e] 🔄 forex_config change detected (guardrails/indicators)
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [generator] [tenant:entrylab] [req:73accf8e] 🔄 Reloading config...
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [forex_signals] [tenant:entrylab] [req:73accf8e] Reloading configuration...
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [forex_signals] [tenant:entrylab] [req:73accf8e] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [forex_signals] [tenant:entrylab] [req:73accf8e] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [forex_signals] [tenant:entrylab] [req:73accf8e] Strategy unchanged: raja_banks
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [runtime] [tenant:entrylab] [req:73accf8e] Config hot-reloaded for signal engine
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [generator] [tenant:entrylab] [req:73accf8e] ✅ Config hot-reloaded successfully
+Jan 14 06:41:10  [2026-01-14 06:41:10] [INFO] [generator] [tenant:entrylab] [req:73accf8e] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 06:56:11  [2026-01-14 06:56:11] [INFO] [generator] [tenant:entrylab] [req:95b68465] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 07:11:11  [2026-01-14 07:11:11] [INFO] [generator] [tenant:entrylab] [req:33abf8b3] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 07:26:11  [2026-01-14 07:26:11] [INFO] [generator] [tenant:entrylab] [req:da56aa26] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 07:41:11  [2026-01-14 07:41:11] [INFO] [generator] [tenant:entrylab] [req:353629f1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 07:56:12  [2026-01-14 07:56:12] [INFO] [generator] [tenant:entrylab] [req:0c2f8090] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 14 08:11:12  [2026-01-14 08:11:12] [INFO] [forex_signals] [tenant:entrylab] [req:e5d574fb] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 08:11:12  [2026-01-14 08:11:12] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Checking for signals on XAU/USD 15min...
+Jan 14 08:11:12  [2026-01-14 08:11:12] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Session: London
+Jan 14 08:11:13  [2026-01-14 08:11:13] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Counter-trend SELL rejected (no S/R confluence)
+Jan 14 08:11:13  [2026-01-14 08:11:13] [INFO] [generator] [tenant:entrylab] [req:e5d574fb] 📊 Checking 1-hour timeframe...
+Jan 14 08:11:13  [2026-01-14 08:11:13] [INFO] [forex_signals] [tenant:entrylab] [req:e5d574fb] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 08:11:13  [2026-01-14 08:11:13] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Checking for signals on XAU/USD 1h...
+Jan 14 08:11:13  [2026-01-14 08:11:13] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Session: London
+Jan 14 08:11:14  [2026-01-14 08:11:14] [INFO] [raja_banks] [tenant:entrylab] [req:e5d574fb] Counter-trend SELL rejected (no S/R confluence)
+Jan 14 08:26:14  [2026-01-14 08:26:14] [INFO] [forex_signals] [tenant:entrylab] [req:48b1552f] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 08:26:14  [2026-01-14 08:26:14] [INFO] [raja_banks] [tenant:entrylab] [req:48b1552f] Checking for signals on XAU/USD 15min...
+Jan 14 08:26:14  [2026-01-14 08:26:14] [INFO] [raja_banks] [tenant:entrylab] [req:48b1552f] Session: London
+Jan 14 08:26:15  [2026-01-14 08:26:15] [INFO] [raja_banks] [tenant:entrylab] [req:48b1552f] No impulse breakout detected
+Jan 14 08:41:15  [2026-01-14 08:41:15] [INFO] [forex_signals] [tenant:entrylab] [req:47550878] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 08:41:15  [2026-01-14 08:41:15] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] Checking for signals on XAU/USD 15min...
+Jan 14 08:41:15  [2026-01-14 08:41:15] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] Session: London
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] With-trend BUY (Bullish)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] 🎯 Signal generated: BUY @ 4629.94
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] 📊 TP1: 4633.27 (50%)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] 📊 TP2: 4645.61 (30%)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] 🛑 SL: 4625.00 (tight candle-based)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [raja_banks] [tenant:entrylab] [req:47550878] 📈 Signals today: 1/4
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_signals] [tenant:entrylab] [req:47550878] ✅ Signal from Raja Banks Gold Start: BUY @ 4629.94
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [bot_credentials] [tenant:entrylab] [req:47550878] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [telegram_sender] [tenant:entrylab] [req:47550878] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_bot] [tenant:entrylab] [req:47550878] Created draft signal #135, posting to Telegram...
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [telegram_sender] [tenant:entrylab] [req:47550878] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=421
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_bot] [tenant:entrylab] [req:47550878] Signal #135 status updated to pending (Telegram msg: 421)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_bot] [tenant:entrylab] [req:47550878] Stored original indicators for signal #135: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_bot] [tenant:entrylab] [req:47550878] Posted BUY signal to Telegram (ID: 135)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [messenger] [tenant:entrylab] [req:47550878] Signal #135 posted to Telegram
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [generator] [tenant:entrylab] [req:47550878] ✅ New 15min signal #135 posted successfully
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [generator] [tenant:entrylab] [req:47550878] ⏭️ Skipped 1h check (signal already active)
+Jan 14 08:41:16  [2026-01-14 08:41:16] [INFO] [forex_signals] [tenant:entrylab] [req:3972bc45] Checking 1 active signals...
+Jan 14 08:41:17  [2026-01-14 08:41:17] [INFO] [forex_signals] [tenant:entrylab] [req:3972bc45] Current XAU/USD price: 4629.89
+Jan 14 08:42:17  [2026-01-14 08:42:17] [INFO] [forex_signals] [tenant:entrylab] [req:affd06b0] Checking 1 active signals...
+Jan 14 08:42:17  [2026-01-14 08:42:17] [INFO] [forex_signals] [tenant:entrylab] [req:affd06b0] Current XAU/USD price: 4631.26
+Jan 14 08:42:40  10.244.7.234 - - [14/Jan/2026 08:42:40] code 404, message File not found
+Jan 14 08:42:40  10.244.7.234 - - [14/Jan/2026 08:42:40] "GET /pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Jan 14 08:43:18  [2026-01-14 08:43:18] [INFO] [forex_signals] [tenant:entrylab] [req:2767ea48] Checking 1 active signals...
+Jan 14 08:43:18  [2026-01-14 08:43:18] [INFO] [forex_signals] [tenant:entrylab] [req:2767ea48] Current XAU/USD price: 4631.20
+Jan 14 08:44:18  [2026-01-14 08:44:18] [INFO] [forex_signals] [tenant:entrylab] [req:f01bff46] Checking 1 active signals...
+Jan 14 08:44:18  [2026-01-14 08:44:18] [INFO] [forex_signals] [tenant:entrylab] [req:f01bff46] Current XAU/USD price: 4631.20
+Jan 14 08:45:19  [2026-01-14 08:45:19] [INFO] [forex_signals] [tenant:entrylab] [req:d119f4af] Checking 1 active signals...
+Jan 14 08:45:19  [2026-01-14 08:45:19] [INFO] [forex_signals] [tenant:entrylab] [req:d119f4af] Current XAU/USD price: 4631.61
+Jan 14 08:45:19  [2026-01-14 08:45:19] [INFO] [bot_credentials] [tenant:entrylab] [req:457b9421] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 08:45:19  [2026-01-14 08:45:19] [INFO] [telegram_sender] [tenant:entrylab] [req:457b9421] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 08:45:20  [2026-01-14 08:45:20] [INFO] [telegram_sender] [tenant:entrylab] [req:457b9421] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=422
+Jan 14 08:45:20  [2026-01-14 08:45:20] [INFO] [messenger] [tenant:entrylab] [req:457b9421] Posted milestone: tp1_40_motivational
+Jan 14 08:46:20  [2026-01-14 08:46:20] [INFO] [forex_signals] [tenant:entrylab] [req:8db7f760] Checking 1 active signals...
+Jan 14 08:46:20  [2026-01-14 08:46:20] [INFO] [forex_signals] [tenant:entrylab] [req:8db7f760] Current XAU/USD price: 4632.26
+Jan 14 08:46:20  [2026-01-14 08:46:20] [INFO] [monitor] [tenant:entrylab] [req:10860936] ⏭️ Milestone tp1_40 already claimed for signal #135
+Jan 14 08:47:20  [2026-01-14 08:47:20] [INFO] [forex_signals] [tenant:entrylab] [req:2869b308] Checking 1 active signals...
+Jan 14 08:47:20  [2026-01-14 08:47:20] [INFO] [forex_signals] [tenant:entrylab] [req:2869b308] Current XAU/USD price: 4634.56
+Jan 14 08:47:20  [2026-01-14 08:47:20] [INFO] [forex_signals] [tenant:entrylab] [req:2869b308] ✅ Signal #135 TP1 HIT! +333.0 pips (50% closed)
+Jan 14 08:47:20  [2026-01-14 08:47:20] [INFO] [bot_credentials] [tenant:entrylab] [req:2869b308] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 08:47:20  [2026-01-14 08:47:20] [INFO] [telegram_sender] [tenant:entrylab] [req:2869b308] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [telegram_sender] [tenant:entrylab] [req:2869b308] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=423
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [messenger] [tenant:entrylab] [req:2869b308] Posted TP1 celebration (+333.0 pips), message_id=423
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [db] [tenant:entrylab] [req:2869b308] Updated signal 135 effective_sl to 4633.27
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [monitor] [tenant:entrylab] [req:2869b308] 🔒 Set effective_sl to TP1 ($4633.27) for signal #135
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [monitor] [tenant:entrylab] [req:2869b308] 📣 Cross-promo check for signal #135: tp1_msg=423, signal_msg=421
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [repo] [tenant:entrylab] [req:2869b308] Enqueued job 06f5b909-2c32-4525-a957-c70e502f368a type=forward_tp1_sequence for tenant entrylab
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [repo] [tenant:entrylab] [req:2869b308] Enqueued job d65bc1f3-70a5-4ea8-8b16-60e0ee5d8493 type=send_cta for tenant entrylab
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [service] [tenant:entrylab] [req:2869b308] TP1 cross-promo triggered for signal #135
+Jan 14 08:47:21  [2026-01-14 08:47:21] [INFO] [monitor] [tenant:entrylab] [req:2869b308] 📢 Cross-promo TP1 triggered for signal #135 (+333 pips)
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [repo] Claimed 1 due jobs
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [crosspromo_worker] Processing job 06f5b909-2c32-4525-a957-c70e502f368a type=forward_tp1_sequence tenant=entrylab
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [client] Message 421 forwarded from -1003213499920 to -1003055722817
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [client] Message 423 forwarded from -1003213499920 to -1003055722817
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [client] Message sent to -1003055722817
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [service] TP1 sequence forwarded with promo: signal_msg=421, tp1_msg=423
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [repo] Job 06f5b909-2c32-4525-a957-c70e502f368a marked as sent
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [crosspromo_worker] Job 06f5b909-2c32-4525-a957-c70e502f368a completed successfully
+Jan 14 08:47:27  [2026-01-14 08:47:27] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 14 08:48:21  [2026-01-14 08:48:21] [INFO] [forex_signals] [tenant:entrylab] [req:20f3cd2b] Checking 1 active signals...
+Jan 14 08:48:21  [2026-01-14 08:48:21] [INFO] [forex_signals] [tenant:entrylab] [req:20f3cd2b] Current XAU/USD price: 4636.39
+Jan 14 08:49:22  [2026-01-14 08:49:22] [INFO] [forex_signals] [tenant:entrylab] [req:5cdd73c0] Checking 1 active signals...
+Jan 14 08:49:22  [2026-01-14 08:49:22] [INFO] [forex_signals] [tenant:entrylab] [req:5cdd73c0] Current XAU/USD price: 4636.13
+Jan 14 08:50:22  [2026-01-14 08:50:22] [INFO] [forex_signals] [tenant:entrylab] [req:24bff1e4] Checking 1 active signals...
+Jan 14 08:50:23  [2026-01-14 08:50:23] [INFO] [forex_signals] [tenant:entrylab] [req:24bff1e4] Current XAU/USD price: 4636.21
+Jan 14 08:51:23  [2026-01-14 08:51:23] [INFO] [forex_signals] [tenant:entrylab] [req:abcedd7e] Checking 1 active signals...
+Jan 14 08:51:23  [2026-01-14 08:51:23] [INFO] [forex_signals] [tenant:entrylab] [req:abcedd7e] Current XAU/USD price: 4635.66
+Jan 14 08:52:23  [2026-01-14 08:52:23] [INFO] [forex_signals] [tenant:entrylab] [req:9517da21] Checking 1 active signals...
+Jan 14 08:52:24  [2026-01-14 08:52:24] [INFO] [forex_signals] [tenant:entrylab] [req:9517da21] Current XAU/USD price: 4635.66
+Jan 14 08:53:24  [2026-01-14 08:53:24] [INFO] [forex_signals] [tenant:entrylab] [req:cbb565cb] Checking 1 active signals...
+Jan 14 08:53:24  [2026-01-14 08:53:24] [INFO] [forex_signals] [tenant:entrylab] [req:cbb565cb] Current XAU/USD price: 4636.01
+Jan 14 08:54:25  [2026-01-14 08:54:25] [INFO] [forex_signals] [tenant:entrylab] [req:662cba17] Checking 1 active signals...
+Jan 14 08:54:25  [2026-01-14 08:54:25] [INFO] [forex_signals] [tenant:entrylab] [req:662cba17] Current XAU/USD price: 4635.77
+Jan 14 08:55:25  [2026-01-14 08:55:25] [INFO] [forex_signals] [tenant:entrylab] [req:a4251d30] Checking 1 active signals...
+Jan 14 08:55:25  [2026-01-14 08:55:25] [INFO] [forex_signals] [tenant:entrylab] [req:a4251d30] Current XAU/USD price: 4635.77
+Jan 14 08:56:26  [2026-01-14 08:56:26] [INFO] [generator] [tenant:entrylab] [req:70245137] ⏸️ Active signal #135 still pending - skipping new signal check
+Jan 14 08:56:26  [2026-01-14 08:56:26] [INFO] [generator] [tenant:entrylab] [req:70245137] Entry: $4629.94, TP: $4633.27, SL: $4625.0
+Jan 14 08:56:26  [2026-01-14 08:56:26] [INFO] [forex_signals] [tenant:entrylab] [req:52939888] Checking 1 active signals...
+Jan 14 08:56:26  [2026-01-14 08:56:26] [INFO] [forex_signals] [tenant:entrylab] [req:52939888] Current XAU/USD price: 4634.98
+Jan 14 08:57:26  [2026-01-14 08:57:26] [INFO] [forex_signals] [tenant:entrylab] [req:786794dd] Checking 1 active signals...
+Jan 14 08:57:27  [2026-01-14 08:57:27] [INFO] [forex_signals] [tenant:entrylab] [req:786794dd] Current XAU/USD price: 4634.93
+Jan 14 08:58:27  [2026-01-14 08:58:27] [INFO] [forex_signals] [tenant:entrylab] [req:bf5d9b8f] Checking 1 active signals...
+Jan 14 08:58:27  [2026-01-14 08:58:27] [INFO] [forex_signals] [tenant:entrylab] [req:bf5d9b8f] Current XAU/USD price: 4634.32
+Jan 14 08:59:27  [2026-01-14 08:59:27] [INFO] [forex_signals] [tenant:entrylab] [req:d0e5c7c1] Checking 1 active signals...
+Jan 14 08:59:28  [2026-01-14 08:59:28] [INFO] [forex_signals] [tenant:entrylab] [req:d0e5c7c1] Current XAU/USD price: 4633.86
+Jan 14 09:00:28  [2026-01-14 09:00:28] [INFO] [forex_signals] [tenant:entrylab] [req:6e4b607b] Checking 1 active signals...
+Jan 14 09:00:28  [2026-01-14 09:00:28] [INFO] [forex_signals] [tenant:entrylab] [req:6e4b607b] Current XAU/USD price: 4634.24
+Jan 14 09:00:29  [2026-01-14 09:00:29] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence (scheduled for 09:00)...
+Jan 14 09:00:29  [2026-01-14 09:00:29] [INFO] [repo] Enqueued job 1b62f767-ec7b-4e67-b828-a6838e6afc8d type=morning_news for tenant entrylab
+Jan 14 09:00:29  [2026-01-14 09:00:29] [INFO] [repo] Enqueued job 0ade6964-d006-4e62-94d0-aa9a12d94148 type=vip_soon for tenant entrylab
+Jan 14 09:00:29  [2026-01-14 09:00:29] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon']
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [repo] Claimed 1 due jobs
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [crosspromo_worker] Processing job 1b62f767-ec7b-4e67-b828-a6838e6afc8d type=morning_news tenant=entrylab
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [client] Message sent to -1003055722817
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [repo] Job 1b62f767-ec7b-4e67-b828-a6838e6afc8d marked as sent
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [crosspromo_worker] Job 1b62f767-ec7b-4e67-b828-a6838e6afc8d completed successfully
+Jan 14 09:00:38  [2026-01-14 09:00:38] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 14 09:01:29  [2026-01-14 09:01:29] [INFO] [forex_signals] [tenant:entrylab] [req:2bc29a5d] Checking 1 active signals...
+Jan 14 09:01:29  [2026-01-14 09:01:29] [INFO] [forex_signals] [tenant:entrylab] [req:2bc29a5d] Current XAU/USD price: 4634.40
+Jan 14 09:02:29  [2026-01-14 09:02:29] [INFO] [forex_signals] [tenant:entrylab] [req:72f875c5] Checking 1 active signals...
+Jan 14 09:02:29  [2026-01-14 09:02:29] [INFO] [forex_signals] [tenant:entrylab] [req:72f875c5] Current XAU/USD price: 4634.34
+Jan 14 09:03:30  [2026-01-14 09:03:30] [INFO] [forex_signals] [tenant:entrylab] [req:0bd27c79] Checking 1 active signals...
+Jan 14 09:03:30  [2026-01-14 09:03:30] [INFO] [forex_signals] [tenant:entrylab] [req:0bd27c79] Current XAU/USD price: 4634.34
+Jan 14 09:04:30  [2026-01-14 09:04:30] [INFO] [forex_signals] [tenant:entrylab] [req:a1267cfd] Checking 1 active signals...
+Jan 14 09:04:31  [2026-01-14 09:04:31] [INFO] [forex_signals] [tenant:entrylab] [req:a1267cfd] Current XAU/USD price: 4634.41
+Jan 14 09:05:31  [2026-01-14 09:05:31] [INFO] [forex_signals] [tenant:entrylab] [req:ef9f243d] Checking 1 active signals...
+Jan 14 09:05:31  [2026-01-14 09:05:31] [INFO] [forex_signals] [tenant:entrylab] [req:ef9f243d] Current XAU/USD price: 4634.01
+Jan 14 09:06:31  [2026-01-14 09:06:31] [INFO] [forex_signals] [tenant:entrylab] [req:5ea8a440] Checking 1 active signals...
+Jan 14 09:06:32  [2026-01-14 09:06:32] [INFO] [forex_signals] [tenant:entrylab] [req:5ea8a440] Current XAU/USD price: 4635.48
+Jan 14 09:07:32  [2026-01-14 09:07:32] [INFO] [forex_signals] [tenant:entrylab] [req:d143a0b5] Checking 1 active signals...
+Jan 14 09:07:32  [2026-01-14 09:07:32] [INFO] [forex_signals] [tenant:entrylab] [req:d143a0b5] Current XAU/USD price: 4636.17
+Jan 14 09:08:33  [2026-01-14 09:08:33] [INFO] [forex_signals] [tenant:entrylab] [req:3763e6b4] Checking 1 active signals...
+Jan 14 09:08:33  [2026-01-14 09:08:33] [INFO] [forex_signals] [tenant:entrylab] [req:3763e6b4] Current XAU/USD price: 4636.14
+Jan 14 09:09:33  [2026-01-14 09:09:33] [INFO] [forex_signals] [tenant:entrylab] [req:6a581b8a] Checking 1 active signals...
+Jan 14 09:09:34  [2026-01-14 09:09:34] [INFO] [forex_signals] [tenant:entrylab] [req:6a581b8a] Current XAU/USD price: 4637.20
+Jan 14 09:10:34  [2026-01-14 09:10:34] [INFO] [forex_signals] [tenant:entrylab] [req:fc7d0fcd] Checking 1 active signals...
+Jan 14 09:10:34  [2026-01-14 09:10:34] [INFO] [forex_signals] [tenant:entrylab] [req:fc7d0fcd] Current XAU/USD price: 4637.88
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [generator] [tenant:entrylab] [req:1bf0430e] 🔄 forex_config change detected (guardrails/indicators)
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [generator] [tenant:entrylab] [req:1bf0430e] 🔄 Reloading config...
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [forex_signals] [tenant:entrylab] [req:1bf0430e] Reloading configuration...
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [forex_signals] [tenant:entrylab] [req:1bf0430e] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [forex_signals] [tenant:entrylab] [req:1bf0430e] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [forex_signals] [tenant:entrylab] [req:1bf0430e] Strategy unchanged: raja_banks
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [runtime] [tenant:entrylab] [req:1bf0430e] Config hot-reloaded for signal engine
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [generator] [tenant:entrylab] [req:1bf0430e] ✅ Config hot-reloaded successfully
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [generator] [tenant:entrylab] [req:1bf0430e] ⏸️ Active signal #135 still pending - skipping new signal check
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [generator] [tenant:entrylab] [req:1bf0430e] Entry: $4629.94, TP: $4633.27, SL: $4625.0
+Jan 14 09:11:34  [2026-01-14 09:11:34] [INFO] [forex_signals] [tenant:entrylab] [req:30f75e7b] Checking 1 active signals...
+Jan 14 09:11:35  [2026-01-14 09:11:35] [INFO] [forex_signals] [tenant:entrylab] [req:30f75e7b] Current XAU/USD price: 4636.87
+Jan 14 09:12:35  [2026-01-14 09:12:35] [INFO] [forex_signals] [tenant:entrylab] [req:7713b4dd] Checking 1 active signals...
+Jan 14 09:12:35  [2026-01-14 09:12:35] [INFO] [forex_signals] [tenant:entrylab] [req:7713b4dd] Current XAU/USD price: 4636.89
+Jan 14 09:13:36  [2026-01-14 09:13:36] [INFO] [forex_signals] [tenant:entrylab] [req:2607e82e] Checking 1 active signals...
+Jan 14 09:13:36  [2026-01-14 09:13:36] [INFO] [forex_signals] [tenant:entrylab] [req:2607e82e] Current XAU/USD price: 4637.79
+Jan 14 09:14:36  [2026-01-14 09:14:36] [INFO] [forex_signals] [tenant:entrylab] [req:ff9bfc52] Checking 1 active signals...
+Jan 14 09:14:36  [2026-01-14 09:14:36] [INFO] [forex_signals] [tenant:entrylab] [req:ff9bfc52] Current XAU/USD price: 4638.76
+Jan 14 09:15:37  [2026-01-14 09:15:37] [INFO] [forex_signals] [tenant:entrylab] [req:77f2a1b6] Checking 1 active signals...
+Jan 14 09:15:37  [2026-01-14 09:15:37] [INFO] [forex_signals] [tenant:entrylab] [req:77f2a1b6] Current XAU/USD price: 4638.91
+Jan 14 09:16:37  [2026-01-14 09:16:37] [INFO] [forex_signals] [tenant:entrylab] [req:b2be4738] Checking 1 active signals...
+Jan 14 09:16:38  [2026-01-14 09:16:38] [INFO] [forex_signals] [tenant:entrylab] [req:b2be4738] Current XAU/USD price: 4638.32
+Jan 14 09:17:38  [2026-01-14 09:17:38] [INFO] [forex_signals] [tenant:entrylab] [req:8fe8eb77] Checking 1 active signals...
+Jan 14 09:17:38  [2026-01-14 09:17:38] [INFO] [forex_signals] [tenant:entrylab] [req:8fe8eb77] Current XAU/USD price: 4638.66
+Jan 14 09:18:38  [2026-01-14 09:18:38] [INFO] [forex_signals] [tenant:entrylab] [req:70f538bd] Checking 1 active signals...
+Jan 14 09:18:39  [2026-01-14 09:18:39] [INFO] [forex_signals] [tenant:entrylab] [req:70f538bd] Current XAU/USD price: 4638.79
+Jan 14 09:19:39  [2026-01-14 09:19:39] [INFO] [forex_signals] [tenant:entrylab] [req:06442c48] Checking 1 active signals...
+Jan 14 09:19:39  [2026-01-14 09:19:39] [INFO] [forex_signals] [tenant:entrylab] [req:06442c48] Current XAU/USD price: 4638.41
+Jan 14 09:20:40  [2026-01-14 09:20:40] [INFO] [forex_signals] [tenant:entrylab] [req:f59b3a6c] Checking 1 active signals...
+Jan 14 09:20:40  [2026-01-14 09:20:40] [INFO] [forex_signals] [tenant:entrylab] [req:f59b3a6c] Current XAU/USD price: 4638.88
+Jan 14 09:21:40  [2026-01-14 09:21:40] [INFO] [forex_signals] [tenant:entrylab] [req:9ad2509e] Checking 1 active signals...
+Jan 14 09:21:40  [2026-01-14 09:21:40] [INFO] [forex_signals] [tenant:entrylab] [req:9ad2509e] Current XAU/USD price: 4638.89
+Jan 14 09:22:41  [2026-01-14 09:22:41] [INFO] [forex_signals] [tenant:entrylab] [req:7a874db0] Checking 1 active signals...
+Jan 14 09:22:41  [2026-01-14 09:22:41] [INFO] [forex_signals] [tenant:entrylab] [req:7a874db0] Current XAU/USD price: 4638.88
+Jan 14 09:23:41  [2026-01-14 09:23:41] [INFO] [forex_signals] [tenant:entrylab] [req:b95d0efe] Checking 1 active signals...
+Jan 14 09:23:41  [2026-01-14 09:23:41] [INFO] [forex_signals] [tenant:entrylab] [req:b95d0efe] Current XAU/USD price: 4637.86
+Jan 14 09:24:42  [2026-01-14 09:24:42] [INFO] [forex_signals] [tenant:entrylab] [req:655f00b8] Checking 1 active signals...
+Jan 14 09:24:42  [2026-01-14 09:24:42] [INFO] [forex_signals] [tenant:entrylab] [req:655f00b8] Current XAU/USD price: 4637.42
+Jan 14 09:25:42  [2026-01-14 09:25:42] [INFO] [forex_signals] [tenant:entrylab] [req:aeab9ed1] Checking 1 active signals...
+Jan 14 09:25:43  [2026-01-14 09:25:43] [INFO] [forex_signals] [tenant:entrylab] [req:aeab9ed1] Current XAU/USD price: 4637.19
+Jan 14 09:26:43  [2026-01-14 09:26:43] [INFO] [generator] [tenant:entrylab] [req:8562953f] ⏸️ Active signal #135 still pending - skipping new signal check
+Jan 14 09:26:43  [2026-01-14 09:26:43] [INFO] [generator] [tenant:entrylab] [req:8562953f] Entry: $4629.94, TP: $4633.27, SL: $4625.0
+Jan 14 09:26:43  [2026-01-14 09:26:43] [INFO] [forex_signals] [tenant:entrylab] [req:6174dcd0] Checking 1 active signals...
+Jan 14 09:26:43  [2026-01-14 09:26:43] [INFO] [forex_signals] [tenant:entrylab] [req:6174dcd0] Current XAU/USD price: 4637.39
+Jan 14 09:27:43  [2026-01-14 09:27:43] [INFO] [forex_signals] [tenant:entrylab] [req:13e98f95] Checking 1 active signals...
+Jan 14 09:27:44  [2026-01-14 09:27:44] [INFO] [forex_signals] [tenant:entrylab] [req:13e98f95] Current XAU/USD price: 4637.14
+Jan 14 09:28:44  [2026-01-14 09:28:44] [INFO] [forex_signals] [tenant:entrylab] [req:7779b95c] Checking 1 active signals...
+Jan 14 09:28:44  [2026-01-14 09:28:44] [INFO] [forex_signals] [tenant:entrylab] [req:7779b95c] Current XAU/USD price: 4637.46
+Jan 14 09:29:45  [2026-01-14 09:29:45] [INFO] [forex_signals] [tenant:entrylab] [req:f7f2c888] Checking 1 active signals...
+Jan 14 09:29:45  [2026-01-14 09:29:45] [INFO] [forex_signals] [tenant:entrylab] [req:f7f2c888] Current XAU/USD price: 4637.48
+Jan 14 09:30:45  [2026-01-14 09:30:45] [INFO] [forex_signals] [tenant:entrylab] [req:7630dc9a] Checking 1 active signals...
+Jan 14 09:30:45  [2026-01-14 09:30:45] [INFO] [forex_signals] [tenant:entrylab] [req:7630dc9a] Current XAU/USD price: 4637.40
+Jan 14 09:31:46  [2026-01-14 09:31:46] [INFO] [forex_signals] [tenant:entrylab] [req:d2f4e46c] Checking 1 active signals...
+Jan 14 09:31:46  [2026-01-14 09:31:46] [INFO] [forex_signals] [tenant:entrylab] [req:d2f4e46c] Current XAU/USD price: 4637.44
+Jan 14 09:32:46  [2026-01-14 09:32:46] [INFO] [forex_signals] [tenant:entrylab] [req:cb4b1da9] Checking 1 active signals...
+Jan 14 09:32:47  [2026-01-14 09:32:47] [INFO] [forex_signals] [tenant:entrylab] [req:cb4b1da9] Current XAU/USD price: 4637.24
+Jan 14 09:33:47  [2026-01-14 09:33:47] [INFO] [forex_signals] [tenant:entrylab] [req:d552c6a5] Checking 1 active signals...
+Jan 14 09:33:47  [2026-01-14 09:33:47] [INFO] [forex_signals] [tenant:entrylab] [req:d552c6a5] Current XAU/USD price: 4636.81
+Jan 14 09:34:47  [2026-01-14 09:34:47] [INFO] [forex_signals] [tenant:entrylab] [req:403f8e39] Checking 1 active signals...
+Jan 14 09:34:48  [2026-01-14 09:34:48] [INFO] [forex_signals] [tenant:entrylab] [req:403f8e39] Current XAU/USD price: 4635.82
+Jan 14 09:35:48  [2026-01-14 09:35:48] [INFO] [forex_signals] [tenant:entrylab] [req:dd7550c2] Checking 1 active signals...
+Jan 14 09:35:48  [2026-01-14 09:35:48] [INFO] [forex_signals] [tenant:entrylab] [req:dd7550c2] Current XAU/USD price: 4634.60
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [forex_signals] [tenant:entrylab] [req:a7548b99] Checking 1 active signals...
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [forex_signals] [tenant:entrylab] [req:a7548b99] Current XAU/USD price: 4632.86
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [forex_signals] [tenant:entrylab] [req:a7548b99] ✅ Signal #135 SL (effective) HIT @ $4633.27! Locked profit: +333.0 pips
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [bot_credentials] [tenant:entrylab] [req:a7548b99] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [telegram_sender] [tenant:entrylab] [req:a7548b99] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [telegram_sender] [tenant:entrylab] [req:a7548b99] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=424
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [messenger] [tenant:entrylab] [req:a7548b99] Posted profit-locked notification (+333.0 pips)
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [monitor] [tenant:entrylab] [req:a7548b99] ✅ Signal #135 closed with locked profit: +333.0 pips
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [forex_signals] [tenant:entrylab] [req:a7548b99] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 09:36:49  [2026-01-14 09:36:49] [INFO] [monitor] [tenant:entrylab] [req:a7548b99] Strategy reloaded after signal #135 closed
+Jan 14 09:41:49  [2026-01-14 09:41:49] [INFO] [forex_signals] [tenant:entrylab] [req:3b2c55f6] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 14 09:41:49  [2026-01-14 09:41:49] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] Checking for signals on XAU/USD 15min...
+Jan 14 09:41:49  [2026-01-14 09:41:49] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] Session: London
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] Counter-trend SELL at resistance (4631.57)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] 🎯 Signal generated: SELL @ 4631.00
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] 📊 TP1: 4625.00 (50%)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] 📊 TP2: 4615.99 (30%)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] 🛑 SL: 4637.50 (tight candle-based)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [raja_banks] [tenant:entrylab] [req:3b2c55f6] 📈 Signals today: 1/4
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_signals] [tenant:entrylab] [req:3b2c55f6] ✅ Signal from Raja Banks Gold Start: SELL @ 4631.00
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [bot_credentials] [tenant:entrylab] [req:3b2c55f6] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [telegram_sender] [tenant:entrylab] [req:3b2c55f6] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_bot] [tenant:entrylab] [req:3b2c55f6] Created draft signal #136, posting to Telegram...
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [telegram_sender] [tenant:entrylab] [req:3b2c55f6] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=425
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_bot] [tenant:entrylab] [req:3b2c55f6] Signal #136 status updated to pending (Telegram msg: 425)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_bot] [tenant:entrylab] [req:3b2c55f6] Stored original indicators for signal #136: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_bot] [tenant:entrylab] [req:3b2c55f6] Posted SELL signal to Telegram (ID: 136)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [messenger] [tenant:entrylab] [req:3b2c55f6] Signal #136 posted to Telegram
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [generator] [tenant:entrylab] [req:3b2c55f6] ✅ New 15min signal #136 posted successfully
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [generator] [tenant:entrylab] [req:3b2c55f6] ⏭️ Skipped 1h check (signal already active)
+Jan 14 09:41:50  [2026-01-14 09:41:50] [INFO] [forex_signals] [tenant:entrylab] [req:85881a6f] Checking 1 active signals...
+Jan 14 09:41:51  [2026-01-14 09:41:51] [INFO] [forex_signals] [tenant:entrylab] [req:85881a6f] Current XAU/USD price: 4630.44
+Jan 14 09:42:51  [2026-01-14 09:42:51] [INFO] [forex_signals] [tenant:entrylab] [req:f4d4af9f] Checking 1 active signals...
+Jan 14 09:42:51  [2026-01-14 09:42:51] [INFO] [forex_signals] [tenant:entrylab] [req:f4d4af9f] Current XAU/USD price: 4629.12
+Jan 14 09:43:52  [2026-01-14 09:43:52] [INFO] [forex_signals] [tenant:entrylab] [req:cd7d1411] Checking 1 active signals...
+Jan 14 09:43:52  [2026-01-14 09:43:52] [INFO] [forex_signals] [tenant:entrylab] [req:cd7d1411] Current XAU/USD price: 4628.74
+Jan 14 09:44:52  [2026-01-14 09:44:52] [INFO] [forex_signals] [tenant:entrylab] [req:912c9ba7] Checking 1 active signals...
+Jan 14 09:44:52  [2026-01-14 09:44:52] [INFO] [forex_signals] [tenant:entrylab] [req:912c9ba7] Current XAU/USD price: 4629.19
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [repo] Claimed 1 due jobs
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [crosspromo_worker] Processing job 0ade6964-d006-4e62-94d0-aa9a12d94148 type=vip_soon tenant=entrylab
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [client] Message sent to -1003055722817
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [repo] Job 0ade6964-d006-4e62-94d0-aa9a12d94148 marked as sent
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [crosspromo_worker] Job 0ade6964-d006-4e62-94d0-aa9a12d94148 completed successfully
+Jan 14 09:45:30  [2026-01-14 09:45:30] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [forex_signals] [tenant:entrylab] [req:380f80ee] Checking 1 active signals...
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [forex_signals] [tenant:entrylab] [req:380f80ee] Current XAU/USD price: 4628.33
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [bot_credentials] [tenant:entrylab] [req:ef45e653] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [telegram_sender] [tenant:entrylab] [req:ef45e653] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [telegram_sender] [tenant:entrylab] [req:ef45e653] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=426
+Jan 14 09:45:53  [2026-01-14 09:45:53] [INFO] [messenger] [tenant:entrylab] [req:ef45e653] Posted milestone: tp1_40_motivational
+Jan 14 09:46:53  [2026-01-14 09:46:53] [INFO] [forex_signals] [tenant:entrylab] [req:722d900d] Checking 1 active signals...
+Jan 14 09:46:54  [2026-01-14 09:46:54] [INFO] [forex_signals] [tenant:entrylab] [req:722d900d] Current XAU/USD price: 4627.84
+Jan 14 09:46:54  [2026-01-14 09:46:54] [INFO] [monitor] [tenant:entrylab] [req:6eee9455] ⏭️ Milestone tp1_40 already claimed for signal #136
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [repo] Claimed 1 due jobs
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [crosspromo_worker] Processing job d65bc1f3-70a5-4ea8-8b16-60e0ee5d8493 type=send_cta tenant=entrylab
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [client] Message sent to -1003055722817
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [service] CTA sent for signal #135, cross-promo complete
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [repo] Job d65bc1f3-70a5-4ea8-8b16-60e0ee5d8493 marked as sent
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [crosspromo_worker] Job d65bc1f3-70a5-4ea8-8b16-60e0ee5d8493 completed successfully
+Jan 14 09:47:30  [2026-01-14 09:47:30] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 14 09:47:54  [2026-01-14 09:47:54] [INFO] [forex_signals] [tenant:entrylab] [req:a2a6a02b] Checking 1 active signals...
+Jan 14 09:47:54  [2026-01-14 09:47:54] [INFO] [forex_signals] [tenant:entrylab] [req:a2a6a02b] Current XAU/USD price: 4627.76
+Jan 14 09:47:55  [2026-01-14 09:47:55] [INFO] [monitor] [tenant:entrylab] [req:eddd10a4] ⏭️ Milestone tp1_40 already claimed for signal #136
+Jan 14 09:48:55  [2026-01-14 09:48:55] [INFO] [forex_signals] [tenant:entrylab] [req:af80c14b] Checking 1 active signals...
+Jan 14 09:48:55  [2026-01-14 09:48:55] [INFO] [forex_signals] [tenant:entrylab] [req:af80c14b] Current XAU/USD price: 4628.15
+Jan 14 09:48:55  [2026-01-14 09:48:55] [INFO] [monitor] [tenant:entrylab] [req:6cbeae2d] ⏭️ Milestone tp1_40 already claimed for signal #136
+Jan 14 09:49:55  [2026-01-14 09:49:55] [INFO] [forex_signals] [tenant:entrylab] [req:05b2ba9d] Checking 1 active signals...
+Jan 14 09:49:55  [2026-01-14 09:49:55] [INFO] [forex_signals] [tenant:entrylab] [req:05b2ba9d] Current XAU/USD price: 4629.01
+Jan 14 09:50:56  [2026-01-14 09:50:56] [INFO] [forex_signals] [tenant:entrylab] [req:0920bce8] Checking 1 active signals...
+Jan 14 09:50:56  [2026-01-14 09:50:56] [INFO] [forex_signals] [tenant:entrylab] [req:0920bce8] Current XAU/USD price: 4629.19
+Jan 14 09:51:56  [2026-01-14 09:51:56] [INFO] [forex_signals] [tenant:entrylab] [req:bc986306] Checking 1 active signals...
+Jan 14 09:51:57  [2026-01-14 09:51:57] [INFO] [forex_signals] [tenant:entrylab] [req:bc986306] Current XAU/USD price: 4631.00
+Jan 14 09:52:52  10.244.6.25 - - [14/Jan/2026 09:52:52] code 404, message File not found
+Jan 14 09:52:52  10.244.6.25 - - [14/Jan/2026 09:52:52] "GET /robots.txt HTTP/1.1" 404 -
+Jan 14 09:52:53  10.244.7.234 - - [14/Jan/2026 09:52:53] "GET / HTTP/1.1" 302 -
+Jan 14 09:52:53  [2026-01-14 09:52:53] [WARNING] [clerk_auth] [req:55e029fe] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Jan 14 09:52:53  10.244.5.120 - - [14/Jan/2026 09:52:53] "GET /admin HTTP/1.1" 302 -
+Jan 14 09:52:54  10.244.4.179 - - [14/Jan/2026 09:52:54] "GET /login HTTP/1.1" 200 -
+Jan 14 09:52:57  [2026-01-14 09:52:57] [INFO] [forex_signals] [tenant:entrylab] [req:7ea5d7e9] Checking 1 active signals...
+Jan 14 09:52:57  [2026-01-14 09:52:57] [INFO] [forex_signals] [tenant:entrylab] [req:7ea5d7e9] Current XAU/USD price: 4630.99
+Jan 14 09:53:57  [2026-01-14 09:53:57] [INFO] [forex_signals] [tenant:entrylab] [req:ceb34be3] Checking 1 active signals...
+Jan 14 09:53:58  [2026-01-14 09:53:58] [INFO] [forex_signals] [tenant:entrylab] [req:ceb34be3] Current XAU/USD price: 4629.72
+Jan 14 09:54:58  [2026-01-14 09:54:58] [INFO] [forex_signals] [tenant:entrylab] [req:f1a767d8] Checking 1 active signals...
+Jan 14 09:54:58  [2026-01-14 09:54:58] [INFO] [forex_signals] [tenant:entrylab] [req:f1a767d8] Current XAU/USD price: 4629.33
+Jan 14 09:55:59  [2026-01-14 09:55:59] [INFO] [forex_signals] [tenant:entrylab] [req:a1163119] Checking 1 active signals...
+Jan 14 09:55:59  [2026-01-14 09:55:59] [INFO] [forex_signals] [tenant:entrylab] [req:a1163119] Current XAU/USD price: 4629.38
+Jan 14 09:56:59  [2026-01-14 09:56:59] [INFO] [generator] [tenant:entrylab] [req:38dc0343] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 09:56:59  [2026-01-14 09:56:59] [INFO] [generator] [tenant:entrylab] [req:38dc0343] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 09:56:59  [2026-01-14 09:56:59] [INFO] [forex_signals] [tenant:entrylab] [req:a9c42865] Checking 1 active signals...
+Jan 14 09:56:59  [2026-01-14 09:56:59] [INFO] [forex_signals] [tenant:entrylab] [req:a9c42865] Current XAU/USD price: 4629.38
+Jan 14 09:58:00  [2026-01-14 09:58:00] [INFO] [forex_signals] [tenant:entrylab] [req:ce0e56ea] Checking 1 active signals...
+Jan 14 09:58:00  [2026-01-14 09:58:00] [INFO] [forex_signals] [tenant:entrylab] [req:ce0e56ea] Current XAU/USD price: 4629.18
+Jan 14 09:59:00  [2026-01-14 09:59:00] [INFO] [forex_signals] [tenant:entrylab] [req:25fd73f7] Checking 1 active signals...
+Jan 14 09:59:01  [2026-01-14 09:59:01] [INFO] [forex_signals] [tenant:entrylab] [req:25fd73f7] Current XAU/USD price: 4630.17
+Jan 14 10:00:01  [2026-01-14 10:00:01] [INFO] [forex_signals] [tenant:entrylab] [req:309a4e9a] Checking 1 active signals...
+Jan 14 10:00:01  [2026-01-14 10:00:01] [INFO] [forex_signals] [tenant:entrylab] [req:309a4e9a] Current XAU/USD price: 4630.17
+Jan 14 10:01:02  [2026-01-14 10:01:02] [INFO] [forex_signals] [tenant:entrylab] [req:421e99b9] Checking 1 active signals...
+Jan 14 10:01:02  [2026-01-14 10:01:02] [INFO] [forex_signals] [tenant:entrylab] [req:421e99b9] Current XAU/USD price: 4630.47
+Jan 14 10:02:02  [2026-01-14 10:02:02] [INFO] [forex_signals] [tenant:entrylab] [req:5f4b8cc4] Checking 1 active signals...
+Jan 14 10:02:03  [2026-01-14 10:02:03] [INFO] [forex_signals] [tenant:entrylab] [req:5f4b8cc4] Current XAU/USD price: 4630.23
+Jan 14 10:03:03  [2026-01-14 10:03:03] [INFO] [forex_signals] [tenant:entrylab] [req:19d65459] Checking 1 active signals...
+Jan 14 10:03:03  [2026-01-14 10:03:03] [INFO] [forex_signals] [tenant:entrylab] [req:19d65459] Current XAU/USD price: 4628.78
+Jan 14 10:04:04  [2026-01-14 10:04:04] [INFO] [forex_signals] [tenant:entrylab] [req:1602bec4] Checking 1 active signals...
+Jan 14 10:04:04  [2026-01-14 10:04:04] [INFO] [forex_signals] [tenant:entrylab] [req:1602bec4] Current XAU/USD price: 4630.07
+Jan 14 10:05:04  [2026-01-14 10:05:04] [INFO] [forex_signals] [tenant:entrylab] [req:670db346] Checking 1 active signals...
+Jan 14 10:05:05  [2026-01-14 10:05:05] [INFO] [forex_signals] [tenant:entrylab] [req:670db346] Current XAU/USD price: 4630.28
+Jan 14 10:06:05  [2026-01-14 10:06:05] [INFO] [forex_signals] [tenant:entrylab] [req:947c89c4] Checking 1 active signals...
+Jan 14 10:06:05  [2026-01-14 10:06:05] [INFO] [forex_signals] [tenant:entrylab] [req:947c89c4] Current XAU/USD price: 4630.19
+Jan 14 10:07:06  [2026-01-14 10:07:06] [INFO] [forex_signals] [tenant:entrylab] [req:e7cc8118] Checking 1 active signals...
+Jan 14 10:07:06  [2026-01-14 10:07:06] [INFO] [forex_signals] [tenant:entrylab] [req:e7cc8118] Current XAU/USD price: 4631.12
+Jan 14 10:08:06  [2026-01-14 10:08:06] [INFO] [forex_signals] [tenant:entrylab] [req:00c4dc08] Checking 1 active signals...
+Jan 14 10:08:06  [2026-01-14 10:08:06] [INFO] [forex_signals] [tenant:entrylab] [req:00c4dc08] Current XAU/USD price: 4631.85
+Jan 14 10:09:07  [2026-01-14 10:09:07] [INFO] [forex_signals] [tenant:entrylab] [req:073ab87a] Checking 1 active signals...
+Jan 14 10:09:07  [2026-01-14 10:09:07] [INFO] [forex_signals] [tenant:entrylab] [req:073ab87a] Current XAU/USD price: 4631.72
+Jan 14 10:10:07  [2026-01-14 10:10:07] [INFO] [forex_signals] [tenant:entrylab] [req:4773b96e] Checking 1 active signals...
+Jan 14 10:10:08  [2026-01-14 10:10:08] [INFO] [forex_signals] [tenant:entrylab] [req:4773b96e] Current XAU/USD price: 4630.34
+Jan 14 10:11:08  [2026-01-14 10:11:08] [INFO] [forex_signals] [tenant:entrylab] [req:c5860d8c] Checking 1 active signals...
+Jan 14 10:11:08  [2026-01-14 10:11:08] [INFO] [forex_signals] [tenant:entrylab] [req:c5860d8c] Current XAU/USD price: 4629.75
+Jan 14 10:12:08  [2026-01-14 10:12:08] [INFO] [generator] [tenant:entrylab] [req:0ac18e31] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 10:12:08  [2026-01-14 10:12:08] [INFO] [generator] [tenant:entrylab] [req:0ac18e31] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 10:12:08  [2026-01-14 10:12:08] [INFO] [forex_signals] [tenant:entrylab] [req:d3f1d609] Checking 1 active signals...
+Jan 14 10:12:09  [2026-01-14 10:12:09] [INFO] [forex_signals] [tenant:entrylab] [req:d3f1d609] Current XAU/USD price: 4629.10
+Jan 14 10:13:09  [2026-01-14 10:13:09] [INFO] [forex_signals] [tenant:entrylab] [req:77533cca] Checking 1 active signals...
+Jan 14 10:13:09  [2026-01-14 10:13:09] [INFO] [forex_signals] [tenant:entrylab] [req:77533cca] Current XAU/USD price: 4629.85
+Jan 14 10:14:10  [2026-01-14 10:14:10] [INFO] [forex_signals] [tenant:entrylab] [req:9377a619] Checking 1 active signals...
+Jan 14 10:14:10  [2026-01-14 10:14:10] [INFO] [forex_signals] [tenant:entrylab] [req:9377a619] Current XAU/USD price: 4630.53
+Jan 14 10:15:10  [2026-01-14 10:15:10] [INFO] [forex_signals] [tenant:entrylab] [req:b4c7f840] Checking 1 active signals...
+Jan 14 10:15:11  [2026-01-14 10:15:11] [INFO] [forex_signals] [tenant:entrylab] [req:b4c7f840] Current XAU/USD price: 4631.22
+Jan 14 10:16:11  [2026-01-14 10:16:11] [INFO] [forex_signals] [tenant:entrylab] [req:0ae140a6] Checking 1 active signals...
+Jan 14 10:16:11  [2026-01-14 10:16:11] [INFO] [forex_signals] [tenant:entrylab] [req:0ae140a6] Current XAU/USD price: 4630.50
+Jan 14 10:17:11  [2026-01-14 10:17:11] [INFO] [forex_signals] [tenant:entrylab] [req:fdb2bd84] Checking 1 active signals...
+Jan 14 10:17:12  [2026-01-14 10:17:12] [INFO] [forex_signals] [tenant:entrylab] [req:fdb2bd84] Current XAU/USD price: 4632.91
+Jan 14 10:18:12  [2026-01-14 10:18:12] [INFO] [forex_signals] [tenant:entrylab] [req:8aaacdbd] Checking 1 active signals...
+Jan 14 10:18:13  [2026-01-14 10:18:13] [INFO] [forex_signals] [tenant:entrylab] [req:8aaacdbd] Current XAU/USD price: 4633.83
+Jan 14 10:19:13  [2026-01-14 10:19:13] [INFO] [forex_signals] [tenant:entrylab] [req:96ccd65a] Checking 1 active signals...
+Jan 14 10:19:13  [2026-01-14 10:19:13] [INFO] [forex_signals] [tenant:entrylab] [req:96ccd65a] Current XAU/USD price: 4634.05
+Jan 14 10:20:14  [2026-01-14 10:20:14] [INFO] [forex_signals] [tenant:entrylab] [req:8a47510d] Checking 1 active signals...
+Jan 14 10:20:14  [2026-01-14 10:20:14] [INFO] [forex_signals] [tenant:entrylab] [req:8a47510d] Current XAU/USD price: 4634.10
+Jan 14 10:21:14  [2026-01-14 10:21:14] [INFO] [forex_signals] [tenant:entrylab] [req:47502146] Checking 1 active signals...
+Jan 14 10:21:14  [2026-01-14 10:21:14] [INFO] [forex_signals] [tenant:entrylab] [req:47502146] Current XAU/USD price: 4634.47
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [forex_signals] [tenant:entrylab] [req:e1662510] Checking 1 active signals...
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [forex_signals] [tenant:entrylab] [req:e1662510] Current XAU/USD price: 4634.91
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [bot_credentials] [tenant:entrylab] [req:2c962a87] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [telegram_sender] [tenant:entrylab] [req:2c962a87] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [telegram_sender] [tenant:entrylab] [req:2c962a87] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=427
+Jan 14 10:22:15  [2026-01-14 10:22:15] [INFO] [messenger] [tenant:entrylab] [req:2c962a87] Posted milestone: sl_60_warning
+Jan 14 10:23:15  [2026-01-14 10:23:15] [INFO] [forex_signals] [tenant:entrylab] [req:155f22d1] Checking 1 active signals...
+Jan 14 10:23:16  [2026-01-14 10:23:16] [INFO] [forex_signals] [tenant:entrylab] [req:155f22d1] Current XAU/USD price: 4634.34
+Jan 14 10:24:16  [2026-01-14 10:24:16] [INFO] [forex_signals] [tenant:entrylab] [req:332fd74e] Checking 1 active signals...
+Jan 14 10:24:16  [2026-01-14 10:24:16] [INFO] [forex_signals] [tenant:entrylab] [req:332fd74e] Current XAU/USD price: 4634.07
+Jan 14 10:25:17  [2026-01-14 10:25:17] [INFO] [forex_signals] [tenant:entrylab] [req:67bdd8cc] Checking 1 active signals...
+Jan 14 10:25:17  [2026-01-14 10:25:17] [INFO] [forex_signals] [tenant:entrylab] [req:67bdd8cc] Current XAU/USD price: 4634.82
+Jan 14 10:26:17  [2026-01-14 10:26:17] [INFO] [forex_signals] [tenant:entrylab] [req:41800ba7] Checking 1 active signals...
+Jan 14 10:26:17  [2026-01-14 10:26:17] [INFO] [forex_signals] [tenant:entrylab] [req:41800ba7] Current XAU/USD price: 4633.16
+Jan 14 10:27:18  [2026-01-14 10:27:18] [INFO] [generator] [tenant:entrylab] [req:0ddda252] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 10:27:18  [2026-01-14 10:27:18] [INFO] [generator] [tenant:entrylab] [req:0ddda252] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 10:27:18  [2026-01-14 10:27:18] [INFO] [forex_signals] [tenant:entrylab] [req:354c0e63] Checking 1 active signals...
+Jan 14 10:27:18  [2026-01-14 10:27:18] [INFO] [forex_signals] [tenant:entrylab] [req:354c0e63] Current XAU/USD price: 4634.96
+Jan 14 10:27:18  [2026-01-14 10:27:18] [INFO] [monitor] [tenant:entrylab] [req:c03e96b5] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:28:18  [2026-01-14 10:28:18] [INFO] [forex_signals] [tenant:entrylab] [req:fc18c75d] Checking 1 active signals...
+Jan 14 10:28:19  [2026-01-14 10:28:19] [INFO] [forex_signals] [tenant:entrylab] [req:fc18c75d] Current XAU/USD price: 4636.13
+Jan 14 10:28:19  [2026-01-14 10:28:19] [INFO] [monitor] [tenant:entrylab] [req:6d3f60c6] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:29:19  [2026-01-14 10:29:19] [INFO] [forex_signals] [tenant:entrylab] [req:e5ff5178] Checking 1 active signals...
+Jan 14 10:29:19  [2026-01-14 10:29:19] [INFO] [forex_signals] [tenant:entrylab] [req:e5ff5178] Current XAU/USD price: 4636.45
+Jan 14 10:29:19  [2026-01-14 10:29:19] [INFO] [monitor] [tenant:entrylab] [req:c4148d74] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:30:19  [2026-01-14 10:30:19] [INFO] [forex_signals] [tenant:entrylab] [req:78995619] Checking 1 active signals...
+Jan 14 10:30:20  [2026-01-14 10:30:20] [INFO] [forex_signals] [tenant:entrylab] [req:78995619] Current XAU/USD price: 4635.76
+Jan 14 10:30:20  [2026-01-14 10:30:20] [INFO] [monitor] [tenant:entrylab] [req:63089f7f] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:31:20  [2026-01-14 10:31:20] [INFO] [forex_signals] [tenant:entrylab] [req:721195b9] Checking 1 active signals...
+Jan 14 10:31:20  [2026-01-14 10:31:20] [INFO] [forex_signals] [tenant:entrylab] [req:721195b9] Current XAU/USD price: 4635.76
+Jan 14 10:31:21  [2026-01-14 10:31:21] [INFO] [monitor] [tenant:entrylab] [req:ff43976d] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:32:21  [2026-01-14 10:32:21] [INFO] [forex_signals] [tenant:entrylab] [req:97c12398] Checking 1 active signals...
+Jan 14 10:32:21  [2026-01-14 10:32:21] [INFO] [forex_signals] [tenant:entrylab] [req:97c12398] Current XAU/USD price: 4633.40
+Jan 14 10:33:21  [2026-01-14 10:33:21] [INFO] [forex_signals] [tenant:entrylab] [req:1900b756] Checking 1 active signals...
+Jan 14 10:33:21  [2026-01-14 10:33:21] [INFO] [forex_signals] [tenant:entrylab] [req:1900b756] Current XAU/USD price: 4634.12
+Jan 14 10:34:22  [2026-01-14 10:34:22] [INFO] [forex_signals] [tenant:entrylab] [req:756c5a3d] Checking 1 active signals...
+Jan 14 10:34:22  [2026-01-14 10:34:22] [INFO] [forex_signals] [tenant:entrylab] [req:756c5a3d] Current XAU/USD price: 4634.09
+Jan 14 10:35:22  [2026-01-14 10:35:22] [INFO] [forex_signals] [tenant:entrylab] [req:73e8ec20] Checking 1 active signals...
+Jan 14 10:35:23  [2026-01-14 10:35:23] [INFO] [forex_signals] [tenant:entrylab] [req:73e8ec20] Current XAU/USD price: 4634.97
+Jan 14 10:35:23  [2026-01-14 10:35:23] [INFO] [monitor] [tenant:entrylab] [req:8c1e3c41] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:36:23  [2026-01-14 10:36:23] [INFO] [forex_signals] [tenant:entrylab] [req:b2e91bdd] Checking 1 active signals...
+Jan 14 10:36:23  [2026-01-14 10:36:23] [INFO] [forex_signals] [tenant:entrylab] [req:b2e91bdd] Current XAU/USD price: 4635.52
+Jan 14 10:36:24  [2026-01-14 10:36:24] [INFO] [monitor] [tenant:entrylab] [req:aba0e213] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:37:24  [2026-01-14 10:37:24] [INFO] [forex_signals] [tenant:entrylab] [req:4536ef0f] Checking 1 active signals...
+Jan 14 10:37:24  [2026-01-14 10:37:24] [INFO] [forex_signals] [tenant:entrylab] [req:4536ef0f] Current XAU/USD price: 4634.50
+Jan 14 10:38:24  [2026-01-14 10:38:24] [INFO] [forex_signals] [tenant:entrylab] [req:a949d7d2] Checking 1 active signals...
+Jan 14 10:38:24  [2026-01-14 10:38:24] [INFO] [forex_signals] [tenant:entrylab] [req:a949d7d2] Current XAU/USD price: 4634.50
+Jan 14 10:39:25  [2026-01-14 10:39:25] [INFO] [forex_signals] [tenant:entrylab] [req:8fdf55ad] Checking 1 active signals...
+Jan 14 10:39:25  [2026-01-14 10:39:25] [INFO] [forex_signals] [tenant:entrylab] [req:8fdf55ad] Current XAU/USD price: 4635.44
+Jan 14 10:39:25  [2026-01-14 10:39:25] [INFO] [monitor] [tenant:entrylab] [req:7d8034be] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:40:25  [2026-01-14 10:40:25] [INFO] [forex_signals] [tenant:entrylab] [req:012cd109] Checking 1 active signals...
+Jan 14 10:40:26  [2026-01-14 10:40:26] [INFO] [forex_signals] [tenant:entrylab] [req:012cd109] Current XAU/USD price: 4636.16
+Jan 14 10:40:26  [2026-01-14 10:40:26] [INFO] [monitor] [tenant:entrylab] [req:1c475504] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:41:26  [2026-01-14 10:41:26] [INFO] [forex_signals] [tenant:entrylab] [req:4202d855] Checking 1 active signals...
+Jan 14 10:41:26  [2026-01-14 10:41:26] [INFO] [forex_signals] [tenant:entrylab] [req:4202d855] Current XAU/USD price: 4636.41
+Jan 14 10:41:26  [2026-01-14 10:41:26] [INFO] [monitor] [tenant:entrylab] [req:8e95a4ea] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:42:26  [2026-01-14 10:42:26] [INFO] [generator] [tenant:entrylab] [req:6f8f7e8c] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 10:42:26  [2026-01-14 10:42:26] [INFO] [generator] [tenant:entrylab] [req:6f8f7e8c] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 10:42:26  [2026-01-14 10:42:26] [INFO] [forex_signals] [tenant:entrylab] [req:952b0cf9] Checking 1 active signals...
+Jan 14 10:42:27  [2026-01-14 10:42:27] [INFO] [forex_signals] [tenant:entrylab] [req:952b0cf9] Current XAU/USD price: 4636.88
+Jan 14 10:42:27  [2026-01-14 10:42:27] [INFO] [monitor] [tenant:entrylab] [req:068fcbc6] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:43:27  [2026-01-14 10:43:27] [INFO] [forex_signals] [tenant:entrylab] [req:2044bf6d] Checking 1 active signals...
+Jan 14 10:43:27  [2026-01-14 10:43:27] [INFO] [forex_signals] [tenant:entrylab] [req:2044bf6d] Current XAU/USD price: 4637.36
+Jan 14 10:43:28  [2026-01-14 10:43:28] [INFO] [monitor] [tenant:entrylab] [req:846d5f6a] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:44:28  [2026-01-14 10:44:28] [INFO] [forex_signals] [tenant:entrylab] [req:d7d203f2] Checking 1 active signals...
+Jan 14 10:44:28  [2026-01-14 10:44:28] [INFO] [forex_signals] [tenant:entrylab] [req:d7d203f2] Current XAU/USD price: 4637.18
+Jan 14 10:44:28  [2026-01-14 10:44:28] [INFO] [monitor] [tenant:entrylab] [req:b66b415e] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:45:28  [2026-01-14 10:45:28] [INFO] [forex_signals] [tenant:entrylab] [req:58401b33] Checking 1 active signals...
+Jan 14 10:45:29  [2026-01-14 10:45:29] [INFO] [forex_signals] [tenant:entrylab] [req:58401b33] Current XAU/USD price: 4637.18
+Jan 14 10:45:29  [2026-01-14 10:45:29] [INFO] [monitor] [tenant:entrylab] [req:fb585192] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:46:29  [2026-01-14 10:46:29] [INFO] [forex_signals] [tenant:entrylab] [req:d00303fe] Checking 1 active signals...
+Jan 14 10:46:29  [2026-01-14 10:46:29] [INFO] [forex_signals] [tenant:entrylab] [req:d00303fe] Current XAU/USD price: 4636.31
+Jan 14 10:46:29  [2026-01-14 10:46:29] [INFO] [monitor] [tenant:entrylab] [req:4cbda8fa] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:47:29  [2026-01-14 10:47:29] [INFO] [forex_signals] [tenant:entrylab] [req:d90c1a82] Checking 1 active signals...
+Jan 14 10:47:30  [2026-01-14 10:47:30] [INFO] [forex_signals] [tenant:entrylab] [req:d90c1a82] Current XAU/USD price: 4636.31
+Jan 14 10:47:30  [2026-01-14 10:47:30] [INFO] [monitor] [tenant:entrylab] [req:493d1f91] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:48:16  10.244.7.234 - - [14/Jan/2026 10:48:16] "GET / HTTP/1.1" 302 -
+Jan 14 10:48:16  10.244.6.25 - - [14/Jan/2026 10:48:16] code 404, message File not found
+Jan 14 10:48:16  10.244.6.25 - - [14/Jan/2026 10:48:16] "GET //wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:16  10.244.6.25 - - [14/Jan/2026 10:48:16] code 404, message File not found
+Jan 14 10:48:16  10.244.6.25 - - [14/Jan/2026 10:48:16] "GET //xmlrpc.php?rsd HTTP/1.1" 404 -
+Jan 14 10:48:16  10.244.7.234 - - [14/Jan/2026 10:48:16] "GET / HTTP/1.1" 302 -
+Jan 14 10:48:17  10.244.6.25 - - [14/Jan/2026 10:48:17] code 404, message File not found
+Jan 14 10:48:17  10.244.6.25 - - [14/Jan/2026 10:48:17] "GET //blog/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:17  10.244.5.120 - - [14/Jan/2026 10:48:17] code 404, message File not found
+Jan 14 10:48:17  10.244.5.120 - - [14/Jan/2026 10:48:17] "GET //web/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:18  10.244.5.120 - - [14/Jan/2026 10:48:18] code 404, message File not found
+Jan 14 10:48:18  10.244.5.120 - - [14/Jan/2026 10:48:18] "GET //wordpress/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:18  10.244.7.234 - - [14/Jan/2026 10:48:18] code 404, message File not found
+Jan 14 10:48:18  10.244.7.234 - - [14/Jan/2026 10:48:18] "GET //website/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:18  10.244.6.25 - - [14/Jan/2026 10:48:18] code 404, message File not found
+Jan 14 10:48:18  10.244.6.25 - - [14/Jan/2026 10:48:18] "GET //wp/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:18  10.244.5.120 - - [14/Jan/2026 10:48:18] code 404, message File not found
+Jan 14 10:48:18  10.244.5.120 - - [14/Jan/2026 10:48:18] "GET //news/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:19  10.244.6.25 - - [14/Jan/2026 10:48:19] code 404, message File not found
+Jan 14 10:48:19  10.244.6.25 - - [14/Jan/2026 10:48:19] "GET //2018/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:19  10.244.6.25 - - [14/Jan/2026 10:48:19] code 404, message File not found
+Jan 14 10:48:19  10.244.6.25 - - [14/Jan/2026 10:48:19] "GET //2019/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:19  10.244.7.234 - - [14/Jan/2026 10:48:19] code 404, message File not found
+Jan 14 10:48:19  10.244.7.234 - - [14/Jan/2026 10:48:19] "GET //shop/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:20  10.244.6.25 - - [14/Jan/2026 10:48:20] code 404, message File not found
+Jan 14 10:48:20  10.244.6.25 - - [14/Jan/2026 10:48:20] "GET //wp1/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:20  10.244.4.179 - - [14/Jan/2026 10:48:20] code 404, message File not found
+Jan 14 10:48:20  10.244.4.179 - - [14/Jan/2026 10:48:20] "GET //test/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:20  10.244.6.25 - - [14/Jan/2026 10:48:20] code 404, message File not found
+Jan 14 10:48:20  10.244.6.25 - - [14/Jan/2026 10:48:20] "GET //media/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:21  10.244.7.234 - - [14/Jan/2026 10:48:21] code 404, message File not found
+Jan 14 10:48:21  10.244.7.234 - - [14/Jan/2026 10:48:21] "GET //wp2/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:21  10.244.7.234 - - [14/Jan/2026 10:48:21] code 404, message File not found
+Jan 14 10:48:21  10.244.7.234 - - [14/Jan/2026 10:48:21] "GET //site/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:21  10.244.4.179 - - [14/Jan/2026 10:48:21] code 404, message File not found
+Jan 14 10:48:21  10.244.4.179 - - [14/Jan/2026 10:48:21] "GET //cms/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:21  10.244.4.179 - - [14/Jan/2026 10:48:21] code 404, message File not found
+Jan 14 10:48:21  10.244.4.179 - - [14/Jan/2026 10:48:21] "GET //sito/wp-includes/wlwmanifest.xml HTTP/1.1" 404 -
+Jan 14 10:48:30  [2026-01-14 10:48:30] [INFO] [forex_signals] [tenant:entrylab] [req:28759d9b] Checking 1 active signals...
+Jan 14 10:48:30  [2026-01-14 10:48:30] [INFO] [forex_signals] [tenant:entrylab] [req:28759d9b] Current XAU/USD price: 4634.92
+Jan 14 10:48:31  [2026-01-14 10:48:31] [INFO] [monitor] [tenant:entrylab] [req:0430f347] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:49:31  [2026-01-14 10:49:31] [INFO] [forex_signals] [tenant:entrylab] [req:893d4c51] Checking 1 active signals...
+Jan 14 10:49:31  [2026-01-14 10:49:31] [INFO] [forex_signals] [tenant:entrylab] [req:893d4c51] Current XAU/USD price: 4634.96
+Jan 14 10:49:31  [2026-01-14 10:49:31] [INFO] [monitor] [tenant:entrylab] [req:7253c17f] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:50:31  [2026-01-14 10:50:31] [INFO] [forex_signals] [tenant:entrylab] [req:d9c4ba74] Checking 1 active signals...
+Jan 14 10:50:32  [2026-01-14 10:50:32] [INFO] [forex_signals] [tenant:entrylab] [req:d9c4ba74] Current XAU/USD price: 4634.50
+Jan 14 10:51:32  [2026-01-14 10:51:32] [INFO] [forex_signals] [tenant:entrylab] [req:e65a6e32] Checking 1 active signals...
+Jan 14 10:51:32  [2026-01-14 10:51:32] [INFO] [forex_signals] [tenant:entrylab] [req:e65a6e32] Current XAU/USD price: 4634.50
+Jan 14 10:52:32  [2026-01-14 10:52:32] [INFO] [forex_signals] [tenant:entrylab] [req:0e12a490] Checking 1 active signals...
+Jan 14 10:52:33  [2026-01-14 10:52:33] [INFO] [forex_signals] [tenant:entrylab] [req:0e12a490] Current XAU/USD price: 4634.37
+Jan 14 10:53:33  [2026-01-14 10:53:33] [INFO] [forex_signals] [tenant:entrylab] [req:46a5adff] Checking 1 active signals...
+Jan 14 10:53:33  [2026-01-14 10:53:33] [INFO] [forex_signals] [tenant:entrylab] [req:46a5adff] Current XAU/USD price: 4635.29
+Jan 14 10:53:34  [2026-01-14 10:53:33] [INFO] [monitor] [tenant:entrylab] [req:3d92c3ea] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 10:54:34  [2026-01-14 10:54:34] [INFO] [forex_signals] [tenant:entrylab] [req:327a052c] Checking 1 active signals...
+Jan 14 10:54:34  [2026-01-14 10:54:34] [INFO] [forex_signals] [tenant:entrylab] [req:327a052c] Current XAU/USD price: 4634.53
+Jan 14 10:55:34  [2026-01-14 10:55:34] [INFO] [forex_signals] [tenant:entrylab] [req:409d0738] Checking 1 active signals...
+Jan 14 10:55:34  [2026-01-14 10:55:34] [INFO] [forex_signals] [tenant:entrylab] [req:409d0738] Current XAU/USD price: 4633.56
+Jan 14 10:56:35  [2026-01-14 10:56:35] [INFO] [forex_signals] [tenant:entrylab] [req:eeb1f5a3] Checking 1 active signals...
+Jan 14 10:56:35  [2026-01-14 10:56:35] [INFO] [forex_signals] [tenant:entrylab] [req:eeb1f5a3] Current XAU/USD price: 4632.90
+Jan 14 10:57:35  [2026-01-14 10:57:35] [INFO] [generator] [tenant:entrylab] [req:0c0a84e6] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 10:57:35  [2026-01-14 10:57:35] [INFO] [generator] [tenant:entrylab] [req:0c0a84e6] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 10:57:35  [2026-01-14 10:57:35] [INFO] [forex_signals] [tenant:entrylab] [req:068ad827] Checking 1 active signals...
+Jan 14 10:57:35  [2026-01-14 10:57:35] [INFO] [forex_signals] [tenant:entrylab] [req:068ad827] Current XAU/USD price: 4633.29
+Jan 14 10:58:36  [2026-01-14 10:58:36] [INFO] [forex_signals] [tenant:entrylab] [req:b91dfd09] Checking 1 active signals...
+Jan 14 10:58:36  [2026-01-14 10:58:36] [INFO] [forex_signals] [tenant:entrylab] [req:b91dfd09] Current XAU/USD price: 4632.57
+Jan 14 10:59:36  [2026-01-14 10:59:36] [INFO] [forex_signals] [tenant:entrylab] [req:a1288e9b] Checking 1 active signals...
+Jan 14 10:59:37  [2026-01-14 10:59:37] [INFO] [forex_signals] [tenant:entrylab] [req:a1288e9b] Current XAU/USD price: 4632.08
+Jan 14 11:00:37  [2026-01-14 11:00:37] [INFO] [forex_signals] [tenant:entrylab] [req:00541797] Checking 1 active signals...
+Jan 14 11:00:37  [2026-01-14 11:00:37] [INFO] [forex_signals] [tenant:entrylab] [req:00541797] Current XAU/USD price: 4632.61
+Jan 14 11:01:37  [2026-01-14 11:01:37] [INFO] [forex_signals] [tenant:entrylab] [req:cc14a792] Checking 1 active signals...
+Jan 14 11:01:38  [2026-01-14 11:01:38] [INFO] [forex_signals] [tenant:entrylab] [req:cc14a792] Current XAU/USD price: 4632.51
+Jan 14 11:02:38  [2026-01-14 11:02:38] [INFO] [forex_signals] [tenant:entrylab] [req:ae0c18c3] Checking 1 active signals...
+Jan 14 11:02:38  [2026-01-14 11:02:38] [INFO] [forex_signals] [tenant:entrylab] [req:ae0c18c3] Current XAU/USD price: 4631.57
+Jan 14 11:03:39  [2026-01-14 11:03:39] [INFO] [forex_signals] [tenant:entrylab] [req:0bae69e7] Checking 1 active signals...
+Jan 14 11:03:39  [2026-01-14 11:03:39] [INFO] [forex_signals] [tenant:entrylab] [req:0bae69e7] Current XAU/USD price: 4631.41
+Jan 14 11:04:39  [2026-01-14 11:04:39] [INFO] [forex_signals] [tenant:entrylab] [req:87d58850] Checking 1 active signals...
+Jan 14 11:04:39  [2026-01-14 11:04:39] [INFO] [forex_signals] [tenant:entrylab] [req:87d58850] Current XAU/USD price: 4632.04
+Jan 14 11:05:40  [2026-01-14 11:05:40] [INFO] [forex_signals] [tenant:entrylab] [req:9a572246] Checking 1 active signals...
+Jan 14 11:05:40  [2026-01-14 11:05:40] [INFO] [forex_signals] [tenant:entrylab] [req:9a572246] Current XAU/USD price: 4633.84
+Jan 14 11:06:40  [2026-01-14 11:06:40] [INFO] [forex_signals] [tenant:entrylab] [req:60295422] Checking 1 active signals...
+Jan 14 11:06:41  [2026-01-14 11:06:41] [INFO] [forex_signals] [tenant:entrylab] [req:60295422] Current XAU/USD price: 4636.01
+Jan 14 11:06:41  [2026-01-14 11:06:41] [INFO] [monitor] [tenant:entrylab] [req:2ec7b8a8] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:07:41  [2026-01-14 11:07:41] [INFO] [forex_signals] [tenant:entrylab] [req:41e3532f] Checking 1 active signals...
+Jan 14 11:07:41  [2026-01-14 11:07:41] [INFO] [forex_signals] [tenant:entrylab] [req:41e3532f] Current XAU/USD price: 4635.56
+Jan 14 11:07:41  [2026-01-14 11:07:41] [INFO] [monitor] [tenant:entrylab] [req:8ef75571] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:08:41  [2026-01-14 11:08:41] [INFO] [forex_signals] [tenant:entrylab] [req:e9a63f20] Checking 1 active signals...
+Jan 14 11:08:42  [2026-01-14 11:08:42] [INFO] [forex_signals] [tenant:entrylab] [req:e9a63f20] Current XAU/USD price: 4634.28
+Jan 14 11:09:42  [2026-01-14 11:09:42] [INFO] [forex_signals] [tenant:entrylab] [req:938e6463] Checking 1 active signals...
+Jan 14 11:09:42  [2026-01-14 11:09:42] [INFO] [forex_signals] [tenant:entrylab] [req:938e6463] Current XAU/USD price: 4634.42
+Jan 14 11:10:43  [2026-01-14 11:10:43] [INFO] [forex_signals] [tenant:entrylab] [req:e4cd8839] Checking 1 active signals...
+Jan 14 11:10:43  [2026-01-14 11:10:43] [INFO] [forex_signals] [tenant:entrylab] [req:e4cd8839] Current XAU/USD price: 4634.50
+Jan 14 11:11:43  [2026-01-14 11:11:43] [INFO] [forex_signals] [tenant:entrylab] [req:4d1ff703] Checking 1 active signals...
+Jan 14 11:11:43  [2026-01-14 11:11:43] [INFO] [forex_signals] [tenant:entrylab] [req:4d1ff703] Current XAU/USD price: 4635.12
+Jan 14 11:11:44  [2026-01-14 11:11:44] [INFO] [monitor] [tenant:entrylab] [req:e0e8cb9e] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [generator] [tenant:entrylab] [req:d497bb29] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [generator] [tenant:entrylab] [req:d497bb29] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [forex_signals] [tenant:entrylab] [req:9219c6b2] Checking 1 active signals...
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [forex_signals] [tenant:entrylab] [req:9219c6b2] Current XAU/USD price: 4635.66
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [monitor] [tenant:entrylab] [req:fc4e906b] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:12:44  [2026-01-14 11:12:44] [INFO] [forex_signals] [tenant:entrylab] [req:dbaa9092] Signal #136: Scheduling revalidation at 91 minutes
+Jan 14 11:12:45  [2026-01-14 11:12:45] [INFO] [forex_signals] [tenant:entrylab] [req:dbaa9092] Fetching current indicators for signal #136...
+Jan 14 11:12:49  [2026-01-14 11:12:49] [INFO] [forex_signals] [tenant:entrylab] [req:dbaa9092] Signal #136: Thesis is INTACT
+Jan 14 11:12:49  [2026-01-14 11:12:49] [INFO] [monitor] [tenant:entrylab] [req:dbaa9092] Signal #136 thesis still intact - no update needed
+Jan 14 11:13:49  [2026-01-14 11:13:49] [INFO] [forex_signals] [tenant:entrylab] [req:24e753bc] Checking 1 active signals...
+Jan 14 11:13:49  [2026-01-14 11:13:49] [INFO] [forex_signals] [tenant:entrylab] [req:24e753bc] Current XAU/USD price: 4636.16
+Jan 14 11:13:49  [2026-01-14 11:13:49] [INFO] [monitor] [tenant:entrylab] [req:1cf72384] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:14:49  [2026-01-14 11:14:49] [INFO] [forex_signals] [tenant:entrylab] [req:ba9b6417] Checking 1 active signals...
+Jan 14 11:14:49  [2026-01-14 11:14:49] [INFO] [forex_signals] [tenant:entrylab] [req:ba9b6417] Current XAU/USD price: 4635.67
+Jan 14 11:14:50  [2026-01-14 11:14:50] [INFO] [monitor] [tenant:entrylab] [req:c9524b16] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:15:50  [2026-01-14 11:15:50] [INFO] [forex_signals] [tenant:entrylab] [req:404b5ffd] Checking 1 active signals...
+Jan 14 11:15:50  [2026-01-14 11:15:50] [INFO] [forex_signals] [tenant:entrylab] [req:404b5ffd] Current XAU/USD price: 4635.37
+Jan 14 11:15:50  [2026-01-14 11:15:50] [INFO] [monitor] [tenant:entrylab] [req:5e833d14] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:16:50  [2026-01-14 11:16:50] [INFO] [forex_signals] [tenant:entrylab] [req:b96d13ae] Checking 1 active signals...
+Jan 14 11:16:51  [2026-01-14 11:16:51] [INFO] [forex_signals] [tenant:entrylab] [req:b96d13ae] Current XAU/USD price: 4635.63
+Jan 14 11:16:51  [2026-01-14 11:16:51] [INFO] [monitor] [tenant:entrylab] [req:e6ab3434] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:17:51  [2026-01-14 11:17:51] [INFO] [forex_signals] [tenant:entrylab] [req:203df8cb] Checking 1 active signals...
+Jan 14 11:17:51  [2026-01-14 11:17:51] [INFO] [forex_signals] [tenant:entrylab] [req:203df8cb] Current XAU/USD price: 4636.30
+Jan 14 11:17:51  [2026-01-14 11:17:51] [INFO] [monitor] [tenant:entrylab] [req:f41762c7] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:18:51  [2026-01-14 11:18:51] [INFO] [forex_signals] [tenant:entrylab] [req:31726636] Checking 1 active signals...
+Jan 14 11:18:52  [2026-01-14 11:18:52] [INFO] [forex_signals] [tenant:entrylab] [req:31726636] Current XAU/USD price: 4637.02
+Jan 14 11:18:52  [2026-01-14 11:18:52] [INFO] [monitor] [tenant:entrylab] [req:4ca24971] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:19:52  [2026-01-14 11:19:52] [INFO] [forex_signals] [tenant:entrylab] [req:a326c487] Checking 1 active signals...
+Jan 14 11:19:52  [2026-01-14 11:19:52] [INFO] [forex_signals] [tenant:entrylab] [req:a326c487] Current XAU/USD price: 4635.56
+Jan 14 11:19:53  [2026-01-14 11:19:53] [INFO] [monitor] [tenant:entrylab] [req:9747c183] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:20:53  [2026-01-14 11:20:53] [INFO] [forex_signals] [tenant:entrylab] [req:cdee6914] Checking 1 active signals...
+Jan 14 11:20:53  [2026-01-14 11:20:53] [INFO] [forex_signals] [tenant:entrylab] [req:cdee6914] Current XAU/USD price: 4635.12
+Jan 14 11:20:53  [2026-01-14 11:20:53] [INFO] [monitor] [tenant:entrylab] [req:e7f5c48d] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:21:53  [2026-01-14 11:21:53] [INFO] [forex_signals] [tenant:entrylab] [req:b4aa8123] Checking 1 active signals...
+Jan 14 11:21:53  [2026-01-14 11:21:53] [INFO] [forex_signals] [tenant:entrylab] [req:b4aa8123] Current XAU/USD price: 4634.61
+Jan 14 11:22:54  [2026-01-14 11:22:54] [INFO] [forex_signals] [tenant:entrylab] [req:2e989231] Checking 1 active signals...
+Jan 14 11:22:54  [2026-01-14 11:22:54] [INFO] [forex_signals] [tenant:entrylab] [req:2e989231] Current XAU/USD price: 4634.74
+Jan 14 11:23:54  [2026-01-14 11:23:54] [INFO] [forex_signals] [tenant:entrylab] [req:2f9ea374] Checking 1 active signals...
+Jan 14 11:23:55  [2026-01-14 11:23:55] [INFO] [forex_signals] [tenant:entrylab] [req:2f9ea374] Current XAU/USD price: 4634.17
+Jan 14 11:24:55  [2026-01-14 11:24:55] [INFO] [forex_signals] [tenant:entrylab] [req:e2a3c400] Checking 1 active signals...
+Jan 14 11:24:55  [2026-01-14 11:24:55] [INFO] [forex_signals] [tenant:entrylab] [req:e2a3c400] Current XAU/USD price: 4634.71
+Jan 14 11:25:55  [2026-01-14 11:25:55] [INFO] [forex_signals] [tenant:entrylab] [req:3b363b74] Checking 1 active signals...
+Jan 14 11:25:56  [2026-01-14 11:25:56] [INFO] [forex_signals] [tenant:entrylab] [req:3b363b74] Current XAU/USD price: 4635.07
+Jan 14 11:25:56  [2026-01-14 11:25:56] [INFO] [monitor] [tenant:entrylab] [req:d7b6498c] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:26:56  [2026-01-14 11:26:56] [INFO] [forex_signals] [tenant:entrylab] [req:0a98e829] Checking 1 active signals...
+Jan 14 11:26:56  [2026-01-14 11:26:56] [INFO] [forex_signals] [tenant:entrylab] [req:0a98e829] Current XAU/USD price: 4635.97
+Jan 14 11:26:57  [2026-01-14 11:26:57] [INFO] [monitor] [tenant:entrylab] [req:d71eaccb] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:27:57  [2026-01-14 11:27:57] [INFO] [generator] [tenant:entrylab] [req:51d353a9] ⏸️ Active signal #136 still pending - skipping new signal check
+Jan 14 11:27:57  [2026-01-14 11:27:57] [INFO] [generator] [tenant:entrylab] [req:51d353a9] Entry: $4631.0, TP: $4625.0, SL: $4637.5
+Jan 14 11:27:57  [2026-01-14 11:27:57] [INFO] [forex_signals] [tenant:entrylab] [req:d38dc415] Checking 1 active signals...
+Jan 14 11:27:57  [2026-01-14 11:27:57] [INFO] [forex_signals] [tenant:entrylab] [req:d38dc415] Current XAU/USD price: 4635.41
+Jan 14 11:27:57  [2026-01-14 11:27:57] [INFO] [monitor] [tenant:entrylab] [req:494204c9] ⏭️ Milestone sl_60 already claimed for signal #136
+Jan 14 11:28:57  [2026-01-14 11:28:57] [INFO] [forex_signals] [tenant:entrylab] [req:68ee2761] Checking 1 active signals...
+Jan 14 11:28:57  [2026-01-14 11:28:57] [INFO] [forex_signals] [tenant:entrylab] [req:68ee2761] Current XAU/USD price: 4634.42
+Jan 14 11:29:58  [2026-01-14 11:29:58] [INFO] [forex_signals] [tenant:entrylab] [req:4cd9959b] Checking 1 active signals...
+Jan 14 11:29:58  [2026-01-14 11:29:58] [INFO] [forex_signals] [tenant:entrylab] [req:4cd9959b] Current XAU/USD price: 4633.26
+Jan 14 11:30:58  [2026-01-14 11:30:58] [INFO] [forex_signals] [tenant:entrylab] [req:8b114e01] Checking 1 active signals...
+Jan 14 11:30:59  [2026-01-14 11:30:59] [INFO] [forex_signals] [tenant:entrylab] [req:8b114e01] Current XAU/USD price: 4631.30
+Jan 14 11:31:59  [2026-01-14 11:31:59] [INFO] [forex_signals] [tenant:entrylab] [req:54754676] Checking 1 active signals...
+Jan 14 11:31:59  [2026-01-14 11:31:59] [INFO] [forex_signals] [tenant:entrylab] [req:54754676] Current XAU/USD price: 4631.18
+Jan 14 11:32:59  [2026-01-14 11:32:59] [INFO] [forex_signals] [tenant:entrylab] [req:10ff52bd] Checking 1 active signals...
+Jan 14 11:33:00  [2026-01-14 11:33:00] [INFO] [forex_signals] [tenant:entrylab] [req:10ff52bd] Current XAU/USD price: 4632.00
+Jan 14 11:34:00  [2026-01-14 11:34:00] [INFO] [forex_signals] [tenant:entrylab] [req:61b75fee] Checking 1 active signals...
+Jan 14 11:34:00  [2026-01-14 11:34:00] [INFO] [forex_signals] [tenant:entrylab] [req:61b75fee] Current XAU/USD price: 4629.86
+Jan 14 11:35:01  [2026-01-14 11:35:01] [INFO] [forex_signals] [tenant:entrylab] [req:a9bfa3ad] Checking 1 active signals...
+Jan 14 11:35:01  [2026-01-14 11:35:01] [INFO] [forex_signals] [tenant:entrylab] [req:a9bfa3ad] Current XAU/USD price: 4629.23
+Jan 14 11:36:01  [2026-01-14 11:36:01] [INFO] [forex_signals] [tenant:entrylab] [req:41c0f314] Checking 1 active signals...
+Jan 14 11:36:02  [2026-01-14 11:36:02] [INFO] [forex_signals] [tenant:entrylab] [req:41c0f314] Current XAU/USD price: 4628.32
+Jan 14 11:36:02  [2026-01-14 11:36:02] [INFO] [monitor] [tenant:entrylab] [req:5e4bf37c] ⏭️ Milestone tp1_40 already claimed for signal #136
+Jan 14 11:37:02  [2026-01-14 11:37:02] [INFO] [forex_signals] [tenant:entrylab] [req:9d6cb725] Checking 1 active signals...
+Jan 14 11:37:02  [2026-01-14 11:37:02] [INFO] [forex_signals] [tenant:entrylab] [req:9d6cb725] Current XAU/USD price: 4628.77
+Jan 14 11:38:02  [2026-01-14 11:38:02] [INFO] [forex_signals] [tenant:entrylab] [req:a9aed14a] Checking 1 active signals...
+Jan 14 11:38:03  [2026-01-14 11:38:03] [INFO] [forex_signals] [tenant:entrylab] [req:a9aed14a] Current XAU/USD price: 4629.13
+Jan 14 11:39:03  [2026-01-14 11:39:03] [INFO] [forex_signals] [tenant:entrylab] [req:645cf775] Checking 1 active signals...
+Jan 14 11:39:03  [2026-01-14 11:39:03] [INFO] [forex_signals] [tenant:entrylab] [req:645cf775] Current XAU/USD price: 4629.01
