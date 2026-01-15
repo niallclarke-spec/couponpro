@@ -15,6 +15,7 @@ from core.runtime import require_tenant_runtime, TenantRuntime
 from core.alerts import notify_error
 from scheduler import SignalGenerator, SignalMonitor, Messenger
 from forex_ai import generate_daily_recap, generate_weekly_recap, generate_detailed_daily_recap
+from domains.crosspromo.service import build_morning_news_message
 
 logger = get_logger(__name__)
 
@@ -114,11 +115,14 @@ class ForexSchedulerRunner:
                 last_posted = db.get_last_recap_date('morning_briefing', tenant_id=self.tenant_id)
                 
                 if last_posted != current_date_str:
-                    logger.info("Generating morning briefing...")
+                    logger.info("Generating morning briefing with Alpha Vantage news...")
+                    
+                    news_message = build_morning_news_message(self.tenant_id)
+                    
                     bot = self.runtime.get_telegram_bot()
-                    await bot.post_morning_briefing()
+                    await bot.post_morning_briefing(ai_message=news_message)
                     db.set_last_recap_date('morning_briefing', current_date_str, tenant_id=self.tenant_id)
-                    logger.info("✅ Morning briefing posted")
+                    logger.info("✅ Morning briefing posted with news")
         
         except Exception as e:
             logger.error(f"❌ Error posting morning briefing: {e}")

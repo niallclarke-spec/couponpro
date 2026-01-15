@@ -3,6 +3,7 @@ Cross Promo Service - Core business logic for cross-promoting VIP signals.
 Handles news fetching, message building, and job execution.
 """
 import os
+import re
 import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
@@ -16,8 +17,66 @@ from db import get_crosspromo_status, update_crosspromo_status, get_today_crossp
 
 logger = get_logger(__name__)
 
-XAU_KEYWORDS = ['gold', 'xau', 'bullion', 'usd', 'dollar', 'fed', 'rates', 
-                'inflation', 'cpi', 'jobs', 'nfp', 'fomc', 'powell', 'treasury']
+XAU_PRIMARY_KEYWORDS = ['gold', 'xau', 'bullion', 'precious metal']
+XAU_SECONDARY_KEYWORDS = ['usd', 'dollar', 'fed', 'rates', 'inflation', 'cpi', 
+                          'jobs', 'nfp', 'fomc', 'powell', 'treasury', 'yields']
+
+
+KNOWN_NEWS_SOURCES = [
+    'Investing.com', 'Reuters', 'Bloomberg', 'CNBC', 'MarketWatch', 
+    'Benzinga', 'Yahoo Finance', "Barron's", 'The Wall Street Journal', 
+    'WSJ', 'Financial Times', 'FT', 'Kitco', 'DailyFX', 'FXStreet', 
+    'ForexLive', 'AP News', 'AFP', 'Dow Jones', 'Nasdaq', 'Morningstar',
+    'Seeking Alpha', 'The Motley Fool', 'Business Insider', 'CNBC Pro'
+]
+
+
+def sanitize_news_title(title: str) -> str:
+    """
+    Strip source attributions and URLs from Alpha Vantage news titles.
+    
+    Uses conservative patterns to avoid breaking legitimate content:
+    - Only strips trailing " - Source", " | Source", " By Source" patterns
+    - Only removes known news sources, not arbitrary text
+    - Falls back to original if sanitization yields empty result
+    
+    Examples:
+        "SPY Sell Off By Investing.com" -> "SPY Sell Off"
+        "Gold rises - Reuters" -> "Gold rises"
+        "Fed hikes | Bloomberg" -> "Fed hikes"
+        "News here https://example.com more" -> "News here more"
+        "Gold By The Numbers" -> "Gold By The Numbers" (preserved - not a source)
+    """
+    if not title:
+        return ""
+    
+    original = title.strip()
+    
+    cleaned = re.sub(r'https?://\S+', '', title)
+    
+    sources_pattern = '|'.join(re.escape(s) for s in KNOWN_NEWS_SOURCES)
+    cleaned = re.sub(
+        rf'\s*[-–—|]\s*(?:[Bb]y\s+)?({sources_pattern})\s*$',
+        '', 
+        cleaned, 
+        flags=re.IGNORECASE
+    )
+    cleaned = re.sub(
+        rf'\s+[Bb]y\s+({sources_pattern})\s*$',
+        '', 
+        cleaned, 
+        flags=re.IGNORECASE
+    )
+    
+    cleaned = re.sub(r'\s*[-–—|]\s*$', '', cleaned)
+    
+    cleaned = cleaned.strip()
+    
+    if not cleaned:
+        logger.warning(f"Sanitization yielded empty title, using original: {original[:50]}")
+        return original
+    
+    return cleaned
 
 
 def is_weekday(tenant_timezone: str = 'UTC') -> bool:
@@ -35,6 +94,11 @@ def fetch_xau_news() -> List[Dict[str, Any]]:
     """
     Fetch latest XAU/USD relevant news from Alpha Vantage.
     Returns list of news items, each with title, sentiment, emoji.
+    
+    Uses weighted keyword matching:
+    - Primary keywords (gold, xau, bullion) are prioritized
+    - Secondary keywords (fed, inflation, etc.) are fallback
+    - Checks both title and summary for better relevance
     """
     api_key = os.environ.get('ALPHA_NEWS_API')
     
@@ -43,34 +107,59 @@ def fetch_xau_news() -> List[Dict[str, Any]]:
         return []
     
     try:
-        url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=economy_monetary&limit=10&apikey={api_key}'
+        url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=forex,commodities,economy_monetary&limit=15&apikey={api_key}'
         response = requests.get(url, timeout=10)
         data = response.json()
         
-        news_items = []
+        primary_matches = []
+        secondary_matches = []
         
         if 'feed' in data:
             for article in data['feed']:
-                title = article.get('title', '').lower()
-                if any(kw in title for kw in XAU_KEYWORDS):
-                    sentiment = article.get('overall_sentiment_label', 'Neutral')
-                    if 'Bullish' in sentiment:
-                        emoji = '📈'
-                    elif 'Bearish' in sentiment:
-                        emoji = '📉'
-                    else:
-                        emoji = '➡️'
-                    
-                    news_items.append({
-                        'title': article.get('title', '')[:80],
-                        'sentiment': sentiment,
-                        'emoji': emoji
-                    })
-                    
-                    if len(news_items) >= 2:
-                        break
+                title = article.get('title', '')
+                summary = article.get('summary', '')
+                searchable = (title + ' ' + summary).lower()
+                
+                has_primary = any(kw in searchable for kw in XAU_PRIMARY_KEYWORDS)
+                has_secondary = any(kw in searchable for kw in XAU_SECONDARY_KEYWORDS)
+                
+                if not has_primary and not has_secondary:
+                    continue
+                
+                sentiment = article.get('overall_sentiment_label', 'Neutral')
+                if 'Bullish' in sentiment:
+                    emoji = '📈'
+                elif 'Bearish' in sentiment:
+                    emoji = '📉'
+                else:
+                    emoji = '➡️'
+                
+                clean_title = sanitize_news_title(title)
+                if len(clean_title) > 80:
+                    clean_title = clean_title[:77] + '...'
+                
+                item = {
+                    'title': clean_title,
+                    'sentiment': sentiment,
+                    'emoji': emoji
+                }
+                
+                if has_primary:
+                    if len(primary_matches) < 2:
+                        primary_matches.append(item)
+                else:
+                    if len(secondary_matches) < 2:
+                        secondary_matches.append(item)
+                
+                if len(primary_matches) >= 2:
+                    break
         
-        return news_items
+        if primary_matches:
+            return primary_matches[:2]
+        elif secondary_matches:
+            return secondary_matches[:2]
+        else:
+            return []
         
     except Exception as e:
         logger.exception(f"Error fetching news from Alpha Vantage: {e}")
