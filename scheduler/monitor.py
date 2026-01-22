@@ -100,7 +100,8 @@ class SignalMonitor:
         
         elif event == 'tp1_hit':
             remaining = update.get('remaining', 0)
-            tp1_message_id = await self.messenger.send_tp1_celebration(signal_type, pips, remaining)
+            posted_at = matching_signal.get('posted_at') if matching_signal else None
+            tp1_message_id = await self.messenger.send_tp1_celebration(signal_type, pips, remaining, posted_at)
             
             if remaining > 0 and matching_signal:
                 tp1_price = float(matching_signal.get('take_profit', 0))
@@ -140,13 +141,15 @@ class SignalMonitor:
             remaining = update.get('remaining', 0)
             tp1_price = matching_signal.get('take_profit', 0) if matching_signal else 0
             tp2_price = matching_signal.get('take_profit_2', 0) if matching_signal else 0
-            await self.messenger.send_tp2_celebration(signal_type, pips, float(tp1_price), remaining)
+            posted_at = matching_signal.get('posted_at') if matching_signal else None
+            await self.messenger.send_tp2_celebration(signal_type, pips, float(tp1_price), remaining, posted_at)
             if remaining > 0 and tp2_price:
                 db.update_effective_sl(signal_id, float(tp2_price), tenant_id=self.tenant_id)
                 logger.info(f"🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
         
         elif event == 'tp3_hit':
-            tp3_message_id = await self.messenger.send_tp3_celebration(signal_type, pips)
+            posted_at = matching_signal.get('posted_at') if matching_signal else None
+            tp3_message_id = await self.messenger.send_tp3_celebration(signal_type, pips, posted_at)
             # DB already closed atomically - just log
             logger.info(f"✅ Signal #{signal_id} completed - all TPs hit!")
             

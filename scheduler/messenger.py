@@ -81,15 +81,21 @@ class Messenger:
             logger.exception("Failed to post signal to Telegram")
             return None
     
-    async def send_tp1_celebration(self, signal_type: str, pips: float, remaining: float) -> Optional[int]:
+    async def send_tp1_celebration(self, signal_type: str, pips: float, remaining: float, posted_at: Optional[str] = None) -> Optional[int]:
         """
         Send TP1 hit celebration message.
+        
+        Args:
+            signal_type: BUY or SELL
+            pips: Pips secured at TP1
+            remaining: Percentage still riding to TP2
+            posted_at: ISO timestamp of original signal for elapsed time display
         
         Returns:
             Telegram message_id if successful, None otherwise
         """
         try:
-            message = self.milestone_tracker.generate_tp1_celebration(signal_type, pips, remaining)
+            message = self.milestone_tracker.generate_tp1_celebration(signal_type, pips, remaining, posted_at)
             result = await self._send_channel_message(message)
             
             if result.success:
@@ -102,10 +108,18 @@ class Messenger:
             logger.exception("Failed to send TP1 celebration")
             return None
     
-    async def send_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining: float) -> bool:
-        """Send TP2 hit celebration message."""
+    async def send_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining: float, posted_at: Optional[str] = None) -> bool:
+        """Send TP2 hit celebration message.
+        
+        Args:
+            signal_type: BUY or SELL
+            pips: Pips secured at TP2
+            tp1_price: TP1 price for SL adjustment advice
+            remaining: Percentage still riding to TP3
+            posted_at: ISO timestamp of original signal for elapsed time display
+        """
         try:
-            message = self.milestone_tracker.generate_tp2_celebration(signal_type, pips, tp1_price, remaining)
+            message = self.milestone_tracker.generate_tp2_celebration(signal_type, pips, tp1_price, remaining, posted_at)
             result = await self._send_channel_message(message)
             
             if result.success:
@@ -118,15 +132,20 @@ class Messenger:
             logger.exception("Failed to send TP2 celebration")
             return False
     
-    async def send_tp3_celebration(self, signal_type: str, pips: float) -> Optional[int]:
+    async def send_tp3_celebration(self, signal_type: str, pips: float, posted_at: Optional[str] = None) -> Optional[int]:
         """
         Send TP3 hit (full exit) celebration message.
+        
+        Args:
+            signal_type: BUY or SELL
+            pips: Total pips secured
+            posted_at: ISO timestamp of original signal for elapsed time display
         
         Returns:
             Telegram message_id if successful, None otherwise
         """
         try:
-            message = self.milestone_tracker.generate_tp3_celebration(signal_type, pips)
+            message = self.milestone_tracker.generate_tp3_celebration(signal_type, pips, posted_at)
             result = await self._send_channel_message(message)
             
             if result.success:

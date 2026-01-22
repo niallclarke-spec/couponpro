@@ -113,7 +113,12 @@ class ForexTelegramBot:
                 indicator_parts.append(f"ATR: {atr:.2f}")
             indicator_line = f"\n📊 {' | '.join(indicator_parts)}" if indicator_parts else ""
             
+            # Capture signal time for transparency
+            signal_time = datetime.utcnow().strftime('%H:%M')
+            
             message = f"""{emoji} <b>{signal_type} SIGNAL</b> {emoji}
+
+⏰ <b>LIVE ENTRY NOW @ {signal_time} UTC</b>
 
 <b>Pair:</b> {pair}
 <b>Timeframe:</b> {timeframe}

@@ -28,6 +28,53 @@ from core.logging import get_logger
 
 logger = get_logger(__name__)
 
+
+def format_elapsed_time(posted_at_iso: Optional[str]) -> Optional[str]:
+    """
+    Format elapsed time from signal posting to now.
+    
+    Args:
+        posted_at_iso: ISO format timestamp string (e.g., '2025-01-22T09:33:00')
+    
+    Returns:
+        Formatted string like "47 minutes", "2h 15m", "1d 4h 32m", or None if invalid
+    """
+    if not posted_at_iso:
+        return None
+    
+    try:
+        # Parse ISO format (handles both with and without microseconds)
+        posted_at = datetime.fromisoformat(posted_at_iso.replace('Z', '+00:00'))
+        
+        # Remove timezone info for comparison with utcnow()
+        if posted_at.tzinfo is not None:
+            posted_at = posted_at.replace(tzinfo=None)
+        
+        delta = datetime.utcnow() - posted_at
+        total_minutes = int(delta.total_seconds() / 60)
+        
+        if total_minutes < 1:
+            return "under 1 minute"
+        elif total_minutes < 60:
+            return f"{total_minutes} minute{'s' if total_minutes != 1 else ''}"
+        elif total_minutes < 1440:  # < 24 hours
+            hours = total_minutes // 60
+            mins = total_minutes % 60
+            if mins == 0:
+                return f"{hours}h"
+            return f"{hours}h {mins}m"
+        else:  # >= 24 hours
+            days = total_minutes // 1440
+            remaining_minutes = total_minutes % 1440
+            hours = remaining_minutes // 60
+            mins = remaining_minutes % 60
+            if mins == 0:
+                return f"{days}d {hours}h"
+            return f"{days}d {hours}h {mins}m"
+    except Exception as e:
+        logger.warning(f"Failed to parse posted_at timestamp '{posted_at_iso}': {e}")
+        return None
+
 COOLDOWN_SECONDS = 90
 
 
@@ -266,12 +313,15 @@ Levels holding. Stay patient.
 
 Risk is managed. 🔒"""
     
-    def generate_tp1_celebration(self, signal_type: str, pips: float, remaining_pct: int = 0) -> str:
+    def generate_tp1_celebration(self, signal_type: str, pips: float, remaining_pct: int = 0, posted_at: Optional[str] = None) -> str:
         """Generate TP1 hit celebration message"""
+        elapsed = format_elapsed_time(posted_at)
+        elapsed_line = f"\n⏱️ Hit in {elapsed}" if elapsed else ""
+        
         if remaining_pct > 0:
             return f"""🎉 <b>TP1 HIT!</b>
 
-+{pips:.2f} pips secured! 💰
++{pips:.2f} pips secured! 💰{elapsed_line}
 
 🔄 {remaining_pct}% still riding to TP2
 
@@ -279,18 +329,21 @@ Well played! 🎯"""
         else:
             return f"""🎉 <b>TARGET HIT!</b>
 
-+{pips:.2f} pips profit! 💰
++{pips:.2f} pips profit! 💰{elapsed_line}
 
 Trade closed successfully.
 
 Great execution! 🏆"""
     
-    def generate_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining_pct: int = 0) -> str:
+    def generate_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining_pct: int = 0, posted_at: Optional[str] = None) -> str:
         """Generate TP2 hit celebration message with SL advice"""
+        elapsed = format_elapsed_time(posted_at)
+        elapsed_line = f"\n⏱️ Hit in {elapsed}" if elapsed else ""
+        
         if remaining_pct > 0:
             return f"""🎉🎉 <b>TP2 HIT!</b>
 
-+{pips:.2f} pips on this leg! 💰💰
++{pips:.2f} pips on this leg! 💰💰{elapsed_line}
 
 🔒 Move SL to TP1 @ ${tp1_price:.2f}
 
@@ -298,15 +351,18 @@ Great execution! 🏆"""
         else:
             return f"""🎉🎉 <b>TP2 HIT - TRADE CLOSED!</b>
 
-+{pips:.2f} pips total profit! 💰💰
++{pips:.2f} pips total profit! 💰💰{elapsed_line}
 
 Excellent execution! 🏆"""
     
-    def generate_tp3_celebration(self, signal_type: str, pips: float) -> str:
+    def generate_tp3_celebration(self, signal_type: str, pips: float, posted_at: Optional[str] = None) -> str:
         """Generate TP3 hit big celebration message"""
+        elapsed = format_elapsed_time(posted_at)
+        elapsed_line = f"\n⏱️ Completed in {elapsed}" if elapsed else ""
+        
         return f"""🎯🎉🎉🎉 <b>TP3 HIT - FULL TARGET!</b> 🎉🎉🎉🎯
 
-💰💰💰 +{pips:.2f} pips profit! 💰💰💰
+💰💰💰 +{pips:.2f} pips profit! 💰💰💰{elapsed_line}
 
 MAXIMUM GAINS SECURED! 🏆
 
