@@ -178,11 +178,7 @@ def build_morning_news_message(tenant_id: str) -> str:
     else:
         summary = "Markets are quiet ahead of the trading session."
     
-    message = f"""☀️ Good morning, traders!
-
-{summary}"""
-    
-    return message
+    return summary
 
 
 def build_vip_soon_message() -> str:

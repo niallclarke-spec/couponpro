@@ -66,7 +66,7 @@ class TestMorningMessage:
         with patch('domains.crosspromo.service.fetch_xau_news', return_value=[]):
             message = build_morning_news_message('test-tenant')
             
-            assert 'Good morning' in message
+            # Returns just the summary (header added by forex_bot.py)
             assert 'Markets are quiet' in message
     
     def test_build_morning_message_with_news(self):
@@ -82,7 +82,7 @@ class TestMorningMessage:
         with patch('domains.crosspromo.service.fetch_xau_news', return_value=mock_news):
             message = build_morning_news_message('test-tenant')
             
-            assert 'Good morning' in message
+            # Returns just the summary with headlines (header added by forex_bot.py)
             assert 'Fed rates decision' in message
             assert 'Gold prices surge' in message
 
