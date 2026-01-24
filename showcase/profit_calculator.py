@@ -5,6 +5,9 @@ Handles pips calculation and profit computation with commission
 for XAU/USD trading. This ensures consistency between celebration
 messages and showcase images.
 
+NOTE: All pip calculations now use the centralized pip_calculator module.
+See core/pip_calculator.py for the authoritative pip value definition.
+
 Constants:
 - COMMISSION_PER_LOT: $7 round-turn commission
 - USD_PER_PIP: $1 profit per pip per lot for XAU/USD
@@ -14,9 +17,15 @@ Constants:
 from dataclasses import dataclass
 from typing import List, Optional
 
+from core.pip_calculator import (
+    calculate_pips,
+    COMMISSION_PER_LOT,
+    USD_PER_PIP_PER_LOT as USD_PER_PIP,
+    PIP_VALUE,
+    PIPS_MULTIPLIER
+)
 
-COMMISSION_PER_LOT = 7.0
-USD_PER_PIP = 1.0
+
 DEFAULT_LOT_SIZE = 1.0
 
 
@@ -37,25 +46,6 @@ class TradeProfit:
         return f"{self.net_profit:,.2f}"
 
 
-def calculate_pips(entry_price: float, exit_price: float, direction: str) -> float:
-    """
-    Calculate pips for XAU/USD trade.
-    
-    Formula: (price_change) × 100
-    For XAU/USD: $0.01 = 1 pip
-    
-    Args:
-        entry_price: Entry price
-        exit_price: Exit/TP price  
-        direction: "BUY" or "SELL"
-        
-    Returns:
-        Pips (positive for profit, negative for loss)
-    """
-    if direction.upper() == "BUY":
-        return round((exit_price - entry_price) * 100, 1)
-    else:
-        return round((entry_price - exit_price) * 100, 1)
 
 
 def calculate_profit(
@@ -68,8 +58,8 @@ def calculate_profit(
     
     For XAU/USD:
     - 1 lot = 100 oz
-    - 1 pip = $0.01
-    - Profit per pip = 100 oz × $0.01 = $1.00 per lot
+    - 1 pip = $0.10
+    - Profit per pip = 100 oz × $0.10 / 10 = $1.00 per lot
     
     Args:
         pips: Number of pips
