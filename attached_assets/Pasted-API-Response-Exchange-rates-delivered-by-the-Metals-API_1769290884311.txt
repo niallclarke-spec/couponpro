@@ -1,0 +1,1257 @@
+API Response
+Exchange rates delivered by the Metals-API API are by default relative to USD. All data is returned in standard JSON format and can be parsed easily using any programming language.
+
+When fetching metal rates with USD selected as the base currency (utilizing the 'base' parameter, defaulting to USD if not specified), it is necessary to apply 1/value to the API response.
+
+For instance, to ascertain the gold rate in USD from the API response value, execute 1/0.0004831705, yielding 2069.6627795 USD.
+
+Furthermore, when USD serves as the base, the API response will include the USD Price without requiring additional conversion. This can be identified, for example, as USDXAU. (ONLY APPLIES FOR LATEST ENDPOINT).
+
+Additionally, it's important to note that if you opt for a different base currency, such as EUR, the 1/value division is not necessary. The price is already converted.
+
+{
+    "success": true,
+    "timestamp": 1519296206,
+    "base": "EUR",
+    "date": "2018-09-10",
+    "rates": {
+        "AUD": 1.566015,
+        "CAD": 1.560132,
+        "CHF": 1.154727,
+        "CNY": 7.827874,
+        "GBP": 0.882047,
+        "JPY": 132.360679,
+        "USD": 1.23396,
+        [...]
+    }
+}      
+As illustrated above, the API's response - when queried for real-time exchange rates - always contains a timestamp object containing a standard UNIX time stamp indicating the time the given exchange rate data was collected, a base object containing the three-letter currency code or metal code of the base currency, a date object containing the date the given exchange rate data was collected, and a rates object containing the actual exchange rate data.
+
+Further below, in the Endpoints section, the API response structure will be discussed in detail.
+
+Available Endpoints
+The Metals-API API comes with 14 API endpoints, each providing a different functionality. Please note that depending on your subscription plan, certain API endpoints may or may not be available.
+
+Supported Symbols Endpoint
+Returns all available currencies and metals supported by the API.
+Latest rates endpoint
+Returns real-time exchange rate data for all available or a specific set of currencies. (The number of symbols per API request depends on the acquired plan).
+Convert endpoint
+Allows for conversion of any amount from one currency to another.
+Historical rates endpoint
+Returns historical exchange rate data for a specific set of currencies. (The number of symbols per API request depends on the acquired plan).
+Bid And Ask Endpoint
+Returns real-time Bid and Ask prices for Gold, Silver, Palladium, and Platinum. (The number of symbols per API request depends on the acquired plan).
+Time-Series data endpoint
+Returns daily historical exchange rate data between two specified dates for all available or a specific set of currencies. (The date limits per API request depend on the acquired plan).
+Fluctuation data endpoint
+Returns fluctuation data between two specified dates for all available or a specific set of currencies. (The date limits per API request depend on the acquired plan).
+Carat data endpoint
+Returns gold by carat data for a specific base currency.
+Lowest/Highest price endpoint
+Return the lowest and highest price
+Metals Price India
+Returns the latest gold price in India using the Metals API's dedicated Gold Price India endpoint.
+Historical rates LBMA endpoint
+Returns historical exchange rate data for a specific set of currencies.
+Open/High/Low/Close price endpoint
+Return the open, high, low, and close price
+News endpoint
+Return the latest news
+Historical LME endpoint
+Returns historical exchange rate data for a specific set of currencies.
+SSL Connection
+All paid subscription plans available on Metals-API come with 256-bit SSL encryption. To connect to the API via SSL, simply use the https protocol instead of standard http.
+
+JSONP Callbacks
+The Metals-API API comes with support for JSONP Callbacks. This feature enables you to specify a function name, pass it into the API's callback GET parameter and cause the API to return your requested API response wrapped inside that function.
+
+Example Call:
+
+https://metals-api.com/api/latest?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&callback=MY_FUNCTION
+Copy
+In the example call above we are requesting the API to use the callback name MY_FUNCTION.
+
+Example Response: Your API response will be wrapped inside your preferred callback function.
+
+({
+    "success": true,
+    "timestamp": 1519296206,
+    "base": "EUR",
+    "date": "2018-09-10",
+    "rates": {
+        "AUD": 1.566015,
+        "CAD": 1.560132,
+        "CHF": 1.154727,
+        "CNY": 7.827874,
+        "GBP": 0.882047,
+        "JPY": 132.360679,
+        "USD": 1.23396,
+        [...]
+    }
+})  
+Access-Control / CORS
+Metals-API also supports Cross-Origin Resource Sharing (CORS) and Access-Control Headers. This will enable you to use the Metals-API API via Cross-Origin HTTP Requests.
+
+Learn more about CORS »
+
+HTTP ETags
+HTTP ETags are a way of reducing the load on your back-end by requesting new Metals-API data only if rates have changed since the last API response.
+
+What are ETags?
+
+An ETag is a part of the HTTP protocol and one of the several mechanisms used for cache validation. The ETag is an identifier assigned to a data resource in a server, and if that resource is ever updated at the server, the ETag is changed.
+
+Whenever a resource is requested (via its URL), the data and ETag are retrieved and stored in the Web cache, and the ETag is sent along with subsequent requests. If the ETag at the server has not changed, a "Not Modified" message is returned, and the cached data is used. (Definition by pcmag.com)
+
+ETags - Quickstart Guide
+Step 1
+Your initial request to the Metals-API API will create an ETag object containing a unique ETag key and a Date object containing the exact date and time at which the data was last modified. This data must be cached along with the entire API response in order for ETags to work.
+
+ETag: "202567a75aef2e66a3ebf2366bff048f"  
+Date: Mon, 12 Apr 2018 11:30:01 GMT
+Step 2
+Once you make another API request, make sure to include the If-None-Match HTTP header and set it to your previously generated ETag value. Moreover, you will need to add the If-Modified-Since HTTP header to your API request containing the date and time data from your last request. Additionally, you can include other optional headers for enhanced functionality:
+
+If-None-Match: "1872ade88f3013edeb33decd74a4f947"  
+If-Modified-Since: Fri, 10 Apr 2015 12:10:04 GMT
+Cache-Control: max-age=3600
+Accept-Encoding: gzip, deflate
+User-Agent: YourApp/1.0
+Step 3
+Depending on whether or not your result set has updated since your last API request, the API will return either:
+
+the results from your initial API request along with a 304 – Not Modified HTTP header indicating that no change has occured. In this case, the size of the API response will be as small as 0.2kb;
+or new results with an entirely new set of ETag and Date objects indicating that new data has been accessed. In this case, the size of your API response will be normal.
+Potential Errors
+Whenever a requested resource is not available or an API call fails for another reason, a JSON error is returned. Errors always come with an error code and a description.
+
+Example Error: The following error is returned if your monthly API request volume has been exceeded.
+
+{
+    "success": false,
+    "error": {
+        "code": 429,
+        "info": "Your monthly API request volume has been reached. Please upgrade your plan."
+    }
+}      
+Other Errors:
+
+Error Code	Description
+400	Bad Request - Invalid parameters or malformed request.
+401	Unauthorized - Invalid or missing API key.
+403	Forbidden - Account inactive or insufficient permissions.
+404	Not Found - The requested resource or endpoint does not exist.
+422	Unprocessable Entity - Invalid request parameters or data format.
+429	Too Many Requests - Rate limit exceeded or monthly quota reached.
+500	Internal Server Error - Server-side error occurred.
+503	Service Unavailable - API temporarily unavailable for maintenance.
+Endpoints
+Supported Symbols Endpoint
+The Metals-API API comes with a constantly updated endpoint returning all available currencies. To access this list, make a request to the API's symbols endpoint.
+
+API Request:
+
+https://metals-api.com/api/symbols?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[Required] Your API Key.
+
+API Response:
+
+{
+    "AAAU": {
+    "id": "AAAU",
+    "name": "Goldman Sachs Physical Gold ETF"
+    },
+    "ADA": {
+    "id": "ADA",
+    "name": "Cardano"
+    },
+    "AED": {
+    "id": "AED",
+    "name": "United Arab Emirates Dirham"
+    },
+    "AFN": {
+    "id": "AFN",
+    "name": "Afghan Afghani"
+    },
+    "AHME-22k": {
+    "id": "AHME-22k",
+    "name": "Ahmedabad Gold 22k",
+    "unit": "per gram"
+    },
+    [...]
+}  
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+symbols	Returns all supported currencies with their respective three-letter currency codes or or metal codes and names.
+Latest Rates Endpoint
+Depending on your subscription plan, the API's latest endpoint will return real-time exchange rate data updated every 60 minutes, every 10 minutes or every 60 seconds.
+
+For LBMA prices, it should be noted that the rates correspond to the previous day's closing price.
+
+API Request:
+
+https://metals-api.com/api/latest?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=USD&symbols=XAU,XAG,XPD
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. Default USD.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output codes. (The number of symbols per API request depends on the acquired plan).
+unit	[optional] Enter the unit of weight for the input value. Supported values: Pound, Ounce, Troy Ounce, Gram, KG, Ton.
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 1519296206,
+    "base": "USD",
+    "date": "2018-09-10",
+    "rates": {
+        "USD": 1,
+        "XAG":  0.041405839732253,
+        "XAU":  0.0004831705,
+        "XPD": 0.00084781687155574,
+        "USDXAG": 24.151182694673185,
+        "USDXAU": 2069.6627794950227,
+        "USDXPD": 1179.5000000000057,
+    }
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+timestamp	Returns the exact date and time (UNIX time stamp) the given rates were collected.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+Historical Rates Endpoint
+Historical rates are available for most currencies dating back to 2019. You can query the Metals-API API for historical rates by appending a date ( YYYY-MM-DD) to the base URL.
+
+For all symbols in this endpoint, the prices provided correspond to the closing price of that day.
+
+Note: For LME symbols, the prices correspond to the closing price of the same day. For LBMA symbols, the prices reflect the closing price of the previous day.
+
+We also offer specific historical endpoints for LBMA and LME, where older data is available.
+
+API Request:
+
+https://metals-api.com/api/2013-12-24?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=EUR&symbols=XAU,XAG,XPD
+Copy
+Request Parameters:
+
+Parameter	Description
+YYYY-MM-DD	[required] A date in the past for which historical rates are requested.
+access_key	[required] Your API Key.
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. Default USD.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output currencies. (The number of symbols per API request depends on the acquired plan).
+
+API Response:
+
+{
+    "success": true,
+    "historical": true,
+    "date": "2013-12-24",
+    "timestamp": 1387929599,
+    "base": "GBP",
+    "rates": {
+        "XAG": 21.9522920446423,
+        "XAU": 1871.0803462620966,
+        "XPD": 1067.2276441391284
+    }
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+historical	Returns true if a request for historical exchange rates was made.
+date	Returns the date for which historical rates were requested.
+timestamp	Returns the exact date and time (UNIX time stamp) the given rates were collected.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+Bid And Ask Endpoint
+Depending on your subscription plan, the API's Bid and Askendpoint is a powerful API feature that enables you to retrieve real-time Bid and Ask prices for a selection of precious metals, including Gold, Silver, Palladium, and Platinum.
+
+To obtain the symbols required for the endpoint, you can refer to the symbols list provided at Symbols List.
+
+API Request:
+
+https://metals-api.com/api/latest?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=USD&symbols=XAU-BID,XAU-ASK
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. Default USD.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output currencies. (The number of symbols per API request depends on the acquired plan).
+
+API Response:
+
+{
+    "success": true,
+    "date": "2013-12-24",
+    "timestamp": 1387929599,
+    "base": "USD",
+    "rates": {
+        "USD": 1,
+        "XAU-ASK": 0.00050474459,
+        "XAU-BID": 0.00050499949,
+        "USDXAU-ASK": 1981.19999999,
+        "USDXAU-BID": 1980.19999999
+    }
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+timestamp	Returns the exact date and time (UNIX time stamp) the given rates were collected.
+date	Returns the exact date when the given rates were collected.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+Specify Symbols
+To reduce bandwidth you can limit the number of output currencies to a specific set of your choice on most API endpoints. To do so, simply append the Metals-API API's symbols parameter to your API request and set it to one or more comma-separated currency codes or metal codes.
+
+Example:
+
+https://metals-api.com/api/latest?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&symbols=XAU,XAG,XPD
+The API's response for the request above will be limited to the currencies USD, CAD and JPY.
+
+Changing base currency
+Provided changing base currency is supported on your subscription plan, you can change the currency to which your output currency rates are relative to by appending the base parameter to your API request URL and setting it to the three-letter code of your preferred base currency.
+
+Example:
+
+https://metals-api.com/api/latest?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=USD
+Please note: The default base currency is USD. You can use any currency as base currency. If you need additional base currencies please contact us
+
+Convert Endpoint
+The Metals-API API comes with a separate currency conversion endpoint, which can be used to convert any amount from one currency to another. In order to convert currencies, please use the API's convert endpoint, append the from and to parameters and set them to your preferred base and target currency codes or metal codes.
+
+It is also possible to convert currencies using historical exchange rate data. To do this, please also use the API's date parameter and set it to your preferred date. (format YYYY-MM-DD)
+
+API Request:
+
+https://metals-api.com/api/convert?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&from=GBP&to=JPY&amount=25
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+from	[required] The three-letter currency code or metal code of the symbol you would like to convert from.
+to	[required] The three-letter currency code or metal code or metal code of the currency you would like to convert to.
+amount	[required] The amount to be converted.
+date	[optional] Specify a date (format YYYY-MM-DD) to use historical rates for this conversion.
+
+API Response:
+
+{
+"success": true,
+"query": {
+"from": "GBP",
+"to": "JPY",
+"amount": 25
+},
+"info": {
+"timestamp": 1519328414,
+"rate": 148.972231
+},
+"historical": "",
+"date": "2018-02-22",
+"result": 3724.305775
+}
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+query > from	Returns the three-letter currency code or metal code of the symbol converted from.
+query > to	Returns the three-letter currency code or metal code of the symbol converted to.
+query > to	Returns the amount that is converted.
+info > timestamp	Returns the exact date and time (UNIX time stamp) the given exchange rare was collected.
+info > rate	Returns the exchange rate used for your conversion.
+historical	Returns true if historical rates are used for this conversion.
+date	Returns the date (format YYYY-MM-DD) the given exchange rate data was collected.
+result	Returns your conversion result.
+Time-Series Endpoint
+The Metals-API timeseries endpoint allows you to query the API for daily historical rates between two dates of your choice. (The date limits per API request depend on the acquired plan).
+
+This endpoint has a limitation depending on the acquired plan, allowing only one symbol per request. If you need to query more than 30 days or more than one symbol, you should send another API call.
+
+For LME symbols, the prices provided in this endpoint correspond to the first known price of the previous day (not the requested day). For example, a request for 2024-11-13 will return the price from 2024-11-12.
+
+For LBMA symbols, there is a two-day delay. For example, a request for 2024-08-22 will return the closing price for the 20th.
+
+For other symbols, the prices correspond to the first known price of the requested day.
+
+You cannot use the current date for the "end_date" parameter. We recommend using a day prior to the current date to get a successful response. To get the latest price, you will need to use the latest endpoint.
+
+We also offer specific historical endpoints for LBMA and LME, where older data is available.
+
+API Request:
+
+https://metals-api.com/api/timeseries?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&start_date=2023-05-01&end_date=2023-05-25&symbols=XAU
+Copy
+https://metals-api.com/api/timeseries?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&type=last_day&symbols=XAU
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+start_date	[required] The start date of your preferred timeframe. (The date limits per API request depends on the acquired plan).
+end_date	[required] The end date of your preferred timeframe. (The date limits per API request depends on the acquired plan).
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. If not provided, USD will be used as the default.
+symbols	[required] Enter one currency or metal codes to limit the output.
+type	[optional] Specify "last_hour", "last_day", "last_week", or "last_month" to retrieve the rate change for the corresponding time period. If provided, this parameter overrides start_date and end_date.
+order	[optional] Enter the sort order of the results. Supported values: asc (ascending), desc (descending). Default is desc.
+
+API Response:
+
+{
+    "success": true,
+    "timeseries": true,
+    "start_date": "2012-05-01",
+    "end_date": "2012-05-03",
+    "base": "EUR",
+    "rates": {
+        "2023-05-01": {
+            "USD": 1,
+            "XAU": 0.00050331446219218
+        },
+        "2023-05-01": {
+            "USD": 1,
+            "XAU": 0.00050469932538839
+        },
+        "2023-05-02": {
+            "USD": 1,
+            "XAU": 0.00049603398443199
+        },
+        "2023-05-03": {
+            "USD": 1,
+            "XAU": 0.00048723596263295
+        },
+        [...]
+    }
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+timeseries	Returns true if a request to the timeseries endpoint is made.
+start_date	The start date of your time frame.
+end_date	The end date of your time frame.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+Fluctuation Endpoint
+Using the Metals-API API's fluctuation endpoint you will be able to retrieve information about how currencies fluctuate on a day-to-day basis. (The date limits per API request depends on the acquired plan). To use this feature, simply append a `start_date` and `end_date` or choose the `type` parameter to retrieve the rate change for a predefined time period, and choose the symbol you would like to query the API for.
+
+API Request:
+
+https://metals-api.com/api/fluctuation?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&start_date=2023-12-01&end_date=2015-12-15&symbols=XAU
+Copy
+https://metals-api.com/api/fluctuation?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&type=last_day&symbols=XAU
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+start_date	[required] The start date of your preferred fluctuation timeframe. (The date limits per API request depends on the acquired plan).
+end_date	[required] The end date of your preferred fluctuation timeframe. (The date limits per API request depends on the acquired plan).
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. Default USD.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output symbols. (1 symbol per API request).
+type	[optional] Specify "last_hour", "last_day", "last_week", or "last_month" to retrieve the rate change for the corresponding time period. If provided, this parameter overrides start_date and end_date.
+
+API Response:
+
+{
+    "success": true,
+    "fluctuation": true,
+    "start_date": "2018-02-25",
+    "end_date": "2018-02-26",
+    "base": "EUR",
+    "rates": {
+        "USD": {
+            "start_rate": 1,
+            "end_rate": 1,
+            "change": 0,
+            "change_pct": 0
+        },
+        "XAU": {
+            "start_rate": 0.0004900901501473,
+            "end_rate": 0.0004950722517565,
+            "change": 4.9821016092000585,
+            "change_pct": 1.0165684023036687
+        },
+        [...]
+    }
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+fluctuation	Returns true if a request to the fluctuation endpoint is made.
+start_date	The start date of your time frame.
+end_date	The end date of your time frame.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+rates > start_rate	Returns the exchange collected on your start date.
+rates > end_rate	Returns the exchange collected on your end date.
+rates > change	Returns the change (decimal number) of the given currency rate between your start and end date.
+rates > change	Returns the percentage change of the given currency rate between your start and end date.
+Carat Endpoint
+Using the Metals-API API's carat endpoint you will be able to retrieve information about Gold rates by Carat. To use this feature, simply append a base to choose which currencies (symbols) you would like to query the API for.
+
+API Request:
+
+https://metals-api.com/api/carat?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+base	[optional] Enter the three-letter currency code or metal code of your preferred base currency. Default is USD
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 1712175937,
+    "base": "USD",
+    "rates": {
+        "24K": 73.71,
+        "23K": 70.62,
+        "22K": 67.6,
+        "21K": 64.5,
+        "18K": 55.29,
+        "14K": 42.98,
+        "12K": 36.86,
+        "10K": 30.74,
+        "9K": 27.64,
+        "8K": 24.55
+    },
+    "unit": "per Gram"
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+base	Returns the three-letter currency code or metal code of the base currency used for this request.
+rates	Returns exchange rate data for the currencies you have requested.
+Lowest/Highest Price Endpoint
+Metals-API lowest-highest/YYYY-MM-DD endpoint allows you to query the API to get the lowest and highest price.
+
+This endpoint has a limitation of one symbol per request.
+
+API Request:
+
+https://metals-api.com/api/lowest-highest/YYYY-MM-DD?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=USD&symbols=XAU
+Copy
+Request Parameters:
+
+Parameter	Description
+YYYY-MM-DD	[required] A date in the past or the current date for which the lowest and highest price is requested.
+access_key	[required] Your API Key.
+base	[required] Enter a metal symbol or currency.
+symbols	[required] Enter one symbol metal or currency to limit the output.
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 1641842149,
+    "date": "2022-01-01",
+    "base": "USD",
+    "symbol": "XAU",
+    "rates": {
+        "low": 0.0005470547,
+        "high": 0.00054754153
+    },
+    "unit": "per ounce"
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+date	Returns the date for which the lowest and highest price was requested
+base	Returns the symbol as base used for this request.
+symbol	Returns the symbol used for this request.
+rates	Returns the lowest and highest price for the requested symbol.
+Metals Price India
+Formerly Gold Price India
+
+Retrieve the latest gold price in India using the Metals API's dedicated Gold Price India endpoint. This API provides real-time data for specific gold symbols.
+
+No specific currency base is declared, as all prices default to INR (Indian Rupee).
+
+List of Symbols: Metals-API Symbols.
+
+API Request:
+
+https://metals-api.com/api/gold-price-india?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&symbols=VIJA-22k,SALE-22k,VISA-24k
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output codes. (The number of symbols per API request depends on the acquired plan).
+date	[optional] A date in the past or the current date.
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 61326132,
+    "base": "INR",
+    "date": "2024-02-08",
+    "rates": {
+        "VIJA-22k": 5840,
+        "SALE-22k": 5840,
+        "VISA-24k": 6132
+    },
+    "unit": "per gram"
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+timestamp	Provides the exact date and time (UNIX timestamp) when the gold prices were collected.
+base	Returns the three-letter currency code base currency used for this request. (Always INR)
+rates	Displays gold price data for the specified symbols.
+rates	Specifies the unit for the gold prices.
+Historical Rates LBMA
+Historical rates are accessible through the Metals-API endpoint for LBMA symbols, dating back to 1968 for Gold, 2010 for Silver, and since 1990 for Palladium & Platinum LBMA.
+
+To query historical rates, simply append a date (formatted as YYYY-MM-DD) to the base URL in the Historical Rates LBMA endpoint.
+
+Please note that the prices provided correspond to the closing price of the respective day and are available in USD, GBP, and EUR
+
+List of Symbols: Metals-API Symbols.
+
+API Request:
+
+https://metals-api.com/api/historical-lbma/1968-12-31?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&symbols=LBXAUAM
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API Key.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output codes. (The number of symbols per API request depends on the acquired plan).
+base	[optional] Available currencies: USD, GBP, and EUR
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": -31622400,
+    "base": "USD",
+    "date": "1968-12-31",
+    "rates": {
+        "LBXAUAM": 41.95
+    },
+    "unit": "per ounce"
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+timestamp	Provides the exact date and time (UNIX timestamp) when the gold prices were collected.
+base	Returns the three-letter currency code base currency used for this request. (Always USD)
+rates	Displays price data for the specified symbols.
+Open/High/Low/Close (OHLC) Price Endpoint
+Metals-API open-high-low-close/YYYY-MM-DD endpoint allows you to query the API to get the open, high, low, and close price.
+
+Note: The open and close values are based on the start and end of the UTC day, not on traditional trading hours. If you're querying data for the current day, keep in mind that the high and close prices may change as the day progresses.
+
+This endpoint has a limitation of one symbol per request.
+
+API Request:
+
+https://metals-api.com/api/open-high-low-close/YYYY-MM-DD?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&base=XAU&symbols=USD
+Copy
+Request Parameters:
+
+Parameter	Description
+YYYY-MM-DD	[required] A date in the past or the current date.
+access_key	[required] Your API Key.
+base	[required] Enter a metal symbol or currency.
+symbols	[required] Enter one symbol metal or currency to limit the output.
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 1653931700,
+    "date": "2022-05-20",
+    "base": "XAU",
+    "symbol": "USD",
+    "rates": {
+        "open": 1841.1889341969709,
+        "high": 1851.6666851833336,
+        "low": 1816.419890887657,
+        "close": 1844.828964194302
+    },
+    "unit": "per ounce"
+}      
+Response Objects:
+
+Response Object	Description
+success	Returns true or false depending on whether or not your API request has succeeded.
+date	Returns the date for the open, high, low, and close price.
+base	Returns the symbol as base used for this request.
+symbol	Returns the symbol used for this request.
+rates	Returns the open, high, low, and close price for the requested symbol.
+News Endpoint
+Metals-API get-news allows you to retrieve the latest news articles related to various metals. This endpoint is useful for staying updated on market trends, significant events, and other relevant information that may affect metal prices. Data is available starting from June 27, 2024.
+
+API Request:
+
+https://metals-api.com/api/get-news?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API key for authenticating the request.
+fromDate	[optional] The start date to filter news articles (in format YYYY-MM-DD). Only articles published from this date onwards will be returned.
+toDate	[optional] The end date to filter news articles (in format YYYY-MM-DD). Only articles published up to this date will be returned.
+page	[optional] The page number of results to retrieve. Default is 1. Maximum number of articles per page is 10.
+keyword	[optional] A keyword to filter news articles that contain this term in their title or content.
+
+API Response:
+
+{
+    "success": true,
+    "data": {
+        "currentPage": 1,
+        "totalPages": 10,
+        "news": [
+            {
+                "title": "Gold Prices Drop Below $2,300, Copper Weaker on China Concerns",
+                "article": "Gold prices declined below key levels in Asian trading on Thursday, due to a stronger dollar and cautious sentiment surrounding metals ahead of crucial inflation data that could impact interest rates...",
+                "date": "2024-06-27"
+            },
+            {
+                "title": "Silver Price Forecast: Silver Shows Resilience with Monday Rebound, Technical Analysis Reveals Bullish Trends",
+                "article": "The silver market displayed positive movement at the start of the week, indicating a resurgence of activity. It is anticipated that the market may target the $28.50 threshold, a key level that has previously acted as both support and resistance...",
+                "date": "2024-08-14"
+            }
+        ]
+    }
+}      
+Response Objects:
+
+Field	Description
+success	Indicates whether the request was successful. (true or false)
+data	Contains the news data and pagination details.
+currentPage	The current page number of the retrieved results.
+totalPages	The total number of pages available.
+news	An object containing the news articles.
+news.data	An array of news articles.
+title	The title of the news article.
+article	The content of the news article.
+date	The date the article was created.
+Historical LME Endpoint
+Metals-API historical-lme Historical rates are accessible through the Metals-API endpoint for LME symbols, dating back to 2008. This endpoint allows you to query historical rates by appending a date (formatted as YYYY-MM-DD) to the base URL in the Historical Rates LME endpoint.
+
+Please note that the prices provided correspond to the closing price of the respective day.
+
+List of Symbols :
+
+Symbol	Metal	Unit
+LME-ALU	Aluminium	Per Troy Ounce
+LME-XCU	Copper	Per Troy Ounce
+LME-LEAD	Lead	Per Troy Ounce
+LME-NI	Nickel	Per Troy Ounce
+LME-TIN	Tin	Per Troy Ounce
+LME-ZNC	Zinc	Per Troy Ounce
+
+Price Types :
+
+Abbreviation	Description
+CS	Cash-Settlement
+3M	3-Month
+ST	Stock
+
+API Request:
+
+https://metals-api.com/api/historical-lme/YYYY-MM-DD?access_key=auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb&symbols=LME-ALU&price_type=CS
+Copy
+Request Parameters:
+
+Parameter	Description
+access_key	[required] Your API key for authenticating the request.
+date	[required] Specify a date (format YYYY-MM-DD) to use historical rates for this conversion.
+symbols	[required] Enter a list of comma-separated currency codes or metal codes to limit output codes. The endpoint allows 1 symbol per request.
+price_type	[required] Type of price to request: CS, 3M, ST. Only one price_type can be specified per request.
+base	[optional] Enter the three-letter currency code (USD or EUR) of your preferred base currency. Defaults to USD. Exchange rate data is available starting from January 2, 2015.
+
+API Response:
+
+{
+    "success": true,
+    "timestamp": 1208995200,
+    "base": "USD",
+    "date": "2008-04-24",
+    "rate": {
+        "LME-ALU": 0.07730948678   
+    },
+    "unit": "per troy ounce",
+    "price_type": "CS"
+}
+Response Objects:
+
+Field	Description
+success	Returns true or false depending on whether your API request has succeeded.
+timestamp	Provides the exact date and time (UNIX timestamp) when the metal prices were collected.
+base	Returns the three-letter currency code base currency used for this request. (Always USD).
+date	Returns the date for the historical rates.
+rates	Displays price data for the specified symbols.
+unit	Specifies the unit of measurement (always per troy ounce).
+price_type	Specifies the type of price returned CS, 3M, ST.
+Sample Code
+The Metals-API API can be integrated with any programming language that supports HTTP requests. Below you will find code examples for various popular programming languages.
+
+PHP (cURL)
+Example code for PHP using cURL.
+Python
+Example code for Python using the requests module.
+JavaScript
+Example code for JavaScript using jQuery.ajax.
+Node.js
+Example code for Node.js using fetch and axios.
+Go
+Example code for Go using net/http package.
+Ruby
+Example code for Ruby using net/http and json.
+Java
+Example code for Java using HttpClient (Java 11+).
+C#
+Example code for C# using .NET HttpClient.
+Rust
+Example code for Rust using reqwest.
+Kotlin
+Example code for Kotlin using ktor-client.
+Swift
+Example code for Swift using URLSession.
+PHP (cURL)
+Real-time rates: Find below a simple PHP example for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// set API Endpoint and API key 
+$endpoint = 'latest';
+$access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+// Initialize CURL:
+$ch = curl_init('https://metals-api.com/api/'.$endpoint.'?access_key='.$access_key.'');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+// Store the data:
+$json = curl_exec($ch);
+curl_close($ch);
+
+// Decode JSON response:
+$exchangeRates = json_decode($json, true);
+
+// Access the exchange rate values, e.g. GBP:
+echo $exchangeRates['rates']['GBP'];
+Convert currencies: Here is how to convert currencies using PHP cURL.
+
+// set API Endpoint, access key, required parameters
+$endpoint = 'convert';
+$access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+$from = 'USD';
+$to = 'EUR';
+$amount = 10;
+
+// initialize CURL:
+$ch = curl_init('https://metals-api.com/api/'.$endpoint.'?access_key='.$access_key.'&from='.$from.'&to='.$to.'&amount='.$amount.'');   
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+// get the JSON data:
+$json = curl_exec($ch);
+curl_close($ch);
+
+// Decode JSON response:
+$conversionResult = json_decode($json, true);
+
+// access the conversion result
+echo $conversionResult['result'];
+Python (using Request module)
+import requests
+
+base_currency = 'USD'
+symbol = 'XAU' 
+endpoint = 'latest'
+access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb'
+
+resp = requests.get(
+    'https://metals-api.com/api/'+endpoint+'?access_key='+access_key+'&base='+base_currency+'&symbols='+symbol)
+if resp.status_code != 200:
+    # This means something went wrong.
+    raise ApiError('GET /'+endpoint+'/ {}'.format(resp.status_code))
+print(resp.json())
+
+JavaScript (jQuery.ajax)
+Real-time rates: Find below a simple jQuery.ajax example for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// set endpoint and your access key
+endpoint = 'latest'
+access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+// get the most recent exchange rates via the "latest" endpoint:
+$.ajax({
+url: 'https://metals-api.com/api/' + endpoint + '?access_key=' + access_key,   
+dataType: 'jsonp',
+success: function(json) {
+
+// exchange rata data is stored in json.rates
+alert(json.rates.GBP);
+
+// base currency is stored in json.base
+alert(json.base);
+
+// timestamp can be accessed in json.timestamp
+alert(json.timestamp);
+
+}
+});
+Convert currencies: Here is how to convert currencies using jQuery.ajax.
+
+// set endpoint and your API key
+endpoint = 'convert';
+access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+// define from currency, to currency, and amount
+from = 'EUR';
+to = 'GBP';
+amount = '10';
+
+// execute the conversion using the "convert" endpoint:
+$.ajax({
+url: 'https://metals-api.com/api/' + endpoint + '?access_key=' + access_key +'&from=' + from + '&to=' + to + '&amount=' + amount,   
+dataType: 'jsonp',
+success: function(json) {
+
+// access the conversion result in json.result
+alert(json.result);
+
+}
+});
+Node.js (fetch / axios)
+Real-time rates using fetch: Find below a simple Node.js example using the native fetch API for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using native fetch (Node.js 18+)
+const endpoint = 'latest';
+const access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+const base = 'USD';
+const symbols = 'XAU,XAG';
+
+const url = 'https://metals-api.com/api/' + endpoint + '?access_key=' + access_key + '&base=' + base + '&symbols=' + symbols;
+
+const response = await fetch(url);
+const data = await response.json();
+
+console.log(data.rates);
+Real-time rates using axios: Here is how to get exchange rate data using axios.
+
+// Using axios (npm install axios)
+const axios = require('axios');
+
+const endpoint = 'latest';
+const access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+axios.get('https://metals-api.com/api/' + endpoint, {
+    params: {
+        access_key: access_key,
+        base: 'USD',
+        symbols: 'XAU,XAG'
+    }
+})
+.then(response => {
+    console.log(response.data.rates);
+})
+.catch(error => {
+    console.error(error);
+});
+Convert currencies: Here is how to convert currencies using axios.
+
+// Convert currencies using axios
+const axios = require('axios');
+
+const access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb';
+
+axios.get('https://metals-api.com/api/convert', {
+    params: {
+        access_key: access_key,
+        from: 'USD',
+        to: 'EUR',
+        amount: 10
+    }
+})
+.then(response => {
+    console.log(response.data.result);
+});
+Go
+Real-time rates: Find below a simple Go example for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using Go net/http package
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "net/url"
+)
+
+type ExchangeRates struct {
+    Success   bool              `json:"success"`
+    Timestamp int64             `json:"timestamp"`
+    Base      string            `json:"base"`
+    Date      string            `json:"date"`
+    Rates     map[string]float64 `json:"rates"`
+}
+
+func main() {
+    accessKey := "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb"
+    base := "USD"
+    symbols := "XAU,XAG"
+    
+    baseURL := "https://metals-api.com/api/latest"
+    params := url.Values{}
+    params.Add("access_key", accessKey)
+    params.Add("base", base)
+    params.Add("symbols", symbols)
+    
+    reqURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+    
+    resp, err := http.Get(reqURL)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+    
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        panic(err)
+    }
+    
+    var exchangeRates ExchangeRates
+    json.Unmarshal(body, &exchangeRates)
+    
+    fmt.Println(exchangeRates.Rates)
+}
+Ruby
+Real-time rates: Find below a simple Ruby example for getting exchange rate data via the Metals-API API's latest endpoint.
+
+# Using Ruby net/http and json
+require 'net/http'
+require 'json'
+require 'uri'
+
+access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb'
+base = 'USD'
+symbols = 'XAU,XAG'
+
+uri = URI('https://metals-api.com/api/latest')
+params = { access_key: access_key, base: base, symbols: symbols }
+uri.query = URI.encode_www_form(params)
+
+response = Net::HTTP.get_response(uri)
+data = JSON.parse(response.body)
+
+puts data['rates']
+Convert currencies: Here is how to convert currencies using Ruby.
+
+# Convert currencies
+require 'net/http'
+require 'json'
+require 'uri'
+
+access_key = 'auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb'
+
+uri = URI('https://metals-api.com/api/convert')
+params = { access_key: access_key, from: 'USD', to: 'EUR', amount: 10 }
+uri.query = URI.encode_www_form(params)
+
+response = Net::HTTP.get_response(uri)
+data = JSON.parse(response.body)
+
+puts data['result']
+Java (HttpClient)
+Real-time rates: Find below a simple Java example using HttpClient (Java 11+) for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using Java HttpClient (Java 11+)
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+public class MetalsAPI {
+    public static void main(String[] args) throws Exception {
+        String accessKey = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb";
+        String base = "USD";
+        String symbols = "XAU,XAG";
+        
+        String url = "https://metals-api.com/api/latest?access_key=" + URLEncoder.encode(accessKey, StandardCharsets.UTF_8)
+                + "&base=" + URLEncoder.encode(base, StandardCharsets.UTF_8)
+                + "&symbols=" + URLEncoder.encode(symbols, StandardCharsets.UTF_8);
+        
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .build();
+        
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(response.body(), JsonObject.class);
+        
+        System.out.println(jsonObject.get("rates"));
+    }
+}
+C# (.NET HttpClient)
+Real-time rates: Find below a simple C# example using HttpClient for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using C# HttpClient and System.Text.Json
+using System;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        string accessKey = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb";
+        string baseCurrency = "USD";
+        string symbols = "XAU,XAG";
+        
+        string url = $"https://metals-api.com/api/latest?access_key={accessKey}&base={baseCurrency}&symbols={symbols}";
+        
+        using HttpClient client = new HttpClient();
+        HttpResponseMessage response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        
+        string responseBody = await response.Content.ReadAsStringAsync();
+        JsonDocument doc = JsonDocument.Parse(responseBody);
+        
+        Console.WriteLine(doc.RootElement.GetProperty("rates"));
+    }
+}
+Convert currencies: Here is how to convert currencies using C#.
+
+// Convert currencies
+using System;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        string accessKey = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb";
+        string url = $"https://metals-api.com/api/convert?access_key={accessKey}&from=USD&to=EUR&amount=10";
+        
+        using HttpClient client = new HttpClient();
+        HttpResponseMessage response = await client.GetAsync(url);
+        string responseBody = await response.Content.ReadAsStringAsync();
+        JsonDocument doc = JsonDocument.Parse(responseBody);
+        
+        Console.WriteLine(doc.RootElement.GetProperty("result"));
+    }
+}
+Rust
+Real-time rates: Find below a simple Rust example using reqwest for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using Rust reqwest and serde_json (add to Cargo.toml: reqwest = { version = "0.11", features = ["json"] }, serde_json = "1.0")
+use reqwest;
+use serde_json::Value;
+
+[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let access_key = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb";
+    let base = "USD";
+    let symbols = "XAU,XAG";
+    
+    let url = format!("https://metals-api.com/api/latest?access_key={}&base={}&symbols={}", access_key, base, symbols);
+    
+    let response = reqwest::get(&url).await?;
+    let json: Value = response.json().await?;
+    
+    println!("{:?}", json["rates"]);
+    
+    Ok(())
+}
+Kotlin
+Real-time rates: Find below a simple Kotlin example using ktor-client for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using Kotlin ktor-client (add to build.gradle.kts: implementation("io.ktor:ktor-client-core:2.3.0"), implementation("io.ktor:ktor-client-cio:2.3.0"))
+import io.ktor.client.*
+import io.ktor.client.call.body.*
+import io.ktor.client.request.*
+import kotlinx.serialization.json.*
+import kotlinx.coroutines.*
+
+suspend fun main() {
+    val client = HttpClient(CIO)
+    val accessKey = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb"
+    val base = "USD"
+    val symbols = "XAU,XAG"
+    
+    val url = "https://metals-api.com/api/latest?access_key=$accessKey&base=$base&symbols=$symbols"
+    val response = client.get(url)
+    val json = Json{ ignoreUnknownKeys = true }.decodeFromString<Map<String, JsonElement>>(response.bodyAsText())
+    
+    println(json["rates"])
+    
+    client.close()
+}
+Swift
+Real-time rates: Find below a simple Swift example using URLSession for getting exchange rate data via the Metals-API API's latest endpoint.
+
+// Using Swift URLSession and Codable
+import Foundation
+
+struct ExchangeRates: Codable {
+    let success: Bool
+    let timestamp: Int
+    let base: String
+    let date: String
+    let rates: [String: Double]
+}
+
+func getExchangeRates() async throws -> ExchangeRates {
+    let accessKey = "auqo8u28fcey8rc3z6b19deko3w8w1f3hh0ls6lf1ka3naf1nqyx334550mb"
+    let base = "USD"
+    let symbols = "XAU,XAG"
+    
+    let urlString = "https://metals-api.com/api/latest?access_key=\(accessKey)&base=\(base)&symbols=\(symbols)"
+    guard let url = URL(string: urlString) else {
+        throw NSError(domain: "Invalid URL", code: 0)
+    }
+    
+    let (data, _) = try await URLSession.shared.data(from: url)
+    let exchangeRates = try JSONDecoder().decode(ExchangeRates.self, from: data)
+    
+    return exchangeRates
+}
+
+// Usage
+Task {
+    do {
+        let rates = try await getExchangeRates()
+        print(rates.rates)
+    } catch {
+        print("Error: \(error)")
+    }
+}
