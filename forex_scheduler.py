@@ -105,10 +105,14 @@ class ForexSchedulerRunner:
         self.monitor_interval = MONITOR_INTERVAL
     
     async def check_morning_briefing(self):
-        """Post morning briefing at 6:20 AM UTC with news and market levels"""
+        """Post morning briefing at 6:20 AM UTC with news and market levels (weekdays only)"""
         try:
             now = datetime.utcnow()
             current_date_str = now.date().isoformat()
+            
+            # Skip weekends - markets are closed
+            if now.weekday() >= 5:  # Saturday=5, Sunday=6
+                return
             
             if now.hour == 6 and 20 <= now.minute < 25:
                 db = self.runtime.db
@@ -128,16 +132,21 @@ class ForexSchedulerRunner:
             logger.error(f"❌ Error posting morning briefing: {e}")
     
     async def check_daily_recap(self):
-        """Post daily recap at 6:30 AM UTC (yesterday's signals)
+        """Post daily recap at 6:30 AM UTC (yesterday's signals, weekdays only)
         
         Skip conditions:
+        - Weekend (no trading on Sat/Sun)
         - 0 signals yesterday (nothing to recap)
-        - Win rate < 60% (don't advertise poor performance)
+        - Net pips <= 0 (only show profitable days)
         - Recap generation failed (retry next cycle)
         """
         try:
             now = datetime.utcnow()
             current_date_str = now.date().isoformat()
+            
+            # Skip weekends - no trading on Sat/Sun
+            if now.weekday() >= 5:  # Saturday=5, Sunday=6
+                return
             
             if now.hour == 6 and 30 <= now.minute < 35:
                 db = self.runtime.db
@@ -162,6 +171,7 @@ class ForexSchedulerRunner:
                     stats = recap_result.get('stats', {})
                     total_signals = stats.get('total_signals', 0)
                     wins = stats.get('wins', 0)
+                    total_pips = stats.get('total_pips', 0)
                     win_rate = (wins / total_signals * 100) if total_signals > 0 else 0
                     
                     if total_signals == 0:
@@ -169,8 +179,9 @@ class ForexSchedulerRunner:
                         db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
                         return
                     
-                    if win_rate < 60:
-                        logger.info(f"⏭️ Skipping daily recap: win rate {win_rate:.0f}% < 60%")
+                    # Only post recap if day was profitable (net positive pips)
+                    if total_pips <= 0:
+                        logger.info(f"⏭️ Skipping daily recap: net pips {total_pips:+.1f} <= 0")
                         db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
                         return
                     
