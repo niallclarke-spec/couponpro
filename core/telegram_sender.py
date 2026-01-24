@@ -18,9 +18,10 @@ import asyncio
 import time
 import threading
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
-from telegram import Bot
+from typing import Optional, Dict, Any, Union
+from telegram import Bot, InputFile
 from telegram.error import TelegramError
+import io
 
 from core.logging import get_logger
 from core.bot_credentials import get_bot_credentials, BotNotConfiguredError, SIGNAL_BOT, MESSAGE_BOT
@@ -340,6 +341,141 @@ async def send_to_channel(
         bot_role=bot_role,
         chat_id=chat_id,
         text=text,
+        parse_mode=parse_mode
+    )
+
+
+async def send_photo(
+    tenant_id: str,
+    bot_role: str,
+    chat_id: str,
+    photo: Union[bytes, io.BytesIO, str],
+    caption: Optional[str] = None,
+    parse_mode: str = 'HTML',
+    disable_notification: bool = False
+) -> SendResult:
+    """
+    Send a photo to a Telegram chat.
+    
+    Args:
+        tenant_id: Tenant ID (required)
+        bot_role: 'signal_bot' or 'message_bot'
+        chat_id: Target chat/channel ID
+        photo: Photo as bytes, BytesIO, or file path
+        caption: Optional caption text
+        parse_mode: 'HTML' or 'Markdown'
+        disable_notification: Send silently
+        
+    Returns:
+        SendResult with success status, message_id if sent, error details if failed
+    """
+    try:
+        connection = _resolve_bot_connection(tenant_id, bot_role)
+    except BotNotConfiguredError as e:
+        logger.error(
+            f"PHOTO SEND FAILED: {e} | "
+            f"tenant={tenant_id}, role={bot_role}, chat={chat_id}"
+        )
+        return SendResult(success=False, error=str(e))
+    except Exception as e:
+        logger.exception(
+            f"PHOTO SEND FAILED: Unexpected error resolving credentials | "
+            f"tenant={tenant_id}, role={bot_role}, error={e}"
+        )
+        return SendResult(success=False, error=f"Credential resolution error: {e}")
+    
+    try:
+        bot = Bot(token=connection.token)
+        
+        if isinstance(photo, bytes):
+            photo_file = io.BytesIO(photo)
+            photo_file.name = 'trade_win.png'
+            input_file = InputFile(photo_file)
+        elif isinstance(photo, io.BytesIO):
+            photo.name = 'trade_win.png'
+            input_file = InputFile(photo)
+        else:
+            input_file = photo
+        
+        sent = await bot.send_photo(
+            chat_id=chat_id,
+            photo=input_file,
+            caption=caption,
+            parse_mode=parse_mode if caption else None,
+            disable_notification=disable_notification
+        )
+        
+        logger.info(
+            f"PHOTO SEND OK: tenant={tenant_id}, role={bot_role}, "
+            f"bot={connection.bot_username}, chat={chat_id}, msg_id={sent.message_id}"
+        )
+        
+        return SendResult(success=True, message_id=sent.message_id)
+        
+    except TelegramError as e:
+        logger.error(
+            f"PHOTO SEND FAILED: Telegram API error | "
+            f"tenant={tenant_id}, role={bot_role}, bot={connection.bot_username}, "
+            f"chat={chat_id}, error={e.message}"
+        )
+        return SendResult(
+            success=False, 
+            error=e.message,
+            error_code=getattr(e, 'error_code', None)
+        )
+    except Exception as e:
+        logger.exception(
+            f"PHOTO SEND FAILED: Unexpected error | "
+            f"tenant={tenant_id}, role={bot_role}, chat={chat_id}, error={e}"
+        )
+        return SendResult(success=False, error=str(e))
+
+
+async def send_photo_to_channel(
+    tenant_id: str,
+    bot_role: str,
+    photo: Union[bytes, io.BytesIO, str],
+    caption: Optional[str] = None,
+    parse_mode: str = 'HTML',
+    channel_type: str = 'default'
+) -> SendResult:
+    """
+    Send photo to the configured channel for a bot.
+    
+    Args:
+        tenant_id: Tenant ID
+        bot_role: 'signal_bot' or 'message_bot'
+        photo: Photo as bytes, BytesIO, or file path
+        caption: Optional caption text
+        parse_mode: 'HTML' or 'Markdown'
+        channel_type: 'default', 'vip', or 'free' (for signal_bot)
+        
+    Returns:
+        SendResult
+    """
+    try:
+        connection = _resolve_bot_connection(tenant_id, bot_role)
+    except BotNotConfiguredError as e:
+        return SendResult(success=False, error=str(e))
+    
+    if channel_type == 'vip':
+        chat_id = connection.vip_channel_id
+    elif channel_type == 'free':
+        chat_id = connection.free_channel_id
+    else:
+        chat_id = connection.channel_id
+    
+    if not chat_id:
+        error = f"No {channel_type} channel configured for tenant={tenant_id}, role={bot_role}"
+        logger.error(f"PHOTO SEND BLOCKED: {error}")
+        return SendResult(success=False, error=error)
+    
+    return await send_photo(
+        tenant_id=tenant_id,
+        bot_role=bot_role,
+        chat_id=chat_id,
+        photo=photo,
+        caption=caption,
         parse_mode=parse_mode
     )
 

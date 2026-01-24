@@ -6,11 +6,13 @@ Centralizes TP celebrations, recap generation, milestone notifications, etc.
 
 All sends go through core/telegram_sender.py - no direct Bot instantiation.
 """
+from datetime import datetime
 from typing import Optional, Any, Dict
 from core.logging import get_logger
 from core.runtime import TenantRuntime
-from core.telegram_sender import send_to_channel, SendResult
+from core.telegram_sender import send_to_channel, send_photo_to_channel, SendResult
 from core.bot_credentials import SIGNAL_BOT
+from showcase.trade_win_generator import generate_single_trade_image
 
 logger = get_logger(__name__)
 
@@ -70,6 +72,59 @@ class Messenger:
             channel_type=channel_type
         )
     
+    async def _send_showcase_image(
+        self,
+        pair: str,
+        direction: str,
+        entry_price: float,
+        exit_price: float,
+        pips: float,
+        channel_type: str = 'vip'
+    ) -> SendResult:
+        """
+        Send a trade win showcase image to the channel.
+        
+        Args:
+            pair: Trading pair (e.g., "XAU/USD")
+            direction: "BUY" or "SELL"
+            entry_price: Entry price
+            exit_price: Exit/TP price
+            pips: Pips gained
+            channel_type: 'vip' or 'free'
+            
+        Returns:
+            SendResult
+        """
+        try:
+            img_bytes = generate_single_trade_image(
+                pair=pair,
+                direction=direction,
+                entry_price=entry_price,
+                exit_price=exit_price,
+                pips=pips,
+                lot_size=1.0,
+                timestamp=datetime.utcnow()
+            )
+            
+            result = await send_photo_to_channel(
+                tenant_id=self.tenant_id,
+                bot_role=SIGNAL_BOT,
+                photo=img_bytes,
+                caption=None,
+                channel_type=channel_type
+            )
+            
+            if result.success:
+                logger.info(f"Sent showcase image to {channel_type} channel")
+            else:
+                logger.error(f"Failed to send showcase image: {result.error}")
+            
+            return result
+            
+        except Exception as e:
+            logger.exception(f"Error generating/sending showcase image: {e}")
+            return SendResult(success=False, error=str(e))
+    
     async def post_signal(self, signal_data: Dict[str, Any]) -> Optional[int]:
         """Post a new signal to Telegram."""
         try:
@@ -81,15 +136,23 @@ class Messenger:
             logger.exception("Failed to post signal to Telegram")
             return None
     
-    async def send_tp1_celebration(self, signal_type: str, pips: float, remaining: float, posted_at: Optional[str] = None) -> Optional[int]:
+    async def send_tp1_celebration(
+        self, 
+        signal_type: str, 
+        pips: float, 
+        remaining: float, 
+        posted_at: Optional[str] = None,
+        signal_data: Optional[Dict[str, Any]] = None
+    ) -> Optional[int]:
         """
-        Send TP1 hit celebration message.
+        Send TP1 hit celebration message and showcase image.
         
         Args:
             signal_type: BUY or SELL
             pips: Pips secured at TP1
             remaining: Percentage still riding to TP2
             posted_at: ISO timestamp of original signal for elapsed time display
+            signal_data: Optional signal dict with entry_price, take_profit, pair for showcase
         
         Returns:
             Telegram message_id if successful, None otherwise
@@ -100,6 +163,16 @@ class Messenger:
             
             if result.success:
                 logger.info(f"Posted TP1 celebration (+{pips} pips), message_id={result.message_id}")
+                
+                if signal_data:
+                    await self._send_showcase_image(
+                        pair=signal_data.get('pair', 'XAU/USD'),
+                        direction=signal_type,
+                        entry_price=float(signal_data.get('entry_price', 0)),
+                        exit_price=float(signal_data.get('take_profit', 0)),
+                        pips=pips
+                    )
+                
                 return result.message_id
             else:
                 logger.error(f"Failed to send TP1 celebration: {result.error}")
@@ -108,8 +181,16 @@ class Messenger:
             logger.exception("Failed to send TP1 celebration")
             return None
     
-    async def send_tp2_celebration(self, signal_type: str, pips: float, tp1_price: float, remaining: float, posted_at: Optional[str] = None) -> bool:
-        """Send TP2 hit celebration message.
+    async def send_tp2_celebration(
+        self, 
+        signal_type: str, 
+        pips: float, 
+        tp1_price: float, 
+        remaining: float, 
+        posted_at: Optional[str] = None,
+        signal_data: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Send TP2 hit celebration message and showcase image.
         
         Args:
             signal_type: BUY or SELL
@@ -117,6 +198,7 @@ class Messenger:
             tp1_price: TP1 price for SL adjustment advice
             remaining: Percentage still riding to TP3
             posted_at: ISO timestamp of original signal for elapsed time display
+            signal_data: Optional signal dict with entry_price, take_profit_2, pair for showcase
         """
         try:
             message = self.milestone_tracker.generate_tp2_celebration(signal_type, pips, tp1_price, remaining, posted_at)
@@ -124,6 +206,16 @@ class Messenger:
             
             if result.success:
                 logger.info(f"Posted TP2 celebration (+{pips} pips)")
+                
+                if signal_data:
+                    await self._send_showcase_image(
+                        pair=signal_data.get('pair', 'XAU/USD'),
+                        direction=signal_type,
+                        entry_price=float(signal_data.get('entry_price', 0)),
+                        exit_price=float(signal_data.get('take_profit_2', 0)),
+                        pips=pips
+                    )
+                
                 return True
             else:
                 logger.error(f"Failed to send TP2 celebration: {result.error}")
@@ -132,14 +224,21 @@ class Messenger:
             logger.exception("Failed to send TP2 celebration")
             return False
     
-    async def send_tp3_celebration(self, signal_type: str, pips: float, posted_at: Optional[str] = None) -> Optional[int]:
+    async def send_tp3_celebration(
+        self, 
+        signal_type: str, 
+        pips: float, 
+        posted_at: Optional[str] = None,
+        signal_data: Optional[Dict[str, Any]] = None
+    ) -> Optional[int]:
         """
-        Send TP3 hit (full exit) celebration message.
+        Send TP3 hit (full exit) celebration message and showcase image.
         
         Args:
             signal_type: BUY or SELL
             pips: Total pips secured
             posted_at: ISO timestamp of original signal for elapsed time display
+            signal_data: Optional signal dict with entry_price, take_profit_3, pair for showcase
         
         Returns:
             Telegram message_id if successful, None otherwise
@@ -150,6 +249,16 @@ class Messenger:
             
             if result.success:
                 logger.info(f"Posted TP3 celebration - full exit (+{pips} pips), message_id={result.message_id}")
+                
+                if signal_data:
+                    await self._send_showcase_image(
+                        pair=signal_data.get('pair', 'XAU/USD'),
+                        direction=signal_type,
+                        entry_price=float(signal_data.get('entry_price', 0)),
+                        exit_price=float(signal_data.get('take_profit_3', 0)),
+                        pips=pips
+                    )
+                
                 return result.message_id
             else:
                 logger.error(f"Failed to send TP3 celebration: {result.error}")
