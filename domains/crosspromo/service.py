@@ -613,6 +613,26 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"CTA sent for signal #{signal_id}, cross-promo complete")
         return {"success": True}
     
+    elif job_type == 'eod_pip_brag':
+        # End-of-day pip brag message - skip if wins were already forwarded today
+        wins_today = repo.get_wins_forwarded_today(tenant_id)
+        if wins_today > 0:
+            logger.info(f"Skipping EOD brag - {wins_today} wins already forwarded today")
+            return {"success": True, "skipped": True, "reason": f"Already forwarded {wins_today} wins today"}
+        
+        # Find brag-worthy performance using cascading lookback
+        brag_result = find_brag_worthy_pips(tenant_id)
+        
+        if brag_result:
+            pips, days = brag_result
+            message = generate_eod_pip_brag_message(pips, days)
+        else:
+            # No threshold met, use generic hype message
+            message = get_fallback_hype_message()
+        
+        result = send_message(bot_token, free_channel_id, message)
+        return result
+    
     else:
         return {"success": False, "error": f"Unknown job type: {job_type}"}
 
@@ -622,6 +642,7 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     Enqueue today's daily sequence.
     - morning_news: runs immediately when called
     - vip_soon: runs after configured delay (default 45 minutes)
+    - eod_pip_brag: runs at 20:00 UTC (end of trading day)
     
     Only works Mon-Fri. Returns result dict.
     """
@@ -661,11 +682,28 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
         dedupe_key=f"{tenant_id}|{today_str}|vip_soon"
     )
     
+    # Schedule end-of-day pip brag at 20:00 UTC
+    # Calculate time until 20:00 UTC today
+    utc_now = datetime.utcnow()
+    eod_time = utc_now.replace(hour=20, minute=0, second=0, microsecond=0)
+    if utc_now.hour >= 20:
+        # Already past 20:00 UTC, skip EOD for today
+        eod_job = None
+    else:
+        eod_job = repo.enqueue_job(
+            tenant_id=tenant_id,
+            job_type='eod_pip_brag',
+            run_at=eod_time,
+            dedupe_key=f"{tenant_id}|{today_str}|eod_pip_brag"
+        )
+    
     jobs_created = []
     if morning_job:
         jobs_created.append('morning_news')
     if vip_soon_job:
         jobs_created.append('vip_soon')
+    if eod_job:
+        jobs_created.append('eod_pip_brag')
     
     if not jobs_created:
         return {"success": True, "message": "Jobs already exist for today (dedupe)"}
