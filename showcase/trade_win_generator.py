@@ -19,7 +19,8 @@ from core.logging import get_logger
 logger = get_logger(__name__)
 
 CANVAS_WIDTH = 430
-CANVAS_HEIGHT = 205
+CANVAS_HEIGHT_BASE = 143  # Base height without any rows
+CANVAS_HEIGHT_PER_ROW = 62  # Height per trade row
 BACKGROUND_COLOR = "#000000"
 
 COLOR_WHITE = "#FFFFFF"
@@ -190,9 +191,15 @@ def _draw_trade_row(
     )
 
 
+def calculate_canvas_height(num_rows: int) -> int:
+    """Calculate dynamic canvas height based on number of trade rows."""
+    rows = max(1, min(num_rows, 3))  # Clamp between 1-3
+    return CANVAS_HEIGHT_BASE + (rows * CANVAS_HEIGHT_PER_ROW)
+
+
 def generate_trade_win_image(trades: List[TradeWinData]) -> bytes:
     """
-    Generate a trade win showcase image.
+    Generate a trade win showcase image with dynamic height.
     
     Args:
         trades: List of TradeWinData (max 3 rows visible)
@@ -200,7 +207,10 @@ def generate_trade_win_image(trades: List[TradeWinData]) -> bytes:
     Returns:
         PNG image as bytes
     """
-    img = Image.new('RGB', (CANVAS_WIDTH, CANVAS_HEIGHT), _hex_to_rgb(BACKGROUND_COLOR))
+    num_rows = min(len(trades), 3)
+    canvas_height = calculate_canvas_height(num_rows)
+    
+    img = Image.new('RGB', (CANVAS_WIDTH, canvas_height), _hex_to_rgb(BACKGROUND_COLOR))
     draw = ImageDraw.Draw(img)
     
     arrow_img = None

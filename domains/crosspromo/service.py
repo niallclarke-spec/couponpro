@@ -11,7 +11,7 @@ import pytz
 
 from core.logging import get_logger
 from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
-from integrations.telegram.client import send_message, copy_message, forward_message
+from integrations.telegram.client import send_message, forward_message
 from domains.crosspromo import repo
 from db import get_crosspromo_status, update_crosspromo_status, get_today_crosspromo_count
 
@@ -389,7 +389,8 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not message_id:
             return {"success": False, "error": "Missing vip_signal_message_id in payload"}
         
-        result = copy_message(bot_token, vip_channel_id, free_channel_id, int(message_id))
+        # Use forward_message to show "Forwarded from VIP Channel" label
+        result = forward_message(bot_token, vip_channel_id, free_channel_id, int(message_id))
         return result
     
     elif job_type == 'forward_win_followup':
@@ -400,7 +401,8 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not win_message_id:
             return {"success": False, "error": "Missing vip_win_message_id in payload"}
         
-        copy_result = copy_message(bot_token, vip_channel_id, free_channel_id, int(win_message_id))
+        # Use forward_message to show "Forwarded from VIP Channel" label
+        copy_result = forward_message(bot_token, vip_channel_id, free_channel_id, int(win_message_id))
         if not copy_result.get('success'):
             return copy_result
         

@@ -7,12 +7,13 @@ Centralizes TP celebrations, recap generation, milestone notifications, etc.
 All sends go through core/telegram_sender.py - no direct Bot instantiation.
 """
 from datetime import datetime
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 from core.logging import get_logger
 from core.runtime import TenantRuntime
 from core.telegram_sender import send_to_channel, send_photo_to_channel, SendResult
 from core.bot_credentials import SIGNAL_BOT
-from showcase.trade_win_generator import generate_single_trade_image
+from showcase.trade_win_generator import generate_trade_win_image, TradeWinData
+from showcase.profit_calculator import calculate_trade_profit, COMMISSION_PER_LOT
 
 logger = get_logger(__name__)
 
@@ -74,37 +75,72 @@ class Messenger:
     
     async def _send_showcase_image(
         self,
-        pair: str,
-        direction: str,
-        entry_price: float,
-        exit_price: float,
-        pips: float,
+        signal_data: Dict[str, Any],
+        tp_level: int,
         channel_type: str = 'vip'
     ) -> SendResult:
         """
-        Send a trade win showcase image to the channel.
+        Send a cumulative trade win showcase image to the channel.
+        
+        Builds cumulative rows based on TP level:
+        - TP1: 1 row (entry → TP1)
+        - TP2: 2 rows (entry → TP1, entry → TP2)
+        - TP3: 3 rows (entry → TP1, entry → TP2, entry → TP3)
+        
+        Each row shows profit after $7/lot commission deduction.
         
         Args:
-            pair: Trading pair (e.g., "XAU/USD")
-            direction: "BUY" or "SELL"
-            entry_price: Entry price
-            exit_price: Exit/TP price
-            pips: Pips gained
+            signal_data: Signal dict with entry_price, take_profit, take_profit_2, take_profit_3, pair
+            tp_level: Current TP level (1, 2, or 3)
             channel_type: 'vip' or 'free'
             
         Returns:
-            SendResult
+            SendResult with message_id if successful
         """
         try:
-            img_bytes = generate_single_trade_image(
-                pair=pair,
-                direction=direction,
-                entry_price=entry_price,
-                exit_price=exit_price,
-                pips=pips,
-                lot_size=1.0,
-                timestamp=datetime.utcnow()
-            )
+            entry_price = float(signal_data.get('entry_price', 0))
+            direction = signal_data.get('signal_type', 'BUY')
+            pair = signal_data.get('pair', 'XAU/USD')
+            
+            tp_prices = [
+                signal_data.get('take_profit'),
+                signal_data.get('take_profit_2'),
+                signal_data.get('take_profit_3')
+            ]
+            
+            trades: List[TradeWinData] = []
+            now = datetime.utcnow()
+            
+            for i in range(tp_level):
+                tp_price = tp_prices[i]
+                if tp_price is None:
+                    continue
+                    
+                tp_price = float(tp_price)
+                profit_calc = calculate_trade_profit(
+                    entry_price=entry_price,
+                    exit_price=tp_price,
+                    direction=direction,
+                    lot_size=1.0,
+                    include_commission=True
+                )
+                
+                trade = TradeWinData(
+                    pair=pair,
+                    direction=direction,
+                    lot_size=1.0,
+                    entry_price=entry_price,
+                    exit_price=tp_price,
+                    profit=profit_calc.net_profit,
+                    timestamp=now
+                )
+                trades.append(trade)
+            
+            if not trades:
+                logger.warning("No trades to display in showcase image")
+                return SendResult(success=False, error="No TP prices available")
+            
+            img_bytes = generate_trade_win_image(trades)
             
             result = await send_photo_to_channel(
                 tenant_id=self.tenant_id,
@@ -115,7 +151,7 @@ class Messenger:
             )
             
             if result.success:
-                logger.info(f"Sent showcase image to {channel_type} channel")
+                logger.info(f"Sent showcase image ({len(trades)} rows) to {channel_type} channel, msg_id={result.message_id}")
             else:
                 logger.error(f"Failed to send showcase image: {result.error}")
             
@@ -165,13 +201,7 @@ class Messenger:
                 logger.info(f"Posted TP1 celebration (+{pips} pips), message_id={result.message_id}")
                 
                 if signal_data:
-                    await self._send_showcase_image(
-                        pair=signal_data.get('pair', 'XAU/USD'),
-                        direction=signal_type,
-                        entry_price=float(signal_data.get('entry_price', 0)),
-                        exit_price=float(signal_data.get('take_profit', 0)),
-                        pips=pips
-                    )
+                    await self._send_showcase_image(signal_data=signal_data, tp_level=1)
                 
                 return result.message_id
             else:
@@ -208,13 +238,7 @@ class Messenger:
                 logger.info(f"Posted TP2 celebration (+{pips} pips)")
                 
                 if signal_data:
-                    await self._send_showcase_image(
-                        pair=signal_data.get('pair', 'XAU/USD'),
-                        direction=signal_type,
-                        entry_price=float(signal_data.get('entry_price', 0)),
-                        exit_price=float(signal_data.get('take_profit_2', 0)),
-                        pips=pips
-                    )
+                    await self._send_showcase_image(signal_data=signal_data, tp_level=2)
                 
                 return True
             else:
@@ -251,13 +275,7 @@ class Messenger:
                 logger.info(f"Posted TP3 celebration - full exit (+{pips} pips), message_id={result.message_id}")
                 
                 if signal_data:
-                    await self._send_showcase_image(
-                        pair=signal_data.get('pair', 'XAU/USD'),
-                        direction=signal_type,
-                        entry_price=float(signal_data.get('entry_price', 0)),
-                        exit_price=float(signal_data.get('take_profit_3', 0)),
-                        pips=pips
-                    )
+                    await self._send_showcase_image(signal_data=signal_data, tp_level=3)
                 
                 return result.message_id
             else:

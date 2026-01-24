@@ -2970,6 +2970,100 @@ def get_forex_signals(tenant_id, status=None, limit=100):
         logger.exception(f"Error getting forex signals: {e}")
         return []
 
+
+def get_forex_signal_by_id(signal_id: int, tenant_id: str):
+    """
+    Get a single forex signal by its ID.
+    
+    Args:
+        signal_id: The signal ID
+        tenant_id: Tenant ID
+    
+    Returns:
+        Signal dictionary or None if not found
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, signal_type, pair, timeframe, entry_price, take_profit, 
+                       stop_loss, status, rsi_value, macd_value, atr_value, 
+                       posted_at, closed_at, result_pips, bot_type,
+                       breakeven_set, guidance_count, last_guidance_at,
+                       last_progress_zone, last_caution_zone,
+                       original_rsi, original_macd, original_adx, original_stoch_k,
+                       last_revalidation_at, revalidation_count, thesis_status,
+                       thesis_changed_at, timeout_notified, original_indicators_json,
+                       take_profit_2, take_profit_3,
+                       tp1_percentage, tp2_percentage, tp3_percentage,
+                       tp1_hit, tp2_hit, tp3_hit,
+                       tp1_hit_at, tp2_hit_at, tp3_hit_at,
+                       breakeven_triggered, breakeven_triggered_at, close_price, effective_sl,
+                       telegram_message_id
+                FROM forex_signals
+                WHERE id = %s AND tenant_id = %s
+            """, (signal_id, tenant_id))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return {
+                'id': row[0],
+                'signal_type': row[1],
+                'pair': row[2],
+                'timeframe': row[3],
+                'entry_price': float(row[4]) if row[4] else None,
+                'take_profit': float(row[5]) if row[5] else None,
+                'stop_loss': float(row[6]) if row[6] else None,
+                'status': row[7],
+                'rsi_value': float(row[8]) if row[8] else None,
+                'macd_value': float(row[9]) if row[9] else None,
+                'atr_value': float(row[10]) if row[10] else None,
+                'posted_at': row[11].isoformat() if row[11] else None,
+                'closed_at': row[12].isoformat() if row[12] else None,
+                'result_pips': float(row[13]) if row[13] else None,
+                'bot_type': row[14] if row[14] else 'custom',
+                'breakeven_set': row[15] or False,
+                'guidance_count': row[16] or 0,
+                'last_guidance_at': row[17].isoformat() if row[17] else None,
+                'last_progress_zone': row[18] or 0,
+                'last_caution_zone': row[19] or 0,
+                'original_rsi': float(row[20]) if row[20] else None,
+                'original_macd': float(row[21]) if row[21] else None,
+                'original_adx': float(row[22]) if row[22] else None,
+                'original_stoch_k': float(row[23]) if row[23] else None,
+                'last_revalidation_at': row[24].isoformat() if row[24] else None,
+                'revalidation_count': row[25] or 0,
+                'thesis_status': row[26] or 'intact',
+                'thesis_changed_at': row[27].isoformat() if row[27] else None,
+                'timeout_notified': row[28] or False,
+                'original_indicators_json': row[29] if row[29] else None,
+                'take_profit_2': float(row[30]) if row[30] else None,
+                'take_profit_3': float(row[31]) if row[31] else None,
+                'tp1_percentage': row[32] or 100,
+                'tp2_percentage': row[33] or 0,
+                'tp3_percentage': row[34] or 0,
+                'tp1_hit': row[35] or False,
+                'tp2_hit': row[36] or False,
+                'tp3_hit': row[37] or False,
+                'tp1_hit_at': row[38].isoformat() if row[38] else None,
+                'tp2_hit_at': row[39].isoformat() if row[39] else None,
+                'tp3_hit_at': row[40].isoformat() if row[40] else None,
+                'breakeven_triggered': row[41] or False,
+                'breakeven_triggered_at': row[42].isoformat() if row[42] else None,
+                'close_price': float(row[43]) if row[43] else None,
+                'effective_sl': float(row[44]) if row[44] else None,
+                'telegram_message_id': row[45]
+            }
+    except Exception as e:
+        logger.exception(f"Error getting forex signal by id {signal_id}: {e}")
+        return None
+
+
 def update_forex_signal_status(signal_id, status, tenant_id, result_pips=None, close_price=None):
     """
     Update forex signal status and optionally set result.

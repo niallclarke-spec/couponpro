@@ -89,8 +89,9 @@ class SignalMonitor:
         close_price = update.get('exit_price') or update.get('current_price')
         already_closed = update.get('closed', False)  # Signal already closed in DB
         
-        signals_data = self.runtime.get_forex_signals(status=None, limit=10)
-        matching_signal = next((s for s in signals_data if s['id'] == signal_id), None)
+        # Fetch signal directly by ID for reliability (not from recent list)
+        import db as db_module
+        matching_signal = db_module.get_forex_signal_by_id(signal_id, self.tenant_id)
         signal_type = matching_signal.get('signal_type', 'BUY') if matching_signal else 'BUY'
         
         db = self.runtime.db
