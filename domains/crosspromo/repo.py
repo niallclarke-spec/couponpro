@@ -2,12 +2,75 @@
 Cross Promo Repository - Database access for settings and job queue.
 """
 import uuid
-from datetime import datetime
-from typing import Optional, List, Dict, Any
+from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any, Tuple
 import db
 from core.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def get_net_pips_over_days(tenant_id: str, days: int) -> float:
+    """
+    Get net pips (sum of result_pips) over the past N days.
+    
+    Args:
+        tenant_id: Tenant ID
+        days: Number of days to look back (e.g., 2, 5, 7, 14)
+        
+    Returns:
+        Net pips as float (can be positive or negative)
+    """
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            logger.warning("Database pool not available for pip query")
+            return 0.0
+        
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COALESCE(SUM(result_pips), 0)
+                FROM forex_signals
+                WHERE tenant_id = %s
+                AND closed_at >= NOW() - INTERVAL '%s days'
+                AND result_pips IS NOT NULL
+            """, (tenant_id, days))
+            
+            row = cursor.fetchone()
+            return float(row[0]) if row and row[0] else 0.0
+    except Exception as e:
+        logger.exception(f"Error getting pips over {days} days: {e}")
+        return 0.0
+
+
+def get_wins_forwarded_today(tenant_id: str) -> int:
+    """
+    Count how many winning signals were forwarded to FREE channel today.
+    Used to skip end-of-day recap if wins were already sent.
+    
+    Returns:
+        Number of win_forward jobs completed today
+    """
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            return 0
+        
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM crosspromo_jobs
+                WHERE tenant_id = %s
+                AND job_type = 'win_forward'
+                AND status = 'completed'
+                AND run_at >= CURRENT_DATE
+            """, (tenant_id,))
+            
+            row = cursor.fetchone()
+            return int(row[0]) if row and row[0] else 0
+    except Exception as e:
+        logger.exception(f"Error counting forwarded wins: {e}")
+        return 0
 
 
 def get_settings(tenant_id: str) -> Optional[Dict[str, Any]]:
