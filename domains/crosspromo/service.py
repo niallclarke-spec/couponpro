@@ -271,6 +271,144 @@ def _fallback_promo_message(pips_secured: float = None, tp_number: int = 1) -> s
     return base
 
 
+# ============================================================================
+# END-OF-DAY PIP BRAG SYSTEM
+# Cascading lookback: 2d → 5d → 7d → 14d → fallback
+# ============================================================================
+
+# Thresholds for each lookback window (days, minimum_pips)
+PIP_LOOKBACK_THRESHOLDS = [
+    (2, 100),    # 2 days: need 100+ pips
+    (5, 100),    # 5 days: need 100+ pips
+    (7, 300),    # 7 days: need 300+ pips
+    (14, 500),   # 14 days: need 500+ pips
+]
+
+
+def find_brag_worthy_pips(tenant_id: str) -> tuple[float, int] | None:
+    """
+    Find the best pip performance to brag about using cascading lookback.
+    
+    Returns:
+        Tuple of (pips, days) if a threshold is met, None if should use fallback.
+        Example: (430.0, 5) means 430 pips over 5 days
+    """
+    for days, threshold in PIP_LOOKBACK_THRESHOLDS:
+        pips = repo.get_net_pips_over_days(tenant_id, days)
+        logger.debug(f"Lookback {days}d: {pips:.1f} pips (threshold: {threshold})")
+        
+        if pips >= threshold:
+            logger.info(f"Found brag-worthy performance: {pips:.1f} pips over {days} days")
+            return (pips, days)
+    
+    logger.info("No threshold met, will use fallback message")
+    return None
+
+
+def generate_eod_pip_brag_message(pips: float, days: int) -> str:
+    """
+    Generate an AI-powered end-of-day message bragging about pip performance.
+    
+    Args:
+        pips: Total pips earned
+        days: Number of days this represents
+    """
+    import os
+    from openai import OpenAI
+    
+    try:
+        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
+        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
+        
+        if not api_key or not base_url:
+            return _fallback_eod_message(pips, days)
+        
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        
+        # Format timeframe naturally
+        if days <= 2:
+            timeframe = "the past 2 days"
+        elif days <= 5:
+            timeframe = "the past 5 days"
+        elif days <= 7:
+            timeframe = "this week"
+        else:
+            timeframe = "the past 2 weeks"
+        
+        prompt = f"""Write a SHORT (2-3 lines max) promotional message for a Telegram forex signals channel.
+
+Context: This is an end-of-day message to FREE channel members bragging about VIP performance.
+VIP members earned {pips:.0f} pips over {timeframe}.
+
+Key points:
+- Mention the EXACT pip count: {pips:.0f} pips
+- Mention the timeframe: {timeframe}
+- Create FOMO - VIP members are banking real profits
+- Encourage joining VIP to get these signals
+- Use 2-3 relevant emojis (fire, money, chart, trophy)
+- Keep it punchy and motivational
+- Don't use hashtags
+
+Example tone: "🔥 430 pips locked in by VIP members this week! That's real money hitting accounts while you're reading this. Ready to join them? 💰"
+
+Write ONLY the message, nothing else:"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150
+        )
+        
+        message = response.choices[0].message.content.strip()
+        
+        if len(message) > 10 and str(int(pips)) in message:
+            return message
+        else:
+            # AI didn't include the pip count, use fallback
+            return _fallback_eod_message(pips, days)
+            
+    except Exception as e:
+        logger.warning(f"AI EOD message generation failed: {e}")
+        return _fallback_eod_message(pips, days)
+
+
+def _fallback_eod_message(pips: float, days: int) -> str:
+    """Fallback end-of-day brag messages when AI is unavailable."""
+    import random
+    
+    if days <= 2:
+        timeframe = "in just 2 days"
+    elif days <= 5:
+        timeframe = "over the past 5 days"
+    elif days <= 7:
+        timeframe = "this week alone"
+    else:
+        timeframe = "in the past 2 weeks"
+    
+    messages = [
+        f"🔥 {pips:.0f} pips locked in by VIP members {timeframe}! That's real money hitting accounts. Ready to join them?",
+        f"📈 {pips:.0f} pips banked {timeframe}! VIP traders are on fire. Don't miss tomorrow's session 💰",
+        f"💰 {pips:.0f} pips secured {timeframe}! Our VIP members are stacking gains while you're reading this 🚀",
+        f"🎯 {pips:.0f} pips {timeframe} - that's VIP precision! The signals don't stop. Neither should you 🔥",
+    ]
+    
+    return random.choice(messages)
+
+
+def get_fallback_hype_message() -> str:
+    """Generic hype message when no pip thresholds are met."""
+    import random
+    
+    messages = [
+        "⚡ VIP members are stacking profits daily. Don't miss tomorrow's session 🔥",
+        "💰 Our VIP traders are making moves every day. Ready to join them?",
+        "🚀 Another day of precision signals in VIP. Tomorrow could be your first win!",
+        "🔥 VIP members are banking gains while you're reading this. Time to upgrade?",
+    ]
+    
+    return random.choice(messages)
+
+
 def generate_tp3_hype_message() -> str:
     """
     Generate a short AI-powered hype message for TP3 (full target) hit.
