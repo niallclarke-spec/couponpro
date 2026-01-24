@@ -21,6 +21,7 @@ from indicator_config import (
 from strategies import get_active_strategy, get_available_strategies, STRATEGY_REGISTRY
 from strategies.base_strategy import SignalData
 from core.logging import get_logger
+from core.pip_calculator import PIPS_MULTIPLIER
 
 logger = get_logger(__name__)
 
@@ -326,7 +327,7 @@ class ForexSignalEngine:
                 is_buy = signal_type == 'BUY'
                 
                 if hours_elapsed >= 4:
-                    pips = round((current_price - entry) * 100, 1) if is_buy else round((entry - current_price) * 100, 1)
+                    pips = round((current_price - entry) * PIPS_MULTIPLIER, 1) if is_buy else round((entry - current_price) * PIPS_MULTIPLIER, 1)
                     final_status = 'won' if pips > 0 else 'expired'
                     minutes_elapsed = hours_elapsed * 60
                     logger.info(f"⏱️  Signal #{signal_id} timed out after 4 hours - closing as {final_status} ({pips:+.1f} pips)")
@@ -353,7 +354,7 @@ class ForexSignalEngine:
                 if is_buy:
                     # XAU/USD: 1 pip = $0.01, multiply by 100
                     if not tp1_hit and current_price >= tp1:
-                        pips = round((tp1 - entry) * 100, 1)
+                        pips = round((tp1 - entry) * PIPS_MULTIPLIER, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1, tenant_id=self.tenant_id)
@@ -377,7 +378,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp2 and tp1_hit and not tp2_hit and current_price >= tp2:
-                        pips = round((tp2 - entry) * 100, 1)
+                        pips = round((tp2 - entry) * PIPS_MULTIPLIER, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2, tenant_id=self.tenant_id)
@@ -401,7 +402,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price >= tp3:
-                        pips = round((tp3 - entry) * 100, 1)
+                        pips = round((tp3 - entry) * PIPS_MULTIPLIER, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
                         # ATOMIC: 3-TP signal closed on TP3 hit
@@ -418,7 +419,7 @@ class ForexSignalEngine:
                         continue
                     
                     if current_price <= sl:
-                        pips = round((sl - entry) * 100, 1)
+                        pips = round((sl - entry) * PIPS_MULTIPLIER, 1)
                         sl_type = "effective" if effective_sl else "original"
                         if pips > 0:
                             status = 'won'
@@ -446,7 +447,7 @@ class ForexSignalEngine:
                 else:
                     # XAU/USD: 1 pip = $0.01, multiply by 100
                     if not tp1_hit and current_price <= tp1:
-                        pips = round((entry - tp1) * 100, 1)
+                        pips = round((entry - tp1) * PIPS_MULTIPLIER, 1)
                         remaining = (tp2_pct if has_tp2 else 0) + (tp3_pct if has_tp3 else 0)
                         logger.info(f"✅ Signal #{signal_id} TP1 HIT! +{pips} pips ({tp1_pct}% closed)")
                         update_tp_hit(signal_id, 1, tenant_id=self.tenant_id)
@@ -470,7 +471,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp2 and tp1_hit and not tp2_hit and current_price <= tp2:
-                        pips = round((entry - tp2) * 100, 1)
+                        pips = round((entry - tp2) * PIPS_MULTIPLIER, 1)
                         remaining = tp3_pct if has_tp3 else 0
                         logger.info(f"✅ Signal #{signal_id} TP2 HIT! +{pips} pips ({tp2_pct}% closed)")
                         update_tp_hit(signal_id, 2, tenant_id=self.tenant_id)
@@ -494,7 +495,7 @@ class ForexSignalEngine:
                             continue
                     
                     if has_tp3 and tp2_hit and not tp3_hit and current_price <= tp3:
-                        pips = round((entry - tp3) * 100, 1)
+                        pips = round((entry - tp3) * PIPS_MULTIPLIER, 1)
                         logger.info(f"🎯 Signal #{signal_id} TP3 HIT! +{pips} pips - FULL EXIT")
                         update_tp_hit(signal_id, 3, tenant_id=self.tenant_id)
                         # ATOMIC: 3-TP signal closed on TP3 hit
@@ -511,7 +512,7 @@ class ForexSignalEngine:
                         continue
                     
                     if current_price >= sl:
-                        pips = round((entry - sl) * 100, 1)
+                        pips = round((entry - sl) * PIPS_MULTIPLIER, 1)
                         sl_type = "effective" if effective_sl else "original"
                         if pips > 0:
                             status = 'won'

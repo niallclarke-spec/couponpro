@@ -20,6 +20,7 @@ from forex_ai import (
     generate_timeout_message
 )
 from domains.crosspromo.service import trigger_tp_crosspromo
+from core.pip_calculator import PIPS_MULTIPLIER
 
 logger = get_logger(__name__)
 
@@ -412,9 +413,9 @@ class SignalMonitor:
                     
                     if thesis_status == 'broken':
                         if signal_type == 'BUY':
-                            pips = round((current_price - entry) * 100, 1)
+                            pips = round((current_price - entry) * PIPS_MULTIPLIER, 1)
                         else:
-                            pips = round((entry - current_price) * 100, 1)
+                            pips = round((entry - current_price) * PIPS_MULTIPLIER, 1)
                         
                         final_status = 'won' if pips > 0 else 'expired'
                         # ATOMIC: Close signal immediately after detecting broken thesis

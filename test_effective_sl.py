@@ -4,13 +4,15 @@ Test script for effective_sl P&L tracking.
 Simulates different scenarios to verify correct status classification.
 """
 
+from core.pip_calculator import PIPS_MULTIPLIER
+
 def calculate_pips_buy(entry, exit_price):
     """For BUY: profit when price goes UP. XAU/USD: 1 pip = $0.01"""
-    return round((exit_price - entry) * 100, 1)
+    return round((exit_price - entry) * PIPS_MULTIPLIER, 1)
 
 def calculate_pips_sell(entry, exit_price):
     """For SELL: profit when price goes DOWN. XAU/USD: 1 pip = $0.01"""
-    return round((entry - exit_price) * 100, 1)
+    return round((entry - exit_price) * PIPS_MULTIPLIER, 1)
 
 def determine_status(pips):
     """Determine win/loss based on pips"""

@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from core.logging import get_logger
+from core.pip_calculator import PIPS_MULTIPLIER
 
 logger = get_logger(__name__)
 
@@ -164,11 +165,11 @@ class MilestoneTracker:
         progress_tp = min(max(progress_tp, 0), 100)
         progress_sl = min(max(progress_sl, 0), 100)
         
-        # XAU/USD: 1 pip = $0.01, multiply by 100
+        # XAU/USD: 1 pip = $0.10, multiply by 10
         if is_buy:
-            current_pips = (current_price - entry) * 100
+            current_pips = (current_price - entry) * PIPS_MULTIPLIER
         else:
-            current_pips = (entry - current_price) * 100
+            current_pips = (entry - current_price) * PIPS_MULTIPLIER
         
         milestone = None
         milestone_key = None

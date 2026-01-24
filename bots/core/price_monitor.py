@@ -7,6 +7,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from forex_api import twelve_data_client
+from core.pip_calculator import calculate_pips as calc_pips, PIPS_MULTIPLIER
 from db import (
     get_open_signal, 
     update_forex_signal_status,
@@ -38,13 +39,13 @@ class PriceMonitor:
             return None
     
     def calculate_pips(self, signal_type: str, entry: float, current_or_target: float) -> float:
-        """Calculate pips for XAU/USD trade (1 pip = $0.01, so $1 = 100 pips)"""
+        """Calculate pips for XAU/USD trade (1 pip = $0.10, so $1 = 10 pips)"""
         if signal_type == 'BUY':
             dollar_diff = current_or_target - entry
         else:
             dollar_diff = entry - current_or_target
-        # XAU/USD: 1 pip = $0.01, multiply by 100 to convert dollars to pips
-        return round(dollar_diff * 100, 1)
+        # XAU/USD: 1 pip = $0.10, multiply by 10 to convert dollars to pips
+        return round(dollar_diff * PIPS_MULTIPLIER, 1)
     
     async def check_signal_status(self) -> Optional[Dict[str, Any]]:
         """

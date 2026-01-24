@@ -10,6 +10,7 @@ from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period
 from core.logging import get_logger
 from core.bot_credentials import BotNotConfiguredError, SIGNAL_BOT
 from core.telegram_sender import send_to_channel, get_connection_for_send, SendResult
+from core.pip_calculator import PIPS_MULTIPLIER
 
 logger = get_logger(__name__)
 
@@ -279,7 +280,7 @@ class ForexTelegramBot:
             return
         
         try:
-            pips_profit = abs(current_price - entry_price) * 100
+            pips_profit = abs(current_price - entry_price) * PIPS_MULTIPLIER
             
             message = f"""⚡ <b>BREAKEVEN ALERT</b>
 

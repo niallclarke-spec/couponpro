@@ -7,6 +7,7 @@ import json
 from urllib.parse import urlparse, parse_qs
 
 from core.logging import get_logger
+from core.pip_calculator import PIPS_MULTIPLIER
 from strategies.strategy_loader import get_valid_bot_types, is_valid_bot_type
 
 logger = get_logger(__name__)
@@ -130,8 +131,8 @@ def handle_signal_bot_status(handler):
                     else:
                         price_diff = entry_price - current_price
                     
-                    # XAU/USD: 1 pip = $0.01, multiply by 100
-                    current_pips = round(price_diff * 100, 1)
+                    # 1 pip = $0.10
+                    current_pips = round(price_diff * PIPS_MULTIPLIER, 1)
                     current_dollars = round(price_diff, 2)
             except Exception as price_err:
                 logger.exception("Error fetching current price")
