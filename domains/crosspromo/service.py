@@ -663,28 +663,27 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     except pytz.UnknownTimeZoneError:
         tz = pytz.UTC
     
-    now = datetime.now(tz)
-    today_str = now.strftime('%Y-%m-%d')
+    # Use UTC date for all dedupe keys to ensure consistency
+    utc_now = datetime.utcnow()
+    utc_today_str = utc_now.strftime('%Y-%m-%d')
     
     vip_soon_delay = settings.get('vip_soon_delay_minutes', 45)
     
     morning_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='morning_news',
-        run_at=datetime.utcnow(),
-        dedupe_key=f"{tenant_id}|{today_str}|morning_news"
+        run_at=utc_now,
+        dedupe_key=f"{tenant_id}|{utc_today_str}|morning_news"
     )
     
     vip_soon_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='vip_soon',
-        run_at=datetime.utcnow() + timedelta(minutes=vip_soon_delay),
-        dedupe_key=f"{tenant_id}|{today_str}|vip_soon"
+        run_at=utc_now + timedelta(minutes=vip_soon_delay),
+        dedupe_key=f"{tenant_id}|{utc_today_str}|vip_soon"
     )
     
     # Schedule end-of-day pip brag at 20:00 UTC
-    # Calculate time until 20:00 UTC today
-    utc_now = datetime.utcnow()
     eod_time = utc_now.replace(hour=20, minute=0, second=0, microsecond=0)
     if utc_now.hour >= 20:
         # Already past 20:00 UTC, skip EOD for today
@@ -694,7 +693,7 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
             tenant_id=tenant_id,
             job_type='eod_pip_brag',
             run_at=eod_time,
-            dedupe_key=f"{tenant_id}|{today_str}|eod_pip_brag"
+            dedupe_key=f"{tenant_id}|{utc_today_str}|eod_pip_brag"
         )
     
     jobs_created = []

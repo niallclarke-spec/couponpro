@@ -48,8 +48,11 @@ def get_wins_forwarded_today(tenant_id: str) -> int:
     Count how many winning signals were forwarded to FREE channel today.
     Used to skip end-of-day recap if wins were already sent.
     
+    Checks for TP1 sequence forwards which indicate wins were shared.
+    Uses 'sent' status which is the terminal status after execution.
+    
     Returns:
-        Number of win_forward jobs completed today
+        Number of win forward jobs completed today
     """
     try:
         if not db.db_pool or not db.db_pool.connection_pool:
@@ -57,12 +60,14 @@ def get_wins_forwarded_today(tenant_id: str) -> int:
         
         with db.db_pool.get_connection() as conn:
             cursor = conn.cursor()
+            # forward_tp1_sequence is the primary job that forwards winning signals
+            # Also check forward_tp3_update as backup (indicates full TP hit was forwarded)
             cursor.execute("""
                 SELECT COUNT(*)
                 FROM crosspromo_jobs
                 WHERE tenant_id = %s
-                AND job_type = 'win_forward'
-                AND status = 'completed'
+                AND job_type IN ('forward_tp1_sequence', 'forward_tp3_update')
+                AND status = 'sent'
                 AND run_at >= CURRENT_DATE
             """, (tenant_id,))
             
