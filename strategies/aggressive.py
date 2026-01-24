@@ -32,8 +32,10 @@ class AggressiveStrategy(BaseStrategy):
             if config:
                 self.rsi_oversold = config.get('rsi_oversold', 40)
                 self.rsi_overbought = config.get('rsi_overbought', 60)
-                self.atr_sl_multiplier = config.get('atr_sl_multiplier', 2.0)
-                self.atr_tp_multiplier = config.get('atr_tp_multiplier', 4.0)
+                self.atr_sl_multiplier = float(config.get('atr_sl_multiplier', 1.0))
+                self.atr_tp1_multiplier = float(config.get('atr_tp1_multiplier', 1.2))
+                self.atr_tp2_multiplier = float(config.get('atr_tp2_multiplier', 2.0))
+                self.atr_tp3_multiplier = float(config.get('atr_tp3_multiplier', 2.5))
                 self.adx_threshold = config.get('adx_threshold', 15)
                 self.trading_start_hour = config.get('trading_start_hour', 8)
                 self.trading_end_hour = config.get('trading_end_hour', 22)
@@ -52,8 +54,10 @@ class AggressiveStrategy(BaseStrategy):
     def _set_defaults(self):
         self.rsi_oversold = 40
         self.rsi_overbought = 60
-        self.atr_sl_multiplier = 2.0
-        self.atr_tp_multiplier = 4.0
+        self.atr_sl_multiplier = 1.0
+        self.atr_tp1_multiplier = 1.2
+        self.atr_tp2_multiplier = 2.0
+        self.atr_tp3_multiplier = 2.5
         self.adx_threshold = 15
         self.trading_start_hour = 8
         self.trading_end_hour = 22
@@ -93,14 +97,14 @@ class AggressiveStrategy(BaseStrategy):
         
         if signal_type == 'BUY':
             stop_loss = round(entry_price - (atr_value * self.atr_sl_multiplier), 2)
-            tp1 = round(entry_price + (atr_value * self.atr_tp_multiplier * 0.5), 2)
-            tp2 = round(entry_price + (atr_value * self.atr_tp_multiplier * 0.75), 2)
-            tp3 = round(entry_price + (atr_value * self.atr_tp_multiplier), 2)
+            tp1 = round(entry_price + (atr_value * self.atr_tp1_multiplier), 2)
+            tp2 = round(entry_price + (atr_value * self.atr_tp2_multiplier), 2)
+            tp3 = round(entry_price + (atr_value * self.atr_tp3_multiplier), 2)
         else:
             stop_loss = round(entry_price + (atr_value * self.atr_sl_multiplier), 2)
-            tp1 = round(entry_price - (atr_value * self.atr_tp_multiplier * 0.5), 2)
-            tp2 = round(entry_price - (atr_value * self.atr_tp_multiplier * 0.75), 2)
-            tp3 = round(entry_price - (atr_value * self.atr_tp_multiplier), 2)
+            tp1 = round(entry_price - (atr_value * self.atr_tp1_multiplier), 2)
+            tp2 = round(entry_price - (atr_value * self.atr_tp2_multiplier), 2)
+            tp3 = round(entry_price - (atr_value * self.atr_tp3_multiplier), 2)
         
         take_profits = [TakeProfitLevel(price=tp1, percentage=tp1_pct)]
         
