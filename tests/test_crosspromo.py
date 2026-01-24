@@ -67,15 +67,16 @@ class TestMorningMessage:
             message = build_morning_news_message('test-tenant')
             
             assert 'Good morning' in message
-            assert 'XAU/USD' in message or 'Markets steady' in message
+            assert 'Markets are quiet' in message
     
     def test_build_morning_message_with_news(self):
         """Morning message should include news items."""
         from domains.crosspromo.service import build_morning_news_message
         
+        # Metals-API response format - only title field
         mock_news = [
-            {'title': 'Fed rates decision', 'emoji': '📈'},
-            {'title': 'Gold prices surge', 'emoji': '📈'}
+            {'title': 'Fed rates decision'},
+            {'title': 'Gold prices surge'}
         ]
         
         with patch('domains.crosspromo.service.fetch_xau_news', return_value=mock_news):

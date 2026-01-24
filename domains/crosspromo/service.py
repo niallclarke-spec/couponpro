@@ -92,77 +92,69 @@ def is_weekday(tenant_timezone: str = 'UTC') -> bool:
 
 def fetch_xau_news() -> List[Dict[str, Any]]:
     """
-    Fetch latest XAU/USD relevant news from Alpha Vantage.
-    Returns list of news items, each with title, sentiment, emoji.
+    Fetch latest gold/XAU news from Metals-API.
+    Returns list of news items, each with title.
     
-    Uses weighted keyword matching:
-    - Primary keywords (gold, xau, bullion) are prioritized
-    - Secondary keywords (fed, inflation, etc.) are fallback
-    - Checks both title and summary for better relevance
+    Uses dedicated precious metals news endpoint with gold keyword filtering.
+    Much more relevant than generic forex/commodities feeds.
     """
-    api_key = os.environ.get('ALPHA_NEWS_API')
+    api_key = os.environ.get('METALS_API_KEY')
     
     if not api_key:
-        logger.warning("ALPHA_NEWS_API not set, cannot fetch news")
+        logger.warning("METALS_API_KEY not set, cannot fetch news")
         return []
     
     try:
-        url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=forex,commodities,economy_monetary&limit=15&apikey={api_key}'
-        response = requests.get(url, timeout=10)
+        # Metals-API news endpoint with gold keyword
+        url = f'https://metals-api.com/api/get-news?access_key={api_key}&keyword=gold'
+        response = requests.get(url, timeout=15)
         data = response.json()
         
-        primary_matches = []
-        secondary_matches = []
-        
-        if 'feed' in data:
-            for article in data['feed']:
-                title = article.get('title', '')
-                summary = article.get('summary', '')
-                searchable = (title + ' ' + summary).lower()
-                
-                has_primary = any(kw in searchable for kw in XAU_PRIMARY_KEYWORDS)
-                has_secondary = any(kw in searchable for kw in XAU_SECONDARY_KEYWORDS)
-                
-                if not has_primary and not has_secondary:
-                    continue
-                
-                sentiment = article.get('overall_sentiment_label', 'Neutral')
-                if 'Bullish' in sentiment:
-                    emoji = '📈'
-                elif 'Bearish' in sentiment:
-                    emoji = '📉'
-                else:
-                    emoji = '➡️'
-                
-                clean_title = sanitize_news_title(title)
-                if len(clean_title) > 80:
-                    clean_title = clean_title[:77] + '...'
-                
-                item = {
-                    'title': clean_title,
-                    'sentiment': sentiment,
-                    'emoji': emoji
-                }
-                
-                if has_primary:
-                    if len(primary_matches) < 2:
-                        primary_matches.append(item)
-                else:
-                    if len(secondary_matches) < 2:
-                        secondary_matches.append(item)
-                
-                if len(primary_matches) >= 2:
-                    break
-        
-        if primary_matches:
-            return primary_matches[:2]
-        elif secondary_matches:
-            return secondary_matches[:2]
-        else:
+        if not data.get('success'):
+            error_info = data.get('error', {})
+            logger.warning(f"Metals-API returned error: {error_info}")
             return []
         
+        # Safely extract news items from nested Metals-API response
+        # Structure: { data: { news: { data: [...] } } }
+        news_data = data.get('data') if isinstance(data.get('data'), dict) else {}
+        news_container = news_data.get('news') if isinstance(news_data.get('news'), dict) else {}
+        news_items = news_container.get('data', []) if isinstance(news_container, dict) else []
+        
+        if not isinstance(news_items, list):
+            logger.warning(f"Metals-API returned unexpected news format: {type(news_items)}")
+            news_items = []
+        
+        results = []
+        for article in news_items[:5]:  # Check up to 5 articles
+            title = article.get('title', '')
+            if not title:
+                continue
+            
+            # Clean and truncate title
+            clean_title = sanitize_news_title(title)
+            if len(clean_title) > 80:
+                clean_title = clean_title[:77] + '...'
+            
+            results.append({
+                'title': clean_title
+            })
+            
+            if len(results) >= 2:
+                break
+        
+        if results:
+            logger.info(f"Fetched {len(results)} gold news items from Metals-API")
+        else:
+            logger.info("No gold news found from Metals-API")
+        
+        return results
+        
+    except requests.exceptions.Timeout:
+        logger.warning("Metals-API request timed out")
+        return []
     except Exception as e:
-        logger.exception(f"Error fetching news from Alpha Vantage: {e}")
+        logger.exception(f"Error fetching news from Metals-API: {e}")
         return []
 
 
@@ -186,9 +178,7 @@ def build_morning_news_message(tenant_id: str) -> str:
     else:
         summary = "Markets are quiet ahead of the trading session."
     
-    message = f"""☀️ Morning Briefing
-
-☀️ Good morning, traders!
+    message = f"""☀️ Good morning, traders!
 
 {summary}"""
     
