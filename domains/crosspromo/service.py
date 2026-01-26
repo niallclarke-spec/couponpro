@@ -161,24 +161,85 @@ def fetch_xau_news() -> List[Dict[str, Any]]:
 def build_morning_news_message(tenant_id: str) -> str:
     """
     Build the morning news message with greeting and market summary.
-    Reports headlines factually without forcing a gold connection.
+    Uses AI to create a conversational, natural-sounding briefing.
     """
     news_items = fetch_xau_news()
     
-    if news_items:
-        # Just report the headlines without forcing gold connection
-        headlines = [item['title'] for item in news_items[:2]]
-        
-        if len(headlines) == 2:
-            summary = f"Today's key focus: {headlines[0]}... and {headlines[1]}."
-        elif len(headlines) == 1:
-            summary = f"Today's key focus: {headlines[0]}."
-        else:
-            summary = "Markets are quiet ahead of the trading session."
-    else:
-        summary = "Markets are quiet ahead of the trading session."
+    if not news_items:
+        return _fallback_morning_message()
     
-    return summary
+    headlines = [item['title'] for item in news_items[:3]]
+    
+    if not headlines:
+        return _fallback_morning_message()
+    
+    # Use AI to generate a conversational summary
+    return _generate_ai_morning_message(headlines)
+
+
+def _generate_ai_morning_message(headlines: List[str]) -> str:
+    """
+    Use AI to generate a conversational morning briefing from headlines.
+    """
+    from openai import OpenAI
+    
+    try:
+        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
+        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
+        
+        if not api_key or not base_url:
+            return _fallback_morning_message()
+        
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        
+        headlines_text = "\n".join(f"- {h}" for h in headlines)
+        
+        prompt = f"""Write a SHORT morning briefing message for a Telegram gold trading signals channel.
+
+Here are today's gold/market headlines:
+{headlines_text}
+
+Requirements:
+- Write 2-3 sentences MAX that summarize the key themes
+- Make it conversational and natural, like a friend updating you on markets
+- Start with the ☀️ emoji and "Morning Briefing" header on its own line
+- Use simple language, no jargon
+- Don't just repeat the headlines - synthesize the key points
+- Add a short motivational closer (e.g., "Stay sharp out there" or "Let's see what the session brings")
+- Use 1-2 relevant emojis in the body (gold, chart, fire, etc.)
+- Keep under 280 characters for the body text
+
+Example format:
+☀️ Morning Briefing
+
+Gold is catching bids as markets digest inflation data. Eyes on the Fed this week. Stay sharp out there. 💪
+
+Write ONLY the message, nothing else:"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200
+        )
+        
+        message = response.choices[0].message.content.strip()
+        
+        # Validate the response looks reasonable
+        if len(message) < 20 or len(message) > 500:
+            return _fallback_morning_message()
+        
+        return message
+        
+    except Exception as e:
+        logger.warning(f"AI morning message generation failed: {e}")
+        return _fallback_morning_message()
+
+
+def _fallback_morning_message() -> str:
+    """Fallback message when news or AI is unavailable."""
+    return """☀️ Morning Briefing
+
+Markets are warming up for another session. Gold remains in focus as traders eye key levels. Let's see what the day brings. 💪"""
 
 
 def build_vip_soon_message() -> str:

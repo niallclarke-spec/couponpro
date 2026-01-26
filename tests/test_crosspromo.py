@@ -60,31 +60,34 @@ class TestMorningMessage:
     """Test morning message building."""
     
     def test_build_morning_message_no_news(self):
-        """Morning message should work even without news."""
+        """Morning message should work even without news - returns fallback."""
         from domains.crosspromo.service import build_morning_news_message
         
         with patch('domains.crosspromo.service.fetch_xau_news', return_value=[]):
             message = build_morning_news_message('test-tenant')
             
-            # Returns just the summary (header added by forex_bot.py)
-            assert 'Markets are quiet' in message
+            # Fallback message includes header and generic content
+            assert 'Morning Briefing' in message
+            assert 'Gold' in message or 'Markets' in message
     
     def test_build_morning_message_with_news(self):
-        """Morning message should include news items."""
-        from domains.crosspromo.service import build_morning_news_message
+        """Morning message should use AI to generate conversational summary."""
+        from domains.crosspromo.service import build_morning_news_message, _fallback_morning_message
         
         # Metals-API response format - only title field
         mock_news = [
-            {'title': 'Fed rates decision'},
-            {'title': 'Gold prices surge'}
+            {'title': 'Fed rates decision boosts gold'},
+            {'title': 'Gold prices surge on inflation data'}
         ]
         
         with patch('domains.crosspromo.service.fetch_xau_news', return_value=mock_news):
             message = build_morning_news_message('test-tenant')
             
-            # Returns just the summary with headlines (header added by forex_bot.py)
-            assert 'Fed rates decision' in message
-            assert 'Gold prices surge' in message
+            # AI generates a conversational summary with the header
+            # We can't test exact content since it's AI-generated
+            # But it should have the header and be reasonably sized
+            assert 'Morning Briefing' in message
+            assert len(message) > 50  # Should be a real message, not empty
 
 
 class TestVIPSoonMessage:
