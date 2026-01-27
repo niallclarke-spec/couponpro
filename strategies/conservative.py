@@ -32,8 +32,8 @@ class ConservativeStrategy(BaseStrategy):
             if config:
                 self.rsi_oversold = 35
                 self.rsi_overbought = 65
-                self.atr_sl_multiplier = config.get('atr_sl_multiplier', 2.0)
-                self.atr_tp_multiplier = config.get('atr_tp_multiplier', 4.0)
+                self.atr_sl_multiplier = float(config.get('atr_sl_multiplier', 2.0))
+                self.atr_tp_multiplier = float(config.get('atr_tp_multiplier', 4.0))
                 self.adx_threshold = 25
                 self.trading_start_hour = config.get('trading_start_hour', 8)
                 self.trading_end_hour = config.get('trading_end_hour', 22)

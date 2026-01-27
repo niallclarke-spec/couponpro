@@ -66,17 +66,17 @@ class ForexSignalEngine:
             # Use get_active_bot() which reads from bot_config table (set by admin UI)
             self._active_bot_type = get_active_bot(tenant_id=self.tenant_id) or 'aggressive'
             
-            self._active_strategy = get_active_strategy(self._active_bot_type)
+            self._active_strategy = get_active_strategy(self._active_bot_type, tenant_id=self.tenant_id)
             if self._active_strategy:
-                logger.info(f"Loaded strategy: {self._active_strategy.name} ({self._active_bot_type})")
+                logger.info(f"Loaded strategy: {self._active_strategy.name} ({self._active_bot_type}) for tenant {self.tenant_id}")
             else:
                 logger.warning(f"Could not load strategy '{self._active_bot_type}', using aggressive")
                 self._active_bot_type = 'aggressive'
-                self._active_strategy = get_active_strategy('aggressive')
+                self._active_strategy = get_active_strategy('aggressive', tenant_id=self.tenant_id)
         except Exception as e:
             logger.error(f"Error loading strategy: {e}")
             self._active_bot_type = 'aggressive'
-            self._active_strategy = get_active_strategy('aggressive')
+            self._active_strategy = get_active_strategy('aggressive', tenant_id=self.tenant_id)
     
     def get_active_strategy(self):
         """Get the currently active strategy instance"""
@@ -96,9 +96,9 @@ class ForexSignalEngine:
             return False
         
         self._active_bot_type = bot_type
-        self._active_strategy = get_active_strategy(bot_type)
+        self._active_strategy = get_active_strategy(bot_type, tenant_id=self.tenant_id)
         if self._active_strategy:
-            logger.info(f"Switched to strategy: {self._active_strategy.name}")
+            logger.info(f"Switched to strategy: {self._active_strategy.name} for tenant {self.tenant_id}")
         return True
     
     def get_available_strategies(self):
@@ -167,9 +167,9 @@ class ForexSignalEngine:
         if new_bot_type != self._active_bot_type:
             logger.info(f"Strategy changed: {self._active_bot_type} -> {new_bot_type}")
             self._active_bot_type = new_bot_type
-            self._active_strategy = get_active_strategy(new_bot_type)
+            self._active_strategy = get_active_strategy(new_bot_type, tenant_id=self.tenant_id)
             if self._active_strategy:
-                logger.info(f"Hot-reloaded strategy: {self._active_strategy.name}")
+                logger.info(f"Hot-reloaded strategy: {self._active_strategy.name} for tenant {self.tenant_id}")
             else:
                 logger.warning(f"Could not load strategy '{new_bot_type}'")
         else:

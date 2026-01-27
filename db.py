@@ -3695,9 +3695,9 @@ def get_forex_config(tenant_id):
                 updated_at = row[2]
                 
                 # Convert to appropriate type
-                if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour', 'session_start_hour_utc', 'session_end_hour_utc', 'back_to_back_throttle_minutes']:
+                if key in ['rsi_oversold', 'rsi_overbought', 'adx_threshold', 'trading_start_hour', 'trading_end_hour', 'session_start_hour_utc', 'session_end_hour_utc', 'back_to_back_throttle_minutes', 'tp_count']:
                     config[key] = int(value) if value else 0
-                elif key in ['atr_sl_multiplier', 'atr_tp_multiplier']:
+                elif key in ['atr_sl_multiplier', 'atr_tp_multiplier', 'atr_tp1_multiplier', 'atr_tp2_multiplier', 'atr_tp3_multiplier', 'daily_loss_cap_pips', 'atr_mult', 'min_stop_usd']:
                     config[key] = float(value) if value else 0.0
                 else:
                     config[key] = value

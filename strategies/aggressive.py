@@ -201,6 +201,13 @@ class AggressiveStrategy(BaseStrategy):
             
             take_profits, stop_loss = self.calculate_tp_sl(price, atr, signal_type)
             
+            # Log TP/SL calculation details for verification
+            sl_distance = abs(price - stop_loss)
+            tp1_distance = abs(take_profits[0].price - price)
+            from core.pip_calculator import price_to_pips
+            logger.info(f"📐 ATR: ${atr:.2f} ({price_to_pips(atr):.1f} pips) | Multipliers: SL={self.atr_sl_multiplier}x, TP1={self.atr_tp1_multiplier}x, TP2={self.atr_tp2_multiplier}x, TP3={self.atr_tp3_multiplier}x")
+            logger.info(f"📐 Distances: SL=${sl_distance:.2f} ({price_to_pips(sl_distance):.1f} pips), TP1=${tp1_distance:.2f} ({price_to_pips(tp1_distance):.1f} pips)")
+            
             indicators = {
                 'rsi': rsi,
                 'macd': macd_data['macd'],

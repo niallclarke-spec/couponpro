@@ -47,7 +47,7 @@ class RajaBanksStrategy(BaseStrategy):
         try:
             config = get_forex_config(tenant_id=self.tenant_id)
             if config:
-                self.atr_sl_multiplier = config.get('atr_sl_multiplier', 1.5)
+                self.atr_sl_multiplier = float(config.get('atr_sl_multiplier', 1.5))
                 self.daily_loss_cap_pips = float(config.get('daily_loss_cap_pips', 50.0))
             else:
                 self._set_defaults()

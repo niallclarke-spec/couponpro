@@ -111,7 +111,10 @@ class ForexTelegramBot:
             if macd is not None:
                 indicator_parts.append(f"MACD: {macd:.4f}")
             if atr is not None:
-                indicator_parts.append(f"ATR: {atr:.2f}")
+                # Display ATR in pips for better trader readability (ATR from API is in dollars)
+                from core.pip_calculator import price_to_pips
+                atr_pips = price_to_pips(atr)
+                indicator_parts.append(f"ATR: {atr_pips:.1f} pips")
             indicator_line = f"\n📊 {' | '.join(indicator_parts)}" if indicator_parts else ""
             
             # Capture signal time for transparency
