@@ -1,0 +1,655 @@
+Jan 29 00:08:46  [2026-01-29 00:08:46] [INFO] [generator] [tenant:entrylab] [req:020ebc2f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 00:23:46  [2026-01-29 00:23:46] [INFO] [generator] [tenant:entrylab] [req:63ee6c68] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 00:38:46  [2026-01-29 00:38:46] [INFO] [generator] [tenant:entrylab] [req:7ab70d1a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 00:53:46  [2026-01-29 00:53:46] [INFO] [generator] [tenant:entrylab] [req:885b4a22] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 01:08:47  [2026-01-29 01:08:47] [INFO] [generator] [tenant:entrylab] [req:833f5d03] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 01:23:47  [2026-01-29 01:23:47] [INFO] [generator] [tenant:entrylab] [req:fbf39dc6] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 01:38:47  [2026-01-29 01:38:47] [INFO] [generator] [tenant:entrylab] [req:551c3606] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 01:53:47  [2026-01-29 01:53:47] [INFO] [generator] [tenant:entrylab] [req:ad608273] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 02:08:48  [2026-01-29 02:08:48] [INFO] [generator] [tenant:entrylab] [req:8446eae0] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 02:23:48  [2026-01-29 02:23:48] [INFO] [generator] [tenant:entrylab] [req:e5ac36e9] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 02:38:48  [2026-01-29 02:38:48] [INFO] [generator] [tenant:entrylab] [req:d075c741] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 02:53:48  [2026-01-29 02:53:48] [INFO] [generator] [tenant:entrylab] [req:9d8b84ce] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 03:08:49  [2026-01-29 03:08:49] [INFO] [generator] [tenant:entrylab] [req:d84c2d06] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 03:19:36  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 03:19:36  [WEBHOOK-ENDPOINT] Received 361 bytes
+Jan 29 03:19:36  [WEBHOOK-ENDPOINT] Processing update_id: 325866668
+Jan 29 03:19:36  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 03:19:36  [WEBHOOK] Received update_id: 325866668
+Jan 29 03:19:36  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 29 03:19:36  [GENERATE] DB fallback failed: cannot access local variable 'asyncio' where it is not associated with a value
+Jan 29 03:19:37  [WEBHOOK] ✅ Update processed successfully
+Jan 29 03:19:37  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866668 in 0.06s, result: {'status': 'ok'}
+Jan 29 03:19:37  10.244.7.214 - - [29/Jan/2026 03:19:37] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 03:19:40  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 03:19:40  [WEBHOOK-ENDPOINT] Received 358 bytes
+Jan 29 03:19:40  [WEBHOOK-ENDPOINT] Processing update_id: 325866669
+Jan 29 03:19:40  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 03:19:40  [WEBHOOK] Received update_id: 325866669
+Jan 29 03:19:40  [WEBHOOK] Processing: type=Message, text=/start
+Jan 29 03:19:40  [WEBHOOK] ✅ Update processed successfully
+Jan 29 03:19:40  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866669 in 0.05s, result: {'status': 'ok'}
+Jan 29 03:19:40  10.244.7.214 - - [29/Jan/2026 03:19:40] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 03:19:48  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 03:19:48  [WEBHOOK-ENDPOINT] Received 299 bytes
+Jan 29 03:19:48  [WEBHOOK-ENDPOINT] Processing update_id: 325866670
+Jan 29 03:19:48  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 03:19:48  [WEBHOOK] Received update_id: 325866670
+Jan 29 03:19:48  [WEBHOOK] Processing: type=Message, text=Dk333
+Jan 29 03:19:48  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 29 03:19:48  [COUPON-HANDLER] Processing coupon: DK333, chat_id: 5075568526
+Jan 29 03:19:48  [COUPON] Validating 'DK333' (attempt 1/3)...
+Jan 29 03:19:48  [COUPON] API response: status=200, body_length=301
+Jan 29 03:19:48  [COUPON] 💾 Cached validation for 'DK333'
+Jan 29 03:19:48  [COUPON] ✅ 'DK333' is VALID
+Jan 29 03:19:48  [COUPON-HANDLER] ✅ Stored coupon 'DK333' in cache for chat_id 5075568526
+Jan 29 03:19:48  [TELEGRAM] ✅ User 5075568526 tracked successfully in database (username=DK_0333, name=D K)
+Jan 29 03:19:48  [TELEGRAM] Cache miss, downloading index.json
+Jan 29 03:19:48  [TELEGRAM] Index cached for 300s
+Jan 29 03:19:48  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 29 03:19:49  [WEBHOOK] ✅ Update processed successfully
+Jan 29 03:19:49  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866670 in 0.45s, result: {'status': 'ok'}
+Jan 29 03:19:49  10.244.7.214 - - [29/Jan/2026 03:19:49] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 03:21:56  10.244.5.120 - - [29/Jan/2026 03:21:56] "GET / HTTP/1.1" 302 -
+Jan 29 03:21:56  [2026-01-29 03:21:56] [WARNING] [clerk_auth] [req:d985ab2c] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Jan 29 03:21:56  10.244.4.249 - - [29/Jan/2026 03:21:56] "GET /admin HTTP/1.1" 302 -
+Jan 29 03:21:56  10.244.6.27 - - [29/Jan/2026 03:21:56] "GET /login HTTP/1.1" 200 -
+Jan 29 03:23:49  [2026-01-29 03:23:49] [INFO] [generator] [tenant:entrylab] [req:6326faf1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 03:38:49  [2026-01-29 03:38:49] [INFO] [generator] [tenant:entrylab] [req:19f54c21] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 03:53:49  [2026-01-29 03:53:49] [INFO] [generator] [tenant:entrylab] [req:0e3828a4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 04:08:50  [2026-01-29 04:08:50] [INFO] [generator] [tenant:entrylab] [req:2d8511de] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 04:23:50  [2026-01-29 04:23:50] [INFO] [generator] [tenant:entrylab] [req:b31d0f6e] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 04:36:45  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 04:36:45  [WEBHOOK-ENDPOINT] Received 345 bytes
+Jan 29 04:36:45  [WEBHOOK-ENDPOINT] Processing update_id: 325866671
+Jan 29 04:36:45  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 04:36:45  [WEBHOOK] Received update_id: 325866671
+Jan 29 04:36:45  [WEBHOOK] Processing: type=Message, text=/generate
+Jan 29 04:36:45  [GENERATE] DB fallback failed: cannot access local variable 'asyncio' where it is not associated with a value
+Jan 29 04:36:45  [WEBHOOK] ✅ Update processed successfully
+Jan 29 04:36:45  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866671 in 0.07s, result: {'status': 'ok'}
+Jan 29 04:36:45  10.244.7.214 - - [29/Jan/2026 04:36:45] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 04:36:49  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 04:36:49  [WEBHOOK-ENDPOINT] Received 342 bytes
+Jan 29 04:36:49  [WEBHOOK-ENDPOINT] Processing update_id: 325866672
+Jan 29 04:36:49  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 04:36:49  [WEBHOOK] Received update_id: 325866672
+Jan 29 04:36:49  [WEBHOOK] Processing: type=Message, text=/start
+Jan 29 04:36:49  [WEBHOOK] ✅ Update processed successfully
+Jan 29 04:36:49  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866672 in 0.03s, result: {'status': 'ok'}
+Jan 29 04:36:49  10.244.7.214 - - [29/Jan/2026 04:36:49] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 04:36:53  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 04:36:53  [WEBHOOK-ENDPOINT] Received 287 bytes
+Jan 29 04:36:53  [WEBHOOK-ENDPOINT] Processing update_id: 325866673
+Jan 29 04:36:53  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 04:36:53  [WEBHOOK] Received update_id: 325866673
+Jan 29 04:36:53  [WEBHOOK] Processing: type=Message, text=ramavat10
+Jan 29 04:36:53  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Jan 29 04:36:53  [COUPON-HANDLER] Processing coupon: RAMAVAT10, chat_id: 5710716868
+Jan 29 04:36:53  [COUPON] Validating 'RAMAVAT10' (attempt 1/3)...
+Jan 29 04:36:53  [COUPON] API response: status=200, body_length=305
+Jan 29 04:36:53  [COUPON] 💾 Cached validation for 'RAMAVAT10'
+Jan 29 04:36:53  [COUPON] ✅ 'RAMAVAT10' is VALID
+Jan 29 04:36:53  [COUPON-HANDLER] ✅ Stored coupon 'RAMAVAT10' in cache for chat_id 5710716868
+Jan 29 04:36:53  [TELEGRAM] ✅ User 5710716868 tracked successfully in database (username=Tjaygalapate, name=Tjay None)
+Jan 29 04:36:53  [TELEGRAM] Cache miss, downloading index.json
+Jan 29 04:36:53  [TELEGRAM] Index cached for 300s
+Jan 29 04:36:53  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Jan 29 04:36:53  [WEBHOOK] ✅ Update processed successfully
+Jan 29 04:36:53  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866673 in 0.42s, result: {'status': 'ok'}
+Jan 29 04:36:53  10.244.7.214 - - [29/Jan/2026 04:36:53] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 04:36:55  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Jan 29 04:36:55  [WEBHOOK-ENDPOINT] Received 1435 bytes
+Jan 29 04:36:55  [WEBHOOK-ENDPOINT] Processing update_id: 325866674
+Jan 29 04:36:55  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Jan 29 04:36:55  [WEBHOOK] Received update_id: 325866674
+Jan 29 04:36:55  [WEBHOOK] Processing: type=CallbackQuery, text=template:january-20-off
+Jan 29 04:36:55  [HANDLER] handle_template_selection called! data=template:january-20-off
+Jan 29 04:36:55  [HANDLER] chat_id=5710716868, coupon_code=RAMAVAT10
+Jan 29 04:36:55  [HANDLER] Coupon code: RAMAVAT10
+Jan 29 04:36:55  [TELEGRAM] Generating single template: january-20-off
+Jan 29 04:36:55  [TELEGRAM] _generate_and_send called: template=january-20-off, coupon=RAMAVAT10, chat_id=5710716868
+Jan 29 04:36:55  [TELEGRAM] Starting image generation...
+Jan 29 04:36:56  [TELEGRAM] Image generation finished: error=None
+Jan 29 04:36:57  [TELEGRAM] About to log SUCCESS usage: chat_id=5710716868
+Jan 29 04:36:57  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=5710716868, template=january-20-off, coupon=RAMAVAT10, success=True, device=unknown
+Jan 29 04:36:57  [2026-01-29 04:36:57] [INFO] [db] [req:57daa629] Attempting to log: chat_id=5710716868, template=january-20-off, coupon=RAMAVAT10, success=True, error=None, device=unknown
+Jan 29 04:36:57  [2026-01-29 04:36:57] [INFO] [db] [req:57daa629] Successfully logged usage
+Jan 29 04:36:57  [BOT_USAGE] ✅ Successfully logged usage to database
+Jan 29 04:36:57  [TELEGRAM] Finished logging SUCCESS usage
+Jan 29 04:36:57  [TELEGRAM] Generation complete for january-20-off
+Jan 29 04:36:57  [WEBHOOK] ✅ Update processed successfully
+Jan 29 04:36:57  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866674 in 1.73s, result: {'status': 'ok'}
+Jan 29 04:36:57  10.244.7.214 - - [29/Jan/2026 04:36:57] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Jan 29 04:38:50  [2026-01-29 04:38:50] [INFO] [generator] [tenant:entrylab] [req:3a8d10c4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 04:53:50  [2026-01-29 04:53:50] [INFO] [generator] [tenant:entrylab] [req:3ac3e846] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 05:08:51  [2026-01-29 05:08:51] [INFO] [generator] [tenant:entrylab] [req:5ee1d969] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 05:23:51  [2026-01-29 05:23:51] [INFO] [generator] [tenant:entrylab] [req:d5bbd8d1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 05:38:51  [2026-01-29 05:38:51] [INFO] [generator] [tenant:entrylab] [req:5bb78753] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 05:53:51  [2026-01-29 05:53:51] [INFO] [generator] [tenant:entrylab] [req:a956c896] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 06:08:52  [2026-01-29 06:08:52] [INFO] [generator] [tenant:entrylab] [req:20e65b0d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 06:20:52  [2026-01-29 06:20:52] [INFO] [forex_scheduler] Generating morning briefing with Alpha Vantage news...
+Jan 29 06:20:52  [2026-01-29 06:20:52] [INFO] [service] Fetched 2 gold news items from Metals-API
+Jan 29 06:20:52  [2026-01-29 06:20:52] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 06:20:52  [2026-01-29 06:20:52] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 06:20:53  [2026-01-29 06:20:53] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=639
+Jan 29 06:20:53  [2026-01-29 06:20:53] [INFO] [forex_bot] Posted morning briefing
+Jan 29 06:20:53  [2026-01-29 06:20:53] [INFO] [forex_scheduler] ✅ Morning briefing posted with news
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [generator] [tenant:entrylab] [req:c418daaa] 🔄 forex_config change detected (guardrails/indicators)
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [generator] [tenant:entrylab] [req:c418daaa] 🔄 Reloading config...
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [forex_signals] [tenant:entrylab] [req:c418daaa] Reloading configuration...
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [forex_signals] [tenant:entrylab] [req:c418daaa] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [forex_signals] [tenant:entrylab] [req:c418daaa] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [forex_signals] [tenant:entrylab] [req:c418daaa] Strategy unchanged: raja_banks
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [runtime] [tenant:entrylab] [req:c418daaa] Config hot-reloaded for signal engine
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [generator] [tenant:entrylab] [req:c418daaa] ✅ Config hot-reloaded successfully
+Jan 29 06:23:53  [2026-01-29 06:23:53] [INFO] [generator] [tenant:entrylab] [req:c418daaa] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 06:30:53  [2026-01-29 06:30:53] [INFO] [forex_scheduler] Generating detailed daily recap for yesterday...
+Jan 29 06:30:56  [2026-01-29 06:30:56] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 06:30:56  [2026-01-29 06:30:56] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 06:30:56  [2026-01-29 06:30:56] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=640
+Jan 29 06:30:56  [2026-01-29 06:30:56] [INFO] [forex_bot] Posted detailed daily recap to VIP channel
+Jan 29 06:30:56  [2026-01-29 06:30:56] [INFO] [forex_scheduler] ✅ Daily recap posted: 4 signals, 50% win rate, +42.7 pips
+Jan 29 06:31:56  [2026-01-29 06:31:56] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 29 06:32:56  [2026-01-29 06:32:56] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 29 06:33:56  [2026-01-29 06:33:56] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 29 06:34:56  [2026-01-29 06:34:56] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [generator] [tenant:entrylab] [req:625c1402] 🔄 forex_config change detected (guardrails/indicators)
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [generator] [tenant:entrylab] [req:625c1402] 🔄 Reloading config...
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [forex_signals] [tenant:entrylab] [req:625c1402] Reloading configuration...
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [forex_signals] [tenant:entrylab] [req:625c1402] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [forex_signals] [tenant:entrylab] [req:625c1402] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [forex_signals] [tenant:entrylab] [req:625c1402] Strategy unchanged: raja_banks
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [runtime] [tenant:entrylab] [req:625c1402] Config hot-reloaded for signal engine
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [generator] [tenant:entrylab] [req:625c1402] ✅ Config hot-reloaded successfully
+Jan 29 06:38:56  [2026-01-29 06:38:56] [INFO] [generator] [tenant:entrylab] [req:625c1402] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 06:53:57  [2026-01-29 06:53:57] [INFO] [generator] [tenant:entrylab] [req:34e0d09a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 07:00:57  [2026-01-29 07:00:57] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence (scheduled for 07:00)...
+Jan 29 07:00:57  [2026-01-29 07:00:57] [INFO] [repo] Enqueued job 70eaf5d1-a7be-4347-8301-8f28b8cfcf8d type=morning_news for tenant entrylab
+Jan 29 07:00:57  [2026-01-29 07:00:57] [INFO] [repo] Enqueued job 7599e54c-5409-48ad-adf1-a40c64766f25 type=vip_soon for tenant entrylab
+Jan 29 07:00:57  [2026-01-29 07:00:57] [INFO] [repo] Enqueued job 8461c5bb-2c74-4430-ae24-c212e1bc9cf8 type=eod_pip_brag for tenant entrylab
+Jan 29 07:00:57  [2026-01-29 07:00:57] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon', 'eod_pip_brag']
+Jan 29 07:01:02  [2026-01-29 07:01:02] [INFO] [repo] Claimed 1 due jobs
+Jan 29 07:01:02  [2026-01-29 07:01:02] [INFO] [crosspromo_worker] Processing job 70eaf5d1-a7be-4347-8301-8f28b8cfcf8d type=morning_news tenant=entrylab
+Jan 29 07:01:02  [2026-01-29 07:01:02] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 07:01:02  [2026-01-29 07:01:02] [INFO] [service] Fetched 2 gold news items from Metals-API
+Jan 29 07:01:03  [2026-01-29 07:01:03] [INFO] [client] Message sent to -1003055722817
+Jan 29 07:01:03  [2026-01-29 07:01:03] [INFO] [repo] Job 70eaf5d1-a7be-4347-8301-8f28b8cfcf8d marked as sent
+Jan 29 07:01:03  [2026-01-29 07:01:03] [INFO] [crosspromo_worker] Job 70eaf5d1-a7be-4347-8301-8f28b8cfcf8d completed successfully
+Jan 29 07:01:03  [2026-01-29 07:01:03] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [generator] [tenant:entrylab] [req:c9437c70] 🔄 forex_config change detected (guardrails/indicators)
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [generator] [tenant:entrylab] [req:c9437c70] 🔄 Reloading config...
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [forex_signals] [tenant:entrylab] [req:c9437c70] Reloading configuration...
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [forex_signals] [tenant:entrylab] [req:c9437c70] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [forex_signals] [tenant:entrylab] [req:c9437c70] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [forex_signals] [tenant:entrylab] [req:c9437c70] Strategy unchanged: raja_banks
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [runtime] [tenant:entrylab] [req:c9437c70] Config hot-reloaded for signal engine
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [generator] [tenant:entrylab] [req:c9437c70] ✅ Config hot-reloaded successfully
+Jan 29 07:08:57  [2026-01-29 07:08:57] [INFO] [generator] [tenant:entrylab] [req:c9437c70] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 07:23:57  [2026-01-29 07:23:57] [INFO] [generator] [tenant:entrylab] [req:4f5a6595] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 07:38:58  [2026-01-29 07:38:58] [INFO] [generator] [tenant:entrylab] [req:44c33ada] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [repo] Claimed 1 due jobs
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [crosspromo_worker] Processing job 7599e54c-5409-48ad-adf1-a40c64766f25 type=vip_soon tenant=entrylab
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [client] Message sent to -1003055722817
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [repo] Job 7599e54c-5409-48ad-adf1-a40c64766f25 marked as sent
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [crosspromo_worker] Job 7599e54c-5409-48ad-adf1-a40c64766f25 completed successfully
+Jan 29 07:46:04  [2026-01-29 07:46:04] [INFO] [crosspromo_worker] Processed 1 job(s)
+Jan 29 07:53:58  [2026-01-29 07:53:58] [INFO] [generator] [tenant:entrylab] [req:9612eb7e] Outside trading hours (8AM-10PM GMT), skipping signal check
+Jan 29 08:08:58  [2026-01-29 08:08:58] [INFO] [forex_signals] [tenant:entrylab] [req:e41f67be] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:08:58  [2026-01-29 08:08:58] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Checking for signals on XAU/USD 15min...
+Jan 29 08:08:58  [2026-01-29 08:08:58] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Session: London
+Jan 29 08:08:59  [2026-01-29 08:08:59] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 08:08:59  [2026-01-29 08:08:59] [INFO] [generator] [tenant:entrylab] [req:e41f67be] 📊 Checking 1-hour timeframe...
+Jan 29 08:08:59  [2026-01-29 08:08:59] [INFO] [forex_signals] [tenant:entrylab] [req:e41f67be] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:08:59  [2026-01-29 08:08:59] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Checking for signals on XAU/USD 1h...
+Jan 29 08:08:59  [2026-01-29 08:08:59] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Session: London
+Jan 29 08:09:00  [2026-01-29 08:09:00] [INFO] [raja_banks] [tenant:entrylab] [req:e41f67be] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 08:24:00  [2026-01-29 08:24:00] [INFO] [forex_signals] [tenant:entrylab] [req:97604b59] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:24:00  [2026-01-29 08:24:00] [INFO] [raja_banks] [tenant:entrylab] [req:97604b59] Checking for signals on XAU/USD 15min...
+Jan 29 08:24:00  [2026-01-29 08:24:00] [INFO] [raja_banks] [tenant:entrylab] [req:97604b59] Session: London
+Jan 29 08:24:02  [2026-01-29 08:24:02] [INFO] [raja_banks] [tenant:entrylab] [req:97604b59] No impulse breakout detected
+Jan 29 08:39:02  [2026-01-29 08:39:02] [INFO] [forex_signals] [tenant:entrylab] [req:8321c6a7] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:39:02  [2026-01-29 08:39:02] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Checking for signals on XAU/USD 15min...
+Jan 29 08:39:02  [2026-01-29 08:39:02] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Session: London
+Jan 29 08:39:03  [2026-01-29 08:39:03] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 08:39:03  [2026-01-29 08:39:03] [INFO] [generator] [tenant:entrylab] [req:8321c6a7] 📊 Checking 1-hour timeframe...
+Jan 29 08:39:03  [2026-01-29 08:39:03] [INFO] [forex_signals] [tenant:entrylab] [req:8321c6a7] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:39:03  [2026-01-29 08:39:03] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Checking for signals on XAU/USD 1h...
+Jan 29 08:39:03  [2026-01-29 08:39:03] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Session: London
+Jan 29 08:39:04  [2026-01-29 08:39:04] [INFO] [raja_banks] [tenant:entrylab] [req:8321c6a7] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 08:54:04  [2026-01-29 08:54:04] [INFO] [forex_signals] [tenant:entrylab] [req:6b8edcb8] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 08:54:04  [2026-01-29 08:54:04] [INFO] [raja_banks] [tenant:entrylab] [req:6b8edcb8] Checking for signals on XAU/USD 15min...
+Jan 29 08:54:04  [2026-01-29 08:54:04] [INFO] [raja_banks] [tenant:entrylab] [req:6b8edcb8] Session: London
+Jan 29 08:54:05  [2026-01-29 08:54:05] [INFO] [raja_banks] [tenant:entrylab] [req:6b8edcb8] No impulse breakout detected
+Jan 29 09:09:06  [2026-01-29 09:09:06] [INFO] [forex_signals] [tenant:entrylab] [req:6803303f] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:09:06  [2026-01-29 09:09:06] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] Checking for signals on XAU/USD 15min...
+Jan 29 09:09:06  [2026-01-29 09:09:06] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] Session: London
+Jan 29 09:09:07  [2026-01-29 09:09:07] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] No impulse breakout detected
+Jan 29 09:09:07  [2026-01-29 09:09:07] [INFO] [generator] [tenant:entrylab] [req:6803303f] 📊 Checking 1-hour timeframe...
+Jan 29 09:09:07  [2026-01-29 09:09:07] [INFO] [forex_signals] [tenant:entrylab] [req:6803303f] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:09:07  [2026-01-29 09:09:07] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] Checking for signals on XAU/USD 1h...
+Jan 29 09:09:07  [2026-01-29 09:09:07] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] Session: London
+Jan 29 09:09:08  [2026-01-29 09:09:08] [INFO] [raja_banks] [tenant:entrylab] [req:6803303f] No impulse breakout detected
+Jan 29 09:24:08  [2026-01-29 09:24:08] [INFO] [forex_signals] [tenant:entrylab] [req:7831916e] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:24:08  [2026-01-29 09:24:08] [INFO] [raja_banks] [tenant:entrylab] [req:7831916e] Checking for signals on XAU/USD 15min...
+Jan 29 09:24:08  [2026-01-29 09:24:08] [INFO] [raja_banks] [tenant:entrylab] [req:7831916e] Session: London
+Jan 29 09:24:09  [2026-01-29 09:24:09] [INFO] [raja_banks] [tenant:entrylab] [req:7831916e] No impulse breakout detected
+Jan 29 09:39:10  [2026-01-29 09:39:10] [INFO] [forex_signals] [tenant:entrylab] [req:d88cd30d] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:39:10  [2026-01-29 09:39:10] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] Checking for signals on XAU/USD 15min...
+Jan 29 09:39:10  [2026-01-29 09:39:10] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] Session: London
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] With-trend BUY (Bullish)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] 🎯 Signal generated: BUY @ 5518.18
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] 📊 TP1: 5528.78 (50%)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] 📊 TP2: 5570.90 (30%)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] 🛑 SL: 5512.32 (tight candle-based)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [raja_banks] [tenant:entrylab] [req:d88cd30d] 📈 Signals today: 1/4
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_signals] [tenant:entrylab] [req:d88cd30d] ✅ Signal from Raja Banks Gold Start: BUY @ 5518.18
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [bot_credentials] [tenant:entrylab] [req:d88cd30d] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [telegram_sender] [tenant:entrylab] [req:d88cd30d] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_bot] [tenant:entrylab] [req:d88cd30d] Created draft signal #190, posting to Telegram...
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [telegram_sender] [tenant:entrylab] [req:d88cd30d] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=641
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_bot] [tenant:entrylab] [req:d88cd30d] Signal #190 status updated to pending (Telegram msg: 641)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_bot] [tenant:entrylab] [req:d88cd30d] Stored original indicators for signal #190: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_bot] [tenant:entrylab] [req:d88cd30d] Posted BUY signal to Telegram (ID: 190)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [messenger] [tenant:entrylab] [req:d88cd30d] Signal #190 posted to Telegram
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [generator] [tenant:entrylab] [req:d88cd30d] ✅ New 15min signal #190 posted successfully
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [generator] [tenant:entrylab] [req:d88cd30d] ⏭️ Skipped 1h check (signal already active)
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_signals] [tenant:entrylab] [req:d112a3f2] Checking 1 active signals...
+Jan 29 09:39:11  [2026-01-29 09:39:11] [INFO] [forex_signals] [tenant:entrylab] [req:d112a3f2] Current XAU/USD price: 5518.18
+Jan 29 09:40:12  [2026-01-29 09:40:12] [INFO] [forex_signals] [tenant:entrylab] [req:fcd7810e] Checking 1 active signals...
+Jan 29 09:40:12  [2026-01-29 09:40:12] [INFO] [forex_signals] [tenant:entrylab] [req:fcd7810e] Current XAU/USD price: 5518.66
+Jan 29 09:41:12  [2026-01-29 09:41:12] [INFO] [forex_signals] [tenant:entrylab] [req:7694fd98] Checking 1 active signals...
+Jan 29 09:41:13  [2026-01-29 09:41:13] [INFO] [forex_signals] [tenant:entrylab] [req:7694fd98] Current XAU/USD price: 5520.30
+Jan 29 09:42:13  [2026-01-29 09:42:13] [INFO] [forex_signals] [tenant:entrylab] [req:e083a816] Checking 1 active signals...
+Jan 29 09:42:13  [2026-01-29 09:42:13] [INFO] [forex_signals] [tenant:entrylab] [req:e083a816] Current XAU/USD price: 5524.46
+Jan 29 09:42:14  [2026-01-29 09:42:14] [INFO] [bot_credentials] [tenant:entrylab] [req:1b759405] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 09:42:14  [2026-01-29 09:42:14] [INFO] [telegram_sender] [tenant:entrylab] [req:1b759405] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 09:42:14  [2026-01-29 09:42:14] [INFO] [telegram_sender] [tenant:entrylab] [req:1b759405] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=642
+Jan 29 09:42:14  [2026-01-29 09:42:14] [INFO] [messenger] [tenant:entrylab] [req:1b759405] Posted milestone: tp1_40_motivational
+Jan 29 09:43:14  [2026-01-29 09:43:14] [INFO] [forex_signals] [tenant:entrylab] [req:c57c2858] Checking 1 active signals...
+Jan 29 09:43:14  [2026-01-29 09:43:14] [INFO] [forex_signals] [tenant:entrylab] [req:c57c2858] Current XAU/USD price: 5525.66
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [bot_credentials] [tenant:entrylab] [req:d623385e] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [telegram_sender] [tenant:entrylab] [req:d623385e] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [telegram_sender] [tenant:entrylab] [req:d623385e] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=643
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [messenger] [tenant:entrylab] [req:d623385e] Posted milestone: tp1_70_breakeven
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [db] [tenant:entrylab] [req:d623385e] Updated signal 190 effective_sl to 5518.18
+Jan 29 09:43:15  [2026-01-29 09:43:15] [INFO] [monitor] [tenant:entrylab] [req:d623385e] 🔒 Set effective_sl to entry (breakeven) for signal #190
+Jan 29 09:44:15  [2026-01-29 09:44:15] [INFO] [forex_signals] [tenant:entrylab] [req:f5d7882d] Checking 1 active signals...
+Jan 29 09:44:15  [2026-01-29 09:44:15] [INFO] [forex_signals] [tenant:entrylab] [req:f5d7882d] Current XAU/USD price: 5527.41
+Jan 29 09:44:15  [2026-01-29 09:44:15] [INFO] [monitor] [tenant:entrylab] [req:f2e3d664] ⏭️ Milestone tp1_70 already claimed for signal #190
+Jan 29 09:45:15  [2026-01-29 09:45:15] [INFO] [forex_signals] [tenant:entrylab] [req:831dd9cf] Checking 1 active signals...
+Jan 29 09:45:16  [2026-01-29 09:45:16] [INFO] [forex_signals] [tenant:entrylab] [req:831dd9cf] Current XAU/USD price: 5527.09
+Jan 29 09:45:16  [2026-01-29 09:45:16] [INFO] [monitor] [tenant:entrylab] [req:d74015d9] ⏭️ Milestone tp1_70 already claimed for signal #190
+Jan 29 09:46:16  [2026-01-29 09:46:16] [INFO] [forex_signals] [tenant:entrylab] [req:304478b0] Checking 1 active signals...
+Jan 29 09:46:16  [2026-01-29 09:46:16] [INFO] [forex_signals] [tenant:entrylab] [req:304478b0] Current XAU/USD price: 5525.25
+Jan 29 09:46:17  [2026-01-29 09:46:17] [INFO] [monitor] [tenant:entrylab] [req:acb3bfa3] ⏭️ Milestone tp1_40 already claimed for signal #190
+Jan 29 09:47:17  [2026-01-29 09:47:17] [INFO] [forex_signals] [tenant:entrylab] [req:a053a401] Checking 1 active signals...
+Jan 29 09:47:17  [2026-01-29 09:47:17] [INFO] [forex_signals] [tenant:entrylab] [req:a053a401] Current XAU/USD price: 5526.28
+Jan 29 09:47:17  [2026-01-29 09:47:17] [INFO] [monitor] [tenant:entrylab] [req:2bb75d3d] ⏭️ Milestone tp1_70 already claimed for signal #190
+Jan 29 09:48:17  [2026-01-29 09:48:17] [INFO] [forex_signals] [tenant:entrylab] [req:ce35f5a7] Checking 1 active signals...
+Jan 29 09:48:18  [2026-01-29 09:48:18] [INFO] [forex_signals] [tenant:entrylab] [req:ce35f5a7] Current XAU/USD price: 5521.70
+Jan 29 09:49:18  [2026-01-29 09:49:18] [INFO] [forex_signals] [tenant:entrylab] [req:983c7f84] Checking 1 active signals...
+Jan 29 09:49:18  [2026-01-29 09:49:18] [INFO] [forex_signals] [tenant:entrylab] [req:983c7f84] Current XAU/USD price: 5517.61
+Jan 29 09:49:18  [2026-01-29 09:49:18] [INFO] [forex_signals] [tenant:entrylab] [req:983c7f84] 🔒 Signal #190 SL (effective) HIT @ $5518.18! Breakeven exit
+Jan 29 09:49:18  [2026-01-29 09:49:18] [INFO] [bot_credentials] [tenant:entrylab] [req:983c7f84] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 09:49:18  [2026-01-29 09:49:18] [INFO] [telegram_sender] [tenant:entrylab] [req:983c7f84] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 09:49:19  [2026-01-29 09:49:19] [INFO] [telegram_sender] [tenant:entrylab] [req:983c7f84] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=644
+Jan 29 09:49:19  [2026-01-29 09:49:19] [INFO] [messenger] [tenant:entrylab] [req:983c7f84] Posted breakeven exit notification
+Jan 29 09:49:19  [2026-01-29 09:49:19] [INFO] [monitor] [tenant:entrylab] [req:983c7f84] ✅ Signal #190 closed at breakeven
+Jan 29 09:49:19  [2026-01-29 09:49:19] [INFO] [forex_signals] [tenant:entrylab] [req:983c7f84] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:49:19  [2026-01-29 09:49:19] [INFO] [monitor] [tenant:entrylab] [req:983c7f84] Strategy reloaded after signal #190 closed
+Jan 29 09:54:19  [2026-01-29 09:54:19] [INFO] [forex_signals] [tenant:entrylab] [req:55a34639] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 09:54:19  [2026-01-29 09:54:19] [INFO] [raja_banks] [tenant:entrylab] [req:55a34639] Checking for signals on XAU/USD 15min...
+Jan 29 09:54:19  [2026-01-29 09:54:19] [INFO] [raja_banks] [tenant:entrylab] [req:55a34639] Session: London
+Jan 29 09:54:20  [2026-01-29 09:54:20] [INFO] [raja_banks] [tenant:entrylab] [req:55a34639] No impulse breakout detected
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [forex_signals] [tenant:entrylab] [req:23b3a200] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [raja_banks] [tenant:entrylab] [req:23b3a200] Checking for signals on XAU/USD 15min...
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [raja_banks] [tenant:entrylab] [req:23b3a200] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [generator] [tenant:entrylab] [req:23b3a200] 📊 Checking 1-hour timeframe...
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [forex_signals] [tenant:entrylab] [req:23b3a200] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [raja_banks] [tenant:entrylab] [req:23b3a200] Checking for signals on XAU/USD 1h...
+Jan 29 10:09:20  [2026-01-29 10:09:20] [INFO] [raja_banks] [tenant:entrylab] [req:23b3a200] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 10:24:20  [2026-01-29 10:24:20] [INFO] [forex_signals] [tenant:entrylab] [req:95e7d77a] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:24:20  [2026-01-29 10:24:20] [INFO] [raja_banks] [tenant:entrylab] [req:95e7d77a] Checking for signals on XAU/USD 15min...
+Jan 29 10:24:20  [2026-01-29 10:24:20] [INFO] [raja_banks] [tenant:entrylab] [req:95e7d77a] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [forex_signals] [tenant:entrylab] [req:f28ba4b8] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [raja_banks] [tenant:entrylab] [req:f28ba4b8] Checking for signals on XAU/USD 15min...
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [raja_banks] [tenant:entrylab] [req:f28ba4b8] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [generator] [tenant:entrylab] [req:f28ba4b8] 📊 Checking 1-hour timeframe...
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [forex_signals] [tenant:entrylab] [req:f28ba4b8] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [raja_banks] [tenant:entrylab] [req:f28ba4b8] Checking for signals on XAU/USD 1h...
+Jan 29 10:39:21  [2026-01-29 10:39:21] [INFO] [raja_banks] [tenant:entrylab] [req:f28ba4b8] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 10:54:21  [2026-01-29 10:54:21] [INFO] [forex_signals] [tenant:entrylab] [req:c135a5ba] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 10:54:21  [2026-01-29 10:54:21] [INFO] [raja_banks] [tenant:entrylab] [req:c135a5ba] Checking for signals on XAU/USD 15min...
+Jan 29 10:54:21  [2026-01-29 10:54:21] [INFO] [raja_banks] [tenant:entrylab] [req:c135a5ba] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [forex_signals] [tenant:entrylab] [req:c72f29a1] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [raja_banks] [tenant:entrylab] [req:c72f29a1] Checking for signals on XAU/USD 15min...
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [raja_banks] [tenant:entrylab] [req:c72f29a1] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [generator] [tenant:entrylab] [req:c72f29a1] 📊 Checking 1-hour timeframe...
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [forex_signals] [tenant:entrylab] [req:c72f29a1] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [raja_banks] [tenant:entrylab] [req:c72f29a1] Checking for signals on XAU/USD 1h...
+Jan 29 11:09:21  [2026-01-29 11:09:21] [INFO] [raja_banks] [tenant:entrylab] [req:c72f29a1] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:24:21  [2026-01-29 11:24:21] [INFO] [forex_signals] [tenant:entrylab] [req:f582a990] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:24:21  [2026-01-29 11:24:21] [INFO] [raja_banks] [tenant:entrylab] [req:f582a990] Checking for signals on XAU/USD 15min...
+Jan 29 11:24:21  [2026-01-29 11:24:21] [INFO] [raja_banks] [tenant:entrylab] [req:f582a990] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [forex_signals] [tenant:entrylab] [req:f560d3b5] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [raja_banks] [tenant:entrylab] [req:f560d3b5] Checking for signals on XAU/USD 15min...
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [raja_banks] [tenant:entrylab] [req:f560d3b5] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [generator] [tenant:entrylab] [req:f560d3b5] 📊 Checking 1-hour timeframe...
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [forex_signals] [tenant:entrylab] [req:f560d3b5] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [raja_banks] [tenant:entrylab] [req:f560d3b5] Checking for signals on XAU/USD 1h...
+Jan 29 11:39:22  [2026-01-29 11:39:22] [INFO] [raja_banks] [tenant:entrylab] [req:f560d3b5] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 11:45:12  10.244.5.120 - - [29/Jan/2026 11:45:12] code 404, message File not found
+Jan 29 11:45:12  10.244.5.120 - - [29/Jan/2026 11:45:12] "GET /robots.txt HTTP/1.1" 404 -
+Jan 29 11:54:22  [2026-01-29 11:54:22] [INFO] [forex_signals] [tenant:entrylab] [req:e4d23030] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 11:54:22  [2026-01-29 11:54:22] [INFO] [raja_banks] [tenant:entrylab] [req:e4d23030] Checking for signals on XAU/USD 15min...
+Jan 29 11:54:22  [2026-01-29 11:54:22] [INFO] [raja_banks] [tenant:entrylab] [req:e4d23030] Guardrail blocked: Outside trading session (Off-hours)
+Jan 29 12:09:22  [2026-01-29 12:09:22] [INFO] [forex_signals] [tenant:entrylab] [req:f5427dbf] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 12:09:22  [2026-01-29 12:09:22] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] Checking for signals on XAU/USD 15min...
+Jan 29 12:09:22  [2026-01-29 12:09:22] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] Session: New York
+Jan 29 12:09:23  [2026-01-29 12:09:23] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] No impulse breakout detected
+Jan 29 12:09:23  [2026-01-29 12:09:23] [INFO] [generator] [tenant:entrylab] [req:f5427dbf] 📊 Checking 1-hour timeframe...
+Jan 29 12:09:23  [2026-01-29 12:09:23] [INFO] [forex_signals] [tenant:entrylab] [req:f5427dbf] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 12:09:23  [2026-01-29 12:09:23] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] Checking for signals on XAU/USD 1h...
+Jan 29 12:09:23  [2026-01-29 12:09:23] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] Session: New York
+Jan 29 12:09:24  [2026-01-29 12:09:24] [INFO] [raja_banks] [tenant:entrylab] [req:f5427dbf] No impulse breakout detected
+Jan 29 12:24:25  [2026-01-29 12:24:25] [INFO] [forex_signals] [tenant:entrylab] [req:e85837cb] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 12:24:25  [2026-01-29 12:24:25] [INFO] [raja_banks] [tenant:entrylab] [req:e85837cb] Checking for signals on XAU/USD 15min...
+Jan 29 12:24:25  [2026-01-29 12:24:25] [INFO] [raja_banks] [tenant:entrylab] [req:e85837cb] Session: New York
+Jan 29 12:24:26  [2026-01-29 12:24:26] [INFO] [raja_banks] [tenant:entrylab] [req:e85837cb] No impulse breakout detected
+Jan 29 12:39:26  [2026-01-29 12:39:26] [INFO] [forex_signals] [tenant:entrylab] [req:feaded5e] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 12:39:26  [2026-01-29 12:39:26] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] Checking for signals on XAU/USD 15min...
+Jan 29 12:39:26  [2026-01-29 12:39:26] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] Session: New York
+Jan 29 12:39:27  [2026-01-29 12:39:27] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] No impulse breakout detected
+Jan 29 12:39:27  [2026-01-29 12:39:27] [INFO] [generator] [tenant:entrylab] [req:feaded5e] 📊 Checking 1-hour timeframe...
+Jan 29 12:39:27  [2026-01-29 12:39:27] [INFO] [forex_signals] [tenant:entrylab] [req:feaded5e] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 12:39:27  [2026-01-29 12:39:27] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] Checking for signals on XAU/USD 1h...
+Jan 29 12:39:27  [2026-01-29 12:39:27] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] Session: New York
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] With-trend BUY (Bullish)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] 🎯 Signal generated: BUY @ 5532.05
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] 📊 TP1: 5552.89 (50%)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] 📊 TP2: 5640.44 (30%)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] 🛑 SL: 5519.51 (tight candle-based)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [raja_banks] [tenant:entrylab] [req:feaded5e] 📈 Signals today: 1/4
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_signals] [tenant:entrylab] [req:feaded5e] ✅ Signal from Raja Banks Gold Start: BUY @ 5532.05
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [bot_credentials] [tenant:entrylab] [req:feaded5e] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [telegram_sender] [tenant:entrylab] [req:feaded5e] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_bot] [tenant:entrylab] [req:feaded5e] Created draft signal #191, posting to Telegram...
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [telegram_sender] [tenant:entrylab] [req:feaded5e] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=645
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_bot] [tenant:entrylab] [req:feaded5e] Signal #191 status updated to pending (Telegram msg: 645)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_bot] [tenant:entrylab] [req:feaded5e] Stored original indicators for signal #191: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_bot] [tenant:entrylab] [req:feaded5e] Posted BUY signal to Telegram (ID: 191)
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [messenger] [tenant:entrylab] [req:feaded5e] Signal #191 posted to Telegram
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [generator] [tenant:entrylab] [req:feaded5e] ✅ New 1h signal #191 posted successfully
+Jan 29 12:39:28  [2026-01-29 12:39:28] [INFO] [forex_signals] [tenant:entrylab] [req:5041d5d6] Checking 1 active signals...
+Jan 29 12:39:29  [2026-01-29 12:39:29] [INFO] [forex_signals] [tenant:entrylab] [req:5041d5d6] Current XAU/USD price: 5532.05
+Jan 29 12:40:29  [2026-01-29 12:40:29] [INFO] [forex_signals] [tenant:entrylab] [req:dc85af35] Checking 1 active signals...
+Jan 29 12:40:29  [2026-01-29 12:40:29] [INFO] [forex_signals] [tenant:entrylab] [req:dc85af35] Current XAU/USD price: 5531.90
+Jan 29 12:41:30  [2026-01-29 12:41:30] [INFO] [forex_signals] [tenant:entrylab] [req:709356e3] Checking 1 active signals...
+Jan 29 12:41:30  [2026-01-29 12:41:30] [INFO] [forex_signals] [tenant:entrylab] [req:709356e3] Current XAU/USD price: 5532.41
+Jan 29 12:42:30  [2026-01-29 12:42:30] [INFO] [forex_signals] [tenant:entrylab] [req:1b256933] Checking 1 active signals...
+Jan 29 12:42:31  [2026-01-29 12:42:31] [INFO] [forex_signals] [tenant:entrylab] [req:1b256933] Current XAU/USD price: 5533.26
+Jan 29 12:43:31  [2026-01-29 12:43:31] [INFO] [forex_signals] [tenant:entrylab] [req:ceeec819] Checking 1 active signals...
+Jan 29 12:43:31  [2026-01-29 12:43:31] [INFO] [forex_signals] [tenant:entrylab] [req:ceeec819] Current XAU/USD price: 5533.59
+Jan 29 12:44:31  [2026-01-29 12:44:31] [INFO] [forex_signals] [tenant:entrylab] [req:6ca06bf7] Checking 1 active signals...
+Jan 29 12:44:32  [2026-01-29 12:44:32] [INFO] [forex_signals] [tenant:entrylab] [req:6ca06bf7] Current XAU/USD price: 5530.12
+Jan 29 12:45:32  [2026-01-29 12:45:32] [INFO] [forex_signals] [tenant:entrylab] [req:e2c07249] Checking 1 active signals...
+Jan 29 12:45:32  [2026-01-29 12:45:32] [INFO] [forex_signals] [tenant:entrylab] [req:e2c07249] Current XAU/USD price: 5530.12
+Jan 29 12:46:33  [2026-01-29 12:46:33] [INFO] [forex_signals] [tenant:entrylab] [req:e3d1c3ac] Checking 1 active signals...
+Jan 29 12:46:33  [2026-01-29 12:46:33] [INFO] [forex_signals] [tenant:entrylab] [req:e3d1c3ac] Current XAU/USD price: 5528.75
+Jan 29 12:47:33  [2026-01-29 12:47:33] [INFO] [forex_signals] [tenant:entrylab] [req:61690f9c] Checking 1 active signals...
+Jan 29 12:47:34  [2026-01-29 12:47:34] [INFO] [forex_signals] [tenant:entrylab] [req:61690f9c] Current XAU/USD price: 5532.10
+Jan 29 12:48:34  [2026-01-29 12:48:34] [INFO] [forex_signals] [tenant:entrylab] [req:ecdbdea7] Checking 1 active signals...
+Jan 29 12:48:34  [2026-01-29 12:48:34] [INFO] [forex_signals] [tenant:entrylab] [req:ecdbdea7] Current XAU/USD price: 5532.10
+Jan 29 12:49:35  [2026-01-29 12:49:35] [INFO] [forex_signals] [tenant:entrylab] [req:5cf82e69] Checking 1 active signals...
+Jan 29 12:49:35  [2026-01-29 12:49:35] [INFO] [forex_signals] [tenant:entrylab] [req:5cf82e69] Current XAU/USD price: 5535.89
+Jan 29 12:50:35  [2026-01-29 12:50:35] [INFO] [forex_signals] [tenant:entrylab] [req:437541c7] Checking 1 active signals...
+Jan 29 12:50:35  [2026-01-29 12:50:35] [INFO] [forex_signals] [tenant:entrylab] [req:437541c7] Current XAU/USD price: 5535.06
+Jan 29 12:51:36  [2026-01-29 12:51:36] [INFO] [forex_signals] [tenant:entrylab] [req:7d8ad8c0] Checking 1 active signals...
+Jan 29 12:51:36  [2026-01-29 12:51:36] [INFO] [forex_signals] [tenant:entrylab] [req:7d8ad8c0] Current XAU/USD price: 5535.15
+Jan 29 12:52:36  [2026-01-29 12:52:36] [INFO] [forex_signals] [tenant:entrylab] [req:28fc3570] Checking 1 active signals...
+Jan 29 12:52:37  [2026-01-29 12:52:37] [INFO] [forex_signals] [tenant:entrylab] [req:28fc3570] Current XAU/USD price: 5536.28
+Jan 29 12:53:37  [2026-01-29 12:53:37] [INFO] [forex_signals] [tenant:entrylab] [req:11f7e1b7] Checking 1 active signals...
+Jan 29 12:53:37  [2026-01-29 12:53:37] [INFO] [forex_signals] [tenant:entrylab] [req:11f7e1b7] Current XAU/USD price: 5538.75
+Jan 29 12:54:38  [2026-01-29 12:54:38] [INFO] [generator] [tenant:entrylab] [req:b5002a09] ⏸️ Active signal #191 still pending - skipping new signal check
+Jan 29 12:54:38  [2026-01-29 12:54:38] [INFO] [generator] [tenant:entrylab] [req:b5002a09] Entry: $5532.05, TP: $5552.89, SL: $5519.51
+Jan 29 12:54:38  [2026-01-29 12:54:38] [INFO] [forex_signals] [tenant:entrylab] [req:44368aef] Checking 1 active signals...
+Jan 29 12:54:38  [2026-01-29 12:54:38] [INFO] [forex_signals] [tenant:entrylab] [req:44368aef] Current XAU/USD price: 5538.34
+Jan 29 12:55:38  [2026-01-29 12:55:38] [INFO] [forex_signals] [tenant:entrylab] [req:6a3dd520] Checking 1 active signals...
+Jan 29 12:55:39  [2026-01-29 12:55:39] [INFO] [forex_signals] [tenant:entrylab] [req:6a3dd520] Current XAU/USD price: 5538.77
+Jan 29 12:56:39  [2026-01-29 12:56:39] [INFO] [forex_signals] [tenant:entrylab] [req:6e6ea4fe] Checking 1 active signals...
+Jan 29 12:56:39  [2026-01-29 12:56:39] [INFO] [forex_signals] [tenant:entrylab] [req:6e6ea4fe] Current XAU/USD price: 5531.89
+Jan 29 12:56:44  10.244.7.214 - - [29/Jan/2026 12:56:44] "GET / HTTP/1.1" 302 -
+Jan 29 12:56:44  10.244.7.214 - - [29/Jan/2026 12:56:44] "GET / HTTP/1.1" 302 -
+Jan 29 12:56:44  [2026-01-29 12:56:44] [WARNING] [clerk_auth] [req:ec5f20b3] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Jan 29 12:56:44  10.244.7.214 - - [29/Jan/2026 12:56:44] "GET /admin HTTP/1.1" 302 -
+Jan 29 12:56:44  10.244.5.120 - - [29/Jan/2026 12:56:44] "GET /app HTTP/1.1" 200 -
+Jan 29 12:56:44  10.244.7.214 - - [29/Jan/2026 12:56:44] "GET /login HTTP/1.1" 200 -
+Jan 29 12:56:46  10.244.4.249 - - [29/Jan/2026 12:56:46] code 404, message File not found
+Jan 29 12:56:46  10.244.4.249 - - [29/Jan/2026 12:56:46] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Jan 29 12:56:46  10.244.6.27 - - [29/Jan/2026 12:56:46] code 404, message File not found
+Jan 29 12:56:46  10.244.6.27 - - [29/Jan/2026 12:56:46] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Jan 29 12:56:47  10.244.7.214 - - [29/Jan/2026 12:56:47] code 404, message File not found
+Jan 29 12:56:47  10.244.7.214 - - [29/Jan/2026 12:56:47] "GET /phpinfo HTTP/1.1" 404 -
+Jan 29 12:56:47  10.244.5.120 - - [29/Jan/2026 12:56:47] code 404, message File not found
+Jan 29 12:56:47  10.244.5.120 - - [29/Jan/2026 12:56:47] "GET /phpinfo HTTP/1.1" 404 -
+Jan 29 12:56:48  10.244.7.214 - - [29/Jan/2026 12:56:48] code 404, message File not found
+Jan 29 12:56:48  10.244.7.214 - - [29/Jan/2026 12:56:48] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Jan 29 12:56:48  10.244.7.214 - - [29/Jan/2026 12:56:48] code 404, message File not found
+Jan 29 12:56:48  10.244.7.214 - - [29/Jan/2026 12:56:48] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Jan 29 12:56:49  10.244.6.27 - - [29/Jan/2026 12:56:49] code 404, message File not found
+Jan 29 12:56:49  10.244.6.27 - - [29/Jan/2026 12:56:49] "GET /info HTTP/1.1" 404 -
+Jan 29 12:56:49  10.244.6.27 - - [29/Jan/2026 12:56:49] code 404, message File not found
+Jan 29 12:56:49  10.244.6.27 - - [29/Jan/2026 12:56:49] "GET /info HTTP/1.1" 404 -
+Jan 29 12:56:50  10.244.6.27 - - [29/Jan/2026 12:56:50] code 404, message File not found
+Jan 29 12:56:50  10.244.6.27 - - [29/Jan/2026 12:56:50] "GET /phpinfo.php HTTP/1.1" 404 -
+Jan 29 12:56:50  10.244.5.120 - - [29/Jan/2026 12:56:50] code 404, message File not found
+Jan 29 12:56:50  10.244.5.120 - - [29/Jan/2026 12:56:50] "GET /phpinfo.php HTTP/1.1" 404 -
+Jan 29 12:56:51  10.244.7.214 - - [29/Jan/2026 12:56:51] code 404, message File not found
+Jan 29 12:56:51  10.244.7.214 - - [29/Jan/2026 12:56:51] "GET /info.php HTTP/1.1" 404 -
+Jan 29 12:56:52  10.244.6.27 - - [29/Jan/2026 12:56:52] code 404, message File not found
+Jan 29 12:56:52  10.244.6.27 - - [29/Jan/2026 12:56:52] "GET /info.php HTTP/1.1" 404 -
+Jan 29 12:56:52  10.244.6.27 - - [29/Jan/2026 12:56:52] code 404, message File not found
+Jan 29 12:56:52  10.244.6.27 - - [29/Jan/2026 12:56:52] "GET /.env HTTP/1.1" 404 -
+Jan 29 12:56:53  10.244.7.214 - - [29/Jan/2026 12:56:53] code 404, message File not found
+Jan 29 12:56:53  10.244.7.214 - - [29/Jan/2026 12:56:53] "GET /.env HTTP/1.1" 404 -
+Jan 29 12:56:53  10.244.6.27 - - [29/Jan/2026 12:56:53] code 404, message File not found
+Jan 29 12:56:53  10.244.6.27 - - [29/Jan/2026 12:56:53] "GET /.env.production HTTP/1.1" 404 -
+Jan 29 12:56:53  10.244.4.249 - - [29/Jan/2026 12:56:53] code 404, message File not found
+Jan 29 12:56:53  10.244.4.249 - - [29/Jan/2026 12:56:53] "GET /.env.production HTTP/1.1" 404 -
+Jan 29 12:56:53  10.244.5.120 - - [29/Jan/2026 12:56:53] code 404, message File not found
+Jan 29 12:56:53  10.244.5.120 - - [29/Jan/2026 12:56:53] "GET /application/.env HTTP/1.1" 404 -
+Jan 29 12:56:53  10.244.7.214 - - [29/Jan/2026 12:56:53] code 404, message File not found
+Jan 29 12:56:53  10.244.7.214 - - [29/Jan/2026 12:56:53] "GET /application/.env HTTP/1.1" 404 -
+Jan 29 12:56:54  10.244.5.120 - - [29/Jan/2026 12:56:54] code 404, message File not found
+Jan 29 12:56:54  10.244.5.120 - - [29/Jan/2026 12:56:54] "GET /prod/.env HTTP/1.1" 404 -
+Jan 29 12:56:54  10.244.4.249 - - [29/Jan/2026 12:56:54] code 404, message File not found
+Jan 29 12:56:54  10.244.4.249 - - [29/Jan/2026 12:56:54] "GET /prod/.env HTTP/1.1" 404 -
+Jan 29 12:56:54  10.244.4.249 - - [29/Jan/2026 12:56:54] code 404, message File not found
+Jan 29 12:56:54  10.244.4.249 - - [29/Jan/2026 12:56:54] "GET /.env.save HTTP/1.1" 404 -
+Jan 29 12:56:54  10.244.7.214 - - [29/Jan/2026 12:56:54] code 404, message File not found
+Jan 29 12:56:54  10.244.7.214 - - [29/Jan/2026 12:56:54] "GET /.env.save HTTP/1.1" 404 -
+Jan 29 12:56:55  10.244.5.120 - - [29/Jan/2026 12:56:55] code 404, message File not found
+Jan 29 12:56:55  10.244.5.120 - - [29/Jan/2026 12:56:55] "GET /beta/.env HTTP/1.1" 404 -
+Jan 29 12:56:55  10.244.7.214 - - [29/Jan/2026 12:56:55] code 404, message File not found
+Jan 29 12:56:55  10.244.7.214 - - [29/Jan/2026 12:56:55] "GET /beta/.env HTTP/1.1" 404 -
+Jan 29 12:56:55  10.244.6.27 - - [29/Jan/2026 12:56:55] code 404, message File not found
+Jan 29 12:56:55  10.244.6.27 - - [29/Jan/2026 12:56:55] "GET /admin/.env HTTP/1.1" 404 -
+Jan 29 12:56:55  10.244.5.120 - - [29/Jan/2026 12:56:55] code 404, message File not found
+Jan 29 12:56:55  10.244.5.120 - - [29/Jan/2026 12:56:55] "GET /admin/.env HTTP/1.1" 404 -
+Jan 29 12:56:55  10.244.7.214 - - [29/Jan/2026 12:56:55] code 404, message File not found
+Jan 29 12:56:55  10.244.7.214 - - [29/Jan/2026 12:56:55] "GET /app/.env HTTP/1.1" 404 -
+Jan 29 12:56:56  10.244.5.120 - - [29/Jan/2026 12:56:56] code 404, message File not found
+Jan 29 12:56:56  10.244.5.120 - - [29/Jan/2026 12:56:56] "GET /config/.env HTTP/1.1" 404 -
+Jan 29 12:56:56  10.244.5.120 - - [29/Jan/2026 12:56:56] code 404, message File not found
+Jan 29 12:56:56  10.244.5.120 - - [29/Jan/2026 12:56:56] "GET /app/.env HTTP/1.1" 404 -
+Jan 29 12:56:56  10.244.7.214 - - [29/Jan/2026 12:56:56] code 404, message File not found
+Jan 29 12:56:56  10.244.7.214 - - [29/Jan/2026 12:56:56] "GET /api/.env HTTP/1.1" 404 -
+Jan 29 12:56:56  10.244.4.249 - - [29/Jan/2026 12:56:56] code 404, message File not found
+Jan 29 12:56:56  10.244.4.249 - - [29/Jan/2026 12:56:56] "GET /config/.env HTTP/1.1" 404 -
+Jan 29 12:56:57  10.244.6.27 - - [29/Jan/2026 12:56:57] code 404, message File not found
+Jan 29 12:56:57  10.244.6.27 - - [29/Jan/2026 12:56:57] "GET /api/.env HTTP/1.1" 404 -
+Jan 29 12:56:57  10.244.6.27 - - [29/Jan/2026 12:56:57] code 404, message File not found
+Jan 29 12:56:57  10.244.6.27 - - [29/Jan/2026 12:56:57] "GET /laravel/.env HTTP/1.1" 404 -
+Jan 29 12:56:57  10.244.7.214 - - [29/Jan/2026 12:56:57] code 404, message File not found
+Jan 29 12:56:57  10.244.7.214 - - [29/Jan/2026 12:56:57] "GET /laravel/.env HTTP/1.1" 404 -
+Jan 29 12:56:57  10.244.7.214 - - [29/Jan/2026 12:56:57] code 404, message Not Found
+Jan 29 12:56:57  10.244.7.214 - - [29/Jan/2026 12:56:57] "POST / HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.4.249 - - [29/Jan/2026 12:56:58] code 404, message Not Found
+Jan 29 12:56:58  10.244.4.249 - - [29/Jan/2026 12:56:58] "POST / HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.6.27 - - [29/Jan/2026 12:56:58] code 404, message File not found
+Jan 29 12:56:58  10.244.6.27 - - [29/Jan/2026 12:56:58] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.4.249 - - [29/Jan/2026 12:56:58] code 404, message File not found
+Jan 29 12:56:58  10.244.4.249 - - [29/Jan/2026 12:56:58] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.5.120 - - [29/Jan/2026 12:56:58] code 404, message File not found
+Jan 29 12:56:58  10.244.5.120 - - [29/Jan/2026 12:56:58] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.5.120 - - [29/Jan/2026 12:56:58] code 404, message File not found
+Jan 29 12:56:58  10.244.5.120 - - [29/Jan/2026 12:56:58] "GET //.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:58  10.244.6.27 - - [29/Jan/2026 12:56:58] code 404, message File not found
+Jan 29 12:56:58  10.244.6.27 - - [29/Jan/2026 12:56:58] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] "GET //.aws/config HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.7.214 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.7.214 - - [29/Jan/2026 12:56:59] "GET //.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] "GET //.aws/config HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.6.27 - - [29/Jan/2026 12:56:59] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] code 404, message File not found
+Jan 29 12:56:59  10.244.4.249 - - [29/Jan/2026 12:56:59] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Jan 29 12:57:35  10.244.7.214 - - [29/Jan/2026 12:57:35] code 404, message File not found
+Jan 29 12:57:35  10.244.7.214 - - [29/Jan/2026 12:57:35] "GET /robots.txt HTTP/1.1" 404 -
+Jan 29 12:57:40  [2026-01-29 12:57:40] [INFO] [forex_signals] [tenant:entrylab] [req:72d563eb] Checking 1 active signals...
+Jan 29 12:57:40  [2026-01-29 12:57:40] [INFO] [forex_signals] [tenant:entrylab] [req:72d563eb] Current XAU/USD price: 5533.30
+Jan 29 12:58:40  [2026-01-29 12:58:40] [INFO] [forex_signals] [tenant:entrylab] [req:d980ef79] Checking 1 active signals...
+Jan 29 12:58:41  [2026-01-29 12:58:41] [INFO] [forex_signals] [tenant:entrylab] [req:d980ef79] Current XAU/USD price: 5537.76
+Jan 29 12:59:41  [2026-01-29 12:59:41] [INFO] [forex_signals] [tenant:entrylab] [req:6b96b8f7] Checking 1 active signals...
+Jan 29 12:59:41  [2026-01-29 12:59:41] [INFO] [forex_signals] [tenant:entrylab] [req:6b96b8f7] Current XAU/USD price: 5537.22
+Jan 29 13:00:41  [2026-01-29 13:00:41] [INFO] [forex_signals] [tenant:entrylab] [req:d184bd83] Checking 1 active signals...
+Jan 29 13:00:42  [2026-01-29 13:00:42] [INFO] [forex_signals] [tenant:entrylab] [req:d184bd83] Current XAU/USD price: 5535.69
+Jan 29 13:01:42  [2026-01-29 13:01:42] [INFO] [forex_signals] [tenant:entrylab] [req:2937ebd8] Checking 1 active signals...
+Jan 29 13:01:42  [2026-01-29 13:01:42] [INFO] [forex_signals] [tenant:entrylab] [req:2937ebd8] Current XAU/USD price: 5534.77
+Jan 29 13:02:43  [2026-01-29 13:02:43] [INFO] [forex_signals] [tenant:entrylab] [req:9bcfd6c9] Checking 1 active signals...
+Jan 29 13:02:43  [2026-01-29 13:02:43] [INFO] [forex_signals] [tenant:entrylab] [req:9bcfd6c9] Current XAU/USD price: 5537.44
+Jan 29 13:03:43  [2026-01-29 13:03:43] [INFO] [forex_signals] [tenant:entrylab] [req:63217444] Checking 1 active signals...
+Jan 29 13:03:44  [2026-01-29 13:03:44] [INFO] [forex_signals] [tenant:entrylab] [req:63217444] Current XAU/USD price: 5539.08
+Jan 29 13:04:44  [2026-01-29 13:04:44] [INFO] [forex_signals] [tenant:entrylab] [req:8ff05c76] Checking 1 active signals...
+Jan 29 13:04:44  [2026-01-29 13:04:44] [INFO] [forex_signals] [tenant:entrylab] [req:8ff05c76] Current XAU/USD price: 5537.83
+Jan 29 13:05:45  [2026-01-29 13:05:45] [INFO] [forex_signals] [tenant:entrylab] [req:ff60b344] Checking 1 active signals...
+Jan 29 13:05:45  [2026-01-29 13:05:45] [INFO] [forex_signals] [tenant:entrylab] [req:ff60b344] Current XAU/USD price: 5533.11
+Jan 29 13:06:45  [2026-01-29 13:06:45] [INFO] [forex_signals] [tenant:entrylab] [req:7a7c3f2a] Checking 1 active signals...
+Jan 29 13:06:45  [2026-01-29 13:06:45] [INFO] [forex_signals] [tenant:entrylab] [req:7a7c3f2a] Current XAU/USD price: 5533.47
+Jan 29 13:07:46  [2026-01-29 13:07:46] [INFO] [forex_signals] [tenant:entrylab] [req:d51aa829] Checking 1 active signals...
+Jan 29 13:07:46  [2026-01-29 13:07:46] [INFO] [forex_signals] [tenant:entrylab] [req:d51aa829] Current XAU/USD price: 5535.23
+Jan 29 13:08:46  [2026-01-29 13:08:46] [INFO] [forex_signals] [tenant:entrylab] [req:77c334eb] Checking 1 active signals...
+Jan 29 13:08:47  [2026-01-29 13:08:47] [INFO] [forex_signals] [tenant:entrylab] [req:77c334eb] Current XAU/USD price: 5533.87
+Jan 29 13:09:47  [2026-01-29 13:09:47] [INFO] [generator] [tenant:entrylab] [req:d31313a5] ⏸️ Active signal #191 still pending - skipping new signal check
+Jan 29 13:09:47  [2026-01-29 13:09:47] [INFO] [generator] [tenant:entrylab] [req:d31313a5] Entry: $5532.05, TP: $5552.89, SL: $5519.51
+Jan 29 13:09:47  [2026-01-29 13:09:47] [INFO] [forex_signals] [tenant:entrylab] [req:731795a9] Checking 1 active signals...
+Jan 29 13:09:47  [2026-01-29 13:09:47] [INFO] [forex_signals] [tenant:entrylab] [req:731795a9] Current XAU/USD price: 5534.37
+Jan 29 13:10:48  [2026-01-29 13:10:48] [INFO] [forex_signals] [tenant:entrylab] [req:08e0f9d2] Checking 1 active signals...
+Jan 29 13:10:48  [2026-01-29 13:10:48] [INFO] [forex_signals] [tenant:entrylab] [req:08e0f9d2] Current XAU/USD price: 5532.15
+Jan 29 13:11:48  [2026-01-29 13:11:48] [INFO] [forex_signals] [tenant:entrylab] [req:f7d2dd8a] Checking 1 active signals...
+Jan 29 13:11:49  [2026-01-29 13:11:49] [INFO] [forex_signals] [tenant:entrylab] [req:f7d2dd8a] Current XAU/USD price: 5528.76
+Jan 29 13:12:49  [2026-01-29 13:12:49] [INFO] [forex_signals] [tenant:entrylab] [req:97880195] Checking 1 active signals...
+Jan 29 13:12:49  [2026-01-29 13:12:49] [INFO] [forex_signals] [tenant:entrylab] [req:97880195] Current XAU/USD price: 5524.78
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [forex_signals] [tenant:entrylab] [req:b95eec1c] Checking 1 active signals...
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [forex_signals] [tenant:entrylab] [req:b95eec1c] Current XAU/USD price: 5517.58
+Jan 29 13:13:50  [2026-01-29 13:13:50] [ERROR] [forex_signals] [tenant:entrylab] [req:b95eec1c] ❌ Signal #191 SL (original) HIT @ $5519.51! Loss: -125.4 pips
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [bot_credentials] [tenant:entrylab] [req:b95eec1c] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [telegram_sender] [tenant:entrylab] [req:b95eec1c] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [telegram_sender] [tenant:entrylab] [req:b95eec1c] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=646
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [messenger] [tenant:entrylab] [req:b95eec1c] Posted SL hit notification (-125.4 pips)
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [monitor] [tenant:entrylab] [req:b95eec1c] ❌ Signal #191 closed at SL: -125.4 pips
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [forex_signals] [tenant:entrylab] [req:b95eec1c] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:13:50  [2026-01-29 13:13:50] [INFO] [monitor] [tenant:entrylab] [req:b95eec1c] Strategy reloaded after signal #191 closed
+Jan 29 13:24:50  [2026-01-29 13:24:50] [INFO] [forex_signals] [tenant:entrylab] [req:26fe42c3] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:24:50  [2026-01-29 13:24:50] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] Checking for signals on XAU/USD 15min...
+Jan 29 13:24:50  [2026-01-29 13:24:50] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] Session: London/NY Overlap
+Jan 29 13:24:52  [2026-01-29 13:24:52] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] No impulse breakout detected
+Jan 29 13:24:52  [2026-01-29 13:24:52] [INFO] [generator] [tenant:entrylab] [req:26fe42c3] 📊 Checking 1-hour timeframe...
+Jan 29 13:24:52  [2026-01-29 13:24:52] [INFO] [forex_signals] [tenant:entrylab] [req:26fe42c3] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:24:52  [2026-01-29 13:24:52] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] Checking for signals on XAU/USD 1h...
+Jan 29 13:24:52  [2026-01-29 13:24:52] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] Session: London/NY Overlap
+Jan 29 13:24:53  [2026-01-29 13:24:53] [INFO] [raja_banks] [tenant:entrylab] [req:26fe42c3] No impulse breakout detected
+Jan 29 13:39:53  [2026-01-29 13:39:53] [INFO] [forex_signals] [tenant:entrylab] [req:e5329ae6] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:39:53  [2026-01-29 13:39:53] [INFO] [raja_banks] [tenant:entrylab] [req:e5329ae6] Checking for signals on XAU/USD 15min...
+Jan 29 13:39:53  [2026-01-29 13:39:53] [INFO] [raja_banks] [tenant:entrylab] [req:e5329ae6] Session: London/NY Overlap
+Jan 29 13:39:54  [2026-01-29 13:39:54] [INFO] [raja_banks] [tenant:entrylab] [req:e5329ae6] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 13:54:54  [2026-01-29 13:54:54] [INFO] [forex_signals] [tenant:entrylab] [req:f1140157] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:54:54  [2026-01-29 13:54:54] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] Checking for signals on XAU/USD 15min...
+Jan 29 13:54:54  [2026-01-29 13:54:54] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] Session: London/NY Overlap
+Jan 29 13:54:56  [2026-01-29 13:54:56] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] No impulse breakout detected
+Jan 29 13:54:56  [2026-01-29 13:54:56] [INFO] [generator] [tenant:entrylab] [req:f1140157] 📊 Checking 1-hour timeframe...
+Jan 29 13:54:56  [2026-01-29 13:54:56] [INFO] [forex_signals] [tenant:entrylab] [req:f1140157] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 13:54:57  [2026-01-29 13:54:57] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] Checking for signals on XAU/USD 1h...
+Jan 29 13:54:57  [2026-01-29 13:54:57] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] Session: London/NY Overlap
+Jan 29 13:54:58  [2026-01-29 13:54:58] [INFO] [raja_banks] [tenant:entrylab] [req:f1140157] Counter-trend SELL rejected (no S/R confluence)
+Jan 29 14:09:58  [2026-01-29 14:09:58] [INFO] [forex_signals] [tenant:entrylab] [req:641ef4db] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 14:09:58  [2026-01-29 14:09:58] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] Checking for signals on XAU/USD 15min...
+Jan 29 14:09:58  [2026-01-29 14:09:58] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] Session: London/NY Overlap
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] With-trend BUY (Bullish)
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] 🎯 Signal generated: BUY @ 5531.22
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] 📊 TP1: 5539.17 (50%)
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] 📊 TP2: 5579.00 (30%)
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] 🛑 SL: 5510.12 (tight candle-based)
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [raja_banks] [tenant:entrylab] [req:641ef4db] 📈 Signals today: 1/4
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [forex_signals] [tenant:entrylab] [req:641ef4db] ✅ Signal from Raja Banks Gold Start: BUY @ 5531.22
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [bot_credentials] [tenant:entrylab] [req:641ef4db] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [telegram_sender] [tenant:entrylab] [req:641ef4db] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 14:09:59  [2026-01-29 14:09:59] [INFO] [forex_bot] [tenant:entrylab] [req:641ef4db] Created draft signal #192, posting to Telegram...
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [telegram_sender] [tenant:entrylab] [req:641ef4db] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=647
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [forex_bot] [tenant:entrylab] [req:641ef4db] Signal #192 status updated to pending (Telegram msg: 647)
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [forex_bot] [tenant:entrylab] [req:641ef4db] Stored original indicators for signal #192: ['ema50', 'ema200', 'atr', 'session', 'impulse_type', 'candle_high', 'candle_low', 'wick_target', 'support', 'resistance']
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [forex_bot] [tenant:entrylab] [req:641ef4db] Posted BUY signal to Telegram (ID: 192)
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [messenger] [tenant:entrylab] [req:641ef4db] Signal #192 posted to Telegram
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [generator] [tenant:entrylab] [req:641ef4db] ✅ New 15min signal #192 posted successfully
+Jan 29 14:10:00  [2026-01-29 14:10:00] [INFO] [forex_signals] [tenant:entrylab] [req:8eec3b0a] Checking 1 active signals...
+Jan 29 14:10:01  [2026-01-29 14:10:01] [INFO] [forex_signals] [tenant:entrylab] [req:8eec3b0a] Current XAU/USD price: 5531.22
+Jan 29 14:11:02  [2026-01-29 14:11:02] [INFO] [forex_signals] [tenant:entrylab] [req:2d08fd8e] Checking 1 active signals...
+Jan 29 14:11:02  [2026-01-29 14:11:02] [INFO] [forex_signals] [tenant:entrylab] [req:2d08fd8e] Current XAU/USD price: 5536.20
+Jan 29 14:11:03  [2026-01-29 14:11:03] [INFO] [bot_credentials] [tenant:entrylab] [req:881f4900] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 14:11:03  [2026-01-29 14:11:03] [INFO] [telegram_sender] [tenant:entrylab] [req:881f4900] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 14:11:03  [2026-01-29 14:11:03] [INFO] [telegram_sender] [tenant:entrylab] [req:881f4900] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=648
+Jan 29 14:11:03  [2026-01-29 14:11:03] [INFO] [messenger] [tenant:entrylab] [req:881f4900] Posted milestone: tp1_40_motivational
+Jan 29 14:12:03  [2026-01-29 14:12:03] [INFO] [forex_signals] [tenant:entrylab] [req:ebfff93b] Checking 1 active signals...
+Jan 29 14:12:03  [2026-01-29 14:12:03] [INFO] [forex_signals] [tenant:entrylab] [req:ebfff93b] Current XAU/USD price: 5537.42
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [bot_credentials] [tenant:entrylab] [req:cba57cd1] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [telegram_sender] [tenant:entrylab] [req:cba57cd1] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [telegram_sender] [tenant:entrylab] [req:cba57cd1] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=649
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [messenger] [tenant:entrylab] [req:cba57cd1] Posted milestone: tp1_70_breakeven
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [db] [tenant:entrylab] [req:cba57cd1] Updated signal 192 effective_sl to 5531.22
+Jan 29 14:12:04  [2026-01-29 14:12:04] [INFO] [monitor] [tenant:entrylab] [req:cba57cd1] 🔒 Set effective_sl to entry (breakeven) for signal #192
+Jan 29 14:13:04  [2026-01-29 14:13:04] [INFO] [forex_signals] [tenant:entrylab] [req:2234b1de] Checking 1 active signals...
+Jan 29 14:13:04  [2026-01-29 14:13:04] [INFO] [forex_signals] [tenant:entrylab] [req:2234b1de] Current XAU/USD price: 5533.08
+Jan 29 14:14:04  [2026-01-29 14:14:04] [INFO] [forex_signals] [tenant:entrylab] [req:3b6aa0dc] Checking 1 active signals...
+Jan 29 14:14:05  [2026-01-29 14:14:05] [INFO] [forex_signals] [tenant:entrylab] [req:3b6aa0dc] Current XAU/USD price: 5536.48
+Jan 29 14:14:05  [2026-01-29 14:14:05] [INFO] [monitor] [tenant:entrylab] [req:cb935894] ⏭️ Milestone tp1_40 already claimed for signal #192
+Jan 29 14:15:05  [2026-01-29 14:15:05] [INFO] [forex_signals] [tenant:entrylab] [req:e684bfa7] Checking 1 active signals...
+Jan 29 14:15:05  [2026-01-29 14:15:05] [INFO] [forex_signals] [tenant:entrylab] [req:e684bfa7] Current XAU/USD price: 5534.37
+Jan 29 14:16:06  [2026-01-29 14:16:06] [INFO] [forex_signals] [tenant:entrylab] [req:6a75a6d2] Checking 1 active signals...
+Jan 29 14:16:06  [2026-01-29 14:16:06] [INFO] [forex_signals] [tenant:entrylab] [req:6a75a6d2] Current XAU/USD price: 5531.41
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:90a2b028] Checking 1 active signals...
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:90a2b028] Current XAU/USD price: 5529.85
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:90a2b028] 🔒 Signal #192 SL (effective) HIT @ $5531.22! Breakeven exit
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [bot_credentials] [tenant:entrylab] [req:90a2b028] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [telegram_sender] [tenant:entrylab] [req:90a2b028] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [telegram_sender] [tenant:entrylab] [req:90a2b028] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003213499920, msg_id=650
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [messenger] [tenant:entrylab] [req:90a2b028] Posted breakeven exit notification
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [monitor] [tenant:entrylab] [req:90a2b028] ✅ Signal #192 closed at breakeven
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [forex_signals] [tenant:entrylab] [req:90a2b028] Loaded strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 14:17:07  [2026-01-29 14:17:07] [INFO] [monitor] [tenant:entrylab] [req:90a2b028] Strategy reloaded after signal #192 closed
+Jan 29 14:25:08  [2026-01-29 14:25:08] [INFO] [forex_signals] [tenant:entrylab] [req:59111eda] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 14:25:08  [2026-01-29 14:25:08] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] Checking for signals on XAU/USD 15min...
+Jan 29 14:25:08  [2026-01-29 14:25:08] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] Session: London/NY Overlap
+Jan 29 14:25:09  [2026-01-29 14:25:09] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] No impulse breakout detected
+Jan 29 14:25:09  [2026-01-29 14:25:09] [INFO] [generator] [tenant:entrylab] [req:59111eda] 📊 Checking 1-hour timeframe...
+Jan 29 14:25:09  [2026-01-29 14:25:09] [INFO] [forex_signals] [tenant:entrylab] [req:59111eda] Using strategy: Raja Banks Gold Start (raja_banks)
+Jan 29 14:25:09  [2026-01-29 14:25:09] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] Checking for signals on XAU/USD 1h...
+Jan 29 14:25:09  [2026-01-29 14:25:09] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] Session: London/NY Overlap
+Jan 29 14:25:10  [2026-01-29 14:25:10] [INFO] [raja_banks] [tenant:entrylab] [req:59111eda] No impulse breakout detected
