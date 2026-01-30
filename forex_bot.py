@@ -754,20 +754,20 @@ No signals posted this week."""
         
         Args:
             briefing_data: Dict with market context data (optional, for future use)
-            ai_message: AI-generated briefing message
+            ai_message: AI-generated briefing message (should already include header)
         """
         if not self.is_configured():
             return False
         
         try:
             if not ai_message:
-                ai_message = "Good morning! Markets are open. Stay disciplined and follow the signals."
-            
-            message = f"""☀️ <b>Morning Briefing</b>
+                # Fallback message with header (matches format from crosspromo service)
+                ai_message = """☀️ <b>Morning Briefing</b>
 
-{ai_message}"""
+Good morning! Markets are open. Stay disciplined and follow the signals. 💪"""
             
-            result = await self._send(message)
+            # ai_message already includes the header from crosspromo service, so send directly
+            result = await self._send(ai_message)
             
             if result.success:
                 logger.info("Posted morning briefing")

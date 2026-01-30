@@ -166,13 +166,16 @@ def build_morning_news_message(tenant_id: str) -> str:
     news_items = fetch_xau_news()
     
     if not news_items:
+        logger.warning(f"Morning briefing for {tenant_id}: No news items fetched, using fallback")
         return _fallback_morning_message()
     
     headlines = [item['title'] for item in news_items[:3]]
     
     if not headlines:
+        logger.warning(f"Morning briefing for {tenant_id}: No headlines extracted, using fallback")
         return _fallback_morning_message()
     
+    logger.info(f"Morning briefing for {tenant_id}: Generating AI message from {len(headlines)} headlines")
     # Use AI to generate a conversational summary
     return _generate_ai_morning_message(headlines)
 
@@ -202,7 +205,7 @@ Here are today's gold/market headlines:
 Requirements:
 - Write 2-3 sentences MAX that summarize the key themes
 - Make it conversational and natural, like a friend updating you on markets
-- Start with the ☀️ emoji and "Morning Briefing" header on its own line
+- Start with the ☀️ emoji and "<b>Morning Briefing</b>" header on its own line (use HTML bold tags)
 - Use simple language, no jargon
 - Don't just repeat the headlines - synthesize the key points
 - Add a short motivational closer (e.g., "Stay sharp out there" or "Let's see what the session brings")
@@ -210,7 +213,7 @@ Requirements:
 - Keep under 280 characters for the body text
 
 Example format:
-☀️ Morning Briefing
+☀️ <b>Morning Briefing</b>
 
 Gold is catching bids as markets digest inflation data. Eyes on the Fed this week. Stay sharp out there. 💪
 
@@ -237,7 +240,7 @@ Write ONLY the message, nothing else:"""
 
 def _fallback_morning_message() -> str:
     """Fallback message when news or AI is unavailable."""
-    return """☀️ Morning Briefing
+    return """☀️ <b>Morning Briefing</b>
 
 Markets are warming up for another session. Gold remains in focus as traders eye key levels. Let's see what the day brings. 💪"""
 
