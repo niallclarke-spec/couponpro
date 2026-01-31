@@ -1,0 +1,86 @@
+You are building a “Gold Morning Briefing” generator for XAU/USD.
+
+Goal:
+Generate a short, believable, pro-style Telegram briefing like this format:
+
+🌅 GOLD MORNING OUTLOOK (XAU/USD)
+
+Market: <1 sentence about overnight Asian session behavior + current price + short structure note>
+Key Levels:
+- Support: <S1> / <S2>
+- Resistance: <R1> / <R2>
+
+Drivers Today:
+- USD Index slightly (up/down) — watch DXY at <level>  [optional if no DXY data]
+- Yields stable at <value>  [optional if no yields data]
+- Volume/volatility expectation into London/NY
+
+Events:
+- <today’s key events> [optional if events data is available, otherwise omit line]
+Expect volatility into London Open and NY session.
+
+Bias:
+Leaning (bullish/bearish/neutral) while above/below <pivot>. Waiting for break of <trigger>.
+
+Stay disciplined — volatility expected once volume steps in.
+
+Data:
+We have live metal price data from Metals API for XAU/USD (spot). Use it to compute session behavior and key levels. Do not assume “tight Asian range” every day — describe what actually happened using the data.
+
+Implementation requirements:
+1) Pull XAU/USD spot OHLC data for:
+   - “Asian session” window: 00:00–06:59 UTC (or configurable)
+   - “Current” price: latest tick / latest close
+   - “Yesterday” daily OHLC (previous full UTC day)
+   If Metals API doesn’t provide OHLC directly, build OHLC by sampling prices at a fixed interval (e.g., 5-min) during each window.
+
+2) Compute:
+   - Asian High, Asian Low, Asian Range = High - Low
+   - 20-day average Asian Range (or 10-day) from historical data
+   - Label the Asian range as:
+       “tight” if todayRange < 0.7 * avgRange
+       “normal” if 0.7–1.3 * avgRange
+       “expanded” if > 1.3 * avgRange
+   - Directional bias from structure using simple rules:
+       * H1 momentum proxy: compare last 3 hours’ slope (linear regression on sampled prices) OR compare last close vs 3-hours-ago
+       * H4 structure proxy: compare current price vs yesterday close and yesterday midpoint
+       Output one of: bullish / bearish / neutral
+
+3) Key Levels:
+   Create 2 supports + 2 resistances using a simple, explainable method:
+   - Pivot = (yesterdayHigh + yesterdayLow + yesterdayClose) / 3
+   - R1 = 2*Pivot - yesterdayLow
+   - S1 = 2*Pivot - yesterdayHigh
+   - R2 = Pivot + (yesterdayHigh - yesterdayLow)
+   - S2 = Pivot - (yesterdayHigh - yesterdayLow)
+   Round levels to 2 decimals.
+
+4) Market sentence rules:
+   Generate one sentence describing Asian session based on:
+   - If “tight”: “Gold traded in a tight Asian range overnight…”
+   - If “normal”: “Gold ranged normally through Asia…”
+   - If “expanded”: “Gold saw an expanded Asian range…”
+   Also mention whether price is currently near the Asian high/low:
+   - If current within 20% of range of high: “pressing the Asian highs”
+   - If within 20% of low: “holding near the Asian lows”
+   - Else: “trading mid-range”
+
+5) Output:
+   Produce the exact short briefing format with placeholders removed, using computed values.
+   Keep it under ~1000 characters (Telegram-friendly).
+   Only include Drivers/Event lines if the data exists; otherwise omit them cleanly (no blanks).
+
+6) Code:
+   Implement in Python.
+   - Use requests to call Metals API.
+   - Put API key in environment variable METALS_API_KEY.
+   - Write functions:
+       fetch_prices(start, end, interval_minutes)
+       build_ohlc(prices)
+       compute_asian_metrics(...)
+       compute_pivots(yesterday_ohlc)
+       generate_briefing(...)
+   - Include error handling and fallbacks if data is missing.
+   - Provide a main() that prints the briefing.
+
+Now implement this in a single file (e.g., briefing.py) and show the final code.
