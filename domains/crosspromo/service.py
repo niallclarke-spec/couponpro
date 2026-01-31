@@ -160,24 +160,13 @@ def fetch_xau_news() -> List[Dict[str, Any]]:
 
 def build_morning_news_message(tenant_id: str) -> str:
     """
-    Build the morning news message with greeting and market summary.
-    Uses AI to create a conversational, natural-sounding briefing.
+    Build the morning briefing with real market data and AI-generated analysis.
+    Uses Twelve Data for price/OHLC data and OpenAI for natural language.
     """
-    news_items = fetch_xau_news()
+    from domains.crosspromo.briefing import generate_morning_briefing
     
-    if not news_items:
-        logger.warning(f"Morning briefing for {tenant_id}: No news items fetched, using fallback")
-        return _fallback_morning_message()
-    
-    headlines = [item['title'] for item in news_items[:3]]
-    
-    if not headlines:
-        logger.warning(f"Morning briefing for {tenant_id}: No headlines extracted, using fallback")
-        return _fallback_morning_message()
-    
-    logger.info(f"Morning briefing for {tenant_id}: Generating AI message from {len(headlines)} headlines")
-    # Use AI to generate a conversational summary
-    return _generate_ai_morning_message(headlines)
+    logger.info(f"Generating morning market briefing for tenant: {tenant_id}")
+    return generate_morning_briefing(tenant_id)
 
 
 def _generate_ai_morning_message(headlines: List[str]) -> str:
