@@ -173,32 +173,31 @@ def aggregate_to_ohlc(candles: List[Dict]) -> Optional[OHLC]:
 
 def get_yesterday_ohlc(candles: List[Dict]) -> Optional[OHLC]:
     """
-    Get yesterday's full day OHLC from candles.
+    Get the most recent trading day's OHLC from candles.
+    Scans back up to 7 days to handle weekends and holidays (e.g., Monday needs Friday's data).
     """
     now_utc = datetime.now(timezone.utc)
-    yesterday = now_utc - timedelta(days=1)
     
-    yesterday_candles = []
-    for candle in candles:
-        try:
-            dt = parse_candle_datetime(candle['datetime'])
-            if dt.date() == yesterday.date():
-                yesterday_candles.append(candle)
-        except (KeyError, ValueError):
-            continue
-    
-    if not yesterday_candles:
-        # Try day before if yesterday has no data (weekend)
-        day_before = now_utc - timedelta(days=2)
+    # Try each day going back, looking for one with trading data
+    for day_offset in range(1, 8):  # Check up to 7 days back
+        target_date = now_utc - timedelta(days=day_offset)
+        
+        day_candles = []
         for candle in candles:
             try:
                 dt = parse_candle_datetime(candle['datetime'])
-                if dt.date() == day_before.date():
-                    yesterday_candles.append(candle)
+                if dt.date() == target_date.date():
+                    day_candles.append(candle)
             except (KeyError, ValueError):
                 continue
+        
+        # If we found candles for this day, use them
+        if day_candles:
+            logger.debug(f"Using OHLC from {target_date.date()} ({len(day_candles)} candles)")
+            return aggregate_to_ohlc(day_candles)
     
-    return aggregate_to_ohlc(yesterday_candles)
+    logger.warning("Could not find any trading day data in the past 7 days")
+    return None
 
 
 def compute_historical_avg_range(days: int = HISTORICAL_DAYS_FOR_AVERAGE) -> float:
