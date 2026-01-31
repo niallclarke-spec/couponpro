@@ -398,26 +398,26 @@ REQUIREMENTS:
 2. Add "XAU/USD" on the next line
 3. Write a "Market:" line (1-2 sentences about overnight session + current structure)
 4. List "Key Levels:" with Support and Resistance on separate lines
-5. Write a "Bias:" line - lean bullish/bearish/neutral based on price vs pivot, but don't say "buy" or "sell"
-6. End with a short motivational line
+5. Write a confident "Outlook:" line - sound assured that clear setups will emerge at these levels, without predicting direction
+6. End with "Stay tuned for signals" or similar CTA
 7. Use HTML formatting (<b> for bold) - NO markdown
-8. Keep total message under 800 characters
-9. Sound like a professional trader writing to their community
+8. Keep total message under 700 characters
+9. Sound like a confident professional trader writing to their community
 10. Reference the actual numbers provided
 
 EXAMPLE FORMAT:
 🌅 <b>GOLD MORNING OUTLOOK</b>
 XAU/USD
 
-<b>Market:</b> Gold traded in a tight range overnight, consolidating around $2785. Price pressing Asian highs suggests buyers in control.
+<b>Market:</b> Gold traded in a tight range overnight, consolidating around $2785. Price pressing Asian highs with momentum building.
 
 <b>Key Levels:</b>
 • Support: $2778 / $2765
 • Resistance: $2792 / $2805
 
-<b>Bias:</b> Leaning bullish while holding above $2780. Watch for a break of $2792.
+<b>Outlook:</b> Clean setups expected as price approaches key levels. The structure is clear — opportunities will present themselves.
 
-Stay disciplined — setups will present themselves. 📊
+Stay tuned for signals. 📊
 
 Write ONLY the briefing message:"""
 
@@ -461,14 +461,6 @@ def build_template_briefing(data: BriefingData) -> str:
         "mid_range": "trading mid-range"
     }.get(data.price_position, "trading mid-range")
     
-    # Determine bias based on price vs pivot
-    if data.current_price > data.pivots.pivot + 5:
-        bias = f"Leaning bullish while above ${data.pivots.pivot:.0f}"
-    elif data.current_price < data.pivots.pivot - 5:
-        bias = f"Leaning bearish while below ${data.pivots.pivot:.0f}"
-    else:
-        bias = f"Neutral around pivot at ${data.pivots.pivot:.0f}"
-    
     return f"""🌅 <b>GOLD MORNING OUTLOOK</b>
 XAU/USD
 
@@ -478,9 +470,9 @@ XAU/USD
 • Support: ${data.pivots.s1:.0f} / ${data.pivots.s2:.0f}
 • Resistance: ${data.pivots.r1:.0f} / ${data.pivots.r2:.0f}
 
-<b>Bias:</b> {bias}. Watch for clean breaks of key levels.
+<b>Outlook:</b> Clean setups expected as price approaches key levels. The structure is clear.
 
-Stay disciplined — volatility expected once volume steps in. 📊"""
+Stay tuned for signals. 📊"""
 
 
 def build_fallback_briefing() -> str:
@@ -490,9 +482,9 @@ def build_fallback_briefing() -> str:
     return """🌅 <b>GOLD MORNING OUTLOOK</b>
 XAU/USD
 
-Markets are warming up for the session ahead. Key levels are in play as traders await fresh catalysts.
+Markets are warming up for the session ahead. Key levels are in play and setups will emerge.
 
-Stay disciplined — setups will present themselves. 📊"""
+Stay tuned for signals. 📊"""
 
 
 def generate_morning_briefing(tenant_id: str = "default") -> str:
