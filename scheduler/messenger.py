@@ -6,8 +6,9 @@ Centralizes TP celebrations, recap generation, milestone notifications, etc.
 
 All sends go through core/telegram_sender.py - no direct Bot instantiation.
 """
+import asyncio
 from datetime import datetime
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List, Tuple
 from core.logging import get_logger
 from core.runtime import TenantRuntime
 from core.telegram_sender import send_to_channel, send_photo_to_channel, SendResult
@@ -73,93 +74,169 @@ class Messenger:
             channel_type=channel_type
         )
     
-    async def _send_showcase_image(
+    def _build_trades_for_showcase(
+        self,
+        signal_data: Dict[str, Any],
+        tp_level: int
+    ) -> List[TradeWinData]:
+        """
+        Build trade data rows for showcase image.
+        
+        Returns list of TradeWinData objects for the given TP level.
+        """
+        entry_price = float(signal_data.get('entry_price', 0))
+        direction = signal_data.get('signal_type', 'BUY')
+        pair = signal_data.get('pair', 'XAU/USD')
+        
+        tp_prices = [
+            signal_data.get('take_profit'),
+            signal_data.get('take_profit_2'),
+            signal_data.get('take_profit_3')
+        ]
+        
+        trades: List[TradeWinData] = []
+        now = datetime.utcnow()
+        
+        for i in range(tp_level):
+            tp_price = tp_prices[i]
+            if tp_price is None:
+                continue
+                
+            tp_price = float(tp_price)
+            profit_calc = calculate_trade_profit(
+                entry_price=entry_price,
+                exit_price=tp_price,
+                direction=direction,
+                lot_size=1.0,
+                include_commission=True
+            )
+            
+            trade = TradeWinData(
+                pair=pair,
+                direction=direction,
+                lot_size=1.0,
+                entry_price=entry_price,
+                exit_price=tp_price,
+                profit=profit_calc.net_profit,
+                timestamp=now
+            )
+            trades.append(trade)
+        
+        return trades
+    
+    async def _generate_image_with_retry(
         self,
         signal_data: Dict[str, Any],
         tp_level: int,
+        max_attempts: int = 3,
+        delay_ms: int = 200
+    ) -> Optional[bytes]:
+        """
+        Generate showcase image with retry logic.
+        
+        Tries up to max_attempts times with delay_ms between attempts.
+        Returns image bytes on success, None after all attempts fail.
+        
+        Args:
+            signal_data: Signal dict with entry_price, TP prices, etc.
+            tp_level: Current TP level (1, 2, or 3)
+            max_attempts: Number of attempts before giving up (default 3)
+            delay_ms: Delay between retries in milliseconds (default 200)
+            
+        Returns:
+            Image bytes if successful, None if all attempts fail
+        """
+        trades = self._build_trades_for_showcase(signal_data, tp_level)
+        
+        if not trades:
+            logger.warning("No trades to display in showcase image")
+            return None
+        
+        for attempt in range(1, max_attempts + 1):
+            try:
+                img_bytes = generate_trade_win_image(trades)
+                if img_bytes:
+                    logger.debug(f"Generated showcase image on attempt {attempt}")
+                    return img_bytes
+            except Exception as e:
+                logger.warning(f"Image generation attempt {attempt}/{max_attempts} failed: {e}")
+            
+            if attempt < max_attempts:
+                await asyncio.sleep(delay_ms / 1000.0)
+        
+        logger.error(f"All {max_attempts} image generation attempts failed")
+        return None
+    
+    async def _send_photo_with_caption(
+        self,
+        photo: bytes,
+        caption: str,
         channel_type: str = 'vip'
     ) -> SendResult:
         """
-        Send a cumulative trade win showcase image to the channel.
-        
-        Builds cumulative rows based on TP level:
-        - TP1: 1 row (entry → TP1)
-        - TP2: 2 rows (entry → TP1, entry → TP2)
-        - TP3: 3 rows (entry → TP1, entry → TP2, entry → TP3)
-        
-        Each row shows profit after $7/lot commission deduction.
+        Send a photo with caption to the channel.
         
         Args:
-            signal_data: Signal dict with entry_price, take_profit, take_profit_2, take_profit_3, pair
-            tp_level: Current TP level (1, 2, or 3)
+            photo: Image bytes
+            caption: Caption text (HTML formatted)
             channel_type: 'vip' or 'free'
             
         Returns:
             SendResult with message_id if successful
         """
-        try:
-            entry_price = float(signal_data.get('entry_price', 0))
-            direction = signal_data.get('signal_type', 'BUY')
-            pair = signal_data.get('pair', 'XAU/USD')
+        return await send_photo_to_channel(
+            tenant_id=self.tenant_id,
+            bot_role=SIGNAL_BOT,
+            photo=photo,
+            caption=caption,
+            channel_type=channel_type
+        )
+    
+    async def _send_tp_celebration_combined(
+        self,
+        message: str,
+        signal_data: Optional[Dict[str, Any]],
+        tp_level: int,
+        channel_type: str = 'vip'
+    ) -> Tuple[bool, Optional[int]]:
+        """
+        Send TP celebration as combined photo+caption or text-only fallback.
+        
+        Strategy:
+        1. If signal_data provided, try to generate showcase image (3 retries)
+        2. If image generated, send as photo+caption
+        3. If image fails after retries, send text-only message
+        
+        Args:
+            message: Celebration message text
+            signal_data: Optional signal dict for showcase image
+            tp_level: TP level (1, 2, or 3)
+            channel_type: 'vip' or 'free'
             
-            tp_prices = [
-                signal_data.get('take_profit'),
-                signal_data.get('take_profit_2'),
-                signal_data.get('take_profit_3')
-            ]
+        Returns:
+            Tuple of (success, message_id or None)
+        """
+        if signal_data:
+            img_bytes = await self._generate_image_with_retry(signal_data, tp_level)
             
-            trades: List[TradeWinData] = []
-            now = datetime.utcnow()
-            
-            for i in range(tp_level):
-                tp_price = tp_prices[i]
-                if tp_price is None:
-                    continue
-                    
-                tp_price = float(tp_price)
-                profit_calc = calculate_trade_profit(
-                    entry_price=entry_price,
-                    exit_price=tp_price,
-                    direction=direction,
-                    lot_size=1.0,
-                    include_commission=True
+            if img_bytes:
+                result = await self._send_photo_with_caption(
+                    photo=img_bytes,
+                    caption=message,
+                    channel_type=channel_type
                 )
-                
-                trade = TradeWinData(
-                    pair=pair,
-                    direction=direction,
-                    lot_size=1.0,
-                    entry_price=entry_price,
-                    exit_price=tp_price,
-                    profit=profit_calc.net_profit,
-                    timestamp=now
-                )
-                trades.append(trade)
-            
-            if not trades:
-                logger.warning("No trades to display in showcase image")
-                return SendResult(success=False, error="No TP prices available")
-            
-            img_bytes = generate_trade_win_image(trades)
-            
-            result = await send_photo_to_channel(
-                tenant_id=self.tenant_id,
-                bot_role=SIGNAL_BOT,
-                photo=img_bytes,
-                caption=None,
-                channel_type=channel_type
-            )
-            
-            if result.success:
-                logger.info(f"Sent showcase image ({len(trades)} rows) to {channel_type} channel, msg_id={result.message_id}")
+                if result.success:
+                    logger.info(f"Sent TP{tp_level} photo+caption to {channel_type}, msg_id={result.message_id}")
+                    return True, result.message_id
+                else:
+                    logger.warning(f"Photo+caption send failed, falling back to text: {result.error}")
             else:
-                logger.error(f"Failed to send showcase image: {result.error}")
-            
-            return result
-            
-        except Exception as e:
-            logger.exception(f"Error generating/sending showcase image: {e}")
-            return SendResult(success=False, error=str(e))
+                logger.warning(f"Image generation failed after retries, sending text-only")
+        
+        result = await self._send_channel_message(message, channel_type)
+        if result.success:
+            logger.info(f"Sent TP{tp_level} text message to {channel_type}, msg_id={result.message_id}")
+        return result.success, result.message_id if result.success else None
     
     async def post_signal(self, signal_data: Dict[str, Any]) -> Optional[int]:
         """Post a new signal to Telegram."""
@@ -181,7 +258,7 @@ class Messenger:
         signal_data: Optional[Dict[str, Any]] = None
     ) -> Optional[int]:
         """
-        Send TP1 hit celebration message and showcase image.
+        Send TP1 hit celebration as combined photo+caption (with text-only fallback).
         
         Args:
             signal_type: BUY or SELL
@@ -195,17 +272,17 @@ class Messenger:
         """
         try:
             message = self.milestone_tracker.generate_tp1_celebration(signal_type, pips, remaining, posted_at)
-            result = await self._send_channel_message(message)
+            success, message_id = await self._send_tp_celebration_combined(
+                message=message,
+                signal_data=signal_data,
+                tp_level=1
+            )
             
-            if result.success:
-                logger.info(f"Posted TP1 celebration (+{pips} pips), message_id={result.message_id}")
-                
-                if signal_data:
-                    await self._send_showcase_image(signal_data=signal_data, tp_level=1)
-                
-                return result.message_id
+            if success:
+                logger.info(f"Posted TP1 celebration (+{pips} pips), message_id={message_id}")
+                return message_id
             else:
-                logger.error(f"Failed to send TP1 celebration: {result.error}")
+                logger.error("Failed to send TP1 celebration")
                 return None
         except Exception as e:
             logger.exception("Failed to send TP1 celebration")
@@ -220,7 +297,7 @@ class Messenger:
         posted_at: Optional[str] = None,
         signal_data: Optional[Dict[str, Any]] = None
     ) -> bool:
-        """Send TP2 hit celebration message and showcase image.
+        """Send TP2 hit celebration as combined photo+caption (with text-only fallback).
         
         Args:
             signal_type: BUY or SELL
@@ -232,17 +309,17 @@ class Messenger:
         """
         try:
             message = self.milestone_tracker.generate_tp2_celebration(signal_type, pips, tp1_price, remaining, posted_at)
-            result = await self._send_channel_message(message)
+            success, message_id = await self._send_tp_celebration_combined(
+                message=message,
+                signal_data=signal_data,
+                tp_level=2
+            )
             
-            if result.success:
-                logger.info(f"Posted TP2 celebration (+{pips} pips)")
-                
-                if signal_data:
-                    await self._send_showcase_image(signal_data=signal_data, tp_level=2)
-                
+            if success:
+                logger.info(f"Posted TP2 celebration (+{pips} pips), message_id={message_id}")
                 return True
             else:
-                logger.error(f"Failed to send TP2 celebration: {result.error}")
+                logger.error("Failed to send TP2 celebration")
                 return False
         except Exception as e:
             logger.exception("Failed to send TP2 celebration")
@@ -256,7 +333,7 @@ class Messenger:
         signal_data: Optional[Dict[str, Any]] = None
     ) -> Optional[int]:
         """
-        Send TP3 hit (full exit) celebration message and showcase image.
+        Send TP3 hit celebration as combined photo+caption (with text-only fallback).
         
         Args:
             signal_type: BUY or SELL
@@ -269,17 +346,17 @@ class Messenger:
         """
         try:
             message = self.milestone_tracker.generate_tp3_celebration(signal_type, pips, posted_at)
-            result = await self._send_channel_message(message)
+            success, message_id = await self._send_tp_celebration_combined(
+                message=message,
+                signal_data=signal_data,
+                tp_level=3
+            )
             
-            if result.success:
-                logger.info(f"Posted TP3 celebration - full exit (+{pips} pips), message_id={result.message_id}")
-                
-                if signal_data:
-                    await self._send_showcase_image(signal_data=signal_data, tp_level=3)
-                
-                return result.message_id
+            if success:
+                logger.info(f"Posted TP3 celebration - full exit (+{pips} pips), message_id={message_id}")
+                return message_id
             else:
-                logger.error(f"Failed to send TP3 celebration: {result.error}")
+                logger.error("Failed to send TP3 celebration")
                 return None
         except Exception as e:
             logger.exception("Failed to send TP3 celebration")
