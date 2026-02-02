@@ -169,10 +169,10 @@ def _draw_trade_row(
     entry_width = entry_bbox[2] - entry_bbox[0]
     entry_height = entry_bbox[3] - entry_bbox[1]
     
-    # Draw arrow line - perfectly centered with text
+    # Draw arrow line - centered with text (offset for font baseline)
     arrow_x = CONTENT_LEFT + entry_width + 16
     arrow_width = 36
-    arrow_y = entry_y + entry_height // 2  # Exact vertical center of text
+    arrow_y = entry_y + (entry_height * 2 // 3)  # Lower to align with number center
     _draw_arrow(draw, arrow_x, arrow_y, arrow_width, _hex_to_rgb(COLOR_GRAY))
     
     draw.text(
