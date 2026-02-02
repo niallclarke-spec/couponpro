@@ -172,7 +172,7 @@ def _draw_trade_row(
     # Draw arrow line - centered with text (offset for font baseline)
     arrow_x = CONTENT_LEFT + entry_width + 16
     arrow_width = 36
-    arrow_y = entry_y + (entry_height * 2 // 3)  # Lower to align with number center
+    arrow_y = entry_y + (entry_height * 3 // 4)  # Lower to align with number center
     _draw_arrow(draw, arrow_x, arrow_y, arrow_width, _hex_to_rgb(COLOR_GRAY))
     
     draw.text(
