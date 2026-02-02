@@ -18,9 +18,9 @@ from core.logging import get_logger
 
 logger = get_logger(__name__)
 
-CANVAS_WIDTH = 860
-CANVAS_HEIGHT_BASE = 80  # Base height (padding top + bottom)
-CANVAS_HEIGHT_PER_ROW = 124  # Height per trade row (2x original)
+CANVAS_WIDTH = 1200
+CANVAS_HEIGHT_BASE = 112  # Base height (padding top + bottom)
+CANVAS_HEIGHT_PER_ROW = 174  # Height per trade row (~2.8x original)
 BACKGROUND_COLOR = "#000000"
 
 COLOR_WHITE = "#FFFFFF"
@@ -28,9 +28,9 @@ COLOR_BLUE = "#4279EA"
 COLOR_RED = "#EA4242"
 COLOR_GRAY = "#B8B8B8"
 
-CONTENT_LEFT = 32
-CONTENT_TOP = 22
-ROW_HEIGHT = 124
+CONTENT_LEFT = 45
+CONTENT_TOP = 30
+ROW_HEIGHT = 174
 
 FONT_PATHS = {
     'medium': [
@@ -102,6 +102,23 @@ def _hex_to_rgb(hex_color: str) -> Tuple[int, ...]:
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 
+def _draw_arrow(draw: ImageDraw.ImageDraw, x: int, y: int, width: int, color: tuple) -> None:
+    """Draw a horizontal arrow line with arrowhead, perfectly centered at y."""
+    line_thickness = 2
+    arrow_head_size = 6
+    
+    # Draw horizontal line
+    draw.line([(x, y), (x + width - arrow_head_size, y)], fill=color, width=line_thickness)
+    
+    # Draw arrowhead (triangle pointing right)
+    arrow_tip_x = x + width
+    draw.polygon([
+        (arrow_tip_x, y),  # Tip
+        (arrow_tip_x - arrow_head_size, y - arrow_head_size // 2),  # Top
+        (arrow_tip_x - arrow_head_size, y + arrow_head_size // 2),  # Bottom
+    ], fill=color)
+
+
 def _draw_trade_row(
     draw: ImageDraw.ImageDraw,
     trade: TradeWinData,
@@ -111,10 +128,10 @@ def _draw_trade_row(
     """Draw a single trade row at the specified index."""
     base_y = CONTENT_TOP + (row_index * ROW_HEIGHT)
     
-    # 2x font sizes for high-res output
-    font_pair = _get_font('medium', 40)
-    font_direction = _get_font('regular', 38)
-    font_small = _get_font('regular', 26)
+    # ~2.8x font sizes for high-res output (1200px width)
+    font_pair = _get_font('medium', 56)
+    font_direction = _get_font('regular', 53)
+    font_small = _get_font('regular', 36)
     
     direction_color = COLOR_BLUE if trade.direction_lower == 'buy' else COLOR_RED
     profit_color = COLOR_BLUE if trade.is_profit else COLOR_RED
@@ -132,14 +149,14 @@ def _draw_trade_row(
     
     direction_text = f"{trade.direction_lower} {trade.formatted_lot}"
     draw.text(
-        (CONTENT_LEFT + pair_width + 12, base_y + 2),
+        (CONTENT_LEFT + pair_width + 16, base_y + 3),
         direction_text,
         font=font_direction,
         fill=_hex_to_rgb(direction_color)
     )
     
     # Row 2: Entry → Exit (left) | Timestamp (right)
-    entry_y = base_y + 54
+    entry_y = base_y + 76
     entry_text = f"{trade.entry_price:.2f}"
     draw.text(
         (CONTENT_LEFT, entry_y),
@@ -152,25 +169,14 @@ def _draw_trade_row(
     entry_width = entry_bbox[2] - entry_bbox[0]
     entry_height = entry_bbox[3] - entry_bbox[1]
     
-    # Draw centered arrow - calculate vertical center of text
-    arrow_x = CONTENT_LEFT + entry_width + 12
-    arrow_text = "→"
-    arrow_bbox = draw.textbbox((0, 0), arrow_text, font=font_small)
-    arrow_height = arrow_bbox[3] - arrow_bbox[1]
-    # Center arrow vertically with entry price text
-    arrow_y = entry_y + (entry_height - arrow_height) // 2
+    # Draw arrow line - perfectly centered with text
+    arrow_x = CONTENT_LEFT + entry_width + 16
+    arrow_width = 36
+    arrow_y = entry_y + entry_height // 2  # Exact vertical center of text
+    _draw_arrow(draw, arrow_x, arrow_y, arrow_width, _hex_to_rgb(COLOR_GRAY))
     
     draw.text(
-        (arrow_x, arrow_y),
-        arrow_text,
-        font=font_small,
-        fill=_hex_to_rgb(COLOR_GRAY)
-    )
-    
-    arrow_width = arrow_bbox[2] - arrow_bbox[0]
-    
-    draw.text(
-        (arrow_x + arrow_width + 12, entry_y),
+        (arrow_x + arrow_width + 16, entry_y),
         f"{trade.exit_price:.2f}",
         font=font_small,
         fill=_hex_to_rgb(COLOR_GRAY)
@@ -183,7 +189,7 @@ def _draw_trade_row(
     profit_x = CANVAS_WIDTH - CONTENT_LEFT - profit_width
     
     draw.text(
-        (profit_x, base_y + 2),
+        (profit_x, base_y + 3),
         profit_text,
         font=font_direction,
         fill=_hex_to_rgb(profit_color)
