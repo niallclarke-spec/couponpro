@@ -18,9 +18,9 @@ from core.logging import get_logger
 
 logger = get_logger(__name__)
 
-CANVAS_WIDTH = 430
-CANVAS_HEIGHT_BASE = 143  # Base height without any rows
-CANVAS_HEIGHT_PER_ROW = 62  # Height per trade row
+CANVAS_WIDTH = 860
+CANVAS_HEIGHT_BASE = 80  # Base height (padding top + bottom)
+CANVAS_HEIGHT_PER_ROW = 124  # Height per trade row (2x original)
 BACKGROUND_COLOR = "#000000"
 
 COLOR_WHITE = "#FFFFFF"
@@ -28,9 +28,9 @@ COLOR_BLUE = "#4279EA"
 COLOR_RED = "#EA4242"
 COLOR_GRAY = "#B8B8B8"
 
-CONTENT_LEFT = 16
-CONTENT_TOP = 11
-ROW_HEIGHT = 62
+CONTENT_LEFT = 32
+CONTENT_TOP = 22
+ROW_HEIGHT = 124
 
 FONT_PATHS = {
     'medium': [
@@ -111,13 +111,15 @@ def _draw_trade_row(
     """Draw a single trade row at the specified index."""
     base_y = CONTENT_TOP + (row_index * ROW_HEIGHT)
     
-    font_pair = _get_font('medium', 20)
-    font_direction = _get_font('regular', 19)
-    font_small = _get_font('regular', 13)
+    # 2x font sizes for high-res output
+    font_pair = _get_font('medium', 40)
+    font_direction = _get_font('regular', 38)
+    font_small = _get_font('regular', 26)
     
     direction_color = COLOR_BLUE if trade.direction_lower == 'buy' else COLOR_RED
     profit_color = COLOR_BLUE if trade.is_profit else COLOR_RED
     
+    # Row 1: Pair + direction/lot (left) | Profit (right)
     draw.text(
         (CONTENT_LEFT, base_y),
         trade.formatted_pair,
@@ -130,54 +132,64 @@ def _draw_trade_row(
     
     direction_text = f"{trade.direction_lower} {trade.formatted_lot}"
     draw.text(
-        (CONTENT_LEFT + pair_width + 6, base_y + 1),
+        (CONTENT_LEFT + pair_width + 12, base_y + 2),
         direction_text,
         font=font_direction,
         fill=_hex_to_rgb(direction_color)
     )
     
-    entry_y = base_y + 27
+    # Row 2: Entry → Exit (left) | Timestamp (right)
+    entry_y = base_y + 54
+    entry_text = f"{trade.entry_price:.2f}"
     draw.text(
         (CONTENT_LEFT, entry_y),
-        f"{trade.entry_price:.2f}",
+        entry_text,
         font=font_small,
         fill=_hex_to_rgb(COLOR_GRAY)
     )
     
-    entry_bbox = draw.textbbox((CONTENT_LEFT, entry_y), f"{trade.entry_price:.2f}", font=font_small)
+    entry_bbox = draw.textbbox((CONTENT_LEFT, entry_y), entry_text, font=font_small)
     entry_width = entry_bbox[2] - entry_bbox[0]
+    entry_height = entry_bbox[3] - entry_bbox[1]
     
-    arrow_x = CONTENT_LEFT + entry_width + 4
-    arrow_y = entry_y + 3
+    # Draw centered arrow - calculate vertical center of text
+    arrow_x = CONTENT_LEFT + entry_width + 12
+    arrow_text = "→"
+    arrow_bbox = draw.textbbox((0, 0), arrow_text, font=font_small)
+    arrow_height = arrow_bbox[3] - arrow_bbox[1]
+    # Center arrow vertically with entry price text
+    arrow_y = entry_y + (entry_height - arrow_height) // 2
+    
     draw.text(
         (arrow_x, arrow_y),
-        "→",
+        arrow_text,
         font=font_small,
         fill=_hex_to_rgb(COLOR_GRAY)
     )
     
-    arrow_bbox = draw.textbbox((arrow_x, arrow_y), "→", font=font_small)
     arrow_width = arrow_bbox[2] - arrow_bbox[0]
     
     draw.text(
-        (arrow_x + arrow_width + 4, entry_y),
+        (arrow_x + arrow_width + 12, entry_y),
         f"{trade.exit_price:.2f}",
         font=font_small,
         fill=_hex_to_rgb(COLOR_GRAY)
     )
     
+    # Profit (right-aligned, row 1)
     profit_text = trade.formatted_profit
     profit_bbox = draw.textbbox((0, 0), profit_text, font=font_direction)
     profit_width = profit_bbox[2] - profit_bbox[0]
     profit_x = CANVAS_WIDTH - CONTENT_LEFT - profit_width
     
     draw.text(
-        (profit_x, base_y + 1),
+        (profit_x, base_y + 2),
         profit_text,
         font=font_direction,
         fill=_hex_to_rgb(profit_color)
     )
     
+    # Timestamp (right-aligned, row 2)
     timestamp_text = trade.formatted_timestamp
     timestamp_bbox = draw.textbbox((0, 0), timestamp_text, font=font_small)
     timestamp_width = timestamp_bbox[2] - timestamp_bbox[0]
