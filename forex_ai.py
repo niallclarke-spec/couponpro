@@ -295,29 +295,36 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
         except (TypeError, ValueError):
             return default
     
+    def get_day_label(dt):
+        """Get day name label like 'Monday' or 'Yesterday'."""
+        if dt is None:
+            return "Yesterday"
+        return dt.strftime('%A')  # Full day name
+    
     try:
         signals = get_forex_signals_detailed(tenant_id, period=period)
         stats = get_forex_stats_by_period(tenant_id, period=period) or {}
         
         if not signals:
             if period == 'yesterday':
-                date_label = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d, %Y')
+                target_date = datetime.utcnow() - timedelta(days=1)
+                day_label = get_day_label(target_date)
             else:
-                date_label = datetime.utcnow().strftime('%b %d, %Y')
+                day_label = "Today"
             
             return {
-                'message': f"📊 <b>Daily Performance</b> - {date_label}\n\nNo signals were posted.",
+                'message': f"📊 <b>Yesterday's Performance Recap</b> - {day_label}\n\nNo signals were posted.",
                 'stats': {'total_signals': 0, 'wins': 0, 'losses': 0, 'total_pips': 0}
             }
         
         if period == 'yesterday':
             first_signal_date = signals[0].get('posted_at')
             if first_signal_date:
-                date_label = first_signal_date.strftime('%b %d, %Y')
+                day_label = get_day_label(first_signal_date)
             else:
-                date_label = (datetime.utcnow() - timedelta(days=1)).strftime('%b %d, %Y')
+                day_label = get_day_label(datetime.utcnow() - timedelta(days=1))
         else:
-            date_label = datetime.utcnow().strftime('%b %d, %Y')
+            day_label = "Today"
         
         signal_blocks = []
         total_pips = 0
@@ -325,7 +332,6 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
         losses = 0
         
         for signal in signals:
-            signal_id = signal['id']
             signal_type = signal['signal_type']
             entry_price = signal.get('entry_price')
             close_price = signal.get('close_price') or entry_price
@@ -333,6 +339,13 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
             result_pips = signal.get('result_pips') or 0
             duration = signal.get('duration') or 'ongoing'
             highest_tp = signal.get('highest_tp')
+            posted_at = signal.get('posted_at')
+            
+            # Format timestamp for display (e.g., "09:15")
+            if posted_at:
+                time_label = posted_at.strftime('%H:%M')
+            else:
+                time_label = "—"
             
             if status == 'won':
                 status_emoji = '✅'
@@ -348,9 +361,16 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
                 result_label = "SL HIT"
                 pips_display = f"-{abs(result_pips):.1f} pips"
             elif status == 'expired':
-                status_emoji = '⏱️'
-                result_label = "EXPIRED"
-                pips_display = f"{result_pips:+.1f} pips" if result_pips else "0 pips"
+                # Expired with negative pips = loss
+                if result_pips < 0:
+                    status_emoji = '❌'
+                    losses += 1
+                    result_label = "EXPIRED (Loss)"
+                    pips_display = f"{result_pips:.1f} pips"
+                else:
+                    status_emoji = '⏱️'
+                    result_label = "EXPIRED"
+                    pips_display = f"+{result_pips:.1f} pips" if result_pips > 0 else "0 pips"
             else:
                 status_emoji = '⏳'
                 result_label = "PENDING"
@@ -361,7 +381,7 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
             entry_str = safe_price(entry_price)
             exit_str = safe_price(close_price)
             
-            block = f"""<b>Signal #{signal_id}</b> - {signal_type}
+            block = f"""<b>{time_label}</b> - {signal_type}
 • Entry: {entry_str} → Exit: {exit_str}
 • Result: {status_emoji} {result_label} ({pips_display})
 • Duration: {duration}"""
@@ -382,12 +402,12 @@ def generate_detailed_daily_recap(tenant_id: str = 'entrylab', period: str = 'ye
         ai_commentary = None
         try:
             if total_signals > 0:
-                prompt = f"""Write 1-2 sentences of professional market commentary for a daily forex recap.
+                prompt = f"""Write 1-2 sentences of professional market commentary for yesterday's forex trading recap.
 
 Results: {wins} wins, {losses} losses, {total_pips:+.1f} pips total.
 Win rate: {win_rate:.0f}%
 
-Style: Analytical and insightful. Reference market conditions or strategy performance. No emojis. Keep it brief."""
+Style: Analytical and insightful. Reference yesterday's market conditions or strategy performance. Say "Yesterday's session" not "Today's". No emojis. Keep it brief."""
                 
                 response = _get_client().chat.completions.create(
                     model="gpt-4o-mini",
@@ -404,7 +424,7 @@ Style: Analytical and insightful. Reference market conditions or strategy perfor
         except Exception as e:
             logger.warning(f"AI commentary generation failed: {e}")
         
-        message = f"""📊 <b>Daily Performance</b> - {date_label}
+        message = f"""📊 <b>Yesterday's Performance Recap</b> - {day_label}
 
 {signals_section}
 
@@ -427,7 +447,7 @@ Style: Analytical and insightful. Reference market conditions or strategy perfor
     except Exception as e:
         logger.exception("Error generating detailed daily recap")
         return {
-            'message': "📊 <b>Daily Performance</b>\n\nUnable to generate recap at this time.",
+            'message': "📊 <b>Yesterday's Performance Recap</b>\n\nUnable to generate recap at this time.",
             'stats': {'total_signals': 0, 'wins': 0, 'losses': 0, 'total_pips': 0}
         }
 

@@ -549,12 +549,12 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
     
     if job_type == 'morning_news':
         message = build_morning_news_message(tenant_id)
-        result = send_message(bot_token, free_channel_id, message)
+        result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
         return result
     
     elif job_type == 'vip_soon':
         message = build_vip_soon_message()
-        result = send_message(bot_token, free_channel_id, message)
+        result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
         return result
     
     elif job_type == 'forward_winning_signal':
@@ -834,7 +834,7 @@ def send_test_morning_message(tenant_id: str) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
     
     message = build_morning_news_message(tenant_id)
-    result = send_message(bot_token, free_channel_id, message)
+    result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
     
     return result
 
