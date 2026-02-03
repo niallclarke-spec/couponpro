@@ -468,7 +468,8 @@ class Messenger:
         signal_id: int,
         message: str,
         current_price: float,
-        entry_price: float
+        entry_price: float,
+        signal_type: str = 'BUY'
     ) -> bool:
         """Post signal timeout notification."""
         try:
@@ -476,7 +477,8 @@ class Messenger:
                 signal_id=signal_id,
                 message=message,
                 current_price=current_price,
-                entry_price=entry_price
+                entry_price=entry_price,
+                signal_type=signal_type
             )
             if success:
                 logger.info(f"Posted timeout notification for signal #{signal_id}")

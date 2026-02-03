@@ -10,7 +10,7 @@ from db import create_forex_signal, get_forex_signals, get_forex_stats_by_period
 from core.logging import get_logger
 from core.bot_credentials import BotNotConfiguredError, SIGNAL_BOT
 from core.telegram_sender import send_to_channel, get_connection_for_send, SendResult
-from core.pip_calculator import PIPS_MULTIPLIER
+from core.pip_calculator import PIPS_MULTIPLIER, calculate_pips
 
 logger = get_logger(__name__)
 
@@ -527,7 +527,7 @@ Signal closed after maximum hold time."""
             logger.exception(f"Failed to post revalidation update: {e}")
             return False
     
-    async def post_signal_timeout(self, signal_id, message, current_price, entry_price):
+    async def post_signal_timeout(self, signal_id, message, current_price, entry_price, signal_type='BUY'):
         """
         Post a timeout notification when signal reaches maximum hold time.
         
@@ -536,13 +536,14 @@ Signal closed after maximum hold time."""
             message: AI-generated timeout message
             current_price: Current market price
             entry_price: Signal entry price
+            signal_type: 'BUY' or 'SELL' for correct pip calculation
         """
         if not self.is_configured():
             return False
         
         try:
-            pnl = current_price - entry_price
-            pnl_display = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"
+            pips = calculate_pips(entry_price, current_price, signal_type)
+            pips_display = f"+{pips:.1f} pips" if pips >= 0 else f"{pips:.1f} pips"
             
             full_message = f"""⏰ <b>Signal Timeout</b>
 <b>Signal #{signal_id}</b>
@@ -550,7 +551,7 @@ Signal closed after maximum hold time."""
 {message}
 
 <b>Exit:</b> ${current_price:.2f} | <b>Entry:</b> ${entry_price:.2f}
-<b>Result:</b> {pnl_display}"""
+<b>Result:</b> {pips_display}"""
             
             result = await self._send(full_message)
             

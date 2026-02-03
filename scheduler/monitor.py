@@ -219,7 +219,8 @@ class SignalMonitor:
                     signal_id=signal_id,
                     message=ai_message,
                     current_price=current_price,
-                    entry_price=entry_price
+                    entry_price=entry_price,
+                    signal_type=timeout_signal_type
                 )
                 logger.info(f"✅ Posted AI timeout notification for signal #{signal_id} (status: {status})")
             except Exception as e:
