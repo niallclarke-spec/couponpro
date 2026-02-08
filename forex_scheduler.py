@@ -76,9 +76,10 @@ def require_db_pool_or_exit():
 
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
-MONITOR_INTERVAL = 60            # 1 minute - monitor active signals for TP/SL
+MONITOR_INTERVAL = 5             # 5 seconds - monitor active signals for TP/SL
 GUIDANCE_INTERVAL = 60           # 1 minute - check for guidance updates
 STAGNANT_CHECK_INTERVAL = 300    # 5 minutes - check stagnant signals for revalidation
+SCHEDULED_CHECK_INTERVAL = 60   # 1 minute - check briefings, recaps, crosspromo
 
 
 class ForexSchedulerRunner:
@@ -288,7 +289,7 @@ class ForexSchedulerRunner:
         logger.info("=" * 60)
         logger.info("📊 Signal checks: 15min timeframe every 15 minutes")
         logger.info("📊 Signal checks: 1h timeframe every 30 minutes")
-        logger.info("🔍 Price monitoring: Every 1 minute")
+        logger.info("🔍 Price monitoring: Every 5 seconds")
         logger.info("💡 Signal guidance: Every 1 minute (with 10min cooldown)")
         logger.info("🔄 Stagnant re-validation: First at 90min, then every 30min")
         logger.info("⏰ Signal timeout: 4 hours (atomic close in price monitor)")
@@ -296,34 +297,41 @@ class ForexSchedulerRunner:
         logger.info("📅 Daily recap: 6:30 AM UTC")
         logger.info("📅 Weekly recap: Sunday 6:30 AM UTC")
         logger.info("📣 Cross promo daily: Configured time from settings (Mon-Fri)")
-        logger.info("⏰ Trading hours: 8AM-10PM GMT")
+        logger.info("⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)")
         logger.info("=" * 60)
         
-        signal_check_counter = 0
+        tick_counter = 0
+        signal_every = self.signal_check_interval // self.monitor_interval       # 900/5 = 180 ticks
+        guidance_every = GUIDANCE_INTERVAL // self.monitor_interval               # 60/5 = 12 ticks
+        stagnant_every = STAGNANT_CHECK_INTERVAL // self.monitor_interval         # 300/5 = 60 ticks
+        scheduled_every = SCHEDULED_CHECK_INTERVAL // self.monitor_interval       # 60/5 = 12 ticks
         
         while True:
             try:
                 with self.runtime.request_context():
                     # Signal generation check (every 15 minutes)
-                    if signal_check_counter % (self.signal_check_interval // self.monitor_interval) == 0:
+                    if tick_counter % signal_every == 0:
                         await self.generator.run_signal_check()
                     
-                    # Signal monitoring (every minute)
+                    # Price monitoring (every 5 seconds)
                     await self.monitor.run_signal_monitoring()
                     
-                    # Milestone guidance (every minute)
-                    await self.monitor.run_signal_guidance()
+                    # Milestone guidance (every 1 minute)
+                    if tick_counter % guidance_every == 0:
+                        await self.monitor.run_signal_guidance()
                     
-                    # Stagnant signal checks
-                    await self.monitor.run_stagnant_signal_checks()
+                    # Stagnant signal checks (every 5 minutes)
+                    if tick_counter % stagnant_every == 0:
+                        await self.monitor.run_stagnant_signal_checks()
                     
-                    # Scheduled messages
-                    await self.check_morning_briefing()
-                    await self.check_daily_recap()
-                    await self.check_weekly_recap()
-                    await self.check_crosspromo_daily()
+                    # Scheduled messages (every 1 minute)
+                    if tick_counter % scheduled_every == 0:
+                        await self.check_morning_briefing()
+                        await self.check_daily_recap()
+                        await self.check_weekly_recap()
+                        await self.check_crosspromo_daily()
                 
-                signal_check_counter += 1
+                tick_counter += 1
                 await asyncio.sleep(self.monitor_interval)
                 
             except KeyboardInterrupt:

@@ -545,12 +545,17 @@ class ForexSignalEngine:
     
     def is_trading_hours(self):
         """
-        Check if current time is within trading hours (configurable, default 8AM-10PM GMT)
+        Check if current time is within trading hours (configurable, default 8AM-10PM GMT).
+        Also checks for weekends - XAU/USD market is closed Saturday and Sunday.
+        Market reopens Sunday ~10PM UTC but we skip all of Sunday for safety.
         """
         from datetime import datetime
         now = datetime.utcnow()
-        current_hour = now.hour
         
+        if now.weekday() >= 5:
+            return False
+        
+        current_hour = now.hour
         if self.trading_start_hour <= current_hour < self.trading_end_hour:
             return True
         return False
