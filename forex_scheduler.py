@@ -77,7 +77,7 @@ def require_db_pool_or_exit():
 # Scheduler timing constants (in seconds)
 SIGNAL_CHECK_INTERVAL = 900      # 15 minutes - check for new signals
 MONITOR_INTERVAL = 5             # 5 seconds - monitor active signals for TP/SL
-GUIDANCE_INTERVAL = 60           # 1 minute - check for guidance updates
+
 STAGNANT_CHECK_INTERVAL = 300    # 5 minutes - check stagnant signals for revalidation
 SCHEDULED_CHECK_INTERVAL = 60   # 1 minute - check briefings, recaps, crosspromo
 
@@ -290,7 +290,7 @@ class ForexSchedulerRunner:
         logger.info("📊 Signal checks: 15min timeframe every 15 minutes")
         logger.info("📊 Signal checks: 1h timeframe every 30 minutes")
         logger.info("🔍 Price monitoring: Every 5 seconds")
-        logger.info("💡 Signal guidance: Every 1 minute (with 10min cooldown)")
+        logger.info("💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)")
         logger.info("🔄 Stagnant re-validation: First at 90min, then every 30min")
         logger.info("⏰ Signal timeout: 4 hours (atomic close in price monitor)")
         logger.info("☀️ Morning briefing: 6:20 AM UTC")
@@ -302,7 +302,6 @@ class ForexSchedulerRunner:
         
         tick_counter = 0
         signal_every = self.signal_check_interval // self.monitor_interval       # 900/5 = 180 ticks
-        guidance_every = GUIDANCE_INTERVAL // self.monitor_interval               # 60/5 = 12 ticks
         stagnant_every = STAGNANT_CHECK_INTERVAL // self.monitor_interval         # 300/5 = 60 ticks
         scheduled_every = SCHEDULED_CHECK_INTERVAL // self.monitor_interval       # 60/5 = 12 ticks
         
@@ -316,9 +315,8 @@ class ForexSchedulerRunner:
                     # Price monitoring (every 5 seconds)
                     await self.monitor.run_signal_monitoring()
                     
-                    # Milestone guidance (every 1 minute)
-                    if tick_counter % guidance_every == 0:
-                        await self.monitor.run_signal_guidance()
+                    # Milestone guidance (every 5 seconds, reuses cached price from monitoring)
+                    await self.monitor.run_signal_guidance()
                     
                     # Stagnant signal checks (every 5 minutes)
                     if tick_counter % stagnant_every == 0:

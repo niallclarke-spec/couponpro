@@ -293,6 +293,7 @@ class ForexSignalEngine:
                 logger.error("❌ Could not fetch current price")
                 return []
             
+            self._last_price = current_price
             logger.info(f"Current {self.symbol} price: {current_price:.2f}")
             
             updates = []

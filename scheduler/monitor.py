@@ -40,6 +40,7 @@ class SignalMonitor:
         self.runtime = runtime
         self.messenger = messenger
         self.tenant_id = runtime.tenant_id
+        self._last_price: Optional[float] = None
     
     @property
     def signal_engine(self):
@@ -59,6 +60,7 @@ class SignalMonitor:
     async def run_signal_monitoring(self) -> List[Dict[str, Any]]:
         """
         Monitor active signals for multi-TP hits, SL hits, and breakeven.
+        Also caches the fetched price for reuse by run_signal_guidance().
         
         Returns:
             List of signal update events that were processed
@@ -66,6 +68,10 @@ class SignalMonitor:
         try:
             with self.runtime.request_context():
                 updates = await self.signal_engine.monitor_active_signals()
+                
+                cached = getattr(self.signal_engine, '_last_price', None)
+                if cached:
+                    self._last_price = cached
                 
                 for update in updates:
                     await self._process_signal_update(update)
@@ -248,6 +254,10 @@ class SignalMonitor:
         """
         Check for milestone-based progress updates on active signals.
         
+        Reuses the cached price from run_signal_monitoring() to avoid
+        duplicate API calls. Skips entirely if no cached price is available
+        (i.e. monitoring didn't fetch one because there are no active signals).
+        
         Milestones:
         - 40% toward TP1: AI motivational message
         - 70% toward TP1: Breakeven alert
@@ -255,14 +265,14 @@ class SignalMonitor:
         - 60% toward SL: Warning
         """
         try:
+            current_price = self._last_price
+            if not current_price:
+                return
+            
             with self.runtime.request_context():
                 active_signals = self.runtime.get_forex_signals(status='pending')
                 
                 if not active_signals:
-                    return
-                
-                current_price = self.price_client.get_price(self.signal_engine.symbol)
-                if not current_price:
                     return
                 
                 db = self.runtime.db
