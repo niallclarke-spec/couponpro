@@ -372,15 +372,20 @@ def handle_telegram_grant_access(handler):
             }).encode())
             return
         
-        private_channel_id = Config.get_forex_channel_id()
-        if not private_channel_id:
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+            private_channel_id = creds.get('vip_channel_id')
+            if not private_channel_id:
+                raise BotNotConfiguredError(handler.tenant_id, 'signal_bot')
+        except BotNotConfiguredError:
             handler.send_response(500)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
-            handler.wfile.write(json.dumps({'success': False, 'error': 'FOREX_CHANNEL_ID not configured'}).encode())
+            handler.wfile.write(json.dumps({'success': False, 'error': 'VIP channel not configured in Connections'}).encode())
             return
         
-        invite_link = server.telegram_bot.sync_create_private_channel_invite_link(private_channel_id)
+        invite_link = server.telegram_bot.sync_create_private_channel_invite_link(private_channel_id, tenant_id=handler.tenant_id)
         
         if not invite_link:
             handler.send_response(500)
@@ -520,10 +525,15 @@ def handle_telegram_cancel_subscription(handler):
                 telegram_user_id = server.db.revoke_telegram_subscription(subscription.get('email'), 'admin_canceled', tenant_id=handler.tenant_id)
                 
                 if telegram_user_id and server.TELEGRAM_BOT_AVAILABLE:
-                    private_channel_id = Config.get_forex_channel_id()
+                    try:
+                        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+                        creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+                        private_channel_id = creds.get('vip_channel_id')
+                    except Exception:
+                        private_channel_id = None
                     if private_channel_id:
                         from telegram_bot import sync_kick_user_from_channel
-                        kicked_from_telegram = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                        kicked_from_telegram = sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=handler.tenant_id)
                         if kicked_from_telegram:
                             logger.info(f"Kicked user {telegram_user_id} from Telegram channel")
                         else:
@@ -580,10 +590,15 @@ def handle_telegram_delete_subscription(handler):
         
         kicked = False
         if telegram_user_id and server.TELEGRAM_BOT_AVAILABLE:
-            private_channel_id = Config.get_forex_channel_id()
+            try:
+                from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+                creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+                private_channel_id = creds.get('vip_channel_id')
+            except Exception:
+                private_channel_id = None
             if private_channel_id:
                 from telegram_bot import sync_kick_user_from_channel
-                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=handler.tenant_id)
                 if kicked:
                     logger.info(f"Kicked user {telegram_user_id} from Telegram channel")
         
@@ -667,11 +682,16 @@ def handle_telegram_revoke_access(handler):
         telegram_user_id = server.db.revoke_telegram_subscription(email, reason, tenant_id=handler.tenant_id)
         
         if telegram_user_id:
-            private_channel_id = Config.get_forex_channel_id()
+            try:
+                from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+                creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+                private_channel_id = creds.get('vip_channel_id')
+            except Exception:
+                private_channel_id = None
             if not private_channel_id:
-                logger.warning("FOREX_CHANNEL_ID not configured, cannot kick user")
+                logger.warning("VIP channel not configured in Connections, cannot kick user")
             else:
-                kicked = server.telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                kicked = server.telegram_bot.sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=handler.tenant_id)
                 
                 if kicked:
                     logger.info(f"User {telegram_user_id} kicked from channel")

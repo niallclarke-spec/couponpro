@@ -892,7 +892,7 @@ def handle_telegram_webhook(webhook_data, bot_token=None):
         return {'status': 'error', 'message': str(e)}
 
 
-async def create_private_channel_invite_link(channel_id):
+async def create_private_channel_invite_link(channel_id, tenant_id='entrylab'):
     """
     Create a unique invite link for the private Telegram channel.
     Uses forex bot token (entrylab_bot in prod, test bot in dev).
@@ -906,7 +906,7 @@ async def create_private_channel_invite_link(channel_id):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal_bot')
+            creds = get_bot_credentials(tenant_id, 'signal_bot')
             forex_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -937,7 +937,7 @@ async def create_private_channel_invite_link(channel_id):
         return None
 
 
-async def kick_user_from_channel(channel_id, user_id):
+async def kick_user_from_channel(channel_id, user_id, tenant_id='entrylab'):
     """
     Remove a user from the private Telegram channel.
     Uses forex bot token (entrylab_bot in prod, test bot in dev).
@@ -952,7 +952,7 @@ async def kick_user_from_channel(channel_id, user_id):
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal_bot')
+            creds = get_bot_credentials(tenant_id, 'signal_bot')
             forex_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -1033,7 +1033,7 @@ async def check_user_in_channel(channel_id, user_id):
         return None
 
 
-def sync_create_private_channel_invite_link(channel_id):
+def sync_create_private_channel_invite_link(channel_id, tenant_id='entrylab'):
     """Synchronous wrapper for creating invite links (for use in HTTP handlers)"""
     if _bot_loop is None:
         print("[TELEGRAM] ERROR: Bot loop not initialized")
@@ -1041,7 +1041,7 @@ def sync_create_private_channel_invite_link(channel_id):
     
     try:
         future = asyncio.run_coroutine_threadsafe(
-            create_private_channel_invite_link(channel_id),
+            create_private_channel_invite_link(channel_id, tenant_id=tenant_id),
             _bot_loop
         )
         return future.result(timeout=10)
@@ -1050,7 +1050,7 @@ def sync_create_private_channel_invite_link(channel_id):
         return None
 
 
-def sync_kick_user_from_channel(channel_id, user_id):
+def sync_kick_user_from_channel(channel_id, user_id, tenant_id='entrylab'):
     """Synchronous wrapper for kicking users (for use in HTTP handlers)"""
     if _bot_loop is None:
         print("[TELEGRAM] ERROR: Bot loop not initialized")
@@ -1058,7 +1058,7 @@ def sync_kick_user_from_channel(channel_id, user_id):
     
     try:
         future = asyncio.run_coroutine_threadsafe(
-            kick_user_from_channel(channel_id, user_id),
+            kick_user_from_channel(channel_id, user_id, tenant_id=tenant_id),
             _bot_loop
         )
         return future.result(timeout=10)
@@ -1084,12 +1084,12 @@ def sync_check_user_in_channel(channel_id, user_id):
         return None
 
 
-async def send_message_to_user(user_id, message, parse_mode='Markdown'):
+async def send_message_to_user(user_id, message, parse_mode='Markdown', tenant_id='entrylab'):
     """Send a direct message to a user via the Forex/EntryLab bot"""
     try:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
-            creds = get_bot_credentials('entrylab', 'signal_bot')
+            creds = get_bot_credentials(tenant_id, 'signal_bot')
             bot_token = creds['bot_token']
         except BotNotConfiguredError as e:
             print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
@@ -1114,7 +1114,7 @@ async def send_message_to_user(user_id, message, parse_mode='Markdown'):
         return False
 
 
-def sync_send_message(user_id, message, parse_mode='Markdown'):
+def sync_send_message(user_id, message, parse_mode='Markdown', tenant_id='entrylab'):
     """Synchronous wrapper for sending messages (for use in HTTP handlers)"""
     if _bot_loop is None:
         print("[TELEGRAM] ERROR: Bot loop not initialized")
@@ -1122,7 +1122,7 @@ def sync_send_message(user_id, message, parse_mode='Markdown'):
     
     try:
         future = asyncio.run_coroutine_threadsafe(
-            send_message_to_user(user_id, message, parse_mode),
+            send_message_to_user(user_id, message, parse_mode, tenant_id=tenant_id),
             _bot_loop
         )
         return future.result(timeout=10)

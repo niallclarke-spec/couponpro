@@ -267,11 +267,16 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                     print(f"[STRIPE WEBHOOK] ⚠️ Marked subscription as payment_failed: {email} (tenant={tenant_id}, Stripe status: {status})")
                     
                     if telegram_user_id and telegram_bot_available:
-                        private_channel_id = Config.get_forex_channel_id()
+                        try:
+                            from core.bot_credentials import get_bot_credentials
+                            _creds = get_bot_credentials(tenant_id, 'signal_bot')
+                            private_channel_id = _creds.get('vip_channel_id')
+                        except Exception:
+                            private_channel_id = None
                         if private_channel_id:
                             try:
                                 from telegram_bot import sync_kick_user_from_channel
-                                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=tenant_id)
                                 print(f"[STRIPE WEBHOOK] Kicked user {telegram_user_id} due to {status}: {kicked}")
                             except Exception as kick_error:
                                 print(f"[STRIPE WEBHOOK] Could not kick user: {kick_error}")
@@ -310,10 +315,15 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                 print(f"[STRIPE WEBHOOK] Revoked access for {sub_details['email']} (tenant={tenant_id})")
                 
                 if telegram_user_id and telegram_bot_available:
-                    private_channel_id = Config.get_forex_channel_id()
+                    try:
+                        from core.bot_credentials import get_bot_credentials
+                        _creds = get_bot_credentials(tenant_id, 'signal_bot')
+                        private_channel_id = _creds.get('vip_channel_id')
+                    except Exception:
+                        private_channel_id = None
                     if private_channel_id:
                         from telegram_bot import sync_kick_user_from_channel
-                        kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                        kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=tenant_id)
                         print(f"[STRIPE WEBHOOK] Kicked user {telegram_user_id}: {kicked}")
         
         elif event_type == 'customer.deleted':
@@ -376,11 +386,16 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                     print(f"[STRIPE WEBHOOK] Marked subscription as payment_failed: {email} (tenant={tenant_id})")
                     
                     if telegram_user_id and telegram_bot_available:
-                        private_channel_id = Config.get_forex_channel_id()
+                        try:
+                            from core.bot_credentials import get_bot_credentials
+                            _creds = get_bot_credentials(tenant_id, 'signal_bot')
+                            private_channel_id = _creds.get('vip_channel_id')
+                        except Exception:
+                            private_channel_id = None
                         if private_channel_id:
                             try:
                                 from telegram_bot import sync_kick_user_from_channel
-                                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id)
+                                kicked = sync_kick_user_from_channel(private_channel_id, telegram_user_id, tenant_id=tenant_id)
                                 print(f"[STRIPE WEBHOOK] Kicked user {telegram_user_id} due to payment failure: {kicked}")
                             except Exception as kick_error:
                                 print(f"[STRIPE WEBHOOK] Could not kick user: {kick_error}")
