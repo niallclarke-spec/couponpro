@@ -354,14 +354,17 @@ def generate_ai_briefing(data: BriefingData) -> Optional[str]:
     from openai import OpenAI
     
     try:
-        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
+        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
         base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
         
-        if not api_key or not base_url:
+        if not api_key:
             logger.warning("OpenAI credentials not available")
             return None
         
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        client_kwargs = {"api_key": api_key}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        client = OpenAI(**client_kwargs)
         
         # Build context for the AI
         range_desc = {

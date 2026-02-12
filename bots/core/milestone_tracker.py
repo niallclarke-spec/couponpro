@@ -88,10 +88,13 @@ class MilestoneTracker:
     def __init__(self):
         self.openai_client = None
         try:
-            api_key = os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY')
+            api_key = os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')
             base_url = os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL')
-            if api_key and base_url:
-                self.openai_client = OpenAI(api_key=api_key, base_url=base_url)
+            if api_key:
+                client_kwargs = {"api_key": api_key}
+                if base_url:
+                    client_kwargs["base_url"] = base_url
+                self.openai_client = OpenAI(**client_kwargs)
         except Exception as e:
             logger.error(f"OpenAI client init failed: {e}")
     
