@@ -421,3 +421,54 @@ def handle_journey_delete(handler, journey_id: str):
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_journey_analytics(handler, journey_id: str):
+    """GET /api/journeys/:id/analytics - Get step analytics for a journey."""
+    from . import repo
+
+    try:
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
+
+        analytics = repo.get_step_analytics(journey_id)
+
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'analytics': analytics}).encode())
+    except Exception as e:
+        logger.exception(f"Error getting journey analytics: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_link_click(handler, track_id: str):
+    """GET /api/j/c/:trackId - Track click and redirect."""
+    from . import repo
+
+    try:
+        link = repo.get_link_click_by_track_id(track_id)
+
+        if not link:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'text/plain')
+            handler.end_headers()
+            handler.wfile.write(b'Link not found')
+            return
+
+        repo.increment_step_link_clicks(link['step_id'])
+
+        handler.send_response(302)
+        handler.send_header('Location', link['destination_url'])
+        handler.end_headers()
+    except Exception as e:
+        logger.exception(f"Error handling link click: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'text/plain')
+        handler.end_headers()
+        handler.wfile.write(b'Internal error')

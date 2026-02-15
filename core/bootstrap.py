@@ -144,5 +144,17 @@ def start_app(ctx: AppContext) -> None:
             logger.info("Cross promo worker started")
         except Exception as e:
             logger.exception("Cross promo worker startup failed")
+        
+        try:
+            from integrations.telegram.user_client import get_client
+            from integrations.telegram.user_listener import start_listener_sync
+            tc = get_client('entrylab')
+            if tc.is_connected() or tc.connect_sync():
+                start_listener_sync('entrylab')
+                logger.info("Telethon listener started for entrylab")
+            else:
+                logger.info("Telethon client not connected, listener skipped")
+        except Exception as e:
+            logger.warning(f"Telethon listener startup skipped: {e}")
     
     logger.info("Application started")

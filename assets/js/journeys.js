@@ -7,6 +7,7 @@
         journeys: [],
         currentJourneyId: null,
         steps: [],
+        stepAnalytics: {},
         editingStepIndex: null,
         selectedStatus: 'draft',
         loading: false,
@@ -211,6 +212,7 @@
     async function openJourneyModal(journeyId = null) {
         state.currentJourneyId = journeyId;
         state.steps = [];
+        state.stepAnalytics = {};
         state.selectedStatus = 'draft';
         
         await loadMessageBotUsername();
@@ -282,12 +284,27 @@
                 }
                 
                 state.steps = (journey.steps || []).map(s => ({
+                    id: s.id || null,
                     step_type: s.step_type || 'message',
                     message_template: s.message_template || s.config?.text || '',
                     delay_seconds: s.delay_seconds || s.config?.delay_seconds || 0,
                     wait_for_reply: s.wait_for_reply || s.config?.wait_for_reply || false,
                     timeout_action: s.timeout_action || s.config?.timeout_action || 'continue'
                 }));
+
+                try {
+                    const analyticsResp = await fetch(`/api/journeys/${journeyId}/analytics`, { headers, credentials: 'include' });
+                    if (analyticsResp.ok) {
+                        const analyticsData = await analyticsResp.json();
+                        state.stepAnalytics = {};
+                        (analyticsData.analytics || []).forEach(a => {
+                            state.stepAnalytics[a.step_id] = a;
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Failed to load step analytics:', err);
+                }
+
                 renderStepsList();
             } else {
                 console.error('Failed to fetch journey, status:', resp.status);
@@ -467,12 +484,22 @@
         if (emptyState) emptyState.style.display = 'none';
         const escapeHtml = config.escapeHtml || escapeHtmlDefault;
         
-        container.innerHTML = state.steps.map((step, index) => `
+        container.innerHTML = state.steps.map((step, index) => {
+            const analytics = step.id ? state.stepAnalytics[step.id] : null;
+            const analyticsHtml = analytics && (analytics.sends > 0 || analytics.reads > 0 || analytics.link_clicks > 0)
+                ? `<div class="step-analytics" style="display: flex; gap: 8px; font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                    <span title="Messages sent">\u{1F4E4} ${analytics.sends}</span>
+                    <span title="Messages read">\u{1F441} ${analytics.reads}</span>
+                    <span title="Links clicked">\u{1F517} ${analytics.link_clicks}</span>
+                </div>`
+                : '';
+            return `
             <div class="step-item">
                 <div class="step-order">${index + 1}</div>
                 <div class="step-content">
                     <div class="step-message">${escapeHtml((step.message_template || '').substring(0, 80))}${(step.message_template || '').length > 80 ? '...' : ''}</div>
                     <div class="step-delay">${step.wait_for_reply ? '⏳ ' : ''}${getStepTypeLabel(step)}</div>
+                    ${analyticsHtml}
                 </div>
                 <div class="step-actions">
                     <button class="step-btn" onclick="window.JourneysModule.moveStep(${index}, -1)" ${index === 0 ? 'disabled' : ''} title="Move up">
@@ -499,7 +526,7 @@
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function updateStepModalVisibility() {

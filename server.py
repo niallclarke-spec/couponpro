@@ -269,6 +269,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.journeys import handlers as jh
         jh.handle_journey_delete(self, urlparse(self.path).path.split('/')[3])
 
+    def handle_api_journey_analytics(self):
+        from domains.journeys import handlers as jh
+        jh.handle_journey_analytics(self, urlparse(self.path).path.split('/')[3])
+
+    def handle_api_journey_link_click(self):
+        from domains.journeys import handlers as jh
+        path_parts = urlparse(self.path).path.rstrip('/').split('/')
+        track_id = path_parts[-1] if len(path_parts) > 4 else ''
+        jh.handle_link_click(self, track_id)
+
     # Connection handlers
     def handle_api_connections_list(self):
         from domains.connections import handlers as conn_h

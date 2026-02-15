@@ -1389,6 +1389,51 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_triggers_journey ON journey_triggers(journey_id, trigger_type, is_active)")
                 logger.info("journey_triggers table ready")
                 
+                # Migration: add tenant_id column to journey_triggers if missing
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'journey_triggers' AND column_name = 'tenant_id'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE journey_triggers ADD COLUMN tenant_id VARCHAR(100)")
+                    cursor.execute("""
+                        UPDATE journey_triggers SET tenant_id = j.tenant_id
+                        FROM journeys j
+                        WHERE journey_triggers.journey_id = j.id AND journey_triggers.tenant_id IS NULL
+                    """)
+                    logger.info("journey_triggers: added tenant_id column and backfilled from journeys")
+                
+                # Migration: deduplicate active triggers (keep newest per journey_id)
+                cursor.execute("""
+                    SELECT journey_id FROM journey_triggers
+                    WHERE is_active = true
+                    GROUP BY journey_id HAVING COUNT(*) > 1
+                """)
+                dup_journeys = cursor.fetchall()
+                if dup_journeys:
+                    for (jid,) in dup_journeys:
+                        cursor.execute("""
+                            UPDATE journey_triggers SET is_active = false
+                            WHERE journey_id = %s AND is_active = true
+                              AND id != (
+                                SELECT id FROM journey_triggers
+                                WHERE journey_id = %s AND is_active = true
+                                ORDER BY created_at DESC LIMIT 1
+                              )
+                        """, (jid, jid))
+                    logger.info(f"journey_triggers: deactivated duplicate active triggers for {len(dup_journeys)} journeys")
+                
+                # Migration: unique partial index for one active trigger per journey
+                cursor.execute("""
+                    SELECT 1 FROM pg_indexes WHERE indexname = 'uq_journey_triggers_one_active'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        CREATE UNIQUE INDEX uq_journey_triggers_one_active
+                        ON journey_triggers (journey_id) WHERE is_active = true
+                    """)
+                    logger.info("journey_triggers: created uq_journey_triggers_one_active partial unique index")
+                
                 # journey_steps - Ordered steps in a journey
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS journey_steps (
@@ -1455,6 +1500,43 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_scheduled_status ON journey_scheduled_messages(status, scheduled_for)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_scheduled_tenant ON journey_scheduled_messages(tenant_id, status, scheduled_for)")
                 logger.info("journey_scheduled_messages table ready")
+                
+                cursor.execute("SELECT to_regclass('journey_step_analytics')")
+                if not cursor.fetchone()[0]:
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS journey_step_analytics (
+                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                            step_id UUID NOT NULL REFERENCES journey_steps(id) ON DELETE CASCADE,
+                            journey_id UUID NOT NULL REFERENCES journeys(id) ON DELETE CASCADE,
+                            tenant_id VARCHAR(100) NOT NULL,
+                            sends INTEGER DEFAULT 0,
+                            unique_users INTEGER DEFAULT 0,
+                            reads INTEGER DEFAULT 0,
+                            link_clicks INTEGER DEFAULT 0,
+                            updated_at TIMESTAMP DEFAULT NOW()
+                        )
+                    """)
+                    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS uq_step_analytics_step ON journey_step_analytics (step_id)")
+                    logger.info("journey_step_analytics table ready")
+                else:
+                    logger.info("journey_step_analytics table already exists")
+                
+                cursor.execute("SELECT to_regclass('journey_link_clicks')")
+                if not cursor.fetchone()[0]:
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS journey_link_clicks (
+                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                            track_id VARCHAR(32) NOT NULL UNIQUE,
+                            step_id UUID NOT NULL,
+                            journey_id UUID NOT NULL,
+                            tenant_id VARCHAR(100) NOT NULL,
+                            destination_url TEXT NOT NULL,
+                            created_at TIMESTAMP DEFAULT NOW()
+                        )
+                    """)
+                    logger.info("journey_link_clicks table ready")
+                else:
+                    logger.info("journey_link_clicks table already exists")
                 
                 cursor.execute("""
                     SELECT 1 FROM information_schema.columns 

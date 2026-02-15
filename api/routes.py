@@ -121,9 +121,15 @@ GET_ROUTES: List[Route] = [
     Route('GET', '/api/stripe/products', 'handle_api_stripe_products',
           auth_required=True, db_required=True),
     
+    # Journey link click redirect (public, no auth)
+    Route('GET', '/api/j/c/', 'handle_api_journey_link_click',
+          is_prefix=True),
+
     # Journeys
     Route('GET', '/api/journeys/debug/sessions', 'handle_api_journeys_debug_sessions',
           auth_required=True, db_required=True),
+    Route('GET', '/api/journeys/', 'handle_api_journey_analytics',
+          auth_required=True, db_required=True, is_prefix=True, contains='/analytics'),
     Route('GET', '/api/journeys/', 'handle_api_journey_steps_get',
           auth_required=True, db_required=True, is_prefix=True, contains='/steps'),
     Route('GET', '/api/journeys/', 'handle_api_journey_get',

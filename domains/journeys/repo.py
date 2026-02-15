@@ -256,7 +256,13 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
 
 def upsert_trigger(tenant_id: str, journey_id: str, trigger_type: str, 
                    trigger_config: Dict, is_active: bool = True) -> Optional[Dict]:
-    """Create or update a journey trigger."""
+    """Create or update a journey trigger.
+    
+    In a single transaction:
+    1. Deactivate ALL existing active triggers for this journey_id
+    2. If a trigger with the same trigger_type exists (active or not), update it
+    3. Otherwise insert a new trigger
+    """
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return None
@@ -266,24 +272,30 @@ def upsert_trigger(tenant_id: str, journey_id: str, trigger_type: str,
             cursor = conn.cursor()
             
             cursor.execute("""
+                UPDATE journey_triggers SET is_active = false
+                WHERE journey_id = %s AND is_active = true
+            """, (journey_id,))
+            
+            cursor.execute("""
                 SELECT id FROM journey_triggers
                 WHERE journey_id = %s AND trigger_type = %s
+                LIMIT 1
             """, (journey_id, trigger_type))
             existing = cursor.fetchone()
             
             if existing:
                 cursor.execute("""
                     UPDATE journey_triggers
-                    SET trigger_config = %s, is_active = %s
+                    SET trigger_config = %s, is_active = %s, tenant_id = %s
                     WHERE id = %s
                     RETURNING id, journey_id, trigger_type, trigger_config, is_active, created_at
-                """, (json.dumps(trigger_config), is_active, existing[0]))
+                """, (json.dumps(trigger_config), is_active, tenant_id, existing[0]))
             else:
                 cursor.execute("""
-                    INSERT INTO journey_triggers (journey_id, trigger_type, trigger_config, is_active)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO journey_triggers (journey_id, trigger_type, trigger_config, is_active, tenant_id)
+                    VALUES (%s, %s, %s, %s, %s)
                     RETURNING id, journey_id, trigger_type, trigger_config, is_active, created_at
-                """, (journey_id, trigger_type, json.dumps(trigger_config), is_active))
+                """, (journey_id, trigger_type, json.dumps(trigger_config), is_active, tenant_id))
             
             row = cursor.fetchone()
             conn.commit()
@@ -304,7 +316,7 @@ def upsert_trigger(tenant_id: str, journey_id: str, trigger_type: str,
 
 
 def get_triggers(tenant_id: str, journey_id: str) -> List[Dict]:
-    """Get all triggers for a journey."""
+    """Get the active trigger for a journey (returns list with at most 1 item)."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return []
@@ -316,7 +328,9 @@ def get_triggers(tenant_id: str, journey_id: str) -> List[Dict]:
                 SELECT t.id, t.journey_id, t.trigger_type, t.trigger_config, t.is_active, t.created_at
                 FROM journey_triggers t
                 JOIN journeys j ON j.id = t.journey_id
-                WHERE j.tenant_id = %s AND t.journey_id = %s
+                WHERE j.tenant_id = %s AND t.journey_id = %s AND t.is_active = true
+                ORDER BY t.created_at DESC
+                LIMIT 1
             """, (tenant_id, journey_id))
             
             triggers = []
@@ -1315,6 +1329,146 @@ def store_user_reply(session_id: str, reply_text: str) -> bool:
         return False
 
 
+def increment_step_send(tenant_id: str, journey_id: str, step_id: str, user_id: int) -> bool:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO journey_step_analytics (step_id, journey_id, tenant_id, sends, unique_users)
+                VALUES (%s::uuid, %s::uuid, %s, 1, 1)
+                ON CONFLICT (step_id) DO UPDATE
+                SET sends = journey_step_analytics.sends + 1,
+                    unique_users = journey_step_analytics.unique_users + 1,
+                    updated_at = NOW()
+            """, (step_id, journey_id, tenant_id))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error incrementing step send: {e}")
+        return False
+
+
+def increment_step_reads(step_id: str) -> bool:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_step_analytics SET reads = reads + 1, updated_at = NOW()
+                WHERE step_id = %s::uuid
+            """, (step_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error incrementing step reads: {e}")
+        return False
+
+
+def increment_step_link_clicks(step_id: str) -> bool:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_step_analytics SET link_clicks = link_clicks + 1, updated_at = NOW()
+                WHERE step_id = %s::uuid
+            """, (step_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error incrementing step link clicks: {e}")
+        return False
+
+
+def get_step_analytics(journey_id: str) -> List[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT step_id, sends, unique_users, reads, link_clicks
+                FROM journey_step_analytics
+                WHERE journey_id = %s::uuid
+            """, (journey_id,))
+            results = []
+            for row in cursor.fetchall():
+                results.append({
+                    'step_id': str(row[0]),
+                    'sends': row[1] or 0,
+                    'unique_users': row[2] or 0,
+                    'reads': row[3] or 0,
+                    'link_clicks': row[4] or 0
+                })
+            return results
+    except Exception as e:
+        logger.exception(f"Error getting step analytics: {e}")
+        return []
+
+
+def create_tracked_link(tenant_id: str, journey_id: str, step_id: str, url: str) -> str:
+    import hashlib
+    track_id = hashlib.md5(f"{step_id}:{url}".encode()).hexdigest()[:16]
+
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return url
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO journey_link_clicks (track_id, step_id, journey_id, tenant_id, destination_url)
+                VALUES (%s, %s::uuid, %s::uuid, %s, %s)
+                ON CONFLICT (track_id) DO UPDATE SET destination_url = EXCLUDED.destination_url
+            """, (track_id, step_id, journey_id, tenant_id, url))
+            conn.commit()
+            return f"https://dash.promostack.io/api/j/c/{track_id}"
+    except Exception as e:
+        logger.exception(f"Error creating tracked link: {e}")
+        return url
+
+
+def get_link_click_by_track_id(track_id: str) -> Optional[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT track_id, step_id, journey_id, tenant_id, destination_url
+                FROM journey_link_clicks
+                WHERE track_id = %s
+            """, (track_id,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'track_id': row[0],
+                    'step_id': str(row[1]),
+                    'journey_id': str(row[2]),
+                    'tenant_id': row[3],
+                    'destination_url': row[4]
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error getting link click: {e}")
+        return None
+
+
 def get_sessions_by_chat_id(tenant_id: str, chat_id: int) -> List[Dict]:
     """Get active or awaiting_reply sessions for a chat ID."""
     db_pool = _get_db_pool()
@@ -1330,7 +1484,7 @@ def get_sessions_by_chat_id(tenant_id: str, chat_id: int) -> List[Dict]:
                 FROM journey_user_sessions
                 WHERE tenant_id = %s AND telegram_chat_id = %s
                   AND status IN ('active', 'awaiting_reply')
-                ORDER BY created_at DESC
+                ORDER BY started_at DESC
             """, (tenant_id, chat_id))
 
             sessions = []

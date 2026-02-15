@@ -4,6 +4,7 @@ Journey engine - linear state machine for step execution.
 Supports: message, question, delay step types.
 V1 does NOT support conditional steps.
 """
+import re
 import random
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Callable
@@ -153,6 +154,18 @@ class JourneyEngine:
             logger.error(f"Unknown step type: {step_type}")
             return False
     
+    def _wrap_urls(self, text: str, tenant_id: str, journey_id: str, step_id: str) -> str:
+        from . import repo
+        url_pattern = re.compile(r'(https?://[^\s<>"\']+)')
+        def replace_url(match):
+            url = match.group(1)
+            try:
+                return repo.create_tracked_link(tenant_id, journey_id, step_id, url)
+            except Exception as e:
+                logger.warning(f"Failed to wrap URL {url}: {e}")
+                return url
+        return url_pattern.sub(replace_url, text)
+
     def _execute_message_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
         """Execute a message step - send immediately and advance."""
         text = config.get('content') or config.get('text', '')
@@ -161,10 +174,14 @@ class JourneyEngine:
             logger.warning(f"Message step {step['id']} has no text")
             return self._advance_to_next_step(session, step, bot_id)
         
+        text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])
         success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
         if not success:
             logger.error(f"Failed to send message for step {step['id']}")
             return False
+        
+        from . import repo
+        repo.increment_step_send(session['tenant_id'], session['journey_id'], step['id'], session['telegram_user_id'])
         
         return self._advance_to_next_step(session, step, bot_id)
     
@@ -176,10 +193,14 @@ class JourneyEngine:
             logger.warning(f"Question step {step['id']} has no text")
             return self._advance_to_next_step(session, step, bot_id)
         
+        text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])
         success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
         if not success:
             logger.error(f"Failed to send question for step {step['id']}")
             return False
+        
+        from . import repo
+        repo.increment_step_send(session['tenant_id'], session['journey_id'], step['id'], session['telegram_user_id'])
         
         return True
     
@@ -238,9 +259,12 @@ class JourneyEngine:
         timeout_minutes = config.get('timeout_minutes', 0)
         
         if text:
+            text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])
             success = self._send_message(session['tenant_id'], session['telegram_chat_id'], text)
             if not success:
                 logger.error(f"Failed to send wait_for_reply prompt for step {step['id']}")
+            else:
+                repo.increment_step_send(session['tenant_id'], session['journey_id'], step['id'], session['telegram_user_id'])
         
         repo.set_session_awaiting_reply(
             session_id=session['id'],
