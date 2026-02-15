@@ -6992,6 +6992,10 @@
         function showModalAlert(title, message) {
             return showCustomModal(title, message, { type: 'alert' });
         }
+
+        function showToast(msg, type) {
+            showModalAlert(type === 'error' ? 'Error' : 'Success', msg);
+        }
         
         function showModalConfirm(title, message, options = {}) {
             return showCustomModal(title, message, options);

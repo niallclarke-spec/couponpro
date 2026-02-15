@@ -23,7 +23,15 @@ def handle_telethon_status(handler):
     try:
         from integrations.telegram.user_client import get_client
         client = get_client(tenant_id)
-        _send_json(handler, 200, client.get_status())
+        status = client.get_status()
+        if status.get('has_session_file') and status.get('has_credentials') and not status.get('connected'):
+            try:
+                ok = client.connect_sync()
+                if ok:
+                    status = client.get_status()
+            except Exception as ce:
+                logger.warning(f"Auto-connect on status check failed: {ce}")
+        _send_json(handler, 200, status)
     except Exception as e:
         logger.exception(f"Error getting telethon status: {e}")
         _send_json(handler, 500, {'error': str(e)})

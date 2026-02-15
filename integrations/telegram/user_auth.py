@@ -96,6 +96,11 @@ async def _verify_code(tenant_id: str, code: str, phone_code_hash: str) -> Dict[
         await client.disconnect()
         _clear_auth_state(tenant_id)
 
+        try:
+            await uc.connect()
+        except Exception as ce:
+            logger.warning(f"Auto-connect after auth failed for tenant={tenant_id}: {ce}")
+
         logger.info(f"Verification successful for tenant={tenant_id}")
         return {'success': True, 'status': 'authorized'}
 
@@ -142,6 +147,11 @@ async def _verify_2fa(tenant_id: str, password: str) -> Dict[str, Any]:
 
         await client.disconnect()
         _clear_auth_state(tenant_id)
+
+        try:
+            await uc.connect()
+        except Exception as ce:
+            logger.warning(f"Auto-connect after 2FA auth failed for tenant={tenant_id}: {ce}")
 
         logger.info(f"2FA verification successful for tenant={tenant_id}")
         return {'success': True, 'status': 'authorized'}
