@@ -635,6 +635,11 @@
             ? 'Journeys are triggered when someone sends a direct message to your Telegram user account.'
             : 'Journeys are triggered when users start the bot via a deep link.';
         
+        const warningText = document.getElementById('active-warning-text');
+        if (warningText) warningText.textContent = isDM
+            ? 'Active journeys will start sending messages immediately when someone DMs your Telegram account with the keyword.'
+            : 'Active journeys will start sending messages to users immediately when they join via the deep link.';
+        
         if (isDM && preview) {
             preview.style.display = 'none';
         } else {
