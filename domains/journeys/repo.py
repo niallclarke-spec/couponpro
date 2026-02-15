@@ -457,6 +457,55 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
         return None
 
 
+def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optional[Dict]:
+    """Find an active journey matching a direct_message trigger for a given tenant.
+    
+    If trigger_config has a 'keyword' field, match case-insensitively against message_text.
+    If keyword is empty/null, any message matches.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
+                       t.id as trigger_id, t.trigger_config
+                FROM journeys j
+                JOIN journey_triggers t ON t.journey_id = j.id
+                WHERE j.tenant_id = %s
+                  AND j.status = 'active'
+                  AND t.trigger_type = 'direct_message'
+                  AND t.is_active = TRUE
+                ORDER BY t.created_at ASC
+            """, (tenant_id,))
+            rows = cursor.fetchall()
+            
+            for row in rows:
+                trigger_config = row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {}
+                keyword = (trigger_config.get('keyword') or '').strip()
+                
+                if keyword and keyword.lower() not in message_text.lower():
+                    continue
+                
+                return {
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'bot_id': row[2],
+                    'name': row[3],
+                    'status': row[4],
+                    're_entry_policy': row[5],
+                    'trigger_id': str(row[6]),
+                    'trigger_config': trigger_config
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error finding journey by DM trigger: {e}")
+        return None
+
+
 def get_active_session(tenant_id: str, journey_id: str, telegram_user_id: int) -> Optional[Dict]:
     """Get active or waiting_delay session for a user in a journey."""
     db_pool = _get_db_pool()

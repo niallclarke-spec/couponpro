@@ -6387,16 +6387,17 @@
 
                 <div class="form-group">
                     <label class="form-label">Trigger Type</label>
-                    <select class="form-select" id="journey-trigger-type" disabled>
-                        <option value="deep_link" selected>Deep Link</option>
+                    <select class="form-select" id="journey-trigger-type" onchange="window.JourneysModule.onTriggerTypeChange && window.JourneysModule.onTriggerTypeChange()">
+                        <option value="deep_link">Deep Link</option>
+                        <option value="direct_message">Direct Message</option>
                     </select>
-                    <div class="form-hint">Journeys are triggered when users start the bot via a deep link.</div>
+                    <div class="form-hint" id="trigger-type-hint">Journeys are triggered when users start the bot via a deep link.</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Trigger Value</label>
+                    <label class="form-label" id="trigger-value-label">Trigger Value</label>
                     <input type="text" class="form-input" id="journey-trigger-value" placeholder="e.g., welcome_promo" oninput="window.JourneysModule.updateDeepLinkPreview()">
-                    <div class="form-hint">The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)</div>
+                    <div class="form-hint" id="trigger-value-hint">The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)</div>
                     <div class="deeplink-preview" id="deeplink-preview" style="display: none;">
                         <div class="deeplink-preview-label">Your Deep Link:</div>
                         <div class="deeplink-preview-url">

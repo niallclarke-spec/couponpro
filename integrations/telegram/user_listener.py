@@ -35,6 +35,9 @@ async def start_listener(tenant_id: str):
     @tc.on(events.NewMessage(incoming=True))
     async def _handle_incoming(event):
         try:
+            if not event.is_private:
+                return
+
             chat_id = event.chat_id
             sender_id = event.sender_id
             text = event.text or ''
@@ -45,7 +48,7 @@ async def start_listener(tenant_id: str):
             if sender_id == my_id:
                 return
 
-            logger.info(f"Incoming message for tenant={tenant_id}: chat={chat_id}, sender={sender_id}")
+            logger.info(f"Incoming DM for tenant={tenant_id}: chat={chat_id}, sender={sender_id}")
 
             _route_to_journey(tenant_id, chat_id, sender_id, text)
         except Exception as e:
@@ -63,26 +66,30 @@ def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: str):
 
         sessions = repo.get_sessions_by_chat_id(tenant_id, chat_id)
 
-        if not sessions:
-            logger.debug(f"No active journey sessions for chat={chat_id}")
+        if sessions:
+            engine = JourneyEngine()
+
+            for session in sessions:
+                status = session.get('status')
+
+                if status == 'awaiting_reply':
+                    logger.info(f"Routing reply to wait_for_reply session {session['id']}")
+                    engine.handle_wait_for_reply_response(session, text)
+                    return
+
+                elif status == 'active':
+                    logger.info(f"Routing reply to question session {session['id']}")
+                    engine.handle_user_reply(session, text)
+                    return
+
+        journey = repo.get_active_journey_by_dm_trigger(tenant_id, text)
+        if journey:
+            logger.info(f"DM trigger matched journey '{journey['name']}' for sender={sender_id}")
+            engine = JourneyEngine()
+            engine.start_journey_for_user(tenant_id, journey, chat_id, sender_id)
             return
 
-        engine = JourneyEngine()
-
-        for session in sessions:
-            status = session.get('status')
-
-            if status == 'awaiting_reply':
-                logger.info(f"Routing reply to wait_for_reply session {session['id']}")
-                engine.handle_wait_for_reply_response(session, text)
-                return
-
-            elif status == 'active':
-                logger.info(f"Routing reply to question session {session['id']}")
-                engine.handle_user_reply(session, text)
-                return
-
-        logger.debug(f"No actionable sessions for chat={chat_id}")
+        logger.debug(f"No actionable sessions or DM triggers for chat={chat_id}")
     except Exception as e:
         logger.exception(f"Error routing message to journey: {e}")
 

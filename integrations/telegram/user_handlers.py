@@ -28,6 +28,8 @@ def handle_telethon_status(handler):
             try:
                 ok = client.connect_sync()
                 if ok:
+                    from integrations.telegram.user_listener import start_listener_sync
+                    start_listener_sync(tenant_id)
                     status = client.get_status()
             except Exception as ce:
                 logger.warning(f"Auto-connect on status check failed: {ce}")
@@ -123,6 +125,9 @@ def handle_telethon_reconnect(handler):
         from integrations.telegram.user_client import get_client
         client = get_client(tenant_id)
         success = client.reconnect_sync()
+        if success:
+            from integrations.telegram.user_listener import start_listener_sync
+            start_listener_sync(tenant_id)
         _send_json(handler, 200, {
             'success': success,
             'status': client.get_status(),

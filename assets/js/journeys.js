@@ -125,11 +125,19 @@
             const triggers = journey.triggers || [];
             const firstTrigger = triggers[0];
             const triggerType = firstTrigger?.trigger_type || 'deep_link';
-            const triggerValue = firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '';
+            const triggerValue = triggerType === 'direct_message' 
+                ? (firstTrigger?.trigger_config?.keyword || '') 
+                : (firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '');
             const deepLinkUrl = getDeepLinkUrl(triggerValue);
             
             let deepLinkHtml = '';
-            if (triggerValue && (triggerType === 'telegram_deeplink' || triggerType === 'deep_link')) {
+            if (triggerType === 'direct_message') {
+                const kwDisplay = triggerValue ? escapeHtml(triggerValue) : '<em>any message</em>';
+                deepLinkHtml = `
+                    <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
+                        DM Trigger keyword: <strong>${kwDisplay}</strong>
+                    </div>`;
+            } else if (triggerValue && (triggerType === 'telegram_deeplink' || triggerType === 'deep_link')) {
                 if (deepLinkUrl) {
                     deepLinkHtml = `
                         <div class="journey-deeplink">
@@ -168,7 +176,7 @@
                                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                             </svg>
-                            <span>Trigger: <strong>${escapeHtml(triggerValue || '-')}</strong></span>
+                            <span>${triggerType === 'direct_message' ? 'DM' : 'Trigger'}: <strong>${escapeHtml(triggerValue || (triggerType === 'direct_message' ? 'any' : '-'))}</strong></span>
                         </div>
                         <div class="journey-meta-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -218,6 +226,7 @@
         if (triggerType) triggerType.value = 'deep_link';
         if (modalTitle) modalTitle.textContent = journeyId ? 'Edit Journey' : 'Create Journey';
         if (preview) preview.style.display = 'none';
+        onTriggerTypeChange();
         
         selectStatus('draft');
         renderStepsList();
@@ -260,10 +269,16 @@
                 const triggers = journey.triggers || [];
                 if (triggers.length > 0) {
                     const trigger = triggers[0];
-                    const triggerType = document.getElementById('journey-trigger-type');
-                    const triggerValue = document.getElementById('journey-trigger-value');
-                    if (triggerType) triggerType.value = 'deep_link';
-                    if (triggerValue) triggerValue.value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
+                    const triggerTypeEl = document.getElementById('journey-trigger-type');
+                    const triggerValueEl = document.getElementById('journey-trigger-value');
+                    const tt = trigger.trigger_type === 'direct_message' ? 'direct_message' : 'deep_link';
+                    if (triggerTypeEl) triggerTypeEl.value = tt;
+                    if (tt === 'direct_message') {
+                        if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.keyword || '';
+                    } else {
+                        if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
+                    }
+                    onTriggerTypeChange();
                 }
                 
                 state.steps = (journey.steps || []).map(s => ({
@@ -337,7 +352,21 @@
                 journeyId = data.journey.id;
             }
             
-            if (triggerValue) {
+            const triggerTypeSelect = document.getElementById('journey-trigger-type');
+            const selectedTriggerType = triggerTypeSelect ? triggerTypeSelect.value : 'deep_link';
+            
+            if (selectedTriggerType === 'direct_message') {
+                await fetch(`/api/journeys/${journeyId}/triggers`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        trigger_type: 'direct_message',
+                        trigger_config: { keyword: triggerValue },
+                        is_active: true
+                    }),
+                    credentials: 'include'
+                });
+            } else if (triggerValue) {
                 await fetch(`/api/journeys/${journeyId}/triggers`, {
                     method: 'POST',
                     headers,
@@ -587,7 +616,36 @@
         }
     }
 
+    function onTriggerTypeChange() {
+        const triggerTypeEl = document.getElementById('journey-trigger-type');
+        const triggerValueEl = document.getElementById('journey-trigger-value');
+        const triggerValueLabel = document.getElementById('trigger-value-label');
+        const triggerValueHint = document.getElementById('trigger-value-hint');
+        const triggerTypeHint = document.getElementById('trigger-type-hint');
+        const preview = document.getElementById('deeplink-preview');
+        
+        const isDM = triggerTypeEl && triggerTypeEl.value === 'direct_message';
+        
+        if (triggerValueLabel) triggerValueLabel.textContent = isDM ? 'Keyword (optional)' : 'Trigger Value';
+        if (triggerValueEl) triggerValueEl.placeholder = isDM ? 'e.g., hello (leave empty for any message)' : 'e.g., welcome_promo';
+        if (triggerValueHint) triggerValueHint.innerHTML = isDM 
+            ? 'If set, the journey triggers when a DM contains this keyword. Leave empty to trigger on any message.'
+            : 'The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)';
+        if (triggerTypeHint) triggerTypeHint.textContent = isDM
+            ? 'Journeys are triggered when someone sends a direct message to your Telegram user account.'
+            : 'Journeys are triggered when users start the bot via a deep link.';
+        
+        if (isDM && preview) {
+            preview.style.display = 'none';
+        } else {
+            updateDeepLinkPreview();
+        }
+    }
+
     function updateDeepLinkPreview() {
+        const triggerTypeEl = document.getElementById('journey-trigger-type');
+        if (triggerTypeEl && triggerTypeEl.value === 'direct_message') return;
+        
         const triggerInput = document.getElementById('journey-trigger-value');
         const preview = document.getElementById('deeplink-preview');
         const urlCode = document.getElementById('deeplink-preview-url');
@@ -655,6 +713,7 @@
             copyDeepLink,
             copyDeepLinkFromPreview,
             updateDeepLinkPreview,
+            onTriggerTypeChange,
             updateStepModalVisibility,
             getDeepLinkUrl: () => state.messageBotUsername
         };
