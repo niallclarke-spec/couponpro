@@ -1,0 +1,94 @@
+We have an existing Journeys system (CRUD, step editor UI, scheduler/engine, step types incl message/question/delay/wait_for_reply, deep link triggers). There is a critical reliability bug:
+
+- Saving a trigger change creates a NEW trigger but does NOT remove/deactivate the old one (e.g. old telegram_deeplink remains). Journeys end up with 2 triggers and re-opening loads the wrong one (first returned by DB).
+- Keyword DM triggers sometimes don’t work because the Telethon listener only starts when the status endpoint is hit (not on server boot).
+
+I need a ROBUST, PRODUCTION-GRADE fix so I can freely change trigger types, edit journeys and steps, and everything saves/reloads correctly every time.
+
+----------------------------------------
+A) TRIGGER SYSTEM: MAKE IT IDEMPOTENT + DETERMINISTIC
+----------------------------------------
+
+Product rule: A Journey must have EXACTLY ONE ACTIVE trigger at any time.
+
+1) DATABASE HARDENING (Postgres)
+- Add/ensure tenant_id is present on triggers.
+- Add a UNIQUE partial index so only ONE active trigger can exist per (tenant_id, journey_id):
+  UNIQUE (tenant_id, journey_id) WHERE is_active = true
+- If we also want to prevent duplicates per type, add:
+  UNIQUE (tenant_id, journey_id, type) WHERE is_active = true
+- Create a data migration to clean up existing duplicates:
+  Keep the newest trigger (by updated_at/created_at) as active, deactivate others.
+
+2) API: REPLACE “POST CREATE” WITH UPSERT/REPLACE BEHAVIOR
+- Implement an idempotent endpoint:
+  PUT /api/journeys/:journeyId/trigger
+  Body: { type: string, config: JSON }
+- In a SINGLE DB TRANSACTION:
+  a) Deactivate any existing active trigger for this tenant/journey
+  b) Insert the new trigger as active (or update in place if preferred, but MUST remain idempotent)
+  c) Commit
+- Ensure reads are deterministic:
+  When opening a journey, fetch ONLY the active trigger:
+  SELECT ... WHERE tenant_id=? AND journey_id=? AND is_active=true LIMIT 1
+  Do NOT “load all triggers and pick first”.
+
+3) ATOMIC “SAVE ALL” (RECOMMENDED)
+- If the UI saves journey + trigger + steps together, implement a single endpoint:
+  PUT /api/journeys/:journeyId
+  Payload includes: journey fields, active trigger (type/config), steps, links/order
+- Save everything inside one transaction so “Save” can never partially apply.
+
+4) OPTIONAL BUT STRONGLY RECOMMENDED
+- Add idempotency support for saves:
+  Accept Idempotency-Key header; store and dedupe to prevent double-click/retry duplicates.
+- Add explicit ordering anywhere triggers are listed:
+  ORDER BY is_active DESC, updated_at DESC
+
+----------------------------------------
+B) TELETHON LISTENER: START ON BOOT + SINGLETON GUARD
+----------------------------------------
+
+1) Listener MUST start on server boot (not via status endpoint).
+- Move Telethon listener initialization into app startup (Express app.listen callback / FastAPI startup event).
+- Status endpoint must be READ-ONLY (report only), never responsible for starting listeners.
+
+2) SINGLETON / LOCKING
+- Prevent multiple listeners if the app runs multiple processes (pm2/docker replicas/workers).
+- Use a distributed lock (Postgres advisory lock or Redis lock) keyed by (tenant_id, telegram_account_id).
+- Only the process holding the lock runs the listener for that account.
+
+3) RELIABLE INBOUND ROUTING
+- On incoming DM:
+  - Determine which Telethon client/account received it -> map to tenant_id
+  - Map telegram_user_id to lead/contact within that tenant
+  - Find active UserJourneyState that is waiting_for_reply (and current step expects reply)
+  - Resolve reply, advance state atomically, and log inbound message
+- Wrap event handler in try/catch; log all exceptions (no silent crashes).
+- Add auto-reconnect logic for Telethon client, and record last error + last heartbeat.
+
+4) Health / Admin UI
+- Show per account:
+  authenticated/session valid, connected, last heartbeat, last inbound message, last send, last error.
+- Manual reconnect button.
+
+----------------------------------------
+DELIVERABLES / ACCEPTANCE TESTS
+----------------------------------------
+
+Implement the above and verify:
+
+1) Trigger type switching:
+- Create journey with deeplink trigger, then switch to keyword trigger, save.
+- Re-open journey: ONLY the new trigger is active and displayed.
+- Switch back and forth repeatedly: no duplicates appear, ever.
+
+2) Concurrency/retry safety:
+- Double-click Save or retry requests: still only one active trigger, no duplicate sends.
+
+3) Listener reliability:
+- Restart server: listener auto-starts without calling status endpoint.
+- Keyword DM trigger works immediately after restart.
+- No duplicate inbound processing when running multiple workers.
+
+Please implement with minimal disruption to existing journeys and keep backward compatibility where possible.
