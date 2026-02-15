@@ -4287,6 +4287,22 @@
             color: var(--status-error);
         }
 
+        .connection-badge.pending {
+            background: var(--status-warning-bg);
+            color: var(--status-warning);
+        }
+
+        .telethon-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
+        }
+        .telethon-stat-row:last-child { border-bottom: none; }
+        .telethon-stat-label { color: var(--text-secondary, #8b92a5); }
+        .telethon-stat-value { color: var(--text-primary, #fff); font-weight: 500; }
+
         .token-status {
             font-size: 13px;
             margin-top: 8px;
@@ -6189,6 +6205,39 @@
                                         <button class="btn-ghost" onclick="testConnection('message')">Test</button>
                                         <button class="btn-primary" onclick="saveConnection('message')">Save</button>
                                         <button class="btn-text-danger" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Account Card (Telethon) -->
+                        <div class="connection-card" id="telethon-card">
+                            <div class="connection-header" onclick="toggleConnectionCard('telethon')">
+                                <span class="bot-icon">👤</span>
+                                <div style="flex: 1;">
+                                    <h3>User Account</h3>
+                                    <div class="bot-subtitle">Messages appear from your account (no bot label)</div>
+                                </div>
+                                <span class="connection-badge disconnected" id="telethon-status">Disconnected</span>
+                                <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </div>
+                            
+                            <div class="connection-body">
+                                <div class="connection-form">
+                                    <div id="telethon-details" style="margin-bottom: 16px;">
+                                        <div class="telethon-stat-row">
+                                            <span class="telethon-stat-label">Status</span>
+                                            <span class="telethon-stat-value">Loading...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="connection-actions">
+                                        <button class="btn-ghost" id="telethon-connect-btn" onclick="connectTelethon()" style="display:none">Connect</button>
+                                        <button class="btn-ghost" id="telethon-reconnect-btn" onclick="reconnectTelethon()" style="display:none">Reconnect</button>
+                                        <button class="btn-primary" id="telethon-auth-btn" onclick="showTelethonAuthModal()">Authenticate</button>
+                                        <button class="btn-text-danger" id="telethon-disconnect-btn" onclick="disconnectTelethon()" style="display:none">Disconnect</button>
                                     </div>
                                 </div>
                             </div>
@@ -8958,6 +9007,219 @@
             } catch (e) {
                 console.error('Error loading connections:', e);
             }
+            loadTelethonStatus();
+        }
+
+        async function loadTelethonStatus() {
+            try {
+                const resp = await authedFetch('/api/telethon/status');
+                if (!resp.ok) {
+                    document.getElementById('telethon-status').textContent = 'Error';
+                    document.getElementById('telethon-status').className = 'connection-badge disconnected';
+                    return;
+                }
+                const data = await resp.json();
+                const statusEl = document.getElementById('telethon-status');
+                const detailsEl = document.getElementById('telethon-details');
+                
+                if (data.status === 'connected') {
+                    statusEl.textContent = 'Connected';
+                    statusEl.className = 'connection-badge connected';
+                } else if (data.status === 'not_authorized') {
+                    statusEl.textContent = 'Not Authorized';
+                    statusEl.className = 'connection-badge pending';
+                } else if (data.status === 'not_configured') {
+                    statusEl.textContent = 'Not configured';
+                    statusEl.className = 'connection-badge disconnected';
+                } else {
+                    statusEl.textContent = 'Disconnected';
+                    statusEl.className = 'connection-badge disconnected';
+                }
+
+                detailsEl.innerHTML = `
+                    <div class="telethon-stat-row">
+                        <span class="telethon-stat-label">Status</span>
+                        <span class="telethon-stat-value" style="color: ${data.status === 'connected' ? 'var(--status-online)' : 'var(--status-error, #ff4d6a)'}">${data.status}</span>
+                    </div>
+                    <div class="telethon-stat-row">
+                        <span class="telethon-stat-label">Messages Today</span>
+                        <span class="telethon-stat-value">${data.sends_today || 0} / 500</span>
+                    </div>
+                    ${data.last_heartbeat ? `<div class="telethon-stat-row"><span class="telethon-stat-label">Last Heartbeat</span><span class="telethon-stat-value">${formatTimeAgo(data.last_heartbeat)}</span></div>` : ''}
+                    ${data.last_send ? `<div class="telethon-stat-row"><span class="telethon-stat-label">Last Send</span><span class="telethon-stat-value">${formatTimeAgo(data.last_send)}</span></div>` : ''}
+                    ${data.last_error ? `<div class="telethon-stat-row"><span class="telethon-stat-label">Last Error</span><span class="telethon-stat-value" style="color: var(--status-error, #ff4d6a)">${data.last_error}</span></div>` : ''}
+                    <div class="telethon-stat-row">
+                        <span class="telethon-stat-label">Session File</span>
+                        <span class="telethon-stat-value">${data.has_session_file ? 'Present' : 'None'}</span>
+                    </div>
+                    <div class="telethon-stat-row">
+                        <span class="telethon-stat-label">Credentials</span>
+                        <span class="telethon-stat-value">${data.has_credentials ? 'Configured' : 'Not set'}</span>
+                    </div>
+                `;
+
+                const connectBtn = document.getElementById('telethon-connect-btn');
+                const reconnectBtn = document.getElementById('telethon-reconnect-btn');
+                const disconnectBtn = document.getElementById('telethon-disconnect-btn');
+                const authBtn = document.getElementById('telethon-auth-btn');
+
+                connectBtn.style.display = (data.status === 'disconnected' && data.has_session_file) ? 'inline-block' : 'none';
+                reconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
+                disconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
+                authBtn.style.display = (!data.has_session_file || data.status === 'not_authorized') ? 'inline-block' : 'none';
+
+            } catch (err) {
+                console.error('Failed to load telethon status:', err);
+            }
+        }
+
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Never';
+            const seconds = Math.floor(Date.now() / 1000 - timestamp);
+            if (seconds < 60) return seconds + 's ago';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        async function connectTelethon() {
+            try {
+                const resp = await authedFetch('/api/telethon/reconnect', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Telethon connected successfully');
+                } else {
+                    showToast('Connection failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+                loadTelethonStatus();
+            } catch (err) {
+                showToast('Connection error: ' + err.message, 'error');
+            }
+        }
+
+        async function reconnectTelethon() {
+            try {
+                const resp = await authedFetch('/api/telethon/reconnect', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Telethon reconnected');
+                } else {
+                    showToast('Reconnect failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+                loadTelethonStatus();
+            } catch (err) {
+                showToast('Reconnect error: ' + err.message, 'error');
+            }
+        }
+
+        async function disconnectTelethon() {
+            try {
+                const resp = await authedFetch('/api/telethon/disconnect', { method: 'POST' });
+                const data = await resp.json();
+                showToast('Telethon disconnected');
+                loadTelethonStatus();
+            } catch (err) {
+                showToast('Disconnect error: ' + err.message, 'error');
+            }
+        }
+
+        function showTelethonAuthModal() {
+            document.getElementById('telethon-auth-modal').style.display = 'flex';
+            document.getElementById('telethon-auth-step-1').style.display = 'block';
+            document.getElementById('telethon-auth-step-2').style.display = 'none';
+            document.getElementById('telethon-auth-step-3').style.display = 'none';
+        }
+
+        function closeTelethonAuthModal() {
+            document.getElementById('telethon-auth-modal').style.display = 'none';
+        }
+
+        async function telethonSendCode() {
+            const apiId = document.getElementById('telethon-api-id').value.trim();
+            const apiHash = document.getElementById('telethon-api-hash').value.trim();
+            const phone = document.getElementById('telethon-phone').value.trim();
+
+            if (!apiId || !apiHash || !phone) {
+                showToast('All fields are required', 'error');
+                return;
+            }
+
+            try {
+                const resp = await authedFetch('/api/telethon/send-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_id: apiId, api_hash: apiHash, phone: phone })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    window._telethonPhoneCodeHash = data.phone_code_hash;
+                    document.getElementById('telethon-auth-step-1').style.display = 'none';
+                    document.getElementById('telethon-auth-step-2').style.display = 'block';
+                    showToast('Verification code sent! Check your Telegram app.');
+                } else {
+                    showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function telethonVerifyCode() {
+            const code = document.getElementById('telethon-code').value.trim();
+            if (!code) {
+                showToast('Enter the verification code', 'error');
+                return;
+            }
+
+            try {
+                const resp = await authedFetch('/api/telethon/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, phone_code_hash: window._telethonPhoneCodeHash })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    if (data.status === '2fa_required') {
+                        document.getElementById('telethon-auth-step-2').style.display = 'none';
+                        document.getElementById('telethon-auth-step-3').style.display = 'block';
+                        showToast('2FA required. Enter your password.');
+                    } else {
+                        closeTelethonAuthModal();
+                        showToast('Authenticated successfully!');
+                        loadTelethonStatus();
+                    }
+                } else {
+                    showToast('Verification failed: ' + (data.error || 'Invalid code'), 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function telethonVerify2FA() {
+            const password = document.getElementById('telethon-2fa-password').value;
+            if (!password) {
+                showToast('Enter your 2FA password', 'error');
+                return;
+            }
+
+            try {
+                const resp = await authedFetch('/api/telethon/verify-2fa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    closeTelethonAuthModal();
+                    showToast('Authenticated with 2FA successfully!');
+                    loadTelethonStatus();
+                } else {
+                    showToast('2FA failed: ' + (data.error || 'Invalid password'), 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
         }
         
         async function testConnection(role) {
@@ -11458,6 +11720,54 @@
         updatePreviewsImmediate();
 
     </script>
+
+    <!-- Telethon Auth Modal -->
+    <div id="telethon-auth-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:var(--bg-primary, #1a1f36); border-radius:12px; padding:32px; max-width:420px; width:90%; color:var(--text-primary, #fff);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="margin:0;">Authenticate User Account</h3>
+                <button onclick="closeTelethonAuthModal()" style="background:none; border:none; color:var(--text-secondary, #8b92a5); cursor:pointer; font-size:24px;">&times;</button>
+            </div>
+            
+            <!-- Step 1: Credentials -->
+            <div id="telethon-auth-step-1">
+                <p style="color:var(--text-secondary, #8b92a5); margin-bottom:16px; font-size:14px;">Enter your Telegram API credentials from <a href="https://my.telegram.org/apps" target="_blank" style="color:var(--accent-primary, #4f8cff);">my.telegram.org</a></p>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:block; margin-bottom:4px; font-size:13px; color:var(--text-secondary, #8b92a5);">API ID</label>
+                    <input type="text" id="telethon-api-id" placeholder="12345678" style="width:100%; padding:10px 12px; background:var(--bg-secondary, #0f1425); border:1px solid var(--border-primary, #2a2f45); border-radius:8px; color:var(--text-primary, #fff);" />
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:block; margin-bottom:4px; font-size:13px; color:var(--text-secondary, #8b92a5);">API Hash</label>
+                    <input type="password" id="telethon-api-hash" placeholder="abc123..." style="width:100%; padding:10px 12px; background:var(--bg-secondary, #0f1425); border:1px solid var(--border-primary, #2a2f45); border-radius:8px; color:var(--text-primary, #fff);" />
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block; margin-bottom:4px; font-size:13px; color:var(--text-secondary, #8b92a5);">Phone Number</label>
+                    <input type="text" id="telethon-phone" placeholder="+1234567890" style="width:100%; padding:10px 12px; background:var(--bg-secondary, #0f1425); border:1px solid var(--border-primary, #2a2f45); border-radius:8px; color:var(--text-primary, #fff);" />
+                </div>
+                <button class="btn-primary" onclick="telethonSendCode()" style="width:100%;">Send Verification Code</button>
+            </div>
+            
+            <!-- Step 2: Verify Code -->
+            <div id="telethon-auth-step-2" style="display:none;">
+                <p style="color:var(--text-secondary, #8b92a5); margin-bottom:16px; font-size:14px;">Enter the code sent to your Telegram app</p>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block; margin-bottom:4px; font-size:13px; color:var(--text-secondary, #8b92a5);">Verification Code</label>
+                    <input type="text" id="telethon-code" placeholder="12345" style="width:100%; padding:10px 12px; background:var(--bg-secondary, #0f1425); border:1px solid var(--border-primary, #2a2f45); border-radius:8px; color:var(--text-primary, #fff); text-align:center; font-size:24px; letter-spacing:8px;" />
+                </div>
+                <button class="btn-primary" onclick="telethonVerifyCode()" style="width:100%;">Verify Code</button>
+            </div>
+            
+            <!-- Step 3: 2FA Password -->
+            <div id="telethon-auth-step-3" style="display:none;">
+                <p style="color:var(--text-secondary, #8b92a5); margin-bottom:16px; font-size:14px;">Your account has 2-factor authentication. Enter your password.</p>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block; margin-bottom:4px; font-size:13px; color:var(--text-secondary, #8b92a5);">2FA Password</label>
+                    <input type="password" id="telethon-2fa-password" placeholder="Your 2FA password" style="width:100%; padding:10px 12px; background:var(--bg-secondary, #0f1425); border:1px solid var(--border-primary, #2a2f45); border-radius:8px; color:var(--text-primary, #fff);" />
+                </div>
+                <button class="btn-primary" onclick="telethonVerify2FA()" style="width:100%;">Verify Password</button>
+            </div>
+        </div>
+    </div>
 
     <!-- User Details Modal -->
     <div class="modal-overlay" id="userDetailsModal">

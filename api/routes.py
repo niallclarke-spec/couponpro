@@ -135,6 +135,10 @@ GET_ROUTES: List[Route] = [
     Route('GET', '/api/connections', 'handle_api_connections_list',
           auth_required=True, db_required=True),
     
+    # Telethon (User Client)
+    Route('GET', '/api/telethon/status', 'handle_api_telethon_status',
+          auth_required=True),
+
     # Cross Promo
     Route('GET', '/api/crosspromo/settings', 'handle_api_crosspromo_settings_get',
           auth_required=True, db_required=True),
@@ -256,6 +260,18 @@ POST_ROUTES: List[Route] = [
     Route('POST', '/api/connections', 'handle_api_connection_save',
           auth_required=True, db_required=True),
     
+    # Telethon (User Client)
+    Route('POST', '/api/telethon/send-code', 'handle_api_telethon_send_code',
+          auth_required=True),
+    Route('POST', '/api/telethon/verify-code', 'handle_api_telethon_verify_code',
+          auth_required=True),
+    Route('POST', '/api/telethon/verify-2fa', 'handle_api_telethon_verify_2fa',
+          auth_required=True),
+    Route('POST', '/api/telethon/reconnect', 'handle_api_telethon_reconnect',
+          auth_required=True),
+    Route('POST', '/api/telethon/disconnect', 'handle_api_telethon_disconnect',
+          auth_required=True),
+
     # Cross Promo
     Route('POST', '/api/crosspromo/settings', 'handle_api_crosspromo_settings_post',
           auth_required=True, db_required=True),

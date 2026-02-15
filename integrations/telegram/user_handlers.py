@@ -1,0 +1,139 @@
+import json
+
+from core.logging import get_logger
+
+logger = get_logger('telethon_handlers')
+
+
+def _send_json(handler, status_code, data):
+    handler.send_response(status_code)
+    handler.send_header('Content-type', 'application/json')
+    handler.end_headers()
+    handler.wfile.write(json.dumps(data).encode())
+
+
+def _read_json_body(handler):
+    content_length = int(handler.headers.get('Content-Length', 0))
+    body = handler.rfile.read(content_length)
+    return json.loads(body) if body else {}
+
+
+def handle_telethon_status(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        from integrations.telegram.user_client import get_client
+        client = get_client(tenant_id)
+        _send_json(handler, 200, client.get_status())
+    except Exception as e:
+        logger.exception(f"Error getting telethon status: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_send_code(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        data = _read_json_body(handler)
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+
+    api_id = data.get('api_id')
+    api_hash = data.get('api_hash')
+    phone = data.get('phone')
+
+    if not api_id or not api_hash or not phone:
+        _send_json(handler, 400, {'error': 'api_id, api_hash, and phone are required'})
+        return
+
+    try:
+        api_id = int(api_id)
+    except (ValueError, TypeError):
+        _send_json(handler, 400, {'error': 'api_id must be a number'})
+        return
+
+    try:
+        from integrations.telegram.user_auth import send_verification_code
+        result = send_verification_code(tenant_id, api_id, api_hash, phone)
+        status_code = 200 if result.get('success') else 400
+        _send_json(handler, status_code, result)
+    except Exception as e:
+        logger.exception(f"Error sending verification code: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_verify_code(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        data = _read_json_body(handler)
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+
+    code = data.get('code')
+    phone_code_hash = data.get('phone_code_hash')
+
+    if not code or not phone_code_hash:
+        _send_json(handler, 400, {'error': 'code and phone_code_hash are required'})
+        return
+
+    try:
+        from integrations.telegram.user_auth import verify_code
+        result = verify_code(tenant_id, str(code), phone_code_hash)
+        status_code = 200 if result.get('success') else 400
+        _send_json(handler, status_code, result)
+    except Exception as e:
+        logger.exception(f"Error verifying code: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_verify_2fa(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        data = _read_json_body(handler)
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+
+    password = data.get('password')
+    if not password:
+        _send_json(handler, 400, {'error': 'password is required'})
+        return
+
+    try:
+        from integrations.telegram.user_auth import verify_2fa
+        result = verify_2fa(tenant_id, password)
+        status_code = 200 if result.get('success') else 400
+        _send_json(handler, status_code, result)
+    except Exception as e:
+        logger.exception(f"Error verifying 2FA: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_reconnect(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        from integrations.telegram.user_client import get_client
+        client = get_client(tenant_id)
+        success = client.reconnect_sync()
+        _send_json(handler, 200, {
+            'success': success,
+            'status': client.get_status(),
+        })
+    except Exception as e:
+        logger.exception(f"Error reconnecting telethon: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_disconnect(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        from integrations.telegram.user_client import get_client
+        client = get_client(tenant_id)
+        client.disconnect_sync()
+        _send_json(handler, 200, {
+            'success': True,
+            'status': client.get_status(),
+        })
+    except Exception as e:
+        logger.exception(f"Error disconnecting telethon: {e}")
+        _send_json(handler, 500, {'error': str(e)})

@@ -1264,3 +1264,42 @@ def store_user_reply(session_id: str, reply_text: str) -> bool:
     except Exception as e:
         logger.exception(f"Error storing user reply: {e}")
         return False
+
+
+def get_sessions_by_chat_id(tenant_id: str, chat_id: int) -> List[Dict]:
+    """Get active or awaiting_reply sessions for a chat ID."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
+                       current_step_id, status, answers, started_at, completed_at, last_activity_at
+                FROM journey_user_sessions
+                WHERE tenant_id = %s AND telegram_chat_id = %s
+                  AND status IN ('active', 'awaiting_reply')
+                ORDER BY created_at DESC
+            """, (tenant_id, chat_id))
+
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'journey_id': str(row[2]),
+                    'telegram_chat_id': row[3],
+                    'telegram_user_id': row[4],
+                    'current_step_id': str(row[5]) if row[5] else None,
+                    'status': row[6],
+                    'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
+                    'started_at': row[8].isoformat() if row[8] else None,
+                    'completed_at': row[9].isoformat() if row[9] else None,
+                    'last_activity_at': row[10].isoformat() if row[10] else None
+                })
+            return sessions
+    except Exception as e:
+        logger.exception(f"Error getting sessions by chat_id: {e}")
+        return []

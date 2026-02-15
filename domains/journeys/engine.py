@@ -32,10 +32,7 @@ class JourneyEngine:
     
     def _send_message(self, tenant_id: str, chat_id: int, text: str) -> bool:
         """
-        Send a Telegram message using tenant's configured message bot.
-        
-        Delegates to core.telegram_sender.send_message_sync for centralized
-        credential resolution and caching.
+        Send a Telegram message, trying Telethon user client first, then bot API fallback.
         
         Args:
             tenant_id: Tenant ID to look up bot credentials
@@ -45,6 +42,18 @@ class JourneyEngine:
         Returns:
             True if sent successfully, False otherwise
         """
+        try:
+            from integrations.telegram.user_client import get_client
+            uc = get_client(tenant_id)
+            if uc.is_connected():
+                result = uc.send_message_sync(chat_id, text)
+                if result.get('success'):
+                    return True
+                else:
+                    logger.warning(f"Telethon send failed, falling back to bot: {result.get('error')}")
+        except Exception as e:
+            logger.warning(f"Telethon unavailable, falling back to bot: {e}")
+
         return send_message_sync(tenant_id, chat_id, text)
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 

@@ -295,6 +295,31 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         bot_role = urlparse(self.path).path.split('/')[3]
         conn_h.handle_connection_delete(self, bot_role)
 
+    # Telethon handlers
+    def handle_api_telethon_status(self):
+        from integrations.telegram.user_handlers import handle_telethon_status
+        handle_telethon_status(self)
+
+    def handle_api_telethon_send_code(self):
+        from integrations.telegram.user_handlers import handle_telethon_send_code
+        handle_telethon_send_code(self)
+
+    def handle_api_telethon_verify_code(self):
+        from integrations.telegram.user_handlers import handle_telethon_verify_code
+        handle_telethon_verify_code(self)
+
+    def handle_api_telethon_verify_2fa(self):
+        from integrations.telegram.user_handlers import handle_telethon_verify_2fa
+        handle_telethon_verify_2fa(self)
+
+    def handle_api_telethon_reconnect(self):
+        from integrations.telegram.user_handlers import handle_telethon_reconnect
+        handle_telethon_reconnect(self)
+
+    def handle_api_telethon_disconnect(self):
+        from integrations.telegram.user_handlers import handle_telethon_disconnect
+        handle_telethon_disconnect(self)
+
     # Cross Promo handlers
     def handle_api_crosspromo_settings_get(self):
         from domains.crosspromo import handlers as cp_h

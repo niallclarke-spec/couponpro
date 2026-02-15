@@ -38,4 +38,6 @@ pytest==9.0.2
 pytest-asyncio
 cryptography
 pytz
-python-telegram-bot[rate-limiter]
+# Telethon (Telegram User API for Journeys)
+telethon
+cryptg
