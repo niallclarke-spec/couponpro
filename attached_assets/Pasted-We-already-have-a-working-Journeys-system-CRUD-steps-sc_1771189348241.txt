@@ -1,0 +1,115 @@
+We already have a working Journeys system (CRUD, steps, scheduler, delays, wait_for_reply, deep links, admin UI, background engine). 
+
+We now need to integrate Telethon user-account sending in place of bot-based sending.
+
+Your previous checklist is directionally correct, but before implementation we must harden the architecture for production use.
+
+Please build this with the following additional requirements:
+
+-------------------------------------------------------
+CORE INTEGRATION REQUIREMENTS
+-------------------------------------------------------
+
+1) TELETHON USER CLIENT
+- One-time login flow (SMS code, in-app code, 2FA password supported)
+- Persistent session file
+- Auto-reconnect handling
+- Graceful handling of FloodWait errors
+- Per-account rate limiting controls (messages per minute/hour/day)
+
+2) SESSION STORAGE
+- Session must be encrypted before storing in Digital Ocean Spaces
+- Decrypt only in memory when loading
+- Never expose session data via logs or admin APIs
+- Session rotation strategy documented
+
+-------------------------------------------------------
+MULTI-TENANT SAFETY (CRITICAL)
+-------------------------------------------------------
+
+We are multi-tenant. Every object must be scoped by tenant_id.
+
+- Each tenant can have one or more Telegram user accounts
+- Leads, journeys, runs, logs must be strictly tenant-isolated
+- Inbound message routing must determine:
+  - Which tenant account received the message
+  - Which lead it belongs to
+  - Which journey run is active
+  - Whether a WAIT_FOR_REPLY step is pending
+
+All database queries must enforce tenant isolation.
+
+-------------------------------------------------------
+ENGINE INTEGRATION
+-------------------------------------------------------
+
+Replace bot-based send calls with Telethon send calls.
+
+Add:
+- Idempotency key per journey step send (journey_run_id + step_id)
+- Deduplication protection (prevent double sends on worker restart)
+- Retry with exponential backoff
+- Dead-letter handling for hard failures
+
+For WAIT_FOR_REPLY steps:
+- Store waiting_until timestamp
+- If reply received before timeout → proceed to reply branch
+- If timeout reached without reply → proceed to no_reply branch
+- Listener must update journey state atomically
+
+-------------------------------------------------------
+INCOMING MESSAGE LISTENER
+-------------------------------------------------------
+
+Implement Telethon event listener that:
+- Maps incoming message to correct tenant
+- Maps to correct lead by telegram_user_id
+- Identifies active journey state
+- Resolves WAIT_FOR_REPLY steps
+- Logs inbound message in MessageLog table
+
+-------------------------------------------------------
+CONNECTION STATUS IN ADMIN UI
+-------------------------------------------------------
+
+Under Connections tab show:
+- Authenticated status
+- Connected / Disconnected
+- Last heartbeat
+- Last successful send
+- Last inbound message
+- Current rate limit state
+- Last error message
+
+Include manual reconnect option.
+
+-------------------------------------------------------
+SAFETY CONTROLS
+-------------------------------------------------------
+
+Add:
+- Configurable rate limits per tenant
+- Default conservative throttle for new accounts
+- Optional STOP keyword handling (opt-out)
+- Daily send cap per account
+
+-------------------------------------------------------
+DELIVERABLES
+-------------------------------------------------------
+
+- Telethon integration module
+- Encrypted session persistence
+- Updated journey engine with idempotent send logic
+- Inbound listener with proper routing
+- Admin UI connection status panel
+- Working example journey:
+    Trigger → Send message → Wait for reply (2 days timeout)
+        → If reply → Wait 10 mins → Send follow-up
+        → If no reply → Send reminder
+
+Important:
+Do NOT break existing journey logic.
+This must be a transport-layer swap + hardened runtime upgrade.
+Advanced node-based editor and versioning can be added after Telethon core is stable.
+
+-------------------------------------------------------

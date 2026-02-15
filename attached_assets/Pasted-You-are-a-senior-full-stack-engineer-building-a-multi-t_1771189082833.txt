@@ -1,0 +1,47 @@
+You are a senior full-stack engineer building a multi-tenant Journey Builder inside an admin UI under a “Journeys” tab.
+
+Goal:
+Build a controllable, editable journey automation system for Telegram user accounts (not bots) using Telethon/Pyrogram. Admins must be able to create and adjust journeys (messages, waits, reply-gating, timeouts, branching) without code changes.
+
+Key requirements:
+1) Multi-tenant: everything must be scoped by tenant_id. Tenants cannot access each other’s journeys/users/sessions/logs.
+2) Admin UI: under “Journeys” tab, include:
+   - Journey list (draft/published, active users, last edited)
+   - Journey builder UI (node-based flow editor)
+   - Right-side properties panel for editing a selected node
+   - Publish flow with versioning (draft -> publish). Editing a published journey creates a new version.
+   - User journey viewer with timeline + logs (messages sent, replies, step transitions, failures)
+3) Journey logic must support:
+   - Send Message node (supports deep links and pre-populated message text; templating variables like {{first_name}})
+   - Wait node (wait X minutes/hours/days)
+   - Wait for Reply node (pause until user replies OR timeout)
+   - Branching: “if reply received -> path A”, “if no reply after X time -> path B”
+   - Optional later: conditions based on tags/fields
+4) Runtime engine:
+   - Store per-user journey state with current_step_id and next_run_at
+   - Background worker processes due users (next_run_at <= now), sends messages, advances state
+   - Incoming Telegram messages must be ingested via Telethon/Pyrogram listener and used to resolve WAIT_FOR_REPLY steps
+   - Make it reliable: idempotency keys for sends, retries with backoff, logging, and error handling
+5) Data model:
+   - Tenants table
+   - TelegramAccounts table per tenant (session storage, phone, status)
+   - Contacts/Leads table per tenant (telegram_user_id, username, tags, attributes)
+   - Journeys table (tenant_id, name, status, version)
+   - JourneyNodes table (journey_version_id, node_id, type, config JSON)
+   - JourneyEdges table (from_node_id, to_node_id, condition like “reply” vs “no_reply”)
+   - UserJourneyState table (lead_id, journey_version_id, current_node_id, status, next_run_at, waiting_until, last_message_id)
+   - MessageLog table (lead_id, journey_state_id, direction, content, sent_at, delivery_status, error)
+6) Security + permissions:
+   - Tenant isolation in backend queries
+   - Admin auth required for journey editing and viewing logs
+7) Deliverables:
+   - Implement backend APIs for CRUD journeys/nodes/edges, publish, start/stop journey for a lead, view logs
+   - Implement admin UI for builder + logs
+   - Provide a minimal working example journey:
+     Trigger: new lead enters journey -> send message with deep link -> wait for reply (timeout 2 days) -> if reply then wait 10 min -> send follow-up, else send reminder after timeout.
+
+Tech stack:
+Use (pick based on our existing app): Node/Express + Postgres + React admin UI OR Python/FastAPI + Postgres + React. Use a job queue (BullMQ/Redis or similar) for processing due steps.
+
+Important:
+Build it in a way that non-technical admins can adjust message timing, reply gates, and branching from the UI without code changes.

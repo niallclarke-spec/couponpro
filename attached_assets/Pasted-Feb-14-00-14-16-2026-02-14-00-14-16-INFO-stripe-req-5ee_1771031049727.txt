@@ -1,0 +1,82 @@
+Feb 14 00:14:16  [2026-02-14 00:14:16] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 14 00:14:16  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Feb 14 00:14:16  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-15
+Feb 14 00:14:16  [2026-02-14 00:14:16] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Feb 14 00:14:16  [2026-02-14 00:14:16] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Feb 14 00:14:16  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 14 00:14:16  [2026-02-14 00:14:16] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 14 00:14:17  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Feb 14 00:14:17  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-18
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Feb 14 00:14:17  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 14 00:14:17  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Feb 14 00:14:17  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-18
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Feb 14 00:14:17  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 14 00:14:17  [2026-02-14 00:14:17] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 14 00:14:18  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Feb 14 00:14:18  [Stripe] ✓ Rebill in period: $39.0 on 2026-02-16
+Feb 14 00:14:18  [Stripe] Active: 4, Rebill in period: $41.34
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [stripe] [req:5ee2d1d9] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [stripe] [req:5ee2d1d9] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 14 00:14:18  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [handlers] [req:5ee2d1d9] Stripe returned: revenue=$417.3, rebill=$41.34
+Feb 14 00:14:18  10.244.4.249 - - [14/Feb/2026 00:14:18] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [bot_credentials] [req:08236bec] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [telegram_sender] [req:08236bec] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003213499920, free_channel=-1003055722817
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [handlers] [req:08236bec] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, bot=@entrylab_bot, token_last4=****nFjE
+Feb 14 00:14:18  [2026-02-14 00:14:18] [INFO] [handlers] [req:08236bec] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003213499920, members=2
+Feb 14 00:14:18  10.244.4.249 - - [14/Feb/2026 00:14:18] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Feb 14 00:14:19  10.244.6.27 - - [14/Feb/2026 00:14:19] "GET /api/connections HTTP/1.1" 200 -
+Feb 14 00:14:19  10.244.6.27 - - [14/Feb/2026 00:14:19] "GET /api/connections HTTP/1.1" 200 -
+Feb 14 00:14:37  10.244.5.120 - - [14/Feb/2026 00:14:37] "POST /api/connections/test HTTP/1.1" 200 -
+Feb 14 00:14:52  10.244.5.120 - - [14/Feb/2026 00:14:52] "POST /api/connections/test HTTP/1.1" 200 -
+Feb 14 00:23:55  [2026-02-14 00:23:55] [WARNING] [clerk_auth] [req:e2d1aeb7] Auth failure: reason=missing_auth_header path=/api/telegram/grant-access host=dash.promostack.io source=none
+Feb 14 00:23:55  [2026-02-14 00:23:55] [INFO] [handlers] [req:e2d1aeb7] Grant access request for niall.clarke@squawkmedia.ie
+Feb 14 00:23:55  [2026-02-14 00:23:55] [INFO] [handlers] [req:e2d1aeb7] Data: plan=Free Gold Signals, amount=$0.0, free=True
+Feb 14 00:23:55  [2026-02-14 00:23:55] [INFO] [handlers] [req:e2d1aeb7] Stripe: customer_id=None, subscription_id=None
+Feb 14 00:23:55  [2026-02-14 00:23:55] [INFO] [db] [req:e2d1aeb7] Creating subscription: email=niall.clarke@squawkmedia.ie, stripe_sub_id=None, plan_type=Free Gold Signals, is_free=True
+Feb 14 00:23:55  [2026-02-14 00:23:55] [INFO] [handlers] [req:e2d1aeb7] Free lead captured for niall.clarke@squawkmedia.ie
+Feb 14 00:23:55  10.244.5.120 - - [14/Feb/2026 00:23:55] "POST /api/telegram/grant-access HTTP/1.1" 200 -
+Feb 14 00:24:47  [STRIPE WEBHOOK] Received event: invoice.paid (evt_1T0WfCQfYsmULFjZvX6wRfU6)
+Feb 14 00:24:47  [STRIPE WEBHOOK] ✅ Event evt_1T0WfCQfYsmULFjZvX6wRfU6 recorded as processed
+Feb 14 00:24:47  10.244.4.249 - - [14/Feb/2026 00:24:47] "POST /api/stripe/webhook HTTP/1.1" 200 -
+Feb 14 00:26:35  [2026-02-14 00:26:35] [INFO] [generator] [tenant:entrylab] [req:f83206ec] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 14 00:40:50  [2026-02-14 00:40:50] [WARNING] [clerk_auth] [req:e7d8f4bf] Token expired
+Feb 14 00:40:50  [2026-02-14 00:40:50] [INFO] [handlers] [req:e7d8f4bf] Signal Bot save request: vip=-1003343226469, free=-1002501458405
+Feb 14 00:40:51  10.244.4.249 - - [14/Feb/2026 00:40:51] "POST /api/connections HTTP/1.1" 200 -
+Feb 14 00:40:51  [2026-02-14 00:40:51] [INFO] [db] [req:e7d8f4bf] Upserted bot connection for tenant=entrylab, role=signal_bot
+Feb 14 00:40:51  [2026-02-14 00:40:51] [INFO] [telegram_sender] [req:e7d8f4bf] Cache invalidated: tenant=entrylab, role=signal_bot
+Feb 14 00:40:51  [2026-02-14 00:40:51] [INFO] [handlers] [req:e7d8f4bf] Saved bot connection: tenant=entrylab, role=signal_bot, username=@entrylab_bot, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 14 00:40:51  [2026-02-14 00:40:51] [WARNING] [clerk_auth] [req:6e48c009] Token expired
+Feb 14 00:40:51  10.244.5.120 - - [14/Feb/2026 00:40:51] "GET /api/connections HTTP/1.1" 200 -
+Feb 14 00:40:58  [2026-02-14 00:40:58] [WARNING] [clerk_auth] [req:de692865] Token expired
+Feb 14 00:40:58  10.244.5.120 - - [14/Feb/2026 00:40:58] "GET /admin HTTP/1.1" 200 -
+Feb 14 00:40:59  10.244.6.27 - - [14/Feb/2026 00:40:59] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 14 00:40:59  10.244.4.249 - - [14/Feb/2026 00:40:59] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 14 00:40:59  10.244.4.249 - - [14/Feb/2026 00:40:59] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 14 00:40:59  10.244.4.249 - - [14/Feb/2026 00:40:59] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 14 00:40:59  [2026-02-14 00:40:59] [WARNING] [clerk_auth] [req:a9265d93] Token expired
+Feb 14 00:40:59  10.244.6.27 - - [14/Feb/2026 00:40:59] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 14 00:40:59  [2026-02-14 00:40:59] [WARNING] [clerk_auth] [req:6a99e7d1] Token expired
+Feb 14 00:40:59  10.244.5.120 - - [14/Feb/2026 00:40:59] "GET /api/connections HTTP/1.1" 200 -
+Feb 14 00:41:18  [2026-02-14 00:41:18] [WARNING] [clerk_auth] [req:a623b611] Token expired
+Feb 14 00:41:18  10.244.4.249 - - [14/Feb/2026 00:41:18] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 14 00:41:18  [2026-02-14 00:41:18] [WARNING] [clerk_auth] [req:118883bb] Token expired
+Feb 14 00:41:18  10.244.4.249 - - [14/Feb/2026 00:41:18] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 14 00:41:18  [2026-02-14 00:41:18] [WARNING] [clerk_auth] [req:3396bac9] Token expired
+Feb 14 00:41:18  10.244.7.214 - - [14/Feb/2026 00:41:18] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 14 00:41:18  [2026-02-14 00:41:18] [WARNING] [clerk_auth] [req:cbcf66dd] Token expired
+Feb 14 00:41:18  10.244.7.214 - - [14/Feb/2026 00:41:18] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 14 00:41:37  [2026-02-14 00:41:37] [INFO] [generator] [tenant:entrylab] [req:38d9f543] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 14 00:56:39  [2026-02-14 00:56:39] [INFO] [generator] [tenant:entrylab] [req:2dc9afbf] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 14 00:58:03  10.244.6.27 - - [14/Feb/2026 00:58:03] code 404, message Not Found
+Feb 14 00:58:03  10.244.6.27 - - [14/Feb/2026 00:58:03] "POST / HTTP/1.1" 404 -
