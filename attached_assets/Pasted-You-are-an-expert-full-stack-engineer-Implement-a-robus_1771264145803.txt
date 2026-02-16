@@ -1,0 +1,109 @@
+You are an expert full-stack engineer. Implement a robust “Journeys” automation feature for Telegram DMs using a REAL Telegram account via Telethon (NOT Bot API). This is a production-grade state machine with scheduling, session validity, and a clean admin UI.
+
+GOAL
+Users DM our Telegram account (often via a site deep link with a prefilled message). If the FIRST inbound message from a user matches a Journey trigger keyword, we start that Journey Session. After a session starts, we DO NOT re-trigger on keywords until the session is completed or auto-completed. While a session is active, ANY inbound message from the user is treated as “reply received” ONLY to advance the current step logic (or to cancel waiting), not to start new journeys.
+
+CRITICAL REQUIREMENTS (MUST)
+1) One active session per user at a time.
+2) Session routing must NEVER get stuck: if a session is broken/invalid, auto-heal (mark as broken + completed) and fall through to trigger matching.
+3) Inactivity auto-complete: per-journey setting “Auto-complete after X days of inactivity while awaiting reply”. Inactivity is measured from LAST inbound user message time. When timed out, mark session as auto_completed and CANCEL any future scheduled sends; do NOT send remaining steps.
+4) Per-step delays: steps support “send after X minutes”. Use a single scheduler mechanism that guarantees correct ordering. Do not allow old scheduled sends to fire after the session has advanced.
+5) Await reply step type: when active, the next inbound message advances the flow. Await reply step supports one simple branch:
+   - if inbound message contains keyword X (case-insensitive substring match) -> go to step A
+   - else -> go to step B
+6) Journey priority: each journey can be flagged priority with an integer priority value. When multiple journey triggers match, select highest priority; tie-break by most recently updated.
+7) No editing live journeys: in admin, journeys can be “Locked” (no new sessions). Editing a locked journey is allowed only after duplicating (create new journey version). For V1: enforce “locked journeys cannot be edited” and provide “Duplicate” action.
+8) Idempotency: store processed inbound telegram message IDs per chat to avoid double-processing on reconnect/retry.
+9) Concurrency safety: implement per-user locking/queue so multiple inbound messages cannot advance a session twice concurrently.
+10) Flood-wait handling: obey Telethon flood wait exceptions and back off. Add basic throttling with jitter for outbound sends.
+
+TECH STACK ASSUMPTIONS
+- Node.js or Python backend is fine; choose what matches the existing repo. Use Postgres for persistence.
+- Use a job scheduler for delayed steps (e.g., a DB-backed jobs table + worker loop). Do NOT rely on in-memory timers only.
+- Use transactions where needed.
+
+DATA MODEL (Postgres)
+Implement tables (or equivalent):
+- journeys: id, name, trigger_keyword, priority_int, is_locked, inactivity_timeout_days, created_at, updated_at
+- journey_steps: id, journey_id, step_index (integer order), type ('send'|'await_reply'), delay_minutes (int, nullable), message_template (text), await_contains_keyword (text nullable), branch_true_step_index (int nullable), branch_false_step_index (int nullable)
+- journey_sessions: id, telegram_user_id (or chat_id), journey_id, status ('active'|'awaiting_reply'|'completed'|'auto_completed'|'broken'), current_step_index, last_inbound_at, created_at, updated_at, completed_at, completion_reason
+- outbound_jobs: id, session_id, step_index, run_at, status ('scheduled'|'sent'|'canceled'|'failed'), last_error, created_at, updated_at
+- inbound_dedupe: id, chat_id, message_id, received_at (unique(chat_id,message_id))
+- session_events (optional but recommended): id, session_id, event_type, payload_json, created_at
+
+SCHEDULING RULES
+- Only ONE “next outbound job” should be active per session. When session advances, cancel any scheduled job for older steps.
+- For 'send' steps:
+  - schedule send for now + delay_minutes (or immediate if 0/null)
+  - when job fires, verify session still active AND current_step_index matches job.step_index; otherwise cancel job (stale job guard).
+  - send the message via Telethon, record sent, then advance current_step_index to next step and schedule next step if it’s a send step; if next step is await_reply, set session status to awaiting_reply and DO NOT schedule further sends.
+- For 'await_reply' steps:
+  - do not schedule outbound sends
+  - on inbound message from same user/chat while session awaiting_reply AND not timed out:
+     - if await_contains_keyword present and inbound contains it -> jump to branch_true_step_index
+     - else jump to branch_false_step_index
+     - set status active and schedule next send step accordingly
+- Inactivity timeout:
+  - if session is awaiting_reply and now - last_inbound_at > inactivity_timeout_days: mark auto_completed, cancel scheduled jobs, do not message user.
+
+ROUTING / LISTENER LOGIC (Telethon)
+On each inbound DM message:
+1) Ignore messages from bots or from our own account.
+2) Idempotency: if (chat_id,message_id) already seen -> return.
+3) Acquire per-user lock (chat_id).
+4) Load active session for chat_id where status in ('active','awaiting_reply').
+   a) If session exists:
+      - validate session: journey exists, current_step_index valid, current step exists.
+      - if invalid -> mark session as broken + completed_at, cancel jobs, continue to triggers.
+      - if status == awaiting_reply:
+         - if timed out -> auto_complete and continue to triggers
+         - else treat inbound as reply and advance as rules above; release lock; return.
+      - if status == active:
+         - DO NOT start new journey; treat inbound as “reply received” ONLY if the current step is awaiting_reply (otherwise ignore inbound or log it). Release lock; return.
+   b) If no session exists:
+      - find matching journeys where is_locked=false and inbound message contains trigger_keyword (case-insensitive).
+      - pick highest priority_int.
+      - create session (status active, current_step_index=1, last_inbound_at=now)
+      - schedule first step send job (step 1) and proceed.
+5) Release lock.
+
+ADMIN UI (Clean, V1)
+Build a simple admin panel with:
+A) Journeys list:
+- Name
+- Trigger keyword
+- Priority int
+- Locked toggle (lock/unlock)
+- Inactivity timeout (days)
+- “Active sessions total”
+- “Active sessions by step” (display like: Step1: 12, Step2: 7, Await Reply: 4, Step4: 1)
+- Actions: View, Duplicate, Lock/Unlock
+B) Journey editor (for unlocked journeys only):
+- Name, trigger keyword, priority, inactivity timeout days
+- Steps list in order with add/remove/reorder
+- Step types:
+   - Send step: message template + delay minutes
+   - Await reply step: contains keyword (optional) + true/false jump targets (select step index)
+- Validate: no invalid jumps, no missing steps
+C) Duplicate journey:
+- Clones journey + steps into a new journey (unlocked) with “(Copy)” suffix
+D) Sessions view:
+- Filter by journey
+- Show: chat_id, status, current_step_index, last_inbound_at, created_at
+- Action: Force complete (marks completed and cancels jobs)
+
+TRACKING LINK CLICKS (Server-side)
+We cannot track Telegram clicks directly. Implement a helper in message templates:
+- Support placeholder {{track_url:https://example.com/path}} that generates a wrapped redirect URL on our domain like /r/<token>
+- Token encodes session_id + step_index + destination URL
+- On GET /r/<token>, log click event (session_id, step_index, timestamp, user agent, ip) then 302 redirect to destination.
+
+DELIVERABLES
+- Telethon listener
+- DB schema migrations
+- Scheduler/worker for outbound_jobs
+- Admin UI screens above
+- Comprehensive logging + defensive checks
+- Unit tests for routing + scheduling + timeout + stale job guard
+
+Do not implement unnecessary complexity (no node graph UI). Focus on correctness and reliability.
