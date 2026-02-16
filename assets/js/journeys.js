@@ -532,11 +532,10 @@
         
         container.innerHTML = state.steps.map((step, index) => {
             const analytics = step.id ? state.stepAnalytics[step.id] : null;
-            const analyticsHtml = analytics && (analytics.sends > 0 || analytics.reads > 0 || analytics.link_clicks > 0)
-                ? `<div class="step-analytics" style="display: flex; gap: 8px; font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+            const analyticsHtml = analytics && (analytics.sends > 0 || analytics.unique_users > 0)
+                ? `<div class="step-analytics">
                     <span title="Messages sent">\u{1F4E4} ${analytics.sends}</span>
-                    <span title="Messages read">\u{1F441} ${analytics.reads}</span>
-                    <span title="Links clicked">\u{1F517} ${analytics.link_clicks}</span>
+                    <span title="Unique users">\u{1F464} ${analytics.unique_users}</span>
                 </div>`
                 : '';
             return `

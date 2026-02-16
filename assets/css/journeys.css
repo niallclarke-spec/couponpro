@@ -451,6 +451,15 @@
     margin-top: 4px;
 }
 
+.step-analytics {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-secondary, #94a3b8);
+    margin-top: 4px;
+    align-items: center;
+}
+
 .step-actions {
     display: flex;
     gap: 4px;
