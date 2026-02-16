@@ -269,6 +269,14 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.journeys import handlers as jh
         jh.handle_journey_delete(self, urlparse(self.path).path.split('/')[3])
 
+    def handle_api_journey_duplicate(self):
+        from domains.journeys import handlers as jh
+        jh.handle_journey_duplicate(self, urlparse(self.path).path.split('/')[3])
+
+    def handle_api_journey_lock(self):
+        from domains.journeys import handlers as jh
+        jh.handle_journey_lock(self, urlparse(self.path).path.split('/')[3])
+
     def handle_api_journey_analytics(self):
         from domains.journeys import handlers as jh
         jh.handle_journey_analytics(self, urlparse(self.path).path.split('/')[3])

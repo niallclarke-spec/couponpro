@@ -251,6 +251,10 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True),
     
     # Journeys
+    Route('POST', '/api/journeys/', 'handle_api_journey_duplicate',
+          auth_required=True, db_required=True, is_prefix=True, contains='/duplicate'),
+    Route('POST', '/api/journeys/', 'handle_api_journey_lock',
+          auth_required=True, db_required=True, is_prefix=True, contains='/lock'),
     Route('POST', '/api/journeys/', 'handle_api_journey_triggers',
           auth_required=True, db_required=True, is_prefix=True, contains='/triggers'),
     Route('POST', '/api/journeys', 'handle_api_journey_create',

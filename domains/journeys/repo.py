@@ -108,7 +108,8 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                 SELECT 
                     j.id, j.tenant_id, j.bot_id, j.name, j.description, 
                     j.status, j.re_entry_policy, j.created_at, j.updated_at,
-                    COALESCE(step_counts.cnt, 0) as step_count
+                    COALESCE(step_counts.cnt, 0) as step_count,
+                    j.priority_int, j.is_locked, j.inactivity_timeout_days
                 FROM journeys j
                 LEFT JOIN (
                     SELECT journey_id, COUNT(*) as cnt
@@ -135,6 +136,9 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
                     'step_count': row[9],
+                    'priority_int': row[10],
+                    'is_locked': row[11],
+                    'inactivity_timeout_days': row[12],
                     'triggers': []
                 })
             
@@ -359,7 +363,8 @@ def list_steps(tenant_id: str, journey_id: str) -> List[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT s.id, s.journey_id, s.step_order, s.step_type, s.config, s.created_at
+                SELECT s.id, s.journey_id, s.step_order, s.step_type, s.config, s.created_at,
+                       s.branch_keyword, s.branch_true_step_id, s.branch_false_step_id
                 FROM journey_steps s
                 JOIN journeys j ON j.id = s.journey_id
                 WHERE j.tenant_id = %s AND s.journey_id = %s
@@ -370,6 +375,12 @@ def list_steps(tenant_id: str, journey_id: str) -> List[Dict]:
             for row in cursor.fetchall():
                 config = row[4] if isinstance(row[4], dict) else json.loads(row[4]) if row[4] else {}
                 step_type = row[3]
+                branch_keyword = row[6] or ''
+                branch_true_step_id = str(row[7]) if row[7] else ''
+                branch_false_step_id = str(row[8]) if row[8] else ''
+                config['branch_keyword'] = branch_keyword
+                config['branch_true_step_id'] = branch_true_step_id
+                config['branch_false_step_id'] = branch_false_step_id
                 steps.append({
                     'id': str(row[0]),
                     'journey_id': str(row[1]),
@@ -380,7 +391,10 @@ def list_steps(tenant_id: str, journey_id: str) -> List[Dict]:
                     'message_template': config.get('text', ''),
                     'delay_seconds': config.get('delay_seconds', 0),
                     'wait_for_reply': config.get('wait_for_reply', False) or step_type == 'wait_for_reply',
-                    'timeout_action': config.get('timeout_action', 'continue')
+                    'timeout_action': config.get('timeout_action', 'continue'),
+                    'branch_keyword': branch_keyword,
+                    'branch_true_step_id': branch_true_step_id,
+                    'branch_false_step_id': branch_false_step_id,
                 })
             return steps
     except Exception as e:
@@ -414,10 +428,16 @@ def set_steps(tenant_id: str, journey_id: str, steps: List[Dict]) -> bool:
             cursor.execute("DELETE FROM journey_steps WHERE journey_id = %s", (journey_id,))
             
             for step in steps:
+                step_config = step.get('config', {})
+                branch_keyword = step_config.get('branch_keyword', '') or None
+                branch_true_step_id = step_config.get('branch_true_step_id', '') or None
+                branch_false_step_id = step_config.get('branch_false_step_id', '') or None
                 cursor.execute("""
-                    INSERT INTO journey_steps (journey_id, step_order, step_type, config)
-                    VALUES (%s, %s, %s, %s)
-                """, (journey_id, step['step_order'], step['step_type'], json.dumps(step.get('config', {}))))
+                    INSERT INTO journey_steps (journey_id, step_order, step_type, config,
+                                              branch_keyword, branch_true_step_id, branch_false_step_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (journey_id, step['step_order'], step['step_type'], json.dumps(step_config),
+                      branch_keyword, branch_true_step_id, branch_false_step_id))
             
             conn.commit()
             logger.info(f"Set {len(steps)} steps for journey {journey_id}")
@@ -493,7 +513,8 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
                   AND j.status = 'active'
                   AND t.trigger_type = 'direct_message'
                   AND t.is_active = TRUE
-                ORDER BY t.created_at ASC
+                  AND j.is_locked = FALSE
+                ORDER BY j.priority_int DESC, j.updated_at DESC
             """, (tenant_id,))
             rows = cursor.fetchall()
             
@@ -612,7 +633,7 @@ def cancel_session(session_id: str) -> bool:
             cursor.execute("""
                 UPDATE journey_user_sessions
                 SET status = 'cancelled', last_activity_at = NOW()
-                WHERE id = %s AND status IN ('active', 'waiting_delay')
+                WHERE id = %s AND status IN ('active', 'waiting_delay', 'awaiting_reply')
             """, (session_id,))
             conn.commit()
             return cursor.rowcount > 0
@@ -738,19 +759,27 @@ def get_step_by_id(step_id: str) -> Optional[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, journey_id, step_order, step_type, config, created_at
+                SELECT id, journey_id, step_order, step_type, config, created_at,
+                       branch_keyword, branch_true_step_id, branch_false_step_id
                 FROM journey_steps
                 WHERE id = %s
             """, (step_id,))
             row = cursor.fetchone()
             
             if row:
+                config = row[4] if isinstance(row[4], dict) else json.loads(row[4]) if row[4] else {}
+                branch_keyword = row[6] or ''
+                branch_true_step_id = str(row[7]) if row[7] else ''
+                branch_false_step_id = str(row[8]) if row[8] else ''
+                config['branch_keyword'] = branch_keyword
+                config['branch_true_step_id'] = branch_true_step_id
+                config['branch_false_step_id'] = branch_false_step_id
                 return {
                     'id': str(row[0]),
                     'journey_id': str(row[1]),
                     'step_order': row[2],
                     'step_type': row[3],
-                    'config': row[4] if isinstance(row[4], dict) else json.loads(row[4]) if row[4] else {},
+                    'config': config,
                     'created_at': row[5].isoformat() if row[5] else None
                 }
             return None
@@ -1103,6 +1132,101 @@ def delete_journey(tenant_id: str, journey_id: str) -> bool:
     except Exception as e:
         logger.exception(f"Error deleting journey: {e}")
         return False
+
+
+def set_journey_locked(tenant_id: str, journey_id: str, is_locked: bool) -> bool:
+    """Set the locked status of a journey."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journeys SET is_locked = %s, updated_at = NOW()
+                WHERE id = %s AND tenant_id = %s
+            """, (is_locked, journey_id, tenant_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error setting journey locked: {e}")
+        return False
+
+
+def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
+    """Duplicate a journey with all its steps and triggers in a single transaction."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy
+                FROM journeys
+                WHERE tenant_id = %s AND id = %s
+            """, (tenant_id, journey_id))
+            original = cursor.fetchone()
+            if not original:
+                return None
+            
+            new_name = original[3] + " (Copy)"
+            
+            cursor.execute("""
+                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, is_locked)
+                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE)
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
+            """, (tenant_id, original[2], new_name, original[4], original[6]))
+            new_row = cursor.fetchone()
+            if not new_row:
+                return None
+            new_journey_id = new_row[0]
+            
+            cursor.execute("""
+                SELECT step_order, step_type, config
+                FROM journey_steps
+                WHERE journey_id = %s
+                ORDER BY step_order ASC
+            """, (journey_id,))
+            steps = cursor.fetchall()
+            for step in steps:
+                cursor.execute("""
+                    INSERT INTO journey_steps (journey_id, step_order, step_type, config)
+                    VALUES (%s, %s, %s, %s)
+                """, (new_journey_id, step[0], step[1], json.dumps(step[2]) if isinstance(step[2], dict) else step[2]))
+            
+            cursor.execute("""
+                SELECT trigger_type, trigger_config, is_active
+                FROM journey_triggers
+                WHERE journey_id = %s
+            """, (journey_id,))
+            triggers = cursor.fetchall()
+            for trigger in triggers:
+                cursor.execute("""
+                    INSERT INTO journey_triggers (journey_id, tenant_id, trigger_type, trigger_config, is_active)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (new_journey_id, tenant_id, trigger[0],
+                      json.dumps(trigger[1]) if isinstance(trigger[1], dict) else trigger[1],
+                      trigger[2]))
+            
+            conn.commit()
+            
+            return {
+                'id': str(new_row[0]),
+                'tenant_id': new_row[1],
+                'bot_id': new_row[2],
+                'name': new_row[3],
+                'description': new_row[4],
+                'status': new_row[5],
+                're_entry_policy': new_row[6],
+                'created_at': new_row[7].isoformat() if new_row[7] else None,
+                'updated_at': new_row[8].isoformat() if new_row[8] else None
+            }
+    except Exception as e:
+        logger.exception(f"Error duplicating journey: {e}")
+        return None
 
 
 def set_session_awaiting_reply(session_id: str, step_id: str, timeout_minutes: int = None) -> bool:
@@ -1505,4 +1629,147 @@ def get_sessions_by_chat_id(tenant_id: str, chat_id: int) -> List[Dict]:
             return sessions
     except Exception as e:
         logger.exception(f"Error getting sessions by chat_id: {e}")
+        return []
+
+
+def check_message_dedupe(tenant_id: str, chat_id: int, message_id: int) -> bool:
+    """Check if a message has already been processed (dedupe).
+    
+    Returns True if this is a NEW message (inserted), False if duplicate.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO journey_inbound_dedupe (tenant_id, chat_id, message_id)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (chat_id, message_id) DO NOTHING
+            """, (tenant_id, chat_id, message_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error checking message dedupe: {e}")
+        return False
+
+
+def cancel_pending_scheduled_messages(session_id: str) -> int:
+    """Cancel all pending scheduled messages for a session.
+    
+    Returns the count of cancelled messages.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return 0
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_scheduled_messages
+                SET status = 'cancelled'
+                WHERE session_id = %s AND status = 'pending'
+            """, (session_id,))
+            conn.commit()
+            cancelled = cursor.rowcount
+            if cancelled > 0:
+                logger.info(f"Cancelled {cancelled} pending scheduled messages for session {session_id}")
+            return cancelled
+    except Exception as e:
+        logger.exception(f"Error cancelling pending scheduled messages: {e}")
+        return 0
+
+
+def mark_session_broken(session_id: str, reason: str = '') -> bool:
+    """Mark a session as broken with an optional reason.
+    
+    Sets status='broken' and completed_at=NOW().
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_user_sessions
+                SET status = 'broken', completed_at = NOW(), last_activity_at = NOW()
+                WHERE id = %s
+            """, (session_id,))
+            conn.commit()
+            if cursor.rowcount > 0:
+                logger.warning(f"Marked session {session_id} as broken. Reason: {reason}")
+                return True
+            return False
+    except Exception as e:
+        logger.exception(f"Error marking session broken: {e}")
+        return False
+
+
+def get_journey_timeout_days(journey_id: str) -> int:
+    """Get the inactivity_timeout_days for a journey. Returns 3 as default."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return 3
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT inactivity_timeout_days FROM journeys WHERE id = %s", (journey_id,))
+            row = cursor.fetchone()
+            return row[0] if row and row[0] else 3
+    except Exception as e:
+        logger.exception(f"Error getting journey timeout: {e}")
+        return 3
+
+
+def fetch_inactive_awaiting_sessions(limit: int = 50) -> List[Dict]:
+    """Fetch sessions in any active state that have exceeded inactivity timeout.
+    
+    Includes sessions with status IN ('awaiting_reply', 'active', 'waiting_delay')
+    that have exceeded their journey's inactivity_timeout_days.
+    
+    Joins with journeys to get each journey's inactivity_timeout_days.
+    Uses FOR UPDATE SKIP LOCKED to allow concurrent processing.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT s.id, s.tenant_id, s.journey_id, s.telegram_chat_id, s.telegram_user_id,
+                       s.current_step_id, s.status, s.answers, s.started_at, s.completed_at, s.last_activity_at
+                FROM journey_user_sessions s
+                JOIN journeys j ON j.id = s.journey_id
+                WHERE s.status IN ('awaiting_reply', 'active', 'waiting_delay')
+                  AND s.last_activity_at < NOW() - (j.inactivity_timeout_days || ' days')::interval
+                ORDER BY s.last_activity_at ASC
+                LIMIT %s
+                FOR UPDATE OF s SKIP LOCKED
+            """, (limit,))
+
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'journey_id': str(row[2]),
+                    'telegram_chat_id': row[3],
+                    'telegram_user_id': row[4],
+                    'current_step_id': str(row[5]) if row[5] else None,
+                    'status': row[6],
+                    'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
+                    'started_at': row[8].isoformat() if row[8] else None,
+                    'completed_at': row[9].isoformat() if row[9] else None,
+                    'last_activity_at': row[10].isoformat() if row[10] else None
+                })
+            return sessions
+    except Exception as e:
+        logger.exception(f"Error fetching inactive awaiting sessions: {e}")
         return []

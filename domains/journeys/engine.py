@@ -300,8 +300,31 @@ class JourneyEngine:
         
         repo.store_user_reply(session['id'], message_text)
         
-        logger.info(f"Received reply for wait_for_reply session {session['id']} - will continue at wait timeout")
-        return True
+        config = current_step.get('config', {})
+        branch_keyword = config.get('branch_keyword', '')
+
+        if branch_keyword:
+            if branch_keyword.lower() in message_text.lower():
+                target_step_id = config.get('branch_true_step_id')
+                logger.info(f"Branch match: '{branch_keyword}' found, jumping to step {target_step_id}")
+            else:
+                target_step_id = config.get('branch_false_step_id')
+                logger.info(f"Branch no match: '{branch_keyword}' not found, jumping to step {target_step_id}")
+            
+            if target_step_id:
+                target_step = repo.get_step_by_id(target_step_id)
+                if target_step:
+                    repo.update_session_status(session['id'], 'active')
+                    repo.update_session_current_step(session['id'], target_step_id)
+                    updated_session = repo.get_session_by_id(session['id'])
+                    if updated_session:
+                        return self.execute_step(updated_session, target_step, bot_id)
+            
+            repo.update_session_status(session['id'], 'active')
+            return self._advance_to_next_step(session, current_step, bot_id)
+        else:
+            repo.update_session_status(session['id'], 'active')
+            return self._advance_to_next_step(session, current_step, bot_id)
     
     def timeout_wait_for_reply(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
         """

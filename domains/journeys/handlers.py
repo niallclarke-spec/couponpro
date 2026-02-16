@@ -157,6 +157,14 @@ def handle_journey_update(handler, journey_id: str):
             _send_no_tenant_context(handler)
             return
         
+        existing = repo.get_journey(tenant_id, journey_id)
+        if existing and existing.get('is_locked'):
+            handler.send_response(409)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey is locked. Duplicate it to make changes.'}).encode())
+            return
+        
         content_length = int(handler.headers.get('Content-Length', 0))
         body = handler.rfile.read(content_length)
         data = json.loads(body.decode('utf-8'))
@@ -287,6 +295,13 @@ def handle_journey_steps_set(handler, journey_id: str):
             handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
             return
         
+        if journey.get('is_locked'):
+            handler.send_response(409)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey is locked. Duplicate it to make changes.'}).encode())
+            return
+        
         content_length = int(handler.headers.get('Content-Length', 0))
         body = handler.rfile.read(content_length)
         data = json.loads(body.decode('utf-8'))
@@ -302,9 +317,15 @@ def handle_journey_steps_set(handler, journey_id: str):
             
             wait_for_reply = step.get('wait_for_reply', False)
             timeout_action = step.get('timeout_action', 'continue')
+            branch_keyword = ''
+            branch_true_step_id = ''
+            branch_false_step_id = ''
             
             if wait_for_reply:
                 step_type = 'wait_for_reply'
+                branch_keyword = step.get('branch_keyword', '')
+                branch_true_step_id = step.get('branch_true_step_id', '')
+                branch_false_step_id = step.get('branch_false_step_id', '')
             elif delay > 0:
                 step_type = 'delay'
             else:
@@ -322,7 +343,10 @@ def handle_journey_steps_set(handler, journey_id: str):
                     'delay_seconds': delay,
                     'wait_for_reply': wait_for_reply,
                     'timeout_action': timeout_action,
-                    'timeout_minutes': timeout_minutes
+                    'timeout_minutes': timeout_minutes,
+                    'branch_keyword': branch_keyword if wait_for_reply else '',
+                    'branch_true_step_id': branch_true_step_id if wait_for_reply else '',
+                    'branch_false_step_id': branch_false_step_id if wait_for_reply else '',
                 }
             })
         
@@ -417,6 +441,93 @@ def handle_journey_delete(handler, journey_id: str):
             handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
     except Exception as e:
         logger.exception(f"Error deleting journey: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_journey_duplicate(handler, journey_id: str):
+    """POST /api/journeys/:id/duplicate - Duplicate a journey and its steps."""
+    from . import repo
+    
+    try:
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
+        
+        journey = repo.get_journey(tenant_id, journey_id)
+        if not journey:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
+            return
+        
+        new_journey = repo.duplicate_journey(tenant_id, journey_id)
+        
+        if new_journey:
+            handler.send_response(201)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'journey': new_journey}).encode())
+        else:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Failed to duplicate journey'}).encode())
+    except Exception as e:
+        logger.exception(f"Error duplicating journey: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_journey_lock(handler, journey_id: str):
+    """POST /api/journeys/:id/lock - Lock or unlock a journey."""
+    from . import repo
+    
+    try:
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
+        
+        journey = repo.get_journey(tenant_id, journey_id)
+        if not journey:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
+            return
+        
+        content_length = int(handler.headers.get('Content-Length', 0))
+        body = handler.rfile.read(content_length)
+        data = json.loads(body.decode('utf-8'))
+        
+        is_locked = data.get('is_locked', True)
+        
+        success = repo.set_journey_locked(tenant_id, journey_id, is_locked)
+        
+        if success:
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': True, 'is_locked': is_locked}).encode())
+        else:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Failed to update lock status'}).encode())
+    except json.JSONDecodeError:
+        handler.send_response(400)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Invalid JSON'}).encode())
+    except Exception as e:
+        logger.exception(f"Error locking journey: {e}")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()

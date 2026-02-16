@@ -85,7 +85,22 @@ def process_wait_timeouts() -> int:
     
     for session in timed_out:
         try:
+            if not session.get('current_step_id'):
+                logger.warning(f"[JOURNEY-SCHEDULER] Timeout session {session['id']} has no current step, marking broken")
+                repo.mark_session_broken(session['id'], "No current_step_id during timeout")
+                continue
+
             step = repo.get_step_by_id(session['current_step_id'])
+            
+            # Verify session is still awaiting_reply and step matches
+            if session.get('status') != 'awaiting_reply':
+                logger.warning(f"[JOURNEY-SCHEDULER] Stale timeout for session {session['id']} - status is {session.get('status')}, skipping")
+                continue
+
+            if session.get('current_step_id') != str(step['id']) if step else None:
+                logger.warning(f"[JOURNEY-SCHEDULER] Stale timeout for session {session['id']} - step mismatch, skipping")
+                continue
+            
             if step:
                 success = engine.timeout_wait_for_reply(session, step)
                 if success:
@@ -96,6 +111,20 @@ def process_wait_timeouts() -> int:
     
     if processed > 0:
         logger.info(f"[JOURNEY-SCHEDULER] Processed {processed} timeouts")
+    
+    try:
+        inactive_sessions = repo.fetch_inactive_awaiting_sessions(limit=50)
+        for session in inactive_sessions:
+            try:
+                repo.update_session_status(session['id'], 'completed')
+                repo.cancel_pending_scheduled_messages(session['id'])
+                logger.info(f"[JOURNEY-SCHEDULER] Auto-completed inactive session {session['id']}")
+                processed += 1
+            except Exception as e:
+                logger.exception(f"[JOURNEY-SCHEDULER] Error auto-completing session {session['id']}: {e}")
+    except Exception as e:
+        logger.exception(f"[JOURNEY-SCHEDULER] Error processing inactivity timeouts: {e}")
+
     return processed
 
 
@@ -112,6 +141,22 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
     """
     from . import repo
     
+    session = repo.get_session_by_id(msg['session_id'])
+    if not session:
+        logger.warning(f"[JOURNEY-SCHEDULER] Stale job {msg['id']} - session not found, cancelling")
+        repo.mark_scheduled_message_failed(msg['id'], "Session not found")
+        return False
+
+    if session['status'] not in ('active', 'waiting_delay'):
+        logger.warning(f"[JOURNEY-SCHEDULER] Stale job {msg['id']} - session status={session['status']}, cancelling")
+        repo.mark_scheduled_message_failed(msg['id'], f"Session status is {session['status']}")
+        return False
+
+    if session.get('current_step_id') and msg.get('step_id') and session['current_step_id'] != msg['step_id']:
+        logger.warning(f"[JOURNEY-SCHEDULER] Stale job {msg['id']} - step mismatch (session={session['current_step_id']}, job={msg['step_id']}), cancelling")
+        repo.mark_scheduled_message_failed(msg['id'], "Step mismatch - session advanced")
+        return False
+
     content = msg.get('message_content', {})
     text = content.get('text', '')
     step_type = content.get('step_type', 'message')
@@ -124,20 +169,15 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
         logger.error(f"[JOURNEY-SCHEDULER] Message {msg['id']} has no tenant_id")
         return False
     
+    if session['tenant_id'] != tenant_id:
+        logger.error(f"[JOURNEY-SCHEDULER] Tenant mismatch: session={session['tenant_id']}, msg={tenant_id}")
+        return False
+    
     if text:
         success = send_message_sync(tenant_id, chat_id, text)
         if not success:
             logger.error(f"[JOURNEY-SCHEDULER] Failed to send to chat {chat_id}")
             return False
-    
-    session = repo.get_session_by_id(msg['session_id'])
-    if not session:
-        logger.error(f"[JOURNEY-SCHEDULER] Session {msg['session_id']} not found")
-        return True
-    
-    if session['tenant_id'] != tenant_id:
-        logger.error(f"[JOURNEY-SCHEDULER] Tenant mismatch: session={session['tenant_id']}, msg={tenant_id}")
-        return False
     
     step = repo.get_step_by_id(msg['step_id'])
     if not step:
