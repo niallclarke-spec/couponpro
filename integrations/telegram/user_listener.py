@@ -29,7 +29,14 @@ async def start_listener(tenant_id: str):
 
     tc = client.raw_client
 
+    if not await tc.is_user_authorized():
+        logger.warning(f"Cannot start listener - client not authorized for tenant={tenant_id}")
+        return
+
     me = await tc.get_me()
+    if not me:
+        logger.warning(f"Cannot start listener - get_me() returned None for tenant={tenant_id}")
+        return
     my_id = me.id
 
     @tc.on(events.NewMessage(incoming=True))

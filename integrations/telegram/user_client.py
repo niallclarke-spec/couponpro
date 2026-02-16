@@ -155,9 +155,21 @@ class TelethonUserClient:
     async def connect(self):
         async with self._lock:
             if self._client and self._client.is_connected():
-                self.status = 'connected'
-                return True
+                if await self._client.is_user_authorized():
+                    self.status = 'connected'
+                    return True
+                else:
+                    self.status = 'not_authorized'
+                    return False
             try:
+                from integrations.telegram.user_session import restore_session
+                local_path = self.session_path + '.session'
+                if not os.path.exists(local_path):
+                    restored = restore_session(self.tenant_id)
+                    if restored:
+                        logger.info(f"Session restored from remote storage for tenant={self.tenant_id}")
+                    else:
+                        logger.info(f"No remote session available for tenant={self.tenant_id}")
                 self._client = self._build_client()
                 await self._client.connect()
                 if await self._client.is_user_authorized():
