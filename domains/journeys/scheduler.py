@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 _scheduler_thread: Optional[threading.Thread] = None
 _scheduler_running = False
 _scheduler_lock = threading.Lock()
+_last_dedupe_cleanup = 0
 
 
 def process_due_messages() -> int:
@@ -217,7 +218,7 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
 
 def _scheduler_loop(interval_seconds: int):
     """Main scheduler loop."""
-    global _scheduler_running
+    global _scheduler_running, _last_dedupe_cleanup
     
     logger.info(f"[JOURNEY-SCHEDULER] Started (interval={interval_seconds}s)")
     
@@ -225,6 +226,19 @@ def _scheduler_loop(interval_seconds: int):
         try:
             process_due_messages()
             process_wait_timeouts()
+            
+            # Hourly dedupe table cleanup
+            now = time.time()
+            if now - _last_dedupe_cleanup > 3600:  # Once per hour
+                try:
+                    from . import repo
+                    deleted = repo.cleanup_old_dedupe_records(days=7)
+                    if deleted > 0:
+                        logger.info(f"[JOURNEY-SCHEDULER] Cleaned up {deleted} old dedupe records")
+                    _last_dedupe_cleanup = now
+                except Exception as e:
+                    logger.exception(f"[JOURNEY-SCHEDULER] Dedupe cleanup error: {e}")
+                    _last_dedupe_cleanup = now  # Don't retry immediately on error
         except Exception as e:
             logger.exception(f"[JOURNEY-SCHEDULER] Loop error: {e}")
         

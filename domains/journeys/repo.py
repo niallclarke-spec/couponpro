@@ -1656,6 +1656,26 @@ def check_message_dedupe(tenant_id: str, chat_id: int, message_id: int) -> bool:
         return False
 
 
+def cleanup_old_dedupe_records(days: int = 7) -> int:
+    """Delete journey_inbound_dedupe records older than N days. Returns count deleted."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return 0
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM journey_inbound_dedupe WHERE received_at < NOW() - make_interval(days => %s)",
+                (int(days),)
+            )
+            deleted = cursor.rowcount
+            conn.commit()
+            return deleted
+    except Exception as e:
+        logger.exception(f"Error cleaning up dedupe records: {e}")
+        return 0
+
+
 def cancel_pending_scheduled_messages(session_id: str) -> int:
     """Cancel all pending scheduled messages for a session.
     

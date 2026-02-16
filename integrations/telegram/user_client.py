@@ -225,31 +225,33 @@ class TelethonUserClient:
                 if not ok:
                     return {'success': False, 'error': 'Not connected'}
 
-        try:
-            msg = await self._client.send_message(chat_id, text, parse_mode=parse_mode)
-            self._rate.record()
-            self.last_send = time.time()
-            self.last_heartbeat = time.time()
-            logger.info(f"Message sent via Telethon: tenant={self.tenant_id}, chat={chat_id}, msg_id={msg.id}")
-            return {'success': True, 'message_id': msg.id}
-        except FloodWaitError as e:
-            wait_seconds = e.seconds
-            self.last_error = f"FloodWait {wait_seconds}s"
-            logger.warning(f"FloodWaitError for tenant={self.tenant_id}: waiting {wait_seconds}s")
-            await asyncio.sleep(wait_seconds)
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
             try:
                 msg = await self._client.send_message(chat_id, text, parse_mode=parse_mode)
                 self._rate.record()
                 self.last_send = time.time()
+                self.last_heartbeat = time.time()
+                logger.info(f"Message sent via Telethon: tenant={self.tenant_id}, chat={chat_id}, msg_id={msg.id}")
                 return {'success': True, 'message_id': msg.id}
-            except Exception as retry_err:
-                self.last_error = str(retry_err)
-                logger.error(f"Retry after FloodWait failed: {retry_err}")
-                return {'success': False, 'error': str(retry_err)}
-        except Exception as e:
-            self.last_error = str(e)
-            logger.exception(f"send_message failed for tenant={self.tenant_id}: {e}")
-            return {'success': False, 'error': str(e)}
+            except FloodWaitError as e:
+                wait_seconds = e.seconds
+                self.last_error = f"FloodWait {wait_seconds}s (attempt {attempt}/{max_retries})"
+                logger.warning(f"FloodWaitError for tenant={self.tenant_id}: waiting {wait_seconds}s (attempt {attempt}/{max_retries})")
+                if attempt < max_retries:
+                    await asyncio.sleep(wait_seconds + (attempt * 2))
+                else:
+                    logger.error(f"FloodWait retries exhausted for tenant={self.tenant_id} after {max_retries} attempts")
+                    return {'success': False, 'error': f'FloodWait retries exhausted after {max_retries} attempts (last wait: {wait_seconds}s)'}
+            except Exception as e:
+                self.last_error = str(e)
+                logger.exception(f"send_message failed for tenant={self.tenant_id} (attempt {attempt}/{max_retries}): {e}")
+                if attempt < max_retries:
+                    await asyncio.sleep(attempt * 2)
+                else:
+                    return {'success': False, 'error': str(e)}
+        
+        return {'success': False, 'error': 'Max retries exhausted'}
 
     async def _reconnect_internal(self) -> bool:
         try:

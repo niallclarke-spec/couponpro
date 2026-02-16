@@ -504,6 +504,6 @@ if __name__ == "__main__":
     STRIPE_AVAILABLE = ctx.stripe_available
     OBJECT_STORAGE_AVAILABLE = ctx.object_storage_available
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Server running at http://0.0.0.0:{PORT}/")
         httpd.serve_forever()

@@ -150,15 +150,45 @@ class JourneyEngine:
                 return url
         return url_pattern.sub(replace_url, text)
 
+    def _defer_step_to_scheduler(self, session: Dict, step: Dict, text: str, step_type: str) -> bool:
+        """Defer a step execution to the scheduler instead of blocking the thread."""
+        from . import repo
+        delay = step.get('config', {}).get('delay_seconds', 0)
+        capped_delay = min(delay, 3600)
+        scheduled_for = datetime.utcnow() + timedelta(seconds=capped_delay)
+
+        if text:
+            text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])
+
+        message_content = {
+            'text': text or '',
+            'step_type': step_type
+        }
+        message_id = repo.schedule_message(
+            tenant_id=session['tenant_id'],
+            session_id=session['id'],
+            step_id=step['id'],
+            telegram_chat_id=session['telegram_chat_id'],
+            message_content=message_content,
+            scheduled_for=scheduled_for
+        )
+        if message_id:
+            repo.update_session_status(session['id'], 'waiting_delay')
+            logger.info(f"Deferred {step_type} step {step['id']} to scheduler ({capped_delay}s)")
+            return True
+        logger.error(f"Failed to defer {step_type} step {step['id']}")
+        return False
+
     def _execute_message_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
         """Execute a message step - send immediately and advance."""
         text = config.get('content') or config.get('text', '')
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 0:
-            capped_delay = min(delay, 3600)
-            logger.info(f"Delaying {capped_delay}s before sending message step {step['id']}")
-            time.sleep(capped_delay)
+        if delay and delay > 5:
+            return self._defer_step_to_scheduler(session, step, text, 'message')
+        elif delay and delay > 0:
+            logger.info(f"Short delay {delay}s before message step {step['id']}")
+            time.sleep(delay)
         
         if not text:
             logger.warning(f"Message step {step['id']} has no text")
@@ -180,10 +210,11 @@ class JourneyEngine:
         text = config.get('content') or config.get('text', '')
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 0:
-            capped_delay = min(delay, 3600)
-            logger.info(f"Delaying {capped_delay}s before sending question step {step['id']}")
-            time.sleep(capped_delay)
+        if delay and delay > 5:
+            return self._defer_step_to_scheduler(session, step, text, 'question')
+        elif delay and delay > 0:
+            logger.info(f"Short delay {delay}s before question step {step['id']}")
+            time.sleep(delay)
         
         if not text:
             logger.warning(f"Question step {step['id']} has no text")
@@ -255,10 +286,11 @@ class JourneyEngine:
         timeout_minutes = config.get('timeout_minutes', 0)
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 0:
-            capped_delay = min(delay, 3600)
-            logger.info(f"Delaying {capped_delay}s before sending wait_for_reply step {step['id']}")
-            time.sleep(capped_delay)
+        if delay and delay > 5:
+            return self._defer_step_to_scheduler(session, step, text, 'wait_for_reply')
+        elif delay and delay > 0:
+            logger.info(f"Short delay {delay}s before wait_for_reply step {step['id']}")
+            time.sleep(delay)
         
         if text:
             text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])

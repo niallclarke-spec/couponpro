@@ -589,17 +589,23 @@ def handle_get_user_account(handler):
                 handler.end_headers()
                 handler.wfile.write(json.dumps({'username': username}).encode())
                 return
+            
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'username': None}).encode())
+            return
 
-        handler.send_response(200)
+        handler.send_response(503)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps({'username': None, 'error': 'Telethon not connected'}).encode())
+        handler.wfile.write(json.dumps({'error': 'Telethon not connected'}).encode())
     except Exception as e:
         logger.exception(f"Error getting user account: {e}")
-        handler.send_response(200)
+        handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
-        handler.wfile.write(json.dumps({'username': None, 'error': str(e)}).encode())
+        handler.wfile.write(json.dumps({'error': 'Internal error'}).encode())
 
 
 def handle_link_click(handler, track_id: str):
