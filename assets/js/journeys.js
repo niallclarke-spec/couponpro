@@ -30,6 +30,7 @@
         selectedStatus: 'draft',
         loading: false,
         messageBotUsername: null,
+        telethonUsername: null,
         journeysLoaded: false,
         lastLoadTime: null
     };
@@ -63,6 +64,19 @@
         }
     }
 
+    async function loadTelethonUsername() {
+        try {
+            const headers = await config.getAuthHeaders();
+            const resp = await fetch('/api/journeys/user-account', { headers, credentials: 'include' });
+            if (resp.ok) {
+                const data = await resp.json();
+                state.telethonUsername = data.username || null;
+            }
+        } catch (err) {
+            console.error('Failed to load Telethon username:', err);
+        }
+    }
+
     function getDeepLinkUrl(startParam) {
         if (!state.messageBotUsername || !startParam) return null;
         const username = state.messageBotUsername.replace(/^@/, '');
@@ -83,7 +97,7 @@
             state.loading = true;
             const headers = await config.getAuthHeaders();
             
-            await loadMessageBotUsername();
+            await Promise.all([loadMessageBotUsername(), loadTelethonUsername()]);
             
             const resp = await fetch('/api/journeys', { headers, credentials: 'include' });
             if (resp.ok) {
@@ -244,6 +258,8 @@
         if (nameInput) nameInput.value = '';
         if (triggerValue) triggerValue.value = '';
         if (triggerType) triggerType.value = 'deep_link';
+        const dmPrefill = document.getElementById('dm-prefill-message');
+        if (dmPrefill) dmPrefill.value = '';
         if (modalTitle) modalTitle.textContent = journeyId ? 'Edit Journey' : 'Create Journey';
         if (preview) preview.style.display = 'none';
         onTriggerTypeChange();
@@ -295,6 +311,8 @@
                     if (triggerTypeEl) triggerTypeEl.value = tt;
                     if (tt === 'direct_message') {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.keyword || '';
+                        const dmPrefill = document.getElementById('dm-prefill-message');
+                        if (dmPrefill) dmPrefill.value = trigger.trigger_config?.prefill_message || '';
                     } else {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
                     }
@@ -412,7 +430,7 @@
                     headers,
                     body: JSON.stringify({
                         trigger_type: 'direct_message',
-                        trigger_config: { keyword: triggerValue },
+                        trigger_config: { keyword: triggerValue, prefill_message: (document.getElementById('dm-prefill-message') || {}).value?.trim() || '' },
                         is_active: true
                     }),
                     credentials: 'include'
@@ -736,6 +754,14 @@
         } else {
             updateDeepLinkPreview();
         }
+
+        const dmMessageGroup = document.getElementById('dm-message-group');
+        if (dmMessageGroup) {
+            dmMessageGroup.style.display = isDM ? 'block' : 'none';
+        }
+        if (isDM) {
+            updateDmLinkPreview();
+        }
     }
 
     function updateDeepLinkPreview() {
@@ -777,6 +803,62 @@
         document.querySelector('.deeplink-preview-url').style.display = 'flex';
     }
 
+    function updateDmLinkPreview() {
+        const msgInput = document.getElementById('dm-prefill-message');
+        const preview = document.getElementById('dm-link-preview');
+        const urlCode = document.getElementById('dm-link-preview-url');
+        const testLink = document.getElementById('dm-link-preview-test');
+        const warning = document.getElementById('dm-link-preview-warning');
+
+        if (!preview || !msgInput) return;
+
+        const message = msgInput.value.trim();
+
+        if (!message) {
+            preview.style.display = 'none';
+            return;
+        }
+
+        preview.style.display = 'block';
+
+        if (!state.telethonUsername) {
+            if (urlCode) urlCode.textContent = '';
+            if (testLink) testLink.style.display = 'none';
+            if (warning) warning.style.display = 'block';
+            const urlContainer = preview.querySelector('.deeplink-preview-url');
+            if (urlContainer) urlContainer.style.display = 'none';
+            return;
+        }
+
+        if (warning) warning.style.display = 'none';
+        const urlContainer = preview.querySelector('.deeplink-preview-url');
+        if (urlContainer) urlContainer.style.display = 'flex';
+
+        const dmUrl = `https://t.me/${state.telethonUsername}?text=${encodeURIComponent(message)}`;
+        if (urlCode) urlCode.textContent = dmUrl;
+        if (testLink) {
+            testLink.href = dmUrl;
+            testLink.style.display = 'inline-flex';
+        }
+    }
+
+    async function copyDmLink() {
+        const urlCode = document.getElementById('dm-link-preview-url');
+        if (!urlCode) return;
+        try {
+            await navigator.clipboard.writeText(urlCode.textContent);
+            config.showToast('DM link copied to clipboard!', 'success');
+        } catch (err) {
+            const input = document.createElement('input');
+            input.value = urlCode.textContent;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            config.showToast('DM link copied!', 'success');
+        }
+    }
+
     async function copyDeepLinkFromPreview() {
         const urlCode = document.getElementById('deeplink-preview-url');
         if (urlCode && urlCode.textContent) {
@@ -810,6 +892,8 @@
             copyDeepLinkFromPreview,
             updateDeepLinkPreview,
             onTriggerTypeChange,
+            updateDmLinkPreview,
+            copyDmLink,
             updateStepModalVisibility,
             getDeepLinkUrl: () => state.messageBotUsername
         };

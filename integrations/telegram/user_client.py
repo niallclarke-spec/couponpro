@@ -187,6 +187,16 @@ class TelethonUserClient:
                 logger.exception(f"Telethon connect failed for tenant={self.tenant_id}: {e}")
                 return False
 
+    async def get_username(self) -> Optional[str]:
+        if not self._client or not self._client.is_connected():
+            return None
+        try:
+            me = await self._client.get_me()
+            return me.username if me else None
+        except Exception as e:
+            logger.warning(f"Failed to get username for tenant={self.tenant_id}: {e}")
+            return None
+
     async def disconnect(self):
         async with self._lock:
             if self._client:

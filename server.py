@@ -233,6 +233,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_api_onboarding_complete(self): onboard_h.handle_onboarding_complete(self)
 
     # Journey handlers
+    def handle_api_journey_user_account(self):
+        from domains.journeys import handlers as jh
+        jh.handle_get_user_account(self)
+
     def handle_api_journeys_list(self):
         from domains.journeys import handlers as jh
         jh.handle_journeys_list(self)

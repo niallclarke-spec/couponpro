@@ -568,6 +568,40 @@ def handle_journey_analytics(handler, journey_id: str):
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
 
 
+def handle_get_user_account(handler):
+    """GET /api/journeys/user-account - Get Telethon user account username for DM link generation."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        handler.send_response(401)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+        return
+
+    try:
+        from integrations.telegram.user_client import get_client, _run_in_bg
+        client = get_client(tenant_id)
+        if client and client.status == 'connected':
+            username = _run_in_bg(client.get_username())
+            if username:
+                handler.send_response(200)
+                handler.send_header('Content-type', 'application/json')
+                handler.end_headers()
+                handler.wfile.write(json.dumps({'username': username}).encode())
+                return
+
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'username': None, 'error': 'Telethon not connected'}).encode())
+    except Exception as e:
+        logger.exception(f"Error getting user account: {e}")
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'username': None, 'error': str(e)}).encode())
+
+
 def handle_link_click(handler, track_id: str):
     """GET /api/j/c/:trackId - Track click and redirect."""
     from . import repo

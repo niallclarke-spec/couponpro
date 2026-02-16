@@ -126,6 +126,8 @@ GET_ROUTES: List[Route] = [
           is_prefix=True),
 
     # Journeys
+    Route('GET', '/api/journeys/user-account', 'handle_api_journey_user_account',
+          auth_required=True),
     Route('GET', '/api/journeys/debug/sessions', 'handle_api_journeys_debug_sessions',
           auth_required=True, db_required=True),
     Route('GET', '/api/journeys/', 'handle_api_journey_analytics',
