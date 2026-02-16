@@ -561,7 +561,7 @@ Signal closed after maximum hold time."""
                     event_type='timeout',
                     current_price=current_price,
                     message_sent=message[:500] if message else None,
-                    notes=f"Signal timeout at ${current_price:.2f}, P/L: {pnl_display}"
+                    notes=f"Signal timeout at ${current_price:.2f}, P/L: {pips_display}"
                 )
                 
                 logger.info(f"Posted timeout notification for signal #{signal_id}")
