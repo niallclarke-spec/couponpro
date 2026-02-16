@@ -70,6 +70,8 @@ async def start_listener(tenant_id: str):
             if sender_id == my_id:
                 return
 
+            await event.get_sender()
+
             message_id = event.id
 
             logger.info(f"Incoming DM for tenant={tenant_id}: chat={chat_id}, sender={sender_id}")
@@ -92,6 +94,7 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
             logger.debug(f"Duplicate message {message_id} for chat={chat_id}, skipping")
             return
 
+        loop = asyncio.get_event_loop()
         lock = _get_user_lock(chat_id)
         async with lock:
             sessions = repo.get_sessions_by_chat_id(tenant_id, chat_id)
@@ -128,7 +131,7 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
                             except Exception as e:
                                 logger.warning(f"Error parsing last_activity_at for session {session['id']}: {e}")
 
-                        result = engine.handle_wait_for_reply_response(session, text)
+                        result = await loop.run_in_executor(None, engine.handle_wait_for_reply_response, session, text)
                         if result:
                             return
                         else:
@@ -136,14 +139,14 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
                             continue
 
                     elif status == 'active':
-                        engine.handle_user_reply(session, text)
+                        await loop.run_in_executor(None, engine.handle_user_reply, session, text)
                         return
 
             journey = repo.get_active_journey_by_dm_trigger(tenant_id, text)
             if journey:
                 logger.info(f"DM trigger matched journey '{journey['name']}' for sender={sender_id}")
                 engine = JourneyEngine()
-                engine.start_journey_for_user(tenant_id, journey, chat_id, sender_id)
+                await loop.run_in_executor(None, engine.start_journey_for_user, tenant_id, journey, chat_id, sender_id)
                 return
 
             logger.debug(f"No actionable sessions or DM triggers for chat={chat_id}")

@@ -15,7 +15,6 @@ from datetime import datetime
 from typing import Optional
 
 from core.logging import get_logger
-from core.telegram_sender import send_message_sync
 
 logger = get_logger(__name__)
 
@@ -174,9 +173,14 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
         return False
     
     if text:
-        success = send_message_sync(tenant_id, chat_id, text)
-        if not success:
-            logger.error(f"[JOURNEY-SCHEDULER] Failed to send to chat {chat_id}")
+        from integrations.telegram.user_client import get_client
+        uc = get_client(tenant_id)
+        if not uc.is_connected():
+            logger.error(f"[JOURNEY-SCHEDULER] Telethon not connected for tenant={tenant_id}")
+            return False
+        result = uc.send_message_sync(chat_id, text)
+        if not result.get('success'):
+            logger.error(f"[JOURNEY-SCHEDULER] Failed to send to chat {chat_id}: {result.get('error')}")
             return False
     
     step = repo.get_step_by_id(msg['step_id'])

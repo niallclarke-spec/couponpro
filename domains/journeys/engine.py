@@ -7,9 +7,8 @@ V1 does NOT support conditional steps.
 import re
 import random
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any
 from core.logging import get_logger
-from core.telegram_sender import send_message_sync
 
 logger = get_logger(__name__)
 
@@ -21,41 +20,25 @@ class JourneyEngine:
     This is a linear state machine that processes steps in order.
     """
     
-    def __init__(self, send_message_fn: Callable[[int, str, str], bool] = None):
-        """
-        Initialize the journey engine.
-        
-        Args:
-            send_message_fn: Deprecated - no longer used.
-                             Messages are sent using tenant credentials from database.
-        """
-        self.send_message_fn = send_message_fn
+    def __init__(self):
+        pass
     
     def _send_message(self, tenant_id: str, chat_id: int, text: str) -> bool:
-        """
-        Send a Telegram message, trying Telethon user client first, then bot API fallback.
-        
-        Args:
-            tenant_id: Tenant ID to look up bot credentials
-            chat_id: Telegram chat ID
-            text: Message text to send
-            
-        Returns:
-            True if sent successfully, False otherwise
-        """
+        """Send a message via Telethon user client. No bot fallback."""
         try:
             from integrations.telegram.user_client import get_client
             uc = get_client(tenant_id)
-            if uc.is_connected():
-                result = uc.send_message_sync(chat_id, text)
-                if result.get('success'):
-                    return True
-                else:
-                    logger.warning(f"Telethon send failed, falling back to bot: {result.get('error')}")
+            if not uc.is_connected():
+                logger.error(f"Telethon not connected for tenant={tenant_id}, cannot send journey message")
+                return False
+            result = uc.send_message_sync(chat_id, text)
+            if result.get('success'):
+                return True
+            logger.error(f"Telethon send failed for tenant={tenant_id}: {result.get('error')}")
+            return False
         except Exception as e:
-            logger.warning(f"Telethon unavailable, falling back to bot: {e}")
-
-        return send_message_sync(tenant_id, chat_id, text)
+            logger.error(f"Telethon send error for tenant={tenant_id}: {e}")
+            return False
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 
                                 telegram_chat_id: int, telegram_user_id: int) -> Optional[Dict]:
