@@ -5,6 +5,7 @@ Supports: message, question, delay step types.
 V1 does NOT support conditional steps.
 """
 import re
+import time
 import random
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
@@ -153,6 +154,12 @@ class JourneyEngine:
         """Execute a message step - send immediately and advance."""
         text = config.get('content') or config.get('text', '')
         
+        delay = config.get('delay_seconds', 0)
+        if delay and delay > 0:
+            capped_delay = min(delay, 3600)
+            logger.info(f"Delaying {capped_delay}s before sending message step {step['id']}")
+            time.sleep(capped_delay)
+        
         if not text:
             logger.warning(f"Message step {step['id']} has no text")
             return self._advance_to_next_step(session, step, bot_id)
@@ -171,6 +178,12 @@ class JourneyEngine:
     def _execute_question_step(self, session: Dict, step: Dict, config: Dict, bot_id: str) -> bool:
         """Execute a question step - send question and wait for reply."""
         text = config.get('content') or config.get('text', '')
+        
+        delay = config.get('delay_seconds', 0)
+        if delay and delay > 0:
+            capped_delay = min(delay, 3600)
+            logger.info(f"Delaying {capped_delay}s before sending question step {step['id']}")
+            time.sleep(capped_delay)
         
         if not text:
             logger.warning(f"Question step {step['id']} has no text")
@@ -240,6 +253,12 @@ class JourneyEngine:
         
         text = config.get('content') or config.get('text', '')
         timeout_minutes = config.get('timeout_minutes', 0)
+        
+        delay = config.get('delay_seconds', 0)
+        if delay and delay > 0:
+            capped_delay = min(delay, 3600)
+            logger.info(f"Delaying {capped_delay}s before sending wait_for_reply step {step['id']}")
+            time.sleep(capped_delay)
         
         if text:
             text = self._wrap_urls(text, session['tenant_id'], session['journey_id'], step['id'])

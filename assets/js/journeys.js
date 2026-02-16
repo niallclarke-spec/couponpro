@@ -2,6 +2,24 @@
     'use strict';
 
     const MAX_JOURNEYS = 6;
+
+    function timeToSeconds(value, unit) {
+        const v = parseInt(value, 10) || 0;
+        switch (unit) {
+            case 'hours': return v * 3600;
+            case 'minutes': return v * 60;
+            case 'days': return v * 86400;
+            default: return v;
+        }
+    }
+
+    function secondsToTimeUnit(totalSeconds) {
+        if (!totalSeconds || totalSeconds <= 0) return { value: 0, unit: 'seconds' };
+        if (totalSeconds >= 86400 && totalSeconds % 86400 === 0) return { value: totalSeconds / 86400, unit: 'days' };
+        if (totalSeconds >= 3600 && totalSeconds % 3600 === 0) return { value: totalSeconds / 3600, unit: 'hours' };
+        if (totalSeconds >= 60 && totalSeconds % 60 === 0) return { value: totalSeconds / 60, unit: 'minutes' };
+        return { value: totalSeconds, unit: 'seconds' };
+    }
     
     const state = {
         journeys: [],
@@ -283,14 +301,30 @@
                     onTriggerTypeChange();
                 }
                 
-                state.steps = (journey.steps || []).map(s => ({
-                    id: s.id || null,
-                    step_type: s.step_type || 'message',
-                    message_template: s.message_template || s.config?.text || '',
-                    delay_seconds: s.delay_seconds || s.config?.delay_seconds || 0,
-                    wait_for_reply: s.wait_for_reply || s.config?.wait_for_reply || false,
-                    timeout_action: s.timeout_action || s.config?.timeout_action || 'continue'
-                }));
+                state.steps = (journey.steps || []).map(s => {
+                    const waitForReply = s.wait_for_reply || s.config?.wait_for_reply || false;
+                    const rawDelay = s.delay_seconds || s.config?.delay_seconds || 0;
+                    const rawTimeoutSeconds = s.timeout_seconds || s.config?.timeout_seconds || 0;
+                    const rawTimeoutMinutes = s.config?.timeout_minutes || 0;
+                    
+                    let delaySeconds = rawDelay;
+                    let timeoutSeconds = rawTimeoutSeconds || (rawTimeoutMinutes * 60);
+                    
+                    if (waitForReply && timeoutSeconds === 0 && rawDelay > 0) {
+                        timeoutSeconds = rawDelay;
+                        delaySeconds = 0;
+                    }
+                    
+                    return {
+                        id: s.id || null,
+                        step_type: s.step_type || 'message',
+                        message_template: s.message_template || s.config?.text || '',
+                        delay_seconds: delaySeconds,
+                        wait_for_reply: waitForReply,
+                        timeout_action: s.timeout_action || s.config?.timeout_action || 'continue',
+                        timeout_seconds: timeoutSeconds
+                    };
+                });
 
                 try {
                     const analyticsResp = await fetch(`/api/journeys/${journeyId}/analytics`, { headers, credentials: 'include' });
@@ -460,11 +494,23 @@
         }
     }
 
+    function formatTimeValue(seconds) {
+        if (!seconds || seconds <= 0) return null;
+        if (seconds >= 86400 && seconds % 86400 === 0) return `${seconds / 86400}d`;
+        if (seconds >= 3600 && seconds % 3600 === 0) return `${seconds / 3600}h`;
+        if (seconds >= 60 && seconds % 60 === 0) return `${seconds / 60}m`;
+        return `${seconds}s`;
+    }
+
     function getStepTypeLabel(step) {
+        const delaySecs = step.delay_seconds || 0;
+        const timeoutSecs = step.timeout_seconds || 0;
         if (step.wait_for_reply) {
-            return `Wait ${step.delay_seconds}s for reply`;
-        } else if (step.delay_seconds > 0) {
-            return `Delay: ${step.delay_seconds}s`;
+            const timeoutStr = timeoutSecs > 0 ? formatTimeValue(timeoutSecs) : '∞';
+            const delayStr = delaySecs > 0 ? `${formatTimeValue(delaySecs)} delay → ` : '';
+            return `${delayStr}Wait for reply (${timeoutStr})`;
+        } else if (delaySecs > 0) {
+            return `Delay: ${formatTimeValue(delaySecs)}`;
         }
         return 'Send immediately';
     }
@@ -541,12 +587,18 @@
         state.editingStepIndex = null;
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const delayUnit = document.getElementById('step-delay-unit');
         const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutValue = document.getElementById('step-timeout-value');
+        const timeoutUnit = document.getElementById('step-timeout-unit');
         const timeoutSelect = document.getElementById('step-timeout-action');
         const modalTitle = document.getElementById('step-modal-title');
         if (msgInput) msgInput.value = '';
         if (delayInput) delayInput.value = '0';
+        if (delayUnit) delayUnit.value = 'seconds';
         if (waitCheckbox) waitCheckbox.checked = false;
+        if (timeoutValue) timeoutValue.value = '0';
+        if (timeoutUnit) timeoutUnit.value = 'minutes';
         if (timeoutSelect) timeoutSelect.value = 'continue';
         if (modalTitle) modalTitle.textContent = 'Add Step';
         updateStepModalVisibility();
@@ -559,12 +611,20 @@
         const step = state.steps[index];
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const delayUnit = document.getElementById('step-delay-unit');
         const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutValue = document.getElementById('step-timeout-value');
+        const timeoutUnit = document.getElementById('step-timeout-unit');
         const timeoutSelect = document.getElementById('step-timeout-action');
         const modalTitle = document.getElementById('step-modal-title');
         if (msgInput) msgInput.value = step.message_template || '';
-        if (delayInput) delayInput.value = step.delay_seconds || 0;
+        const delayParsed = secondsToTimeUnit(step.delay_seconds || 0);
+        if (delayInput) delayInput.value = delayParsed.value;
+        if (delayUnit) delayUnit.value = delayParsed.unit;
         if (waitCheckbox) waitCheckbox.checked = step.wait_for_reply || false;
+        const timeoutParsed = secondsToTimeUnit(step.timeout_seconds || 0);
+        if (timeoutValue) timeoutValue.value = timeoutParsed.value;
+        if (timeoutUnit) timeoutUnit.value = timeoutParsed.unit;
         if (timeoutSelect) timeoutSelect.value = step.timeout_action || 'continue';
         if (modalTitle) modalTitle.textContent = 'Edit Step';
         updateStepModalVisibility();
@@ -581,11 +641,15 @@
     function saveStep() {
         const msgInput = document.getElementById('step-message-input');
         const delayInput = document.getElementById('step-delay-input');
+        const delayUnit = document.getElementById('step-delay-unit');
         const waitCheckbox = document.getElementById('step-wait-for-reply');
+        const timeoutValueInput = document.getElementById('step-timeout-value');
+        const timeoutUnit = document.getElementById('step-timeout-unit');
         const timeoutSelect = document.getElementById('step-timeout-action');
         const message = msgInput ? msgInput.value.trim() : '';
-        const delay = delayInput ? (parseInt(delayInput.value, 10) || 0) : 0;
+        const delaySeconds = timeToSeconds(delayInput ? delayInput.value : 0, delayUnit ? delayUnit.value : 'seconds');
         const waitForReply = waitCheckbox ? waitCheckbox.checked : false;
+        const timeoutSeconds = timeToSeconds(timeoutValueInput ? timeoutValueInput.value : 0, timeoutUnit ? timeoutUnit.value : 'minutes');
         const timeoutAction = timeoutSelect ? timeoutSelect.value : 'continue';
         
         if (!message) {
@@ -595,8 +659,9 @@
         
         const stepData = {
             message_template: message,
-            delay_seconds: delay,
+            delay_seconds: delaySeconds,
             wait_for_reply: waitForReply,
+            timeout_seconds: timeoutSeconds,
             timeout_action: timeoutAction
         };
         

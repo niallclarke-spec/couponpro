@@ -536,6 +536,21 @@
     margin: 0 auto;
 }
 
+.time-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.time-input-row .form-input {
+    flex: 1;
+    min-width: 80px;
+}
+
+.time-input-row .form-select {
+    min-width: 100px;
+}
+
 @media (max-width: 768px) {
     .journeys-grid {
         grid-template-columns: 1fr;

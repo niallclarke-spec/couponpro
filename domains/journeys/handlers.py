@@ -317,6 +317,15 @@ def handle_journey_steps_set(handler, journey_id: str):
             
             wait_for_reply = step.get('wait_for_reply', False)
             timeout_action = step.get('timeout_action', 'continue')
+            
+            timeout_seconds = step.get('timeout_seconds', 0)
+            if isinstance(timeout_seconds, str):
+                timeout_seconds = int(timeout_seconds) if timeout_seconds.isdigit() else 0
+            
+            if wait_for_reply and timeout_seconds == 0 and delay > 0:
+                timeout_seconds = delay
+                delay = 0
+            
             branch_keyword = ''
             branch_true_step_id = ''
             branch_false_step_id = ''
@@ -326,14 +335,14 @@ def handle_journey_steps_set(handler, journey_id: str):
                 branch_keyword = step.get('branch_keyword', '')
                 branch_true_step_id = step.get('branch_true_step_id', '')
                 branch_false_step_id = step.get('branch_false_step_id', '')
-            elif delay > 0:
+            elif delay > 0 and not wait_for_reply:
                 step_type = 'delay'
             else:
                 step_type = 'message'
             
             timeout_minutes = 0
-            if wait_for_reply and delay > 0:
-                timeout_minutes = max(1, delay // 60)
+            if wait_for_reply and timeout_seconds > 0:
+                timeout_minutes = max(1, timeout_seconds // 60)
             
             normalized_steps.append({
                 'step_order': step.get('step_order', i + 1),
@@ -344,6 +353,7 @@ def handle_journey_steps_set(handler, journey_id: str):
                     'wait_for_reply': wait_for_reply,
                     'timeout_action': timeout_action,
                     'timeout_minutes': timeout_minutes,
+                    'timeout_seconds': timeout_seconds,
                     'branch_keyword': branch_keyword if wait_for_reply else '',
                     'branch_true_step_id': branch_true_step_id if wait_for_reply else '',
                     'branch_false_step_id': branch_false_step_id if wait_for_reply else '',

@@ -1100,9 +1100,39 @@
                     <p class="form-hint">You can use variables like {first_name} for personalization</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Delay (seconds)</label>
-                    <input type="number" class="form-input" id="step-delay-input" value="0" min="0">
-                    <p class="form-hint">How long to wait before sending this message (0 = immediately after previous step)</p>
+                    <label class="form-label">Delay before sending</label>
+                    <div class="time-input-row">
+                        <input type="number" class="form-input" id="step-delay-input" value="0" min="0" style="flex: 1;">
+                        <select class="form-select" id="step-delay-unit" style="width: 120px;">
+                            <option value="seconds">Seconds</option>
+                            <option value="minutes">Minutes</option>
+                            <option value="hours">Hours</option>
+                        </select>
+                    </div>
+                    <p class="form-hint">Pause before sending this message (0 = send immediately)</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="step-wait-for-reply" onchange="window.JourneysModule.updateStepModalVisibility()">
+                        Wait for reply before continuing
+                    </label>
+                </div>
+                <div class="form-group" id="step-timeout-group" style="display: none;">
+                    <label class="form-label">If no response received after</label>
+                    <div class="time-input-row">
+                        <input type="number" class="form-input" id="step-timeout-value" value="0" min="0" style="flex: 1;">
+                        <select class="form-select" id="step-timeout-unit" style="width: 120px;">
+                            <option value="seconds">Seconds</option>
+                            <option value="minutes">Minutes</option>
+                            <option value="hours">Hours</option>
+                            <option value="days">Days</option>
+                        </select>
+                        <select class="form-select" id="step-timeout-action" style="width: 140px;">
+                            <option value="continue">Continue</option>
+                            <option value="end">End journey</option>
+                        </select>
+                    </div>
+                    <p class="form-hint">What to do if no reply is received within this time (0 = wait indefinitely)</p>
                 </div>
             </div>
             <div class="modal-footer">
