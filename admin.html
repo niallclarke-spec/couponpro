@@ -9131,7 +9131,32 @@
 
                 const credsSection = document.getElementById('telethon-creds-section');
                 if (data.has_credentials) {
-                    credsSection.style.display = 'none';
+                    const source = data.credential_source === 'environment' ? 'Environment Variables' : 'Database';
+                    const isEnv = data.credential_source === 'environment';
+                    credsSection.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">API Credentials</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: var(--text-secondary); font-size: 13px;">Source: <strong style="color: var(--text-primary);">${source}</strong></span>
+            ${isEnv ? '<span style="font-size: 11px; color: var(--text-muted); background: var(--bg-tertiary, #1a1f3e); padding: 2px 8px; border-radius: 4px;">Read-only (set via server env)</span>' : '<a href="#" onclick="toggleCredsForm(); return false;" style="font-size: 12px; color: var(--accent-primary);" id="telethon-creds-toggle-link">Change</a>'}
+        </div>
+        <div id="telethon-creds-form" style="display: none;">
+            <div style="margin-bottom: 8px; color: var(--text-muted); font-size: 12px;">From <a href="https://my.telegram.org/apps" target="_blank" style="color: var(--accent-primary);">my.telegram.org/apps</a></div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">API ID</label>
+                <input type="text" id="telethon-cred-api-id" placeholder="e.g. 12345678" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">API Hash</label>
+                <input type="password" id="telethon-cred-api-hash" placeholder="Paste API hash" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Phone Number</label>
+                <input type="text" id="telethon-cred-phone" placeholder="+1234567890" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+            </div>
+            <button class="btn-primary" onclick="saveTelethonCredentials()" style="width: 100%;">Save Credentials</button>
+        </div>
+    `;
+                    credsSection.style.display = 'block';
                 } else {
                     credsSection.style.display = 'block';
                 }
@@ -9161,6 +9186,18 @@
             if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
             if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
             return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        function toggleCredsForm() {
+            const form = document.getElementById('telethon-creds-form');
+            const link = document.getElementById('telethon-creds-toggle-link');
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                link.textContent = 'Hide';
+            } else {
+                form.style.display = 'none';
+                link.textContent = 'Change';
+            }
         }
 
         async function saveTelethonCredentials() {

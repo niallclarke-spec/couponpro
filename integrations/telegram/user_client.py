@@ -126,6 +126,7 @@ class TelethonUserClient:
         self._api_id: Optional[int] = None
         self._api_hash: Optional[str] = None
         self._phone: Optional[str] = None
+        self._credential_source = 'none'
         self._load_credentials()
 
     def _load_credentials(self, log_source=True):
@@ -139,6 +140,7 @@ class TelethonUserClient:
                 if log_source:
                     masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
                     logger.info(f"Credentials loaded from DB for tenant={self.tenant_id}, phone={masked}")
+                self._credential_source = 'database'
                 return True
         except Exception as e:
             logger.warning(f"Could not load telethon credentials from DB for tenant={self.tenant_id}: {e}")
@@ -151,10 +153,12 @@ class TelethonUserClient:
             if log_source:
                 masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
                 logger.info(f"Credentials loaded from env for tenant={self.tenant_id}, phone={masked}")
+            self._credential_source = 'environment'
             return True
         else:
             if log_source:
                 logger.info(f"No Telethon credentials configured yet for tenant={self.tenant_id}")
+            self._credential_source = 'none'
             return False
 
     def reload_credentials(self):
@@ -349,6 +353,7 @@ class TelethonUserClient:
             'has_api_id': bool(self._api_id),
             'masked_phone': masked_phone,
             'has_session_file': os.path.exists(self.session_path + '.session'),
+            'credential_source': self._credential_source,
         }
 
     @property
