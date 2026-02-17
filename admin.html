@@ -9168,7 +9168,7 @@
 
                 const isConfigured = data.has_credentials;
                 const resetBtn = document.getElementById('telethon-reset-btn');
-                connectBtn.style.display = (data.status === 'disconnected' && data.has_session_file && isConfigured) ? 'inline-block' : 'none';
+                connectBtn.style.display = ((data.status === 'disconnected' || data.status === 'not_authorized') && data.has_session_file && isConfigured) ? 'inline-block' : 'none';
                 reconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
                 disconnectBtn.style.display = (data.status === 'connected' || data.status === 'error') ? 'inline-block' : 'none';
                 authBtn.style.display = (isConfigured && (!data.has_session_file || data.status === 'not_authorized' || data.status === 'not_configured' || data.status === 'error' || data.status === 'session_expired')) ? 'inline-block' : 'none';

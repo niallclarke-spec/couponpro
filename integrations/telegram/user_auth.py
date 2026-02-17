@@ -103,8 +103,18 @@ async def _verify_code(tenant_id: str, code: str, phone_code_hash: str) -> Dict[
         await client.disconnect()
         _clear_auth_state(tenant_id)
 
+        uc.reload_credentials()
         try:
-            await uc.connect()
+            connected = await uc.connect()
+            if connected:
+                logger.info(f"Auto-connect after auth succeeded for tenant={tenant_id}")
+                try:
+                    from integrations.telegram.user_listener import start_listener_sync
+                    start_listener_sync(tenant_id)
+                except Exception as le:
+                    logger.warning(f"Listener start after auth failed for tenant={tenant_id}: {le}")
+            else:
+                logger.warning(f"Auto-connect after auth returned False for tenant={tenant_id}")
         except Exception as ce:
             logger.warning(f"Auto-connect after auth failed for tenant={tenant_id}: {ce}")
 
@@ -162,8 +172,18 @@ async def _verify_2fa(tenant_id: str, password: str) -> Dict[str, Any]:
         await client.disconnect()
         _clear_auth_state(tenant_id)
 
+        uc.reload_credentials()
         try:
-            await uc.connect()
+            connected = await uc.connect()
+            if connected:
+                logger.info(f"Auto-connect after 2FA auth succeeded for tenant={tenant_id}")
+                try:
+                    from integrations.telegram.user_listener import start_listener_sync
+                    start_listener_sync(tenant_id)
+                except Exception as le:
+                    logger.warning(f"Listener start after 2FA auth failed for tenant={tenant_id}: {le}")
+            else:
+                logger.warning(f"Auto-connect after 2FA auth returned False for tenant={tenant_id}")
         except Exception as ce:
             logger.warning(f"Auto-connect after 2FA auth failed for tenant={tenant_id}: {ce}")
 
