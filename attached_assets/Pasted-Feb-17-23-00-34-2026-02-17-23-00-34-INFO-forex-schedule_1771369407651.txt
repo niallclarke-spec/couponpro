@@ -1,0 +1,41 @@
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 5 seconds
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [forex_scheduler] ============================================================
+Feb 17 23:00:34  [2026-02-17 23:00:34] [INFO] [generator] [tenant:entrylab] [req:3bca2113] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 17 23:01:27  [2026-02-17 23:01:27] [WARNING] [clerk_auth] [req:0d15d7d9] Token expired
+Feb 17 23:01:27  [2026-02-17 23:01:27] [INFO] [repo] [req:0d15d7d9] Saved telethon credentials for tenant=entrylab
+Feb 17 23:01:27  [2026-02-17 23:01:27] [INFO] [telethon_client] [req:0d15d7d9] Credentials loaded from DB for tenant=entrylab, phone=***4944
+Feb 17 23:01:27  [2026-02-17 23:01:27] [INFO] [telethon_handlers] [req:0d15d7d9] Telethon credentials saved for tenant=entrylab
+Feb 17 23:01:27  10.244.5.120 - - [17/Feb/2026 23:01:27] "POST /api/telethon/credentials HTTP/1.1" 200 -
+Feb 17 23:01:27  [2026-02-17 23:01:27] [WARNING] [clerk_auth] [req:86c495fb] Token expired
+Feb 17 23:01:27  10.244.7.214 - - [17/Feb/2026 23:01:27] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 17 23:01:57  [2026-02-17 23:01:57] [WARNING] [clerk_auth] [req:1a909e09] Token expired
+Feb 17 23:01:57  [2026-02-17 23:01:57] [INFO] [mtprotosender] [req:1a909e09] Connecting to 149.154.167.51:443/TcpFull...
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [mtprotosender] [req:1a909e09] Connection to 149.154.167.51:443/TcpFull complete!
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [telethon_auth] [req:1a909e09] Sending verification code for tenant=entrylab, phone=***4944
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [users] [req:1a909e09] Phone migrated to 4
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [telegrambaseclient] [req:1a909e09] Reconnecting to new data center 4
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [mtprotosender] [req:1a909e09] Disconnecting from 149.154.167.51:443/TcpFull...
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [mtprotosender] [req:1a909e09] Disconnection from 149.154.167.51:443/TcpFull complete!
+Feb 17 23:01:58  [2026-02-17 23:01:58] [INFO] [mtprotosender] [req:1a909e09] Connecting to 149.154.167.92:443/TcpFull...
+Feb 17 23:01:59  [2026-02-17 23:01:59] [INFO] [mtprotosender] [req:1a909e09] Connection to 149.154.167.92:443/TcpFull complete!
+Feb 17 23:02:00  [2026-02-17 23:02:00] [INFO] [telethon_auth] [req:1a909e09] Verification code sent for tenant=entrylab
+Feb 17 23:02:00  10.244.5.120 - - [17/Feb/2026 23:02:00] "POST /api/telethon/send-code HTTP/1.1" 200 -
+Feb 17 23:02:20  [2026-02-17 23:02:20] [WARNING] [clerk_auth] [req:e3197484] Token expired
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [telethon_session] [req:e3197484] Session uploaded for tenant=entrylab -> telethon_sessions/entrylab.session
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [repo] [req:e3197484] Saved telethon credentials for tenant=entrylab
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [telethon_auth] [req:e3197484] Telethon credentials persisted to DB for tenant=entrylab
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [mtprotosender] [req:e3197484] Disconnecting from 149.154.167.92:443/TcpFull...
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [mtprotosender] [req:e3197484] Disconnection from 149.154.167.92:443/TcpFull complete!
+Feb 17 23:02:21  [2026-02-17 23:02:21] [INFO] [telethon_auth] [req:e3197484] Verification successful for tenant=entrylab
+Feb 17 23:02:21  10.244.5.120 - - [17/Feb/2026 23:02:21] "POST /api/telethon/verify-code HTTP/1.1" 200 -
+Feb 17 23:02:21  [2026-02-17 23:02:21] [WARNING] [clerk_auth] [req:1b823ec8] Token expired
+Feb 17 23:02:21  10.244.7.214 - - [17/Feb/2026 23:02:21] "GET /api/telethon/status HTTP/1.1" 200 -
