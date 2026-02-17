@@ -28,6 +28,21 @@ def handle_telethon_status(handler):
         if not auto_connect and not client.is_connected():
             client.status = 'disconnected'
             client.last_error = None
+            _send_json(handler, 200, {
+                'tenant_id': client.tenant_id,
+                'status': 'disconnected',
+                'connected': False,
+                'auto_connect_disabled': True,
+                'last_heartbeat': None,
+                'last_send': None,
+                'last_error': None,
+                'sends_today': 0,
+                'has_credentials': False,
+                'has_api_id': False,
+                'masked_phone': None,
+                'has_session_file': False,
+            })
+            return
         status = client.get_status()
         if auto_connect and status.get('has_session_file') and status.get('has_credentials') and not status.get('connected') and status.get('status') != 'error':
             try:
