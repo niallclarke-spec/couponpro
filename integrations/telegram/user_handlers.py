@@ -181,11 +181,9 @@ def handle_telethon_save_credentials(handler):
         if success:
             from integrations.telegram.user_client import get_client
             client = get_client(tenant_id)
-            client._api_id = api_id
-            client._api_hash = api_hash
-            client._phone = phone
+            client.reload_credentials()
             logger.info(f"Telethon credentials saved for tenant={tenant_id}")
-            _send_json(handler, 200, {'success': True})
+            _send_json(handler, 200, {'success': True, 'status': client.get_status()})
         else:
             _send_json(handler, 500, {'error': 'Failed to save credentials'})
     except Exception as e:

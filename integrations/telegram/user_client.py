@@ -127,7 +127,7 @@ class TelethonUserClient:
         self._phone: Optional[str] = None
         self._load_credentials()
 
-    def _load_credentials(self):
+    def _load_credentials(self, log_source=True):
         try:
             from domains.connections.repo import get_telethon_credentials
             db_creds = get_telethon_credentials(self.tenant_id)
@@ -135,9 +135,10 @@ class TelethonUserClient:
                 self._api_id = db_creds['api_id']
                 self._api_hash = db_creds['api_hash']
                 self._phone = db_creds.get('phone')
-                masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
-                logger.info(f"Credentials loaded from DB for tenant={self.tenant_id}, phone={masked}")
-                return
+                if log_source:
+                    masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
+                    logger.info(f"Credentials loaded from DB for tenant={self.tenant_id}, phone={masked}")
+                return True
         except Exception as e:
             logger.warning(f"Could not load telethon credentials from DB for tenant={self.tenant_id}: {e}")
 
@@ -145,11 +146,19 @@ class TelethonUserClient:
         self._api_id = int(raw_id) if raw_id.isdigit() else None
         self._api_hash = os.environ.get('TELEGRAM_API_HASH')
         self._phone = os.environ.get('TELEGRAM_PHONE')
-        if self._phone:
-            masked = '***' + self._phone[-4:]
-            logger.info(f"Credentials loaded from env for tenant={self.tenant_id}, phone={masked}")
+        if self._api_id and self._api_hash:
+            if log_source:
+                masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
+                logger.info(f"Credentials loaded from env for tenant={self.tenant_id}, phone={masked}")
+            return True
         else:
-            logger.warning(f"No Telethon credentials found for tenant={self.tenant_id}")
+            if log_source:
+                logger.info(f"No Telethon credentials configured yet for tenant={self.tenant_id}")
+            return False
+
+    def reload_credentials(self):
+        self._load_credentials(log_source=True)
+        self.last_error = None
 
     @property
     def session_path(self) -> str:
@@ -173,6 +182,14 @@ class TelethonUserClient:
                 else:
                     self.status = 'not_authorized'
                     return False
+
+            self._load_credentials(log_source=False)
+
+            if not self._api_id or not self._api_hash:
+                self.status = 'not_configured'
+                logger.info(f"Telethon connect skipped for tenant={self.tenant_id}: credentials not configured")
+                return False
+
             try:
                 from integrations.telegram.user_session import restore_session
                 local_path = self.session_path + '.session'
@@ -187,6 +204,7 @@ class TelethonUserClient:
                 if await self._client.is_user_authorized():
                     self.status = 'connected'
                     self.last_heartbeat = time.time()
+                    self.last_error = None
                     logger.info(f"Telethon connected for tenant={self.tenant_id}")
                     return True
                 else:
@@ -272,11 +290,18 @@ class TelethonUserClient:
                     await self._client.disconnect()
                 except Exception:
                     pass
+
+            self._load_credentials(log_source=False)
+            if not self._api_id or not self._api_hash:
+                self.status = 'not_configured'
+                return False
+
             self._client = self._build_client()
             await self._client.connect()
             if await self._client.is_user_authorized():
                 self.status = 'connected'
                 self.last_heartbeat = time.time()
+                self.last_error = None
                 logger.info(f"Auto-reconnected for tenant={self.tenant_id}")
                 return True
             self.status = 'not_authorized'

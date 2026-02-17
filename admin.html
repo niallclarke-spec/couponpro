@@ -9105,7 +9105,7 @@
                 detailsEl.innerHTML = `
                     <div class="telethon-stat-row">
                         <span class="telethon-stat-label">Status</span>
-                        <span class="telethon-stat-value" style="color: ${data.status === 'connected' ? 'var(--status-online)' : 'var(--status-error, #ff4d6a)'}">${data.status}</span>
+                        <span class="telethon-stat-value" style="color: ${data.status === 'connected' ? 'var(--status-online)' : data.status === 'not_configured' ? 'var(--text-muted)' : 'var(--status-error, #ff4d6a)'}">${data.status === 'not_configured' ? 'Not configured' : data.status}</span>
                     </div>
                     <div class="telethon-stat-row">
                         <span class="telethon-stat-label">Messages Today</span>
@@ -9137,10 +9137,11 @@
                 const disconnectBtn = document.getElementById('telethon-disconnect-btn');
                 const authBtn = document.getElementById('telethon-auth-btn');
 
-                connectBtn.style.display = (data.status === 'disconnected' && data.has_session_file) ? 'inline-block' : 'none';
+                const isConfigured = data.has_credentials;
+                connectBtn.style.display = (data.status === 'disconnected' && data.has_session_file && isConfigured) ? 'inline-block' : 'none';
                 reconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
                 disconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
-                authBtn.style.display = (!data.has_session_file || data.status === 'not_authorized') ? 'inline-block' : 'none';
+                authBtn.style.display = (isConfigured && (!data.has_session_file || data.status === 'not_authorized' || data.status === 'not_configured')) ? 'inline-block' : 'none';
 
             } catch (err) {
                 console.error('Failed to load telethon status:', err);
