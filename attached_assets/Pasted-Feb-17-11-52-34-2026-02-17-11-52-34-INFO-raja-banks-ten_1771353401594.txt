@@ -1,0 +1,776 @@
+Feb 17 11:52:34  [2026-02-17 11:52:34] [INFO] [raja_banks] [tenant:entrylab] [req:1d11db33] Checking for signals on XAU/USD 15min...
+Feb 17 11:52:34  [2026-02-17 11:52:34] [INFO] [raja_banks] [tenant:entrylab] [req:1d11db33] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 12:07:36  [2026-02-17 12:07:36] [INFO] [forex_signals] [tenant:entrylab] [req:214f213f] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:07:36  [2026-02-17 12:07:36] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Checking for signals on XAU/USD 15min...
+Feb 17 12:07:36  [2026-02-17 12:07:36] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Session: New York
+Feb 17 12:07:37  [2026-02-17 12:07:37] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 12:07:37  [2026-02-17 12:07:37] [INFO] [generator] [tenant:entrylab] [req:214f213f] 📊 Checking 1-hour timeframe...
+Feb 17 12:07:37  [2026-02-17 12:07:37] [INFO] [forex_signals] [tenant:entrylab] [req:214f213f] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:07:37  [2026-02-17 12:07:37] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Checking for signals on XAU/USD 1h...
+Feb 17 12:07:37  [2026-02-17 12:07:37] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Session: New York
+Feb 17 12:07:38  [2026-02-17 12:07:38] [INFO] [raja_banks] [tenant:entrylab] [req:214f213f] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 12:12:04  10.244.6.27 - - [17/Feb/2026 12:12:04] code 404, message File not found
+Feb 17 12:12:04  10.244.6.27 - - [17/Feb/2026 12:12:04] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 12:12:29  10.244.4.249 - - [17/Feb/2026 12:12:29] code 404, message File not found
+Feb 17 12:12:29  10.244.4.249 - - [17/Feb/2026 12:12:29] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 12:22:39  [2026-02-17 12:22:39] [INFO] [forex_signals] [tenant:entrylab] [req:26f053cb] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:22:39  [2026-02-17 12:22:39] [INFO] [raja_banks] [tenant:entrylab] [req:26f053cb] Checking for signals on XAU/USD 15min...
+Feb 17 12:22:39  [2026-02-17 12:22:39] [INFO] [raja_banks] [tenant:entrylab] [req:26f053cb] Session: New York
+Feb 17 12:22:40  [2026-02-17 12:22:40] [INFO] [raja_banks] [tenant:entrylab] [req:26f053cb] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 12:35:47  [2026-02-17 12:35:47] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 12:35:47  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 12:35:47                      ^
+Feb 17 12:35:47  
+Feb 17 12:35:47  Traceback (most recent call last):
+Feb 17 12:35:47    File "/workspace/db.py", line 156, in get_connection
+Feb 17 12:35:47      yield conn
+Feb 17 12:35:47    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 12:35:47      cursor.execute(
+Feb 17 12:35:47  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 12:35:47  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 12:35:47                      ^
+Feb 17 12:35:47  
+Feb 17 12:35:47  [2026-02-17 12:35:47] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 12:35:47  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 12:35:47                      ^
+Feb 17 12:35:47  
+Feb 17 12:35:47  Traceback (most recent call last):
+Feb 17 12:35:47    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 12:35:47      cursor.execute(
+Feb 17 12:35:47  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 12:35:47  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 12:35:47                      ^
+Feb 17 12:35:47  
+Feb 17 12:37:41  [2026-02-17 12:37:41] [INFO] [forex_signals] [tenant:entrylab] [req:be0969eb] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:37:41  [2026-02-17 12:37:41] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] Checking for signals on XAU/USD 15min...
+Feb 17 12:37:41  [2026-02-17 12:37:41] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] Session: New York
+Feb 17 12:37:42  [2026-02-17 12:37:42] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] No impulse breakout detected
+Feb 17 12:37:42  [2026-02-17 12:37:42] [INFO] [generator] [tenant:entrylab] [req:be0969eb] 📊 Checking 1-hour timeframe...
+Feb 17 12:37:42  [2026-02-17 12:37:42] [INFO] [forex_signals] [tenant:entrylab] [req:be0969eb] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:37:42  [2026-02-17 12:37:42] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] Checking for signals on XAU/USD 1h...
+Feb 17 12:37:42  [2026-02-17 12:37:42] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] Session: New York
+Feb 17 12:37:43  [2026-02-17 12:37:43] [INFO] [raja_banks] [tenant:entrylab] [req:be0969eb] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 12:52:45  [2026-02-17 12:52:45] [INFO] [forex_signals] [tenant:entrylab] [req:2d9fc6f7] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 12:52:45  [2026-02-17 12:52:45] [INFO] [raja_banks] [tenant:entrylab] [req:2d9fc6f7] Checking for signals on XAU/USD 15min...
+Feb 17 12:52:45  [2026-02-17 12:52:45] [INFO] [raja_banks] [tenant:entrylab] [req:2d9fc6f7] Session: New York
+Feb 17 12:52:46  [2026-02-17 12:52:46] [INFO] [raja_banks] [tenant:entrylab] [req:2d9fc6f7] No impulse breakout detected
+Feb 17 13:07:47  [2026-02-17 13:07:47] [INFO] [forex_signals] [tenant:entrylab] [req:310de4cc] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:07:47  [2026-02-17 13:07:47] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] Checking for signals on XAU/USD 15min...
+Feb 17 13:07:47  [2026-02-17 13:07:47] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] Session: London/NY Overlap
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] With-trend SELL (Bearish)
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] 🎯 Signal generated: SELL @ 4926.94
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] 📊 TP1: 4926.36 (50%)
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] 📊 TP2: 4903.33 (30%)
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] 🛑 SL: 4932.48 (tight candle-based)
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] 📈 Signals today: 1/4
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [forex_signals] [tenant:entrylab] [req:310de4cc] ✅ Signal from Raja Banks Gold Start: SELL @ 4926.94
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [bot_credentials] [tenant:entrylab] [req:310de4cc] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [telegram_sender] [tenant:entrylab] [req:310de4cc] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [forex_bot] [tenant:entrylab] [req:310de4cc] Created draft signal #239, posting to Telegram...
+Feb 17 13:07:48  [2026-02-17 13:07:48] [ERROR] [telegram_sender] [tenant:entrylab] [req:310de4cc] SEND FAILED: Telegram API error | tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003343226469, error=Chat not found
+Feb 17 13:07:48  [2026-02-17 13:07:48] [ERROR] [forex_bot] [tenant:entrylab] [req:310de4cc] Failed to post signal to Telegram: Chat not found
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [forex_bot] [tenant:entrylab] [req:310de4cc] Signal #239 marked as broadcast_failed
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [generator] [tenant:entrylab] [req:310de4cc] 📊 Checking 1-hour timeframe...
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [forex_signals] [tenant:entrylab] [req:310de4cc] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] Checking for signals on XAU/USD 1h...
+Feb 17 13:07:48  [2026-02-17 13:07:48] [INFO] [raja_banks] [tenant:entrylab] [req:310de4cc] Guardrail blocked: Cooldown active (14min remaining)
+Feb 17 13:22:50  [2026-02-17 13:22:50] [INFO] [forex_signals] [tenant:entrylab] [req:b70136a0] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:22:50  [2026-02-17 13:22:50] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] Checking for signals on XAU/USD 15min...
+Feb 17 13:22:50  [2026-02-17 13:22:50] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] Session: London/NY Overlap
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] With-trend SELL (Bearish)
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] 🎯 Signal generated: SELL @ 4917.49
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] 📊 TP1: 4902.28 (50%)
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] 📊 TP2: 4892.14 (30%)
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] 🛑 SL: 4922.71 (tight candle-based)
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [raja_banks] [tenant:entrylab] [req:b70136a0] 📈 Signals today: 1/4
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [forex_signals] [tenant:entrylab] [req:b70136a0] ✅ Signal from Raja Banks Gold Start: SELL @ 4917.49
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [bot_credentials] [tenant:entrylab] [req:b70136a0] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [telegram_sender] [tenant:entrylab] [req:b70136a0] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [forex_bot] [tenant:entrylab] [req:b70136a0] Created draft signal #240, posting to Telegram...
+Feb 17 13:22:51  [2026-02-17 13:22:51] [ERROR] [telegram_sender] [tenant:entrylab] [req:b70136a0] SEND FAILED: Telegram API error | tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003343226469, error=Chat not found
+Feb 17 13:22:51  [2026-02-17 13:22:51] [ERROR] [forex_bot] [tenant:entrylab] [req:b70136a0] Failed to post signal to Telegram: Chat not found
+Feb 17 13:22:51  [2026-02-17 13:22:51] [INFO] [forex_bot] [tenant:entrylab] [req:b70136a0] Signal #240 marked as broadcast_failed
+Feb 17 13:35:48  [2026-02-17 13:35:48] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 13:35:48  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 13:35:48                      ^
+Feb 17 13:35:48  
+Feb 17 13:35:48  Traceback (most recent call last):
+Feb 17 13:35:48    File "/workspace/db.py", line 156, in get_connection
+Feb 17 13:35:48      yield conn
+Feb 17 13:35:48    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 13:35:48      cursor.execute(
+Feb 17 13:35:48  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 13:35:48  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 13:35:48                      ^
+Feb 17 13:35:48  
+Feb 17 13:35:48  [2026-02-17 13:35:48] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 13:35:48  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 13:35:48                      ^
+Feb 17 13:35:48  
+Feb 17 13:35:48  Traceback (most recent call last):
+Feb 17 13:35:48    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 13:35:48      cursor.execute(
+Feb 17 13:35:48  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 13:35:48  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 13:35:48                      ^
+Feb 17 13:35:48  
+Feb 17 13:37:52  [2026-02-17 13:37:52] [INFO] [forex_signals] [tenant:entrylab] [req:ac1fbc0f] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:37:52  [2026-02-17 13:37:52] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] Checking for signals on XAU/USD 15min...
+Feb 17 13:37:52  [2026-02-17 13:37:52] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] Session: London/NY Overlap
+Feb 17 13:37:54  [2026-02-17 13:37:54] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] No impulse breakout detected
+Feb 17 13:37:54  [2026-02-17 13:37:54] [INFO] [generator] [tenant:entrylab] [req:ac1fbc0f] 📊 Checking 1-hour timeframe...
+Feb 17 13:37:54  [2026-02-17 13:37:54] [INFO] [forex_signals] [tenant:entrylab] [req:ac1fbc0f] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:37:54  [2026-02-17 13:37:54] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] Checking for signals on XAU/USD 1h...
+Feb 17 13:37:54  [2026-02-17 13:37:54] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] Session: London/NY Overlap
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] With-trend SELL (Bearish)
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] 🎯 Signal generated: SELL @ 4914.40
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] 📊 TP1: 4884.68 (50%)
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] 📊 TP2: 4864.87 (30%)
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] 🛑 SL: 4932.48 (tight candle-based)
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [raja_banks] [tenant:entrylab] [req:ac1fbc0f] 📈 Signals today: 1/4
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [forex_signals] [tenant:entrylab] [req:ac1fbc0f] ✅ Signal from Raja Banks Gold Start: SELL @ 4914.40
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [bot_credentials] [tenant:entrylab] [req:ac1fbc0f] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [telegram_sender] [tenant:entrylab] [req:ac1fbc0f] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [forex_bot] [tenant:entrylab] [req:ac1fbc0f] Created draft signal #241, posting to Telegram...
+Feb 17 13:37:55  [2026-02-17 13:37:55] [ERROR] [telegram_sender] [tenant:entrylab] [req:ac1fbc0f] SEND FAILED: Telegram API error | tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003343226469, error=Chat not found
+Feb 17 13:37:55  [2026-02-17 13:37:55] [ERROR] [forex_bot] [tenant:entrylab] [req:ac1fbc0f] Failed to post signal to Telegram: Chat not found
+Feb 17 13:37:55  [2026-02-17 13:37:55] [INFO] [forex_bot] [tenant:entrylab] [req:ac1fbc0f] Signal #241 marked as broadcast_failed
+Feb 17 13:37:55  [2026-02-17 13:37:55] [ERROR] [generator] [tenant:entrylab] [req:ac1fbc0f] ❌ Failed to post 1h signal to Telegram
+Feb 17 13:52:56  [2026-02-17 13:52:56] [INFO] [forex_signals] [tenant:entrylab] [req:afa95f31] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 13:52:56  [2026-02-17 13:52:56] [INFO] [raja_banks] [tenant:entrylab] [req:afa95f31] Checking for signals on XAU/USD 15min...
+Feb 17 13:52:56  [2026-02-17 13:52:56] [INFO] [raja_banks] [tenant:entrylab] [req:afa95f31] Session: London/NY Overlap
+Feb 17 13:52:57  [2026-02-17 13:52:57] [INFO] [raja_banks] [tenant:entrylab] [req:afa95f31] No impulse breakout detected
+Feb 17 13:56:23  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Feb 17 13:56:23  [WEBHOOK-ENDPOINT] Received 358 bytes
+Feb 17 13:56:23  [WEBHOOK-ENDPOINT] Processing update_id: 325866925
+Feb 17 13:56:23  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Feb 17 13:56:23  [WEBHOOK] Received update_id: 325866925
+Feb 17 13:56:23  [WEBHOOK] Processing: type=Message, text=/start
+Feb 17 13:56:24  [WEBHOOK] ✅ Update processed successfully
+Feb 17 13:56:24  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866925 in 0.10s, result: {'status': 'ok'}
+Feb 17 13:56:24  10.244.4.249 - - [17/Feb/2026 13:56:24] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Feb 17 13:56:30  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Feb 17 13:56:30  [WEBHOOK-ENDPOINT] Received 299 bytes
+Feb 17 13:56:30  [WEBHOOK-ENDPOINT] Processing update_id: 325866926
+Feb 17 13:56:30  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Feb 17 13:56:30  [WEBHOOK] Received update_id: 325866926
+Feb 17 13:56:30  [WEBHOOK] Processing: type=Message, text=Dk333
+Feb 17 13:56:30  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Feb 17 13:56:30  [COUPON-HANDLER] Processing coupon: DK333, chat_id: 5075568526
+Feb 17 13:56:30  [COUPON] Validating 'DK333' (attempt 1/3)...
+Feb 17 13:56:30  [COUPON] API response: status=200, body_length=299
+Feb 17 13:56:30  [COUPON] 💾 Cached validation for 'DK333'
+Feb 17 13:56:30  [COUPON] ✅ 'DK333' is VALID
+Feb 17 13:56:30  [COUPON-HANDLER] ✅ Stored coupon 'DK333' in cache for chat_id 5075568526
+Feb 17 13:56:30  [TELEGRAM] ✅ User 5075568526 tracked successfully in database (username=DK_0333, name=D K)
+Feb 17 13:56:30  [TELEGRAM] Cache miss, downloading index.json
+Feb 17 13:56:31  [TELEGRAM] Index cached for 300s
+Feb 17 13:56:31  [TELEGRAM] Returning 1/1 telegram-enabled templates
+Feb 17 13:56:31  [WEBHOOK] ✅ Update processed successfully
+Feb 17 13:56:31  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325866926 in 0.60s, result: {'status': 'ok'}
+Feb 17 13:56:31  10.244.4.249 - - [17/Feb/2026 13:56:31] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Feb 17 14:03:32  10.244.4.249 - - [17/Feb/2026 14:03:32] code 404, message File not found
+Feb 17 14:03:32  10.244.4.249 - - [17/Feb/2026 14:03:32] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 14:07:58  [2026-02-17 14:07:58] [INFO] [forex_signals] [tenant:entrylab] [req:b4eef1a4] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:07:58  [2026-02-17 14:07:58] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] Checking for signals on XAU/USD 15min...
+Feb 17 14:07:58  [2026-02-17 14:07:58] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] Session: London/NY Overlap
+Feb 17 14:07:59  [2026-02-17 14:07:59] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] No impulse breakout detected
+Feb 17 14:07:59  [2026-02-17 14:07:59] [INFO] [generator] [tenant:entrylab] [req:b4eef1a4] 📊 Checking 1-hour timeframe...
+Feb 17 14:07:59  [2026-02-17 14:07:59] [INFO] [forex_signals] [tenant:entrylab] [req:b4eef1a4] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:07:59  [2026-02-17 14:07:59] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] Checking for signals on XAU/USD 1h...
+Feb 17 14:07:59  [2026-02-17 14:07:59] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] Session: London/NY Overlap
+Feb 17 14:08:00  [2026-02-17 14:08:00] [INFO] [raja_banks] [tenant:entrylab] [req:b4eef1a4] No impulse breakout detected
+Feb 17 14:11:48  10.244.5.120 - - [17/Feb/2026 14:11:48] "GET / HTTP/1.1" 302 -
+Feb 17 14:11:48  10.244.7.214 - - [17/Feb/2026 14:11:48] "GET /app HTTP/1.1" 200 -
+Feb 17 14:11:58  10.244.7.214 - - [17/Feb/2026 14:11:58] code 404, message File not found
+Feb 17 14:11:58  10.244.7.214 - - [17/Feb/2026 14:11:58] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 17 14:12:09  10.244.6.27 - - [17/Feb/2026 14:12:09] code 404, message File not found
+Feb 17 14:12:09  10.244.6.27 - - [17/Feb/2026 14:12:09] "GET /phpinfo HTTP/1.1" 404 -
+Feb 17 14:12:20  10.244.6.27 - - [17/Feb/2026 14:12:20] code 404, message File not found
+Feb 17 14:12:20  10.244.6.27 - - [17/Feb/2026 14:12:20] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 17 14:12:28  10.244.6.27 - - [17/Feb/2026 14:12:28] code 404, message File not found
+Feb 17 14:12:28  10.244.6.27 - - [17/Feb/2026 14:12:28] "GET /info HTTP/1.1" 404 -
+Feb 17 14:12:39  10.244.5.120 - - [17/Feb/2026 14:12:39] code 404, message File not found
+Feb 17 14:12:39  10.244.5.120 - - [17/Feb/2026 14:12:39] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 17 14:14:17  10.244.7.214 - - [17/Feb/2026 14:14:17] code 404, message File not found
+Feb 17 14:14:17  10.244.7.214 - - [17/Feb/2026 14:14:17] "GET /.env.production HTTP/1.1" 404 -
+Feb 17 14:14:18  10.244.6.27 - - [17/Feb/2026 14:14:18] code 404, message File not found
+Feb 17 14:14:18  10.244.6.27 - - [17/Feb/2026 14:14:18] "GET /application/.env HTTP/1.1" 404 -
+Feb 17 14:14:18  10.244.7.214 - - [17/Feb/2026 14:14:18] code 404, message File not found
+Feb 17 14:14:18  10.244.7.214 - - [17/Feb/2026 14:14:18] "GET /prod/.env HTTP/1.1" 404 -
+Feb 17 14:14:19  10.244.5.120 - - [17/Feb/2026 14:14:19] code 404, message File not found
+Feb 17 14:14:19  10.244.5.120 - - [17/Feb/2026 14:14:19] "GET /.env.save HTTP/1.1" 404 -
+Feb 17 14:14:20  10.244.7.214 - - [17/Feb/2026 14:14:20] code 404, message File not found
+Feb 17 14:14:20  10.244.7.214 - - [17/Feb/2026 14:14:20] "GET /beta/.env HTTP/1.1" 404 -
+Feb 17 14:14:20  10.244.7.214 - - [17/Feb/2026 14:14:20] code 404, message File not found
+Feb 17 14:14:20  10.244.7.214 - - [17/Feb/2026 14:14:20] "GET /admin/.env HTTP/1.1" 404 -
+Feb 17 14:14:21  10.244.5.120 - - [17/Feb/2026 14:14:21] code 404, message File not found
+Feb 17 14:14:21  10.244.5.120 - - [17/Feb/2026 14:14:21] "GET /app/.env HTTP/1.1" 404 -
+Feb 17 14:14:22  10.244.5.120 - - [17/Feb/2026 14:14:22] code 404, message File not found
+Feb 17 14:14:22  10.244.5.120 - - [17/Feb/2026 14:14:22] "GET /config/.env HTTP/1.1" 404 -
+Feb 17 14:14:23  10.244.5.120 - - [17/Feb/2026 14:14:23] code 404, message File not found
+Feb 17 14:14:23  10.244.5.120 - - [17/Feb/2026 14:14:23] "GET /api/.env HTTP/1.1" 404 -
+Feb 17 14:14:23  10.244.5.120 - - [17/Feb/2026 14:14:23] code 404, message File not found
+Feb 17 14:14:23  10.244.5.120 - - [17/Feb/2026 14:14:23] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 17 14:14:25  10.244.5.120 - - [17/Feb/2026 14:14:25] code 404, message Not Found
+Feb 17 14:14:25  10.244.5.120 - - [17/Feb/2026 14:14:25] "POST / HTTP/1.1" 404 -
+Feb 17 14:14:25  10.244.6.27 - - [17/Feb/2026 14:14:25] code 404, message File not found
+Feb 17 14:14:25  10.244.6.27 - - [17/Feb/2026 14:14:25] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 17 14:14:26  10.244.6.27 - - [17/Feb/2026 14:14:26] code 404, message File not found
+Feb 17 14:14:26  10.244.6.27 - - [17/Feb/2026 14:14:26] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 17 14:14:26  10.244.6.27 - - [17/Feb/2026 14:14:26] code 404, message File not found
+Feb 17 14:14:26  10.244.6.27 - - [17/Feb/2026 14:14:26] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 17 14:14:27  10.244.4.249 - - [17/Feb/2026 14:14:27] code 404, message File not found
+Feb 17 14:14:27  10.244.4.249 - - [17/Feb/2026 14:14:27] "GET //.aws/config HTTP/1.1" 404 -
+Feb 17 14:14:27  10.244.7.214 - - [17/Feb/2026 14:14:27] code 404, message File not found
+Feb 17 14:14:27  10.244.7.214 - - [17/Feb/2026 14:14:27] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 17 14:14:28  10.244.4.249 - - [17/Feb/2026 14:14:28] code 404, message File not found
+Feb 17 14:14:28  10.244.4.249 - - [17/Feb/2026 14:14:28] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 17 14:23:02  [2026-02-17 14:23:02] [INFO] [forex_signals] [tenant:entrylab] [req:1df0af15] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:23:02  [2026-02-17 14:23:02] [INFO] [raja_banks] [tenant:entrylab] [req:1df0af15] Checking for signals on XAU/USD 15min...
+Feb 17 14:23:02  [2026-02-17 14:23:02] [INFO] [raja_banks] [tenant:entrylab] [req:1df0af15] Session: London/NY Overlap
+Feb 17 14:23:03  [2026-02-17 14:23:03] [INFO] [raja_banks] [tenant:entrylab] [req:1df0af15] No impulse breakout detected
+Feb 17 14:27:30  10.244.7.214 - - [17/Feb/2026 14:27:30] code 404, message File not found
+Feb 17 14:27:30  10.244.7.214 - - [17/Feb/2026 14:27:30] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 14:35:49  [2026-02-17 14:35:49] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 14:35:49  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 14:35:49                      ^
+Feb 17 14:35:49  
+Feb 17 14:35:49  Traceback (most recent call last):
+Feb 17 14:35:49    File "/workspace/db.py", line 156, in get_connection
+Feb 17 14:35:49      yield conn
+Feb 17 14:35:49    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 14:35:49      cursor.execute(
+Feb 17 14:35:49  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 14:35:49  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 14:35:49                      ^
+Feb 17 14:35:49  
+Feb 17 14:35:49  [2026-02-17 14:35:49] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 14:35:49  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 14:35:49                      ^
+Feb 17 14:35:49  
+Feb 17 14:35:49  Traceback (most recent call last):
+Feb 17 14:35:49    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 14:35:49      cursor.execute(
+Feb 17 14:35:49  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 14:35:49  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 14:35:49                      ^
+Feb 17 14:35:49  
+Feb 17 14:38:04  [2026-02-17 14:38:04] [INFO] [forex_signals] [tenant:entrylab] [req:07830aa0] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:38:04  [2026-02-17 14:38:04] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] Checking for signals on XAU/USD 15min...
+Feb 17 14:38:04  [2026-02-17 14:38:04] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] Session: London/NY Overlap
+Feb 17 14:38:09  [2026-02-17 14:38:09] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] No impulse breakout detected
+Feb 17 14:38:09  [2026-02-17 14:38:09] [INFO] [generator] [tenant:entrylab] [req:07830aa0] 📊 Checking 1-hour timeframe...
+Feb 17 14:38:09  [2026-02-17 14:38:09] [INFO] [forex_signals] [tenant:entrylab] [req:07830aa0] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:38:09  [2026-02-17 14:38:09] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] Checking for signals on XAU/USD 1h...
+Feb 17 14:38:09  [2026-02-17 14:38:09] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] Session: London/NY Overlap
+Feb 17 14:38:11  [2026-02-17 14:38:11] [INFO] [raja_banks] [tenant:entrylab] [req:07830aa0] No impulse breakout detected
+Feb 17 14:53:12  [2026-02-17 14:53:12] [INFO] [forex_signals] [tenant:entrylab] [req:1d05d8b8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 14:53:12  [2026-02-17 14:53:12] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] Checking for signals on XAU/USD 15min...
+Feb 17 14:53:12  [2026-02-17 14:53:12] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] Session: London/NY Overlap
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] With-trend SELL (Bearish)
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] 🎯 Signal generated: SELL @ 4866.14
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] 📊 TP1: 4853.82 (50%)
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] 📊 TP2: 4827.57 (30%)
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] 🛑 SL: 4874.07 (tight candle-based)
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [raja_banks] [tenant:entrylab] [req:1d05d8b8] 📈 Signals today: 1/4
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [forex_signals] [tenant:entrylab] [req:1d05d8b8] ✅ Signal from Raja Banks Gold Start: SELL @ 4866.14
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [bot_credentials] [tenant:entrylab] [req:1d05d8b8] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [telegram_sender] [tenant:entrylab] [req:1d05d8b8] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [forex_bot] [tenant:entrylab] [req:1d05d8b8] Created draft signal #242, posting to Telegram...
+Feb 17 14:53:19  [2026-02-17 14:53:19] [ERROR] [telegram_sender] [tenant:entrylab] [req:1d05d8b8] SEND FAILED: Telegram API error | tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003343226469, error=Chat not found
+Feb 17 14:53:19  [2026-02-17 14:53:19] [ERROR] [forex_bot] [tenant:entrylab] [req:1d05d8b8] Failed to post signal to Telegram: Chat not found
+Feb 17 14:53:19  [2026-02-17 14:53:19] [INFO] [forex_bot] [tenant:entrylab] [req:1d05d8b8] Signal #242 marked as broadcast_failed
+Feb 17 15:08:20  [2026-02-17 15:08:20] [INFO] [forex_signals] [tenant:entrylab] [req:448f0a22] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:08:20  [2026-02-17 15:08:20] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] Checking for signals on XAU/USD 15min...
+Feb 17 15:08:20  [2026-02-17 15:08:20] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] Session: London/NY Overlap
+Feb 17 15:08:23  [2026-02-17 15:08:23] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] No impulse breakout detected
+Feb 17 15:08:23  [2026-02-17 15:08:23] [INFO] [generator] [tenant:entrylab] [req:448f0a22] 📊 Checking 1-hour timeframe...
+Feb 17 15:08:23  [2026-02-17 15:08:23] [INFO] [forex_signals] [tenant:entrylab] [req:448f0a22] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:08:23  [2026-02-17 15:08:23] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] Checking for signals on XAU/USD 1h...
+Feb 17 15:08:23  [2026-02-17 15:08:23] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] Session: London/NY Overlap
+Feb 17 15:08:26  [2026-02-17 15:08:26] [INFO] [raja_banks] [tenant:entrylab] [req:448f0a22] No impulse breakout detected
+Feb 17 15:23:28  [2026-02-17 15:23:28] [INFO] [forex_signals] [tenant:entrylab] [req:fb3b90a2] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:23:28  [2026-02-17 15:23:28] [INFO] [raja_banks] [tenant:entrylab] [req:fb3b90a2] Checking for signals on XAU/USD 15min...
+Feb 17 15:23:28  [2026-02-17 15:23:28] [INFO] [raja_banks] [tenant:entrylab] [req:fb3b90a2] Session: London/NY Overlap
+Feb 17 15:23:30  [2026-02-17 15:23:30] [INFO] [raja_banks] [tenant:entrylab] [req:fb3b90a2] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 15:31:22  [2026-02-17 15:31:22] [WARNING] [clerk_auth] [req:46c4a6c6] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 15:31:22  10.244.5.120 - - [17/Feb/2026 15:31:22] "GET /admin HTTP/1.1" 302 -
+Feb 17 15:31:22  10.244.5.120 - - [17/Feb/2026 15:31:22] "GET /login HTTP/1.1" 200 -
+Feb 17 15:31:22  10.244.5.120 - - [17/Feb/2026 15:31:22] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 15:31:22  10.244.5.120 - - [17/Feb/2026 15:31:22] "GET /api/config HTTP/1.1" 200 -
+Feb 17 15:31:27  [2026-02-17 15:31:27] [WARNING] [clerk_auth] [req:5d6ec78a] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 15:31:27  10.244.5.120 - - [17/Feb/2026 15:31:27] "GET /admin HTTP/1.1" 302 -
+Feb 17 15:31:27  10.244.5.120 - - [17/Feb/2026 15:31:27] "GET /login HTTP/1.1" 200 -
+Feb 17 15:31:27  10.244.5.120 - - [17/Feb/2026 15:31:27] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 15:31:27  10.244.5.120 - - [17/Feb/2026 15:31:27] "GET /api/config HTTP/1.1" 200 -
+Feb 17 15:35:50  [2026-02-17 15:35:50] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 15:35:50  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 15:35:50                      ^
+Feb 17 15:35:50  
+Feb 17 15:35:50  Traceback (most recent call last):
+Feb 17 15:35:50    File "/workspace/db.py", line 156, in get_connection
+Feb 17 15:35:50      yield conn
+Feb 17 15:35:50    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 15:35:50      cursor.execute(
+Feb 17 15:35:50  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 15:35:50  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 15:35:50                      ^
+Feb 17 15:35:50  
+Feb 17 15:35:50  [2026-02-17 15:35:50] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 15:35:50  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 15:35:50                      ^
+Feb 17 15:35:50  
+Feb 17 15:35:50  Traceback (most recent call last):
+Feb 17 15:35:50    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 15:35:50      cursor.execute(
+Feb 17 15:35:50  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 15:35:50  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 15:35:50                      ^
+Feb 17 15:35:50  
+Feb 17 15:38:31  [2026-02-17 15:38:31] [INFO] [forex_signals] [tenant:entrylab] [req:faa534bf] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:38:31  [2026-02-17 15:38:31] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] Checking for signals on XAU/USD 15min...
+Feb 17 15:38:31  [2026-02-17 15:38:31] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] Session: London/NY Overlap
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] With-trend SELL (Bearish)
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] 🎯 Signal generated: SELL @ 4856.22
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] 📊 TP1: 4833.45 (50%)
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] 📊 TP2: 4818.28 (30%)
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] 🛑 SL: 4866.53 (tight candle-based)
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] 📈 Signals today: 1/4
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [forex_signals] [tenant:entrylab] [req:faa534bf] ✅ Signal from Raja Banks Gold Start: SELL @ 4856.22
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [bot_credentials] [tenant:entrylab] [req:faa534bf] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [telegram_sender] [tenant:entrylab] [req:faa534bf] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 15:38:33  [2026-02-17 15:38:33] [INFO] [forex_bot] [tenant:entrylab] [req:faa534bf] Created draft signal #243, posting to Telegram...
+Feb 17 15:38:34  [2026-02-17 15:38:34] [ERROR] [telegram_sender] [tenant:entrylab] [req:faa534bf] SEND FAILED: Telegram API error | tenant=entrylab, role=signal_bot, bot=@entrylab_bot, chat=-1003343226469, error=Chat not found
+Feb 17 15:38:34  [2026-02-17 15:38:34] [ERROR] [forex_bot] [tenant:entrylab] [req:faa534bf] Failed to post signal to Telegram: Chat not found
+Feb 17 15:38:34  [2026-02-17 15:38:34] [INFO] [forex_bot] [tenant:entrylab] [req:faa534bf] Signal #243 marked as broadcast_failed
+Feb 17 15:38:34  [2026-02-17 15:38:34] [INFO] [generator] [tenant:entrylab] [req:faa534bf] 📊 Checking 1-hour timeframe...
+Feb 17 15:38:34  [2026-02-17 15:38:34] [INFO] [forex_signals] [tenant:entrylab] [req:faa534bf] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:38:34  [2026-02-17 15:38:34] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] Checking for signals on XAU/USD 1h...
+Feb 17 15:38:34  [2026-02-17 15:38:34] [INFO] [raja_banks] [tenant:entrylab] [req:faa534bf] Guardrail blocked: Cooldown active (14min remaining)
+Feb 17 15:53:35  [2026-02-17 15:53:35] [INFO] [forex_signals] [tenant:entrylab] [req:04746889] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 15:53:35  [2026-02-17 15:53:35] [INFO] [raja_banks] [tenant:entrylab] [req:04746889] Checking for signals on XAU/USD 15min...
+Feb 17 15:53:35  [2026-02-17 15:53:35] [INFO] [raja_banks] [tenant:entrylab] [req:04746889] Session: London/NY Overlap
+Feb 17 15:53:36  [2026-02-17 15:53:36] [INFO] [raja_banks] [tenant:entrylab] [req:04746889] Counter-trend BUY rejected (no S/R confluence)
+Feb 17 15:59:18  10.244.5.120 - - [17/Feb/2026 15:59:18] "GET / HTTP/1.1" 302 -
+Feb 17 15:59:18  10.244.5.120 - - [17/Feb/2026 15:59:18] "GET / HTTP/1.1" 302 -
+Feb 17 15:59:18  10.244.7.214 - - [17/Feb/2026 15:59:18] "GET /app HTTP/1.1" 200 -
+Feb 17 15:59:18  [2026-02-17 15:59:18] [WARNING] [clerk_auth] [req:4c905447] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 15:59:18  10.244.7.214 - - [17/Feb/2026 15:59:18] "GET /admin HTTP/1.1" 302 -
+Feb 17 15:59:19  10.244.4.249 - - [17/Feb/2026 15:59:19] "GET /login HTTP/1.1" 200 -
+Feb 17 15:59:28  10.244.6.27 - - [17/Feb/2026 15:59:28] code 404, message File not found
+Feb 17 15:59:28  10.244.6.27 - - [17/Feb/2026 15:59:28] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 17 15:59:29  10.244.6.27 - - [17/Feb/2026 15:59:29] code 404, message File not found
+Feb 17 15:59:29  10.244.6.27 - - [17/Feb/2026 15:59:29] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 17 15:59:38  10.244.7.214 - - [17/Feb/2026 15:59:38] code 404, message File not found
+Feb 17 15:59:38  10.244.7.214 - - [17/Feb/2026 15:59:38] "GET /phpinfo HTTP/1.1" 404 -
+Feb 17 15:59:39  10.244.4.249 - - [17/Feb/2026 15:59:39] code 404, message File not found
+Feb 17 15:59:39  10.244.4.249 - - [17/Feb/2026 15:59:39] "GET /phpinfo HTTP/1.1" 404 -
+Feb 17 15:59:49  10.244.7.214 - - [17/Feb/2026 15:59:49] code 404, message File not found
+Feb 17 15:59:49  10.244.7.214 - - [17/Feb/2026 15:59:49] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 17 15:59:49  10.244.5.120 - - [17/Feb/2026 15:59:49] code 404, message File not found
+Feb 17 15:59:49  10.244.5.120 - - [17/Feb/2026 15:59:49] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 17 15:59:59  10.244.6.27 - - [17/Feb/2026 15:59:59] code 404, message File not found
+Feb 17 15:59:59  10.244.6.27 - - [17/Feb/2026 15:59:59] "GET /info HTTP/1.1" 404 -
+Feb 17 16:00:00  10.244.6.27 - - [17/Feb/2026 16:00:00] code 404, message File not found
+Feb 17 16:00:00  10.244.6.27 - - [17/Feb/2026 16:00:00] "GET /info HTTP/1.1" 404 -
+Feb 17 16:00:11  10.244.6.27 - - [17/Feb/2026 16:00:11] code 404, message File not found
+Feb 17 16:00:11  10.244.6.27 - - [17/Feb/2026 16:00:11] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 17 16:00:11  10.244.7.214 - - [17/Feb/2026 16:00:11] code 404, message File not found
+Feb 17 16:00:11  10.244.7.214 - - [17/Feb/2026 16:00:11] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 17 16:00:21  10.244.7.214 - - [17/Feb/2026 16:00:21] code 404, message File not found
+Feb 17 16:00:21  10.244.7.214 - - [17/Feb/2026 16:00:21] "GET /info.php HTTP/1.1" 404 -
+Feb 17 16:00:22  10.244.4.249 - - [17/Feb/2026 16:00:22] code 404, message File not found
+Feb 17 16:00:22  10.244.4.249 - - [17/Feb/2026 16:00:22] "GET /info.php HTTP/1.1" 404 -
+Feb 17 16:00:32  10.244.7.214 - - [17/Feb/2026 16:00:32] code 404, message File not found
+Feb 17 16:00:32  10.244.7.214 - - [17/Feb/2026 16:00:32] "GET /.env HTTP/1.1" 404 -
+Feb 17 16:00:33  10.244.4.249 - - [17/Feb/2026 16:00:33] code 404, message File not found
+Feb 17 16:00:33  10.244.4.249 - - [17/Feb/2026 16:00:33] "GET /.env HTTP/1.1" 404 -
+Feb 17 16:00:43  10.244.6.27 - - [17/Feb/2026 16:00:43] code 404, message File not found
+Feb 17 16:00:43  10.244.6.27 - - [17/Feb/2026 16:00:43] "GET /application/.env HTTP/1.1" 404 -
+Feb 17 16:00:44  10.244.4.249 - - [17/Feb/2026 16:00:44] code 404, message File not found
+Feb 17 16:00:44  10.244.4.249 - - [17/Feb/2026 16:00:44] "GET /prod/.env HTTP/1.1" 404 -
+Feb 17 16:00:44  10.244.7.214 - - [17/Feb/2026 16:00:44] code 404, message File not found
+Feb 17 16:00:44  10.244.7.214 - - [17/Feb/2026 16:00:44] "GET /application/.env HTTP/1.1" 404 -
+Feb 17 16:00:45  10.244.6.27 - - [17/Feb/2026 16:00:45] code 404, message File not found
+Feb 17 16:00:45  10.244.6.27 - - [17/Feb/2026 16:00:45] "GET /.env.save HTTP/1.1" 404 -
+Feb 17 16:00:45  10.244.6.27 - - [17/Feb/2026 16:00:45] code 404, message File not found
+Feb 17 16:00:45  10.244.6.27 - - [17/Feb/2026 16:00:45] "GET /prod/.env HTTP/1.1" 404 -
+Feb 17 16:00:46  10.244.5.120 - - [17/Feb/2026 16:00:46] code 404, message File not found
+Feb 17 16:00:46  10.244.5.120 - - [17/Feb/2026 16:00:46] "GET /beta/.env HTTP/1.1" 404 -
+Feb 17 16:00:46  10.244.6.27 - - [17/Feb/2026 16:00:46] code 404, message File not found
+Feb 17 16:00:46  10.244.6.27 - - [17/Feb/2026 16:00:46] "GET /.env.save HTTP/1.1" 404 -
+Feb 17 16:00:46  10.244.4.249 - - [17/Feb/2026 16:00:46] code 404, message File not found
+Feb 17 16:00:46  10.244.4.249 - - [17/Feb/2026 16:00:46] "GET /admin/.env HTTP/1.1" 404 -
+Feb 17 16:00:47  10.244.4.249 - - [17/Feb/2026 16:00:47] code 404, message File not found
+Feb 17 16:00:47  10.244.4.249 - - [17/Feb/2026 16:00:47] "GET /beta/.env HTTP/1.1" 404 -
+Feb 17 16:00:48  10.244.4.249 - - [17/Feb/2026 16:00:48] code 404, message File not found
+Feb 17 16:00:48  10.244.4.249 - - [17/Feb/2026 16:00:48] "GET /app/.env HTTP/1.1" 404 -
+Feb 17 16:00:48  10.244.4.249 - - [17/Feb/2026 16:00:48] code 404, message File not found
+Feb 17 16:00:48  10.244.4.249 - - [17/Feb/2026 16:00:48] "GET /admin/.env HTTP/1.1" 404 -
+Feb 17 16:00:49  10.244.6.27 - - [17/Feb/2026 16:00:49] code 404, message File not found
+Feb 17 16:00:49  10.244.6.27 - - [17/Feb/2026 16:00:49] "GET /config/.env HTTP/1.1" 404 -
+Feb 17 16:00:49  10.244.4.249 - - [17/Feb/2026 16:00:49] code 404, message File not found
+Feb 17 16:00:49  10.244.4.249 - - [17/Feb/2026 16:00:49] "GET /app/.env HTTP/1.1" 404 -
+Feb 17 16:00:50  10.244.7.214 - - [17/Feb/2026 16:00:50] code 404, message File not found
+Feb 17 16:00:50  10.244.7.214 - - [17/Feb/2026 16:00:50] "GET /config/.env HTTP/1.1" 404 -
+Feb 17 16:00:50  10.244.6.27 - - [17/Feb/2026 16:00:50] code 404, message File not found
+Feb 17 16:00:50  10.244.6.27 - - [17/Feb/2026 16:00:50] "GET /api/.env HTTP/1.1" 404 -
+Feb 17 16:00:50  10.244.5.120 - - [17/Feb/2026 16:00:50] code 404, message File not found
+Feb 17 16:00:50  10.244.5.120 - - [17/Feb/2026 16:00:50] "GET /api/.env HTTP/1.1" 404 -
+Feb 17 16:00:51  10.244.4.249 - - [17/Feb/2026 16:00:51] code 404, message File not found
+Feb 17 16:00:51  10.244.4.249 - - [17/Feb/2026 16:00:51] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 17 16:00:51  10.244.7.214 - - [17/Feb/2026 16:00:51] code 404, message File not found
+Feb 17 16:00:51  10.244.7.214 - - [17/Feb/2026 16:00:51] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 17 16:00:52  10.244.4.249 - - [17/Feb/2026 16:00:52] code 404, message Not Found
+Feb 17 16:00:52  10.244.4.249 - - [17/Feb/2026 16:00:52] "POST / HTTP/1.1" 404 -
+Feb 17 16:00:52  10.244.6.27 - - [17/Feb/2026 16:00:52] code 404, message Not Found
+Feb 17 16:00:52  10.244.6.27 - - [17/Feb/2026 16:00:52] "POST / HTTP/1.1" 404 -
+Feb 17 16:00:52  10.244.4.249 - - [17/Feb/2026 16:00:52] code 404, message File not found
+Feb 17 16:00:52  10.244.4.249 - - [17/Feb/2026 16:00:52] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 17 16:00:53  10.244.5.120 - - [17/Feb/2026 16:00:53] code 404, message File not found
+Feb 17 16:00:53  10.244.5.120 - - [17/Feb/2026 16:00:53] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:53  10.244.6.27 - - [17/Feb/2026 16:00:53] code 404, message File not found
+Feb 17 16:00:53  10.244.6.27 - - [17/Feb/2026 16:00:53] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 17 16:00:53  10.244.6.27 - - [17/Feb/2026 16:00:53] code 404, message File not found
+Feb 17 16:00:53  10.244.6.27 - - [17/Feb/2026 16:00:53] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:53  10.244.4.249 - - [17/Feb/2026 16:00:53] code 404, message File not found
+Feb 17 16:00:53  10.244.4.249 - - [17/Feb/2026 16:00:53] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.5.120 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.5.120 - - [17/Feb/2026 16:00:54] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] "GET //.aws/config HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.4.249 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.4.249 - - [17/Feb/2026 16:00:54] "GET //.aws/config HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.6.27 - - [17/Feb/2026 16:00:54] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:00:54  10.244.4.249 - - [17/Feb/2026 16:00:54] code 404, message File not found
+Feb 17 16:00:54  10.244.4.249 - - [17/Feb/2026 16:00:54] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [forex_signals] [tenant:entrylab] [req:cf14e33e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [raja_banks] [tenant:entrylab] [req:cf14e33e] Checking for signals on XAU/USD 15min...
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [raja_banks] [tenant:entrylab] [req:cf14e33e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [generator] [tenant:entrylab] [req:cf14e33e] 📊 Checking 1-hour timeframe...
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [forex_signals] [tenant:entrylab] [req:cf14e33e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [raja_banks] [tenant:entrylab] [req:cf14e33e] Checking for signals on XAU/USD 1h...
+Feb 17 16:08:38  [2026-02-17 16:08:38] [INFO] [raja_banks] [tenant:entrylab] [req:cf14e33e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 16:23:39  [2026-02-17 16:23:39] [INFO] [forex_signals] [tenant:entrylab] [req:88e39950] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:23:39  [2026-02-17 16:23:39] [INFO] [raja_banks] [tenant:entrylab] [req:88e39950] Checking for signals on XAU/USD 15min...
+Feb 17 16:23:39  [2026-02-17 16:23:39] [INFO] [raja_banks] [tenant:entrylab] [req:88e39950] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 16:35:51  [2026-02-17 16:35:51] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 16:35:51  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 16:35:51                      ^
+Feb 17 16:35:51  
+Feb 17 16:35:51  Traceback (most recent call last):
+Feb 17 16:35:51    File "/workspace/db.py", line 156, in get_connection
+Feb 17 16:35:51      yield conn
+Feb 17 16:35:51    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 16:35:51      cursor.execute(
+Feb 17 16:35:51  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 16:35:51  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 16:35:51                      ^
+Feb 17 16:35:51  
+Feb 17 16:35:51  [2026-02-17 16:35:51] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 16:35:51  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 16:35:51                      ^
+Feb 17 16:35:51  
+Feb 17 16:35:51  Traceback (most recent call last):
+Feb 17 16:35:51    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 16:35:51      cursor.execute(
+Feb 17 16:35:51  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 16:35:51  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 16:35:51                      ^
+Feb 17 16:35:51  
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [forex_signals] [tenant:entrylab] [req:b6b6cb1d] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [raja_banks] [tenant:entrylab] [req:b6b6cb1d] Checking for signals on XAU/USD 15min...
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [raja_banks] [tenant:entrylab] [req:b6b6cb1d] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [generator] [tenant:entrylab] [req:b6b6cb1d] 📊 Checking 1-hour timeframe...
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [forex_signals] [tenant:entrylab] [req:b6b6cb1d] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [raja_banks] [tenant:entrylab] [req:b6b6cb1d] Checking for signals on XAU/USD 1h...
+Feb 17 16:38:40  [2026-02-17 16:38:40] [INFO] [raja_banks] [tenant:entrylab] [req:b6b6cb1d] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 16:53:41  [2026-02-17 16:53:41] [INFO] [forex_signals] [tenant:entrylab] [req:7a3b03fa] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 16:53:41  [2026-02-17 16:53:41] [INFO] [raja_banks] [tenant:entrylab] [req:7a3b03fa] Checking for signals on XAU/USD 15min...
+Feb 17 16:53:41  [2026-02-17 16:53:41] [INFO] [raja_banks] [tenant:entrylab] [req:7a3b03fa] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:01:09  10.244.5.120 - - [17/Feb/2026 17:01:09] "GET / HTTP/1.1" 302 -
+Feb 17 17:01:09  10.244.4.249 - - [17/Feb/2026 17:01:09] "GET /app HTTP/1.1" 200 -
+Feb 17 17:01:11  10.244.4.249 - - [17/Feb/2026 17:01:11] "GET / HTTP/1.1" 302 -
+Feb 17 17:01:11  [2026-02-17 17:01:11] [WARNING] [clerk_auth] [req:32653de0] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 17:01:11  10.244.6.27 - - [17/Feb/2026 17:01:11] "GET /admin HTTP/1.1" 302 -
+Feb 17 17:01:11  10.244.4.249 - - [17/Feb/2026 17:01:11] "GET /login HTTP/1.1" 200 -
+Feb 17 17:01:21  10.244.7.214 - - [17/Feb/2026 17:01:21] code 404, message File not found
+Feb 17 17:01:21  10.244.7.214 - - [17/Feb/2026 17:01:21] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 17 17:01:30  10.244.4.249 - - [17/Feb/2026 17:01:30] code 404, message File not found
+Feb 17 17:01:30  10.244.4.249 - - [17/Feb/2026 17:01:30] "GET /phpinfo HTTP/1.1" 404 -
+Feb 17 17:01:40  10.244.7.214 - - [17/Feb/2026 17:01:40] code 404, message File not found
+Feb 17 17:01:40  10.244.7.214 - - [17/Feb/2026 17:01:40] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 17 17:01:52  10.244.6.27 - - [17/Feb/2026 17:01:52] code 404, message File not found
+Feb 17 17:01:52  10.244.6.27 - - [17/Feb/2026 17:01:52] "GET /info HTTP/1.1" 404 -
+Feb 17 17:01:56  10.244.4.249 - - [17/Feb/2026 17:01:56] code 404, message File not found
+Feb 17 17:01:56  10.244.4.249 - - [17/Feb/2026 17:01:56] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 17 17:02:11  10.244.6.27 - - [17/Feb/2026 17:02:11] code 404, message File not found
+Feb 17 17:02:11  10.244.6.27 - - [17/Feb/2026 17:02:11] "GET /info.php HTTP/1.1" 404 -
+Feb 17 17:02:18  10.244.6.27 - - [17/Feb/2026 17:02:18] code 404, message File not found
+Feb 17 17:02:18  10.244.6.27 - - [17/Feb/2026 17:02:18] "GET /.env HTTP/1.1" 404 -
+Feb 17 17:02:18  10.244.5.120 - - [17/Feb/2026 17:02:18] code 404, message File not found
+Feb 17 17:02:18  10.244.5.120 - - [17/Feb/2026 17:02:18] "GET /.env.production HTTP/1.1" 404 -
+Feb 17 17:02:20  10.244.5.120 - - [17/Feb/2026 17:02:20] code 404, message File not found
+Feb 17 17:02:20  10.244.5.120 - - [17/Feb/2026 17:02:20] "GET /application/.env HTTP/1.1" 404 -
+Feb 17 17:02:21  10.244.5.120 - - [17/Feb/2026 17:02:21] code 404, message File not found
+Feb 17 17:02:21  10.244.5.120 - - [17/Feb/2026 17:02:21] "GET /prod/.env HTTP/1.1" 404 -
+Feb 17 17:02:22  10.244.6.27 - - [17/Feb/2026 17:02:22] code 404, message File not found
+Feb 17 17:02:22  10.244.6.27 - - [17/Feb/2026 17:02:22] "GET /.env.save HTTP/1.1" 404 -
+Feb 17 17:02:23  10.244.6.27 - - [17/Feb/2026 17:02:23] code 404, message File not found
+Feb 17 17:02:23  10.244.6.27 - - [17/Feb/2026 17:02:23] "GET /beta/.env HTTP/1.1" 404 -
+Feb 17 17:02:24  10.244.4.249 - - [17/Feb/2026 17:02:24] code 404, message File not found
+Feb 17 17:02:24  10.244.4.249 - - [17/Feb/2026 17:02:24] "GET /admin/.env HTTP/1.1" 404 -
+Feb 17 17:02:25  10.244.6.27 - - [17/Feb/2026 17:02:25] code 404, message File not found
+Feb 17 17:02:25  10.244.6.27 - - [17/Feb/2026 17:02:25] "GET /app/.env HTTP/1.1" 404 -
+Feb 17 17:02:26  10.244.6.27 - - [17/Feb/2026 17:02:26] code 404, message File not found
+Feb 17 17:02:26  10.244.6.27 - - [17/Feb/2026 17:02:26] "GET /config/.env HTTP/1.1" 404 -
+Feb 17 17:02:26  10.244.7.214 - - [17/Feb/2026 17:02:26] code 404, message File not found
+Feb 17 17:02:26  10.244.7.214 - - [17/Feb/2026 17:02:26] "GET /api/.env HTTP/1.1" 404 -
+Feb 17 17:02:27  10.244.4.249 - - [17/Feb/2026 17:02:27] code 404, message File not found
+Feb 17 17:02:27  10.244.4.249 - - [17/Feb/2026 17:02:27] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 17 17:02:28  10.244.5.120 - - [17/Feb/2026 17:02:28] code 404, message Not Found
+Feb 17 17:02:28  10.244.5.120 - - [17/Feb/2026 17:02:28] "POST / HTTP/1.1" 404 -
+Feb 17 17:02:30  10.244.4.249 - - [17/Feb/2026 17:02:30] code 404, message File not found
+Feb 17 17:02:30  10.244.4.249 - - [17/Feb/2026 17:02:30] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 17 17:02:31  10.244.6.27 - - [17/Feb/2026 17:02:31] code 404, message File not found
+Feb 17 17:02:31  10.244.6.27 - - [17/Feb/2026 17:02:31] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 17 17:02:31  10.244.5.120 - - [17/Feb/2026 17:02:31] code 404, message File not found
+Feb 17 17:02:31  10.244.5.120 - - [17/Feb/2026 17:02:31] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 17 17:02:31  10.244.4.249 - - [17/Feb/2026 17:02:31] code 404, message File not found
+Feb 17 17:02:31  10.244.4.249 - - [17/Feb/2026 17:02:31] "GET //.aws/config HTTP/1.1" 404 -
+Feb 17 17:02:32  10.244.6.27 - - [17/Feb/2026 17:02:32] code 404, message File not found
+Feb 17 17:02:32  10.244.6.27 - - [17/Feb/2026 17:02:32] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 17 17:02:32  10.244.6.27 - - [17/Feb/2026 17:02:32] code 404, message File not found
+Feb 17 17:02:32  10.244.6.27 - - [17/Feb/2026 17:02:32] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [forex_signals] [tenant:entrylab] [req:d1c2cd25] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [raja_banks] [tenant:entrylab] [req:d1c2cd25] Checking for signals on XAU/USD 15min...
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [raja_banks] [tenant:entrylab] [req:d1c2cd25] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [generator] [tenant:entrylab] [req:d1c2cd25] 📊 Checking 1-hour timeframe...
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [forex_signals] [tenant:entrylab] [req:d1c2cd25] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [raja_banks] [tenant:entrylab] [req:d1c2cd25] Checking for signals on XAU/USD 1h...
+Feb 17 17:08:43  [2026-02-17 17:08:43] [INFO] [raja_banks] [tenant:entrylab] [req:d1c2cd25] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:23:44  [2026-02-17 17:23:44] [INFO] [forex_signals] [tenant:entrylab] [req:27cd56d8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:23:44  [2026-02-17 17:23:44] [INFO] [raja_banks] [tenant:entrylab] [req:27cd56d8] Checking for signals on XAU/USD 15min...
+Feb 17 17:23:44  [2026-02-17 17:23:44] [INFO] [raja_banks] [tenant:entrylab] [req:27cd56d8] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:35:53  [2026-02-17 17:35:53] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 17:35:53  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 17:35:53                      ^
+Feb 17 17:35:53  
+Feb 17 17:35:53  Traceback (most recent call last):
+Feb 17 17:35:53    File "/workspace/db.py", line 156, in get_connection
+Feb 17 17:35:53      yield conn
+Feb 17 17:35:53    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 17:35:53      cursor.execute(
+Feb 17 17:35:53  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 17:35:53  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 17:35:53                      ^
+Feb 17 17:35:53  
+Feb 17 17:35:53  [2026-02-17 17:35:53] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 17:35:53  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 17:35:53                      ^
+Feb 17 17:35:53  
+Feb 17 17:35:53  Traceback (most recent call last):
+Feb 17 17:35:53    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 17:35:53      cursor.execute(
+Feb 17 17:35:53  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 17:35:53  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 17:35:53                      ^
+Feb 17 17:35:53  
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [forex_signals] [tenant:entrylab] [req:b570b5d9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [raja_banks] [tenant:entrylab] [req:b570b5d9] Checking for signals on XAU/USD 15min...
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [raja_banks] [tenant:entrylab] [req:b570b5d9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [generator] [tenant:entrylab] [req:b570b5d9] 📊 Checking 1-hour timeframe...
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [forex_signals] [tenant:entrylab] [req:b570b5d9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [raja_banks] [tenant:entrylab] [req:b570b5d9] Checking for signals on XAU/USD 1h...
+Feb 17 17:38:45  [2026-02-17 17:38:45] [INFO] [raja_banks] [tenant:entrylab] [req:b570b5d9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 17:53:46  [2026-02-17 17:53:46] [INFO] [forex_signals] [tenant:entrylab] [req:0204d531] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 17:53:46  [2026-02-17 17:53:46] [INFO] [raja_banks] [tenant:entrylab] [req:0204d531] Checking for signals on XAU/USD 15min...
+Feb 17 17:53:46  [2026-02-17 17:53:46] [INFO] [raja_banks] [tenant:entrylab] [req:0204d531] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [forex_signals] [tenant:entrylab] [req:1c6048b8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [raja_banks] [tenant:entrylab] [req:1c6048b8] Checking for signals on XAU/USD 15min...
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [raja_banks] [tenant:entrylab] [req:1c6048b8] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [generator] [tenant:entrylab] [req:1c6048b8] 📊 Checking 1-hour timeframe...
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [forex_signals] [tenant:entrylab] [req:1c6048b8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [raja_banks] [tenant:entrylab] [req:1c6048b8] Checking for signals on XAU/USD 1h...
+Feb 17 18:08:48  [2026-02-17 18:08:48] [INFO] [raja_banks] [tenant:entrylab] [req:1c6048b8] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 18:10:11  10.244.6.27 - - [17/Feb/2026 18:10:11] code 404, message File not found
+Feb 17 18:10:11  10.244.6.27 - - [17/Feb/2026 18:10:11] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 18:23:49  [2026-02-17 18:23:49] [INFO] [forex_signals] [tenant:entrylab] [req:1bdf74e9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 18:23:49  [2026-02-17 18:23:49] [INFO] [raja_banks] [tenant:entrylab] [req:1bdf74e9] Checking for signals on XAU/USD 15min...
+Feb 17 18:23:49  [2026-02-17 18:23:49] [INFO] [raja_banks] [tenant:entrylab] [req:1bdf74e9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 18:23:52  10.244.5.120 - - [17/Feb/2026 18:23:52] code 404, message File not found
+Feb 17 18:23:52  10.244.5.120 - - [17/Feb/2026 18:23:52] "GET /robots.txt HTTP/1.1" 404 -
+Feb 17 18:34:13  10.244.4.249 - - [17/Feb/2026 18:34:13] "GET / HTTP/1.1" 302 -
+Feb 17 18:34:13  [2026-02-17 18:34:13] [WARNING] [clerk_auth] [req:51aa085c] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 18:34:13  10.244.5.120 - - [17/Feb/2026 18:34:13] "GET /admin HTTP/1.1" 302 -
+Feb 17 18:34:14  10.244.7.214 - - [17/Feb/2026 18:34:14] "GET /login HTTP/1.1" 200 -
+Feb 17 18:34:14  10.244.6.27 - - [17/Feb/2026 18:34:14] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 18:34:14  10.244.7.214 - - [17/Feb/2026 18:34:14] "GET /api/config HTTP/1.1" 200 -
+Feb 17 18:34:14  10.244.4.249 - - [17/Feb/2026 18:34:14] "GET / HTTP/1.1" 302 -
+Feb 17 18:34:14  [2026-02-17 18:34:14] [WARNING] [clerk_auth] [req:67e0dafc] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 18:34:14  10.244.5.120 - - [17/Feb/2026 18:34:14] "GET /admin HTTP/1.1" 302 -
+Feb 17 18:34:14  10.244.7.214 - - [17/Feb/2026 18:34:14] "GET /login HTTP/1.1" 200 -
+Feb 17 18:34:15  10.244.6.27 - - [17/Feb/2026 18:34:15] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 18:34:15  10.244.7.214 - - [17/Feb/2026 18:34:15] "GET /api/config HTTP/1.1" 200 -
+Feb 17 18:34:15  10.244.6.27 - - [17/Feb/2026 18:34:15] code 404, message File not found
+Feb 17 18:34:15  10.244.6.27 - - [17/Feb/2026 18:34:15] "GET /favicon.ico HTTP/1.1" 404 -
+Feb 17 18:34:22  10.244.4.249 - - [17/Feb/2026 18:34:22] "GET / HTTP/1.1" 302 -
+Feb 17 18:34:22  [2026-02-17 18:34:22] [WARNING] [clerk_auth] [req:748de624] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 17 18:34:22  10.244.5.120 - - [17/Feb/2026 18:34:22] "GET /admin HTTP/1.1" 302 -
+Feb 17 18:34:22  10.244.7.214 - - [17/Feb/2026 18:34:22] "GET /login HTTP/1.1" 200 -
+Feb 17 18:34:22  10.244.6.27 - - [17/Feb/2026 18:34:22] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 18:34:22  10.244.7.214 - - [17/Feb/2026 18:34:22] "GET /api/config HTTP/1.1" 200 -
+Feb 17 18:34:23  [2026-02-17 18:34:23] [INFO] [set_auth_cookie] [req:a0734ac8] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Feb 17 18:34:23  10.244.4.249 - - [17/Feb/2026 18:34:23] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Feb 17 18:34:23  [2026-02-17 18:34:23] [INFO] [set_auth_cookie] [req:a0734ac8] set-auth-cookie: SUCCESS - cookies set
+Feb 17 18:34:23  10.244.7.214 - - [17/Feb/2026 18:34:23] "GET /api/config HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.5.120 - - [17/Feb/2026 18:34:23] "GET /admin HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.6.27 - - [17/Feb/2026 18:34:23] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.5.120 - - [17/Feb/2026 18:34:23] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.4.249 - - [17/Feb/2026 18:34:23] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.7.214 - - [17/Feb/2026 18:34:23] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.6.27 - - [17/Feb/2026 18:34:23] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 18:34:23  10.244.7.214 - - [17/Feb/2026 18:34:23] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [db] [req:82b7143e] get_all_telegram_subscriptions: found 15 rows
+Feb 17 18:34:24  10.244.4.249 - - [17/Feb/2026 18:34:24] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [db] [req:3db6a996] get_all_telegram_subscriptions: found 15 rows
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [handlers] [req:3db6a996] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Feb 17 18:34:24  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Feb 17 18:34:24  [Stripe] Fetching all paid invoices...
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [bot_credentials] [req:610f0c55] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [telegram_sender] [req:610f0c55] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_bot, token=8154355791:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 17 18:34:24  [2026-02-17 18:34:24] [INFO] [handlers] [req:610f0c55] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, bot=@entrylab_bot, token_last4=****nFjE
+Feb 17 18:34:24  [2026-02-17 18:34:24] [WARNING] [handlers] [req:610f0c55] [STATS] Telegram error: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, error_code=400, error=Bad Request: chat not found
+Feb 17 18:34:24  10.244.4.249 - - [17/Feb/2026 18:34:24] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 502 -
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 17 18:34:26  [Stripe] Total revenue from 44 VIP invoices: $418.8599999999997
+Feb 17 18:34:26  [Stripe] Found 0 subscription IDs from invoices
+Feb 17 18:34:26  [Stripe] Also fetching active subscriptions directly from Stripe...
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 17 18:34:26  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 17 18:34:26  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Feb 17 18:34:26  [2026-02-17 18:34:26] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 17 18:34:27  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 17 18:34:27  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Feb 17 18:34:27  [Stripe] Total subscription IDs to check: 4
+Feb 17 18:34:27  [Stripe] Checking 4 subscriptions for rebill (period: 2026-02-17 to 2028-12-31)...
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Feb 17 18:34:27  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 17 18:34:27  10.244.6.27 - - [17/Feb/2026 18:34:27] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 18:34:27  10.244.6.27 - - [17/Feb/2026 18:34:27] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 18:34:27  10.244.6.27 - - [17/Feb/2026 18:34:27] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 17 18:34:27  10.244.6.27 - - [17/Feb/2026 18:34:27] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 17 18:34:27  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Feb 17 18:34:27  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-18
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Feb 17 18:34:27  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 17 18:34:27  [2026-02-17 18:34:27] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 17 18:34:28  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Feb 17 18:34:28  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-18
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Feb 17 18:34:28  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 17 18:34:28  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Feb 17 18:34:28  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-22
+Feb 17 18:34:28  [2026-02-17 18:34:28] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Feb 17 18:34:29  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 17 18:34:29  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Feb 17 18:34:29  [Stripe] ✓ Rebill in period: $39.0 on 2026-02-23
+Feb 17 18:34:29  [Stripe] Active: 4, Rebill in period: $41.34
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [stripe] [req:3db6a996] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 17 18:34:29  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Feb 17 18:34:29  [2026-02-17 18:34:29] [INFO] [handlers] [req:3db6a996] Stripe returned: revenue=$418.86, rebill=$41.34
+Feb 17 18:34:29  10.244.6.27 - - [17/Feb/2026 18:34:29] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Feb 17 18:35:54  [2026-02-17 18:35:54] [ERROR] [db] Database connection error: relation "journey_inbound_dedupe" does not exist
+Feb 17 18:35:54  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 18:35:54                      ^
+Feb 17 18:35:54  
+Feb 17 18:35:54  Traceback (most recent call last):
+Feb 17 18:35:54    File "/workspace/db.py", line 156, in get_connection
+Feb 17 18:35:54      yield conn
+Feb 17 18:35:54    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 18:35:54      cursor.execute(
+Feb 17 18:35:54  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
+Feb 17 18:35:54  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 18:35:54                      ^
+Feb 17 18:35:54  
+Feb 17 18:35:54  [2026-02-17 18:35:54] [ERROR] [repo] Error cleaning up dedupe records: relation "journey_inbound_dedupe" does not exist
+Feb 17 18:35:54  LINE 1: DELETE FROM journey_inbound_dedupe WHERE received_at < NOW()...
+Feb 17 18:35:54                      ^
+Feb 17 18:35:54  
+Feb 17 18:35:54  Traceback (most recent call last):
+Feb 17 18:35:54    File "/workspace/domains/journeys/repo.py", line 1667, in cleanup_old_dedupe_records
+Feb 17 18:35:54      cursor.execute(
+Feb 17 18:35:54  psycopg2.errors.UndefinedTable: relation "journey_inbound_dedupe" does not exist
