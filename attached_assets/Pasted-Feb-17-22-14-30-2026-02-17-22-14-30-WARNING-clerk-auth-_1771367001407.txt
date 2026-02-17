@@ -1,0 +1,214 @@
+Feb 17 22:14:30  [2026-02-17 22:14:30] [WARNING] [clerk_auth] [req:c15464ac] Token expired
+Feb 17 22:14:30  10.244.7.214 - - [17/Feb/2026 22:14:30] "GET /admin HTTP/1.1" 200 -
+Feb 17 22:14:30  10.244.5.120 - - [17/Feb/2026 22:14:30] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 17 22:14:30  10.244.4.249 - - [17/Feb/2026 22:14:30] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 22:14:30  10.244.6.27 - - [17/Feb/2026 22:14:30] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 17 22:14:30  10.244.5.120 - - [17/Feb/2026 22:14:30] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 17 22:14:30  [2026-02-17 22:14:30] [WARNING] [clerk_auth] [req:773678a3] Token expired
+Feb 17 22:14:30  10.244.7.214 - - [17/Feb/2026 22:14:30] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 17 22:14:30  [2026-02-17 22:14:30] [WARNING] [clerk_auth] [req:6b20743f] Token expired
+Feb 17 22:14:30  10.244.7.214 - - [17/Feb/2026 22:14:30] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:14:30  [2026-02-17 22:14:30] [WARNING] [clerk_auth] [req:01ebaa6f] Token expired
+Feb 17 22:14:30  10.244.7.214 - - [17/Feb/2026 22:14:30] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:3c159049] Token expired
+Feb 17 22:15:28  10.244.7.214 - - [17/Feb/2026 22:15:28] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:bdce15f9] Token expired
+Feb 17 22:15:28  10.244.7.214 - - [17/Feb/2026 22:15:28] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:2950b251] Token expired
+Feb 17 22:15:28  10.244.5.120 - - [17/Feb/2026 22:15:28] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:0ee22437] Token expired
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:67b3cafe] Token expired
+Feb 17 22:15:28  [2026-02-17 22:15:28] [ERROR] [db] [req:67b3cafe] Database connection error: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  Traceback (most recent call last):
+Feb 17 22:15:28    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:15:28      yield conn
+Feb 17 22:15:28    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:15:28      cursor.execute("""
+Feb 17 22:15:28  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  [2026-02-17 22:15:28] [ERROR] [repo] [req:67b3cafe] Error listing journeys with summary: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  Traceback (most recent call last):
+Feb 17 22:15:28    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:15:28      cursor.execute("""
+Feb 17 22:15:28  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  10.244.6.27 - - [17/Feb/2026 22:15:28] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 22:15:28  10.244.5.120 - - [17/Feb/2026 22:15:28] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 22:15:28  [2026-02-17 22:15:28] [WARNING] [clerk_auth] [req:a701f160] Token expired
+Feb 17 22:15:28  [2026-02-17 22:15:28] [ERROR] [db] [req:a701f160] Database connection error: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  Traceback (most recent call last):
+Feb 17 22:15:28    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:15:28      yield conn
+Feb 17 22:15:28    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:15:28      cursor.execute("""
+Feb 17 22:15:28  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  [2026-02-17 22:15:28] [ERROR] [repo] [req:a701f160] Error listing journeys with summary: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  Traceback (most recent call last):
+Feb 17 22:15:28    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:15:28      cursor.execute("""
+Feb 17 22:15:28  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:15:28  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:15:28                              ^
+Feb 17 22:15:28  
+Feb 17 22:15:28  10.244.6.27 - - [17/Feb/2026 22:15:28] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 22:15:29  [2026-02-17 22:15:29] [WARNING] [clerk_auth] [req:c3ee34ca] Token expired
+Feb 17 22:15:29  10.244.7.214 - - [17/Feb/2026 22:15:29] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:e156f48b] Token expired
+Feb 17 22:22:40  10.244.7.214 - - [17/Feb/2026 22:22:40] "POST /api/journeys HTTP/1.1" 201 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:71ddf7a7] Token expired
+Feb 17 22:22:40  10.244.7.214 - - [17/Feb/2026 22:22:40] "POST /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/triggers HTTP/1.1" 200 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:4250e047] Token expired
+Feb 17 22:22:40  [2026-02-17 22:22:40] [INFO] [handlers] [req:4250e047] Saving 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d: ['By opening a trading account with one of our trust', 'This plan is subject to regional availability and ']
+Feb 17 22:22:40  [2026-02-17 22:22:40] [ERROR] [db] [req:4250e047] Database connection error: column "branch_keyword" of relation "journey_steps" does not exist
+Feb 17 22:22:40  LINE 3:                                               branch_keyword...
+Feb 17 22:22:40                                                        ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  Traceback (most recent call last):
+Feb 17 22:22:40    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:22:40      yield conn
+Feb 17 22:22:40    File "/workspace/domains/journeys/repo.py", line 435, in set_steps
+Feb 17 22:22:40      cursor.execute("""
+Feb 17 22:22:40  psycopg2.errors.UndefinedColumn: column "branch_keyword" of relation "journey_steps" does not exist
+Feb 17 22:22:40  LINE 3:                                               branch_keyword...
+Feb 17 22:22:40                                                        ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  [2026-02-17 22:22:40] [ERROR] [repo] [req:4250e047] Error setting steps: column "branch_keyword" of relation "journey_steps" does not exist
+Feb 17 22:22:40  LINE 3:                                               branch_keyword...
+Feb 17 22:22:40                                                        ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  Traceback (most recent call last):
+Feb 17 22:22:40    File "/workspace/domains/journeys/repo.py", line 435, in set_steps
+Feb 17 22:22:40      cursor.execute("""
+Feb 17 22:22:40  psycopg2.errors.UndefinedColumn: column "branch_keyword" of relation "journey_steps" does not exist
+Feb 17 22:22:40  LINE 3:                                               branch_keyword...
+Feb 17 22:22:40                                                        ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  10.244.6.27 - - [17/Feb/2026 22:22:40] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/steps HTTP/1.1" 500 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:35847e39] Token expired
+Feb 17 22:22:40  10.244.7.214 - - [17/Feb/2026 22:22:40] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:796e798e] Token expired
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [telethon_client] [req:796e798e] Failed to get username for tenant=entrylab: The authorization key (session file) was used under two different IP addresses simultaneously, and can no longer be used. Use the same session exclusively, or use different sessions (caused by GetUsersRequest)
+Feb 17 22:22:40  10.244.5.120 - - [17/Feb/2026 22:22:40] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [WARNING] [clerk_auth] [req:ed02b896] Token expired
+Feb 17 22:22:40  [2026-02-17 22:22:40] [ERROR] [db] [req:ed02b896] Database connection error: column j.priority_int does not exist
+Feb 17 22:22:40  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:40                              ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  Traceback (most recent call last):
+Feb 17 22:22:40    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:22:40      yield conn
+Feb 17 22:22:40    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:40      cursor.execute("""
+Feb 17 22:22:40  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:40  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:40                              ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  10.244.6.27 - - [17/Feb/2026 22:22:40] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 22:22:40  [2026-02-17 22:22:40] [ERROR] [repo] [req:ed02b896] Error listing journeys with summary: column j.priority_int does not exist
+Feb 17 22:22:40  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:40                              ^
+Feb 17 22:22:40  
+Feb 17 22:22:40  Traceback (most recent call last):
+Feb 17 22:22:40    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:40      cursor.execute("""
+Feb 17 22:22:40  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:40  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:40                              ^
+Feb 17 22:22:40  
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [clerk_auth] [req:57edd985] Token expired
+Feb 17 22:22:45  10.244.7.214 - - [17/Feb/2026 22:22:45] "GET /admin HTTP/1.1" 200 -
+Feb 17 22:22:45  10.244.5.120 - - [17/Feb/2026 22:22:45] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 17 22:22:45  10.244.6.27 - - [17/Feb/2026 22:22:45] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 17 22:22:45  10.244.4.249 - - [17/Feb/2026 22:22:45] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 22:22:45  10.244.5.120 - - [17/Feb/2026 22:22:45] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [clerk_auth] [req:43a0fc13] Token expired
+Feb 17 22:22:45  10.244.7.214 - - [17/Feb/2026 22:22:45] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [clerk_auth] [req:78970898] Token expired
+Feb 17 22:22:45  10.244.7.214 - - [17/Feb/2026 22:22:45] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [clerk_auth] [req:964062eb] Token expired
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [telethon_client] [req:964062eb] Failed to get username for tenant=entrylab: The authorization key (session file) was used under two different IP addresses simultaneously, and can no longer be used. Use the same session exclusively, or use different sessions (caused by GetUsersRequest)
+Feb 17 22:22:45  10.244.5.120 - - [17/Feb/2026 22:22:45] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 22:22:45  [2026-02-17 22:22:45] [WARNING] [clerk_auth] [req:241b784a] Token expired
+Feb 17 22:22:45  [2026-02-17 22:22:45] [ERROR] [db] [req:241b784a] Database connection error: column j.priority_int does not exist
+Feb 17 22:22:45  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:45                              ^
+Feb 17 22:22:45  
+Feb 17 22:22:45  Traceback (most recent call last):
+Feb 17 22:22:45    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:22:45      yield conn
+Feb 17 22:22:45    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:45      cursor.execute("""
+Feb 17 22:22:45  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:45  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:45                              ^
+Feb 17 22:22:45  
+Feb 17 22:22:45  [2026-02-17 22:22:45] [ERROR] [repo] [req:241b784a] Error listing journeys with summary: column j.priority_int does not exist
+Feb 17 22:22:45  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:45  10.244.6.27 - - [17/Feb/2026 22:22:45] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 22:22:45                              ^
+Feb 17 22:22:45  
+Feb 17 22:22:45  Traceback (most recent call last):
+Feb 17 22:22:45    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:45      cursor.execute("""
+Feb 17 22:22:45  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:45  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:45                              ^
+Feb 17 22:22:45  
+Feb 17 22:22:53  [2026-02-17 22:22:53] [WARNING] [clerk_auth] [req:f849f6d4] Token expired
+Feb 17 22:22:53  10.244.7.214 - - [17/Feb/2026 22:22:53] "GET /admin HTTP/1.1" 200 -
+Feb 17 22:22:53  10.244.5.120 - - [17/Feb/2026 22:22:53] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 17 22:22:53  10.244.6.27 - - [17/Feb/2026 22:22:53] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 17 22:22:53  10.244.4.249 - - [17/Feb/2026 22:22:53] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 17 22:22:53  10.244.5.120 - - [17/Feb/2026 22:22:53] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 17 22:22:53  [2026-02-17 22:22:53] [WARNING] [clerk_auth] [req:bc673bcc] Token expired
+Feb 17 22:22:53  10.244.7.214 - - [17/Feb/2026 22:22:53] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 17 22:22:54  [2026-02-17 22:22:54] [WARNING] [clerk_auth] [req:bc3a6865] Token expired
+Feb 17 22:22:54  10.244.7.214 - - [17/Feb/2026 22:22:54] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 22:22:54  [2026-02-17 22:22:54] [WARNING] [clerk_auth] [req:09a36352] Token expired
+Feb 17 22:22:54  [2026-02-17 22:22:54] [WARNING] [telethon_client] [req:09a36352] Failed to get username for tenant=entrylab: The authorization key (session file) was used under two different IP addresses simultaneously, and can no longer be used. Use the same session exclusively, or use different sessions (caused by GetUsersRequest)
+Feb 17 22:22:54  10.244.5.120 - - [17/Feb/2026 22:22:54] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 22:22:54  [2026-02-17 22:22:54] [WARNING] [clerk_auth] [req:ad298bbe] Token expired
+Feb 17 22:22:54  [2026-02-17 22:22:54] [ERROR] [db] [req:ad298bbe] Database connection error: column j.priority_int does not exist
+Feb 17 22:22:54  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:54                              ^
+Feb 17 22:22:54  
+Feb 17 22:22:54  Traceback (most recent call last):
+Feb 17 22:22:54    File "/workspace/db.py", line 156, in get_connection
+Feb 17 22:22:54      yield conn
+Feb 17 22:22:54    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:54      cursor.execute("""
+Feb 17 22:22:54  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:54  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:54                              ^
+Feb 17 22:22:54  
+Feb 17 22:22:54  [2026-02-17 22:22:54] [ERROR] [repo] [req:ad298bbe] Error listing journeys with summary: column j.priority_int does not exist
+Feb 17 22:22:54  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:54                              ^
+Feb 17 22:22:54  
+Feb 17 22:22:54  Traceback (most recent call last):
+Feb 17 22:22:54    File "/workspace/domains/journeys/repo.py", line 107, in list_journeys_with_summary
+Feb 17 22:22:54      cursor.execute("""
+Feb 17 22:22:54  psycopg2.errors.UndefinedColumn: column j.priority_int does not exist
+Feb 17 22:22:54  LINE 6:                     j.priority_int, j.is_locked, j.inactivit...
+Feb 17 22:22:54                              ^
+Feb 17 22:22:54  
+Feb 17 22:22:54  10.244.6.27 - - [17/Feb/2026 22:22:54] "GET /api/journeys HTTP/1.1" 200 -
