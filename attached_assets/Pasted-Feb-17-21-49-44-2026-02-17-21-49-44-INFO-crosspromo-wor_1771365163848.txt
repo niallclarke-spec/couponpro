@@ -1,0 +1,59 @@
+Feb 17 21:49:44  [2026-02-17 21:49:44] [INFO] [crosspromo_worker] Cross Promo worker thread started
+Feb 17 21:49:44  [2026-02-17 21:49:44] [INFO] [bootstrap] Cross promo worker started
+Feb 17 21:49:44  [2026-02-17 21:49:44] [WARNING] [telethon_client] No Telethon credentials found for tenant=entrylab
+Feb 17 21:49:46  [2026-02-17 21:49:46] [INFO] [telethon_session] Session restored for tenant=entrylab <- telethon_sessions/entrylab.session
+Feb 17 21:49:46  [2026-02-17 21:49:46] [INFO] [telethon_client] Session restored from remote storage for tenant=entrylab
+Feb 17 21:49:46  [2026-02-17 21:49:46] [ERROR] [telethon_client] Telethon connect failed for tenant=entrylab: Missing api_id/api_hash for tenant=entrylab
+Feb 17 21:49:46  Traceback (most recent call last):
+Feb 17 21:49:46    File "/workspace/integrations/telegram/user_client.py", line 185, in connect
+Feb 17 21:49:46      self._client = self._build_client()
+Feb 17 21:49:46                     ^^^^^^^^^^^^^^^^^^^^
+Feb 17 21:49:46    File "/workspace/integrations/telegram/user_client.py", line 160, in _build_client
+Feb 17 21:49:46      raise ValueError(f"Missing api_id/api_hash for tenant={self.tenant_id}")
+Feb 17 21:49:46  ValueError: Missing api_id/api_hash for tenant=entrylab
+Feb 17 21:49:46  [2026-02-17 21:49:46] [INFO] [bootstrap] Telethon client not ready (status=error), listener skipped
+Feb 17 21:49:46  [2026-02-17 21:49:46] [INFO] [bootstrap] Application started
+Feb 17 21:49:46  Server running at http://0.0.0.0:8080/
+Feb 17 21:49:54  [2026-02-17 21:49:54] [INFO] [leader] Retrying leader lock acquisition...
+Feb 17 21:49:54  [2026-02-17 21:49:54] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 17 21:50:04  [2026-02-17 21:50:04] [INFO] [leader] Retrying leader lock acquisition...
+Feb 17 21:50:04  [2026-02-17 21:50:04] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 17 21:50:14  [2026-02-17 21:50:14] [INFO] [leader] Retrying leader lock acquisition...
+Feb 17 21:50:14  [2026-02-17 21:50:14] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [leader] Retrying leader lock acquisition...
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [leader] Leader lock acquired on retry
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [bootstrap] Forex scheduler started in background thread
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] Starting forex scheduler for tenant: entrylab
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ============================================================
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 🚀 FOREX SIGNALS SCHEDULER STARTED
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler]    Tenant: entrylab
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ============================================================
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 📊 Signal checks: 15min timeframe every 15 minutes
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 5 seconds
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_scheduler] ============================================================
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] [tenant:entrylab] [req:c4b4cbce] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [raja_banks] [tenant:entrylab] [req:c4b4cbce] Checking for signals on XAU/USD 15min...
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [raja_banks] [tenant:entrylab] [req:c4b4cbce] Guardrail blocked: Outside trading session (Off-hours)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [generator] [tenant:entrylab] [req:c4b4cbce] 📊 Checking 1-hour timeframe...
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [forex_signals] [tenant:entrylab] [req:c4b4cbce] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [raja_banks] [tenant:entrylab] [req:c4b4cbce] Checking for signals on XAU/USD 1h...
+Feb 17 21:50:24  [2026-02-17 21:50:24] [INFO] [raja_banks] [tenant:entrylab] [req:c4b4cbce] Guardrail blocked: Outside trading session (Off-hours)
