@@ -128,14 +128,26 @@ class TelethonUserClient:
         self._load_credentials()
 
     def _load_credentials(self):
-        if self.tenant_id == 'entrylab':
-            raw_id = os.environ.get('TELEGRAM_API_ID', '')
-            self._api_id = int(raw_id) if raw_id.isdigit() else None
-            self._api_hash = os.environ.get('TELEGRAM_API_HASH')
-            self._phone = os.environ.get('TELEGRAM_PHONE')
+        try:
+            from domains.connections.repo import get_telethon_credentials
+            db_creds = get_telethon_credentials(self.tenant_id)
+            if db_creds and db_creds.get('api_id') and db_creds.get('api_hash'):
+                self._api_id = db_creds['api_id']
+                self._api_hash = db_creds['api_hash']
+                self._phone = db_creds.get('phone')
+                masked = '***' + self._phone[-4:] if self._phone and len(self._phone) >= 4 else '***'
+                logger.info(f"Credentials loaded from DB for tenant={self.tenant_id}, phone={masked}")
+                return
+        except Exception as e:
+            logger.warning(f"Could not load telethon credentials from DB for tenant={self.tenant_id}: {e}")
+
+        raw_id = os.environ.get('TELEGRAM_API_ID', '')
+        self._api_id = int(raw_id) if raw_id.isdigit() else None
+        self._api_hash = os.environ.get('TELEGRAM_API_HASH')
+        self._phone = os.environ.get('TELEGRAM_PHONE')
         if self._phone:
             masked = '***' + self._phone[-4:]
-            logger.info(f"Credentials loaded for tenant={self.tenant_id}, phone={masked}")
+            logger.info(f"Credentials loaded from env for tenant={self.tenant_id}, phone={masked}")
         else:
             logger.warning(f"No Telethon credentials found for tenant={self.tenant_id}")
 
@@ -291,6 +303,7 @@ class TelethonUserClient:
         return self.status == 'connected' and self._client is not None and self._client.is_connected()
 
     def get_status(self) -> Dict[str, Any]:
+        masked_phone = ('***' + self._phone[-4:]) if self._phone and len(self._phone) >= 4 else None
         return {
             'tenant_id': self.tenant_id,
             'status': self.status,
@@ -300,6 +313,8 @@ class TelethonUserClient:
             'last_error': self.last_error,
             'sends_today': self._rate.sends_today,
             'has_credentials': bool(self._api_id and self._api_hash),
+            'has_api_id': bool(self._api_id),
+            'masked_phone': masked_phone,
             'has_session_file': os.path.exists(self.session_path + '.session'),
         }
 

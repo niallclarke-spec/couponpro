@@ -342,6 +342,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from integrations.telegram.user_handlers import handle_telethon_disconnect
         handle_telethon_disconnect(self)
 
+    def handle_api_telethon_save_credentials(self):
+        from integrations.telegram.user_handlers import handle_telethon_save_credentials
+        handle_telethon_save_credentials(self)
+
     # Cross Promo handlers
     def handle_api_crosspromo_settings_get(self):
         from domains.crosspromo import handlers as cp_h

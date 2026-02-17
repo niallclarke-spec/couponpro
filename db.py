@@ -890,6 +890,22 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_bot_connections_tenant_id ON tenant_bot_connections(tenant_id)")
                 logger.info("tenant_bot_connections table ready")
                 
+                # Telethon credentials table for Telegram API integration
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS tenant_telethon_credentials (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(100) NOT NULL REFERENCES tenants(id),
+                        api_id INTEGER NOT NULL,
+                        api_hash VARCHAR(255) NOT NULL,
+                        phone VARCHAR(50) NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(tenant_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_tenant_telethon_credentials_tenant ON tenant_telethon_credentials(tenant_id)")
+                logger.info("tenant_telethon_credentials table ready")
+                
                 # Migration: Add channel_id to tenant_bot_connections if it doesn't exist
                 cursor.execute("""
                     SELECT 1 FROM information_schema.columns 
@@ -1537,6 +1553,19 @@ class DatabasePool:
                     logger.info("journey_link_clicks table ready")
                 else:
                     logger.info("journey_link_clicks table already exists")
+                
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_inbound_dedupe (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(100) NOT NULL,
+                        chat_id BIGINT NOT NULL,
+                        message_id BIGINT NOT NULL,
+                        received_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(tenant_id, chat_id, message_id)
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_inbound_dedupe_received ON journey_inbound_dedupe(received_at)")
+                logger.info("journey_inbound_dedupe table ready")
                 
                 cursor.execute("""
                     SELECT 1 FROM information_schema.columns 

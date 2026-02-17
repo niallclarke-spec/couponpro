@@ -157,3 +157,60 @@ def delete_connection(tenant_id: str, bot_role: str) -> bool:
     except Exception as e:
         logger.exception(f"Error deleting connection for tenant {tenant_id}, role {bot_role}: {e}")
         raise DatabaseOperationError(f"Failed to delete connection: {e}") from e
+
+
+def get_telethon_credentials(tenant_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Get Telethon user account credentials for a tenant.
+    
+    Returns dict with api_id, api_hash, phone or None if not configured.
+    """
+    db_pool = _require_db_pool()
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT api_id, api_hash, phone
+                FROM tenant_telethon_credentials
+                WHERE tenant_id = %s
+            """, (tenant_id,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'api_id': row[0],
+                    'api_hash': row[1],
+                    'phone': row[2],
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error getting telethon credentials for tenant {tenant_id}: {e}")
+        return None
+
+
+def save_telethon_credentials(tenant_id: str, api_id: int, api_hash: str, phone: str) -> bool:
+    """
+    Save or update Telethon user account credentials for a tenant.
+    
+    Returns True on success, False on error.
+    """
+    db_pool = _require_db_pool()
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tenant_telethon_credentials (tenant_id, api_id, api_hash, phone)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (tenant_id) DO UPDATE SET
+                    api_id = EXCLUDED.api_id,
+                    api_hash = EXCLUDED.api_hash,
+                    phone = EXCLUDED.phone,
+                    updated_at = NOW()
+            """, (tenant_id, api_id, api_hash, phone))
+            conn.commit()
+            logger.info(f"Saved telethon credentials for tenant={tenant_id}")
+            return True
+    except Exception as e:
+        logger.exception(f"Error saving telethon credentials for tenant {tenant_id}: {e}")
+        return False

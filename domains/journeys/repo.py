@@ -1661,17 +1661,23 @@ def cleanup_old_dedupe_records(days: int = 7) -> int:
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return 0
+
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "DELETE FROM journey_inbound_dedupe WHERE received_at < NOW() - make_interval(days => %s)",
-                (int(days),)
+                (days,)
             )
             deleted = cursor.rowcount
             conn.commit()
+            if deleted > 0:
+                logger.info(f"Cleaned up {deleted} old dedupe records (>{days} days)")
             return deleted
     except Exception as e:
+        if 'relation "journey_inbound_dedupe" does not exist' in str(e):
+            logger.debug("journey_inbound_dedupe table does not exist yet, skipping cleanup")
+            return 0
         logger.exception(f"Error cleaning up dedupe records: {e}")
         return 0
 

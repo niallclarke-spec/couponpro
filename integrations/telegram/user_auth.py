@@ -93,6 +93,13 @@ async def _verify_code(tenant_id: str, code: str, phone_code_hash: str) -> Dict[
         uc._api_hash = state['api_hash']
         uc._phone = phone
 
+        try:
+            from domains.connections.repo import save_telethon_credentials
+            save_telethon_credentials(tenant_id, state['api_id'], state['api_hash'], phone)
+            logger.info(f"Telethon credentials persisted to DB for tenant={tenant_id}")
+        except Exception as pe:
+            logger.warning(f"Failed to persist telethon credentials to DB for tenant={tenant_id}: {pe}")
+
         await client.disconnect()
         _clear_auth_state(tenant_id)
 
@@ -144,6 +151,13 @@ async def _verify_2fa(tenant_id: str, password: str) -> Dict[str, Any]:
         uc._api_id = state['api_id']
         uc._api_hash = state['api_hash']
         uc._phone = state['phone']
+
+        try:
+            from domains.connections.repo import save_telethon_credentials
+            save_telethon_credentials(tenant_id, state['api_id'], state['api_hash'], state['phone'])
+            logger.info(f"Telethon credentials persisted to DB for tenant={tenant_id}")
+        except Exception as pe:
+            logger.warning(f"Failed to persist telethon credentials to DB for tenant={tenant_id}: {pe}")
 
         await client.disconnect()
         _clear_auth_state(tenant_id)

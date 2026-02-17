@@ -6232,6 +6232,24 @@
                                             <span class="telethon-stat-value">Loading...</span>
                                         </div>
                                     </div>
+
+                                    <div id="telethon-creds-section" style="margin-bottom: 16px; border-top: 1px solid var(--border-color, #2a2f4e); padding-top: 16px;">
+                                        <div style="font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">API Credentials</div>
+                                        <div style="margin-bottom: 8px; color: var(--text-muted); font-size: 12px;">From <a href="https://my.telegram.org/apps" target="_blank" style="color: var(--accent-primary);">my.telegram.org/apps</a></div>
+                                        <div class="form-group" style="margin-bottom: 10px;">
+                                            <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">API ID</label>
+                                            <input type="text" id="telethon-cred-api-id" placeholder="e.g. 12345678" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 10px;">
+                                            <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">API Hash</label>
+                                            <input type="password" id="telethon-cred-api-hash" placeholder="Paste API hash" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 10px;">
+                                            <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Phone Number</label>
+                                            <input type="text" id="telethon-cred-phone" placeholder="+1234567890" style="width: 100%; padding: 8px 12px; background: var(--bg-input, #1a1f3e); border: 1px solid var(--border-color, #2a2f4e); border-radius: 8px; color: var(--text-primary); font-size: 14px;">
+                                        </div>
+                                        <button class="btn-primary" onclick="saveTelethonCredentials()" style="width: 100%;">Save Credentials</button>
+                                    </div>
                                     
                                     <div class="connection-actions">
                                         <button class="btn-ghost" id="telethon-connect-btn" onclick="connectTelethon()" style="display:none">Connect</button>
@@ -9102,9 +9120,17 @@
                     </div>
                     <div class="telethon-stat-row">
                         <span class="telethon-stat-label">Credentials</span>
-                        <span class="telethon-stat-value">${data.has_credentials ? 'Configured' : 'Not set'}</span>
+                        <span class="telethon-stat-value" style="color: ${data.has_credentials ? 'var(--status-online)' : 'var(--status-error, #ff4d6a)'}">${data.has_credentials ? 'Configured' : 'Not set'}</span>
                     </div>
+                    ${data.masked_phone ? `<div class="telethon-stat-row"><span class="telethon-stat-label">Phone</span><span class="telethon-stat-value">${data.masked_phone}</span></div>` : ''}
                 `;
+
+                const credsSection = document.getElementById('telethon-creds-section');
+                if (data.has_credentials) {
+                    credsSection.style.display = 'none';
+                } else {
+                    credsSection.style.display = 'block';
+                }
 
                 const connectBtn = document.getElementById('telethon-connect-btn');
                 const reconnectBtn = document.getElementById('telethon-reconnect-btn');
@@ -9128,6 +9154,34 @@
             if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
             if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
             return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        async function saveTelethonCredentials() {
+            const apiId = document.getElementById('telethon-cred-api-id').value.trim();
+            const apiHash = document.getElementById('telethon-cred-api-hash').value.trim();
+            const phone = document.getElementById('telethon-cred-phone').value.trim();
+
+            if (!apiId || !apiHash || !phone) {
+                showToast('All credential fields are required', 'error');
+                return;
+            }
+
+            try {
+                const resp = await authedFetch('/api/telethon/credentials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_id: apiId, api_hash: apiHash, phone: phone })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Credentials saved successfully');
+                    loadTelethonStatus();
+                } else {
+                    showToast('Failed to save: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                showToast('Error saving credentials: ' + err.message, 'error');
+            }
         }
 
         async function connectTelethon() {

@@ -150,3 +150,44 @@ def handle_telethon_disconnect(handler):
     except Exception as e:
         logger.exception(f"Error disconnecting telethon: {e}")
         _send_json(handler, 500, {'error': str(e)})
+
+
+def handle_telethon_save_credentials(handler):
+    """POST /api/telethon/credentials - Save Telethon credentials to DB."""
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        data = _read_json_body(handler)
+    except (json.JSONDecodeError, ValueError) as e:
+        _send_json(handler, 400, {'error': f'Invalid JSON: {e}'})
+        return
+
+    api_id = data.get('api_id')
+    api_hash = data.get('api_hash')
+    phone = data.get('phone')
+
+    if not api_id or not api_hash or not phone:
+        _send_json(handler, 400, {'error': 'api_id, api_hash, and phone are required'})
+        return
+
+    try:
+        api_id = int(api_id)
+    except (ValueError, TypeError):
+        _send_json(handler, 400, {'error': 'api_id must be a number'})
+        return
+
+    try:
+        from domains.connections.repo import save_telethon_credentials
+        success = save_telethon_credentials(tenant_id, api_id, api_hash, phone)
+        if success:
+            from integrations.telegram.user_client import get_client
+            client = get_client(tenant_id)
+            client._api_id = api_id
+            client._api_hash = api_hash
+            client._phone = phone
+            logger.info(f"Telethon credentials saved for tenant={tenant_id}")
+            _send_json(handler, 200, {'success': True})
+        else:
+            _send_json(handler, 500, {'error': 'Failed to save credentials'})
+    except Exception as e:
+        logger.exception(f"Error saving telethon credentials: {e}")
+        _send_json(handler, 500, {'error': str(e)})

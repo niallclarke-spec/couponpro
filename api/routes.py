@@ -283,6 +283,8 @@ POST_ROUTES: List[Route] = [
           auth_required=True),
     Route('POST', '/api/telethon/disconnect', 'handle_api_telethon_disconnect',
           auth_required=True),
+    Route('POST', '/api/telethon/credentials', 'handle_api_telethon_save_credentials',
+          auth_required=True, db_required=True),
 
     # Cross Promo
     Route('POST', '/api/crosspromo/settings', 'handle_api_crosspromo_settings_post',
