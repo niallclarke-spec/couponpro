@@ -21,10 +21,12 @@ def _read_json_body(handler):
 def handle_telethon_status(handler):
     tenant_id = getattr(handler, 'tenant_id', 'entrylab')
     try:
+        import os
         from integrations.telegram.user_client import get_client
         client = get_client(tenant_id)
         status = client.get_status()
-        if status.get('has_session_file') and status.get('has_credentials') and not status.get('connected'):
+        auto_connect = os.environ.get('TELETHON_AUTO_CONNECT', 'true').lower() != 'false'
+        if auto_connect and status.get('has_session_file') and status.get('has_credentials') and not status.get('connected') and status.get('status') != 'error':
             try:
                 ok = client.connect_sync()
                 if ok:
