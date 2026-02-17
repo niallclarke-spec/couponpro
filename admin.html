@@ -6256,6 +6256,7 @@
                                         <button class="btn-ghost" id="telethon-reconnect-btn" onclick="reconnectTelethon()" style="display:none">Reconnect</button>
                                         <button class="btn-primary" id="telethon-auth-btn" onclick="showTelethonAuthModal()">Authenticate</button>
                                         <button class="btn-text-danger" id="telethon-disconnect-btn" onclick="disconnectTelethon()" style="display:none">Disconnect</button>
+                                        <button class="btn-text-danger" id="telethon-reset-btn" onclick="resetTelethonSession()" style="display:none">Reset Session</button>
                                     </div>
                                 </div>
                             </div>
@@ -9094,6 +9095,9 @@
                 } else if (data.status === 'not_authorized') {
                     statusEl.textContent = 'Not Authorized';
                     statusEl.className = 'connection-badge pending';
+                } else if (data.status === 'session_expired') {
+                    statusEl.textContent = 'Session Expired';
+                    statusEl.className = 'connection-badge disconnected';
                 } else if (data.status === 'not_configured') {
                     statusEl.textContent = 'Not configured';
                     statusEl.className = 'connection-badge disconnected';
@@ -9105,7 +9109,7 @@
                 detailsEl.innerHTML = `
                     <div class="telethon-stat-row">
                         <span class="telethon-stat-label">Status</span>
-                        <span class="telethon-stat-value" style="color: ${data.status === 'connected' ? 'var(--status-online)' : data.status === 'not_configured' ? 'var(--text-muted)' : 'var(--status-error, #ff4d6a)'}">${data.status === 'not_configured' ? 'Not configured' : data.status}</span>
+                        <span class="telethon-stat-value" style="color: ${data.status === 'connected' ? 'var(--status-online)' : data.status === 'session_expired' ? 'var(--status-warning, #ffc107)' : data.status === 'not_configured' ? 'var(--text-muted)' : 'var(--status-error, #ff4d6a)'}">${data.status === 'not_configured' ? 'Not configured' : data.status === 'session_expired' ? 'Session Expired' : data.status}</span>
                     </div>
                     <div class="telethon-stat-row">
                         <span class="telethon-stat-label">Messages Today</span>
@@ -9138,10 +9142,12 @@
                 const authBtn = document.getElementById('telethon-auth-btn');
 
                 const isConfigured = data.has_credentials;
+                const resetBtn = document.getElementById('telethon-reset-btn');
                 connectBtn.style.display = (data.status === 'disconnected' && data.has_session_file && isConfigured) ? 'inline-block' : 'none';
                 reconnectBtn.style.display = data.status === 'connected' ? 'inline-block' : 'none';
                 disconnectBtn.style.display = (data.status === 'connected' || data.status === 'error') ? 'inline-block' : 'none';
-                authBtn.style.display = (isConfigured && (!data.has_session_file || data.status === 'not_authorized' || data.status === 'not_configured' || data.status === 'error')) ? 'inline-block' : 'none';
+                authBtn.style.display = (isConfigured && (!data.has_session_file || data.status === 'not_authorized' || data.status === 'not_configured' || data.status === 'error' || data.status === 'session_expired')) ? 'inline-block' : 'none';
+                resetBtn.style.display = (data.status === 'session_expired' || data.status === 'error') ? 'inline-block' : 'none';
 
             } catch (err) {
                 console.error('Failed to load telethon status:', err);
@@ -9223,6 +9229,22 @@
                 loadTelethonStatus();
             } catch (err) {
                 showToast('Disconnect error: ' + err.message, 'error');
+            }
+        }
+
+        async function resetTelethonSession() {
+            if (!confirm('This will clear the expired session. You will need to re-authenticate afterwards. Continue?')) return;
+            try {
+                const resp = await authedFetch('/api/telethon/reset-session', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Session cleared. Please authenticate to reconnect.');
+                } else {
+                    showToast('Failed to reset: ' + (data.error || 'Unknown error'), 'error');
+                }
+                loadTelethonStatus();
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
             }
         }
 

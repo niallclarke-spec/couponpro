@@ -342,6 +342,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from integrations.telegram.user_handlers import handle_telethon_disconnect
         handle_telethon_disconnect(self)
 
+    def handle_api_telethon_reset_session(self):
+        from integrations.telegram.user_handlers import handle_telethon_reset_session
+        handle_telethon_reset_session(self)
+
     def handle_api_telethon_save_credentials(self):
         from integrations.telegram.user_handlers import handle_telethon_save_credentials
         handle_telethon_save_credentials(self)

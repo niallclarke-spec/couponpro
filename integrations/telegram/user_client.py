@@ -7,6 +7,7 @@ from typing import Optional, Dict, Any
 
 from telethon import TelegramClient
 from telethon.errors import FloodWaitError, SessionPasswordNeededError
+from telethon.errors.rpcerrorlist import AuthKeyDuplicatedError
 
 from core.logging import get_logger
 
@@ -211,6 +212,13 @@ class TelethonUserClient:
                     self.status = 'not_authorized'
                     logger.warning(f"Telethon connected but not authorized for tenant={self.tenant_id}")
                     return False
+            except AuthKeyDuplicatedError:
+                from integrations.telegram.user_session import delete_session
+                delete_session(self.tenant_id)
+                self.status = 'session_expired'
+                self.last_error = 'Session expired - please re-authenticate'
+                logger.warning(f"AuthKeyDuplicatedError for tenant={self.tenant_id}: session invalidated, re-authentication needed")
+                return False
             except Exception as e:
                 self.status = 'error'
                 self.last_error = str(e)

@@ -172,6 +172,24 @@ def handle_telethon_disconnect(handler):
         _send_json(handler, 500, {'error': str(e)})
 
 
+def handle_telethon_reset_session(handler):
+    tenant_id = getattr(handler, 'tenant_id', 'entrylab')
+    try:
+        from integrations.telegram.user_client import get_client
+        from integrations.telegram.user_session import delete_session
+        client = get_client(tenant_id)
+        if client.is_connected():
+            client.disconnect_sync()
+        delete_session(tenant_id)
+        client.status = 'not_configured'
+        client.last_error = None
+        logger.info(f"Telethon session reset for tenant={tenant_id}")
+        _send_json(handler, 200, {'success': True, 'status': client.get_status()})
+    except Exception as e:
+        logger.exception(f"Error resetting telethon session: {e}")
+        _send_json(handler, 500, {'error': str(e)})
+
+
 def handle_telethon_save_credentials(handler):
     """POST /api/telethon/credentials - Save Telethon credentials to DB."""
     tenant_id = getattr(handler, 'tenant_id', 'entrylab')
