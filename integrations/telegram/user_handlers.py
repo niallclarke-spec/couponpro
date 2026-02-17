@@ -24,8 +24,11 @@ def handle_telethon_status(handler):
         import os
         from integrations.telegram.user_client import get_client
         client = get_client(tenant_id)
-        status = client.get_status()
         auto_connect = os.environ.get('TELETHON_AUTO_CONNECT', 'true').lower() != 'false'
+        if not auto_connect and not client.is_connected():
+            client.status = 'disconnected'
+            client.last_error = None
+        status = client.get_status()
         if auto_connect and status.get('has_session_file') and status.get('has_credentials') and not status.get('connected') and status.get('status') != 'error':
             try:
                 ok = client.connect_sync()
