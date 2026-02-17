@@ -1384,6 +1384,9 @@ class DatabasePool:
                         description TEXT,
                         status VARCHAR NOT NULL DEFAULT 'draft',
                         re_entry_policy VARCHAR NOT NULL DEFAULT 'block',
+                        priority_int INTEGER NOT NULL DEFAULT 0,
+                        is_locked BOOLEAN NOT NULL DEFAULT FALSE,
+                        inactivity_timeout_days INTEGER,
                         created_at TIMESTAMP DEFAULT NOW(),
                         updated_at TIMESTAMP DEFAULT NOW()
                     )
@@ -1458,6 +1461,9 @@ class DatabasePool:
                         step_order INT NOT NULL,
                         step_type VARCHAR NOT NULL,
                         config JSONB NOT NULL DEFAULT '{}',
+                        branch_keyword VARCHAR,
+                        branch_true_step_id UUID,
+                        branch_false_step_id UUID,
                         created_at TIMESTAMP DEFAULT NOW()
                     )
                 """)
@@ -1585,6 +1591,38 @@ class DatabasePool:
                 if not cursor.fetchone():
                     cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN reply_received_at TIMESTAMP")
                     logger.info("Added reply_received_at column to journey_user_sessions")
+                
+                # Migration: add priority_int, is_locked, inactivity_timeout_days to journeys
+                for col, col_def in [
+                    ('priority_int', 'INTEGER NOT NULL DEFAULT 0'),
+                    ('is_locked', 'BOOLEAN NOT NULL DEFAULT FALSE'),
+                    ('inactivity_timeout_days', 'INTEGER'),
+                ]:
+                    cursor.execute("""
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'journeys' AND column_name = %s
+                    """, (col,))
+                    if not cursor.fetchone():
+                        cursor.execute(f"ALTER TABLE journeys ADD COLUMN {col} {col_def}")
+                        logger.info(f"Added {col} column to journeys")
+                    else:
+                        logger.info(f"{col} column already exists on journeys, skipping")
+                
+                # Migration: add branch_keyword, branch_true_step_id, branch_false_step_id to journey_steps
+                for col, col_def in [
+                    ('branch_keyword', 'VARCHAR'),
+                    ('branch_true_step_id', 'UUID'),
+                    ('branch_false_step_id', 'UUID'),
+                ]:
+                    cursor.execute("""
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'journey_steps' AND column_name = %s
+                    """, (col,))
+                    if not cursor.fetchone():
+                        cursor.execute(f"ALTER TABLE journey_steps ADD COLUMN {col} {col_def}")
+                        logger.info(f"Added {col} column to journey_steps")
+                    else:
+                        logger.info(f"{col} column already exists on journey_steps, skipping")
                 
                 # Cross Promo tables
                 cursor.execute("""
