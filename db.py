@@ -1626,6 +1626,14 @@ class DatabasePool:
                     else:
                         logger.info(f"{col} column already exists on journeys, skipping")
                 
+                # Migration: add welcome_message to journeys
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='journeys' AND column_name='welcome_message'")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE journeys ADD COLUMN welcome_message TEXT")
+                    logger.info("Added welcome_message column to journeys")
+                else:
+                    logger.info("welcome_message column already exists on journeys, skipping")
+                
                 # Migration: add branch_keyword, branch_true_step_id, branch_false_step_id to journey_steps
                 for col, col_def in [
                     ('branch_keyword', 'VARCHAR'),

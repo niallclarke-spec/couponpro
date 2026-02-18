@@ -42,7 +42,8 @@ class JourneyEngine:
             return False
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 
-                                telegram_chat_id: int, telegram_user_id: int) -> Optional[Dict]:
+                                telegram_chat_id: int, telegram_user_id: int,
+                                first_name: str = '') -> Optional[Dict]:
         """
         Start a journey for a user, handling re-entry policy.
         
@@ -90,6 +91,17 @@ class JourneyEngine:
         
         if session:
             logger.info(f"Started journey {journey_id} for user {telegram_user_id}, session {session['id']}")
+            
+            welcome_message = journey.get('welcome_message', '')
+            if welcome_message:
+                personalized = welcome_message.replace('{first_name}', first_name or '').strip()
+                if personalized:
+                    success = self._send_message(tenant_id, telegram_chat_id, personalized)
+                    if success:
+                        logger.info(f"Sent welcome message for journey {journey_id} to user {telegram_user_id}")
+                    else:
+                        logger.warning(f"Failed to send welcome message for journey {journey_id} to user {telegram_user_id}")
+            
             self.execute_step(session, first_step, journey.get('bot_id'))
         
         return session

@@ -6470,6 +6470,12 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Welcome Message <span style="color: rgba(255,255,255,0.4); font-weight: 400;">(optional)</span></label>
+                    <textarea class="form-textarea" id="journey-welcome-message" placeholder="e.g., Hey {first_name}, thanks for reaching out!" rows="2"></textarea>
+                    <div class="form-hint">Sent instantly before the first step. Use <strong>{first_name}</strong> to personalise with their Telegram name.</div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Status</label>
                     <div class="status-options">
                         <div class="status-option selected" onclick="window.JourneysModule.selectStatus('draft')" data-status="draft">

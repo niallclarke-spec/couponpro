@@ -19,7 +19,8 @@ def _get_db_pool():
 
 
 def create_journey(tenant_id: str, bot_id: str, name: str, description: str = None,
-                   status: str = 'draft', re_entry_policy: str = 'block') -> Optional[Dict]:
+                   status: str = 'draft', re_entry_policy: str = 'block',
+                   welcome_message: str = None) -> Optional[Dict]:
     """Create a new journey."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -29,10 +30,10 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
-            """, (tenant_id, bot_id, name, description, status, re_entry_policy))
+                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
+            """, (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message))
             row = cursor.fetchone()
             conn.commit()
             
@@ -46,7 +47,8 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
                     'status': row[5],
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
-                    'updated_at': row[8].isoformat() if row[8] else None
+                    'updated_at': row[8].isoformat() if row[8] else None,
+                    'welcome_message': row[9]
                 }
             return None
     except Exception as e:
@@ -64,7 +66,7 @@ def list_journeys(tenant_id: str) -> List[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
                 FROM journeys
                 WHERE tenant_id = %s
                 ORDER BY created_at DESC
@@ -81,7 +83,8 @@ def list_journeys(tenant_id: str) -> List[Dict]:
                     'status': row[5],
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
-                    'updated_at': row[8].isoformat() if row[8] else None
+                    'updated_at': row[8].isoformat() if row[8] else None,
+                    'welcome_message': row[9]
                 })
             return journeys
     except Exception as e:
@@ -109,7 +112,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     j.id, j.tenant_id, j.bot_id, j.name, j.description, 
                     j.status, j.re_entry_policy, j.created_at, j.updated_at,
                     COALESCE(step_counts.cnt, 0) as step_count,
-                    j.priority_int, j.is_locked, j.inactivity_timeout_days
+                    j.priority_int, j.is_locked, j.inactivity_timeout_days, j.welcome_message
                 FROM journeys j
                 LEFT JOIN (
                     SELECT journey_id, COUNT(*) as cnt
@@ -139,6 +142,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     'priority_int': row[10],
                     'is_locked': row[11],
                     'inactivity_timeout_days': row[12],
+                    'welcome_message': row[13],
                     'triggers': []
                 })
             
@@ -188,7 +192,7 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -204,7 +208,8 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
                     'status': row[5],
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
-                    'updated_at': row[8].isoformat() if row[8] else None
+                    'updated_at': row[8].isoformat() if row[8] else None,
+                    'welcome_message': row[9]
                 }
             return None
     except Exception as e:
@@ -218,7 +223,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
     if not db_pool or not db_pool.connection_pool:
         return None
     
-    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id'}
+    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id', 'welcome_message'}
     update_fields = {k: v for k, v in fields.items() if k in allowed_fields}
     
     if not update_fields:
@@ -235,7 +240,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                 UPDATE journeys
                 SET {set_clause}, updated_at = NOW()
                 WHERE tenant_id = %s AND id = %s
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
             """, values)
             row = cursor.fetchone()
             conn.commit()
@@ -250,7 +255,8 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                     'status': row[5],
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
-                    'updated_at': row[8].isoformat() if row[8] else None
+                    'updated_at': row[8].isoformat() if row[8] else None,
+                    'welcome_message': row[9]
                 }
             return None
     except Exception as e:
@@ -461,7 +467,7 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config
+                       t.id as trigger_id, t.trigger_config, j.welcome_message
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s 
@@ -483,7 +489,8 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
                     'status': row[4],
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
-                    'trigger_config': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {}
+                    'trigger_config': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
+                    'welcome_message': row[8]
                 }
             return None
     except Exception as e:
@@ -506,7 +513,7 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config
+                       t.id as trigger_id, t.trigger_config, j.welcome_message
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s
@@ -533,7 +540,8 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
                     'status': row[4],
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
-                    'trigger_config': trigger_config
+                    'trigger_config': trigger_config,
+                    'welcome_message': row[8]
                 }
             return None
     except Exception as e:

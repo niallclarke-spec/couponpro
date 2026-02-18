@@ -70,13 +70,14 @@ async def start_listener(tenant_id: str):
             if sender_id == my_id:
                 return
 
-            await event.get_sender()
+            sender = await event.get_sender()
+            first_name = getattr(sender, 'first_name', None) or ''
 
             message_id = event.id
 
             logger.info(f"Incoming DM for tenant={tenant_id}: chat={chat_id}, sender={sender_id}")
 
-            await _route_to_journey(tenant_id, chat_id, sender_id, text, message_id)
+            await _route_to_journey(tenant_id, chat_id, sender_id, text, message_id, first_name=first_name)
         except Exception as e:
             logger.exception(f"Error handling incoming message: {e}")
 
@@ -85,7 +86,7 @@ async def start_listener(tenant_id: str):
     logger.info(f"Listener started for tenant={tenant_id}")
 
 
-async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: str, message_id: int):
+async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: str, message_id: int, first_name: str = ''):
     try:
         from domains.journeys import repo
         from domains.journeys.engine import JourneyEngine
@@ -151,7 +152,7 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
             if journey:
                 logger.info(f"DM trigger matched journey '{journey['name']}' for sender={sender_id}")
                 engine = JourneyEngine()
-                await loop.run_in_executor(None, engine.start_journey_for_user, tenant_id, journey, chat_id, sender_id)
+                await loop.run_in_executor(None, engine.start_journey_for_user, tenant_id, journey, chat_id, sender_id, first_name)
                 return
 
             logger.debug(f"No actionable sessions or DM triggers for chat={chat_id}")

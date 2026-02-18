@@ -260,6 +260,8 @@
         if (triggerType) triggerType.value = 'deep_link';
         const dmPrefill = document.getElementById('dm-prefill-message');
         if (dmPrefill) dmPrefill.value = '';
+        const welcomeMsg = document.getElementById('journey-welcome-message');
+        if (welcomeMsg) welcomeMsg.value = '';
         if (modalTitle) modalTitle.textContent = journeyId ? 'Edit Journey' : 'Create Journey';
         if (preview) preview.style.display = 'none';
         onTriggerTypeChange();
@@ -300,6 +302,8 @@
                 
                 const nameInput = document.getElementById('journey-name-input');
                 if (nameInput) nameInput.value = journey.name || '';
+                const welcomeMsgInput = document.getElementById('journey-welcome-message');
+                if (welcomeMsgInput) welcomeMsgInput.value = journey.welcome_message || '';
                 selectStatus(journey.status || 'draft');
                 
                 const triggers = journey.triggers || [];
@@ -395,11 +399,13 @@
             
             let journeyId = state.currentJourneyId;
             
+            const welcomeMessage = (document.getElementById('journey-welcome-message') || {}).value?.trim() || '';
+            
             if (journeyId) {
                 const resp = await fetch(`/api/journeys/${journeyId}`, {
                     method: 'PUT',
                     headers,
-                    body: JSON.stringify({ name, status }),
+                    body: JSON.stringify({ name, status, welcome_message: welcomeMessage }),
                     credentials: 'include'
                 });
                 if (!resp.ok) {
@@ -411,7 +417,7 @@
                 const resp = await fetch('/api/journeys', {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ name, status, bot_id: botId }),
+                    body: JSON.stringify({ name, status, bot_id: botId, welcome_message: welcomeMessage }),
                     credentials: 'include'
                 });
                 const data = await resp.json();
