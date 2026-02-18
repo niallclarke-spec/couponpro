@@ -1571,6 +1571,24 @@ class DatabasePool:
                     )
                 """)
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_journey_inbound_dedupe_received ON journey_inbound_dedupe(received_at)")
+                cursor.execute("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_constraint c
+                            JOIN pg_class t ON c.conrelid = t.oid
+                            WHERE t.relname = 'journey_inbound_dedupe'
+                            AND c.contype = 'u'
+                            AND array_length(c.conkey, 1) = 3
+                        ) THEN
+                            ALTER TABLE journey_inbound_dedupe
+                            ADD CONSTRAINT journey_inbound_dedupe_tenant_chat_msg_key
+                            UNIQUE (tenant_id, chat_id, message_id);
+                        END IF;
+                    EXCEPTION WHEN duplicate_object THEN
+                        NULL;
+                    END $$;
+                """)
                 logger.info("journey_inbound_dedupe table ready")
                 
                 cursor.execute("""

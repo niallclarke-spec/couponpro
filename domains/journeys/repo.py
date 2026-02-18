@@ -1647,7 +1647,7 @@ def check_message_dedupe(tenant_id: str, chat_id: int, message_id: int) -> bool:
             cursor.execute("""
                 INSERT INTO journey_inbound_dedupe (tenant_id, chat_id, message_id)
                 VALUES (%s, %s, %s)
-                ON CONFLICT (chat_id, message_id) DO NOTHING
+                ON CONFLICT (tenant_id, chat_id, message_id) DO NOTHING
             """, (tenant_id, chat_id, message_id))
             conn.commit()
             return cursor.rowcount > 0
