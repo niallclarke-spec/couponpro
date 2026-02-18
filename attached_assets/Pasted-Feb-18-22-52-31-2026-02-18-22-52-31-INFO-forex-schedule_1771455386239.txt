@@ -1,0 +1,75 @@
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [forex_scheduler] ============================================================
+Feb 18 22:52:31  [2026-02-18 22:52:31] [INFO] [generator] [tenant:entrylab] [req:15fdcfaf] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 18 22:52:41  [2026-02-18 22:52:41] [INFO] [clerk_auth] [req:a96cd882] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 18 22:52:41  [2026-02-18 22:52:41] [INFO] [clerk_auth] [req:a96cd882] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 18 22:52:41  [2026-02-18 22:52:41] [INFO] [clerk_auth] [req:a96cd882] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 18 22:52:41  [2026-02-18 22:52:41] [WARNING] [clerk_auth] [req:a96cd882] Token expired
+Feb 18 22:52:41  10.244.7.214 - - [18/Feb/2026 22:52:41] "GET /admin HTTP/1.1" 200 -
+Feb 18 22:52:41  10.244.5.120 - - [18/Feb/2026 22:52:41] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 18 22:52:41  10.244.7.214 - - [18/Feb/2026 22:52:41] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 18 22:52:41  10.244.4.249 - - [18/Feb/2026 22:52:41] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 18 22:52:41  10.244.4.249 - - [18/Feb/2026 22:52:41] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 18 22:52:41  [2026-02-18 22:52:41] [WARNING] [clerk_auth] [req:0f68c08c] Token expired
+Feb 18 22:52:41  10.244.4.249 - - [18/Feb/2026 22:52:41] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 18 22:52:42  [2026-02-18 22:52:42] [WARNING] [clerk_auth] [req:76ed0bc8] Token expired
+Feb 18 22:52:42  10.244.5.120 - - [18/Feb/2026 22:52:42] "GET /api/connections HTTP/1.1" 200 -
+Feb 18 22:52:42  [2026-02-18 22:52:42] [WARNING] [clerk_auth] [req:7535ac81] Token expired
+Feb 18 22:52:42  10.244.7.214 - - [18/Feb/2026 22:52:42] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 18 22:52:42  [2026-02-18 22:52:42] [WARNING] [clerk_auth] [req:55017ab9] Token expired
+Feb 18 22:52:42  10.244.4.249 - - [18/Feb/2026 22:52:42] "GET /api/journeys HTTP/1.1" 200 -
+Feb 18 22:52:43  [2026-02-18 22:52:43] [WARNING] [clerk_auth] [req:98f9a0a5] Token expired
+Feb 18 22:52:43  10.244.5.120 - - [18/Feb/2026 22:52:43] "GET /api/connections HTTP/1.1" 200 -
+Feb 18 22:52:44  [2026-02-18 22:52:44] [WARNING] [clerk_auth] [req:f8c31303] Token expired
+Feb 18 22:52:44  10.244.6.27 - - [18/Feb/2026 22:52:44] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 18 22:52:44  [2026-02-18 22:52:44] [WARNING] [clerk_auth] [req:71ea114d] Token expired
+Feb 18 22:52:44  10.244.7.214 - - [18/Feb/2026 22:52:44] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/analytics HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:39445124] Token expired
+Feb 18 22:52:55  10.244.4.249 - - [18/Feb/2026 22:52:55] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:b8811056] Token expired
+Feb 18 22:52:55  10.244.5.120 - - [18/Feb/2026 22:52:55] "POST /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/triggers HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:48c7d1c6] Token expired
+Feb 18 22:52:55  [2026-02-18 22:52:55] [INFO] [handlers] [req:48c7d1c6] Saving 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d: ['By opening a trading account with one of our trust', 'This plan is subject to regional availability and ']
+Feb 18 22:52:55  [2026-02-18 22:52:55] [INFO] [repo] [req:48c7d1c6] Set 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d
+Feb 18 22:52:55  10.244.5.120 - - [18/Feb/2026 22:52:55] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/steps HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:1bc38e9a] Token expired
+Feb 18 22:52:55  10.244.5.120 - - [18/Feb/2026 22:52:55] "GET /api/connections HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:deb7ab41] Token expired
+Feb 18 22:52:55  10.244.7.214 - - [18/Feb/2026 22:52:55] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 18 22:52:55  [2026-02-18 22:52:55] [WARNING] [clerk_auth] [req:8d6a7513] Token expired
+Feb 18 22:52:55  10.244.4.249 - - [18/Feb/2026 22:52:55] "GET /api/journeys HTTP/1.1" 200 -
+Feb 18 22:52:57  [2026-02-18 22:52:57] [WARNING] [clerk_auth] [req:404828e1] Token expired
+Feb 18 22:52:57  10.244.5.120 - - [18/Feb/2026 22:52:57] "GET /api/connections HTTP/1.1" 200 -
+Feb 18 22:52:57  [2026-02-18 22:52:57] [WARNING] [clerk_auth] [req:2e0265fd] Token expired
+Feb 18 22:52:57  10.244.5.120 - - [18/Feb/2026 22:52:57] "GET /api/connections HTTP/1.1" 200 -
+Feb 18 22:52:57  [2026-02-18 22:52:57] [WARNING] [clerk_auth] [req:e9796554] Token expired
+Feb 18 22:52:57  10.244.6.27 - - [18/Feb/2026 22:52:57] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 18 22:52:57  [2026-02-18 22:52:57] [WARNING] [clerk_auth] [req:7a3516e4] Token expired
+Feb 18 22:52:57  10.244.6.27 - - [18/Feb/2026 22:52:57] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [telethon_listener] DM trigger matched journey 'Broker' for sender=5262022632
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [repo] Created journey session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c for user 5262022632
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [engine] Started journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d for user 5262022632, session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [engine] Executing step 2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca (type=wait_for_reply) for session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [repo] Scheduled message c95cfa64-9473-4608-b3df-c2d89d370714 for 2026-02-18 22:53:23.242653
+Feb 18 22:53:14  [2026-02-18 22:53:14] [INFO] [engine] Deferred wait_for_reply step 2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca to scheduler (9s)
+Feb 18 22:53:45  [2026-02-18 22:53:45] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 18 22:53:45  [2026-02-18 22:53:45] [INFO] [telethon_listener] DM trigger matched journey 'Broker' for sender=5262022632
+Feb 18 22:53:45  [2026-02-18 22:53:45] [INFO] [engine] Blocked re-entry for user 5262022632 in journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d
+Feb 18 22:53:45  [2026-02-18 22:53:45] [INFO] [telethon_client] Message sent via Telethon: tenant=entrylab, chat=5262022632, msg_id=35
+Feb 18 22:53:51  [2026-02-18 22:53:51] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processing 1 due messages
+Feb 18 22:53:51  [2026-02-18 22:53:51] [INFO] [telethon_client] Message sent via Telethon: tenant=entrylab, chat=5262022632, msg_id=36
+Feb 18 22:53:51  [2026-02-18 22:53:51] [INFO] [repo] Session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c now awaiting reply (timeout=2min)
+Feb 18 22:53:51  [2026-02-18 22:53:51] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processed 1/1 messages
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processing 1 timed-out sessions
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [engine] Wait complete for session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c - no reply, timeout_action=continue
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [engine] Executing step e0d9d828-8057-4fbb-a309-9ae0317d9389 (type=wait_for_reply) for session 9d841d82-81bb-40fb-b0cb-8b4f20781d2c
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [repo] Scheduled message 15238497-7bfa-49ae-b386-ec92b9ea548f for 2026-02-18 22:56:51.370505
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [engine] Deferred wait_for_reply step e0d9d828-8057-4fbb-a309-9ae0317d9389 to scheduler (60s)
+Feb 18 22:55:51  [2026-02-18 22:55:51] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processed 1 timeouts
