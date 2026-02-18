@@ -1,0 +1,95 @@
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [forex_scheduler] ============================================================
+Feb 17 23:09:20  [2026-02-17 23:09:20] [INFO] [generator] [tenant:entrylab] [req:ab081a77] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:145a990b] Token expired
+Feb 17 23:09:26  10.244.7.214 - - [17/Feb/2026 23:09:26] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:76ca7e7c] Token expired
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:55cf213c] Token expired
+Feb 17 23:09:26  10.244.7.214 - - [17/Feb/2026 23:09:26] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:09:26  10.244.5.120 - - [17/Feb/2026 23:09:26] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:b6bc2bd4] Token expired
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:7ffd85fe] Token expired
+Feb 17 23:09:26  10.244.7.214 - - [17/Feb/2026 23:09:26] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 23:09:26  10.244.5.120 - - [17/Feb/2026 23:09:26] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 23:09:26  [2026-02-17 23:09:26] [WARNING] [clerk_auth] [req:34ec0121] Token expired
+Feb 17 23:09:26  10.244.7.214 - - [17/Feb/2026 23:09:26] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 23:09:27  [2026-02-17 23:09:27] [WARNING] [clerk_auth] [req:e7aba508] Token expired
+Feb 17 23:09:27  10.244.7.214 - - [17/Feb/2026 23:09:27] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:09:27  [2026-02-17 23:09:27] [WARNING] [clerk_auth] [req:42117acf] Token expired
+Feb 17 23:09:27  10.244.6.27 - - [17/Feb/2026 23:09:27] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 17 23:09:28  [2026-02-17 23:09:28] [WARNING] [clerk_auth] [req:359d10c4] Token expired
+Feb 17 23:09:28  10.244.6.27 - - [17/Feb/2026 23:09:28] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/analytics HTTP/1.1" 200 -
+Feb 17 23:11:06  [2026-02-17 23:11:06] [WARNING] [clerk_auth] [req:ddf9202c] Token expired
+Feb 17 23:11:06  10.244.6.27 - - [17/Feb/2026 23:11:06] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 17 23:11:06  [2026-02-17 23:11:06] [WARNING] [clerk_auth] [req:39727c2f] Token expired
+Feb 17 23:11:06  10.244.4.249 - - [17/Feb/2026 23:11:06] "POST /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/triggers HTTP/1.1" 200 -
+Feb 17 23:11:06  [2026-02-17 23:11:06] [WARNING] [clerk_auth] [req:5bb3651c] Token expired
+Feb 17 23:11:06  [2026-02-17 23:11:06] [INFO] [handlers] [req:5bb3651c] Saving 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d: ['By opening a trading account with one of our trust', 'This plan is subject to regional availability and ']
+Feb 17 23:11:06  [2026-02-17 23:11:06] [INFO] [repo] [req:5bb3651c] Set 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d
+Feb 17 23:11:06  10.244.4.249 - - [17/Feb/2026 23:11:06] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/steps HTTP/1.1" 200 -
+Feb 17 23:11:06  [2026-02-17 23:11:06] [WARNING] [clerk_auth] [req:bfa54637] Token expired
+Feb 17 23:11:06  10.244.7.214 - - [17/Feb/2026 23:11:06] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:11:07  [2026-02-17 23:11:07] [WARNING] [clerk_auth] [req:a33d6448] Token expired
+Feb 17 23:11:07  10.244.5.120 - - [17/Feb/2026 23:11:07] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 23:11:07  [2026-02-17 23:11:07] [WARNING] [clerk_auth] [req:94a73790] Token expired
+Feb 17 23:11:07  10.244.7.214 - - [17/Feb/2026 23:11:07] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 23:11:21  [2026-02-17 23:11:21] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 17 23:11:21  [2026-02-17 23:11:21] [ERROR] [db] Database connection error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:11:21  
+Feb 17 23:11:21  Traceback (most recent call last):
+Feb 17 23:11:21    File "/workspace/db.py", line 156, in get_connection
+Feb 17 23:11:21      yield conn
+Feb 17 23:11:21    File "/workspace/domains/journeys/repo.py", line 1647, in check_message_dedupe
+Feb 17 23:11:21      cursor.execute("""
+Feb 17 23:11:21  psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:11:21  
+Feb 17 23:11:21  [2026-02-17 23:11:21] [ERROR] [repo] Error checking message dedupe: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:11:21  
+Feb 17 23:11:21  Traceback (most recent call last):
+Feb 17 23:11:21    File "/workspace/domains/journeys/repo.py", line 1647, in check_message_dedupe
+Feb 17 23:11:21      cursor.execute("""
+Feb 17 23:11:21  psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:11:21  
+Feb 17 23:11:33  [2026-02-17 23:11:33] [WARNING] [clerk_auth] [req:89e3deeb] Token expired
+Feb 17 23:11:33  10.244.7.214 - - [17/Feb/2026 23:11:33] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:11:33  [2026-02-17 23:11:33] [WARNING] [clerk_auth] [req:6979508e] Token expired
+Feb 17 23:11:33  10.244.6.27 - - [17/Feb/2026 23:11:33] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 17 23:11:33  [2026-02-17 23:11:33] [WARNING] [clerk_auth] [req:7a8ffb7e] Token expired
+Feb 17 23:11:33  10.244.6.27 - - [17/Feb/2026 23:11:33] "GET /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/analytics HTTP/1.1" 200 -
+Feb 17 23:11:46  [2026-02-17 23:11:46] [WARNING] [clerk_auth] [req:5065c4e3] Token expired
+Feb 17 23:11:46  10.244.6.27 - - [17/Feb/2026 23:11:46] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d HTTP/1.1" 200 -
+Feb 17 23:11:47  [2026-02-17 23:11:47] [WARNING] [clerk_auth] [req:f0e19ea6] Token expired
+Feb 17 23:11:47  10.244.4.249 - - [17/Feb/2026 23:11:47] "POST /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/triggers HTTP/1.1" 200 -
+Feb 17 23:11:47  [2026-02-17 23:11:47] [WARNING] [clerk_auth] [req:abd8361a] Token expired
+Feb 17 23:11:47  [2026-02-17 23:11:47] [INFO] [handlers] [req:abd8361a] Saving 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d: ['By opening a trading account with one of our trust', 'This plan is subject to regional availability and ']
+Feb 17 23:11:47  [2026-02-17 23:11:47] [INFO] [repo] [req:abd8361a] Set 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d
+Feb 17 23:11:47  10.244.4.249 - - [17/Feb/2026 23:11:47] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/steps HTTP/1.1" 200 -
+Feb 17 23:11:47  [2026-02-17 23:11:47] [WARNING] [clerk_auth] [req:9cc61c2f] Token expired
+Feb 17 23:11:47  10.244.7.214 - - [17/Feb/2026 23:11:47] "GET /api/connections HTTP/1.1" 200 -
+Feb 17 23:11:47  [2026-02-17 23:11:47] [WARNING] [clerk_auth] [req:d378190a] Token expired
+Feb 17 23:11:47  10.244.5.120 - - [17/Feb/2026 23:11:47] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 17 23:11:47  [2026-02-17 23:11:47] [WARNING] [clerk_auth] [req:5e891286] Token expired
+Feb 17 23:11:47  10.244.7.214 - - [17/Feb/2026 23:11:47] "GET /api/journeys HTTP/1.1" 200 -
+Feb 17 23:12:25  [2026-02-17 23:12:25] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 17 23:12:25  [2026-02-17 23:12:25] [ERROR] [db] Database connection error: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:12:25  
+Feb 17 23:12:25  Traceback (most recent call last):
+Feb 17 23:12:25    File "/workspace/db.py", line 156, in get_connection
+Feb 17 23:12:25      yield conn
+Feb 17 23:12:25    File "/workspace/domains/journeys/repo.py", line 1647, in check_message_dedupe
+Feb 17 23:12:25      cursor.execute("""
+Feb 17 23:12:25  psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:12:25  
+Feb 17 23:12:25  [2026-02-17 23:12:25] [ERROR] [repo] Error checking message dedupe: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:12:25  
+Feb 17 23:12:25  Traceback (most recent call last):
+Feb 17 23:12:25    File "/workspace/domains/journeys/repo.py", line 1647, in check_message_dedupe
+Feb 17 23:12:25      cursor.execute("""
+Feb 17 23:12:25  psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification
+Feb 17 23:12:25  
