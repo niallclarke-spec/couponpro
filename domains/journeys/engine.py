@@ -64,12 +64,7 @@ class JourneyEngine:
         
         if existing_session:
             if re_entry_policy == 'block':
-                logger.info(f"Blocked re-entry for user {telegram_user_id} in journey {journey_id}")
-                self._send_message(
-                    tenant_id,
-                    telegram_chat_id,
-                    "You're already in this flow. Please reply to continue."
-                )
+                logger.info(f"Blocked re-entry for user {telegram_user_id} in journey {journey_id} (silent, no message sent)")
                 return existing_session
             
             elif re_entry_policy == 'restart':

@@ -101,6 +101,7 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
 
             if sessions:
                 engine = JourneyEngine()
+                has_live_session = False
 
                 for session in sessions:
                     status = session.get('status')
@@ -139,8 +140,12 @@ async def _route_to_journey(tenant_id: str, chat_id: int, sender_id: int, text: 
                             continue
 
                     elif status == 'active':
-                        await loop.run_in_executor(None, engine.handle_user_reply, session, text)
-                        return
+                        has_live_session = True
+                        logger.info(f"User {sender_id} has active session {session['id']} (step in progress) - ignoring message silently")
+                        continue
+
+                if has_live_session:
+                    return
 
             journey = repo.get_active_journey_by_dm_trigger(tenant_id, text)
             if journey:
