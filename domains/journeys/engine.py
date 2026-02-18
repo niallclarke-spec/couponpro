@@ -179,7 +179,7 @@ class JourneyEngine:
         text = config.get('content') or config.get('text', '')
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 5:
+        if delay and delay > 15:
             return self._defer_step_to_scheduler(session, step, text, 'message')
         elif delay and delay > 0:
             logger.info(f"Short delay {delay}s before message step {step['id']}")
@@ -205,7 +205,7 @@ class JourneyEngine:
         text = config.get('content') or config.get('text', '')
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 5:
+        if delay and delay > 15:
             return self._defer_step_to_scheduler(session, step, text, 'question')
         elif delay and delay > 0:
             logger.info(f"Short delay {delay}s before question step {step['id']}")
@@ -281,7 +281,7 @@ class JourneyEngine:
         timeout_minutes = config.get('timeout_minutes', 0)
         
         delay = config.get('delay_seconds', 0)
-        if delay and delay > 5:
+        if delay and delay > 15:
             return self._defer_step_to_scheduler(session, step, text, 'wait_for_reply')
         elif delay and delay > 0:
             logger.info(f"Short delay {delay}s before wait_for_reply step {step['id']}")

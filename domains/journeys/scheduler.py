@@ -247,12 +247,12 @@ def _scheduler_loop(interval_seconds: int):
     logger.info("[JOURNEY-SCHEDULER] Stopped")
 
 
-def start_journey_scheduler(interval_seconds: int = 30):
+def start_journey_scheduler(interval_seconds: int = 10):
     """
     Start the journey scheduler in a background thread.
     
     Args:
-        interval_seconds: How often to check for due messages (default 30s)
+        interval_seconds: How often to check for due messages (default 10s)
     """
     global _scheduler_thread, _scheduler_running
     
