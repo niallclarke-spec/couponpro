@@ -5992,11 +5992,29 @@
                                 </div>
                             </div>
                             
-                            <div style="background: var(--bg-hover); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                                <div style="font-size: 13px; color: var(--text-secondary);">
-                                    <strong>Schedule (Mon-Fri only):</strong><br>
-                                    09:00 - Morning news summary<br>
-                                    10:00 - VIP teaser message
+                            <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                                    <strong>FREE Channel Morning Sequence (Mon-Fri only):</strong>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">Morning News</label>
+                                        <input type="time" id="crosspromo-morning-time" value="06:42" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
+                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">Recap Forward</label>
+                                        <input type="time" id="crosspromo-recap-time" value="07:12" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
+                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">VIP Teaser</label>
+                                        <input type="time" id="crosspromo-vip-soon-time" value="07:51" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
+                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
+                                    </div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                                    Recap forward only runs if a weekly recap was posted to VIP channel.
                                 </div>
                             </div>
                             
@@ -8783,6 +8801,9 @@
                 
                 document.getElementById('crosspromo-enabled').checked = settings.enabled || false;
                 document.getElementById('crosspromo-cta-url').value = settings.cta_url || 'https://entrylab.io/subscribe';
+                document.getElementById('crosspromo-morning-time').value = settings.morning_post_time_utc || '06:42';
+                document.getElementById('crosspromo-recap-time').value = settings.recap_forward_time_utc || '07:12';
+                document.getElementById('crosspromo-vip-soon-time').value = settings.vip_soon_time_utc || '07:51';
                 
                 document.getElementById('crosspromo-preview').textContent = preview.preview || 'No preview available';
                 
@@ -8882,7 +8903,10 @@
                 
                 const settings = {
                     enabled: enabled,
-                    cta_url: document.getElementById('crosspromo-cta-url').value || 'https://entrylab.io/subscribe'
+                    cta_url: document.getElementById('crosspromo-cta-url').value || 'https://entrylab.io/subscribe',
+                    morning_post_time_utc: document.getElementById('crosspromo-morning-time').value || '06:42',
+                    recap_forward_time_utc: document.getElementById('crosspromo-recap-time').value || '07:12',
+                    vip_soon_time_utc: document.getElementById('crosspromo-vip-soon-time').value || '07:51'
                 };
                 
                 const resp = await authedFetch('/api/crosspromo/settings', {

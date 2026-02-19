@@ -1,0 +1,1068 @@
+Feb 19 16:19:46  10.244.5.120 - - [19/Feb/2026 16:19:46] code 404, message File not found
+Feb 19 16:19:46  10.244.5.120 - - [19/Feb/2026 16:19:46] "GET /prod/.env HTTP/1.1" 404 -
+Feb 19 16:19:46  10.244.7.214 - - [19/Feb/2026 16:19:46] code 404, message File not found
+Feb 19 16:19:46  10.244.7.214 - - [19/Feb/2026 16:19:46] "GET /.env.save HTTP/1.1" 404 -
+Feb 19 16:19:47  10.244.5.120 - - [19/Feb/2026 16:19:47] code 404, message File not found
+Feb 19 16:19:47  10.244.5.120 - - [19/Feb/2026 16:19:47] "GET /beta/.env HTTP/1.1" 404 -
+Feb 19 16:19:48  10.244.5.120 - - [19/Feb/2026 16:19:48] code 404, message File not found
+Feb 19 16:19:48  10.244.5.120 - - [19/Feb/2026 16:19:48] "GET /admin/.env HTTP/1.1" 404 -
+Feb 19 16:19:48  10.244.4.249 - - [19/Feb/2026 16:19:48] code 404, message File not found
+Feb 19 16:19:48  10.244.4.249 - - [19/Feb/2026 16:19:48] "GET /app/.env HTTP/1.1" 404 -
+Feb 19 16:19:49  10.244.5.120 - - [19/Feb/2026 16:19:49] code 404, message File not found
+Feb 19 16:19:49  10.244.5.120 - - [19/Feb/2026 16:19:49] "GET /config/.env HTTP/1.1" 404 -
+Feb 19 16:19:50  10.244.6.27 - - [19/Feb/2026 16:19:50] code 404, message File not found
+Feb 19 16:19:50  10.244.6.27 - - [19/Feb/2026 16:19:50] "GET /api/.env HTTP/1.1" 404 -
+Feb 19 16:19:51  10.244.6.27 - - [19/Feb/2026 16:19:51] code 404, message File not found
+Feb 19 16:19:51  10.244.6.27 - - [19/Feb/2026 16:19:51] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 19 16:19:51  10.244.5.120 - - [19/Feb/2026 16:19:51] code 404, message Not Found
+Feb 19 16:19:51  10.244.5.120 - - [19/Feb/2026 16:19:51] "POST / HTTP/1.1" 404 -
+Feb 19 16:19:52  10.244.5.120 - - [19/Feb/2026 16:19:52] code 404, message File not found
+Feb 19 16:19:52  10.244.5.120 - - [19/Feb/2026 16:19:52] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 19 16:19:53  10.244.7.214 - - [19/Feb/2026 16:19:53] code 404, message File not found
+Feb 19 16:19:53  10.244.7.214 - - [19/Feb/2026 16:19:53] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 19 16:19:53  10.244.5.120 - - [19/Feb/2026 16:19:53] code 404, message File not found
+Feb 19 16:19:53  10.244.5.120 - - [19/Feb/2026 16:19:53] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 19 16:19:54  10.244.4.249 - - [19/Feb/2026 16:19:54] code 404, message File not found
+Feb 19 16:19:54  10.244.4.249 - - [19/Feb/2026 16:19:54] "GET //.aws/config HTTP/1.1" 404 -
+Feb 19 16:19:55  10.244.4.249 - - [19/Feb/2026 16:19:55] code 404, message File not found
+Feb 19 16:19:55  10.244.4.249 - - [19/Feb/2026 16:19:55] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 19 16:19:55  10.244.5.120 - - [19/Feb/2026 16:19:55] code 404, message File not found
+Feb 19 16:19:55  10.244.5.120 - - [19/Feb/2026 16:19:55] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [forex_signals] [tenant:entrylab] [req:9d5057bf] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [raja_banks] [tenant:entrylab] [req:9d5057bf] Checking for signals on XAU/USD 15min...
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [raja_banks] [tenant:entrylab] [req:9d5057bf] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [generator] [tenant:entrylab] [req:9d5057bf] 📊 Checking 1-hour timeframe...
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [forex_signals] [tenant:entrylab] [req:9d5057bf] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [raja_banks] [tenant:entrylab] [req:9d5057bf] Checking for signals on XAU/USD 1h...
+Feb 19 16:33:56  [2026-02-19 16:33:56] [INFO] [raja_banks] [tenant:entrylab] [req:9d5057bf] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 16:48:57  [2026-02-19 16:48:57] [INFO] [forex_signals] [tenant:entrylab] [req:ee81a3b4] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 16:48:57  [2026-02-19 16:48:57] [INFO] [raja_banks] [tenant:entrylab] [req:ee81a3b4] Checking for signals on XAU/USD 15min...
+Feb 19 16:48:57  [2026-02-19 16:48:57] [INFO] [raja_banks] [tenant:entrylab] [req:ee81a3b4] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [forex_signals] [tenant:entrylab] [req:568fb584] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [raja_banks] [tenant:entrylab] [req:568fb584] Checking for signals on XAU/USD 15min...
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [raja_banks] [tenant:entrylab] [req:568fb584] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [generator] [tenant:entrylab] [req:568fb584] 📊 Checking 1-hour timeframe...
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [forex_signals] [tenant:entrylab] [req:568fb584] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [raja_banks] [tenant:entrylab] [req:568fb584] Checking for signals on XAU/USD 1h...
+Feb 19 17:03:58  [2026-02-19 17:03:58] [INFO] [raja_banks] [tenant:entrylab] [req:568fb584] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:04:14  10.244.6.27 - - [19/Feb/2026 17:04:14] code 404, message File not found
+Feb 19 17:04:14  10.244.6.27 - - [19/Feb/2026 17:04:14] "GET //.env HTTP/1.1" 404 -
+Feb 19 17:18:59  [2026-02-19 17:18:59] [INFO] [forex_signals] [tenant:entrylab] [req:2484306c] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:18:59  [2026-02-19 17:18:59] [INFO] [raja_banks] [tenant:entrylab] [req:2484306c] Checking for signals on XAU/USD 15min...
+Feb 19 17:18:59  [2026-02-19 17:18:59] [INFO] [raja_banks] [tenant:entrylab] [req:2484306c] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [forex_signals] [tenant:entrylab] [req:7a432f94] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [raja_banks] [tenant:entrylab] [req:7a432f94] Checking for signals on XAU/USD 15min...
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [raja_banks] [tenant:entrylab] [req:7a432f94] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [generator] [tenant:entrylab] [req:7a432f94] 📊 Checking 1-hour timeframe...
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [forex_signals] [tenant:entrylab] [req:7a432f94] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [raja_banks] [tenant:entrylab] [req:7a432f94] Checking for signals on XAU/USD 1h...
+Feb 19 17:34:00  [2026-02-19 17:34:00] [INFO] [raja_banks] [tenant:entrylab] [req:7a432f94] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 17:49:01  [2026-02-19 17:49:01] [INFO] [forex_signals] [tenant:entrylab] [req:e98614ba] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 17:49:01  [2026-02-19 17:49:01] [INFO] [raja_banks] [tenant:entrylab] [req:e98614ba] Checking for signals on XAU/USD 15min...
+Feb 19 17:49:01  [2026-02-19 17:49:01] [INFO] [raja_banks] [tenant:entrylab] [req:e98614ba] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [forex_signals] [tenant:entrylab] [req:9d72fad0] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [raja_banks] [tenant:entrylab] [req:9d72fad0] Checking for signals on XAU/USD 15min...
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [raja_banks] [tenant:entrylab] [req:9d72fad0] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [generator] [tenant:entrylab] [req:9d72fad0] 📊 Checking 1-hour timeframe...
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [forex_signals] [tenant:entrylab] [req:9d72fad0] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [raja_banks] [tenant:entrylab] [req:9d72fad0] Checking for signals on XAU/USD 1h...
+Feb 19 18:04:03  [2026-02-19 18:04:03] [INFO] [raja_banks] [tenant:entrylab] [req:9d72fad0] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:19:04  [2026-02-19 18:19:04] [INFO] [forex_signals] [tenant:entrylab] [req:12744107] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:19:04  [2026-02-19 18:19:04] [INFO] [raja_banks] [tenant:entrylab] [req:12744107] Checking for signals on XAU/USD 15min...
+Feb 19 18:19:04  [2026-02-19 18:19:04] [INFO] [raja_banks] [tenant:entrylab] [req:12744107] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [forex_signals] [tenant:entrylab] [req:577ff5ec] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [raja_banks] [tenant:entrylab] [req:577ff5ec] Checking for signals on XAU/USD 15min...
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [raja_banks] [tenant:entrylab] [req:577ff5ec] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [generator] [tenant:entrylab] [req:577ff5ec] 📊 Checking 1-hour timeframe...
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [forex_signals] [tenant:entrylab] [req:577ff5ec] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [raja_banks] [tenant:entrylab] [req:577ff5ec] Checking for signals on XAU/USD 1h...
+Feb 19 18:34:05  [2026-02-19 18:34:05] [INFO] [raja_banks] [tenant:entrylab] [req:577ff5ec] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 18:49:06  [2026-02-19 18:49:06] [INFO] [forex_signals] [tenant:entrylab] [req:1e578930] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 18:49:06  [2026-02-19 18:49:06] [INFO] [raja_banks] [tenant:entrylab] [req:1e578930] Checking for signals on XAU/USD 15min...
+Feb 19 18:49:06  [2026-02-19 18:49:06] [INFO] [raja_banks] [tenant:entrylab] [req:1e578930] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [forex_signals] [tenant:entrylab] [req:8eca154c] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [raja_banks] [tenant:entrylab] [req:8eca154c] Checking for signals on XAU/USD 15min...
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [raja_banks] [tenant:entrylab] [req:8eca154c] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [generator] [tenant:entrylab] [req:8eca154c] 📊 Checking 1-hour timeframe...
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [forex_signals] [tenant:entrylab] [req:8eca154c] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [raja_banks] [tenant:entrylab] [req:8eca154c] Checking for signals on XAU/USD 1h...
+Feb 19 19:04:07  [2026-02-19 19:04:07] [INFO] [raja_banks] [tenant:entrylab] [req:8eca154c] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:19:08  [2026-02-19 19:19:08] [INFO] [forex_signals] [tenant:entrylab] [req:14a5996e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:19:08  [2026-02-19 19:19:08] [INFO] [raja_banks] [tenant:entrylab] [req:14a5996e] Checking for signals on XAU/USD 15min...
+Feb 19 19:19:08  [2026-02-19 19:19:08] [INFO] [raja_banks] [tenant:entrylab] [req:14a5996e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [forex_signals] [tenant:entrylab] [req:4e812c9d] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [raja_banks] [tenant:entrylab] [req:4e812c9d] Checking for signals on XAU/USD 15min...
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [raja_banks] [tenant:entrylab] [req:4e812c9d] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [generator] [tenant:entrylab] [req:4e812c9d] 📊 Checking 1-hour timeframe...
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [forex_signals] [tenant:entrylab] [req:4e812c9d] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [raja_banks] [tenant:entrylab] [req:4e812c9d] Checking for signals on XAU/USD 1h...
+Feb 19 19:34:09  [2026-02-19 19:34:09] [INFO] [raja_banks] [tenant:entrylab] [req:4e812c9d] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 19:37:07  10.244.4.249 - - [19/Feb/2026 19:37:07] "GET / HTTP/1.1" 302 -
+Feb 19 19:37:07  10.244.5.120 - - [19/Feb/2026 19:37:07] "GET /app HTTP/1.1" 200 -
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] "GET /.git/config HTTP/1.1" 200 -
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] "GET /backend/.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.6.27 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.6.27 - - [19/Feb/2026 19:37:08] "GET /.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] "GET /%2f.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.6.27 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.6.27 - - [19/Feb/2026 19:37:08] "GET /.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] "GET /.git/config HTTP/1.1" 200 -
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] "GET /backend/.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.5.120 - - [19/Feb/2026 19:37:08] "GET /%2fbackend%2f.env HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] "GET /%2f.aws%2fcredentials HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] "GET /info.php HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] "GET /error/ HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] "GET /api/user HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.4.249 - - [19/Feb/2026 19:37:08] "GET /..%5c..%5c..%5c..%5c..%5c..%5cvar/log/apache2/access.log HTTP/1.1" 404 -
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] code 404, message File not found
+Feb 19 19:37:08  10.244.7.214 - - [19/Feb/2026 19:37:08] "GET /var/task/next.config.js HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.7.214 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.7.214 - - [19/Feb/2026 19:37:09] "GET /var/task/next.config.mjs HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.7.214 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.7.214 - - [19/Feb/2026 19:37:09] "GET /var/task/next.config.ts HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.4.249 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.4.249 - - [19/Feb/2026 19:37:09] "GET /app/next.config.js HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] "GET /app/next.config.mjs HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] "GET /$(pwd)/next.config.js HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] "GET /$(pwd)/next.config.mjs HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.4.249 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.4.249 - - [19/Feb/2026 19:37:09] "GET /var/task/nuxt.config.js HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.6.27 - - [19/Feb/2026 19:37:09] "GET /var/task/nuxt.config.ts HTTP/1.1" 404 -
+Feb 19 19:37:09  10.244.5.120 - - [19/Feb/2026 19:37:09] code 404, message File not found
+Feb 19 19:37:09  10.244.5.120 - - [19/Feb/2026 19:37:09] "GET /app/nuxt.config.js HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] "GET /var/task/serverless.yml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] "GET /var/task/serverless.yaml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] "GET /var/task/serverless.json HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] "GET /app/serverless.yml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] "GET /app/serverless.yaml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.4.249 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.4.249 - - [19/Feb/2026 19:37:10] "GET /$(pwd)/serverless.yml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.7.214 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.7.214 - - [19/Feb/2026 19:37:10] "GET /$(pwd)/serverless.yaml HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.6.27 - - [19/Feb/2026 19:37:10] "GET /var/task/package.json HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.5.120 - - [19/Feb/2026 19:37:10] "GET /app/package.json HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.4.249 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.4.249 - - [19/Feb/2026 19:37:10] "GET /$(pwd)/package.json HTTP/1.1" 404 -
+Feb 19 19:37:10  10.244.7.214 - - [19/Feb/2026 19:37:10] code 404, message File not found
+Feb 19 19:37:10  10.244.7.214 - - [19/Feb/2026 19:37:10] "GET /var/task/vercel.json HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] "GET /app/vercel.json HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] "GET /$(pwd)/vercel.json HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] "GET /var/task/netlify.toml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] "GET /app/netlify.toml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] "GET /$(pwd)/netlify.toml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] "GET /var/task/docker-compose.yml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] "GET /var/task/docker-compose.yaml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.7.214 - - [19/Feb/2026 19:37:11] "GET /app/docker-compose.yml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] "GET /$(pwd)/docker-compose.yml HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] "GET /.dockerignore HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.6.27 - - [19/Feb/2026 19:37:11] "GET /docker/overlay/config.json HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.5.120 - - [19/Feb/2026 19:37:11] "GET /opt/mailcow-dockerized/mailcow.conf HTTP/1.1" 404 -
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] code 404, message File not found
+Feb 19 19:37:11  10.244.4.249 - - [19/Feb/2026 19:37:11] "GET /Dockerfile HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /docker/registry/config.yml HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] "GET /docker-compose.yml HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /.docker/config.json HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /.docker/secrets.json HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /attacker/docker-compose.yml HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] "GET /_vercel/insights HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.4.249 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.4.249 - - [19/Feb/2026 19:37:12] "GET /vercel.json HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /aws/bucket HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] "GET /aws/buckets HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.6.27 - - [19/Feb/2026 19:37:12] "GET /aws/config/s3.json HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.7.214 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.7.214 - - [19/Feb/2026 19:37:12] "GET /aws/s3/credentials HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.5.120 - - [19/Feb/2026 19:37:12] "GET /aws/s3/env.env HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.4.249 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.4.249 - - [19/Feb/2026 19:37:12] "GET /aws_s3_bucket HTTP/1.1" 404 -
+Feb 19 19:37:12  10.244.7.214 - - [19/Feb/2026 19:37:12] code 404, message File not found
+Feb 19 19:37:12  10.244.7.214 - - [19/Feb/2026 19:37:12] "GET /aws_s3_config.json HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] "GET /s3/.aws/config HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] "GET /config/aws.php HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.4.249 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.4.249 - - [19/Feb/2026 19:37:13] "GET /.aws/config HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.4.249 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.4.249 - - [19/Feb/2026 19:37:13] "GET /aws-codecommit/ HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] "GET /aws.yaml HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] "GET /old/aws_config HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] "GET /aws.env.json HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.6.27 - - [19/Feb/2026 19:37:13] "GET /aws.env HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] "GET /aws-ses.json HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.7.214 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.7.214 - - [19/Feb/2026 19:37:13] "GET /aws/ses/smtp.env HTTP/1.1" 404 -
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] code 404, message File not found
+Feb 19 19:37:13  10.244.5.120 - - [19/Feb/2026 19:37:13] "GET /aws/metadata HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] "GET /aws.json HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] "GET /aws.yml HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] "GET /.aws/credentials HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] "GET /.env.aws HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.5.120 - - [19/Feb/2026 19:37:14] "GET /s3/credentials HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] "GET /s3/bucket.env HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] "GET /s3/bucket HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.7.214 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.7.214 - - [19/Feb/2026 19:37:14] "GET /s3/buckets HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] "GET /s3/backup HTTP/1.1" 404 -
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] code 404, message File not found
+Feb 19 19:37:14  10.244.6.27 - - [19/Feb/2026 19:37:14] "GET /s3.yml HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] "GET /s3.yaml HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] "GET /s3.properties HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] "GET /s3.key HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] "GET /s3.secret HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] "GET /s3/.env.bak HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] "GET /root/.aws/credentials HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] "GET /root/.aws/config HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.4.249 - - [19/Feb/2026 19:37:15] "GET /home/*/.aws/credentials HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.5.120 - - [19/Feb/2026 19:37:15] "GET /.boto HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] "GET /root/.boto HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.7.214 - - [19/Feb/2026 19:37:15] "GET /.s3cfg HTTP/1.1" 404 -
+Feb 19 19:37:15  10.244.6.27 - - [19/Feb/2026 19:37:15] code 404, message File not found
+Feb 19 19:37:15  10.244.6.27 - - [19/Feb/2026 19:37:15] "GET /root/.s3cfg HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.5.120 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.5.120 - - [19/Feb/2026 19:37:16] "GET /etc/boto.cfg HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.7.214 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.7.214 - - [19/Feb/2026 19:37:16] "GET /.terraform/credentials.tfrc.json HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] "GET /terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] "GET /terraform.tfstate.backup HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] "GET /.terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] "GET /serverless.yml HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.5.120 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.5.120 - - [19/Feb/2026 19:37:16] "GET /serverless.yaml HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] "GET /sam-template.yaml HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] "GET /template.yaml HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] "GET /amplify/team-provider-info.json HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.6.27 - - [19/Feb/2026 19:37:16] "GET /.amplifyrc HTTP/1.1" 404 -
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] code 404, message File not found
+Feb 19 19:37:16  10.244.4.249 - - [19/Feb/2026 19:37:16] "GET /$(pwd)/terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /$(pwd)/.terraform/terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.7.214 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.7.214 - - [19/Feb/2026 19:37:17] "GET /$(pwd)/terraform.tfvars HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /$(pwd)/*.auto.tfvars HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /app/terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /app/.terraform/terraform.tfstate HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /~/.aws/credentials HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /~/.aws/config HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /~/.boto HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.4.249 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.4.249 - - [19/Feb/2026 19:37:17] "GET /~/.s3cfg HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.6.27 - - [19/Feb/2026 19:37:17] "GET /.terraform.lock.hcl HTTP/1.1" 404 -
+Feb 19 19:37:17  10.244.4.249 - - [19/Feb/2026 19:37:17] code 404, message File not found
+Feb 19 19:37:17  10.244.4.249 - - [19/Feb/2026 19:37:17] "GET /terraform.tfvars HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.7.214 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.7.214 - - [19/Feb/2026 19:37:18] "GET /terraform/terraform.tfvars.json HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /var/task/amplify.yml HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.4.249 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.4.249 - - [19/Feb/2026 19:37:18] "GET /var/task/amplify.yaml HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.5.120 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.5.120 - - [19/Feb/2026 19:37:18] "GET /app/amplify.yml HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /app/amplify.yaml HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /var/task/amplify/backend/function/*/src/index.js HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /$(pwd)/.env HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /$(pwd)/.env.local HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.6.27 - - [19/Feb/2026 19:37:18] "GET /$(pwd)/.env.production HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.5.120 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.5.120 - - [19/Feb/2026 19:37:18] "GET /$(pwd)/.env.development HTTP/1.1" 404 -
+Feb 19 19:37:18  10.244.4.249 - - [19/Feb/2026 19:37:18] code 404, message File not found
+Feb 19 19:37:18  10.244.4.249 - - [19/Feb/2026 19:37:18] "GET /$(pwd)/.env.staging HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /app/.env HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /app/.env.local HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /app/.env.production HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /var/www/.env HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /var/www/html/.env HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.6.27 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.6.27 - - [19/Feb/2026 19:37:19] "GET /opt/.env HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.4.249 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.4.249 - - [19/Feb/2026 19:37:19] "GET /srv/.env HTTP/1.1" 404 -
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] code 404, message File not found
+Feb 19 19:37:19  10.244.5.120 - - [19/Feb/2026 19:37:19] "GET /.env.example HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.5.120 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.5.120 - - [19/Feb/2026 19:37:20] "GET /api/.env HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] "GET /env HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.7.214 - - [19/Feb/2026 19:37:20] "GET /.git HTTP/1.1" 301 -
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] "GET /.git/ HTTP/1.1" 200 -
+Feb 19 19:37:20  10.244.5.120 - - [19/Feb/2026 19:37:20] "GET /.git/HEAD HTTP/1.1" 200 -
+Feb 19 19:37:20  10.244.5.120 - - [19/Feb/2026 19:37:20] "GET /.git/index HTTP/1.1" 200 -
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] "GET /.git/logs/HEAD HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] "GET /.git/logs/refs/heads/master HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] "GET /.git/logs/refs/heads/main HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.4.249 - - [19/Feb/2026 19:37:20] "GET /.git/logs/refs/remotes/origin/master HTTP/1.1" 404 -
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] code 404, message File not found
+Feb 19 19:37:20  10.244.6.27 - - [19/Feb/2026 19:37:20] "GET /.git/logs/refs/remotes/origin/main HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.6.27 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.6.27 - - [19/Feb/2026 19:37:21] "GET /.git/hooks HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] "GET /.git/info/exclude HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.7.214 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.7.214 - - [19/Feb/2026 19:37:21] "GET /.git/refs/heads/master HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.7.214 - - [19/Feb/2026 19:37:21] "GET /.git/refs/heads/main HTTP/1.1" 200 -
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] "GET /.git/refs/remotes/origin/HEAD HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] "GET /.git/packed-refs HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.6.27 - - [19/Feb/2026 19:37:21] "GET /.git/objects HTTP/1.1" 301 -
+Feb 19 19:37:21  10.244.5.120 - - [19/Feb/2026 19:37:21] "GET /.git/objects/ HTTP/1.1" 200 -
+Feb 19 19:37:21  10.244.6.27 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.6.27 - - [19/Feb/2026 19:37:21] "GET /.git/COMMIT_EDITMSG HTTP/1.1" 404 -
+Feb 19 19:37:21  10.244.4.249 - - [19/Feb/2026 19:37:21] code 404, message File not found
+Feb 19 19:37:21  10.244.4.249 - - [19/Feb/2026 19:37:21] "GET /.git/description HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] "GET /.git/FETCH_HEAD HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] "GET /.git/ORIG_HEAD HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] "GET /.github HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] "GET /.github/workflows HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.7.214 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.7.214 - - [19/Feb/2026 19:37:22] "GET /.github/workflows/main.yml HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] "GET /.github/workflows/ci.yml HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.6.27 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.6.27 - - [19/Feb/2026 19:37:22] "GET /.github/dependabot.yml HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] "GET /.github/CODEOWNERS HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.5.120 - - [19/Feb/2026 19:37:22] "GET /.github/ISSUE_TEMPLATE HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.4.249 - - [19/Feb/2026 19:37:22] "GET /.github/PULL_REQUEST_TEMPLATE.md HTTP/1.1" 404 -
+Feb 19 19:37:22  10.244.6.27 - - [19/Feb/2026 19:37:22] code 404, message File not found
+Feb 19 19:37:22  10.244.6.27 - - [19/Feb/2026 19:37:22] "GET /.github/funding.yml HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.6.27 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.6.27 - - [19/Feb/2026 19:37:23] "GET /.github/stale.yml HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] "GET /.gitlab-ci.yml HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.4.249 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.4.249 - - [19/Feb/2026 19:37:23] "GET /.gitlab HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.4.249 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.4.249 - - [19/Feb/2026 19:37:23] "GET /.gitlab/issue_templates HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] "GET /.gitlab/merge_request_templates HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.6.27 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.6.27 - - [19/Feb/2026 19:37:23] "GET /.gitlab-ci HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] "GET /.gitignore HTTP/1.1" 200 -
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] "GET /.gitattributes HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] "GET /.gitmodules HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] "GET /.git-credentials HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.5.120 - - [19/Feb/2026 19:37:23] "GET /.git-askpass.sh HTTP/1.1" 404 -
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] code 404, message File not found
+Feb 19 19:37:23  10.244.7.214 - - [19/Feb/2026 19:37:23] "GET /.git-secret HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.6.27 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.6.27 - - [19/Feb/2026 19:37:24] "GET /.git/hooks/pre-commit HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] "GET /.git/hooks/post-commit HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] "GET /.git/info HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.7.214 - - [19/Feb/2026 19:37:24] "GET /.git/objects/info HTTP/1.1" 301 -
+Feb 19 19:37:24  10.244.7.214 - - [19/Feb/2026 19:37:24] "GET /.git/objects/info/ HTTP/1.1" 200 -
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] "GET /.git/objects/pack HTTP/1.1" 301 -
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] "GET /.git/objects/pack/ HTTP/1.1" 200 -
+Feb 19 19:37:24  10.244.6.27 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.6.27 - - [19/Feb/2026 19:37:24] "GET /.git/config.bak HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.5.120 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.5.120 - - [19/Feb/2026 19:37:24] "GET /.git/config.old HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] code 404, message File not found
+Feb 19 19:37:24  10.244.4.249 - - [19/Feb/2026 19:37:24] "GET /.git/config~ HTTP/1.1" 404 -
+Feb 19 19:37:24  10.244.6.27 - - [19/Feb/2026 19:37:24] "GET /.git/ HTTP/1.1" 200 -
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] "GET /root/.git-credentials HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.7.214 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.7.214 - - [19/Feb/2026 19:37:25] "GET /root/.gitconfig HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] "GET /root/.netrc HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] "GET /home/*/.git-credentials HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.5.120 - - [19/Feb/2026 19:37:25] "GET /home/*/.gitconfig HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] "GET /home/*/.netrc HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.7.214 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.7.214 - - [19/Feb/2026 19:37:25] "GET /~/.git-credentials HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] "GET /~/.gitconfig HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] "GET /~/.netrc HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.4.249 - - [19/Feb/2026 19:37:25] "GET /app/.git/config HTTP/1.1" 404 -
+Feb 19 19:37:25  10.244.6.27 - - [19/Feb/2026 19:37:25] code 404, message File not found
+Feb 19 19:37:25  10.244.6.27 - - [19/Feb/2026 19:37:25] "GET /$(pwd)/.git/config HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] "GET /wp-json/wp/v2/users HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] "GET /wp-content/debug.log HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.6.27 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.6.27 - - [19/Feb/2026 19:37:26] "GET /etc/apache2/apache2.conf HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] "GET /package-updates/*.cgi HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.7.214 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.7.214 - - [19/Feb/2026 19:37:26] "GET /software/*.cgi?*u=* HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.4.249 - - [19/Feb/2026 19:37:26] "GET /package-updates/*?*update* HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.7.214 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.7.214 - - [19/Feb/2026 19:37:26] "GET /webhook/* HTTP/1.1" 404 -
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] code 404, message File not found
+Feb 19 19:37:26  10.244.5.120 - - [19/Feb/2026 19:37:26] "GET /webhook-test/* HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] "GET /form/* HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] "GET /form-test/* HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] "GET /webhook HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] "GET /form HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] "GET /rest/oauth1-credential/auth HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] "GET /rest/oauth2-credential/auth HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.4.249 - - [19/Feb/2026 19:37:27] "GET /rest/workflows HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] "GET /rest/executions HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.6.27 - - [19/Feb/2026 19:37:27] "GET /rest/workflows/run HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.7.214 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.7.214 - - [19/Feb/2026 19:37:27] "GET /api/v1/* HTTP/1.1" 404 -
+Feb 19 19:37:27  10.244.7.214 - - [19/Feb/2026 19:37:27] code 404, message File not found
+Feb 19 19:37:27  10.244.7.214 - - [19/Feb/2026 19:37:27] "GET /api/v1/workflows HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] "GET /api/v1/executions HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] "GET /api/v1/credentials HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] "GET /__debug HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] "GET /.well-known/* HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] "GET /healthz HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.7.214 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.7.214 - - [19/Feb/2026 19:37:28] "GET /metrics HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.5.120 - - [19/Feb/2026 19:37:28] "GET /rest/* HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.7.214 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.7.214 - - [19/Feb/2026 19:37:28] "GET /rest/settings HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] "GET /rest/login HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] "GET /rest/logout HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] "GET /rest/users HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.4.249 - - [19/Feb/2026 19:37:28] "GET /rest/node-types HTTP/1.1" 404 -
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] code 404, message File not found
+Feb 19 19:37:28  10.244.6.27 - - [19/Feb/2026 19:37:28] "GET /rest/credentials-for-node HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] "GET /rest/credential-translation HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.5.120 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.5.120 - - [19/Feb/2026 19:37:29] "GET /rest/tags HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] "GET /rest/variables HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] "GET /rest/license HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] "GET /webhook-waiting/* HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] "GET /chat/* HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] "GET /chat HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.7.214 - - [19/Feb/2026 19:37:29] "GET /*update.cgi* HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.4.249 - - [19/Feb/2026 19:37:29] "GET /sysinfo.cgi HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] "GET /proc/index.cgi HTTP/1.1" 404 -
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] code 404, message File not found
+Feb 19 19:37:29  10.244.6.27 - - [19/Feb/2026 19:37:29] "GET /servers/link.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] "GET /servers/save.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] "GET /package-updates/apt.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] "GET /package-updates/yum.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] "GET /package-updates/save.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] "GET /package-updates/refresh.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.5.120 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.5.120 - - [19/Feb/2026 19:37:30] "GET /package-updates/perform.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.4.249 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.4.249 - - [19/Feb/2026 19:37:30] "GET /package-updates/download.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] "GET /package-updates/install.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] "GET /package-updates/update.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.6.27 - - [19/Feb/2026 19:37:30] "GET /package-updates/index.cgi HTTP/1.1" 404 -
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] code 404, message File not found
+Feb 19 19:37:30  10.244.7.214 - - [19/Feb/2026 19:37:30] "GET /software/update.cgi HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] "GET /software/install-updates.cgi HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] "GET /package-updates/ HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] "GET /webmin/package-updates/update.cgi HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] "GET /_next/data/*/index.json HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.6.27 - - [19/Feb/2026 19:37:31] "GET /_next/data/*/about.json HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] "GET /_next/data/*/*.json HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] "GET /_next/static/* HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] "GET /api/* HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.5.120 - - [19/Feb/2026 19:37:31] "GET /api/auth/* HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.4.249 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.4.249 - - [19/Feb/2026 19:37:31] "GET /api/users/* HTTP/1.1" 404 -
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] code 404, message File not found
+Feb 19 19:37:31  10.244.7.214 - - [19/Feb/2026 19:37:31] "GET /api/data/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] "GET /api/webhook/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.4.249 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.4.249 - - [19/Feb/2026 19:37:32] "GET /__nextjs_action HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] "GET /__nextjs_action/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] "GET /app/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] "GET /dashboard/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.7.214 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.7.214 - - [19/Feb/2026 19:37:32] "GET /admin/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.5.120 - - [19/Feb/2026 19:37:32] "GET /user/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.6.27 - - [19/Feb/2026 19:37:32] "GET /profile/* HTTP/1.1" 404 -
+Feb 19 19:37:32  10.244.4.249 - - [19/Feb/2026 19:37:32] code 404, message File not found
+Feb 19 19:37:32  10.244.4.249 - - [19/Feb/2026 19:37:32] "GET /settings/* HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] "GET /[slug] HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] "GET /[id] HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] "GET /[...catchAll] HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] "GET /[[...optional]] HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] "GET /about HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] "GET /contact HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] "GET /products HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] "GET /blog HTTP/1.1" 404 -
+Feb 19 19:37:33  10.244.4.249 - - [19/Feb/2026 19:37:33] "GET /docs HTTP/1.1" 301 -
+Feb 19 19:37:33  10.244.6.27 - - [19/Feb/2026 19:37:33] "GET /docs/ HTTP/1.1" 200 -
+Feb 19 19:37:33  10.244.7.214 - - [19/Feb/2026 19:37:33] code 404, message File not found
+Feb 19 19:37:33  10.244.7.214 - - [19/Feb/2026 19:37:33] "GET /_react/action/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /_react/data/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /actions/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] "GET /loaders/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] "GET /waku/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.4.249 - - [19/Feb/2026 19:37:34] "GET /_waku/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.6.27 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.6.27 - - [19/Feb/2026 19:37:34] "GET /*/[id] HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.7.214 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.7.214 - - [19/Feb/2026 19:37:34] "GET /*/[slug] HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /v1/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /v2/* HTTP/1.1" 404 -
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] code 404, message File not found
+Feb 19 19:37:34  10.244.5.120 - - [19/Feb/2026 19:37:34] "GET /graphql HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] "GET /trpc/* HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] "GET /auth/* HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] "GET /login HTTP/1.1" 200 -
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] "GET /register HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.6.27 - - [19/Feb/2026 19:37:35] "GET /signup HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.4.249 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.4.249 - - [19/Feb/2026 19:37:35] "GET /oauth/* HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] "GET /console/* HTTP/1.1" 404 -
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] code 404, message File not found
+Feb 19 19:37:35  10.244.5.120 - - [19/Feb/2026 19:37:35] "GET /manage/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] "GET /posts/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] "GET /articles/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] "GET /pages/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.6.27 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.6.27 - - [19/Feb/2026 19:37:36] "GET /content/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.6.27 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.6.27 - - [19/Feb/2026 19:37:36] "GET /cart HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] "GET /checkout HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] "GET /orders/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] "GET /payment/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.5.120 - - [19/Feb/2026 19:37:36] "GET /workspaces/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] "GET /projects/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.4.249 - - [19/Feb/2026 19:37:36] "GET /teams/* HTTP/1.1" 404 -
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] code 404, message File not found
+Feb 19 19:37:36  10.244.7.214 - - [19/Feb/2026 19:37:36] "GET /billing/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /integrations/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] "GET /cms/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /editor/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] "GET /media/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] "GET /publish/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] "GET /threads/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.6.27 - - [19/Feb/2026 19:37:37] "GET /messages/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /notifications/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /.netlify/functions/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.5.120 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.5.120 - - [19/Feb/2026 19:37:37] "GET /.vercel/functions/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /api/serverless/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.4.249 - - [19/Feb/2026 19:37:37] "GET /[locale]/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /en/* HTTP/1.1" 404 -
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] code 404, message File not found
+Feb 19 19:37:37  10.244.7.214 - - [19/Feb/2026 19:37:37] "GET /fr/* HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] "GET /[tenant]/* HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] "GET /[workspace]/* HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] "GET /shop/[category]/* HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.5.120 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.5.120 - - [19/Feb/2026 19:37:38] "GET /blog/[year]/[month]/[slug] HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] "GET /:27017 HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.4.249 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.4.249 - - [19/Feb/2026 19:37:38] "GET /:27018 HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.5.120 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.5.120 - - [19/Feb/2026 19:37:38] "GET /:27019 HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] "GET /:28017 HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.4.249 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.4.249 - - [19/Feb/2026 19:37:38] "GET /.well-known/acme-challenge/* HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] "GET /.well-known/acme-challenge/ HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.6.27 - - [19/Feb/2026 19:37:38] "GET /dnscfg.cgi HTTP/1.1" 404 -
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] code 404, message File not found
+Feb 19 19:37:38  10.244.7.214 - - [19/Feb/2026 19:37:38] "GET /_layouts/* HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] "GET /_layouts/15/* HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] "GET /_api/* HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] "GET /_vti_bin/* HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] "GET /sendgrid.env HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] "GET /.env.testing HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.7.214 - - [19/Feb/2026 19:37:39] "GET /admin.html HTTP/1.1" 200 -
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] "GET /.env.development HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] "GET /test HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] "GET /.env.production HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.4.249 - - [19/Feb/2026 19:37:39] "GET /oauth/authorize HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] "GET /.env.test HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.5.120 - - [19/Feb/2026 19:37:39] "GET /api/login HTTP/1.1" 404 -
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] code 404, message File not found
+Feb 19 19:37:39  10.244.6.27 - - [19/Feb/2026 19:37:39] "GET /config/secrets.yml HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.5.120 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.5.120 - - [19/Feb/2026 19:37:40] "GET /api/credentials HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] "GET /.env.local HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] "GET /.env.prod HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.5.120 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.5.120 - - [19/Feb/2026 19:37:40] "GET /wp-config.php HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] "GET /controlpanel HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] "GET /.cache HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.7.214 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.7.214 - - [19/Feb/2026 19:37:40] "GET /config/stripe.yaml HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] "GET /.well-known/stripe.txt HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.4.249 - - [19/Feb/2026 19:37:40] "GET /payment/stripe.json HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.6.27 - - [19/Feb/2026 19:37:40] "GET /stripe.yaml HTTP/1.1" 404 -
+Feb 19 19:37:40  10.244.7.214 - - [19/Feb/2026 19:37:40] code 404, message File not found
+Feb 19 19:37:40  10.244.7.214 - - [19/Feb/2026 19:37:40] "GET /payment_gateways/stripe.yaml HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] "GET /stripe/config.json HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.6.27 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.6.27 - - [19/Feb/2026 19:37:41] "GET /src/config/stripe.ts HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] "GET /client/stripe.config.js HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.4.249 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.4.249 - - [19/Feb/2026 19:37:41] "GET /stripe.env HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.6.27 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.6.27 - - [19/Feb/2026 19:37:41] "GET /stripe.config.js HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.7.214 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.7.214 - - [19/Feb/2026 19:37:41] "GET /stripe/webhook_secret.env HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] "GET /public/stripe.js HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.5.120 - - [19/Feb/2026 19:37:41] "GET /config/stripe.php HTTP/1.1" 404 -
+Feb 19 19:37:41  10.244.4.249 - - [19/Feb/2026 19:37:41] code 404, message File not found
+Feb 19 19:37:41  10.244.4.249 - - [19/Feb/2026 19:37:41] "GET /webhooks/incoming/stripe.json HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.5.120 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.5.120 - - [19/Feb/2026 19:37:42] "GET /stripe-keys.json HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] "GET /src/config/stripe.js HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] "GET /stripe.json HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] "GET /stripe-credentials.json HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.6.27 - - [19/Feb/2026 19:37:42] "GET /.well-known/stripe/ HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] "GET /.stripe/ HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] "GET /stripe/.env HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.7.214 - - [19/Feb/2026 19:37:42] "GET /config/stripe.json HTTP/1.1" 404 -
+Feb 19 19:37:42  10.244.4.249 - - [19/Feb/2026 19:37:42] code 404, message File not found
+Feb 19 19:37:42  10.244.4.249 - - [19/Feb/2026 19:37:42] "GET /plugins/payments/stripe.json HTTP/1.1" 404 -
+Feb 19 19:49:11  [2026-02-19 19:49:11] [INFO] [forex_signals] [tenant:entrylab] [req:c7cae43b] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 19:49:11  [2026-02-19 19:49:11] [INFO] [raja_banks] [tenant:entrylab] [req:c7cae43b] Checking for signals on XAU/USD 15min...
+Feb 19 19:49:11  [2026-02-19 19:49:11] [INFO] [raja_banks] [tenant:entrylab] [req:c7cae43b] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:00:01  [2026-02-19 20:00:01] [INFO] [repo] Claimed 1 due jobs
+Feb 19 20:00:01  [2026-02-19 20:00:01] [INFO] [crosspromo_worker] Processing job b5c2c7b4-0c55-473f-b9b5-40d7c391335e type=eod_pip_brag tenant=entrylab
+Feb 19 20:00:01  [2026-02-19 20:00:01] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_bot
+Feb 19 20:00:01  [2026-02-19 20:00:01] [INFO] [service] Found brag-worthy performance: 335.6 pips over 7 days
+Feb 19 20:00:01  [2026-02-19 20:00:01] [WARNING] [client] Failed to send message: Bad Request: chat not found
+Feb 19 20:00:01  [2026-02-19 20:00:01] [WARNING] [repo] Job b5c2c7b4-0c55-473f-b9b5-40d7c391335e marked as failed: Bad Request: chat not found
+Feb 19 20:00:01  [2026-02-19 20:00:01] [WARNING] [crosspromo_worker] Job b5c2c7b4-0c55-473f-b9b5-40d7c391335e failed: Bad Request: chat not found
+Feb 19 20:00:01  [2026-02-19 20:00:01] [INFO] [crosspromo_worker] Processed 1 job(s)
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [forex_signals] [tenant:entrylab] [req:607b417a] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [raja_banks] [tenant:entrylab] [req:607b417a] Checking for signals on XAU/USD 15min...
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [raja_banks] [tenant:entrylab] [req:607b417a] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [generator] [tenant:entrylab] [req:607b417a] 📊 Checking 1-hour timeframe...
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [forex_signals] [tenant:entrylab] [req:607b417a] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [raja_banks] [tenant:entrylab] [req:607b417a] Checking for signals on XAU/USD 1h...
+Feb 19 20:04:12  [2026-02-19 20:04:12] [INFO] [raja_banks] [tenant:entrylab] [req:607b417a] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:19:13  [2026-02-19 20:19:13] [INFO] [forex_signals] [tenant:entrylab] [req:f4182716] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:19:13  [2026-02-19 20:19:13] [INFO] [raja_banks] [tenant:entrylab] [req:f4182716] Checking for signals on XAU/USD 15min...
+Feb 19 20:19:13  [2026-02-19 20:19:13] [INFO] [raja_banks] [tenant:entrylab] [req:f4182716] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [forex_signals] [tenant:entrylab] [req:53aa0099] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [raja_banks] [tenant:entrylab] [req:53aa0099] Checking for signals on XAU/USD 15min...
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [raja_banks] [tenant:entrylab] [req:53aa0099] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [generator] [tenant:entrylab] [req:53aa0099] 📊 Checking 1-hour timeframe...
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [forex_signals] [tenant:entrylab] [req:53aa0099] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [raja_banks] [tenant:entrylab] [req:53aa0099] Checking for signals on XAU/USD 1h...
+Feb 19 20:34:14  [2026-02-19 20:34:14] [INFO] [raja_banks] [tenant:entrylab] [req:53aa0099] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 20:49:15  [2026-02-19 20:49:15] [INFO] [forex_signals] [tenant:entrylab] [req:e0e5283b] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 20:49:15  [2026-02-19 20:49:15] [INFO] [raja_banks] [tenant:entrylab] [req:e0e5283b] Checking for signals on XAU/USD 15min...
+Feb 19 20:49:15  [2026-02-19 20:49:15] [INFO] [raja_banks] [tenant:entrylab] [req:e0e5283b] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [forex_signals] [tenant:entrylab] [req:32b7c232] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [raja_banks] [tenant:entrylab] [req:32b7c232] Checking for signals on XAU/USD 15min...
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [raja_banks] [tenant:entrylab] [req:32b7c232] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [generator] [tenant:entrylab] [req:32b7c232] 📊 Checking 1-hour timeframe...
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [forex_signals] [tenant:entrylab] [req:32b7c232] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [raja_banks] [tenant:entrylab] [req:32b7c232] Checking for signals on XAU/USD 1h...
+Feb 19 21:04:16  [2026-02-19 21:04:16] [INFO] [raja_banks] [tenant:entrylab] [req:32b7c232] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:14:28  10.244.5.120 - - [19/Feb/2026 21:14:28] "GET / HTTP/1.1" 302 -
+Feb 19 21:14:29  10.244.7.214 - - [19/Feb/2026 21:14:29] code 404, message File not found
+Feb 19 21:14:29  10.244.7.214 - - [19/Feb/2026 21:14:29] "GET /server HTTP/1.1" 404 -
+Feb 19 21:14:29  10.244.4.249 - - [19/Feb/2026 21:14:29] "GET / HTTP/1.1" 302 -
+Feb 19 21:14:30  10.244.5.120 - - [19/Feb/2026 21:14:30] code 404, message File not found
+Feb 19 21:14:30  10.244.5.120 - - [19/Feb/2026 21:14:30] "GET /server-status HTTP/1.1" 404 -
+Feb 19 21:14:30  10.244.5.120 - - [19/Feb/2026 21:14:30] code 404, message File not found
+Feb 19 21:14:30  10.244.5.120 - - [19/Feb/2026 21:14:30] "GET /server HTTP/1.1" 404 -
+Feb 19 21:14:31  10.244.7.214 - - [19/Feb/2026 21:14:31] code 404, message File not found
+Feb 19 21:14:31  10.244.7.214 - - [19/Feb/2026 21:14:31] "GET /server-status HTTP/1.1" 404 -
+Feb 19 21:14:32  10.244.6.27 - - [19/Feb/2026 21:14:32] code 404, message File not found
+Feb 19 21:14:32  10.244.6.27 - - [19/Feb/2026 21:14:32] "GET /about HTTP/1.1" 404 -
+Feb 19 21:14:33  10.244.7.214 - - [19/Feb/2026 21:14:33] code 404, message File not found
+Feb 19 21:14:33  10.244.7.214 - - [19/Feb/2026 21:14:33] "GET /login.action HTTP/1.1" 404 -
+Feb 19 21:14:33  10.244.5.120 - - [19/Feb/2026 21:14:33] code 404, message File not found
+Feb 19 21:14:33  10.244.5.120 - - [19/Feb/2026 21:14:33] "GET /about HTTP/1.1" 404 -
+Feb 19 21:14:34  10.244.7.214 - - [19/Feb/2026 21:14:34] code 404, message File not found
+Feb 19 21:14:34  10.244.7.214 - - [19/Feb/2026 21:14:34] "GET /v2/_catalog HTTP/1.1" 404 -
+Feb 19 21:14:34  10.244.4.249 - - [19/Feb/2026 21:14:34] code 404, message File not found
+Feb 19 21:14:34  10.244.4.249 - - [19/Feb/2026 21:14:34] "GET /login.action HTTP/1.1" 404 -
+Feb 19 21:14:35  10.244.5.120 - - [19/Feb/2026 21:14:35] "GET /.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:35  10.244.7.214 - - [19/Feb/2026 21:14:35] "GET /assets/.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:35  10.244.5.120 - - [19/Feb/2026 21:14:35] code 404, message File not found
+Feb 19 21:14:35  10.244.5.120 - - [19/Feb/2026 21:14:35] "GET /v2/_catalog HTTP/1.1" 404 -
+Feb 19 21:14:35  10.244.7.214 - - [19/Feb/2026 21:14:35] "GET /assets/templates/.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:35  10.244.5.120 - - [19/Feb/2026 21:14:35] "GET /.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:36  10.244.4.249 - - [19/Feb/2026 21:14:36] "GET /assets/.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:36  10.244.6.27 - - [19/Feb/2026 21:14:36] "GET /assets/templates/.DS_Store HTTP/1.1" 200 -
+Feb 19 21:14:36  10.244.5.120 - - [19/Feb/2026 21:14:36] code 404, message File not found
+Feb 19 21:14:36  10.244.5.120 - - [19/Feb/2026 21:14:36] "GET /assets/templates/flash-sale/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:36  10.244.5.120 - - [19/Feb/2026 21:14:36] code 404, message File not found
+Feb 19 21:14:36  10.244.5.120 - - [19/Feb/2026 21:14:36] "GET /assets/templates/september-sale/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:36  10.244.7.214 - - [19/Feb/2026 21:14:36] code 404, message File not found
+Feb 19 21:14:36  10.244.7.214 - - [19/Feb/2026 21:14:36] "GET /assets/templates/flash-sale/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:36  10.244.4.249 - - [19/Feb/2026 21:14:36] code 404, message File not found
+Feb 19 21:14:36  10.244.4.249 - - [19/Feb/2026 21:14:36] "GET /assets/templates/september-sale-2/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:36  10.244.7.214 - - [19/Feb/2026 21:14:36] code 404, message File not found
+Feb 19 21:14:36  10.244.7.214 - - [19/Feb/2026 21:14:36] "GET /assets/templates/september-sale/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:37  10.244.5.120 - - [19/Feb/2026 21:14:37] code 404, message File not found
+Feb 19 21:14:37  10.244.5.120 - - [19/Feb/2026 21:14:37] "GET /.env HTTP/1.1" 404 -
+Feb 19 21:14:37  10.244.4.249 - - [19/Feb/2026 21:14:37] code 404, message File not found
+Feb 19 21:14:37  10.244.4.249 - - [19/Feb/2026 21:14:37] "GET /assets/templates/september-sale-2/.DS_Store HTTP/1.1" 404 -
+Feb 19 21:14:38  10.244.4.249 - - [19/Feb/2026 21:14:38] code 404, message File not found
+Feb 19 21:14:38  10.244.4.249 - - [19/Feb/2026 21:14:38] "GET /.env HTTP/1.1" 404 -
+Feb 19 21:14:39  10.244.7.214 - - [19/Feb/2026 21:14:39] code 404, message File not found
+Feb 19 21:14:39  10.244.7.214 - - [19/Feb/2026 21:14:39] "GET /ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application HTTP/1.1" 404 -
+Feb 19 21:14:40  10.244.5.120 - - [19/Feb/2026 21:14:40] code 404, message File not found
+Feb 19 21:14:40  10.244.5.120 - - [19/Feb/2026 21:14:40] "GET /ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application HTTP/1.1" 404 -
+Feb 19 21:14:41  10.244.7.214 - - [19/Feb/2026 21:14:41] "GET /.git/config HTTP/1.1" 200 -
+Feb 19 21:14:41  10.244.7.214 - - [19/Feb/2026 21:14:41] code 404, message Not Found
+Feb 19 21:14:41  10.244.7.214 - - [19/Feb/2026 21:14:41] "POST /graphql HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] code 404, message File not found
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] "GET /admin/ajax.php?brand=x%27+AND+EXTRACTVALUE%281%2CCONCAT%28%27~USER%3A%27%2C%28SELECT+USER%28%29%29%2C%27~%27%29%29+--+&command=model&model=model&module=FreePBX%5Cmodules%5Cendpoint%5Cajax&template=x HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.6.27 - - [19/Feb/2026 21:14:42] code 404, message Not Found
+Feb 19 21:14:42  10.244.6.27 - - [19/Feb/2026 21:14:42] "POST /api HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.5.120 - - [19/Feb/2026 21:14:42] code 404, message Not Found
+Feb 19 21:14:42  10.244.5.120 - - [19/Feb/2026 21:14:42] "POST /api/graphql HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] code 404, message Not Found
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] "POST /graphql/api HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] code 404, message Not Found
+Feb 19 21:14:42  10.244.7.214 - - [19/Feb/2026 21:14:42] "POST /api/gql HTTP/1.1" 404 -
+Feb 19 21:14:42  10.244.5.120 - - [19/Feb/2026 21:14:42] code 404, message File not found
+Feb 19 21:14:42  10.244.5.120 - - [19/Feb/2026 21:14:42] "GET /s/8393e2034313e2935313e2236313/_/;/META-INF/maven/com.atlassian.jira/jira-webapp-dist/pom.properties HTTP/1.1" 404 -
+Feb 19 21:14:43  10.244.5.120 - - [19/Feb/2026 21:14:43] "GET /.git/config HTTP/1.1" 200 -
+Feb 19 21:14:43  10.244.7.214 - - [19/Feb/2026 21:14:43] code 404, message File not found
+Feb 19 21:14:43  10.244.7.214 - - [19/Feb/2026 21:14:43] "GET /config.json HTTP/1.1" 404 -
+Feb 19 21:14:44  10.244.5.120 - - [19/Feb/2026 21:14:44] code 404, message Not Found
+Feb 19 21:14:44  10.244.5.120 - - [19/Feb/2026 21:14:44] "POST /graphql HTTP/1.1" 404 -
+Feb 19 21:14:44  10.244.4.249 - - [19/Feb/2026 21:14:44] code 404, message Not Found
+Feb 19 21:14:44  10.244.4.249 - - [19/Feb/2026 21:14:44] "POST /api HTTP/1.1" 404 -
+Feb 19 21:14:45  10.244.6.27 - - [19/Feb/2026 21:14:45] code 404, message Not Found
+Feb 19 21:14:45  10.244.6.27 - - [19/Feb/2026 21:14:45] "POST /api/graphql HTTP/1.1" 404 -
+Feb 19 21:14:45  10.244.5.120 - - [19/Feb/2026 21:14:45] code 404, message Not Found
+Feb 19 21:14:45  10.244.5.120 - - [19/Feb/2026 21:14:45] "POST /graphql/api HTTP/1.1" 404 -
+Feb 19 21:14:45  10.244.6.27 - - [19/Feb/2026 21:14:45] code 404, message Not Found
+Feb 19 21:14:45  10.244.6.27 - - [19/Feb/2026 21:14:45] "POST /api/gql HTTP/1.1" 404 -
+Feb 19 21:14:46  10.244.4.249 - - [19/Feb/2026 21:14:46] code 404, message File not found
+Feb 19 21:14:46  10.244.4.249 - - [19/Feb/2026 21:14:46] "GET /telescope/requests HTTP/1.1" 404 -
+Feb 19 21:14:46  10.244.4.249 - - [19/Feb/2026 21:14:46] code 404, message File not found
+Feb 19 21:14:46  10.244.4.249 - - [19/Feb/2026 21:14:46] "GET /info.php HTTP/1.1" 404 -
+Feb 19 21:14:46  10.244.7.214 - - [19/Feb/2026 21:14:46] code 404, message File not found
+Feb 19 21:14:46  10.244.7.214 - - [19/Feb/2026 21:14:46] "GET /s/6393e203e26363e2237313/_/;/META-INF/maven/com.atlassian.jira/jira-webapp-dist/pom.properties HTTP/1.1" 404 -
+Feb 19 21:14:47  10.244.5.120 - - [19/Feb/2026 21:14:47] code 404, message File not found
+Feb 19 21:14:47  10.244.5.120 - - [19/Feb/2026 21:14:47] "GET /.well-known/security.txt HTTP/1.1" 404 -
+Feb 19 21:14:47  10.244.6.27 - - [19/Feb/2026 21:14:47] code 404, message File not found
+Feb 19 21:14:47  10.244.6.27 - - [19/Feb/2026 21:14:47] "GET /config.json HTTP/1.1" 404 -
+Feb 19 21:14:48  10.244.5.120 - - [19/Feb/2026 21:14:48] code 404, message File not found
+Feb 19 21:14:48  10.244.5.120 - - [19/Feb/2026 21:14:48] "GET /actuator/env HTTP/1.1" 404 -
+Feb 19 21:14:49  10.244.5.120 - - [19/Feb/2026 21:14:49] code 404, message File not found
+Feb 19 21:14:49  10.244.5.120 - - [19/Feb/2026 21:14:49] "GET /telescope/requests HTTP/1.1" 404 -
+Feb 19 21:14:49  10.244.6.27 - - [19/Feb/2026 21:14:49] code 404, message File not found
+Feb 19 21:14:49  10.244.6.27 - - [19/Feb/2026 21:14:49] "GET /info.php HTTP/1.1" 404 -
+Feb 19 21:14:50  10.244.6.27 - - [19/Feb/2026 21:14:50] code 404, message File not found
+Feb 19 21:14:50  10.244.6.27 - - [19/Feb/2026 21:14:50] "GET /swagger-ui.html HTTP/1.1" 404 -
+Feb 19 21:14:50  10.244.7.214 - - [19/Feb/2026 21:14:50] code 404, message File not found
+Feb 19 21:14:50  10.244.7.214 - - [19/Feb/2026 21:14:50] "GET /.well-known/security.txt HTTP/1.1" 404 -
+Feb 19 21:14:51  10.244.6.27 - - [19/Feb/2026 21:14:51] code 404, message File not found
+Feb 19 21:14:51  10.244.6.27 - - [19/Feb/2026 21:14:51] "GET /swagger/index.html HTTP/1.1" 404 -
+Feb 19 21:14:51  10.244.7.214 - - [19/Feb/2026 21:14:51] code 404, message File not found
+Feb 19 21:14:51  10.244.7.214 - - [19/Feb/2026 21:14:51] "GET /actuator/env HTTP/1.1" 404 -
+Feb 19 21:14:52  10.244.7.214 - - [19/Feb/2026 21:14:52] code 404, message File not found
+Feb 19 21:14:52  10.244.7.214 - - [19/Feb/2026 21:14:52] "GET /swagger/swagger-ui.html HTTP/1.1" 404 -
+Feb 19 21:14:53  10.244.4.249 - - [19/Feb/2026 21:14:53] code 404, message File not found
+Feb 19 21:14:53  10.244.4.249 - - [19/Feb/2026 21:14:53] "GET /webjars/swagger-ui/index.html HTTP/1.1" 404 -
+Feb 19 21:14:53  10.244.7.214 - - [19/Feb/2026 21:14:53] code 404, message File not found
+Feb 19 21:14:53  10.244.7.214 - - [19/Feb/2026 21:14:53] "GET /swagger-ui.html HTTP/1.1" 404 -
+Feb 19 21:14:54  10.244.4.249 - - [19/Feb/2026 21:14:54] code 404, message File not found
+Feb 19 21:14:54  10.244.4.249 - - [19/Feb/2026 21:14:54] "GET /swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:54  10.244.5.120 - - [19/Feb/2026 21:14:54] code 404, message File not found
+Feb 19 21:14:54  10.244.5.120 - - [19/Feb/2026 21:14:54] "GET /swagger/index.html HTTP/1.1" 404 -
+Feb 19 21:14:55  10.244.7.214 - - [19/Feb/2026 21:14:55] code 404, message File not found
+Feb 19 21:14:55  10.244.7.214 - - [19/Feb/2026 21:14:55] "GET /swagger/v1/swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:55  10.244.7.214 - - [19/Feb/2026 21:14:55] code 404, message File not found
+Feb 19 21:14:55  10.244.7.214 - - [19/Feb/2026 21:14:55] "GET /swagger/swagger-ui.html HTTP/1.1" 404 -
+Feb 19 21:14:56  10.244.7.214 - - [19/Feb/2026 21:14:56] code 404, message File not found
+Feb 19 21:14:56  10.244.7.214 - - [19/Feb/2026 21:14:56] "GET /v2/api-docs HTTP/1.1" 404 -
+Feb 19 21:14:56  10.244.6.27 - - [19/Feb/2026 21:14:56] code 404, message File not found
+Feb 19 21:14:56  10.244.6.27 - - [19/Feb/2026 21:14:56] "GET /webjars/swagger-ui/index.html HTTP/1.1" 404 -
+Feb 19 21:14:57  10.244.4.249 - - [19/Feb/2026 21:14:57] code 404, message File not found
+Feb 19 21:14:57  10.244.4.249 - - [19/Feb/2026 21:14:57] "GET /v3/api-docs HTTP/1.1" 404 -
+Feb 19 21:14:57  10.244.5.120 - - [19/Feb/2026 21:14:57] code 404, message File not found
+Feb 19 21:14:57  10.244.5.120 - - [19/Feb/2026 21:14:57] "GET /swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:58  10.244.6.27 - - [19/Feb/2026 21:14:58] code 404, message File not found
+Feb 19 21:14:58  10.244.6.27 - - [19/Feb/2026 21:14:58] "GET /api-docs/swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:58  10.244.4.249 - - [19/Feb/2026 21:14:58] code 404, message File not found
+Feb 19 21:14:58  10.244.4.249 - - [19/Feb/2026 21:14:58] "GET /swagger/v1/swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:59  10.244.6.27 - - [19/Feb/2026 21:14:59] code 404, message File not found
+Feb 19 21:14:59  10.244.6.27 - - [19/Feb/2026 21:14:59] "GET /api/swagger.json HTTP/1.1" 404 -
+Feb 19 21:14:59  10.244.5.120 - - [19/Feb/2026 21:14:59] code 404, message File not found
+Feb 19 21:14:59  10.244.5.120 - - [19/Feb/2026 21:14:59] "GET /v2/api-docs HTTP/1.1" 404 -
+Feb 19 21:15:00  10.244.5.120 - - [19/Feb/2026 21:15:00] code 404, message File not found
+Feb 19 21:15:00  10.244.5.120 - - [19/Feb/2026 21:15:00] "GET /@vite/env HTTP/1.1" 404 -
+Feb 19 21:15:00  10.244.5.120 - - [19/Feb/2026 21:15:00] code 404, message File not found
+Feb 19 21:15:00  10.244.5.120 - - [19/Feb/2026 21:15:00] "GET /v3/api-docs HTTP/1.1" 404 -
+Feb 19 21:15:01  10.244.7.214 - - [19/Feb/2026 21:15:01] code 404, message File not found
+Feb 19 21:15:01  10.244.7.214 - - [19/Feb/2026 21:15:01] "GET /.vscode/sftp.json HTTP/1.1" 404 -
+Feb 19 21:15:01  10.244.5.120 - - [19/Feb/2026 21:15:01] code 404, message File not found
+Feb 19 21:15:01  10.244.5.120 - - [19/Feb/2026 21:15:01] "GET /api-docs/swagger.json HTTP/1.1" 404 -
+Feb 19 21:15:02  10.244.7.214 - - [19/Feb/2026 21:15:02] code 501, message Unsupported method ('OPTIONS')
+Feb 19 21:15:02  10.244.7.214 - - [19/Feb/2026 21:15:02] "OPTIONS / HTTP/1.1" 501 -
+Feb 19 21:15:03  10.244.5.120 - - [19/Feb/2026 21:15:03] code 404, message File not found
+Feb 19 21:15:03  10.244.5.120 - - [19/Feb/2026 21:15:03] "GET /api/swagger.json HTTP/1.1" 404 -
+Feb 19 21:15:03  10.244.6.27 - - [19/Feb/2026 21:15:03] "GET /?rest_route=/wp/v2/users/ HTTP/1.1" 302 -
+Feb 19 21:15:03  10.244.6.27 - - [19/Feb/2026 21:15:03] code 404, message File not found
+Feb 19 21:15:03  10.244.6.27 - - [19/Feb/2026 21:15:03] "GET /@vite/env HTTP/1.1" 404 -
+Feb 19 21:15:04  10.244.5.120 - - [19/Feb/2026 21:15:04] code 404, message File not found
+Feb 19 21:15:04  10.244.5.120 - - [19/Feb/2026 21:15:04] "GET /debug/default/view?panel=config HTTP/1.1" 404 -
+Feb 19 21:15:04  10.244.5.120 - - [19/Feb/2026 21:15:04] code 404, message File not found
+Feb 19 21:15:04  10.244.5.120 - - [19/Feb/2026 21:15:04] "GET /.vscode/sftp.json HTTP/1.1" 404 -
+Feb 19 21:15:05  10.244.7.214 - - [19/Feb/2026 21:15:05] code 501, message Unsupported method ('OPTIONS')
+Feb 19 21:15:05  10.244.7.214 - - [19/Feb/2026 21:15:05] "OPTIONS / HTTP/1.1" 501 -
+Feb 19 21:15:06  10.244.5.120 - - [19/Feb/2026 21:15:06] "GET /?rest_route=/wp/v2/users/ HTTP/1.1" 302 -
+Feb 19 21:15:07  10.244.7.214 - - [19/Feb/2026 21:15:07] code 404, message File not found
+Feb 19 21:15:07  10.244.7.214 - - [19/Feb/2026 21:15:07] "GET /debug/default/view?panel=config HTTP/1.1" 404 -
+Feb 19 21:19:17  [2026-02-19 21:19:17] [INFO] [forex_signals] [tenant:entrylab] [req:428ce991] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:19:17  [2026-02-19 21:19:17] [INFO] [raja_banks] [tenant:entrylab] [req:428ce991] Checking for signals on XAU/USD 15min...
+Feb 19 21:19:17  [2026-02-19 21:19:17] [INFO] [raja_banks] [tenant:entrylab] [req:428ce991] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [forex_signals] [tenant:entrylab] [req:42249ae9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [raja_banks] [tenant:entrylab] [req:42249ae9] Checking for signals on XAU/USD 15min...
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [raja_banks] [tenant:entrylab] [req:42249ae9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [generator] [tenant:entrylab] [req:42249ae9] 📊 Checking 1-hour timeframe...
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [forex_signals] [tenant:entrylab] [req:42249ae9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [raja_banks] [tenant:entrylab] [req:42249ae9] Checking for signals on XAU/USD 1h...
+Feb 19 21:34:18  [2026-02-19 21:34:18] [INFO] [raja_banks] [tenant:entrylab] [req:42249ae9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:49:19  [2026-02-19 21:49:19] [INFO] [forex_signals] [tenant:entrylab] [req:a6a0b802] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 19 21:49:19  [2026-02-19 21:49:19] [INFO] [raja_banks] [tenant:entrylab] [req:a6a0b802] Checking for signals on XAU/USD 15min...
+Feb 19 21:49:19  [2026-02-19 21:49:19] [INFO] [raja_banks] [tenant:entrylab] [req:a6a0b802] Guardrail blocked: Outside trading session (Off-hours)
+Feb 19 21:59:56  10.244.7.214 - - [19/Feb/2026 21:59:56] "GET /.DS_Store HTTP/1.1" 200 -
+Feb 19 21:59:58  10.244.4.249 - - [19/Feb/2026 21:59:58] "GET /assets/.DS_Store HTTP/1.1" 200 -
+Feb 19 22:04:20  [2026-02-19 22:04:20] [INFO] [generator] [tenant:entrylab] [req:122d41e5] Outside trading hours (8AM-10PM GMT), skipping signal check

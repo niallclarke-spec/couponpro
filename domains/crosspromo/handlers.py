@@ -50,8 +50,10 @@ def handle_get_settings(handler):
             "vip_channel_id": None,
             "free_channel_id": None,
             "cta_url": "https://entrylab.io/subscribe",
-            "morning_post_time_utc": "07:00",
+            "morning_post_time_utc": "06:42",
             "vip_soon_delay_minutes": 45,
+            "recap_forward_time_utc": "07:12",
+            "vip_soon_time_utc": "07:51",
             "timezone": "UTC"
         })
         return
@@ -74,8 +76,10 @@ def handle_save_settings(handler):
         vip_channel_id=data.get('vip_channel_id'),
         free_channel_id=data.get('free_channel_id'),
         cta_url=data.get('cta_url', 'https://entrylab.io/subscribe'),
-        morning_post_time_utc=data.get('morning_post_time_utc', '07:00'),
+        morning_post_time_utc=data.get('morning_post_time_utc', '06:42'),
         vip_soon_delay_minutes=data.get('vip_soon_delay_minutes', 45),
+        recap_forward_time_utc=data.get('recap_forward_time_utc', '07:12'),
+        vip_soon_time_utc=data.get('vip_soon_time_utc', '07:51'),
         timezone=data.get('timezone', 'UTC')
     )
     

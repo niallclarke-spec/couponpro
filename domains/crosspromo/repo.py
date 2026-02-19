@@ -86,7 +86,7 @@ def get_settings(tenant_id: str) -> Optional[Dict[str, Any]]:
             cursor.execute("""
                 SELECT tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
                        cta_url, morning_post_time_utc, timezone, created_at, updated_at,
-                       vip_soon_delay_minutes
+                       vip_soon_delay_minutes, recap_forward_time_utc, vip_soon_time_utc
                 FROM tenant_crosspromo_settings
                 WHERE tenant_id = %s
             """, (tenant_id,))
@@ -105,6 +105,8 @@ def get_settings(tenant_id: str) -> Optional[Dict[str, Any]]:
                 'created_at': row[8].isoformat() if row[8] else None,
                 'updated_at': row[9].isoformat() if row[9] else None,
                 'vip_soon_delay_minutes': row[10] if len(row) > 10 else 45,
+                'recap_forward_time_utc': row[11] if len(row) > 11 else '07:12',
+                'vip_soon_time_utc': row[12] if len(row) > 12 else '07:51',
             }
     except Exception as e:
         logger.exception(f"Error getting crosspromo settings: {e}")
@@ -125,12 +127,15 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
             morning_post_time_utc = kwargs.get('morning_post_time_utc', '07:00')
             timezone = kwargs.get('timezone', 'UTC')
             vip_soon_delay_minutes = kwargs.get('vip_soon_delay_minutes', 45)
+            recap_forward_time_utc = kwargs.get('recap_forward_time_utc', '07:12')
+            vip_soon_time_utc = kwargs.get('vip_soon_time_utc', '07:51')
             
             cursor.execute("""
                 INSERT INTO tenant_crosspromo_settings 
                     (tenant_id, enabled, bot_role, vip_channel_id, free_channel_id, 
-                     cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                     cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes,
+                     recap_forward_time_utc, vip_soon_time_utc, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (tenant_id) DO UPDATE SET
                     enabled = EXCLUDED.enabled,
                     bot_role = EXCLUDED.bot_role,
@@ -140,12 +145,15 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
                     morning_post_time_utc = EXCLUDED.morning_post_time_utc,
                     timezone = EXCLUDED.timezone,
                     vip_soon_delay_minutes = EXCLUDED.vip_soon_delay_minutes,
+                    recap_forward_time_utc = EXCLUDED.recap_forward_time_utc,
+                    vip_soon_time_utc = EXCLUDED.vip_soon_time_utc,
                     updated_at = NOW()
                 RETURNING tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
                           cta_url, morning_post_time_utc, timezone, created_at, updated_at,
-                          vip_soon_delay_minutes
+                          vip_soon_delay_minutes, recap_forward_time_utc, vip_soon_time_utc
             """, (tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
-                  cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes))
+                  cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes,
+                  recap_forward_time_utc, vip_soon_time_utc))
             
             row = cursor.fetchone()
             conn.commit()
@@ -166,6 +174,8 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
                 'created_at': row[8].isoformat() if row[8] else None,
                 'updated_at': row[9].isoformat() if row[9] else None,
                 'vip_soon_delay_minutes': row[10] if len(row) > 10 else 45,
+                'recap_forward_time_utc': row[11] if len(row) > 11 else '07:12',
+                'vip_soon_time_utc': row[12] if len(row) > 12 else '07:51',
             }
     except Exception as e:
         logger.exception(f"Error upserting crosspromo settings: {e}")

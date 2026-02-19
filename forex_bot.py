@@ -739,8 +739,8 @@ No signals posted this week."""
             result = await self._send(message)
             
             if result.success:
-                logger.info(f"Posted weekly recap for {week_str or 'this week'}")
-                return True
+                logger.info(f"Posted weekly recap for {week_str or 'this week'} (msg_id: {result.message_id})")
+                return result.message_id
             else:
                 logger.error(f"Failed to post weekly recap: {result.error}")
                 return False

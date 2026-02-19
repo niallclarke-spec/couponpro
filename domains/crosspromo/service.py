@@ -557,6 +557,17 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
         return result
     
+    elif job_type == 'forward_recap':
+        recap_message_id = payload.get('recap_message_id')
+        if not recap_message_id:
+            return {"success": True, "skipped": True, "reason": "No recap message to forward"}
+        
+        if not vip_channel_id:
+            return {"success": False, "error": "VIP channel ID not configured"}
+        
+        result = forward_message(bot_token, vip_channel_id, free_channel_id, int(recap_message_id))
+        return result
+    
     elif job_type == 'forward_winning_signal':
         if not vip_channel_id:
             return {"success": False, "error": "VIP channel ID not configured"}
@@ -692,10 +703,11 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
 
 def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     """
-    Enqueue today's daily sequence.
-    - morning_news: runs immediately when called
-    - vip_soon: runs after configured delay (default 45 minutes)
-    - eod_pip_brag: runs at 20:00 UTC (end of trading day)
+    Enqueue today's daily sequence with fixed UTC times.
+    - morning_news: at morning_post_time_utc (default 06:42)
+    - forward_recap: at recap_forward_time_utc (default 07:12) - only if recent recap exists
+    - vip_soon: at vip_soon_time_utc (default 07:51)
+    - eod_pip_brag: at 20:00 UTC (end of trading day)
     
     Only works Mon-Fri. Returns result dict.
     """
@@ -716,30 +728,70 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     except pytz.UnknownTimeZoneError:
         tz = pytz.UTC
     
-    # Use UTC date for all dedupe keys to ensure consistency
     utc_now = datetime.utcnow()
     utc_today_str = utc_now.strftime('%Y-%m-%d')
     
-    vip_soon_delay = settings.get('vip_soon_delay_minutes', 45)
+    morning_time_str = settings.get('morning_post_time_utc', '06:42')
+    recap_time_str = settings.get('recap_forward_time_utc', '07:12')
+    vip_soon_time_str = settings.get('vip_soon_time_utc', '07:51')
+    
+    def parse_time(time_str, default_h, default_m):
+        try:
+            parts = time_str.split(':')
+            return int(parts[0]), int(parts[1])
+        except (ValueError, IndexError):
+            return default_h, default_m
+    
+    morning_h, morning_m = parse_time(morning_time_str, 6, 42)
+    recap_h, recap_m = parse_time(recap_time_str, 7, 12)
+    vip_soon_h, vip_soon_m = parse_time(vip_soon_time_str, 7, 51)
+    
+    morning_run_at = utc_now.replace(hour=morning_h, minute=morning_m, second=0, microsecond=0)
+    recap_run_at = utc_now.replace(hour=recap_h, minute=recap_m, second=0, microsecond=0)
+    vip_soon_run_at = utc_now.replace(hour=vip_soon_h, minute=vip_soon_m, second=0, microsecond=0)
     
     morning_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='morning_news',
-        run_at=utc_now,
+        run_at=morning_run_at,
         dedupe_key=f"{tenant_id}|{utc_today_str}|morning_news"
     )
+    
+    recap_job = None
+    try:
+        import db as db_module
+        recap_msg_id = db_module.get_last_recap_date('weekly_recap_msg_id', tenant_id=tenant_id)
+        recap_week = db_module.get_last_recap_date('weekly', tenant_id=tenant_id)
+        
+        if recap_msg_id and recap_week:
+            current_week = utc_now.isocalendar()[1]
+            try:
+                recap_week_num = int(recap_week)
+                weeks_diff = current_week - recap_week_num
+                if weeks_diff < 0:
+                    weeks_diff += 52
+                if weeks_diff <= 1:
+                    recap_job = repo.enqueue_job(
+                        tenant_id=tenant_id,
+                        job_type='forward_recap',
+                        run_at=recap_run_at,
+                        dedupe_key=f"{tenant_id}|{utc_today_str}|forward_recap",
+                        payload={'recap_message_id': recap_msg_id}
+                    )
+            except (ValueError, TypeError):
+                logger.warning(f"Could not parse recap week number: {recap_week}")
+    except Exception as e:
+        logger.warning(f"Error checking recap for forwarding: {e}")
     
     vip_soon_job = repo.enqueue_job(
         tenant_id=tenant_id,
         job_type='vip_soon',
-        run_at=utc_now + timedelta(minutes=vip_soon_delay),
+        run_at=vip_soon_run_at,
         dedupe_key=f"{tenant_id}|{utc_today_str}|vip_soon"
     )
     
-    # Schedule end-of-day pip brag at 20:00 UTC
     eod_time = utc_now.replace(hour=20, minute=0, second=0, microsecond=0)
     if utc_now.hour >= 20:
-        # Already past 20:00 UTC, skip EOD for today
         eod_job = None
     else:
         eod_job = repo.enqueue_job(
@@ -752,6 +804,8 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     jobs_created = []
     if morning_job:
         jobs_created.append('morning_news')
+    if recap_job:
+        jobs_created.append('forward_recap')
     if vip_soon_job:
         jobs_created.append('vip_soon')
     if eod_job:

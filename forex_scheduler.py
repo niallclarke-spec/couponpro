@@ -218,10 +218,15 @@ class ForexSchedulerRunner:
                     
                     ai_recap = generate_weekly_recap(tenant_id=self.tenant_id)
                     bot = self.runtime.get_telegram_bot()
-                    await bot.post_weekly_recap(ai_recap)
+                    result = await bot.post_weekly_recap(ai_recap)
                     
                     db.set_last_recap_date('weekly', week_number, tenant_id=self.tenant_id)
-                    logger.info("✅ Weekly recap posted")
+                    
+                    if result and result is not False:
+                        db.set_last_recap_date('weekly_recap_msg_id', str(result), tenant_id=self.tenant_id)
+                        logger.info(f"✅ Weekly recap posted (msg_id: {result})")
+                    else:
+                        logger.info("✅ Weekly recap posted")
                 else:
                     logger.info("Weekly recap already posted this week, skipping")
         

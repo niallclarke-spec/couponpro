@@ -1696,6 +1696,28 @@ class DatabasePool:
                 else:
                     logger.info("vip_soon_delay_minutes column already exists, skipping")
                 
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'tenant_crosspromo_settings' 
+                    AND column_name = 'recap_forward_time_utc'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE tenant_crosspromo_settings ADD COLUMN recap_forward_time_utc VARCHAR DEFAULT '07:12'")
+                    logger.info("Added recap_forward_time_utc column to tenant_crosspromo_settings")
+                else:
+                    logger.info("recap_forward_time_utc column already exists, skipping")
+                
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'tenant_crosspromo_settings' 
+                    AND column_name = 'vip_soon_time_utc'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE tenant_crosspromo_settings ADD COLUMN vip_soon_time_utc VARCHAR DEFAULT '07:51'")
+                    logger.info("Added vip_soon_time_utc column to tenant_crosspromo_settings")
+                else:
+                    logger.info("vip_soon_time_utc column already exists, skipping")
+                
                 # Migration: Update legacy crosspromo defaults (09:00 -> 07:00)
                 # This ensures both Replit (Neon) and DO (managed DB) have correct settings
                 cursor.execute("""

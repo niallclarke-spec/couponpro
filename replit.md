@@ -38,7 +38,7 @@ The platform supports dual authentication: primary Clerk JWT authentication and 
 - **BotCredentialResolver**: Centralized service for accessing bot credentials, raising actionable errors when credentials are missing.
 - **Telegram Send Infrastructure**: Production-grade message sending with a 60s TTL cache for bot connections, short-lived `telegram.Bot` instances, explicit cache invalidation, and fail-fast behavior.
 - **Telethon User Client**: Telegram User API integration for Journey messaging without bot labels, featuring a singleton client per tenant, rate limiting, and session persistence.
-- **Cross Promo Automation**: Automated system for cross-promoting VIP signals in FREE channels, including scheduled jobs, Alpha Vantage gold news integration, and atomic job claiming.
+- **Cross Promo Automation**: Automated system for cross-promoting VIP signals in FREE channels, including scheduled jobs, Alpha Vantage gold news integration, and atomic job claiming. Morning sequence posts three timed messages to FREE channel (morning news, weekly recap forward if available, VIP teaser) at configurable UTC times (default 06:42, 07:12, 07:51). Weekly recap message IDs are tracked so they can be forwarded from VIP to FREE. End-of-day pip brag at 20:00 UTC.
 
 ### Server Architecture
 The server employs a dispatcher pattern with thin request handlers, centralized routing, and middleware for authentication and database checks.
