@@ -395,6 +395,60 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.crosspromo import handlers as cp_h
         cp_h.handle_test_forward_promo(self)
 
+    # Hype Chat
+    def handle_api_hypechat_prompts_list(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_list_prompts(self)
+
+    def handle_api_hypechat_prompt_create(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_create_prompt(self)
+
+    def handle_api_hypechat_prompt_update(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_update_prompt(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_prompt_delete(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_delete_prompt(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flows_list(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_list_flows(self)
+
+    def handle_api_hypechat_flow_get(self):
+        from domains.hypechat import handlers as hc_h
+        flow_id = urlparse(self.path).path.rstrip('/').split('/')[4]
+        hc_h.handle_flow_analytics(self, flow_id)
+
+    def handle_api_hypechat_flow_create(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_create_flow(self)
+
+    def handle_api_hypechat_flow_update(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_update_flow(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_delete(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_delete_flow(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_status(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_set_flow_status(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_trigger(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_trigger_flow(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_analytics(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_flow_analytics(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_preview(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_preview_message(self)
+
     # Legacy auth
     def handle_api_login(self):
         cl = int(self.headers.get('Content-Length', 0))

@@ -1650,6 +1650,60 @@ class DatabasePool:
                     else:
                         logger.info(f"{col} column already exists on journey_steps, skipping")
                 
+                # ============================================================
+                # Hype Chat: AI-powered hype message flows
+                # ============================================================
+                logger.info("Checking for hype chat tables...")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS hype_prompts (
+                        id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                        tenant_id VARCHAR(100) NOT NULL,
+                        name VARCHAR(200) NOT NULL,
+                        custom_prompt TEXT NOT NULL,
+                        is_default BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_prompts_tenant ON hype_prompts(tenant_id)")
+                logger.info("hype_prompts table ready")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS hype_flows (
+                        id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                        tenant_id VARCHAR(100) NOT NULL,
+                        prompt_id VARCHAR(36) REFERENCES hype_prompts(id) ON DELETE SET NULL,
+                        name VARCHAR(200) NOT NULL,
+                        message_count INTEGER DEFAULT 3,
+                        interval_minutes INTEGER DEFAULT 90,
+                        delay_after_cta_minutes INTEGER DEFAULT 10,
+                        active_days VARCHAR(20) DEFAULT 'mon-fri',
+                        status VARCHAR(20) DEFAULT 'paused',
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_flows_tenant ON hype_flows(tenant_id, status)")
+                logger.info("hype_flows table ready")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS hype_messages (
+                        id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                        flow_id VARCHAR(36) REFERENCES hype_flows(id) ON DELETE CASCADE,
+                        tenant_id VARCHAR(100) NOT NULL,
+                        step_number INTEGER NOT NULL,
+                        content_sent TEXT,
+                        telegram_message_id BIGINT,
+                        views_1hr INTEGER DEFAULT 0,
+                        views_24hr INTEGER DEFAULT 0,
+                        sent_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_messages_flow ON hype_messages(flow_id, step_number)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_messages_tenant ON hype_messages(tenant_id, sent_at)")
+                logger.info("hype_messages table ready")
+
                 # Cross Promo tables
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS tenant_crosspromo_settings (
