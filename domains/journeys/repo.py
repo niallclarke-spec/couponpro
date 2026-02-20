@@ -350,10 +350,10 @@ def get_journey_aggregate_stats(tenant_id: str) -> Dict[str, Dict]:
             cursor.execute("""
                 SELECT 
                     sa.journey_id,
-                    COALESCE(SUM(sa.send_count), 0) as total_sends,
+                    COALESCE(SUM(sa.total_sends), 0) as total_sends,
                     COUNT(DISTINCT jus.telegram_user_id) as unique_users
                 FROM (
-                    SELECT js.journey_id, jsa.step_id, COALESCE(jsa.send_count, 0) as send_count
+                    SELECT js.journey_id, jsa.step_id, COALESCE(jsa.sends, 0) as total_sends
                     FROM journey_step_analytics jsa
                     JOIN journey_steps js ON js.id = jsa.step_id
                     WHERE js.journey_id IN (
