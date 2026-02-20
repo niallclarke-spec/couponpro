@@ -273,6 +273,62 @@
     background: rgba(239, 68, 68, 0.1);
 }
 
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-primary, #2d3748);
+    background: transparent;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-action:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary, #fff);
+    border-color: var(--text-secondary, #94a3b8);
+}
+
+.btn-action.publish {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-action.publish:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+.btn-action.stop {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-action.stop:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.btn-action.danger {
+    color: var(--status-error, #ef4444);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-action.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--status-error, #ef4444);
+}
+
+.btn-action svg {
+    flex-shrink: 0;
+}
+
 .btn-icon svg {
     width: 16px;
     height: 16px;

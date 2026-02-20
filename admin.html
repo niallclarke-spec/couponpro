@@ -6881,7 +6881,7 @@
                 showLoading: showLoading,
                 hideLoading: hideLoading,
                 escapeHtml: escapeHtml || function(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; },
-                confirmDialog: function(msg) { return confirm(msg); }
+                confirmDialog: function(msg) { return showModalConfirm('Confirm', msg); }
             });
             
             // Load route from hash on page load
