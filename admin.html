@@ -4137,10 +4137,11 @@
         .connections-header h2 { margin: 0 0 8px 0; }
         .connections-description { color: var(--text-secondary); margin: 0; }
 
-        .connections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 20px;
+        .connections-list {
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .connection-card {
@@ -4162,7 +4163,7 @@
         .connection-header {
             display: flex;
             align-items: center;
-            padding: 16px 20px;
+            padding: 14px 16px;
             cursor: pointer;
             gap: 12px;
             user-select: none;
@@ -4196,13 +4197,15 @@
             justify-content: center;
             background: rgba(99, 102, 241, 0.15);
             border-radius: 8px;
+            flex-shrink: 0;
         }
 
         .expand-chevron {
             width: 20px;
             height: 20px;
             color: var(--text-secondary);
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
         }
 
         .connection-card.expanded .expand-chevron {
@@ -4212,33 +4215,251 @@
         .connection-body {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s ease;
         }
 
         .connection-card.expanded .connection-body {
-            max-height: 600px;
+            max-height: 2000px;
         }
 
         .connection-form {
-            padding: 0 20px 20px;
+            padding: 0 16px 16px;
         }
 
         .connection-badge {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
             font-weight: 500;
             white-space: nowrap;
+            background: var(--status-offline-bg);
+            color: var(--status-offline);
         }
 
         .connection-badge.connected {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10B981;
+            background: var(--status-online-bg);
+            color: var(--status-online);
         }
 
         .connection-badge.disconnected {
-            background: rgba(107, 114, 128, 0.15);
-            color: #9CA3AF;
+            background: var(--status-offline-bg);
+            color: var(--status-offline);
+        }
+
+        .connection-badge.error {
+            background: var(--status-error-bg);
+            color: var(--status-error);
+        }
+
+        .connection-badge.pending {
+            background: var(--status-warning-bg);
+            color: var(--status-warning);
+        }
+
+        .crosspromo-subsection {
+            margin-top: 16px;
+            border-top: 1px solid var(--border-primary);
+            padding-top: 12px;
+        }
+
+        .crosspromo-subsection-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            cursor: pointer;
+            gap: 10px;
+            user-select: none;
+            border-radius: 8px;
+            transition: background 0.15s ease;
+        }
+
+        .crosspromo-subsection-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .crosspromo-subsection-header h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .crosspromo-subsection-header .sub-chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .crosspromo-subsection.expanded .sub-chevron {
+            transform: rotate(180deg);
+        }
+
+        .crosspromo-subsection-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .crosspromo-subsection.expanded .crosspromo-subsection-body {
+            max-height: 1200px;
+        }
+
+        .crosspromo-inner {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .crosspromo-bot-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .crosspromo-channels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .crosspromo-channel-item {
+            font-size: 12px;
+        }
+
+        .crosspromo-channel-item .ch-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .crosspromo-channel-item code {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .crosspromo-times-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .crosspromo-time-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .crosspromo-time-row label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-width: 120px;
+            margin-bottom: 0 !important;
+        }
+
+        .crosspromo-time-row input[type="time"] {
+            background: var(--bg-input);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        .crosspromo-time-row .utc-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .actions-subpanel {
+            margin-top: 14px;
+            border-top: 1px solid var(--border-primary);
+            padding-top: 10px;
+        }
+
+        .actions-subpanel-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            gap: 8px;
+            user-select: none;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .actions-subpanel-header:hover {
+            color: var(--text-primary);
+        }
+
+        .actions-subpanel-header .sub-chevron {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .actions-subpanel.expanded .actions-subpanel-header .sub-chevron {
+            transform: rotate(180deg);
+        }
+
+        .actions-subpanel-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .actions-subpanel.expanded .actions-subpanel-body {
+            max-height: 600px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .toggle-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(120, 120, 128, 0.32);
+            border-radius: 12px;
+            transition: background 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-switch {
+            background: var(--accent-primary);
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
+            transform: translateX(20px);
         }
         
         .channel-section {
@@ -4267,29 +4488,9 @@
             .channel-section {
                 grid-template-columns: 1fr;
             }
-        }
-
-        .connection-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            background: var(--status-offline-bg);
-            color: var(--status-offline);
-        }
-
-        .connection-badge.connected {
-            background: var(--status-online-bg);
-            color: var(--status-online);
-        }
-
-        .connection-badge.error {
-            background: var(--status-error-bg);
-            color: var(--status-error);
-        }
-
-        .connection-badge.pending {
-            background: var(--status-warning-bg);
-            color: var(--status-warning);
+            .crosspromo-channels-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .telethon-stat-row {
@@ -5952,135 +6153,14 @@
                 </div>
             </div>
 
-            <!-- Cross Promo View -->
-            <div id="forex-crosspromo" class="view-container">
-                <div class="content-header">
-                    <h1>Cross Promo Automation</h1>
-                    <p>Automatically promote VIP signals in your free channel (Mon-Fri only)</p>
-                </div>
-                <div class="content-body">
-                    <div class="crosspromo-section">
-                        <div class="card" style="margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 16px;">Settings</h3>
-                            
-                            <div class="form-row" style="margin-bottom: 16px;">
-                                <label class="toggle-label">
-                                    <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
-                                    <span class="toggle-switch"></span>
-                                    <span>Enable Cross Promo</span>
-                                </label>
-                            </div>
-                            
-                            <div class="crosspromo-bot-info" id="crosspromo-bot-info" style="background: var(--bg-hover); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <span style="font-size: 20px;">🤖</span>
-                                    <strong id="crosspromo-bot-name">Signal Bot</strong>
-                                    <span id="crosspromo-bot-status" class="connection-badge" style="font-size: 11px;">Not configured</span>
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <div>
-                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">VIP Channel (source)</div>
-                                        <code id="crosspromo-vip-display" style="font-size: 13px;">Not configured</code>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">FREE Channel (destination)</div>
-                                        <code id="crosspromo-free-display" style="font-size: 13px;">Not configured</code>
-                                    </div>
-                                </div>
-                                <div id="crosspromo-channels-missing" style="margin-top: 12px; padding: 8px; background: rgba(255,193,7,0.1); border-radius: 6px; display: none;">
-                                    <span style="color: #ffc107;">Configure VIP and FREE channels in the <a href="#" onclick="switchView('forex-connections'); return false;" style="color: var(--accent-primary);">Connections</a> page</span>
-                                </div>
-                            </div>
-                            
-                            <div style="background: var(--bg-hover); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
-                                    <strong>FREE Channel Morning Sequence (Mon-Fri only):</strong>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 10px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">Morning News</label>
-                                        <input type="time" id="crosspromo-morning-time" value="06:42" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
-                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">Recap Forward</label>
-                                        <input type="time" id="crosspromo-recap-time" value="07:12" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
-                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <label style="font-size: 13px; color: var(--text-secondary); min-width: 140px;">VIP Teaser</label>
-                                        <input type="time" id="crosspromo-vip-soon-time" value="07:51" style="background: var(--bg-input); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); color: var(--text-primary); padding: 6px 10px; font-size: 13px;">
-                                        <span style="font-size: 12px; color: var(--text-muted);">UTC</span>
-                                    </div>
-                                </div>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
-                                    Recap forward only runs if a weekly recap was posted to VIP channel.
-                                </div>
-                            </div>
-                            
-                            <div class="form-group" style="margin-bottom: 16px;">
-                                <label>CTA URL</label>
-                                <input type="text" id="crosspromo-cta-url" value="https://entrylab.io/subscribe" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card);">
-                                <div class="hint">Link shown in congratulations messages</div>
-                            </div>
-                            
-                            <button class="btn" onclick="saveCrossPromoSettings()" style="margin-top: 8px;">Save Settings</button>
-                        </div>
-                        
-                        <div class="card" style="margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 16px;">Morning Message Preview</h3>
-                            <pre id="crosspromo-preview" style="background: var(--bg-hover); padding: 16px; border-radius: 8px; white-space: pre-wrap; font-family: inherit; color: var(--text-primary); border: 1px solid var(--bg-hover);">Loading preview...</pre>
-                            <button class="btn" onclick="loadCrossPromoPreview()" style="margin-top: 12px;">Refresh Preview</button>
-                        </div>
-                        
-                        <div class="card" style="margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 16px;">Actions</h3>
-                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                <button class="btn" onclick="runDailySequence()">Run Today's Sequence</button>
-                                <button class="btn btn-secondary" onclick="sendTestMorning()">Send Test Morning Message</button>
-                            </div>
-                            
-                            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--bg-hover);">
-                                <h4 style="margin-bottom: 12px;">Publish Winning Promo</h4>
-                                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
-                                    <input type="number" id="crosspromo-signal-id" placeholder="VIP Signal Message ID" style="flex: 1; min-width: 180px; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card);">
-                                    <input type="number" id="crosspromo-win-id" placeholder="VIP Win Message ID" style="flex: 1; min-width: 180px; padding: 10px; border-radius: 8px; border: 1px solid var(--bg-hover); background: var(--bg-card);">
-                                </div>
-                                <button class="btn" onclick="publishWinSequence()">Publish Winning Promo</button>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <h3 style="margin-bottom: 16px;">Job History</h3>
-                            <div id="crosspromo-jobs-table" style="overflow-x: auto;">
-                                <table class="data-table" style="width: 100%;">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Status</th>
-                                            <th>Scheduled</th>
-                                            <th>Error</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="crosspromo-jobs-tbody">
-                                        <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Loading...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <button class="btn btn-secondary" onclick="loadCrossPromoJobs()" style="margin-top: 12px;">Refresh Jobs</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Connections View -->
             <div id="forex-connections" class="view-container">
                 <div class="content-header">
                     <h1>Bot Connections</h1>
-                    <p>Configure Telegram bots for signals and messages</p>
+                    <p>Configure Telegram bots and account connections</p>
                 </div>
                 <div class="content-body">
-                    <div class="connections-grid">
+                    <div class="connections-list">
                         <!-- Signal Bot Card -->
                         <div class="connection-card" data-role="signal" data-has-token="false" id="signal-card">
                             <div class="connection-header" onclick="toggleConnectionCard('signal')">
@@ -6154,75 +6234,112 @@
                                         <button class="btn-primary" onclick="saveConnection('signal')">Save</button>
                                         <button class="btn-text-danger" onclick="deleteConnection('signal')" style="display:none" id="signal-delete">Remove</button>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Message Bot Card -->
-                        <div class="connection-card" data-role="message" data-has-token="false" id="message-card">
-                            <div class="connection-header" onclick="toggleConnectionCard('message')">
-                                <span class="bot-icon">💬</span>
-                                <div style="flex: 1;">
-                                    <h3>Message Bot</h3>
-                                    <div class="bot-subtitle" id="message-subtitle">Journeys & user messaging</div>
-                                </div>
-                                <span class="connection-badge disconnected" id="message-status">Not configured</span>
-                                <svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9l6 6 6-6"/>
-                                </svg>
-                            </div>
-                            
-                            <div class="connection-body">
-                                <div class="connection-form">
-                                    <div class="form-group">
-                                        <label>Bot Token</label>
-                                        <div class="token-input-wrapper" id="message-token-wrapper">
-                                            <input type="password" id="message-bot-token" placeholder="Paste token from @BotFather" />
-                                            <div class="token-actions">
-                                                <button class="token-action-btn visibility-btn" onclick="toggleTokenVisibility('message')" type="button" title="Show/hide token">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                                        <circle cx="12" cy="12" r="3"/>
-                                                    </svg>
-                                                </button>
-                                                <button class="token-action-btn edit-btn" onclick="editToken('message')" type="button" title="Change token">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                                    </svg>
-                                                </button>
+
+                                    <!-- Cross Promo Sub-section -->
+                                    <div class="crosspromo-subsection" id="crosspromo-subsection">
+                                        <div class="crosspromo-subsection-header" onclick="toggleCrossPromoSection()">
+                                            <span style="font-size: 16px;">📣</span>
+                                            <h4>Cross Promo</h4>
+                                            <svg class="sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M6 9l6 6 6-6"/>
+                                            </svg>
+                                        </div>
+                                        <div class="crosspromo-subsection-body">
+                                            <div class="crosspromo-inner">
+                                                <div style="margin-bottom: 14px;">
+                                                    <label class="toggle-label">
+                                                        <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
+                                                        <span class="toggle-switch"></span>
+                                                        <span>Enable Cross Promo</span>
+                                                    </label>
+                                                </div>
+
+                                                <div class="crosspromo-bot-info" id="crosspromo-bot-info" style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                                                    <div class="crosspromo-bot-info-row">
+                                                        <span style="font-size: 16px;">🤖</span>
+                                                        <strong id="crosspromo-bot-name" style="font-size: 13px;">Signal Bot</strong>
+                                                        <span id="crosspromo-bot-status" class="connection-badge" style="font-size: 11px;">Not configured</span>
+                                                    </div>
+                                                    <div class="crosspromo-channels-grid">
+                                                        <div class="crosspromo-channel-item">
+                                                            <div class="ch-label">VIP Channel (source)</div>
+                                                            <code id="crosspromo-vip-display">Not configured</code>
+                                                        </div>
+                                                        <div class="crosspromo-channel-item">
+                                                            <div class="ch-label">FREE Channel (destination)</div>
+                                                            <code id="crosspromo-free-display">Not configured</code>
+                                                        </div>
+                                                    </div>
+                                                    <div id="crosspromo-channels-missing" style="margin-top: 8px; padding: 8px; background: rgba(255,193,7,0.1); border-radius: 6px; display: none; font-size: 12px;">
+                                                        <span style="color: #ffc107;">Configure VIP and FREE channels above first</span>
+                                                    </div>
+                                                </div>
+
+                                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 500;">Morning Sequence (Mon-Fri)</div>
+                                                <div class="crosspromo-times-grid">
+                                                    <div class="crosspromo-time-row">
+                                                        <label>Morning News</label>
+                                                        <input type="time" id="crosspromo-morning-time" value="06:42">
+                                                        <span class="utc-label">UTC</span>
+                                                    </div>
+                                                    <div class="crosspromo-time-row">
+                                                        <label>Recap Forward</label>
+                                                        <input type="time" id="crosspromo-recap-time" value="07:12">
+                                                        <span class="utc-label">UTC</span>
+                                                    </div>
+                                                    <div class="crosspromo-time-row">
+                                                        <label>VIP Teaser</label>
+                                                        <input type="time" id="crosspromo-vip-soon-time" value="07:51">
+                                                        <span class="utc-label">UTC</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group" style="margin-bottom: 14px;">
+                                                    <label>CTA URL</label>
+                                                    <input type="text" id="crosspromo-cta-url" value="https://entrylab.io/subscribe" placeholder="https://..." />
+                                                </div>
+
+                                                <button class="btn-primary" onclick="saveCrossPromoSettings()" style="width: 100%; margin-bottom: 6px;">Save Settings</button>
+
+                                                <!-- Actions & History sub-panel -->
+                                                <div class="actions-subpanel" id="crosspromo-actions-panel">
+                                                    <div class="actions-subpanel-header" onclick="toggleActionsPanel()">
+                                                        <span>Actions & History</span>
+                                                        <svg class="sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M6 9l6 6 6-6"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="actions-subpanel-body">
+                                                        <div style="padding-top: 10px;">
+                                                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                                                                <button class="btn-primary" onclick="runDailySequence()" style="font-size: 12px; padding: 7px 12px;">Run Today's Sequence</button>
+                                                                <button class="btn-secondary" onclick="sendTestMorning()" style="font-size: 12px; padding: 7px 12px;">Send Test Morning</button>
+                                                            </div>
+                                                            
+                                                            <pre id="crosspromo-preview" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; white-space: pre-wrap; font-family: inherit; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 12px; margin-bottom: 12px; max-height: 150px; overflow-y: auto;">Loading preview...</pre>
+
+                                                            <div style="font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Job History</div>
+                                                            <div style="overflow-x: auto; margin-bottom: 8px;">
+                                                                <table class="data-table" style="width: 100%; font-size: 12px;">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Type</th>
+                                                                            <th>Status</th>
+                                                                            <th>Scheduled</th>
+                                                                            <th>Error</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="crosspromo-jobs-tbody">
+                                                                        <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Loading...</td></tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <button class="btn-secondary" onclick="loadCrossPromoJobs()" style="font-size: 12px; padding: 6px 12px;">Refresh Jobs</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <input type="hidden" id="message-username" value="" />
-                                        <input type="hidden" id="message-webhook" value="" />
-                                        <input type="hidden" id="message-updated" value="" />
-                                    </div>
-                                    
-                                    <div class="form-group" id="message-channel-wrapper">
-                                        <label><span class="channel-icon">📨</span>Channel ID <span style="opacity: 0.5;">(optional)</span></label>
-                                        <input type="text" id="message-channel-id" placeholder="-100..." />
-                                    </div>
-                                    
-                                    <div class="connection-info-v2" id="message-info" style="display:none">
-                                        <div class="webhook-row">
-                                            <span class="webhook-badge">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                                    <polyline points="22 4 12 14.01 9 11.01"/>
-                                                </svg>
-                                                Webhook configured
-                                            </span>
-                                            <button class="btn-copy-webhook" onclick="copyWebhook('message')">Copy URL</button>
-                                        </div>
-                                        <input type="hidden" id="message-channel-id-display" value="" />
-                                    </div>
-                                    
-                                    <div class="connection-error" id="message-error" style="display:none"></div>
-                                    
-                                    <div class="connection-actions">
-                                        <button class="btn-ghost" onclick="testConnection('message')">Test</button>
-                                        <button class="btn-primary" onclick="saveConnection('message')">Save</button>
-                                        <button class="btn-text-danger" onclick="deleteConnection('message')" style="display:none" id="message-delete">Remove</button>
                                     </div>
                                 </div>
                             </div>
@@ -6639,7 +6756,6 @@
                 { id: 'conversions', label: 'Conversions', icon: 'M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
                 { id: 'signals', label: 'Signals Monitor', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
                 { id: 'journeys', label: 'Journeys', icon: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M12 11h4 M12 16h4 M8 11h.01 M8 16h.01' },
-                { id: 'crosspromo', label: 'Cross Promo', icon: 'M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z' },
                 { id: 'connections', label: 'Connections', icon: 'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244' },
                 { id: 'settings', label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' }
             ],
@@ -6776,13 +6892,17 @@
         }
 
         function loadRouteFromHash() {
-            const hash = window.location.hash.substring(1); // Remove #
+            const hash = window.location.hash.substring(1);
             if (!hash) {
                 navigateTo('forex', 'subscriptions', false);
                 return;
             }
 
             const [product, view] = hash.split('/');
+            if (product === 'forex' && view === 'crosspromo') {
+                navigateTo('forex', 'connections', true);
+                return;
+            }
             if (product && view) {
                 navigateTo(product, view, false);
             } else {
@@ -6901,10 +7021,9 @@
                     loadForexSettings();
                 } else if (viewId === 'forex-journeys') {
                     window.JourneysModule.loadJourneys();
-                } else if (viewId === 'forex-crosspromo') {
-                    loadCrossPromo();
                 } else if (viewId === 'forex-connections') {
                     loadConnections();
+                    loadCrossPromo();
                 } else if (viewId === 'tenants-list') {
                     loadTenants();
                 }
@@ -9013,7 +9132,7 @@
                 const response = await authedFetch('/api/connections');
                 const data = await response.json();
                 
-                const uiRoles = ['signal', 'message'];
+                const uiRoles = ['signal'];
                 const connMap = {};
                 for (const conn of data.connections || []) {
                     const uiRole = API_TO_UI_ROLE[conn.bot_role] || conn.bot_role;
@@ -9025,11 +9144,6 @@
                     const statusEl = document.getElementById(`${role}-status`);
                     const tokenInput = document.getElementById(`${role}-bot-token`);
                     const card = document.querySelector(`.connection-card[data-role="${role}"]`);
-                    
-                    if (role === 'message') {
-                        const channelWrapper = document.getElementById('message-channel-wrapper');
-                        if (channelWrapper) channelWrapper.classList.add('visible');
-                    }
                     
                     if (conn) {
                         card.dataset.hasToken = 'true';
@@ -9543,6 +9657,20 @@
             const card = document.getElementById(`${role}-card`);
             if (card) {
                 card.classList.toggle('expanded');
+            }
+        }
+
+        function toggleCrossPromoSection() {
+            const section = document.getElementById('crosspromo-subsection');
+            if (section) {
+                section.classList.toggle('expanded');
+            }
+        }
+
+        function toggleActionsPanel() {
+            const panel = document.getElementById('crosspromo-actions-panel');
+            if (panel) {
+                panel.classList.toggle('expanded');
             }
         }
 
