@@ -348,30 +348,16 @@ def get_journey_aggregate_stats(tenant_id: str) -> Dict[str, Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT 
-                    sa.journey_id,
-                    COALESCE(SUM(sa.total_sends), 0) as total_sends,
-                    COUNT(DISTINCT jus.telegram_user_id) as unique_users
-                FROM (
-                    SELECT js.journey_id, jsa.step_id, COALESCE(jsa.sends, 0) as total_sends
-                    FROM journey_step_analytics jsa
-                    JOIN journey_steps js ON js.id = jsa.step_id
-                    WHERE js.journey_id IN (
-                        SELECT id FROM journeys WHERE tenant_id = %s
-                    )
-                ) sa
-                FULL OUTER JOIN journey_user_sessions jus 
-                    ON jus.journey_id = sa.journey_id AND jus.tenant_id = %s
-                GROUP BY sa.journey_id
-            """, (tenant_id, tenant_id))
+                SELECT js.journey_id, COALESCE(SUM(jsa.sends), 0) as total_sends
+                FROM journey_step_analytics jsa
+                JOIN journey_steps js ON js.id = jsa.step_id
+                WHERE js.journey_id IN (SELECT id FROM journeys WHERE tenant_id = %s)
+                GROUP BY js.journey_id
+            """, (tenant_id,))
             
             stats = {}
             for row in cursor.fetchall():
-                if row[0]:
-                    stats[str(row[0])] = {
-                        'total_sends': int(row[1]),
-                        'unique_users': int(row[2])
-                    }
+                stats[str(row[0])] = {'total_sends': int(row[1]), 'unique_users': 0}
             
             cursor.execute("""
                 SELECT journey_id, COUNT(DISTINCT telegram_user_id) as unique_users
@@ -382,10 +368,10 @@ def get_journey_aggregate_stats(tenant_id: str) -> Dict[str, Dict]:
             
             for row in cursor.fetchall():
                 jid = str(row[0])
-                if jid not in stats:
-                    stats[jid] = {'total_sends': 0, 'unique_users': int(row[1])}
+                if jid in stats:
+                    stats[jid]['unique_users'] = int(row[1])
                 else:
-                    stats[jid]['unique_users'] = max(stats[jid]['unique_users'], int(row[1]))
+                    stats[jid] = {'total_sends': 0, 'unique_users': int(row[1])}
             
             return stats
     except Exception as e:
