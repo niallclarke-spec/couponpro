@@ -1,0 +1,37 @@
+Feb 20 21:44:01  [2026-02-20 21:44:01] [WARNING] [clerk_auth] [req:dcc184cb] Token expired
+Feb 20 21:44:01  10.244.5.120 - - [20/Feb/2026 21:44:01] "POST /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/triggers HTTP/1.1" 200 -
+Feb 20 21:44:01  [2026-02-20 21:44:01] [WARNING] [clerk_auth] [req:7719b40e] Token expired
+Feb 20 21:44:01  [2026-02-20 21:44:01] [INFO] [handlers] [req:7719b40e] Saving 2 steps for journey 15c5ad62-f90f-4687-8841-bfbb67c0b11d: ['By opening a trading account with one of our trust', 'This plan is subject to regional availability and ']
+Feb 20 21:44:01  [2026-02-20 21:44:01] [ERROR] [db] [req:7719b40e] Database connection error: update or delete on table "journey_steps" violates foreign key constraint "journey_scheduled_messages_step_id_fkey" on table "journey_scheduled_messages"
+Feb 20 21:44:01  DETAIL:  Key (id)=(2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca) is still referenced from table "journey_scheduled_messages".
+Feb 20 21:44:01  
+Feb 20 21:44:01  Traceback (most recent call last):
+Feb 20 21:44:01    File "/workspace/db.py", line 156, in get_connection
+Feb 20 21:44:01      yield conn
+Feb 20 21:44:01    File "/workspace/domains/journeys/repo.py", line 434, in set_steps
+Feb 20 21:44:01      cursor.execute("DELETE FROM journey_steps WHERE journey_id = %s", (journey_id,))
+Feb 20 21:44:01  psycopg2.errors.ForeignKeyViolation: update or delete on table "journey_steps" violates foreign key constraint "journey_scheduled_messages_step_id_fkey" on table "journey_scheduled_messages"
+Feb 20 21:44:01  DETAIL:  Key (id)=(2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca) is still referenced from table "journey_scheduled_messages".
+Feb 20 21:44:01  
+Feb 20 21:44:01  [2026-02-20 21:44:01] [ERROR] [repo] [req:7719b40e] Error setting steps: update or delete on table "journey_steps" violates foreign key constraint "journey_scheduled_messages_step_id_fkey" on table "journey_scheduled_messages"
+Feb 20 21:44:01  DETAIL:  Key (id)=(2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca) is still referenced from table "journey_scheduled_messages".
+Feb 20 21:44:01  
+Feb 20 21:44:01  Traceback (most recent call last):
+Feb 20 21:44:01    File "/workspace/domains/journeys/repo.py", line 434, in set_steps
+Feb 20 21:44:01      cursor.execute("DELETE FROM journey_steps WHERE journey_id = %s", (journey_id,))
+Feb 20 21:44:01  psycopg2.errors.ForeignKeyViolation: update or delete on table "journey_steps" violates foreign key constraint "journey_scheduled_messages_step_id_fkey" on table "journey_scheduled_messages"
+Feb 20 21:44:01  DETAIL:  Key (id)=(2f7b2bfd-4c7d-41aa-b1a4-07e766e270ca) is still referenced from table "journey_scheduled_messages".
+Feb 20 21:44:01  
+Feb 20 21:44:01  10.244.6.27 - - [20/Feb/2026 21:44:01] "PUT /api/journeys/15c5ad62-f90f-4687-8841-bfbb67c0b11d/steps HTTP/1.1" 500 -
+Feb 20 21:44:02  [2026-02-20 21:44:02] [WARNING] [clerk_auth] [req:b737e2d5] Token expired
+Feb 20 21:44:02  10.244.6.27 - - [20/Feb/2026 21:44:02] "GET /api/connections HTTP/1.1" 200 -
+Feb 20 21:44:02  [2026-02-20 21:44:02] [WARNING] [clerk_auth] [req:baa490bb] Token expired
+Feb 20 21:44:02  10.244.4.249 - - [20/Feb/2026 21:44:02] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 20 21:44:02  [2026-02-20 21:44:02] [WARNING] [clerk_auth] [req:b6daaa60] Token expired
+Feb 20 21:44:02  10.244.4.249 - - [20/Feb/2026 21:44:02] "GET /api/journeys HTTP/1.1" 200 -
+Feb 20 21:44:34  [2026-02-20 21:44:34] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processing 1 due messages
+Feb 20 21:44:34  [2026-02-20 21:44:34] [INFO] [telethon_client] Message sent via Telethon: tenant=entrylab, chat=5262022632, msg_id=50
+Feb 20 21:44:34  [2026-02-20 21:44:34] [INFO] [repo] Session 786b380e-9490-4a54-84a5-a73d7b7598c7 now awaiting reply (timeout=3min)
+Feb 20 21:44:34  [2026-02-20 21:44:34] [INFO] [scheduler] [JOURNEY-SCHEDULER] Processed 1/1 messages
+Feb 20 21:45:34  [2026-02-20 21:45:34] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 20 21:45:34  [2026-02-20 21:45:34] [INFO] [engine] Journey complete for session 786b380e-9490-4a54-84a5-a73d7b7598c7
