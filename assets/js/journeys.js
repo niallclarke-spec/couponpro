@@ -197,11 +197,71 @@
                 }
             }
             
+            const statusColors = { draft: '#6b7280', active: '#10b981', stopped: '#ef4444' };
+            const statusLabels = { draft: 'Draft', active: 'Active', stopped: 'Stopped' };
+            const totalSends = journey.total_sends || 0;
+            const uniqueUsers = journey.unique_users || 0;
+            
+            let actionButtonsHtml = '';
+            if (journey.status === 'draft') {
+                actionButtonsHtml = `
+                    <button class="btn-icon" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon publish" onclick="window.JourneysModule.publishJourney('${journey.id}')" title="Publish">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3,6 5,6 21,6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </button>`;
+            } else if (journey.status === 'active') {
+                actionButtonsHtml = `
+                    <button class="btn-icon" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon stop" onclick="window.JourneysModule.stopJourney('${journey.id}')" title="Stop">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <rect x="6" y="6" width="12" height="12" rx="1"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    </button>`;
+            } else {
+                actionButtonsHtml = `
+                    <button class="btn-icon" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3,6 5,6 21,6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </button>`;
+            }
+
             return `
-                <div class="journey-card">
+                <div class="journey-card ${journey.status}">
                     <div class="journey-card-header">
                         <div class="journey-name">${escapeHtml(journey.name)}</div>
-                        <span class="journey-status ${journey.status}">${journey.status}</span>
+                        <span class="journey-status ${journey.status}" style="background: ${statusColors[journey.status] || '#6b7280'}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">${statusLabels[journey.status] || journey.status}</span>
                     </div>
                     <div class="journey-meta">
                         <div class="journey-meta-item">
@@ -221,20 +281,19 @@
                             <span>${journey.step_count || 0} step${journey.step_count !== 1 ? 's' : ''}</span>
                         </div>
                     </div>
+                    <div class="journey-stats-row">
+                        <div class="journey-stat">
+                            <span class="journey-stat-value">${totalSends}</span>
+                            <span class="journey-stat-label">sends</span>
+                        </div>
+                        <div class="journey-stat">
+                            <span class="journey-stat-value">${uniqueUsers}</span>
+                            <span class="journey-stat-label">users</span>
+                        </div>
+                    </div>
                     ${deepLinkHtml}
                     <div class="journey-actions">
-                        <button class="btn-icon" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </button>
-                        <button class="btn-icon danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3,6 5,6 21,6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                        </button>
+                        ${actionButtonsHtml}
                     </div>
                 </div>
             `;
@@ -872,6 +931,109 @@
         }
     }
 
+    async function publishJourney(journeyId) {
+        const confirmFn = config.confirmDialog || window.confirm;
+        const confirmed = await confirmFn('Publish this journey? It will start triggering for new users.');
+        if (!confirmed) return;
+        
+        try {
+            if (config.showLoading) config.showLoading('Publishing journey...');
+            const headers = await config.getAuthHeaders();
+            const resp = await fetch(`/api/journeys/${journeyId}/publish`, {
+                method: 'POST',
+                headers,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            if (config.hideLoading) config.hideLoading();
+            
+            if (resp.ok) {
+                config.showToast('Journey published successfully!', 'success');
+                invalidateJourneysCache();
+                await loadJourneys(true);
+            } else if (resp.status === 409) {
+                config.showToast(data.error || 'Trigger keyword conflict', 'error');
+            } else {
+                config.showToast(data.error || 'Failed to publish journey', 'error');
+            }
+        } catch (err) {
+            if (config.hideLoading) config.hideLoading();
+            console.error('Publish journey error:', err);
+            config.showToast('Failed to publish journey', 'error');
+        }
+    }
+
+    async function stopJourney(journeyId) {
+        const confirmFn = config.confirmDialog || window.confirm;
+        const confirmed = await confirmFn('Stop this journey? New users will no longer trigger it, but users already in the flow will finish.');
+        if (!confirmed) return;
+        
+        try {
+            if (config.showLoading) config.showLoading('Stopping journey...');
+            const headers = await config.getAuthHeaders();
+            const resp = await fetch(`/api/journeys/${journeyId}/stop`, {
+                method: 'POST',
+                headers,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            if (config.hideLoading) config.hideLoading();
+            
+            if (resp.ok) {
+                config.showToast('Journey stopped. In-progress users will complete their flow.', 'success');
+                invalidateJourneysCache();
+                await loadJourneys(true);
+            } else {
+                config.showToast(data.error || 'Failed to stop journey', 'error');
+            }
+        } catch (err) {
+            if (config.hideLoading) config.hideLoading();
+            console.error('Stop journey error:', err);
+            config.showToast('Failed to stop journey', 'error');
+        }
+    }
+
+    async function duplicateJourney(journeyId) {
+        try {
+            if (config.showLoading) config.showLoading('Duplicating journey...');
+            const headers = await config.getAuthHeaders();
+            const resp = await fetch(`/api/journeys/${journeyId}/duplicate`, {
+                method: 'POST',
+                headers,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            if (config.hideLoading) config.hideLoading();
+            
+            if (resp.ok) {
+                config.showToast('Journey duplicated as draft', 'success');
+                
+                const journey = state.journeys.find(j => j.id === journeyId);
+                if (journey && journey.status === 'active') {
+                    const confirmFn = config.confirmDialog || window.confirm;
+                    const shouldStop = await confirmFn('Would you like to stop the original journey from accepting new users?');
+                    if (shouldStop) {
+                        await fetch(`/api/journeys/${journeyId}/stop`, {
+                            method: 'POST',
+                            headers,
+                            credentials: 'include'
+                        });
+                        config.showToast('Original journey stopped', 'success');
+                    }
+                }
+                
+                invalidateJourneysCache();
+                await loadJourneys(true);
+            } else {
+                config.showToast(data.error || 'Failed to duplicate journey', 'error');
+            }
+        } catch (err) {
+            if (config.hideLoading) config.hideLoading();
+            console.error('Duplicate journey error:', err);
+            config.showToast('Failed to duplicate journey', 'error');
+        }
+    }
+
     function initJourneys(options) {
         config.getAuthHeaders = options.getAuthHeaders;
         config.showToast = options.showToast || function(msg) { console.log(msg); };
@@ -887,6 +1049,9 @@
             closeJourneyModal,
             saveJourney,
             deleteJourney,
+            publishJourney,
+            stopJourney,
+            duplicateJourney,
             selectStatus,
             addStep,
             editStep,

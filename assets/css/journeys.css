@@ -56,6 +56,46 @@
     color: var(--status-warning, #eab308);
 }
 
+.journey-status.stopped {
+    background: var(--status-error-bg, rgba(239, 68, 68, 0.1));
+    color: var(--status-error, #ef4444);
+}
+
+.journey-stats-row {
+    display: flex;
+    gap: 16px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin: 6px 0;
+}
+
+.journey-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.journey-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.journey-stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: lowercase;
+}
+
+.journey-card.stopped {
+    opacity: 0.7;
+}
+
+.journey-card.stopped:hover {
+    opacity: 1;
+}
+
 .journey-meta {
     display: flex;
     flex-direction: column;
@@ -215,6 +255,22 @@
 .btn-icon.danger:hover {
     border-color: var(--status-error, #ef4444);
     color: var(--status-error, #ef4444);
+}
+
+.btn-icon.publish {
+    color: #10b981;
+}
+
+.btn-icon.publish:hover {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-icon.stop {
+    color: #ef4444;
+}
+
+.btn-icon.stop:hover {
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .btn-icon svg {

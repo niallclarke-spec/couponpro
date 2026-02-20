@@ -176,6 +176,13 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
             for j in journeys:
                 j['triggers'] = triggers_by_journey.get(j['id'], [])
             
+            # Third query: aggregate stats (total sends, unique users)
+            agg_stats = get_journey_aggregate_stats(tenant_id)
+            for j in journeys:
+                stats = agg_stats.get(j['id'], {})
+                j['total_sends'] = stats.get('total_sends', 0)
+                j['unique_users'] = stats.get('unique_users', 0)
+            
             return journeys
     except Exception as e:
         logger.exception(f"Error listing journeys with summary: {e}")
@@ -215,6 +222,175 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
     except Exception as e:
         logger.exception(f"Error getting journey: {e}")
         return None
+
+
+def update_journey_status(tenant_id: str, journey_id: str, new_status: str) -> bool:
+    """Update journey status (draft/active/stopped)."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    valid_statuses = ('draft', 'active', 'stopped')
+    if new_status not in valid_statuses:
+        logger.warning(f"Invalid journey status: {new_status}")
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journeys SET status = %s, updated_at = NOW()
+                WHERE tenant_id = %s AND id = %s
+                RETURNING id
+            """, (new_status, tenant_id, journey_id))
+            result = cursor.fetchone()
+            conn.commit()
+            if result:
+                logger.info(f"Journey {journey_id} status changed to {new_status}")
+                return True
+            return False
+    except Exception as e:
+        logger.exception(f"Error updating journey status: {e}")
+        return False
+
+
+def check_active_trigger_keyword_conflict(tenant_id: str, journey_id: str) -> Optional[Dict]:
+    """Check if publishing this journey would create a duplicate active trigger keyword.
+    
+    Returns the conflicting journey info if a conflict exists, None otherwise.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT t.trigger_type, t.trigger_config
+                FROM journey_triggers t
+                WHERE t.journey_id = %s
+            """, (journey_id,))
+            my_triggers = cursor.fetchall()
+            
+            for trigger_type, trigger_config in my_triggers:
+                config = trigger_config if isinstance(trigger_config, dict) else json.loads(trigger_config) if trigger_config else {}
+                
+                if trigger_type == 'direct_message':
+                    keyword = (config.get('keyword') or '').strip().lower()
+                    if not keyword:
+                        continue
+                    
+                    cursor.execute("""
+                        SELECT j.id, j.name, t.trigger_config
+                        FROM journeys j
+                        JOIN journey_triggers t ON t.journey_id = j.id
+                        WHERE j.tenant_id = %s 
+                          AND j.status = 'active'
+                          AND j.id != %s
+                          AND t.trigger_type = 'direct_message'
+                          AND t.is_active = TRUE
+                    """, (tenant_id, journey_id))
+                    
+                    for row in cursor.fetchall():
+                        other_config = row[2] if isinstance(row[2], dict) else json.loads(row[2]) if row[2] else {}
+                        other_keyword = (other_config.get('keyword') or '').strip().lower()
+                        if other_keyword == keyword:
+                            return {
+                                'conflict_journey_id': str(row[0]),
+                                'conflict_journey_name': row[1],
+                                'keyword': keyword
+                            }
+                
+                elif trigger_type == 'telegram_deeplink':
+                    param = (config.get('start_param') or config.get('param') or '').strip().lower()
+                    if not param:
+                        continue
+                    
+                    cursor.execute("""
+                        SELECT j.id, j.name, t.trigger_config
+                        FROM journeys j
+                        JOIN journey_triggers t ON t.journey_id = j.id
+                        WHERE j.tenant_id = %s 
+                          AND j.status = 'active'
+                          AND j.id != %s
+                          AND t.trigger_type = 'telegram_deeplink'
+                          AND t.is_active = TRUE
+                    """, (tenant_id, journey_id))
+                    
+                    for row in cursor.fetchall():
+                        other_config = row[2] if isinstance(row[2], dict) else json.loads(row[2]) if row[2] else {}
+                        other_param = (other_config.get('start_param') or other_config.get('param') or '').strip().lower()
+                        if other_param == param:
+                            return {
+                                'conflict_journey_id': str(row[0]),
+                                'conflict_journey_name': row[1],
+                                'keyword': param
+                            }
+            
+            return None
+    except Exception as e:
+        logger.exception(f"Error checking trigger conflict: {e}")
+        return None
+
+
+def get_journey_aggregate_stats(tenant_id: str) -> Dict[str, Dict]:
+    """Get aggregate stats (total sends, unique users) for all journeys of a tenant.
+    
+    Returns dict keyed by journey_id with {total_sends, unique_users}.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return {}
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 
+                    sa.journey_id,
+                    COALESCE(SUM(sa.send_count), 0) as total_sends,
+                    COUNT(DISTINCT jus.telegram_user_id) as unique_users
+                FROM (
+                    SELECT js.journey_id, jsa.step_id, COALESCE(jsa.send_count, 0) as send_count
+                    FROM journey_step_analytics jsa
+                    JOIN journey_steps js ON js.id = jsa.step_id
+                    WHERE js.journey_id IN (
+                        SELECT id FROM journeys WHERE tenant_id = %s
+                    )
+                ) sa
+                FULL OUTER JOIN journey_user_sessions jus 
+                    ON jus.journey_id = sa.journey_id AND jus.tenant_id = %s
+                GROUP BY sa.journey_id
+            """, (tenant_id, tenant_id))
+            
+            stats = {}
+            for row in cursor.fetchall():
+                if row[0]:
+                    stats[str(row[0])] = {
+                        'total_sends': int(row[1]),
+                        'unique_users': int(row[2])
+                    }
+            
+            cursor.execute("""
+                SELECT journey_id, COUNT(DISTINCT telegram_user_id) as unique_users
+                FROM journey_user_sessions
+                WHERE tenant_id = %s
+                GROUP BY journey_id
+            """, (tenant_id,))
+            
+            for row in cursor.fetchall():
+                jid = str(row[0])
+                if jid not in stats:
+                    stats[jid] = {'total_sends': 0, 'unique_users': int(row[1])}
+                else:
+                    stats[jid]['unique_users'] = max(stats[jid]['unique_users'], int(row[1]))
+            
+            return stats
+    except Exception as e:
+        logger.exception(f"Error getting journey aggregate stats: {e}")
+        return {}
 
 
 def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Dict]:
@@ -429,6 +605,11 @@ def set_steps(tenant_id: str, journey_id: str, steps: List[Dict]) -> bool:
                 UPDATE journey_user_sessions 
                 SET current_step_id = NULL 
                 WHERE journey_id = %s
+            """, (journey_id,))
+            
+            cursor.execute("""
+                DELETE FROM journey_scheduled_messages 
+                WHERE step_id IN (SELECT id FROM journey_steps WHERE journey_id = %s)
             """, (journey_id,))
             
             cursor.execute("DELETE FROM journey_steps WHERE journey_id = %s", (journey_id,))
@@ -1172,7 +1353,8 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             cursor = conn.cursor()
             
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy,
+                       welcome_message, priority_int, inactivity_timeout_days
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -1183,10 +1365,12 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             new_name = original[3] + " (Copy)"
             
             cursor.execute("""
-                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, is_locked)
-                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE)
+                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, is_locked,
+                                      welcome_message, priority_int, inactivity_timeout_days)
+                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE, %s, %s, %s)
                 RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
-            """, (tenant_id, original[2], new_name, original[4], original[6]))
+            """, (tenant_id, original[2], new_name, original[4], original[6],
+                  original[7], original[8], original[9]))
             new_row = cursor.fetchone()
             if not new_row:
                 return None

@@ -497,6 +497,105 @@ def handle_journey_duplicate(handler, journey_id: str):
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
 
 
+def handle_journey_publish(handler, journey_id: str):
+    """POST /api/journeys/:id/publish - Publish a draft journey (set to active)."""
+    from . import repo
+    
+    try:
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
+        
+        journey = repo.get_journey(tenant_id, journey_id)
+        if not journey:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
+            return
+        
+        if journey['status'] != 'draft':
+            handler.send_response(400)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Only draft journeys can be published'}).encode())
+            return
+        
+        conflict = repo.check_active_trigger_keyword_conflict(tenant_id, journey_id)
+        if conflict:
+            handler.send_response(409)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                'error': f"Cannot publish: trigger keyword \"{conflict['keyword']}\" is already active on journey \"{conflict['conflict_journey_name']}\"",
+                'conflict': conflict
+            }).encode())
+            return
+        
+        success = repo.update_journey_status(tenant_id, journey_id, 'active')
+        if success:
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': True, 'status': 'active'}).encode())
+        else:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Failed to publish journey'}).encode())
+    except Exception as e:
+        logger.exception(f"Error publishing journey: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
+def handle_journey_stop(handler, journey_id: str):
+    """POST /api/journeys/:id/stop - Stop a journey (prevent new users, in-progress finish)."""
+    from . import repo
+    
+    try:
+        tenant_id = getattr(handler, 'tenant_id', None)
+        if not tenant_id:
+            _send_no_tenant_context(handler)
+            return
+        
+        journey = repo.get_journey(tenant_id, journey_id)
+        if not journey:
+            handler.send_response(404)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey not found'}).encode())
+            return
+        
+        if journey['status'] not in ('active', 'draft'):
+            handler.send_response(400)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Journey is already stopped'}).encode())
+            return
+        
+        success = repo.update_journey_status(tenant_id, journey_id, 'stopped')
+        if success:
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': True, 'status': 'stopped'}).encode())
+        else:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'error': 'Failed to stop journey'}).encode())
+    except Exception as e:
+        logger.exception(f"Error stopping journey: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'error': str(e)}).encode())
+
+
 def handle_journey_lock(handler, journey_id: str):
     """POST /api/journeys/:id/lock - Lock or unlock a journey."""
     from . import repo
