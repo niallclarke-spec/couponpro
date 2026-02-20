@@ -675,6 +675,17 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             update_crosspromo_status(signal_id, 'complete', tenant_id)
         
         logger.info(f"CTA sent for signal #{signal_id}, cross-promo complete")
+        
+        try:
+            from domains.hypechat.service import trigger_flow_from_cta
+            hype_result = trigger_flow_from_cta(tenant_id)
+            if hype_result.get("success"):
+                logger.info(f"Hype flow triggered after CTA: {hype_result.get('total_messages_scheduled', 0)} messages scheduled")
+            else:
+                logger.debug(f"Hype flow not triggered: {hype_result.get('reason', hype_result.get('error', 'unknown'))}")
+        except Exception as e:
+            logger.warning(f"Hype trigger after CTA failed (non-fatal): {e}")
+        
         return {"success": True}
     
     elif job_type == 'eod_pip_brag':
@@ -696,6 +707,22 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         
         result = send_message(bot_token, free_channel_id, message)
         return result
+    
+    elif job_type == 'hype_message':
+        flow_id = payload.get('flow_id')
+        step_number = payload.get('step_number', 1)
+        custom_prompt = payload.get('custom_prompt', '')
+        
+        if not flow_id or not custom_prompt:
+            return {"success": False, "error": "Missing flow_id or custom_prompt in hype_message payload"}
+        
+        try:
+            from domains.hypechat.service import send_hype_message
+            result = send_hype_message(tenant_id, flow_id, step_number, custom_prompt)
+            return result
+        except Exception as e:
+            logger.exception(f"Error executing hype_message job: {e}")
+            return {"success": False, "error": str(e)}
     
     else:
         return {"success": False, "error": f"Unknown job type: {job_type}"}
