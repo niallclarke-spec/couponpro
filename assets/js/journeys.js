@@ -168,7 +168,7 @@
         }
 
         emptyState.style.display = 'none';
-        container.style.display = 'grid';
+        container.style.display = 'flex';
 
         const escapeHtml = config.escapeHtml || escapeHtmlDefault;
         
@@ -215,7 +215,6 @@
                 }
             }
             
-            const statusColors = { draft: '#6b7280', active: '#10b981', stopped: '#ef4444' };
             const statusLabels = { draft: 'Draft', active: 'Active', stopped: 'Stopped' };
             const totalSends = journey.total_sends || 0;
             const uniqueUsers = journey.unique_users || 0;
@@ -285,41 +284,43 @@
 
             return `
                 <div class="journey-card ${journey.status}">
-                    <div class="journey-card-header">
-                        <div class="journey-name">${escapeHtml(journey.name)}</div>
-                        <span class="journey-status ${journey.status}" style="background: ${statusColors[journey.status] || '#6b7280'}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">${statusLabels[journey.status] || journey.status}</span>
+                    <div class="journey-card-left">
+                        <div class="journey-card-header">
+                            <div class="journey-name">${escapeHtml(journey.name)}</div>
+                            <span class="journey-status ${journey.status}">${statusLabels[journey.status] || journey.status}</span>
+                        </div>
+                        <div class="journey-meta">
+                            <div class="journey-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                <span>${triggerType === 'direct_message' ? 'DM' : 'Trigger'}: <strong>${escapeHtml(triggerValue || (triggerType === 'direct_message' ? 'any' : '-'))}</strong></span>
+                            </div>
+                            <div class="journey-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                </svg>
+                                <span>${journey.step_count || 0} steps</span>
+                            </div>
+                        </div>
+                        ${deepLinkHtml}
                     </div>
-                    <div class="journey-meta">
-                        <div class="journey-meta-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                            </svg>
-                            <span>${triggerType === 'direct_message' ? 'DM' : 'Trigger'}: <strong>${escapeHtml(triggerValue || (triggerType === 'direct_message' ? 'any' : '-'))}</strong></span>
+                    <div class="journey-card-right">
+                        <div class="journey-stats-row">
+                            <div class="journey-stat">
+                                <span class="journey-stat-value">${totalSends}</span>
+                                <span class="journey-stat-label">sends</span>
+                            </div>
+                            <div class="journey-stat">
+                                <span class="journey-stat-value">${uniqueUsers}</span>
+                                <span class="journey-stat-label">users</span>
+                            </div>
                         </div>
-                        <div class="journey-meta-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14,2 14,8 20,8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                            </svg>
-                            <span>${journey.step_count || 0} step${journey.step_count !== 1 ? 's' : ''}</span>
+                        <div class="journey-actions">
+                            ${actionButtonsHtml}
                         </div>
-                    </div>
-                    <div class="journey-stats-row">
-                        <div class="journey-stat">
-                            <span class="journey-stat-value">${totalSends}</span>
-                            <span class="journey-stat-label">sends</span>
-                        </div>
-                        <div class="journey-stat">
-                            <span class="journey-stat-value">${uniqueUsers}</span>
-                            <span class="journey-stat-label">users</span>
-                        </div>
-                    </div>
-                    ${deepLinkHtml}
-                    <div class="journey-actions">
-                        ${actionButtonsHtml}
                     </div>
                 </div>
             `;
