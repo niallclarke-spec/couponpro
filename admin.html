@@ -9129,11 +9129,16 @@
                 label.textContent = enabled ? 'Active' : 'Inactive';
                 label.style.color = enabled ? '#34c759' : 'var(--text-muted)';
             }
+            const toggle = document.querySelector('#crosspromo-enabled + .toggle-switch');
+            if (toggle) {
+                toggle.style.background = enabled ? '#34c759' : 'rgba(120, 120, 128, 0.32)';
+            }
         }
 
         async function saveCrossPromoSettings() {
             try {
                 const enabled = document.getElementById('crosspromo-enabled').checked;
+                updateCrossPromoStatusLabel(enabled);
                 
                 const settings = {
                     enabled: enabled,
