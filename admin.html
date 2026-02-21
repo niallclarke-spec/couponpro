@@ -6331,7 +6331,8 @@
                                         <div class="crosspromo-subsection-header" onclick="toggleCrossPromoSection()">
                                             <span style="font-size: 16px;">📣</span>
                                             <h4>Cross Promo</h4>
-                                            <label class="toggle-label" style="margin-left: auto; margin-right: 8px;" onclick="event.stopPropagation()">
+                                            <span id="crosspromo-status-label" style="margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Inactive</span>
+                                            <label class="toggle-label" style="margin-right: 8px;" onclick="event.stopPropagation()">
                                                 <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
                                                 <span class="toggle-switch"></span>
                                             </label>
@@ -9024,6 +9025,7 @@
                 updateCrossPromoBotDisplay(connections.connections || []);
                 
                 document.getElementById('crosspromo-enabled').checked = settings.enabled || false;
+                updateCrossPromoStatusLabel(settings.enabled || false);
                 document.getElementById('crosspromo-cta-url').value = settings.cta_url || 'https://entrylab.io/subscribe';
                 document.getElementById('crosspromo-morning-time').value = settings.morning_post_time_utc || '06:42';
                 document.getElementById('crosspromo-recap-time').value = settings.recap_forward_time_utc || '07:12';
@@ -9121,6 +9123,14 @@
             }
         }
         
+        function updateCrossPromoStatusLabel(enabled) {
+            const label = document.getElementById('crosspromo-status-label');
+            if (label) {
+                label.textContent = enabled ? 'Active' : 'Inactive';
+                label.style.color = enabled ? '#34c759' : 'var(--text-muted)';
+            }
+        }
+
         async function saveCrossPromoSettings() {
             try {
                 const enabled = document.getElementById('crosspromo-enabled').checked;
@@ -9143,7 +9153,8 @@
                 console.log('[CrossPromo] Response status:', resp.status, resp.statusText);
                 
                 if (resp.ok) {
-                    showToast('Cross Promo settings saved');
+                    updateCrossPromoStatusLabel(enabled);
+                    showToast(enabled ? 'Cross Promo enabled' : 'Cross Promo disabled');
                 } else {
                     const text = await resp.text();
                     let errorMsg = 'Failed to save settings';
