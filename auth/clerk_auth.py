@@ -350,7 +350,7 @@ def verify_clerk_token(token: str) -> Tuple[Optional[Dict[str, Any]], Optional[s
             )
             return None, AuthFailureReason.JWKS_FETCH_FAILED
         except jwt.ExpiredSignatureError:
-            logger.warning("Token expired")
+            logger.debug("Token expired (may fall back to cookie auth)")
             return None, AuthFailureReason.TOKEN_EXPIRED
         except jwt.InvalidIssuerError:
             logger.warning(f"[JWKS] Invalid issuer during verification: token_iss={token_iss}")
@@ -455,7 +455,10 @@ def get_auth_user_from_request(request, record_failure: bool = True) -> Optional
     
     if admin_session_token and verify_admin_session(admin_session_token):
         email = request.headers.get('X-Clerk-User-Email', '')
-        logger.debug(f"Auth: admin_session cookie verified successfully (email={email})")
+        if jwt_failure_reason == AuthFailureReason.TOKEN_EXPIRED:
+            logger.debug(f"Auth: JWT expired, fell back to admin_session cookie (email={email})")
+        else:
+            logger.debug(f"Auth: admin_session cookie verified successfully (email={email})")
         return {
             'clerk_user_id': 'admin_session',
             'email': email if email else None,
