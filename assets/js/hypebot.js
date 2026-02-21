@@ -16,20 +16,14 @@ window.HypeBotModule = (function() {
         if (!bar) return;
         try {
             const headers = await getAuthHeaders();
-            const [connResp, settingsResp] = await Promise.all([
-                fetch('/api/connections', { headers }),
-                fetch('/api/crosspromo/settings', { headers })
-            ]);
+            const connResp = await fetch('/api/connections', { headers });
             let botUsername = null;
             let freeChannelId = null;
             if (connResp.ok) {
                 const connData = await connResp.json();
                 const signalBot = (connData.connections || []).find(c => c.bot_role === 'signal_bot');
                 botUsername = signalBot?.bot_username || null;
-            }
-            if (settingsResp.ok) {
-                const settingsData = await settingsResp.json();
-                freeChannelId = settingsData.free_channel_id || settingsData.settings?.free_channel_id || null;
+                freeChannelId = signalBot?.free_channel_id || null;
             }
             const connected = !!(botUsername && freeChannelId);
             const dotClass = connected ? 'connected' : 'disconnected';
