@@ -91,7 +91,7 @@ Write ONLY the Telegram message, nothing else:"""
 
             message = response.choices[0].message.content.strip()
 
-            if len(message) < 10 or len(message) > 500:
+            if len(message) < 10 or len(message) > 2100:
                 logger.warning(f"Generated message {step}/{message_count} length out of range: {len(message)}")
                 message = ""
 
