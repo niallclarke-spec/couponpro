@@ -639,7 +639,7 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config, j.welcome_message
+                       t.id as trigger_id, t.trigger_config, j.welcome_message, j.welcome_delay_seconds
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s 
@@ -662,7 +662,8 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
                     'trigger_config': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
-                    'welcome_message': row[8]
+                    'welcome_message': row[8],
+                    'welcome_delay_seconds': row[9] or 0
                 }
             return None
     except Exception as e:
@@ -685,7 +686,7 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config, j.welcome_message
+                       t.id as trigger_id, t.trigger_config, j.welcome_message, j.welcome_delay_seconds
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s
@@ -713,7 +714,8 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
                     'trigger_config': trigger_config,
-                    'welcome_message': row[8]
+                    'welcome_message': row[8],
+                    'welcome_delay_seconds': row[9] or 0
                 }
             return None
     except Exception as e:
