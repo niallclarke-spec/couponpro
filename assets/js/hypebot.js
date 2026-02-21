@@ -116,6 +116,7 @@ window.HypeBotModule = (function() {
                 </div>
             </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('hype-prompt-modal').classList.add('active');
         document.getElementById('hype-prompt-name').focus();
     }
 
@@ -162,6 +163,7 @@ window.HypeBotModule = (function() {
                 </div>
             </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('hype-preview-modal').classList.add('active');
         await doGeneratePreview(prompt.custom_prompt);
     }
 
@@ -227,6 +229,7 @@ window.HypeBotModule = (function() {
                 </div>
             </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('hype-flow-modal').classList.add('active');
         document.getElementById('hype-flow-name').focus();
     }
 
@@ -319,6 +322,7 @@ window.HypeBotModule = (function() {
                     </div>
                 </div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('hype-analytics-modal').classList.add('active');
         } catch (e) { console.error(e); }
     }
 
