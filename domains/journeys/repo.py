@@ -1377,7 +1377,7 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             
             cursor.execute("""
                 SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy,
-                       welcome_message, priority_int, inactivity_timeout_days
+                       welcome_message, priority_int, inactivity_timeout_days, welcome_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -1389,11 +1389,11 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             
             cursor.execute("""
                 INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, is_locked,
-                                      welcome_message, priority_int, inactivity_timeout_days)
-                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE, %s, %s, %s)
+                                      welcome_message, priority_int, inactivity_timeout_days, welcome_delay_seconds)
+                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE, %s, %s, %s, %s)
                 RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
             """, (tenant_id, original[2], new_name, original[4], original[6],
-                  original[7], original[8], original[9]))
+                  original[7], original[8], original[9], original[10]))
             new_row = cursor.fetchone()
             if not new_row:
                 return None
