@@ -53,16 +53,12 @@ def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_coun
     from openai import OpenAI
 
     try:
-        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
-        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
+        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL") or "https://api.openai.com/v1"
 
         if not api_key:
-            logger.warning("OpenAI API key not configured (AI_INTEGRATIONS_OPENAI_API_KEY missing)")
-            return [], "OpenAI API key not configured. Please set up the OpenAI integration."
-
-        if not base_url:
-            logger.warning("OpenAI base URL not configured (AI_INTEGRATIONS_OPENAI_BASE_URL missing)")
-            return [], "OpenAI base URL not configured. Please set up the OpenAI integration."
+            logger.warning("OpenAI API key not configured (checked AI_INTEGRATIONS_OPENAI_API_KEY and OPENAI_API_KEY)")
+            return [], "OpenAI API key not configured. Set OPENAI_API_KEY in your environment."
 
         client = OpenAI(api_key=api_key, base_url=base_url)
         context = build_context(tenant_id)
