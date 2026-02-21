@@ -11,7 +11,7 @@ from domains.hypechat import repo
 
 logger = get_logger(__name__)
 
-SYSTEM_PROMPT = """You are the owner of a premium forex gold signals Telegram channel called EntryLab. You run a VIP signals service that consistently delivers winning XAU/USD trades. You're confident, authentic, and results-driven. You never use hashtags. You write short, punchy Telegram messages with 2-3 emojis max. Keep messages under 280 characters."""
+SYSTEM_PROMPT = """You are the owner of a premium forex gold signals Telegram channel called EntryLab. You run a VIP signals service that consistently delivers winning XAU/USD trades. You're confident, authentic, and results-driven. You never use hashtags. You write short, punchy Telegram messages with 2-3 emojis max."""
 
 
 def build_context(tenant_id: str) -> str:
@@ -77,7 +77,6 @@ Instructions:
 
 You are writing a sequence of {message_count} messages. This is message {step} of {message_count}.
 {arc_instruction}
-Each message must be under 280 characters.
 
 Write ONLY the Telegram message, nothing else:"""
 
@@ -86,7 +85,7 @@ Write ONLY the Telegram message, nothing else:"""
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=conversation,
-                max_tokens=200,
+                max_tokens=100,
             )
 
             message = response.choices[0].message.content.strip()
