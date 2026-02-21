@@ -3,7 +3,7 @@ Hype Chat service - AI-powered hype message generation and flow execution.
 """
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from core.logging import get_logger
 from domains.hypechat import repo
@@ -37,7 +37,18 @@ def build_context(tenant_id: str) -> str:
         return "Performance data currently unavailable"
 
 
-def generate_message(tenant_id: str, custom_prompt: str) -> str:
+def _get_arc_instruction(step: int, total: int) -> str:
+    if total == 1:
+        return "Write a single compelling message that references today's wins and ends with a call to action about joining VIP."
+    if step == 1:
+        return "This is the opening - set the tone, reference today's wins."
+    elif step == total:
+        return "This is the final message - end with a strong call to action about joining VIP."
+    else:
+        return "Build on what you said before, add a new angle or detail."
+
+
+def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3) -> List[str]:
     from openai import OpenAI
 
     try:
@@ -46,59 +57,80 @@ def generate_message(tenant_id: str, custom_prompt: str) -> str:
 
         if not api_key or not base_url:
             logger.warning("OpenAI credentials not configured")
-            return ""
+            return []
 
         client = OpenAI(api_key=api_key, base_url=base_url)
-
         context = build_context(tenant_id)
+        messages_result = []
 
-        user_prompt = f"""Context about recent performance:
+        conversation = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+        for step in range(1, message_count + 1):
+            arc_instruction = _get_arc_instruction(step, message_count)
+
+            user_prompt = f"""Context about recent performance:
 {context}
 
 Instructions:
 {custom_prompt}
 
+You are writing a sequence of {message_count} messages. This is message {step} of {message_count}.
+{arc_instruction}
+Each message must be under 280 characters.
+
 Write ONLY the Telegram message, nothing else:"""
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=200,
-        )
+            conversation.append({"role": "user", "content": user_prompt})
 
-        message = response.choices[0].message.content.strip()
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=conversation,
+                max_tokens=200,
+            )
 
-        if len(message) < 10 or len(message) > 500:
-            logger.warning(f"Generated message length out of range: {len(message)}")
-            return ""
+            message = response.choices[0].message.content.strip()
 
-        return message
+            if len(message) < 10 or len(message) > 500:
+                logger.warning(f"Generated message {step}/{message_count} length out of range: {len(message)}")
+                message = ""
+
+            messages_result.append(message)
+            conversation.append({"role": "assistant", "content": message})
+
+        logger.info(f"Generated sequence of {len(messages_result)} messages for tenant {tenant_id}")
+        return messages_result
 
     except Exception as e:
-        logger.exception(f"Error generating hype message: {e}")
-        return ""
+        logger.exception(f"Error generating message sequence: {e}")
+        return []
 
 
-def preview_message(tenant_id: str, custom_prompt: str) -> Dict:
+def generate_message(tenant_id: str, custom_prompt: str) -> str:
+    result = generate_message_sequence(tenant_id, custom_prompt, 1)
+    return result[0] if result else ""
+
+
+def preview_message(tenant_id: str, custom_prompt: str, message_count: int = 3) -> Dict:
     context = build_context(tenant_id)
-    message = generate_message(tenant_id, custom_prompt)
+    messages = generate_message_sequence(tenant_id, custom_prompt, message_count)
 
     return {
-        "message": message,
+        "messages": messages,
         "context": context,
     }
 
 
-def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_prompt: str) -> Dict:
+def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_prompt: str, pre_generated_message: str = None) -> Dict:
     from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
     from integrations.telegram.client import send_message
     from domains.crosspromo.repo import get_settings
 
     try:
-        message_text = generate_message(tenant_id, custom_prompt)
+        if pre_generated_message:
+            message_text = pre_generated_message
+        else:
+            message_text = generate_message(tenant_id, custom_prompt)
+
         if not message_text:
             return {"success": False, "error": "Failed to generate message"}
 
@@ -169,6 +201,10 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
         interval_minutes = flow.get("interval_minutes", 90)
         delay_after_cta = flow.get("delay_after_cta_minutes", 10)
 
+        pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count)
+        if not pre_generated_messages:
+            logger.warning(f"Failed to pre-generate messages for flow {flow_id}, will fallback to per-job generation")
+
         now = datetime.utcnow()
         scheduled = 0
 
@@ -185,6 +221,9 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
                 "custom_prompt": custom_prompt,
                 "job_sub_type": "hype_message",
             }
+
+            if pre_generated_messages and step <= len(pre_generated_messages):
+                payload["pre_generated_message"] = pre_generated_messages[step - 1]
 
             job = enqueue_job(
                 tenant_id=tenant_id,

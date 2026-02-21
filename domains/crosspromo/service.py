@@ -712,13 +712,14 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         flow_id = payload.get('flow_id')
         step_number = payload.get('step_number', 1)
         custom_prompt = payload.get('custom_prompt', '')
+        pre_generated_message = payload.get('pre_generated_message', '')
         
         if not flow_id or not custom_prompt:
             return {"success": False, "error": "Missing flow_id or custom_prompt in hype_message payload"}
         
         try:
             from domains.hypechat.service import send_hype_message
-            result = send_hype_message(tenant_id, flow_id, step_number, custom_prompt)
+            result = send_hype_message(tenant_id, flow_id, step_number, custom_prompt, pre_generated_message=pre_generated_message)
             return result
         except Exception as e:
             logger.exception(f"Error executing hype_message job: {e}")

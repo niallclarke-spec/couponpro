@@ -187,12 +187,16 @@ def handle_preview_message(handler):
 
     data = _read_json_body(handler)
     custom_prompt = data.get('custom_prompt', '').strip()
+    message_count = int(data.get('message_count', 3))
 
     if not custom_prompt:
         _send_json(handler, 400, {"error": "custom_prompt is required"})
         return
 
-    result = service.preview_message(tenant_id, custom_prompt)
+    if message_count < 1 or message_count > 10:
+        message_count = 3
+
+    result = service.preview_message(tenant_id, custom_prompt, message_count)
     _send_json(handler, 200, result)
 
 

@@ -82,6 +82,7 @@ window.HypeBotModule = (function() {
                     ${f.status === 'paused'
                         ? `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'active')" style="color:#34c759;border-color:#34c759;">Activate</button>`
                         : `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'paused')" style="color:#ff9f0a;border-color:#ff9f0a;">Pause</button>`}
+                    <button onclick="window.HypeBotModule.previewFlow('${f.id}')">Preview</button>
                     <button onclick="window.HypeBotModule.triggerFlow('${f.id}')">Trigger Now</button>
                     <button onclick="window.HypeBotModule.editFlow('${f.id}')">Edit</button>
                     <button onclick="window.HypeBotModule.viewAnalytics('${f.id}')">Analytics</button>
@@ -145,15 +146,75 @@ window.HypeBotModule = (function() {
         try { const h = await getAuthHeaders(); await fetch(`/api/hypechat/prompts/${id}`, { method:'DELETE', headers:h }); await loadPrompts(); } catch(e) { console.error(e); }
     }
 
+    function _getArcLabel(step, total) {
+        if (total === 1) return 'Single';
+        if (step === 1) return 'Opening';
+        if (step === total) return 'Finale';
+        return 'Build-up';
+    }
+
+    function _getArcColor(step, total) {
+        if (total === 1) return 'var(--accent, #007aff)';
+        if (step === 1) return '#34c759';
+        if (step === total) return '#ff9f0a';
+        return 'var(--accent, #007aff)';
+    }
+
+    function _renderTimelineMessages(messages, messageCount, intervalMinutes, delayAfterCta) {
+        if (!messages || !messages.length) {
+            return '<div class="hype-empty-state">Failed to generate messages</div>';
+        }
+
+        const interval = intervalMinutes || 90;
+        const delay = delayAfterCta || 10;
+
+        return messages.map((msg, i) => {
+            const step = i + 1;
+            const offsetMin = delay + (i * interval);
+            const arcLabel = _getArcLabel(step, messageCount);
+            const arcColor = _getArcColor(step, messageCount);
+            const isLast = step === messageCount;
+
+            return `
+                <div style="display:flex;gap:16px;position:relative;">
+                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:36px;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:${arcColor};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">${step}</div>
+                        ${!isLast ? '<div style="flex:1;width:2px;background:var(--border-primary);margin:4px 0;"></div>' : ''}
+                    </div>
+                    <div style="flex:1;padding-bottom:${isLast ? '0' : '16px'};">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">+${offsetMin} min</span>
+                            <span style="font-size:10px;font-weight:600;color:${arcColor};background:${arcColor}18;padding:2px 8px;border-radius:10px;text-transform:uppercase;">${escapeHtml(arcLabel)}</span>
+                        </div>
+                        <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">${msg ? escapeHtml(msg) : '<span style="color:var(--text-muted);font-style:italic;">Failed to generate</span>'}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
     async function previewPrompt(id) {
         const prompt = prompts.find(p => p.id === id);
         if (!prompt) return;
+
+        const defaultCount = (flows.length > 0 && flows[0].message_count) ? flows[0].message_count : 3;
+        const defaultInterval = (flows.length > 0 && flows[0].interval_minutes) ? flows[0].interval_minutes : 90;
+        const defaultDelay = (flows.length > 0 && flows[0].delay_after_cta_minutes) ? flows[0].delay_after_cta_minutes : 10;
+
         const modalHtml = `
             <div class="modal-overlay" id="hype-preview-modal" onclick="if(event.target===this)this.remove()">
-                <div class="modal-content" style="max-width:480px;">
-                    <div class="modal-header"><h3>Preview: ${escapeHtml(prompt.name)}</h3><button class="modal-close" onclick="document.getElementById('hype-preview-modal').remove()">&times;</button></div>
+                <div class="modal-content" style="max-width:540px;">
+                    <div class="modal-header"><h3>Flow Preview: ${escapeHtml(prompt.name)}</h3><button class="modal-close" onclick="document.getElementById('hype-preview-modal').remove()">&times;</button></div>
                     <div class="modal-body" style="padding:24px;">
-                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);">Generating preview...</div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                            <label style="font-size:13px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
+                            <input type="number" id="preview-msg-count" min="1" max="10" value="${defaultCount}" style="width:60px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;">
+                        </div>
+                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:40px 0;">
+                            <div style="font-size:14px;">Generating flow preview...</div>
+                            <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">Creating a coherent message sequence</div>
+                        </div>
                         <div id="preview-result" style="display:none;"></div>
                     </div>
                     <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border-primary);">
@@ -164,24 +225,69 @@ window.HypeBotModule = (function() {
             </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         document.getElementById('hype-preview-modal').classList.add('active');
-        await doGeneratePreview(prompt.custom_prompt);
+        await doGeneratePreview(prompt.custom_prompt, defaultCount, defaultInterval, defaultDelay);
     }
 
-    async function doGeneratePreview(customPrompt) {
+    async function previewFlow(id) {
+        const flow = flows.find(f => f.id === id);
+        if (!flow) return;
+
+        const prompt = flow.prompt_id ? prompts.find(p => p.id === flow.prompt_id) : null;
+        const customPrompt = prompt ? prompt.custom_prompt : '';
+
+        if (!customPrompt) {
+            alert('This flow has no prompt assigned. Please assign a prompt first.');
+            return;
+        }
+
+        const modalHtml = `
+            <div class="modal-overlay" id="hype-preview-modal" onclick="if(event.target===this)this.remove()">
+                <div class="modal-content" style="max-width:540px;">
+                    <div class="modal-header"><h3>Flow Preview: ${escapeHtml(flow.name)}</h3><button class="modal-close" onclick="document.getElementById('hype-preview-modal').remove()">&times;</button></div>
+                    <div class="modal-body" style="padding:24px;">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                            <label style="font-size:13px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
+                            <input type="number" id="preview-msg-count" min="1" max="10" value="${flow.message_count}" style="width:60px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;" readonly>
+                        </div>
+                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:40px 0;">
+                            <div style="font-size:14px;">Generating flow preview...</div>
+                            <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">Creating a coherent ${flow.message_count}-message sequence</div>
+                        </div>
+                        <div id="preview-result" style="display:none;"></div>
+                    </div>
+                    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border-primary);">
+                        <button class="btn btn-secondary" onclick="document.getElementById('hype-preview-modal').remove()">Close</button>
+                        <button class="btn" onclick="window.HypeBotModule.regenerateFlowPreview('${id}')">Regenerate</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('hype-preview-modal').classList.add('active');
+        await doGeneratePreview(customPrompt, flow.message_count, flow.interval_minutes, flow.delay_after_cta_minutes);
+    }
+
+    async function doGeneratePreview(customPrompt, messageCount, intervalMinutes, delayAfterCta) {
+        const count = messageCount || 3;
+        const interval = intervalMinutes || 90;
+        const delay = delayAfterCta || 10;
+
         try {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
-            const resp = await fetch('/api/hypechat/preview', { method:'POST', headers, body: JSON.stringify({ custom_prompt: customPrompt }) });
+            const resp = await fetch('/api/hypechat/preview', { method:'POST', headers, body: JSON.stringify({ custom_prompt: customPrompt, message_count: count }) });
             const data = await resp.json();
             document.getElementById('preview-loading').style.display = 'none';
             const r = document.getElementById('preview-result');
             r.style.display = 'block';
+
+            const messages = data.messages || [];
+            const timelineHtml = _renderTimelineMessages(messages, count, interval, delay);
+
             r.innerHTML = `
-                <div style="background:var(--bg-primary);border-radius:12px;padding:16px;margin-bottom:12px;">
-                    <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;font-weight:600;">Generated Message</div>
-                    <div style="font-size:15px;color:var(--text-primary);line-height:1.5;">${escapeHtml(data.message || 'Failed to generate')}</div>
+                <div style="margin-bottom:16px;">
+                    ${timelineHtml}
                 </div>
-                <div style="background:var(--bg-primary);border-radius:12px;padding:16px;">
+                <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:10px;padding:14px 16px;">
                     <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;font-weight:600;">Context Injected</div>
                     <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;">${escapeHtml(data.context || '')}</div>
                 </div>`;
@@ -191,9 +297,23 @@ window.HypeBotModule = (function() {
     async function regeneratePreview(id) {
         const prompt = prompts.find(p => p.id === id);
         if (!prompt) return;
+        const countEl = document.getElementById('preview-msg-count');
+        const messageCount = countEl ? parseInt(countEl.value) || 3 : 3;
+        const defaultInterval = (flows.length > 0 && flows[0].interval_minutes) ? flows[0].interval_minutes : 90;
+        const defaultDelay = (flows.length > 0 && flows[0].delay_after_cta_minutes) ? flows[0].delay_after_cta_minutes : 10;
         document.getElementById('preview-loading').style.display = 'block';
         document.getElementById('preview-result').style.display = 'none';
-        await doGeneratePreview(prompt.custom_prompt);
+        await doGeneratePreview(prompt.custom_prompt, messageCount, defaultInterval, defaultDelay);
+    }
+
+    async function regenerateFlowPreview(id) {
+        const flow = flows.find(f => f.id === id);
+        if (!flow) return;
+        const prompt = flow.prompt_id ? prompts.find(p => p.id === flow.prompt_id) : null;
+        if (!prompt) return;
+        document.getElementById('preview-loading').style.display = 'block';
+        document.getElementById('preview-result').style.display = 'none';
+        await doGeneratePreview(prompt.custom_prompt, flow.message_count, flow.interval_minutes, flow.delay_after_cta_minutes);
     }
 
     function openFlowModal(editId) {
@@ -328,7 +448,8 @@ window.HypeBotModule = (function() {
 
     return {
         loadHypeBot, loadPrompts, loadFlows, openPromptModal, savePrompt, editPrompt, deletePrompt,
-        previewPrompt, regeneratePreview, openFlowModal, saveFlow, editFlow, deleteFlow,
+        previewPrompt, previewFlow, regeneratePreview, regenerateFlowPreview,
+        openFlowModal, saveFlow, editFlow, deleteFlow,
         setFlowStatus, triggerFlow, viewAnalytics
     };
 })();
