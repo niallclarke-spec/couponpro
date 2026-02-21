@@ -49,16 +49,20 @@ def _get_arc_instruction(step: int, total: int) -> str:
         return "Build on what you said before, add a new angle or detail."
 
 
-def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3) -> List[str]:
+def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3) -> tuple:
     from openai import OpenAI
 
     try:
         api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
         base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
 
-        if not api_key or not base_url:
-            logger.warning("OpenAI credentials not configured")
-            return []
+        if not api_key:
+            logger.warning("OpenAI API key not configured (AI_INTEGRATIONS_OPENAI_API_KEY missing)")
+            return [], "OpenAI API key not configured. Please set up the OpenAI integration."
+
+        if not base_url:
+            logger.warning("OpenAI base URL not configured (AI_INTEGRATIONS_OPENAI_BASE_URL missing)")
+            return [], "OpenAI base URL not configured. Please set up the OpenAI integration."
 
         client = OpenAI(api_key=api_key, base_url=base_url)
         context = build_context(tenant_id)
@@ -99,11 +103,20 @@ Write ONLY the Telegram message, nothing else:"""
             conversation.append({"role": "assistant", "content": message})
 
         logger.info(f"Generated sequence of {len(messages_result)} messages for tenant {tenant_id}")
-        return messages_result
+        return messages_result, None
 
     except Exception as e:
-        logger.exception(f"Error generating message sequence: {e}")
-        return []
+        error_type = type(e).__name__
+        error_detail = str(e)
+        logger.exception(f"Error generating message sequence: [{error_type}] {error_detail}")
+        return [], f"{error_type}: {error_detail}"
+
+
+def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3) -> List[str]:
+    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count)
+    if error:
+        logger.warning(f"generate_message_sequence failed for tenant {tenant_id}: {error}")
+    return messages
 
 
 def generate_message(tenant_id: str, custom_prompt: str) -> str:
@@ -113,12 +126,17 @@ def generate_message(tenant_id: str, custom_prompt: str) -> str:
 
 def preview_message(tenant_id: str, custom_prompt: str, message_count: int = 3) -> Dict:
     context = build_context(tenant_id)
-    messages = generate_message_sequence(tenant_id, custom_prompt, message_count)
+    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count)
 
-    return {
+    result = {
         "messages": messages,
         "context": context,
     }
+
+    if error:
+        result["error"] = error
+
+    return result
 
 
 def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_prompt: str, pre_generated_message: str = None) -> Dict:

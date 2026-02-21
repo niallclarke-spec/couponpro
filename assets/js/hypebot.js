@@ -319,7 +319,17 @@ window.HypeBotModule = (function() {
             r.style.display = 'block';
 
             const messages = data.messages || [];
-            const timelineHtml = _renderTimelineMessages(messages, count, interval, delay);
+
+            let timelineHtml;
+            if (data.error && (!messages.length || messages.every(m => !m))) {
+                timelineHtml = `
+                    <div style="text-align:center;padding:24px 16px;">
+                        <div style="font-size:13px;font-weight:600;color:#ff453a;margin-bottom:8px;">Failed to generate messages</div>
+                        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.2);border-radius:8px;padding:10px 14px;text-align:left;word-break:break-word;">${escapeHtml(data.error)}</div>
+                    </div>`;
+            } else {
+                timelineHtml = _renderTimelineMessages(messages, count, interval, delay);
+            }
 
             r.innerHTML = `
                 <div style="margin-bottom:10px;">
