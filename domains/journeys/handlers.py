@@ -114,8 +114,7 @@ def handle_journey_create(handler):
         description = data.get('description', '')
         status = data.get('status', 'draft')
         re_entry_policy = data.get('re_entry_policy', 'block')
-        welcome_message = data.get('welcome_message')
-        welcome_delay_seconds = int(data.get('welcome_delay_seconds', 0) or 0)
+        start_delay_seconds = int(data.get('start_delay_seconds', 0) or 0)
         
         journey = repo.create_journey(
             tenant_id=tenant_id,
@@ -124,8 +123,7 @@ def handle_journey_create(handler):
             description=description,
             status=status,
             re_entry_policy=re_entry_policy,
-            welcome_message=welcome_message,
-            welcome_delay_seconds=welcome_delay_seconds
+            start_delay_seconds=start_delay_seconds
         )
         
         if journey:

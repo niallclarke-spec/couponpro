@@ -1648,6 +1648,18 @@ class DatabasePool:
                 else:
                     logger.info("welcome_delay_seconds column already exists on journeys, skipping")
                 
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='journeys' AND column_name='start_delay_seconds'")
+                if not cursor.fetchone():
+                    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='journeys' AND column_name='welcome_delay_seconds'")
+                    if cursor.fetchone():
+                        cursor.execute("ALTER TABLE journeys RENAME COLUMN welcome_delay_seconds TO start_delay_seconds")
+                        logger.info("Renamed welcome_delay_seconds to start_delay_seconds on journeys")
+                    else:
+                        cursor.execute("ALTER TABLE journeys ADD COLUMN start_delay_seconds INTEGER DEFAULT 0")
+                        logger.info("Added start_delay_seconds column to journeys")
+                else:
+                    logger.info("start_delay_seconds column already exists on journeys, skipping")
+                
                 # Migration: add branch_keyword, branch_true_step_id, branch_false_step_id to journey_steps
                 for col, col_def in [
                     ('branch_keyword', 'VARCHAR'),

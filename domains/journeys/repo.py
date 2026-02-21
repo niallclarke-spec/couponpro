@@ -20,7 +20,7 @@ def _get_db_pool():
 
 def create_journey(tenant_id: str, bot_id: str, name: str, description: str = None,
                    status: str = 'draft', re_entry_policy: str = 'block',
-                   welcome_message: str = None, welcome_delay_seconds: int = 0) -> Optional[Dict]:
+                   start_delay_seconds: int = 0) -> Optional[Dict]:
     """Create a new journey."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -30,10 +30,10 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message, welcome_delay_seconds)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
-            """, (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message, welcome_delay_seconds))
+                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, start_delay_seconds)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, start_delay_seconds
+            """, (tenant_id, bot_id, name, description, status, re_entry_policy, start_delay_seconds))
             row = cursor.fetchone()
             conn.commit()
             
@@ -48,8 +48,7 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9],
-                    'welcome_delay_seconds': row[10]
+                    'start_delay_seconds': row[9]
                 }
             return None
     except Exception as e:
@@ -67,7 +66,7 @@ def list_journeys(tenant_id: str) -> List[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, start_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s
                 ORDER BY created_at DESC
@@ -85,8 +84,7 @@ def list_journeys(tenant_id: str) -> List[Dict]:
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9],
-                    'welcome_delay_seconds': row[10]
+                    'start_delay_seconds': row[9]
                 })
             return journeys
     except Exception as e:
@@ -114,7 +112,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     j.id, j.tenant_id, j.bot_id, j.name, j.description, 
                     j.status, j.re_entry_policy, j.created_at, j.updated_at,
                     COALESCE(step_counts.cnt, 0) as step_count,
-                    j.priority_int, j.is_locked, j.inactivity_timeout_days, j.welcome_message, j.welcome_delay_seconds
+                    j.priority_int, j.is_locked, j.inactivity_timeout_days, j.start_delay_seconds
                 FROM journeys j
                 LEFT JOIN (
                     SELECT journey_id, COUNT(*) as cnt
@@ -144,8 +142,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     'priority_int': row[10],
                     'is_locked': row[11],
                     'inactivity_timeout_days': row[12],
-                    'welcome_message': row[13],
-                    'welcome_delay_seconds': row[14],
+                    'start_delay_seconds': row[13],
                     'triggers': []
                 })
             
@@ -202,7 +199,7 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, start_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -219,8 +216,7 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9],
-                    'welcome_delay_seconds': row[10]
+                    'start_delay_seconds': row[9]
                 }
             return None
     except Exception as e:
@@ -389,7 +385,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
     if not db_pool or not db_pool.connection_pool:
         return None
     
-    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id', 'welcome_message', 'welcome_delay_seconds'}
+    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id', 'start_delay_seconds'}
     update_fields = {k: v for k, v in fields.items() if k in allowed_fields}
     
     if not update_fields:
@@ -406,7 +402,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                 UPDATE journeys
                 SET {set_clause}, updated_at = NOW()
                 WHERE tenant_id = %s AND id = %s
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, start_delay_seconds
             """, values)
             row = cursor.fetchone()
             conn.commit()
@@ -422,8 +418,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9],
-                    'welcome_delay_seconds': row[10]
+                    'start_delay_seconds': row[9]
                 }
             return None
     except Exception as e:
@@ -639,7 +634,7 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config, j.welcome_message, j.welcome_delay_seconds
+                       t.id as trigger_id, t.trigger_config, j.start_delay_seconds
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s 
@@ -662,8 +657,7 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
                     'trigger_config': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
-                    'welcome_message': row[8],
-                    'welcome_delay_seconds': row[9] or 0
+                    'start_delay_seconds': row[8] or 0
                 }
             return None
     except Exception as e:
@@ -686,7 +680,7 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT j.id, j.tenant_id, j.bot_id, j.name, j.status, j.re_entry_policy,
-                       t.id as trigger_id, t.trigger_config, j.welcome_message, j.welcome_delay_seconds
+                       t.id as trigger_id, t.trigger_config, j.start_delay_seconds
                 FROM journeys j
                 JOIN journey_triggers t ON t.journey_id = j.id
                 WHERE j.tenant_id = %s
@@ -714,8 +708,7 @@ def get_active_journey_by_dm_trigger(tenant_id: str, message_text: str) -> Optio
                     're_entry_policy': row[5],
                     'trigger_id': str(row[6]),
                     'trigger_config': trigger_config,
-                    'welcome_message': row[8],
-                    'welcome_delay_seconds': row[9] or 0
+                    'start_delay_seconds': row[8] or 0
                 }
             return None
     except Exception as e:
@@ -764,7 +757,7 @@ def get_active_session(tenant_id: str, journey_id: str, telegram_user_id: int) -
 
 
 def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int, 
-                   telegram_user_id: int, first_step_id: str = None) -> Optional[Dict]:
+                   telegram_user_id: int, first_step_id: str = None, first_name: str = '') -> Optional[Dict]:
     """Create a new journey session for a user."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -773,13 +766,14 @@ def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int,
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
+            initial_answers = json.dumps({'_first_name': first_name}) if first_name else None
             cursor.execute("""
                 INSERT INTO journey_user_sessions 
-                (tenant_id, journey_id, telegram_chat_id, telegram_user_id, current_step_id, status)
-                VALUES (%s, %s, %s, %s, %s, 'active')
+                (tenant_id, journey_id, telegram_chat_id, telegram_user_id, current_step_id, status, answers)
+                VALUES (%s, %s, %s, %s, %s, 'active', %s)
                 RETURNING id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
                           current_step_id, status, answers, started_at, completed_at, last_activity_at, welcome_sent_at
-            """, (tenant_id, journey_id, telegram_chat_id, telegram_user_id, first_step_id))
+            """, (tenant_id, journey_id, telegram_chat_id, telegram_user_id, first_step_id, initial_answers))
             row = cursor.fetchone()
             conn.commit()
             
@@ -851,27 +845,6 @@ def update_session_status(session_id: str, status: str) -> bool:
             return cursor.rowcount > 0
     except Exception as e:
         logger.exception(f"Error updating session status: {e}")
-        return False
-
-
-def mark_welcome_sent(session_id: str) -> bool:
-    """Mark the welcome message as sent for a session."""
-    db_pool = _get_db_pool()
-    if not db_pool or not db_pool.connection_pool:
-        return False
-    
-    try:
-        with db_pool.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE journey_user_sessions
-                SET welcome_sent_at = NOW(), last_activity_at = NOW()
-                WHERE id = %s AND welcome_sent_at IS NULL
-            """, (session_id,))
-            conn.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        logger.exception(f"Error marking welcome sent for session {session_id}: {e}")
         return False
 
 
@@ -1379,7 +1352,7 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             
             cursor.execute("""
                 SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy,
-                       welcome_message, priority_int, inactivity_timeout_days, welcome_delay_seconds
+                       priority_int, inactivity_timeout_days, start_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -1391,11 +1364,11 @@ def duplicate_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
             
             cursor.execute("""
                 INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, is_locked,
-                                      welcome_message, priority_int, inactivity_timeout_days, welcome_delay_seconds)
-                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE, %s, %s, %s, %s)
+                                      priority_int, inactivity_timeout_days, start_delay_seconds)
+                VALUES (%s, %s, %s, %s, 'draft', %s, FALSE, %s, %s, %s)
                 RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at
             """, (tenant_id, original[2], new_name, original[4], original[6],
-                  original[7], original[8], original[9], original[10]))
+                  original[7], original[8], original[9]))
             new_row = cursor.fetchone()
             if not new_row:
                 return None
@@ -2021,8 +1994,8 @@ def fetch_inactive_awaiting_sessions(limit: int = 50) -> List[Dict]:
 def fetch_stale_waiting_delay_sessions(stale_after_seconds: int = 60, limit: int = 20) -> List[Dict]:
     """Fetch waiting_delay sessions that have no pending scheduled messages and are older than stale_after_seconds.
     
-    These sessions were likely left by a welcome-message deferral thread that didn't complete
-    (e.g., process restart during the 20s delay window). Recovery: re-execute their first step.
+    These sessions were likely left by a start_delay that didn't complete
+    (e.g., process restart). Recovery: re-execute their first step.
     """
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:

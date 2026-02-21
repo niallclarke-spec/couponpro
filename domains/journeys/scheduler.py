@@ -158,13 +158,6 @@ def process_wait_timeouts() -> int:
                 step = repo.get_step_by_id(session['current_step_id']) if session.get('current_step_id') else repo.get_first_step(session['journey_id'])
                 if step:
                     journey = repo.get_journey(session['tenant_id'], session['journey_id'])
-                    
-                    if journey and journey.get('welcome_message') and not session.get('welcome_sent_at'):
-                        welcome_text = journey['welcome_message'].replace('{first_name}', '').strip()
-                        if welcome_text:
-                            engine._send_welcome_with_retry(session['tenant_id'], session['telegram_chat_id'], welcome_text)
-                            repo.mark_welcome_sent(session['id'])
-                    
                     repo.update_session_status(session['id'], 'active')
                     logger.info(f"[JOURNEY-SCHEDULER] Recovering stale waiting_delay session {session['id']}, executing step {step['id']}")
                     engine.execute_step(session, step, journey.get('bot_id') if journey else None)
@@ -211,21 +204,14 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
 
     content = msg.get('message_content', {})
     
-    if content.get('type') == 'welcome_and_step':
-        welcome_text = content.get('welcome_text', '')
-        first_name = content.get('first_name', '')
-        
-        if session.get('welcome_sent_at'):
-            logger.info(f"[JOURNEY-SCHEDULER] Welcome already sent for session {msg['session_id']}, skipping to step")
-        elif welcome_text:
-            engine._send_welcome_with_retry(msg.get('tenant_id'), msg['telegram_chat_id'], welcome_text)
-            repo.mark_welcome_sent(msg['session_id'])
-        
+    if content.get('type') == 'start_delayed_step':
         step = repo.get_step_by_id(msg['step_id'])
         if step:
             repo.update_session_status(session['id'], 'active')
             repo.update_session_current_step(session['id'], step['id'])
-            engine.execute_step(session, step, msg.get('bot_id'))
+            updated_session = repo.get_session_by_id(session['id'])
+            if updated_session:
+                engine.execute_step(updated_session, step, msg.get('bot_id'))
         return True
     
     text = content.get('text', '')
@@ -244,6 +230,11 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
         return False
     
     if text:
+        answers = session.get('answers') or {}
+        first_name = answers.get('_first_name', '')
+        if first_name:
+            text = text.replace('{first_name}', first_name)
+        
         from integrations.telegram.user_client import get_client
         uc = get_client(tenant_id)
         if not uc.is_connected():

@@ -6694,21 +6694,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Welcome Message <span style="color: rgba(255,255,255,0.4); font-weight: 400;">(optional)</span></label>
-                    <textarea class="form-textarea" id="journey-welcome-message" placeholder="e.g., Hey {first_name}, thanks for reaching out!" rows="2" oninput="var dg=document.getElementById('welcome-delay-group');if(dg)dg.style.display=this.value.trim()?'block':'none';"></textarea>
-                    <div class="form-hint">Sent instantly before the first step. Use <strong>{first_name}</strong> to personalise with their Telegram name.</div>
-                </div>
-
-                <div class="form-group" id="welcome-delay-group">
-                    <label class="form-label">Welcome Delay <span style="color: rgba(255,255,255,0.4); font-weight: 400;">(optional)</span></label>
+                    <label class="form-label">Start Delay <span style="color: rgba(255,255,255,0.4); font-weight: 400;">(optional)</span></label>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="number" class="form-input" id="journey-welcome-delay-value" placeholder="0" min="0" max="180" value="0" style="width: 80px; text-align: center;">
-                        <select class="form-input" id="journey-welcome-delay-unit" style="width: 120px;">
+                        <input type="number" class="form-input" id="journey-start-delay-value" placeholder="0" min="0" max="180" value="0" style="width: 80px; text-align: center;">
+                        <select class="form-input" id="journey-start-delay-unit" style="width: 120px;">
                             <option value="seconds">Seconds</option>
                             <option value="minutes" selected>Minutes</option>
                         </select>
                     </div>
-                    <div class="form-hint">Wait before sending the welcome message. 0 = instant.</div>
+                    <div class="form-hint">Wait before sending the first step after trigger. Use <strong>{first_name}</strong> in any step to personalise. 0 = instant.</div>
                 </div>
 
                 <div class="form-group">
