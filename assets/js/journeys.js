@@ -172,159 +172,177 @@
 
         const escapeHtml = config.escapeHtml || escapeHtmlDefault;
         
-        container.innerHTML = state.journeys.map(journey => {
-            const triggers = journey.triggers || [];
-            const firstTrigger = triggers[0];
-            const triggerType = firstTrigger?.trigger_type || 'deep_link';
-            const triggerValue = triggerType === 'direct_message' 
-                ? (firstTrigger?.trigger_config?.keyword || '') 
-                : (firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '');
-            const deepLinkUrl = getDeepLinkUrl(triggerValue);
-            
-            let deepLinkHtml = '';
-            if (triggerType === 'direct_message') {
-                const kwDisplay = triggerValue ? escapeHtml(triggerValue) : '<em>any message</em>';
-                deepLinkHtml = `
-                    <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
-                        DM Trigger keyword: <strong>${kwDisplay}</strong>
-                    </div>`;
-            } else if (triggerValue && (triggerType === 'telegram_deeplink' || triggerType === 'deep_link')) {
-                if (deepLinkUrl) {
-                    deepLinkHtml = `
-                        <div class="journey-deeplink">
-                            <code class="deeplink-url">${escapeHtml(deepLinkUrl)}</code>
-                            <button class="btn-copy" onclick="window.JourneysModule.copyDeepLink('${escapeHtml(deepLinkUrl)}')" title="Copy link">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                </svg>
-                            </button>
-                            <a href="${escapeHtml(deepLinkUrl)}" target="_blank" class="btn-test" title="Test link">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                    <polyline points="15 3 21 3 21 9"/>
-                                    <line x1="10" y1="14" x2="21" y2="3"/>
-                                </svg>
-                            </a>
-                        </div>`;
-                } else {
-                    deepLinkHtml = `
-                        <div class="journey-deeplink-warning">
-                            Configure Message Bot in Connections to get deep link URL
-                        </div>`;
-                }
-            }
-            
-            const statusLabels = { draft: 'Draft', active: 'Active', stopped: 'Stopped' };
-            const totalSends = journey.total_sends || 0;
-            const uniqueUsers = journey.unique_users || 0;
-            
-            let actionButtonsHtml = '';
-            if (journey.status === 'draft') {
-                actionButtonsHtml = `
-                    <button class="btn-action" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        <span>Edit</span>
-                    </button>
-                    <button class="btn-action publish" onclick="window.JourneysModule.publishJourney('${journey.id}')" title="Publish">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>Publish</span>
-                    </button>
-                    <button class="btn-action danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <polyline points="3,6 5,6 21,6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        <span>Delete</span>
-                    </button>`;
-            } else if (journey.status === 'active') {
-                actionButtonsHtml = `
-                    <button class="btn-action" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        <span>Edit</span>
-                    </button>
-                    <button class="btn-action stop" onclick="window.JourneysModule.stopJourney('${journey.id}')" title="Stop">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="6" y="6" width="12" height="12" rx="1"/>
-                        </svg>
-                        <span>Stop</span>
-                    </button>
-                    <button class="btn-action" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        <span>Duplicate</span>
-                    </button>`;
-            } else {
-                actionButtonsHtml = `
-                    <button class="btn-action" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        <span>Duplicate</span>
-                    </button>
-                    <button class="btn-action danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                            <polyline points="3,6 5,6 21,6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        <span>Delete</span>
-                    </button>`;
-            }
+        const statusOrder = ['active', 'paused', 'draft', 'stopped'];
+        const statusLabelsMap = { active: 'Active', paused: 'Paused', draft: 'Drafts', stopped: 'Stopped' };
+        const statusLabels = { draft: 'Draft', active: 'Active', paused: 'Paused', stopped: 'Stopped' };
+        const grouped = {};
+        state.journeys.forEach(journey => {
+            const s = journey.status || 'draft';
+            if (!grouped[s]) grouped[s] = [];
+            grouped[s].push(journey);
+        });
 
-            return `
-                <div class="journey-card ${journey.status}">
-                    <div class="journey-card-left">
-                        <div class="journey-card-header">
-                            <div class="journey-name">${escapeHtml(journey.name)}</div>
-                            <span class="journey-status ${journey.status}">${statusLabels[journey.status] || journey.status}</span>
-                        </div>
-                        <div class="journey-meta">
-                            <div class="journey-meta-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                                </svg>
-                                <span>${triggerType === 'direct_message' ? 'DM' : 'Trigger'}: <strong>${escapeHtml(triggerValue || (triggerType === 'direct_message' ? 'any' : '-'))}</strong></span>
+        let html = '';
+        statusOrder.forEach(status => {
+            const journeys = grouped[status];
+            if (!journeys || journeys.length === 0) return;
+            html += `<div class="journey-status-group">
+                <div class="journey-group-heading">${statusLabelsMap[status] || status} <span class="journey-group-count">${journeys.length}</span></div>`;
+            journeys.forEach(journey => {
+                const triggers = journey.triggers || [];
+                const firstTrigger = triggers[0];
+                const triggerType = firstTrigger?.trigger_type || 'deep_link';
+                const triggerValue = triggerType === 'direct_message' 
+                    ? (firstTrigger?.trigger_config?.keyword || '') 
+                    : (firstTrigger?.trigger_config?.start_param || firstTrigger?.trigger_config?.value || '');
+                const deepLinkUrl = getDeepLinkUrl(triggerValue);
+                
+                let deepLinkHtml = '';
+                if (triggerType === 'direct_message') {
+                    const kwDisplay = triggerValue ? escapeHtml(triggerValue) : '<em>any message</em>';
+                    deepLinkHtml = `
+                        <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
+                            DM Trigger keyword: <strong>${kwDisplay}</strong>
+                        </div>`;
+                } else if (triggerValue && (triggerType === 'telegram_deeplink' || triggerType === 'deep_link')) {
+                    if (deepLinkUrl) {
+                        deepLinkHtml = `
+                            <div class="journey-deeplink">
+                                <code class="deeplink-url">${escapeHtml(deepLinkUrl)}</code>
+                                <button class="btn-copy" onclick="window.JourneysModule.copyDeepLink('${escapeHtml(deepLinkUrl)}')" title="Copy link">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                    </svg>
+                                </button>
+                                <a href="${escapeHtml(deepLinkUrl)}" target="_blank" class="btn-test" title="Test link">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                    </svg>
+                                </a>
+                            </div>`;
+                    } else {
+                        deepLinkHtml = `
+                            <div class="journey-deeplink-warning">
+                                Configure Message Bot in Connections to get deep link URL
+                            </div>`;
+                    }
+                }
+                
+                const totalSends = journey.total_sends || 0;
+                const uniqueUsers = journey.unique_users || 0;
+                
+                let actionButtonsHtml = '';
+                if (journey.status === 'draft') {
+                    actionButtonsHtml = `
+                        <button class="btn-action" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            <span>Edit</span>
+                        </button>
+                        <button class="btn-action publish" onclick="window.JourneysModule.publishJourney('${journey.id}')" title="Publish">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Publish</span>
+                        </button>
+                        <button class="btn-action danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <polyline points="3,6 5,6 21,6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            <span>Delete</span>
+                        </button>`;
+                } else if (journey.status === 'active') {
+                    actionButtonsHtml = `
+                        <button class="btn-action" onclick="window.JourneysModule.openJourneyModal('${journey.id}')" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            <span>Edit</span>
+                        </button>
+                        <button class="btn-action stop" onclick="window.JourneysModule.stopJourney('${journey.id}')" title="Stop">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <rect x="6" y="6" width="12" height="12" rx="1"/>
+                            </svg>
+                            <span>Stop</span>
+                        </button>
+                        <button class="btn-action" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            <span>Duplicate</span>
+                        </button>`;
+                } else {
+                    actionButtonsHtml = `
+                        <button class="btn-action" onclick="window.JourneysModule.duplicateJourney('${journey.id}')" title="Duplicate">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            <span>Duplicate</span>
+                        </button>
+                        <button class="btn-action danger" onclick="window.JourneysModule.deleteJourney('${journey.id}')" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <polyline points="3,6 5,6 21,6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            <span>Delete</span>
+                        </button>`;
+                }
+
+                html += `
+                    <div class="journey-card ${journey.status}">
+                        <div class="journey-card-left">
+                            <div class="journey-card-header">
+                                <div class="journey-name">${escapeHtml(journey.name)}</div>
+                                <span class="journey-status ${journey.status}">${statusLabels[journey.status] || journey.status}</span>
                             </div>
-                            <div class="journey-meta-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14,2 14,8 20,8"/>
-                                </svg>
-                                <span>${journey.step_count || 0} steps</span>
+                            <div class="journey-meta">
+                                <div class="journey-meta-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                    </svg>
+                                    <span>${triggerType === 'direct_message' ? 'DM' : 'Trigger'}: <strong>${escapeHtml(triggerValue || (triggerType === 'direct_message' ? 'any' : '-'))}</strong></span>
+                                </div>
+                                <div class="journey-meta-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14,2 14,8 20,8"/>
+                                    </svg>
+                                    <span>${journey.step_count || 0} steps</span>
+                                </div>
+                            </div>
+                            ${deepLinkHtml}
+                        </div>
+                        <div class="journey-card-right">
+                            <div class="journey-stats-row">
+                                <div class="journey-stat">
+                                    <span class="journey-stat-value">${totalSends}</span>
+                                    <span class="journey-stat-label">sends</span>
+                                </div>
+                                <div class="journey-stat">
+                                    <span class="journey-stat-value">${uniqueUsers}</span>
+                                    <span class="journey-stat-label">users</span>
+                                </div>
+                            </div>
+                            <div class="journey-actions">
+                                ${actionButtonsHtml}
                             </div>
                         </div>
-                        ${deepLinkHtml}
                     </div>
-                    <div class="journey-card-right">
-                        <div class="journey-stats-row">
-                            <div class="journey-stat">
-                                <span class="journey-stat-value">${totalSends}</span>
-                                <span class="journey-stat-label">sends</span>
-                            </div>
-                            <div class="journey-stat">
-                                <span class="journey-stat-value">${uniqueUsers}</span>
-                                <span class="journey-stat-label">users</span>
-                            </div>
-                        </div>
-                        <div class="journey-actions">
-                            ${actionButtonsHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            });
+            html += '</div>';
+        });
+        container.innerHTML = html;
     }
 
     async function openJourneyModal(journeyId = null) {
