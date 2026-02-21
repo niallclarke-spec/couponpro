@@ -168,7 +168,7 @@ window.HypeBotModule = (function() {
         const interval = intervalMinutes || 90;
         const delay = delayAfterCta || 10;
 
-        return messages.map((msg, i) => {
+        const items = messages.map((msg, i) => {
             const step = i + 1;
             const offsetMin = delay + (i * interval);
             const arcLabel = _getArcLabel(step, messageCount);
@@ -176,22 +176,24 @@ window.HypeBotModule = (function() {
             const isLast = step === messageCount;
 
             return `
-                <div style="display:flex;gap:16px;position:relative;">
-                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:36px;">
-                        <div style="width:28px;height:28px;border-radius:50%;background:${arcColor};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">${step}</div>
-                        ${!isLast ? '<div style="flex:1;width:2px;background:var(--border-primary);margin:4px 0;"></div>' : ''}
+                <div style="display:flex;gap:10px;position:relative;">
+                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:24px;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:${arcColor};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">${step}</div>
+                        ${!isLast ? '<div style="flex:1;width:1px;background:var(--border-primary);margin:3px 0;"></div>' : ''}
                     </div>
-                    <div style="flex:1;padding-bottom:${isLast ? '0' : '16px'};">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                            <span style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">+${offsetMin} min</span>
-                            <span style="font-size:10px;font-weight:600;color:${arcColor};background:${arcColor}18;padding:2px 8px;border-radius:10px;text-transform:uppercase;">${escapeHtml(arcLabel)}</span>
+                    <div style="flex:1;padding-bottom:${isLast ? '0' : '10px'};">
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                            <span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">+${offsetMin} min</span>
+                            <span style="font-size:9px;font-weight:600;color:${arcColor};background:${arcColor}18;padding:1px 6px;border-radius:8px;text-transform:uppercase;">${escapeHtml(arcLabel)}</span>
                         </div>
-                        <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:10px;padding:14px 16px;">
-                            <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">${msg ? escapeHtml(msg) : '<span style="color:var(--text-muted);font-style:italic;">Failed to generate</span>'}</div>
+                        <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;padding:8px 10px;">
+                            <div style="font-size:12px;color:var(--text-primary);line-height:1.45;">${msg ? escapeHtml(msg) : '<span style="color:var(--text-muted);font-style:italic;">Failed to generate</span>'}</div>
                         </div>
                     </div>
                 </div>`;
         }).join('');
+
+        return `<div style="max-height:50vh;overflow-y:auto;padding-right:4px;">${items}</div>`;
     }
 
     async function previewPrompt(id) {
@@ -206,14 +208,14 @@ window.HypeBotModule = (function() {
             <div class="modal-overlay" id="hype-preview-modal" onclick="if(event.target===this)this.remove()">
                 <div class="modal-content" style="max-width:540px;">
                     <div class="modal-header"><h3>Flow Preview: ${escapeHtml(prompt.name)}</h3><button class="modal-close" onclick="document.getElementById('hype-preview-modal').remove()">&times;</button></div>
-                    <div class="modal-body" style="padding:24px;">
-                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                            <label style="font-size:13px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
-                            <input type="number" id="preview-msg-count" min="1" max="10" value="${defaultCount}" style="width:60px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;">
+                    <div class="modal-body" style="padding:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <label style="font-size:12px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
+                            <input type="number" id="preview-msg-count" min="1" max="10" value="${defaultCount}" style="width:52px;padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:13px;text-align:center;">
                         </div>
-                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:40px 0;">
-                            <div style="font-size:14px;">Generating flow preview...</div>
-                            <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">Creating a coherent message sequence</div>
+                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:30px 0;">
+                            <div style="font-size:13px;">Generating flow preview...</div>
+                            <div style="font-size:11px;margin-top:4px;color:var(--text-muted);">Creating a coherent message sequence</div>
                         </div>
                         <div id="preview-result" style="display:none;"></div>
                     </div>
@@ -244,14 +246,14 @@ window.HypeBotModule = (function() {
             <div class="modal-overlay" id="hype-preview-modal" onclick="if(event.target===this)this.remove()">
                 <div class="modal-content" style="max-width:540px;">
                     <div class="modal-header"><h3>Flow Preview: ${escapeHtml(flow.name)}</h3><button class="modal-close" onclick="document.getElementById('hype-preview-modal').remove()">&times;</button></div>
-                    <div class="modal-body" style="padding:24px;">
-                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                            <label style="font-size:13px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
-                            <input type="number" id="preview-msg-count" min="1" max="10" value="${flow.message_count}" style="width:60px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;" readonly>
+                    <div class="modal-body" style="padding:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <label style="font-size:12px;font-weight:500;color:var(--text-secondary);white-space:nowrap;">Messages:</label>
+                            <input type="number" id="preview-msg-count" min="1" max="10" value="${flow.message_count}" style="width:52px;padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:13px;text-align:center;" readonly>
                         </div>
-                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:40px 0;">
-                            <div style="font-size:14px;">Generating flow preview...</div>
-                            <div style="font-size:12px;margin-top:6px;color:var(--text-muted);">Creating a coherent ${flow.message_count}-message sequence</div>
+                        <div id="preview-loading" style="text-align:center;color:var(--text-muted);padding:30px 0;">
+                            <div style="font-size:13px;">Generating flow preview...</div>
+                            <div style="font-size:11px;margin-top:4px;color:var(--text-muted);">Creating a coherent ${flow.message_count}-message sequence</div>
                         </div>
                         <div id="preview-result" style="display:none;"></div>
                     </div>
@@ -284,12 +286,12 @@ window.HypeBotModule = (function() {
             const timelineHtml = _renderTimelineMessages(messages, count, interval, delay);
 
             r.innerHTML = `
-                <div style="margin-bottom:16px;">
+                <div style="margin-bottom:10px;">
                     ${timelineHtml}
                 </div>
-                <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:10px;padding:14px 16px;">
-                    <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;font-weight:600;">Context Injected</div>
-                    <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap;">${escapeHtml(data.context || '')}</div>
+                <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;padding:8px 10px;">
+                    <div style="font-size:10px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;font-weight:600;">Context Injected</div>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.4;white-space:pre-wrap;">${escapeHtml(data.context || '')}</div>
                 </div>`;
         } catch (e) { console.error('Preview error:', e); }
     }
