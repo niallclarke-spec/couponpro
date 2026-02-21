@@ -1,0 +1,171 @@
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [bootstrap] Starting application...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking if bot_usage.error_type column exists...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] error_type column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking if bot_usage.device_type column exists...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] device_type column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking if bot_users user profile columns exist...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] username column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] first_name column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] last_name column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals table for new signal bot columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] bot_type column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] telegram_message_id column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] breakeven_set column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] breakeven_price column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] guidance_count column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] last_guidance_at column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] indicators_used column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] notes column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for indicator re-validation columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] original_indicators_json column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for guidance zone columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] last_progress_zone column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] last_caution_zone column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking telegram_subscriptions for conversion tracking columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] free_signup_at column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] is_converted column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] converted_at column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] conversion_days column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] UTM columns already exist, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking for tenants table...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenants table ready, 'entrylab' tenant seeded
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_users table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_integrations table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] onboarding_state table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_stripe_settings table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_stripe_products table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_stripe_prices table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] telegram_webhook_secrets table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_bot_connections table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_telethon_credentials table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] channel_id already exists on tenant_bot_connections, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] No signal_bot rows needed legacy channel_id migration (already migrated or no data)
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on forex_signals, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on forex_config, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on telegram_subscriptions, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on recent_phrases, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on campaigns, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on bot_usage, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on bot_users, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on broadcast_jobs, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_id already exists on bot_config, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking processed_webhook_events migration...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] processed_webhook_events swap already done or skipped
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for multi-TP columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for milestone tracking columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for close_price column...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] close_price column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for effective_sl column...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] effective_sl column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_signals for cross-promo columns...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Cross-promo columns already exist, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking bot_users unique constraint (tenant_id, chat_id)...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] uq_bot_users_tenant_chat already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking forex_config unique constraint (tenant_id, setting_key)...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] uq_forex_config_tenant_key already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking bot_config unique constraint (tenant_id, setting_key)...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] uq_bot_config_tenant_key already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking telegram_subscriptions unique constraint (tenant_id, email)...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] uq_telegram_subscriptions_tenant_email already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking for clerk_users table...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] clerk_users table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking for journeys tables...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journeys table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_triggers table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_steps table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_user_sessions table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_scheduled_messages table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_step_analytics table already exists
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_link_clicks table already exists
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] journey_inbound_dedupe table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] priority_int column already exists on journeys, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] is_locked column already exists on journeys, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] inactivity_timeout_days column already exists on journeys, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] welcome_message column already exists on journeys, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] branch_keyword column already exists on journey_steps, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] branch_true_step_id column already exists on journey_steps, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] branch_false_step_id column already exists on journey_steps, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Checking for hype chat tables...
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] hype_prompts table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] hype_flows table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] hype_messages table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] tenant_crosspromo_settings table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] crosspromo_jobs table ready
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] vip_soon_delay_minutes column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] recap_forward_time_utc column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] vip_soon_time_utc column already exists, skipping
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Crosspromo settings already up to date (no 09:00 defaults found)
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Database schema initialized
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Forex config initialized with defaults
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [db] Bot config initialized with defaults
+Feb 21 02:12:59  [2026-02-21 02:12:59] [INFO] [bootstrap] Database schema initialized
+Feb 21 02:13:00  [2026-02-21 02:13:00] [INFO] [bootstrap] Initializing coupon bot webhook...
+Feb 21 02:13:01  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Feb 21 02:13:01  [TELEGRAM] Webhook bot initialized and ready
+Feb 21 02:13:01  [2026-02-21 02:13:01] [INFO] [bootstrap] Coupon bot webhook started
+Feb 21 02:13:01  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Feb 21 02:13:01  [2026-02-21 02:13:01] [INFO] [bootstrap] Forex bot webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [leader] Leader lock using DB_HOST/DB_* vars
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [leader] Database connection established
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [bootstrap] Leader lock not acquired, waiting for leader to terminate
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [leader] Started leader retry loop (every 10s)
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [clerk_auth] [JWKS] Dynamic issuer mode ENABLED (no allowlist - accepting any issuer)
+Feb 21 02:13:05  [2026-02-21 02:13:05] [WARNING] [clerk_auth] [JWKS] Consider setting CLERK_ALLOWED_ISSUERS for production security
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [clerk_auth] [JWKS] JWKS URL will be derived from each token's issuer claim
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [bootstrap] Clerk JWKS prefetch complete
+Feb 21 02:13:05  [STRIPE] Using LIVE (no test keys found) mode
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [bootstrap] Stripe client initialized
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [scheduler] [JOURNEY-SCHEDULER] Started (interval=10s)
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [scheduler] [JOURNEY-SCHEDULER] Background thread started
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [bootstrap] Journey scheduler started
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [crosspromo_worker] Cross Promo worker started
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [crosspromo_worker] Cross Promo worker thread started
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [bootstrap] Cross promo worker started
+Feb 21 02:13:05  [2026-02-21 02:13:05] [INFO] [telethon_client] Credentials loaded from DB for tenant=entrylab, phone=***4944
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [telethon_session] Session restored for tenant=entrylab <- telethon_sessions/entrylab.session
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [telethon_client] Session restored from remote storage for tenant=entrylab
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [mtprotosender] Connecting to 149.154.167.92:443/TcpFull...
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [mtprotosender] Connection to 149.154.167.92:443/TcpFull complete!
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [telethon_client] Telethon connected for tenant=entrylab
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [telethon_listener] Listener started for tenant=entrylab
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [bootstrap] Telethon listener started for entrylab
+Feb 21 02:13:06  [2026-02-21 02:13:06] [INFO] [bootstrap] Application started
+Feb 21 02:13:06  Server running at http://0.0.0.0:8080/
+Feb 21 02:13:15  [2026-02-21 02:13:15] [INFO] [leader] Retrying leader lock acquisition...
+Feb 21 02:13:15  [2026-02-21 02:13:15] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 21 02:13:25  [2026-02-21 02:13:25] [INFO] [leader] Retrying leader lock acquisition...
+Feb 21 02:13:25  [2026-02-21 02:13:25] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 21 02:13:35  [2026-02-21 02:13:35] [INFO] [leader] Retrying leader lock acquisition...
+Feb 21 02:13:35  [2026-02-21 02:13:35] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [leader] Retrying leader lock acquisition...
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [leader] Leader lock acquired on retry
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [bootstrap] Forex scheduler started in background thread
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] Starting forex scheduler for tenant: entrylab
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ============================================================
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 🚀 FOREX SIGNALS SCHEDULER STARTED
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler]    Tenant: entrylab
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ============================================================
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 📊 Signal checks: 15min timeframe every 15 minutes
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 5 seconds
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [forex_scheduler] ============================================================
+Feb 21 02:13:45  [2026-02-21 02:13:45] [INFO] [generator] [tenant:entrylab] [req:adce4fb1] Outside trading hours (8AM-10PM GMT), skipping signal check
