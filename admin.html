@@ -4471,7 +4471,7 @@
         }
 
         .toggle-label input[type="checkbox"]:checked + .toggle-switch {
-            background: var(--accent-primary);
+            background: #34c759;
         }
 
         .toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
@@ -6331,19 +6331,16 @@
                                         <div class="crosspromo-subsection-header" onclick="toggleCrossPromoSection()">
                                             <span style="font-size: 16px;">📣</span>
                                             <h4>Cross Promo</h4>
+                                            <label class="toggle-label" style="margin-left: auto; margin-right: 8px;" onclick="event.stopPropagation()">
+                                                <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
+                                                <span class="toggle-switch"></span>
+                                            </label>
                                             <svg class="sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M6 9l6 6 6-6"/>
                                             </svg>
                                         </div>
                                         <div class="crosspromo-subsection-body">
                                             <div class="crosspromo-inner">
-                                                <div style="margin-bottom: 14px;">
-                                                    <label class="toggle-label">
-                                                        <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
-                                                        <span class="toggle-switch"></span>
-                                                        <span>Enable Cross Promo</span>
-                                                    </label>
-                                                </div>
 
                                                 <div class="crosspromo-bot-info" id="crosspromo-bot-info" style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
                                                     <div class="crosspromo-bot-info-row">
