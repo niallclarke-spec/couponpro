@@ -7,6 +7,7 @@ V1 does NOT support conditional steps.
 import re
 import time
 import random
+import threading
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from core.logging import get_logger
@@ -93,19 +94,66 @@ class JourneyEngine:
             logger.info(f"Started journey {journey_id} for user {telegram_user_id}, session {session['id']}")
             
             welcome_message = journey.get('welcome_message', '')
+            welcome_sent = False
             if welcome_message:
                 personalized = welcome_message.replace('{first_name}', first_name or '').strip()
                 if personalized:
-                    success = self._send_message(tenant_id, telegram_chat_id, personalized)
-                    if success:
-                        logger.info(f"Sent welcome message for journey {journey_id} to user {telegram_user_id}")
-                    else:
-                        logger.warning(f"Failed to send welcome message for journey {journey_id} to user {telegram_user_id}")
+                    for attempt in range(1, 4):
+                        success = self._send_message(tenant_id, telegram_chat_id, personalized)
+                        if success:
+                            logger.info(f"Welcome message sent (attempt {attempt}) for journey {journey_id} to user {telegram_user_id}")
+                            welcome_sent = True
+                            break
+                        logger.warning(f"Welcome message attempt {attempt}/3 failed for journey {journey_id} to user {telegram_user_id}")
+                        if attempt < 3:
+                            time.sleep(1)
+                    if not welcome_sent:
+                        logger.error(f"Welcome message failed all 3 attempts for journey {journey_id} to user {telegram_user_id}, proceeding with first step")
             
-            self.execute_step(session, first_step, journey.get('bot_id'))
+            if welcome_sent:
+                self._defer_first_step_after_welcome(session, first_step, journey.get('bot_id'), delay_seconds=20)
+            else:
+                self.execute_step(session, first_step, journey.get('bot_id'))
         
         return session
     
+    def _defer_first_step_after_welcome(self, session: Dict, step: Dict, bot_id: str, delay_seconds: int = 20):
+        """
+        Defer the first step execution after a welcome message.
+        Uses a daemon thread with a hard sleep to guarantee the welcome message
+        is delivered before the first step fires. Calls execute_step() normally
+        so all step types (message, delay, question, wait_for_reply) are handled correctly.
+        Re-checks session status before executing to handle cancellations during the wait.
+        """
+        from . import repo
+        
+        session_id = session['id']
+        step_id = step['id']
+        repo.update_session_status(session_id, 'waiting_delay')
+        
+        def _run():
+            try:
+                logger.info(f"Waiting {delay_seconds}s before first step {step_id} (post-welcome delay)")
+                time.sleep(delay_seconds)
+                
+                fresh_session = repo.get_session_by_id(session_id)
+                if not fresh_session:
+                    logger.warning(f"Session {session_id} no longer exists, skipping deferred first step")
+                    return
+                if fresh_session['status'] not in ('active', 'waiting_delay'):
+                    logger.warning(f"Session {session_id} status is {fresh_session['status']}, skipping deferred first step")
+                    return
+                
+                repo.update_session_status(session_id, 'active')
+                logger.info(f"Post-welcome delay complete, executing first step {step_id}")
+                self.execute_step(fresh_session, step, bot_id)
+            except Exception as e:
+                logger.exception(f"Error executing deferred first step {step_id}: {e}")
+
+        t = threading.Thread(target=_run, daemon=True, name=f"welcome-delay-{session_id}")
+        t.start()
+        logger.info(f"Deferred first step {step_id} by {delay_seconds}s after welcome message (thread={t.name})")
+
     def execute_step(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
         """
         Execute a single step.

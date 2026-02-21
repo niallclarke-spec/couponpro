@@ -75,13 +75,13 @@ def process_wait_timeouts() -> int:
     
     timed_out = repo.fetch_timed_out_waiting_sessions(limit=50)
     
-    if not timed_out:
-        return 0
-    
-    logger.info(f"[JOURNEY-SCHEDULER] Processing {len(timed_out)} timed-out sessions")
-    
     engine = JourneyEngine()
     processed = 0
+    
+    if not timed_out:
+        pass
+    else:
+        logger.info(f"[JOURNEY-SCHEDULER] Processing {len(timed_out)} timed-out sessions")
     
     for session in timed_out:
         try:
@@ -124,6 +124,25 @@ def process_wait_timeouts() -> int:
                 logger.exception(f"[JOURNEY-SCHEDULER] Error auto-completing session {session['id']}: {e}")
     except Exception as e:
         logger.exception(f"[JOURNEY-SCHEDULER] Error processing inactivity timeouts: {e}")
+
+    try:
+        stale_sessions = repo.fetch_stale_waiting_delay_sessions(stale_after_seconds=60, limit=20)
+        for session in stale_sessions:
+            try:
+                step = repo.get_step_by_id(session['current_step_id']) if session.get('current_step_id') else repo.get_first_step(session['journey_id'])
+                if step:
+                    repo.update_session_status(session['id'], 'active')
+                    logger.info(f"[JOURNEY-SCHEDULER] Recovering stale waiting_delay session {session['id']}, executing step {step['id']}")
+                    journey = repo.get_journey(session['tenant_id'], session['journey_id'])
+                    engine.execute_step(session, step, journey.get('bot_id') if journey else None)
+                    processed += 1
+                else:
+                    logger.warning(f"[JOURNEY-SCHEDULER] Stale session {session['id']} has no step to recover, completing")
+                    repo.update_session_status(session['id'], 'completed')
+            except Exception as e:
+                logger.exception(f"[JOURNEY-SCHEDULER] Error recovering stale session {session['id']}: {e}")
+    except Exception as e:
+        logger.exception(f"[JOURNEY-SCHEDULER] Error processing stale waiting_delay sessions: {e}")
 
     return processed
 

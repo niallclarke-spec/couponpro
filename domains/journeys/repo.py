@@ -1977,3 +1977,53 @@ def fetch_inactive_awaiting_sessions(limit: int = 50) -> List[Dict]:
     except Exception as e:
         logger.exception(f"Error fetching inactive awaiting sessions: {e}")
         return []
+
+
+def fetch_stale_waiting_delay_sessions(stale_after_seconds: int = 60, limit: int = 20) -> List[Dict]:
+    """Fetch waiting_delay sessions that have no pending scheduled messages and are older than stale_after_seconds.
+    
+    These sessions were likely left by a welcome-message deferral thread that didn't complete
+    (e.g., process restart during the 20s delay window). Recovery: re-execute their first step.
+    """
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT s.id, s.tenant_id, s.journey_id, s.telegram_chat_id, s.telegram_user_id,
+                       s.current_step_id, s.status, s.answers, s.started_at, s.completed_at, s.last_activity_at
+                FROM journey_user_sessions s
+                WHERE s.status = 'waiting_delay'
+                  AND s.last_activity_at < NOW() - make_interval(secs => %s)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM journey_scheduled_messages m
+                      WHERE m.session_id = s.id AND m.status = 'pending'
+                  )
+                ORDER BY s.last_activity_at ASC
+                LIMIT %s
+                FOR UPDATE OF s SKIP LOCKED
+            """, (stale_after_seconds, limit))
+
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'id': str(row[0]),
+                    'tenant_id': row[1],
+                    'journey_id': str(row[2]),
+                    'telegram_chat_id': row[3],
+                    'telegram_user_id': row[4],
+                    'current_step_id': str(row[5]) if row[5] else None,
+                    'status': row[6],
+                    'answers': row[7],
+                    'started_at': row[8],
+                    'completed_at': row[9],
+                    'last_activity_at': row[10]
+                })
+            conn.commit()
+            return sessions
+    except Exception as e:
+        logger.exception(f"Error fetching stale waiting_delay sessions: {e}")
+        return []
