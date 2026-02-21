@@ -368,6 +368,14 @@
         if (dmPrefill) dmPrefill.value = '';
         const welcomeMsg = document.getElementById('journey-welcome-message');
         if (welcomeMsg) welcomeMsg.value = '';
+        const delayValue = document.getElementById('journey-welcome-delay-value');
+        const delayUnit = document.getElementById('journey-welcome-delay-unit');
+        if (delayValue) delayValue.value = '0';
+        if (delayUnit) delayUnit.value = 'minutes';
+
+        const delayGroup = document.getElementById('welcome-delay-group');
+        if (delayGroup) delayGroup.style.display = 'none';
+        
         if (modalTitle) modalTitle.textContent = journeyId ? 'Edit Journey' : 'Create Journey';
         if (preview) preview.style.display = 'none';
         onTriggerTypeChange();
@@ -410,6 +418,20 @@
                 if (nameInput) nameInput.value = journey.name || '';
                 const welcomeMsgInput = document.getElementById('journey-welcome-message');
                 if (welcomeMsgInput) welcomeMsgInput.value = journey.welcome_message || '';
+                const delaySeconds = journey.welcome_delay_seconds || 0;
+                const delayValueInput = document.getElementById('journey-welcome-delay-value');
+                const delayUnitSelect = document.getElementById('journey-welcome-delay-unit');
+                if (delayValueInput && delayUnitSelect) {
+                    if (delaySeconds >= 60 && delaySeconds % 60 === 0) {
+                        delayValueInput.value = Math.floor(delaySeconds / 60);
+                        delayUnitSelect.value = 'minutes';
+                    } else {
+                        delayValueInput.value = delaySeconds;
+                        delayUnitSelect.value = 'seconds';
+                    }
+                }
+                const delayGroup = document.getElementById('welcome-delay-group');
+                if (delayGroup) delayGroup.style.display = (journey.welcome_message || '').trim() ? 'block' : 'none';
                 selectStatus(journey.status || 'draft');
                 
                 const triggers = journey.triggers || [];
@@ -506,12 +528,15 @@
             let journeyId = state.currentJourneyId;
             
             const welcomeMessage = (document.getElementById('journey-welcome-message') || {}).value?.trim() || '';
+            const delayVal = parseInt(document.getElementById('journey-welcome-delay-value')?.value || '0', 10) || 0;
+            const delayUnit = document.getElementById('journey-welcome-delay-unit')?.value || 'minutes';
+            const welcomeDelaySeconds = delayUnit === 'minutes' ? delayVal * 60 : delayVal;
             
             if (journeyId) {
                 const resp = await fetch(`/api/journeys/${journeyId}`, {
                     method: 'PUT',
                     headers,
-                    body: JSON.stringify({ name, status, welcome_message: welcomeMessage }),
+                    body: JSON.stringify({ name, status, welcome_message: welcomeMessage, welcome_delay_seconds: welcomeDelaySeconds }),
                     credentials: 'include'
                 });
                 if (!resp.ok) {
@@ -523,7 +548,7 @@
                 const resp = await fetch('/api/journeys', {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ name, status, bot_id: botId, welcome_message: welcomeMessage }),
+                    body: JSON.stringify({ name, status, bot_id: botId, welcome_message: welcomeMessage, welcome_delay_seconds: welcomeDelaySeconds }),
                     credentials: 'include'
                 });
                 const data = await resp.json();

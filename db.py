@@ -1610,6 +1610,13 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN reply_received_at TIMESTAMP")
                     logger.info("Added reply_received_at column to journey_user_sessions")
                 
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='journey_user_sessions' AND column_name='welcome_sent_at'")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE journey_user_sessions ADD COLUMN welcome_sent_at TIMESTAMP")
+                    logger.info("Added welcome_sent_at column to journey_user_sessions")
+                else:
+                    logger.info("welcome_sent_at column already exists on journey_user_sessions, skipping")
+                
                 # Migration: add priority_int, is_locked, inactivity_timeout_days to journeys
                 for col, col_def in [
                     ('priority_int', 'INTEGER NOT NULL DEFAULT 0'),
@@ -1633,6 +1640,13 @@ class DatabasePool:
                     logger.info("Added welcome_message column to journeys")
                 else:
                     logger.info("welcome_message column already exists on journeys, skipping")
+                
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='journeys' AND column_name='welcome_delay_seconds'")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE journeys ADD COLUMN welcome_delay_seconds INTEGER DEFAULT 0")
+                    logger.info("Added welcome_delay_seconds column to journeys")
+                else:
+                    logger.info("welcome_delay_seconds column already exists on journeys, skipping")
                 
                 # Migration: add branch_keyword, branch_true_step_id, branch_false_step_id to journey_steps
                 for col, col_def in [

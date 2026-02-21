@@ -25,12 +25,7 @@ _last_dedupe_cleanup = 0
 
 
 def process_due_messages() -> int:
-    """
-    Process all due scheduled messages.
-    
-    Returns:
-        Number of messages processed
-    """
+    """Process all due scheduled messages with rate-limited pacing."""
     from . import repo
     from .engine import JourneyEngine
     
@@ -41,11 +36,39 @@ def process_due_messages() -> int:
     
     logger.info(f"[JOURNEY-SCHEDULER] Processing {len(messages)} due messages")
     
+    try:
+        from integrations.telegram.user_client import get_client
+        uc = get_client('entrylab')
+        level = uc._rate.get_level()
+    except Exception:
+        uc = None
+        level = 'normal'
+    
+    if level == 'hard':
+        logger.warning(f"[JOURNEY-SCHEDULER] Hard rate limit hit, deferring {len(messages)} messages back to pending")
+        for msg in messages:
+            repo.mark_scheduled_message_failed(msg['id'], "Rate limit: daily hard limit reached", reset_to_pending=True)
+        return 0
+    
+    pace_seconds = 5.0 if level == 'soft' else 2.0
+    
     engine = JourneyEngine()
     processed = 0
     
-    for msg in messages:
+    for i, msg in enumerate(messages):
         try:
+            try:
+                if uc:
+                    level = uc._rate.get_level()
+                    if level == 'hard':
+                        logger.warning(f"[JOURNEY-SCHEDULER] Hit hard limit mid-batch, deferring remaining {len(messages) - i} messages")
+                        for remaining_msg in messages[i:]:
+                            repo.mark_scheduled_message_failed(remaining_msg['id'], "Rate limit: daily hard limit reached", reset_to_pending=True)
+                        break
+                    pace_seconds = 5.0 if level == 'soft' else 2.0
+            except Exception:
+                pass
+            
             success = _send_scheduled_message(msg, engine)
             
             if success:
@@ -57,9 +80,12 @@ def process_due_messages() -> int:
         except Exception as e:
             logger.exception(f"[JOURNEY-SCHEDULER] Error processing message {msg['id']}: {e}")
             repo.mark_scheduled_message_failed(msg['id'], str(e))
+        
+        if i < len(messages) - 1:
+            time.sleep(pace_seconds)
     
     if processed > 0:
-        logger.info(f"[JOURNEY-SCHEDULER] Processed {processed}/{len(messages)} messages")
+        logger.info(f"[JOURNEY-SCHEDULER] Processed {processed}/{len(messages)} messages (pace={pace_seconds}s, level={level})")
     return processed
 
 
@@ -131,9 +157,16 @@ def process_wait_timeouts() -> int:
             try:
                 step = repo.get_step_by_id(session['current_step_id']) if session.get('current_step_id') else repo.get_first_step(session['journey_id'])
                 if step:
+                    journey = repo.get_journey(session['tenant_id'], session['journey_id'])
+                    
+                    if journey and journey.get('welcome_message') and not session.get('welcome_sent_at'):
+                        welcome_text = journey['welcome_message'].replace('{first_name}', '').strip()
+                        if welcome_text:
+                            engine._send_welcome_with_retry(session['tenant_id'], session['telegram_chat_id'], welcome_text)
+                            repo.mark_welcome_sent(session['id'])
+                    
                     repo.update_session_status(session['id'], 'active')
                     logger.info(f"[JOURNEY-SCHEDULER] Recovering stale waiting_delay session {session['id']}, executing step {step['id']}")
-                    journey = repo.get_journey(session['tenant_id'], session['journey_id'])
                     engine.execute_step(session, step, journey.get('bot_id') if journey else None)
                     processed += 1
                 else:
@@ -177,6 +210,24 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
         return False
 
     content = msg.get('message_content', {})
+    
+    if content.get('type') == 'welcome_and_step':
+        welcome_text = content.get('welcome_text', '')
+        first_name = content.get('first_name', '')
+        
+        if session.get('welcome_sent_at'):
+            logger.info(f"[JOURNEY-SCHEDULER] Welcome already sent for session {msg['session_id']}, skipping to step")
+        elif welcome_text:
+            engine._send_welcome_with_retry(msg.get('tenant_id'), msg['telegram_chat_id'], welcome_text)
+            repo.mark_welcome_sent(msg['session_id'])
+        
+        step = repo.get_step_by_id(msg['step_id'])
+        if step:
+            repo.update_session_status(session['id'], 'active')
+            repo.update_session_current_step(session['id'], step['id'])
+            engine.execute_step(session, step, msg.get('bot_id'))
+        return True
+    
     text = content.get('text', '')
     step_type = content.get('step_type', 'message')
     

@@ -61,7 +61,9 @@ def remove_client(tenant_id: str):
 
 
 class RateLimitState:
-    def __init__(self, max_per_minute=20, max_per_hour=200, max_per_day=500):
+    SOFT_DAILY_LIMIT = 1200
+
+    def __init__(self, max_per_minute=20, max_per_hour=200, max_per_day=1500):
         self.max_per_minute = max_per_minute
         self.max_per_hour = max_per_hour
         self.max_per_day = max_per_day
@@ -100,6 +102,32 @@ class RateLimitState:
             self._minute_sends.append(now)
             self._hour_sends.append(now)
             self._day_count += 1
+
+    def _get_level_unlocked(self) -> str:
+        """Get current rate limit level without acquiring lock (caller must hold lock)."""
+        if self._day_count >= self.max_per_day:
+            return 'hard'
+        if self._day_count >= self.SOFT_DAILY_LIMIT:
+            return 'soft'
+        return 'normal'
+
+    def get_level(self) -> str:
+        """Get current rate limit level: 'normal', 'soft', or 'hard'."""
+        with self._lock:
+            self._cleanup(time.time())
+            return self._get_level_unlocked()
+
+    def get_status(self) -> dict:
+        """Get current rate limit status for monitoring."""
+        with self._lock:
+            self._cleanup(time.time())
+            return {
+                'sends_today': self._day_count,
+                'max_per_day': self.max_per_day,
+                'level': self._get_level_unlocked(),
+                'sends_this_minute': len(self._minute_sends),
+                'sends_this_hour': len(self._hour_sends),
+            }
 
     @property
     def sends_today(self) -> int:

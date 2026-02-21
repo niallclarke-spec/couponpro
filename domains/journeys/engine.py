@@ -93,66 +93,107 @@ class JourneyEngine:
         if session:
             logger.info(f"Started journey {journey_id} for user {telegram_user_id}, session {session['id']}")
             
+            welcome_delay_seconds = journey.get('welcome_delay_seconds', 0) or 0
             welcome_message = journey.get('welcome_message', '')
-            welcome_sent = False
+            personalized_welcome = ''
             if welcome_message:
-                personalized = welcome_message.replace('{first_name}', first_name or '').strip()
-                if personalized:
-                    for attempt in range(1, 4):
-                        success = self._send_message(tenant_id, telegram_chat_id, personalized)
-                        if success:
-                            logger.info(f"Welcome message sent (attempt {attempt}) for journey {journey_id} to user {telegram_user_id}")
-                            welcome_sent = True
-                            break
-                        logger.warning(f"Welcome message attempt {attempt}/3 failed for journey {journey_id} to user {telegram_user_id}")
-                        if attempt < 3:
-                            time.sleep(1)
-                    if not welcome_sent:
-                        logger.error(f"Welcome message failed all 3 attempts for journey {journey_id} to user {telegram_user_id}, proceeding with first step")
+                personalized_welcome = welcome_message.replace('{first_name}', first_name or '').strip()
             
-            if welcome_sent:
-                self._defer_first_step_after_welcome(session, first_step, journey.get('bot_id'), delay_seconds=20)
-            else:
+            # If no welcome message, delay is irrelevant - execute step 1 immediately
+            if not welcome_message or not welcome_message.strip():
                 self.execute_step(session, first_step, journey.get('bot_id'))
+                return session
+            
+            if welcome_delay_seconds == 0:
+                self._send_welcome_with_retry(tenant_id, telegram_chat_id, personalized_welcome)
+                repo.mark_welcome_sent(session['id'])
+                self.execute_step(session, first_step, journey.get('bot_id'))
+            elif welcome_delay_seconds <= 60:
+                self._defer_welcome_and_step(session, journey, first_step, first_name=first_name, delay_seconds=welcome_delay_seconds)
+            else:
+                repo.update_session_status(session['id'], 'waiting_delay')
+                scheduled_for = datetime.utcnow() + timedelta(seconds=welcome_delay_seconds)
+                repo.schedule_message(
+                    tenant_id=tenant_id,
+                    session_id=session['id'],
+                    step_id=first_step['id'],
+                    telegram_chat_id=telegram_chat_id,
+                    message_content={
+                        'type': 'welcome_and_step',
+                        'welcome_text': personalized_welcome,
+                        'step_type': first_step.get('step_type', 'message'),
+                        'text': first_step.get('config', {}).get('text', ''),
+                        'first_name': first_name
+                    },
+                    scheduled_for=scheduled_for
+                )
+                logger.info(f"Scheduled welcome+step1 for session {session['id']} in {welcome_delay_seconds}s via scheduler")
         
         return session
     
-    def _defer_first_step_after_welcome(self, session: Dict, step: Dict, bot_id: str, delay_seconds: int = 20):
-        """
-        Defer the first step execution after a welcome message.
-        Uses a daemon thread with a hard sleep to guarantee the welcome message
-        is delivered before the first step fires. Calls execute_step() normally
-        so all step types (message, delay, question, wait_for_reply) are handled correctly.
-        Re-checks session status before executing to handle cancellations during the wait.
-        """
+    def _send_welcome_with_retry(self, tenant_id: str, chat_id: int, text: str, max_attempts: int = 3) -> bool:
+        """Send welcome message with exponential backoff retry."""
+        backoff = [5, 15, 45]
+        for attempt in range(1, max_attempts + 1):
+            success = self._send_message(tenant_id, chat_id, text)
+            if success:
+                logger.info(f"Welcome message sent (attempt {attempt}) to chat {chat_id}")
+                return True
+            logger.warning(f"Welcome message attempt {attempt}/{max_attempts} failed for chat {chat_id}")
+            if attempt < max_attempts:
+                delay = backoff[attempt - 1] if attempt - 1 < len(backoff) else backoff[-1]
+                time.sleep(delay)
+        logger.error(f"Welcome message failed all {max_attempts} attempts for chat {chat_id}")
+        return False
+    
+    def _defer_welcome_and_step(self, session: Dict, journey: Dict, step: Dict, 
+                                  first_name: str = '', delay_seconds: int = 10):
+        """Defer welcome message + first step by delay_seconds.
+        Thread-based for delays <= 60s. For > 60s, caller should use scheduler instead."""
         from . import repo
         
         session_id = session['id']
+        tenant_id = session['tenant_id']
+        chat_id = session['telegram_chat_id']
+        journey_id = journey['id']
+        welcome_message = journey.get('welcome_message', '')
+        bot_id = journey.get('bot_id')
         step_id = step['id']
+        
         repo.update_session_status(session_id, 'waiting_delay')
         
         def _run():
             try:
-                logger.info(f"Waiting {delay_seconds}s before first step {step_id} (post-welcome delay)")
+                logger.info(f"Waiting {delay_seconds}s before welcome+step1 for session {session_id}")
                 time.sleep(delay_seconds)
                 
                 fresh_session = repo.get_session_by_id(session_id)
                 if not fresh_session:
-                    logger.warning(f"Session {session_id} no longer exists, skipping deferred first step")
+                    logger.warning(f"Session {session_id} gone, skipping deferred welcome+step1")
                     return
                 if fresh_session['status'] not in ('active', 'waiting_delay'):
-                    logger.warning(f"Session {session_id} status is {fresh_session['status']}, skipping deferred first step")
+                    logger.warning(f"Session {session_id} status={fresh_session['status']}, skipping")
                     return
                 
+                if fresh_session.get('welcome_sent_at'):
+                    logger.info(f"Welcome already sent for session {session_id}, skipping to step 1")
+                elif welcome_message:
+                    personalized = welcome_message.replace('{first_name}', first_name or '').strip()
+                    if personalized:
+                        self._send_welcome_with_retry(tenant_id, chat_id, personalized)
+                        repo.mark_welcome_sent(session_id)
+                
                 repo.update_session_status(session_id, 'active')
-                logger.info(f"Post-welcome delay complete, executing first step {step_id}")
-                self.execute_step(fresh_session, step, bot_id)
+                fresh_session = repo.get_session_by_id(session_id)
+                if fresh_session:
+                    self.execute_step(fresh_session, step, bot_id)
+                
             except Exception as e:
-                logger.exception(f"Error executing deferred first step {step_id}: {e}")
+                logger.exception(f"Error in deferred welcome+step1 for session {session_id}: {e}")
 
         t = threading.Thread(target=_run, daemon=True, name=f"welcome-delay-{session_id}")
         t.start()
-        logger.info(f"Deferred first step {step_id} by {delay_seconds}s after welcome message (thread={t.name})")
+        logger.info(f"Deferred welcome+step1 by {delay_seconds}s (thread={t.name})")
 
     def execute_step(self, session: Dict, step: Dict, bot_id: str = None) -> bool:
         """

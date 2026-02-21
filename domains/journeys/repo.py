@@ -20,7 +20,7 @@ def _get_db_pool():
 
 def create_journey(tenant_id: str, bot_id: str, name: str, description: str = None,
                    status: str = 'draft', re_entry_policy: str = 'block',
-                   welcome_message: str = None) -> Optional[Dict]:
+                   welcome_message: str = None, welcome_delay_seconds: int = 0) -> Optional[Dict]:
     """Create a new journey."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -30,10 +30,10 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
-            """, (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message))
+                INSERT INTO journeys (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message, welcome_delay_seconds)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
+            """, (tenant_id, bot_id, name, description, status, re_entry_policy, welcome_message, welcome_delay_seconds))
             row = cursor.fetchone()
             conn.commit()
             
@@ -48,7 +48,8 @@ def create_journey(tenant_id: str, bot_id: str, name: str, description: str = No
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9]
+                    'welcome_message': row[9],
+                    'welcome_delay_seconds': row[10]
                 }
             return None
     except Exception as e:
@@ -66,7 +67,7 @@ def list_journeys(tenant_id: str) -> List[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s
                 ORDER BY created_at DESC
@@ -84,7 +85,8 @@ def list_journeys(tenant_id: str) -> List[Dict]:
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9]
+                    'welcome_message': row[9],
+                    'welcome_delay_seconds': row[10]
                 })
             return journeys
     except Exception as e:
@@ -112,7 +114,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     j.id, j.tenant_id, j.bot_id, j.name, j.description, 
                     j.status, j.re_entry_policy, j.created_at, j.updated_at,
                     COALESCE(step_counts.cnt, 0) as step_count,
-                    j.priority_int, j.is_locked, j.inactivity_timeout_days, j.welcome_message
+                    j.priority_int, j.is_locked, j.inactivity_timeout_days, j.welcome_message, j.welcome_delay_seconds
                 FROM journeys j
                 LEFT JOIN (
                     SELECT journey_id, COUNT(*) as cnt
@@ -143,6 +145,7 @@ def list_journeys_with_summary(tenant_id: str) -> List[Dict]:
                     'is_locked': row[11],
                     'inactivity_timeout_days': row[12],
                     'welcome_message': row[13],
+                    'welcome_delay_seconds': row[14],
                     'triggers': []
                 })
             
@@ -199,7 +202,7 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
+                SELECT id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
                 FROM journeys
                 WHERE tenant_id = %s AND id = %s
             """, (tenant_id, journey_id))
@@ -216,7 +219,8 @@ def get_journey(tenant_id: str, journey_id: str) -> Optional[Dict]:
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9]
+                    'welcome_message': row[9],
+                    'welcome_delay_seconds': row[10]
                 }
             return None
     except Exception as e:
@@ -385,7 +389,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
     if not db_pool or not db_pool.connection_pool:
         return None
     
-    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id', 'welcome_message'}
+    allowed_fields = {'name', 'description', 'status', 're_entry_policy', 'bot_id', 'welcome_message', 'welcome_delay_seconds'}
     update_fields = {k: v for k, v in fields.items() if k in allowed_fields}
     
     if not update_fields:
@@ -402,7 +406,7 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                 UPDATE journeys
                 SET {set_clause}, updated_at = NOW()
                 WHERE tenant_id = %s AND id = %s
-                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message
+                RETURNING id, tenant_id, bot_id, name, description, status, re_entry_policy, created_at, updated_at, welcome_message, welcome_delay_seconds
             """, values)
             row = cursor.fetchone()
             conn.commit()
@@ -418,7 +422,8 @@ def update_journey(tenant_id: str, journey_id: str, fields: Dict) -> Optional[Di
                     're_entry_policy': row[6],
                     'created_at': row[7].isoformat() if row[7] else None,
                     'updated_at': row[8].isoformat() if row[8] else None,
-                    'welcome_message': row[9]
+                    'welcome_message': row[9],
+                    'welcome_delay_seconds': row[10]
                 }
             return None
     except Exception as e:
@@ -727,7 +732,7 @@ def get_active_session(tenant_id: str, journey_id: str, telegram_user_id: int) -
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
-                       current_step_id, status, answers, started_at, completed_at, last_activity_at
+                       current_step_id, status, answers, started_at, completed_at, last_activity_at, welcome_sent_at
                 FROM journey_user_sessions
                 WHERE tenant_id = %s AND journey_id = %s AND telegram_user_id = %s
                   AND status IN ('active', 'waiting_delay')
@@ -747,7 +752,8 @@ def get_active_session(tenant_id: str, journey_id: str, telegram_user_id: int) -
                     'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
                     'started_at': row[8].isoformat() if row[8] else None,
                     'completed_at': row[9].isoformat() if row[9] else None,
-                    'last_activity_at': row[10].isoformat() if row[10] else None
+                    'last_activity_at': row[10].isoformat() if row[10] else None,
+                    'welcome_sent_at': row[11].isoformat() if row[11] else None
                 }
             return None
     except Exception as e:
@@ -770,7 +776,7 @@ def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int,
                 (tenant_id, journey_id, telegram_chat_id, telegram_user_id, current_step_id, status)
                 VALUES (%s, %s, %s, %s, %s, 'active')
                 RETURNING id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
-                          current_step_id, status, answers, started_at, completed_at, last_activity_at
+                          current_step_id, status, answers, started_at, completed_at, last_activity_at, welcome_sent_at
             """, (tenant_id, journey_id, telegram_chat_id, telegram_user_id, first_step_id))
             row = cursor.fetchone()
             conn.commit()
@@ -788,7 +794,8 @@ def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int,
                     'answers': row[7] if isinstance(row[7], dict) else {},
                     'started_at': row[8].isoformat() if row[8] else None,
                     'completed_at': row[9].isoformat() if row[9] else None,
-                    'last_activity_at': row[10].isoformat() if row[10] else None
+                    'last_activity_at': row[10].isoformat() if row[10] else None,
+                    'welcome_sent_at': row[11].isoformat() if row[11] else None
                 }
             return None
     except Exception as e:
@@ -845,6 +852,27 @@ def update_session_status(session_id: str, status: str) -> bool:
         return False
 
 
+def mark_welcome_sent(session_id: str) -> bool:
+    """Mark the welcome message as sent for a session."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE journey_user_sessions
+                SET welcome_sent_at = NOW(), last_activity_at = NOW()
+                WHERE id = %s AND welcome_sent_at IS NULL
+            """, (session_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.exception(f"Error marking welcome sent for session {session_id}: {e}")
+        return False
+
+
 def update_session_current_step(session_id: str, step_id: str) -> bool:
     """Update the current step for a session."""
     db_pool = _get_db_pool()
@@ -898,7 +926,7 @@ def get_session_by_id(session_id: str) -> Optional[Dict]:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, tenant_id, journey_id, telegram_chat_id, telegram_user_id,
-                       current_step_id, status, answers, started_at, completed_at, last_activity_at
+                       current_step_id, status, answers, started_at, completed_at, last_activity_at, welcome_sent_at
                 FROM journey_user_sessions
                 WHERE id = %s
             """, (session_id,))
@@ -916,7 +944,8 @@ def get_session_by_id(session_id: str) -> Optional[Dict]:
                     'answers': row[7] if isinstance(row[7], dict) else json.loads(row[7]) if row[7] else {},
                     'started_at': row[8].isoformat() if row[8] else None,
                     'completed_at': row[9].isoformat() if row[9] else None,
-                    'last_activity_at': row[10].isoformat() if row[10] else None
+                    'last_activity_at': row[10].isoformat() if row[10] else None,
+                    'welcome_sent_at': row[11].isoformat() if row[11] else None
                 }
             return None
     except Exception as e:
@@ -1025,7 +1054,7 @@ def schedule_message(tenant_id: str, session_id: str, step_id: str, telegram_cha
 
 
 def fetch_due_scheduled_messages(limit: int = 50) -> List[Dict]:
-    """Fetch scheduled messages that are due for sending."""
+    """Fetch and atomically claim scheduled messages that are due for sending."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return []
@@ -1034,17 +1063,24 @@ def fetch_due_scheduled_messages(limit: int = 50) -> List[Dict]:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT m.id, m.tenant_id, m.session_id, m.step_id, m.telegram_chat_id, 
-                       m.message_content, m.scheduled_for,
-                       s.journey_id, j.bot_id
-                FROM journey_scheduled_messages m
-                JOIN journey_user_sessions s ON s.id = m.session_id
-                JOIN journeys j ON j.id = s.journey_id
-                WHERE m.status = 'pending' AND m.scheduled_for <= NOW()
-                ORDER BY m.scheduled_for ASC
-                LIMIT %s
-                FOR UPDATE SKIP LOCKED
+                UPDATE journey_scheduled_messages
+                SET status = 'processing'
+                WHERE id IN (
+                    SELECT m.id
+                    FROM journey_scheduled_messages m
+                    JOIN journey_user_sessions s ON s.id = m.session_id
+                    JOIN journeys j ON j.id = s.journey_id
+                    WHERE m.status = 'pending' AND m.scheduled_for <= NOW()
+                    ORDER BY m.scheduled_for ASC
+                    LIMIT %s
+                    FOR UPDATE OF m SKIP LOCKED
+                )
+                RETURNING id, tenant_id, session_id, step_id, telegram_chat_id, 
+                          message_content, scheduled_for,
+                          (SELECT s.journey_id FROM journey_user_sessions s WHERE s.id = session_id),
+                          (SELECT j.bot_id FROM journeys j JOIN journey_user_sessions s2 ON j.id = s2.journey_id WHERE s2.id = session_id)
             """, (limit,))
+            conn.commit()
             
             messages = []
             for row in cursor.fetchall():
@@ -1056,7 +1092,7 @@ def fetch_due_scheduled_messages(limit: int = 50) -> List[Dict]:
                     'telegram_chat_id': row[4],
                     'message_content': row[5] if isinstance(row[5], dict) else json.loads(row[5]) if row[5] else {},
                     'scheduled_for': row[6].isoformat() if row[6] else None,
-                    'journey_id': str(row[7]),
+                    'journey_id': str(row[7]) if row[7] else None,
                     'bot_id': row[8]
                 })
             return messages
@@ -1086,8 +1122,8 @@ def mark_scheduled_message_sent(message_id: str) -> bool:
         return False
 
 
-def mark_scheduled_message_failed(message_id: str, error: str) -> bool:
-    """Mark a scheduled message as failed."""
+def mark_scheduled_message_failed(message_id: str, error: str, reset_to_pending: bool = False) -> bool:
+    """Mark a scheduled message as failed, optionally resetting to pending for retry."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return False
@@ -1095,11 +1131,12 @@ def mark_scheduled_message_failed(message_id: str, error: str) -> bool:
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
+            new_status = 'pending' if reset_to_pending else 'failed'
             cursor.execute("""
                 UPDATE journey_scheduled_messages
-                SET status = 'failed', error = %s
+                SET status = %s, error = %s
                 WHERE id = %s
-            """, (error, message_id))
+            """, (new_status, error, message_id))
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
@@ -1994,7 +2031,7 @@ def fetch_stale_waiting_delay_sessions(stale_after_seconds: int = 60, limit: int
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT s.id, s.tenant_id, s.journey_id, s.telegram_chat_id, s.telegram_user_id,
-                       s.current_step_id, s.status, s.answers, s.started_at, s.completed_at, s.last_activity_at
+                       s.current_step_id, s.status, s.answers, s.started_at, s.completed_at, s.last_activity_at, s.welcome_sent_at
                 FROM journey_user_sessions s
                 WHERE s.status = 'waiting_delay'
                   AND s.last_activity_at < NOW() - make_interval(secs => %s)
@@ -2020,7 +2057,8 @@ def fetch_stale_waiting_delay_sessions(stale_after_seconds: int = 60, limit: int
                     'answers': row[7],
                     'started_at': row[8],
                     'completed_at': row[9],
-                    'last_activity_at': row[10]
+                    'last_activity_at': row[10],
+                    'welcome_sent_at': row[11]
                 })
             conn.commit()
             return sessions
