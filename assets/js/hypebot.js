@@ -71,15 +71,17 @@ window.HypeBotModule = (function() {
         }
         container.innerHTML = prompts.map(p => `
             <div class="hype-prompt-card">
-                <div class="hype-card-header">
-                    <span class="hype-card-title"><svg class="card-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>${escapeHtml(p.name)}</span>
-                    <span class="hype-card-meta">${new Date(p.created_at).toLocaleDateString()}</span>
+                <div class="hype-card-left">
+                    <div class="hype-card-title"><svg class="card-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>${escapeHtml(p.name)}</div>
+                    <div class="hype-card-prompt">${escapeHtml(p.custom_prompt)}</div>
                 </div>
-                <div class="hype-card-prompt">${escapeHtml(p.custom_prompt)}</div>
-                <div class="hype-card-actions">
-                    <button onclick="window.HypeBotModule.previewPrompt('${p.id}')">Preview</button>
-                    <button onclick="window.HypeBotModule.editPrompt('${p.id}')">Edit</button>
-                    <button class="btn-danger" onclick="window.HypeBotModule.deletePrompt('${p.id}')">Del</button>
+                <div class="hype-card-right">
+                    <span class="hype-card-meta">${new Date(p.created_at).toLocaleDateString()}</span>
+                    <div class="hype-card-actions">
+                        <button onclick="window.HypeBotModule.previewPrompt('${p.id}')">Preview</button>
+                        <button onclick="window.HypeBotModule.editPrompt('${p.id}')">Edit</button>
+                        <button class="btn-danger" onclick="window.HypeBotModule.deletePrompt('${p.id}')">Del</button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -104,28 +106,29 @@ window.HypeBotModule = (function() {
         }
         container.innerHTML = flows.map(f => `
             <div class="hype-flow-card status-${f.status}">
-                <div class="hype-card-header">
-                    <div>
+                <div class="hype-card-left">
+                    <div class="hype-card-header">
                         <span class="hype-card-title">${escapeHtml(f.name)}</span>
                         <span class="hype-flow-status ${f.status}">${f.status}</span>
                     </div>
+                    <div class="hype-flow-prompt-name">Prompt: ${f.prompt_name ? escapeHtml(f.prompt_name) : 'None'}</div>
                 </div>
-                <div class="hype-flow-prompt-name">Prompt: ${f.prompt_name ? escapeHtml(f.prompt_name) : 'None'}</div>
-                <div class="hype-flow-config">
-                    <span class="hype-config-pill">Messages: ${f.message_count}</span>
-                    <span class="hype-config-pill">Interval: ${f.interval_minutes}min</span>
-                    <span class="hype-config-pill">CTA Delay: ${f.delay_after_cta_minutes}min</span>
-                    <span class="hype-config-pill">Days: ${escapeHtml(f.active_days)}</span>
-                </div>
-                <div class="hype-card-actions">
-                    ${f.status === 'paused'
-                        ? `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'active')" style="color:#34c759;border-color:#34c759;">Activate</button>`
-                        : `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'paused')" style="color:#ff9f0a;border-color:#ff9f0a;">Pause</button>`}
-                    <button onclick="window.HypeBotModule.previewFlow('${f.id}')">Preview</button>
-                    <button onclick="window.HypeBotModule.triggerFlow('${f.id}')">Trigger</button>
-                    <button onclick="window.HypeBotModule.editFlow('${f.id}')">Edit</button>
-                    <button onclick="window.HypeBotModule.viewAnalytics('${f.id}')">Stats</button>
-                    <button class="btn-danger" onclick="window.HypeBotModule.deleteFlow('${f.id}')">Del</button>
+                <div class="hype-card-right">
+                    <div class="hype-flow-config">
+                        <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}min</span>
+                        <span class="hype-config-item">CTA delay: ${f.delay_after_cta_minutes}min</span>
+                        <span class="hype-config-item">${escapeHtml(f.active_days)}</span>
+                    </div>
+                    <div class="hype-card-actions">
+                        ${f.status === 'paused'
+                            ? `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'active')" style="color:#34c759;border-color:#34c759;">Activate</button>`
+                            : `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'paused')" style="color:#ff9f0a;border-color:#ff9f0a;">Pause</button>`}
+                        <button onclick="window.HypeBotModule.previewFlow('${f.id}')">Preview</button>
+                        <button onclick="window.HypeBotModule.triggerFlow('${f.id}')">Trigger</button>
+                        <button onclick="window.HypeBotModule.editFlow('${f.id}')">Edit</button>
+                        <button onclick="window.HypeBotModule.viewAnalytics('${f.id}')">Stats</button>
+                        <button class="btn-danger" onclick="window.HypeBotModule.deleteFlow('${f.id}')">Del</button>
+                    </div>
                 </div>
             </div>
         `).join('');
