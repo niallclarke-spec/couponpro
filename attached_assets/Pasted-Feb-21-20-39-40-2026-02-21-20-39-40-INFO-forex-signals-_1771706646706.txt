@@ -1,0 +1,66 @@
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ============================================================
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 🚀 FOREX SIGNALS SCHEDULER STARTED
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler]    Tenant: entrylab
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ============================================================
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 📊 Signal checks: 15min timeframe every 15 minutes
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 5 seconds
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [forex_scheduler] ============================================================
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [generator] [tenant:entrylab] [req:8f0f7508] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 21 20:39:40  [2026-02-21 20:39:40] [INFO] [telethon_client] Credentials loaded from DB for tenant=entrylab, phone=***4944
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [telethon_session] Session restored for tenant=entrylab <- telethon_sessions/entrylab.session
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [telethon_client] Session restored from remote storage for tenant=entrylab
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [mtprotosender] Connecting to 149.154.167.92:443/TcpFull...
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [mtprotosender] Connection to 149.154.167.92:443/TcpFull complete!
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [telethon_client] Telethon connected for tenant=entrylab
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [telethon_listener] Listener started for tenant=entrylab
+Feb 21 20:39:41  [2026-02-21 20:39:41] [INFO] [bootstrap] Telethon listener started for entrylab
+Feb 21 20:39:56  [2026-02-21 20:39:56] [INFO] [clerk_auth] [req:01b5e65a] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 21 20:39:56  [2026-02-21 20:39:56] [INFO] [clerk_auth] [req:01b5e65a] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 21 20:39:56  [2026-02-21 20:39:56] [INFO] [clerk_auth] [req:01b5e65a] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 21 20:39:56  10.244.5.120 - - [21/Feb/2026 20:39:56] "GET /admin HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.6.27 - - [21/Feb/2026 20:39:57] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.5.120 - - [21/Feb/2026 20:39:57] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.5.120 - - [21/Feb/2026 20:39:57] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.5.120 - - [21/Feb/2026 20:39:57] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.6.27 - - [21/Feb/2026 20:39:57] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.5.120 - - [21/Feb/2026 20:39:57] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 21 20:39:57  10.244.7.214 - - [21/Feb/2026 20:39:57] "GET /api/config HTTP/1.1" 200 -
+Feb 21 20:39:58  10.244.7.214 - - [21/Feb/2026 20:39:58] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 21 20:39:58  10.244.7.214 - - [21/Feb/2026 20:39:58] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 20:39:58  10.244.5.120 - - [21/Feb/2026 20:39:58] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 21 20:39:58  10.244.6.27 - - [21/Feb/2026 20:39:58] "GET /api/journeys HTTP/1.1" 200 -
+Feb 21 20:40:01  [2026-02-21 20:40:01] [INFO] [repo] [req:f762b5da] Journey 1ff33e95-1c20-4036-82d3-a7774eceef48 status changed to stopped
+Feb 21 20:40:01  10.244.7.214 - - [21/Feb/2026 20:40:01] "POST /api/journeys/1ff33e95-1c20-4036-82d3-a7774eceef48/stop HTTP/1.1" 200 -
+Feb 21 20:40:01  10.244.7.214 - - [21/Feb/2026 20:40:01] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 20:40:01  10.244.5.120 - - [21/Feb/2026 20:40:01] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 21 20:40:01  10.244.6.27 - - [21/Feb/2026 20:40:01] "GET /api/journeys HTTP/1.1" 200 -
+Feb 21 20:40:04  10.244.7.214 - - [21/Feb/2026 20:40:04] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 20:42:34  10.244.7.214 - - [21/Feb/2026 20:42:34] "POST /api/journeys HTTP/1.1" 201 -
+Feb 21 20:42:34  10.244.7.214 - - [21/Feb/2026 20:42:34] "POST /api/journeys/c783df2b-c4a4-4b4d-85b8-4f1540844a11/triggers HTTP/1.1" 200 -
+Feb 21 20:42:34  [2026-02-21 20:42:34] [INFO] [handlers] [req:922030a0] Saving 1 steps for journey c783df2b-c4a4-4b4d-85b8-4f1540844a11: ['You wanna join our broker?']
+Feb 21 20:42:34  [2026-02-21 20:42:34] [INFO] [repo] [req:922030a0] Set 1 steps for journey c783df2b-c4a4-4b4d-85b8-4f1540844a11
+Feb 21 20:42:34  10.244.7.214 - - [21/Feb/2026 20:42:34] "PUT /api/journeys/c783df2b-c4a4-4b4d-85b8-4f1540844a11/steps HTTP/1.1" 200 -
+Feb 21 20:42:34  10.244.7.214 - - [21/Feb/2026 20:42:34] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 20:42:34  10.244.5.120 - - [21/Feb/2026 20:42:34] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 21 20:42:34  10.244.6.27 - - [21/Feb/2026 20:42:34] "GET /api/journeys HTTP/1.1" 200 -
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [telethon_listener] Incoming DM for tenant=entrylab: chat=5262022632, sender=5262022632
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [telethon_listener] DM trigger matched journey 'Welcome' for sender=5262022632
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [repo] Created journey session b88cf9c4-bd9b-434b-b0cf-4c4063666b77 for user 5262022632
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [engine] Started journey c783df2b-c4a4-4b4d-85b8-4f1540844a11 for user 5262022632, session b88cf9c4-bd9b-434b-b0cf-4c4063666b77
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [telethon_client] Message sent via Telethon: tenant=entrylab, chat=5262022632, msg_id=77
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [engine] Welcome message sent (attempt 1) to chat 5262022632
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [engine] Executing step b623c206-8431-440f-9e82-892fcc5e5ad9 (type=wait_for_reply) for session b88cf9c4-bd9b-434b-b0cf-4c4063666b77
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [telethon_client] Message sent via Telethon: tenant=entrylab, chat=5262022632, msg_id=78
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [repo] Session b88cf9c4-bd9b-434b-b0cf-4c4063666b77 now awaiting reply (timeout=1min)
+Feb 21 20:42:41  [2026-02-21 20:42:41] [INFO] [engine] Session b88cf9c4-bd9b-434b-b0cf-4c4063666b77 now waiting for reply (timeout=1min)
