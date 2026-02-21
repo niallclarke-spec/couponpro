@@ -283,7 +283,7 @@ class TelethonUserClient:
         await self.disconnect()
         return await self.connect()
 
-    async def send_message(self, chat_id, text: str, parse_mode: str = None) -> Dict[str, Any]:
+    async def send_message(self, chat_id, text: str, parse_mode: str = None, link_preview: bool = False) -> Dict[str, Any]:
         rate_err = self._rate.check()
         if rate_err:
             logger.warning(f"Rate limited for tenant={self.tenant_id}: {rate_err}")
@@ -298,7 +298,7 @@ class TelethonUserClient:
         max_retries = 3
         for attempt in range(1, max_retries + 1):
             try:
-                msg = await self._client.send_message(chat_id, text, parse_mode=parse_mode)
+                msg = await self._client.send_message(chat_id, text, parse_mode=parse_mode, link_preview=link_preview)
                 self._rate.record()
                 self.last_send = time.time()
                 self.last_heartbeat = time.time()
@@ -352,8 +352,8 @@ class TelethonUserClient:
             logger.error(f"Auto-reconnect failed for tenant={self.tenant_id}: {e}")
             return False
 
-    def send_message_sync(self, chat_id, text: str, parse_mode: str = None) -> Dict[str, Any]:
-        return _run_in_bg(self.send_message(chat_id, text, parse_mode=parse_mode))
+    def send_message_sync(self, chat_id, text: str, parse_mode: str = None, link_preview: bool = False) -> Dict[str, Any]:
+        return _run_in_bg(self.send_message(chat_id, text, parse_mode=parse_mode, link_preview=link_preview))
 
     def connect_sync(self) -> bool:
         return _run_in_bg(self.connect())
