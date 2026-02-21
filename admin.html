@@ -4888,22 +4888,36 @@
         }
 
         .hype-section { margin-bottom: 8px; }
-        .hype-prompt-card, .hype-flow-card { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
-        .hype-prompt-card:hover, .hype-flow-card:hover { border-color: var(--accent-primary); }
+        .connection-banner { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg-primary); border: 1px solid var(--border-primary); border-radius: 10px; margin-bottom: 16px; font-size: 13px; }
+        .connection-banner .conn-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .connection-banner .conn-dot.connected { background: #34c759; }
+        .connection-banner .conn-dot.disconnected { background: #ff453a; }
+        .connection-banner .conn-label { color: var(--text-muted); font-size: 12px; }
+        .connection-banner .conn-username { color: var(--text-primary); font-weight: 600; font-size: 13px; }
+        .connection-banner .conn-separator { color: var(--text-muted); font-size: 11px; }
+        .connection-banner .conn-icon { color: #229ED9; flex-shrink: 0; display: flex; align-items: center; }
+
+        .hype-prompt-card { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-left: 3px solid var(--accent, #007aff); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: border-color 0.2s; }
+        .hype-prompt-card:hover { border-color: var(--accent-primary); border-left-color: var(--accent, #007aff); }
+        .hype-flow-card { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: border-color 0.2s; }
+        .hype-flow-card:hover { border-color: var(--accent-primary); }
+        .hype-flow-card.status-active { border-left: 3px solid #34c759; }
+        .hype-flow-card.status-paused { border-left: 3px solid #ff9f0a; }
         .hype-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .hype-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+        .hype-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .hype-card-title .card-icon { color: var(--text-muted); flex-shrink: 0; }
         .hype-card-meta { font-size: 12px; color: var(--text-muted); }
-        .hype-card-prompt { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-top: 8px; padding: 10px 12px; background: var(--bg-primary); border-radius: 8px; white-space: pre-wrap; max-height: 100px; overflow-y: auto; }
-        .hype-card-actions { display: flex; gap: 8px; margin-top: 12px; }
-        .hype-card-actions button { padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-primary); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+        .hype-card-prompt { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .hype-card-actions { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+        .hype-card-actions button { padding: 4px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border-primary); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
         .hype-card-actions button:hover { color: var(--text-primary); border-color: var(--accent-primary); }
         .hype-card-actions .btn-danger:hover { border-color: var(--error); color: var(--error); }
         .hype-flow-status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px; }
         .hype-flow-status.active { background: rgba(52, 199, 89, 0.15); color: #34c759; }
         .hype-flow-status.paused { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
-        .hype-flow-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
-        .hype-config-item { font-size: 12px; color: var(--text-muted); }
-        .hype-config-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+        .hype-flow-config { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .hype-config-pill { font-size: 11px; color: var(--text-secondary); background: var(--bg-primary); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+        .hype-flow-prompt-name { font-size: 13px; color: var(--text-primary); font-weight: 500; margin-top: 4px; }
         .hype-message-card { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
         .hype-message-text { font-size: 14px; color: var(--text-primary); line-height: 1.5; margin-bottom: 6px; }
         .hype-message-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 16px; }
@@ -6166,6 +6180,7 @@
                     <p>Create automated messaging sequences triggered by deep links or direct messages</p>
                 </div>
                 <div class="content-body">
+                    <div id="journeys-connection-bar"></div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <span class="limit-badge" id="journeys-limit-badge">0 / 6</span>
@@ -6196,6 +6211,7 @@
                     <p>AI-powered motivational messages for your FREE channel</p>
                 </div>
                 <div class="content-body" id="hype-bot-content">
+                    <div id="hype-connection-bar"></div>
                     <div class="hype-section">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                             <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Prompts</h3>

@@ -9,8 +9,47 @@ window.HypeBotModule = (function() {
         return div.innerHTML;
     }
 
+    const TG_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>';
+
+    async function loadConnectionStatus() {
+        const bar = document.getElementById('hype-connection-bar');
+        if (!bar) return;
+        try {
+            const headers = await getAuthHeaders();
+            const [connResp, settingsResp] = await Promise.all([
+                fetch('/api/connections', { headers }),
+                fetch('/api/crosspromo/settings', { headers })
+            ]);
+            let botUsername = null;
+            let freeChannelId = null;
+            if (connResp.ok) {
+                const connData = await connResp.json();
+                const signalBot = (connData.connections || []).find(c => c.bot_role === 'signal_bot');
+                botUsername = signalBot?.bot_username || null;
+            }
+            if (settingsResp.ok) {
+                const settingsData = await settingsResp.json();
+                freeChannelId = settingsData.free_channel_id || settingsData.settings?.free_channel_id || null;
+            }
+            const connected = !!(botUsername && freeChannelId);
+            const dotClass = connected ? 'connected' : 'disconnected';
+            const usernameDisplay = botUsername ? escapeHtml(botUsername.startsWith('@') ? botUsername : '@' + botUsername) : 'Not configured';
+            const channelDisplay = freeChannelId ? escapeHtml(String(freeChannelId)) : 'Not set';
+            bar.innerHTML = `
+                <div class="connection-banner">
+                    <span class="conn-icon">${TG_ICON}</span>
+                    <span class="conn-username">${usernameDisplay}</span>
+                    <span class="conn-separator">→</span>
+                    <span class="conn-label">FREE: ${channelDisplay}</span>
+                    <span class="conn-dot ${dotClass}"></span>
+                </div>`;
+        } catch (e) {
+            console.error('Error loading connection status:', e);
+        }
+    }
+
     async function loadHypeBot() {
-        await Promise.all([loadPrompts(), loadFlows()]);
+        await Promise.all([loadPrompts(), loadFlows(), loadConnectionStatus()]);
     }
 
     async function loadPrompts() {
@@ -33,14 +72,14 @@ window.HypeBotModule = (function() {
         container.innerHTML = prompts.map(p => `
             <div class="hype-prompt-card">
                 <div class="hype-card-header">
-                    <span class="hype-card-title">${escapeHtml(p.name)}</span>
+                    <span class="hype-card-title"><svg class="card-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>${escapeHtml(p.name)}</span>
                     <span class="hype-card-meta">${new Date(p.created_at).toLocaleDateString()}</span>
                 </div>
                 <div class="hype-card-prompt">${escapeHtml(p.custom_prompt)}</div>
                 <div class="hype-card-actions">
                     <button onclick="window.HypeBotModule.previewPrompt('${p.id}')">Preview</button>
                     <button onclick="window.HypeBotModule.editPrompt('${p.id}')">Edit</button>
-                    <button class="btn-danger" onclick="window.HypeBotModule.deletePrompt('${p.id}')">Delete</button>
+                    <button class="btn-danger" onclick="window.HypeBotModule.deletePrompt('${p.id}')">Del</button>
                 </div>
             </div>
         `).join('');
@@ -64,29 +103,29 @@ window.HypeBotModule = (function() {
             return;
         }
         container.innerHTML = flows.map(f => `
-            <div class="hype-flow-card">
+            <div class="hype-flow-card status-${f.status}">
                 <div class="hype-card-header">
                     <div>
                         <span class="hype-card-title">${escapeHtml(f.name)}</span>
                         <span class="hype-flow-status ${f.status}">${f.status}</span>
                     </div>
-                    <span class="hype-card-meta">Prompt: ${f.prompt_name ? escapeHtml(f.prompt_name) : 'None'}</span>
                 </div>
+                <div class="hype-flow-prompt-name">Prompt: ${f.prompt_name ? escapeHtml(f.prompt_name) : 'None'}</div>
                 <div class="hype-flow-config">
-                    <div class="hype-config-item">Messages<br><span class="hype-config-value">${f.message_count}</span></div>
-                    <div class="hype-config-item">Interval<br><span class="hype-config-value">${f.interval_minutes} min</span></div>
-                    <div class="hype-config-item">Delay after CTA<br><span class="hype-config-value">${f.delay_after_cta_minutes} min</span></div>
-                    <div class="hype-config-item">Active Days<br><span class="hype-config-value">${f.active_days}</span></div>
+                    <span class="hype-config-pill">Messages: ${f.message_count}</span>
+                    <span class="hype-config-pill">Interval: ${f.interval_minutes}min</span>
+                    <span class="hype-config-pill">CTA Delay: ${f.delay_after_cta_minutes}min</span>
+                    <span class="hype-config-pill">Days: ${escapeHtml(f.active_days)}</span>
                 </div>
                 <div class="hype-card-actions">
                     ${f.status === 'paused'
                         ? `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'active')" style="color:#34c759;border-color:#34c759;">Activate</button>`
                         : `<button onclick="window.HypeBotModule.setFlowStatus('${f.id}', 'paused')" style="color:#ff9f0a;border-color:#ff9f0a;">Pause</button>`}
                     <button onclick="window.HypeBotModule.previewFlow('${f.id}')">Preview</button>
-                    <button onclick="window.HypeBotModule.triggerFlow('${f.id}')">Trigger Now</button>
+                    <button onclick="window.HypeBotModule.triggerFlow('${f.id}')">Trigger</button>
                     <button onclick="window.HypeBotModule.editFlow('${f.id}')">Edit</button>
-                    <button onclick="window.HypeBotModule.viewAnalytics('${f.id}')">Analytics</button>
-                    <button class="btn-danger" onclick="window.HypeBotModule.deleteFlow('${f.id}')">Delete</button>
+                    <button onclick="window.HypeBotModule.viewAnalytics('${f.id}')">Stats</button>
+                    <button class="btn-danger" onclick="window.HypeBotModule.deleteFlow('${f.id}')">Del</button>
                 </div>
             </div>
         `).join('');
