@@ -9136,17 +9136,28 @@
                     vip_soon_time_utc: document.getElementById('crosspromo-vip-soon-time').value || '07:51'
                 };
                 
+                console.log('[CrossPromo] Saving settings:', JSON.stringify(settings));
                 const resp = await authedFetch('/api/crosspromo/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(settings)
                 });
                 
+                console.log('[CrossPromo] Response status:', resp.status, resp.statusText);
+                
                 if (resp.ok) {
-                    showModalAlert('Success', 'Settings saved');
+                    showToast('Cross Promo settings saved');
                 } else {
-                    const err = await resp.json();
-                    showModalAlert('Error', err.error || 'Failed to save');
+                    const text = await resp.text();
+                    let errorMsg = 'Failed to save settings';
+                    try {
+                        const err = JSON.parse(text);
+                        errorMsg = err.error || errorMsg;
+                    } catch (_) {
+                        console.error('[CrossPromo] Non-JSON error response:', resp.status, text.substring(0, 200));
+                        errorMsg = `Server error (${resp.status})`;
+                    }
+                    showModalAlert('Error', errorMsg);
                 }
             } catch (e) {
                 console.error('Error saving settings:', e);

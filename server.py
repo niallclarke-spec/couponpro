@@ -537,7 +537,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.host_context = hc
         if dispatch_request(self, 'POST', self.path, POST_ROUTES + AUTH_ROUTES, hc, DATABASE_AVAILABLE):
             return clear_request_context()
-        self.send_error(404, "Not Found")
+        self.send_response(404)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': 'Not Found'}).encode())
         clear_request_context()
 
     def do_PUT(self):
@@ -546,7 +549,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.host_context = hc
         if dispatch_request(self, 'PUT', self.path, PUT_ROUTES, hc, DATABASE_AVAILABLE):
             return clear_request_context()
-        self.send_error(404, "Not Found")
+        self.send_response(404)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': 'Not Found'}).encode())
         clear_request_context()
 
     def do_DELETE(self):
@@ -555,7 +561,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.host_context = hc
         if dispatch_request(self, 'DELETE', self.path, DELETE_ROUTES, hc, DATABASE_AVAILABLE):
             return clear_request_context()
-        self.send_error(404, "Not Found")
+        self.send_response(404)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': 'Not Found'}).encode())
         clear_request_context()
 
 if __name__ == "__main__":

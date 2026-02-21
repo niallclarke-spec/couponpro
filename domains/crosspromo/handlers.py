@@ -67,21 +67,33 @@ def handle_save_settings(handler):
     if not tenant_id:
         _send_no_tenant_context(handler)
         return
-    data = _read_json_body(handler)
+    try:
+        data = _read_json_body(handler)
+    except Exception as e:
+        logger.error(f"Failed to parse crosspromo settings body: {e}")
+        _send_json(handler, 400, {"error": "Invalid request body"})
+        return
     
-    result = repo.upsert_settings(
-        tenant_id=tenant_id,
-        enabled=data.get('enabled', False),
-        bot_role=data.get('bot_role', 'signal_bot'),
-        vip_channel_id=data.get('vip_channel_id'),
-        free_channel_id=data.get('free_channel_id'),
-        cta_url=data.get('cta_url', 'https://entrylab.io/subscribe'),
-        morning_post_time_utc=data.get('morning_post_time_utc', '06:42'),
-        vip_soon_delay_minutes=data.get('vip_soon_delay_minutes', 45),
-        recap_forward_time_utc=data.get('recap_forward_time_utc', '07:12'),
-        vip_soon_time_utc=data.get('vip_soon_time_utc', '07:51'),
-        timezone=data.get('timezone', 'UTC')
-    )
+    logger.info(f"Saving crosspromo settings for tenant={tenant_id}: enabled={data.get('enabled')}")
+    
+    try:
+        result = repo.upsert_settings(
+            tenant_id=tenant_id,
+            enabled=data.get('enabled', False),
+            bot_role=data.get('bot_role', 'signal_bot'),
+            vip_channel_id=data.get('vip_channel_id'),
+            free_channel_id=data.get('free_channel_id'),
+            cta_url=data.get('cta_url', 'https://entrylab.io/subscribe'),
+            morning_post_time_utc=data.get('morning_post_time_utc', '06:42'),
+            vip_soon_delay_minutes=data.get('vip_soon_delay_minutes', 45),
+            recap_forward_time_utc=data.get('recap_forward_time_utc', '07:12'),
+            vip_soon_time_utc=data.get('vip_soon_time_utc', '07:51'),
+            timezone=data.get('timezone', 'UTC')
+        )
+    except Exception as e:
+        logger.exception(f"Error saving crosspromo settings: {e}")
+        _send_json(handler, 500, {"error": "Internal server error"})
+        return
     
     if not result:
         _send_json(handler, 500, {"error": "Failed to save settings"})
