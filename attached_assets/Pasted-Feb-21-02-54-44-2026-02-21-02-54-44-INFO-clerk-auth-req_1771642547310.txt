@@ -1,0 +1,67 @@
+Feb 21 02:54:44  [2026-02-21 02:54:44] [INFO] [clerk_auth] [req:3b1a302f] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 21 02:54:44  [2026-02-21 02:54:44] [INFO] [clerk_auth] [req:3b1a302f] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 21 02:54:44  [2026-02-21 02:54:44] [INFO] [clerk_auth] [req:3b1a302f] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 21 02:54:44  [2026-02-21 02:54:44] [WARNING] [clerk_auth] [req:3b1a302f] Token expired
+Feb 21 02:54:44  10.244.6.27 - - [21/Feb/2026 02:54:44] "GET /admin HTTP/1.1" 200 -
+Feb 21 02:54:44  10.244.7.214 - - [21/Feb/2026 02:54:44] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 21 02:54:44  10.244.7.214 - - [21/Feb/2026 02:54:44] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 21 02:54:44  10.244.7.214 - - [21/Feb/2026 02:54:44] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 21 02:54:44  10.244.4.249 - - [21/Feb/2026 02:54:44] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 21 02:54:44  10.244.5.120 - - [21/Feb/2026 02:54:44] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 21 02:54:44  [2026-02-21 02:54:44] [WARNING] [clerk_auth] [req:17b326d4] Token expired
+Feb 21 02:54:44  10.244.5.120 - - [21/Feb/2026 02:54:44] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 21 02:54:44  [2026-02-21 02:54:44] [WARNING] [clerk_auth] [req:c57641f6] Token expired
+Feb 21 02:54:45  [2026-02-21 02:54:45] [WARNING] [clerk_auth] [req:63ae008c] Token expired
+Feb 21 02:54:45  10.244.4.249 - - [21/Feb/2026 02:54:45] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 02:54:45  [2026-02-21 02:54:45] [INFO] [service] [req:63ae008c] Generating morning market briefing for tenant: entrylab
+Feb 21 02:54:45  [2026-02-21 02:54:45] [INFO] [briefing] [req:63ae008c] Generating morning briefing for tenant: entrylab
+Feb 21 02:54:45  [2026-02-21 02:54:45] [INFO] [briefing] [req:63ae008c] Computing morning briefing data from Twelve Data...
+Feb 21 02:54:45  [2026-02-21 02:54:45] [WARNING] [clerk_auth] [req:c21a5980] Token expired
+Feb 21 02:54:45  [2026-02-21 02:54:45] [WARNING] [clerk_auth] [req:341d6898] Token expired
+Feb 21 02:54:45  10.244.6.27 - - [21/Feb/2026 02:54:45] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 21 02:54:45  [2026-02-21 02:54:45] [WARNING] [clerk_auth] [req:de375f27] Token expired
+Feb 21 02:54:45  10.244.5.120 - - [21/Feb/2026 02:54:45] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 21 02:54:45  10.244.4.249 - - [21/Feb/2026 02:54:45] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 02:54:45  10.244.4.249 - - [21/Feb/2026 02:54:45] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 21 02:54:45  [2026-02-21 02:54:45] [WARNING] [clerk_auth] [req:fcde538b] Token expired
+Feb 21 02:54:45  [2026-02-21 02:54:45] [INFO] [briefing] [req:63ae008c] Briefing data computed: price=$5098.51, range=expanded, position=near_high
+Feb 21 02:54:48  [2026-02-21 02:54:48] [WARNING] [clerk_auth] [req:c2106912] Token expired
+Feb 21 02:54:48  [2026-02-21 02:54:48] [INFO] [handlers] [req:c2106912] Saving crosspromo settings for tenant=entrylab: enabled=True
+Feb 21 02:54:48  [2026-02-21 02:54:48] [INFO] [repo] [req:c2106912] Upserted crosspromo settings for tenant entrylab
+Feb 21 02:54:48  10.244.7.214 - - [21/Feb/2026 02:54:48] "POST /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 21 02:54:49  [2026-02-21 02:54:49] [INFO] [briefing] [req:63ae008c] Generated AI briefing for entrylab
+Feb 21 02:54:49  10.244.4.249 - - [21/Feb/2026 02:54:49] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 21 02:54:56  [2026-02-21 02:54:56] [WARNING] [clerk_auth] [req:8e5dca1d] Token expired
+Feb 21 02:54:56  [2026-02-21 02:54:56] [INFO] [handlers] [req:8e5dca1d] Saving crosspromo settings for tenant=entrylab: enabled=True
+Feb 21 02:54:56  [2026-02-21 02:54:56] [INFO] [repo] [req:8e5dca1d] Upserted crosspromo settings for tenant entrylab
+Feb 21 02:54:56  10.244.7.214 - - [21/Feb/2026 02:54:56] "POST /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 21 02:55:08  [2026-02-21 02:55:08] [WARNING] [clerk_auth] [req:2e6315ec] Token expired
+Feb 21 02:55:08  [2026-02-21 02:55:08] [INFO] [handlers] [req:2e6315ec] Saving crosspromo settings for tenant=entrylab: enabled=True
+Feb 21 02:55:08  [2026-02-21 02:55:08] [INFO] [repo] [req:2e6315ec] Upserted crosspromo settings for tenant entrylab
+Feb 21 02:55:08  10.244.7.214 - - [21/Feb/2026 02:55:08] "POST /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:ba481854] Token expired
+Feb 21 02:55:14  10.244.6.27 - - [21/Feb/2026 02:55:14] "GET /admin HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.7.214 - - [21/Feb/2026 02:55:14] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.4.249 - - [21/Feb/2026 02:55:14] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.7.214 - - [21/Feb/2026 02:55:14] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.7.214 - - [21/Feb/2026 02:55:14] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.5.120 - - [21/Feb/2026 02:55:14] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:f2376b2f] Token expired
+Feb 21 02:55:14  10.244.5.120 - - [21/Feb/2026 02:55:14] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:c3ceea24] Token expired
+Feb 21 02:55:14  10.244.4.249 - - [21/Feb/2026 02:55:14] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:61690e26] Token expired
+Feb 21 02:55:14  [2026-02-21 02:55:14] [INFO] [service] [req:61690e26] Generating morning market briefing for tenant: entrylab
+Feb 21 02:55:14  [2026-02-21 02:55:14] [INFO] [briefing] [req:61690e26] Generating morning briefing for tenant: entrylab
+Feb 21 02:55:14  [2026-02-21 02:55:14] [INFO] [briefing] [req:61690e26] Computing morning briefing data from Twelve Data...
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:a7a289f2] Token expired
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:48d320c9] Token expired
+Feb 21 02:55:14  10.244.6.27 - - [21/Feb/2026 02:55:14] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 21 02:55:14  10.244.5.120 - - [21/Feb/2026 02:55:14] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:b61722e4] Token expired
+Feb 21 02:55:14  10.244.4.249 - - [21/Feb/2026 02:55:14] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 02:55:14  [2026-02-21 02:55:14] [WARNING] [clerk_auth] [req:3aa7c01d] Token expired
+Feb 21 02:55:14  10.244.4.249 - - [21/Feb/2026 02:55:14] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 21 02:55:15  [2026-02-21 02:55:15] [INFO] [briefing] [req:61690e26] Briefing data computed: price=$5098.51, range=expanded, position=near_high
+Feb 21 02:55:18  10.244.4.249 - - [21/Feb/2026 02:55:18] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 21 02:55:18  [2026-02-21 02:55:18] [INFO] [briefing] [req:61690e26] Generated AI briefing for entrylab
