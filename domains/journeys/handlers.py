@@ -337,8 +337,6 @@ def handle_journey_steps_set(handler, journey_id: str):
                 branch_keyword = step.get('branch_keyword', '')
                 branch_true_step_id = step.get('branch_true_step_id', '')
                 branch_false_step_id = step.get('branch_false_step_id', '')
-            elif delay > 0 and not wait_for_reply:
-                step_type = 'delay'
             else:
                 step_type = 'message'
             
