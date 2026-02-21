@@ -325,10 +325,12 @@
                         <div class="journey-card-right">
                             <div class="journey-stats-row">
                                 <div class="journey-stat">
+                                    <svg class="journey-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                                     <span class="journey-stat-value">${totalSends}</span>
                                     <span class="journey-stat-label">sends</span>
                                 </div>
                                 <div class="journey-stat">
+                                    <svg class="journey-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     <span class="journey-stat-value">${uniqueUsers}</span>
                                     <span class="journey-stat-label">users</span>
                                 </div>

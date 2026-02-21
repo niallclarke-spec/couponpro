@@ -74,26 +74,33 @@
 
 .journey-stats-row {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
 }
 
 .journey-stat {
     display: flex;
-    align-items: baseline;
-    gap: 3px;
+    align-items: center;
+    gap: 4px;
+}
+
+.journey-stat-icon {
+    width: 13px;
+    height: 13px;
+    opacity: 0.5;
+    flex-shrink: 0;
 }
 
 .journey-stat-value {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-primary, #e8edf5);
 }
 
 .journey-stat-label {
     font-size: 11px;
-    color: var(--text-secondary, #8896a6);
+    color: var(--text-muted, #64748b);
 }
 
 .journey-card.stopped {

@@ -2,6 +2,7 @@
 Hype Chat service - AI-powered hype message generation and flow execution.
 """
 import os
+import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 
@@ -147,16 +148,50 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
         free_channel_id = settings["free_channel_id"]
         bot_token = creds["bot_token"]
 
-        result = send_message(
-            bot_token=bot_token,
-            chat_id=free_channel_id,
-            text=message_text,
-            parse_mode="HTML",
-        )
+        def is_retryable_error(error_str: str) -> bool:
+            """Check if an error is transient and retryable."""
+            error_lower = error_str.lower()
+            retryable_patterns = [
+                "429", "500", "502", "503", "504",
+                "too many requests", "retry after",
+                "internal server error", "bad gateway",
+                "gateway timeout", "service unavailable",
+                "timeout", "connection", "network",
+                "timed out", "temporarily unavailable",
+            ]
+            return any(pattern in error_lower for pattern in retryable_patterns)
 
         telegram_message_id = None
-        if result.get("ok") and result.get("result"):
-            telegram_message_id = result["result"].get("message_id")
+        result = None
+        last_error = None
+        max_attempts = 3
+        base_wait = 2
+
+        for attempt in range(1, max_attempts + 1):
+            result = send_message(
+                bot_token=bot_token,
+                chat_id=free_channel_id,
+                text=message_text,
+                parse_mode="HTML",
+            )
+
+            if result.get("success"):
+                if result.get("response") and result["response"].get("result"):
+                    telegram_message_id = result["response"]["result"].get("message_id")
+                logger.info(f"Message sent successfully on attempt {attempt}")
+                break
+            else:
+                last_error = result.get("error", "Unknown error")
+                if not is_retryable_error(last_error):
+                    logger.warning(f"Non-retryable error on attempt {attempt}: {last_error}")
+                    break
+                
+                if attempt < max_attempts:
+                    wait_time = base_wait * (2 ** (attempt - 1))
+                    logger.warning(f"Attempt {attempt} failed with retryable error: {last_error}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"All {max_attempts} attempts failed. Last error: {last_error}")
 
         repo.log_message(
             tenant_id=tenant_id,
@@ -166,11 +201,19 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
             telegram_message_id=telegram_message_id,
         )
 
-        return {
-            "success": True,
-            "message_sent": message_text,
-            "telegram_message_id": telegram_message_id,
-        }
+        if result and result.get("success"):
+            return {
+                "success": True,
+                "message_sent": message_text,
+                "telegram_message_id": telegram_message_id,
+            }
+        else:
+            return {
+                "success": False,
+                "error": last_error or "Failed to send message",
+                "message_text_logged": True,
+                "content_preserved": True,
+            }
 
     except Exception as e:
         logger.exception(f"Error sending hype message: {e}")
