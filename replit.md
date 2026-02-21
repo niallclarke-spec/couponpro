@@ -44,7 +44,7 @@ The platform supports dual authentication: primary Clerk JWT authentication and 
 - **Navigation Restructure**: Journeys sidebar item split into parent group "Journeys" with two children: "Support Chat" (existing DM journey flows) and "Hype Bot" (new channel posting system). Legacy `#forex/journeys` hash redirects to `#forex/support-chat`.
 
 ### Server Architecture
-The server employs a dispatcher pattern with thin request handlers, centralized routing, and middleware for authentication and database checks.
+The server employs a dispatcher pattern with thin request handlers, centralized routing, and middleware for authentication and database checks. **Leader Lock (PostgreSQL advisory lock)** gates ALL background workers (Forex scheduler, Journey scheduler, Cross Promo worker, Telethon listener) so only one instance runs them in multi-instance deployments. Standby instances handle webhooks/API requests but do not run scheduled jobs. Leader retry loop checks every 10s for failover.
 
 ### Repository Pattern
 Domain-specific repository modules centralize database access with consistent error handling, implementing a `Database Availability Pattern` (raising 503 on unavailability) and a `Tenant Isolation Pattern` (rejecting requests without valid tenant context).

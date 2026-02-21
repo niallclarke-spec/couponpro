@@ -86,33 +86,65 @@ def start_app(ctx: AppContext) -> None:
         except Exception as e:
             logger.exception("Forex bot webhook error")
     
-    if ctx.forex_scheduler_available:
+    if ctx.database_available:
         try:
             from core.leader import acquire_scheduler_leader_lock, start_leader_retry_loop, start_scheduler_once
-            from workers.scheduler import start_forex_scheduler
             
-            def _do_start_scheduler():
-                """Actual scheduler startup - called via start_scheduler_once()"""
-                def run_forex_scheduler():
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
+            def _do_start_all_workers():
+                """Start all background workers - called via start_scheduler_once() on leader only"""
+                if ctx.forex_scheduler_available:
+                    from workers.scheduler import start_forex_scheduler
+                    def run_forex_scheduler():
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        try:
+                            loop.run_until_complete(start_forex_scheduler())
+                        except Exception as e:
+                            logger.exception("Scheduler error")
+                    
+                    scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
+                    scheduler_thread.start()
+                    logger.info("Forex scheduler started in background thread")
+
+                try:
+                    from domains.journeys.scheduler import start_journey_scheduler
+                    start_journey_scheduler(interval_seconds=10)
+                    logger.info("Journey scheduler started")
+                except Exception as e:
+                    logger.exception("Journey scheduler startup failed")
+
+                try:
+                    from scheduler.crosspromo_worker import start_worker_thread
+                    start_worker_thread()
+                    logger.info("Cross promo worker started")
+                except Exception as e:
+                    logger.exception("Cross promo worker startup failed")
+
+                telethon_auto_connect = os.environ.get('TELETHON_AUTO_CONNECT', 'true').lower()
+                if telethon_auto_connect == 'false':
+                    logger.info("Telethon auto-connect disabled (TELETHON_AUTO_CONNECT=false)")
+                else:
                     try:
-                        loop.run_until_complete(start_forex_scheduler())
+                        from integrations.telegram.user_client import get_client
+                        from integrations.telegram.user_listener import start_listener_sync
+                        tc = get_client('entrylab')
+                        connected = tc.is_connected() or tc.connect_sync()
+                        if connected:
+                            start_listener_sync('entrylab')
+                            logger.info("Telethon listener started for entrylab")
+                        else:
+                            logger.info(f"Telethon client not ready (status={tc.status}), listener skipped")
                     except Exception as e:
-                        logger.exception("Scheduler error")
-                
-                scheduler_thread = threading.Thread(target=run_forex_scheduler, daemon=True)
-                scheduler_thread.start()
-                logger.info("Forex scheduler started in background thread")
+                        logger.warning(f"Telethon listener startup skipped: {e}")
             
             if acquire_scheduler_leader_lock():
-                logger.info("Leader lock acquired, starting scheduler")
-                start_scheduler_once(_do_start_scheduler)
+                logger.info("Leader lock acquired, starting all workers")
+                start_scheduler_once(_do_start_all_workers)
             else:
                 logger.info("Leader lock not acquired, waiting for leader to terminate")
-                start_leader_retry_loop(_do_start_scheduler)
+                start_leader_retry_loop(_do_start_all_workers)
         except Exception as e:
-            logger.exception("Forex scheduler startup failed")
+            logger.exception("Worker startup failed")
     
     try:
         from auth.clerk_auth import prefetch_jwks
@@ -129,38 +161,5 @@ def start_app(ctx: AppContext) -> None:
         except Exception as e:
             logger.exception("Stripe initialization failed")
             ctx.stripe_available = False
-    
-    if ctx.database_available:
-        try:
-            from domains.journeys.scheduler import start_journey_scheduler
-            start_journey_scheduler(interval_seconds=10)
-            logger.info("Journey scheduler started")
-        except Exception as e:
-            logger.exception("Journey scheduler startup failed")
-        
-        try:
-            from scheduler.crosspromo_worker import start_worker_thread
-            start_worker_thread()
-            logger.info("Cross promo worker started")
-        except Exception as e:
-            logger.exception("Cross promo worker startup failed")
-        
-        import os
-        telethon_auto_connect = os.environ.get('TELETHON_AUTO_CONNECT', 'true').lower()
-        if telethon_auto_connect == 'false':
-            logger.info("Telethon auto-connect disabled (TELETHON_AUTO_CONNECT=false)")
-        else:
-            try:
-                from integrations.telegram.user_client import get_client
-                from integrations.telegram.user_listener import start_listener_sync
-                tc = get_client('entrylab')
-                connected = tc.is_connected() or tc.connect_sync()
-                if connected:
-                    start_listener_sync('entrylab')
-                    logger.info("Telethon listener started for entrylab")
-                else:
-                    logger.info(f"Telethon client not ready (status={tc.status}), listener skipped")
-            except Exception as e:
-                logger.warning(f"Telethon listener startup skipped: {e}")
     
     logger.info("Application started")
