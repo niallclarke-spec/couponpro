@@ -1,0 +1,114 @@
+Feb 21 23:24:21  10.244.4.249 - - [21/Feb/2026 23:24:21] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 21 23:24:22  10.244.5.120 - - [21/Feb/2026 23:24:22] code 404, message File not found
+Feb 21 23:24:22  10.244.5.120 - - [21/Feb/2026 23:24:22] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:24:22  10.244.6.27 - - [21/Feb/2026 23:24:22] code 404, message File not found
+Feb 21 23:24:22  10.244.6.27 - - [21/Feb/2026 23:24:22] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:24:23  10.244.7.214 - - [21/Feb/2026 23:24:23] code 404, message File not found
+Feb 21 23:24:23  10.244.7.214 - - [21/Feb/2026 23:24:23] "GET //.aws/config HTTP/1.1" 404 -
+Feb 21 23:24:24  10.244.7.214 - - [21/Feb/2026 23:24:24] code 404, message File not found
+Feb 21 23:24:24  10.244.7.214 - - [21/Feb/2026 23:24:24] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:24:24  10.244.7.214 - - [21/Feb/2026 23:24:24] code 404, message File not found
+Feb 21 23:24:24  10.244.7.214 - - [21/Feb/2026 23:24:24] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:24:25  10.244.6.27 - - [21/Feb/2026 23:24:25] "GET /.git/config HTTP/1.1" 200 -
+Feb 21 23:24:26  10.244.5.120 - - [21/Feb/2026 23:24:26] code 404, message File not found
+Feb 21 23:24:26  10.244.5.120 - - [21/Feb/2026 23:24:26] "GET /admin/.git/config HTTP/1.1" 404 -
+Feb 21 23:24:30  [2026-02-21 23:24:30] [INFO] [service] [req:27836c38] Generated sequence of 5 messages for tenant entrylab
+Feb 21 23:24:30  10.244.4.249 - - [21/Feb/2026 23:24:30] "POST /api/hypechat/preview HTTP/1.1" 200 -
+Feb 21 23:26:17  10.244.7.214 - - [21/Feb/2026 23:26:17] "GET / HTTP/1.1" 302 -
+Feb 21 23:26:18  [2026-02-21 23:26:18] [WARNING] [clerk_auth] [req:15f4b5bd] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 21 23:26:18  10.244.4.249 - - [21/Feb/2026 23:26:18] "GET /admin HTTP/1.1" 302 -
+Feb 21 23:26:18  10.244.5.120 - - [21/Feb/2026 23:26:18] "GET /login HTTP/1.1" 200 -
+Feb 21 23:26:19  10.244.4.249 - - [21/Feb/2026 23:26:19] code 404, message File not found
+Feb 21 23:26:19  10.244.4.249 - - [21/Feb/2026 23:26:19] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 21 23:26:20  10.244.4.249 - - [21/Feb/2026 23:26:20] code 404, message File not found
+Feb 21 23:26:20  10.244.4.249 - - [21/Feb/2026 23:26:20] "GET /phpinfo HTTP/1.1" 404 -
+Feb 21 23:26:21  10.244.7.214 - - [21/Feb/2026 23:26:21] code 404, message File not found
+Feb 21 23:26:21  10.244.7.214 - - [21/Feb/2026 23:26:21] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 21 23:26:24  10.244.5.120 - - [21/Feb/2026 23:26:24] code 404, message File not found
+Feb 21 23:26:24  10.244.5.120 - - [21/Feb/2026 23:26:24] "GET /info HTTP/1.1" 404 -
+Feb 21 23:26:26  10.244.7.214 - - [21/Feb/2026 23:26:26] code 404, message File not found
+Feb 21 23:26:26  10.244.7.214 - - [21/Feb/2026 23:26:26] "GET /php_info.php HTTP/1.1" 404 -
+Feb 21 23:26:28  10.244.7.214 - - [21/Feb/2026 23:26:28] code 404, message File not found
+Feb 21 23:26:28  10.244.7.214 - - [21/Feb/2026 23:26:28] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 21 23:26:29  10.244.6.27 - - [21/Feb/2026 23:26:29] code 404, message File not found
+Feb 21 23:26:29  10.244.6.27 - - [21/Feb/2026 23:26:29] "GET /info.php HTTP/1.1" 404 -
+Feb 21 23:26:30  10.244.6.27 - - [21/Feb/2026 23:26:30] code 404, message File not found
+Feb 21 23:26:30  10.244.6.27 - - [21/Feb/2026 23:26:30] "GET /.env HTTP/1.1" 404 -
+Feb 21 23:26:31  10.244.7.214 - - [21/Feb/2026 23:26:31] code 404, message File not found
+Feb 21 23:26:31  10.244.7.214 - - [21/Feb/2026 23:26:31] "GET /config/.env HTTP/1.1" 404 -
+Feb 21 23:26:31  10.244.6.27 - - [21/Feb/2026 23:26:31] code 404, message File not found
+Feb 21 23:26:31  10.244.6.27 - - [21/Feb/2026 23:26:31] "GET /.env.production HTTP/1.1" 404 -
+Feb 21 23:26:32  10.244.6.27 - - [21/Feb/2026 23:26:32] code 404, message File not found
+Feb 21 23:26:32  10.244.6.27 - - [21/Feb/2026 23:26:32] "GET /application/.env HTTP/1.1" 404 -
+Feb 21 23:26:33  10.244.4.249 - - [21/Feb/2026 23:26:33] code 404, message File not found
+Feb 21 23:26:33  10.244.4.249 - - [21/Feb/2026 23:26:33] "GET /prod/.env HTTP/1.1" 404 -
+Feb 21 23:26:33  10.244.7.214 - - [21/Feb/2026 23:26:33] code 404, message File not found
+Feb 21 23:26:33  10.244.7.214 - - [21/Feb/2026 23:26:33] "GET /.env.save HTTP/1.1" 404 -
+Feb 21 23:26:34  10.244.6.27 - - [21/Feb/2026 23:26:34] code 404, message File not found
+Feb 21 23:26:34  10.244.6.27 - - [21/Feb/2026 23:26:34] "GET /beta/.env HTTP/1.1" 404 -
+Feb 21 23:26:35  10.244.5.120 - - [21/Feb/2026 23:26:35] code 404, message File not found
+Feb 21 23:26:35  10.244.5.120 - - [21/Feb/2026 23:26:35] "GET /admin/.env HTTP/1.1" 404 -
+Feb 21 23:26:35  10.244.6.27 - - [21/Feb/2026 23:26:35] code 404, message File not found
+Feb 21 23:26:35  10.244.6.27 - - [21/Feb/2026 23:26:35] "GET /app/.env HTTP/1.1" 404 -
+Feb 21 23:26:36  10.244.4.249 - - [21/Feb/2026 23:26:36] code 404, message File not found
+Feb 21 23:26:36  10.244.4.249 - - [21/Feb/2026 23:26:36] "GET /api/shared/config/config.env HTTP/1.1" 404 -
+Feb 21 23:26:36  10.244.7.214 - - [21/Feb/2026 23:26:36] code 404, message File not found
+Feb 21 23:26:36  10.244.7.214 - - [21/Feb/2026 23:26:36] "GET /api/.env HTTP/1.1" 404 -
+Feb 21 23:26:37  10.244.7.214 - - [21/Feb/2026 23:26:37] code 404, message File not found
+Feb 21 23:26:37  10.244.7.214 - - [21/Feb/2026 23:26:37] "GET /.env.local HTTP/1.1" 404 -
+Feb 21 23:26:38  10.244.5.120 - - [21/Feb/2026 23:26:38] "POST /vendor/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:38  10.244.5.120 - - [21/Feb/2026 23:26:38] "POST /app/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:39  10.244.5.120 - - [21/Feb/2026 23:26:39] "POST /yii/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:39  10.244.5.120 - - [21/Feb/2026 23:26:39] "POST /laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:39  10.244.5.120 - - [21/Feb/2026 23:26:39] "POST /laravel52/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:40  10.244.5.120 - - [21/Feb/2026 23:26:40] "POST /lib/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:41  10.244.5.120 - - [21/Feb/2026 23:26:41] "POST /zend/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:41  10.244.5.120 - - [21/Feb/2026 23:26:41] "POST /panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:41  10.244.5.120 - - [21/Feb/2026 23:26:41] "POST /phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:42  10.244.5.120 - - [21/Feb/2026 23:26:42] "POST /lib/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:42  10.244.5.120 - - [21/Feb/2026 23:26:42] "POST /vendor/phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:43  10.244.5.120 - - [21/Feb/2026 23:26:43] "POST /phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:43  10.244.5.120 - - [21/Feb/2026 23:26:43] "POST /phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:43  10.244.5.120 - - [21/Feb/2026 23:26:43] "POST /lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:44  10.244.5.120 - - [21/Feb/2026 23:26:44] "POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:44  10.244.5.120 - - [21/Feb/2026 23:26:44] "POST /lib/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:44  10.244.5.120 - - [21/Feb/2026 23:26:44] "POST /vendor/phpunit/phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:45  10.244.5.120 - - [21/Feb/2026 23:26:45] "POST /admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:45  10.244.5.120 - - [21/Feb/2026 23:26:45] "POST /admin/ckeditor/plugins/ajaxplorer/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:45  10.244.5.120 - - [21/Feb/2026 23:26:45] "POST /lib/phpunit/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:46  10.244.5.120 - - [21/Feb/2026 23:26:46] "POST /phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1" 404 -
+Feb 21 23:26:46  10.244.5.120 - - [21/Feb/2026 23:26:46] "POST / HTTP/1.1" 404 -
+Feb 21 23:26:47  10.244.7.214 - - [21/Feb/2026 23:26:47] code 404, message File not found
+Feb 21 23:26:47  10.244.7.214 - - [21/Feb/2026 23:26:47] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 21 23:26:47  10.244.6.27 - - [21/Feb/2026 23:26:47] code 404, message File not found
+Feb 21 23:26:47  10.244.6.27 - - [21/Feb/2026 23:26:47] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:26:48  10.244.4.249 - - [21/Feb/2026 23:26:48] code 404, message File not found
+Feb 21 23:26:48  10.244.4.249 - - [21/Feb/2026 23:26:48] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:26:48  10.244.7.214 - - [21/Feb/2026 23:26:48] code 404, message File not found
+Feb 21 23:26:48  10.244.7.214 - - [21/Feb/2026 23:26:48] "GET //.aws/config HTTP/1.1" 404 -
+Feb 21 23:26:49  10.244.4.249 - - [21/Feb/2026 23:26:49] code 404, message File not found
+Feb 21 23:26:49  10.244.4.249 - - [21/Feb/2026 23:26:49] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:26:49  10.244.7.214 - - [21/Feb/2026 23:26:49] code 404, message File not found
+Feb 21 23:26:49  10.244.7.214 - - [21/Feb/2026 23:26:49] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 21 23:26:51  10.244.7.214 - - [21/Feb/2026 23:26:51] "GET /.git/config HTTP/1.1" 200 -
+Feb 21 23:26:52  10.244.5.120 - - [21/Feb/2026 23:26:52] code 404, message File not found
+Feb 21 23:26:52  10.244.5.120 - - [21/Feb/2026 23:26:52] "GET /admin/.git/config HTTP/1.1" 404 -
+Feb 21 23:27:30  10.244.5.120 - - [21/Feb/2026 23:27:30] "PUT /api/hypechat/prompts/ef202b17-f9c2-4ce1-b566-6321bbb8f269 HTTP/1.1" 200 -
+Feb 21 23:27:30  10.244.6.27 - - [21/Feb/2026 23:27:30] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 21 23:27:42  [2026-02-21 23:27:42] [INFO] [service] [req:9b525943] Generated sequence of 5 messages for tenant entrylab
+Feb 21 23:27:42  10.244.4.249 - - [21/Feb/2026 23:27:42] "POST /api/hypechat/preview HTTP/1.1" 200 -
+Feb 21 23:29:01  10.244.5.120 - - [21/Feb/2026 23:29:01] "PUT /api/hypechat/prompts/ef202b17-f9c2-4ce1-b566-6321bbb8f269 HTTP/1.1" 200 -
+Feb 21 23:29:01  10.244.6.27 - - [21/Feb/2026 23:29:01] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.6.27 - - [21/Feb/2026 23:29:03] "GET /admin HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.4.249 - - [21/Feb/2026 23:29:03] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.7.214 - - [21/Feb/2026 23:29:03] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.6.27 - - [21/Feb/2026 23:29:03] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.5.120 - - [21/Feb/2026 23:29:03] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 21 23:29:03  10.244.5.120 - - [21/Feb/2026 23:29:03] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 21 23:29:04  10.244.7.214 - - [21/Feb/2026 23:29:04] "GET /api/config HTTP/1.1" 200 -
+Feb 21 23:29:04  10.244.7.214 - - [21/Feb/2026 23:29:04] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 21 23:29:04  10.244.6.27 - - [21/Feb/2026 23:29:04] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 21 23:29:04  10.244.4.249 - - [21/Feb/2026 23:29:04] "GET /api/hypechat/flows HTTP/1.1" 200 -
+Feb 21 23:29:04  10.244.5.120 - - [21/Feb/2026 23:29:04] "GET /api/connections HTTP/1.1" 200 -
+Feb 21 23:29:17  [2026-02-21 23:29:17] [INFO] [service] [req:e711e1d7] Generated sequence of 5 messages for tenant entrylab
+Feb 21 23:29:17  10.244.7.214 - - [21/Feb/2026 23:29:17] "POST /api/hypechat/preview HTTP/1.1" 200 -
