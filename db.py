@@ -1737,6 +1737,15 @@ class DatabasePool:
                     else:
                         logger.info(f"{col} column already exists on hype_flows, skipping")
 
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='hype_flows' AND column_name='interval_max_minutes'")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE hype_flows ADD COLUMN interval_max_minutes INTEGER DEFAULT 90")
+                    cursor.execute("UPDATE hype_flows SET interval_max_minutes = interval_minutes WHERE interval_max_minutes IS NULL OR interval_max_minutes = 90")
+                    conn.commit()
+                    logger.info("interval_max_minutes column added to hype_flows")
+                else:
+                    logger.info("interval_max_minutes column already exists on hype_flows, skipping")
+
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS hype_messages (
                         id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,

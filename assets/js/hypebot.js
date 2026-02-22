@@ -109,7 +109,7 @@ window.HypeBotModule = (function() {
                 </div>
                 <div class="hype-card-right">
                     <div class="hype-flow-config">
-                        <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}min</span>
+                        <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}-${f.interval_max_minutes || f.interval_minutes}min</span>
                         <span class="hype-config-item">CTA delay: ${f.delay_after_cta_minutes}min</span>
                         <span class="hype-config-item">${escapeHtml(f.active_days)}</span>
                         ${f.cta_enabled ? '<span class="hype-config-item" style="color:#34c759;">CTA ✓</span>' : ''}
@@ -371,9 +371,9 @@ window.HypeBotModule = (function() {
         const opts = prompts.map(p => `<option value="${p.id}" ${flow && flow.prompt_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
         const modalHtml = `
             <div class="modal-overlay" id="hype-flow-modal" onclick="if(event.target===this)this.remove()">
-                <div class="modal-content" style="max-width:520px;">
+                <div class="modal-content" style="max-width:520px;max-height:90vh;display:flex;flex-direction:column;">
                     <div class="modal-header"><h3>${title}</h3><button class="modal-close" onclick="document.getElementById('hype-flow-modal').remove()">&times;</button></div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="overflow-y:auto;flex:1;">
                         <div style="margin-bottom:16px;">
                             <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Name</label>
                             <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}" placeholder="e.g. Post-CTA Hype" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;">
@@ -386,7 +386,8 @@ window.HypeBotModule = (function() {
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Messages</label><input type="number" id="hype-flow-count" min="1" max="10" value="${flow ? flow.message_count : 3}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Interval (min)</label><input type="number" id="hype-flow-interval" min="5" value="${flow ? flow.interval_minutes : 90}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
+                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Min Interval (min)</label><input type="number" id="hype-flow-interval" min="1" value="${flow ? flow.interval_minutes : 5}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
+                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Max Interval (min)</label><input type="number" id="hype-flow-interval-max" min="1" value="${flow ? (flow.interval_max_minutes || flow.interval_minutes) : 30}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Delay after CTA (min)</label><input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label><input type="text" id="hype-flow-days" value="${flow ? flow.active_days : 'mon-fri'}" placeholder="mon-fri" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                         </div>
@@ -445,7 +446,8 @@ window.HypeBotModule = (function() {
         const name = document.getElementById('hype-flow-name').value.trim();
         const promptId = document.getElementById('hype-flow-prompt').value;
         const mc = parseInt(document.getElementById('hype-flow-count').value) || 3;
-        const iv = parseInt(document.getElementById('hype-flow-interval').value) || 90;
+        const iv = parseInt(document.getElementById('hype-flow-interval').value) || 5;
+        const ivMax = parseInt(document.getElementById('hype-flow-interval-max')?.value) || iv;
         const dl = parseInt(document.getElementById('hype-flow-delay').value) || 10;
         const days = document.getElementById('hype-flow-days').value.trim() || 'mon-fri';
         const ctaEnabled = document.getElementById('hype-flow-cta-enabled')?.checked || false;
@@ -460,7 +462,7 @@ window.HypeBotModule = (function() {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
             const url = editId ? `/api/hypechat/flows/${editId}` : '/api/hypechat/flows';
-            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl }) });
+            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, interval_max_minutes: ivMax, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl }) });
             if (resp.ok) { document.getElementById('hype-flow-modal')?.remove(); await loadFlows(); }
             else { const err = await resp.json(); alert(err.error || 'Failed to save'); }
         } catch (e) { console.error('Error saving flow:', e); }

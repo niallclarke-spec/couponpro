@@ -2,6 +2,7 @@
 Hype Chat service - AI-powered hype message generation and flow execution.
 """
 import os
+import random
 import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
@@ -254,7 +255,10 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
             return {"success": False, "error": "No prompt configured for flow", "messages_scheduled": 0}
 
         message_count = flow.get("message_count", 3)
-        interval_minutes = flow.get("interval_minutes", 90)
+        interval_min = flow.get("interval_minutes", 90)
+        interval_max = flow.get("interval_max_minutes", interval_min)
+        if interval_max < interval_min:
+            interval_max = interval_min
         delay_after_cta = flow.get("delay_after_cta_minutes", 10)
 
         pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count)
@@ -264,10 +268,14 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
         now = datetime.utcnow()
         today_str = now.strftime("%Y-%m-%d")
         scheduled = 0
+        cumulative_offset = delay_after_cta
+        last_run_at = now + timedelta(minutes=cumulative_offset)
 
         for step in range(1, message_count + 1):
-            offset_minutes = delay_after_cta + ((step - 1) * interval_minutes)
-            run_at = now + timedelta(minutes=offset_minutes)
+            if step > 1:
+                cumulative_offset += random.randint(interval_min, interval_max)
+            run_at = now + timedelta(minutes=cumulative_offset)
+            last_run_at = run_at
 
             dedupe_key = f"hype_{flow_id}_{today_str}_step{step}"
 
@@ -318,8 +326,7 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
             cta_message = "\n\n".join(cta_parts)
 
             if cta_message.strip():
-                last_step_offset = delay_after_cta + ((message_count - 1) * interval_minutes)
-                cta_run_at = now + timedelta(minutes=last_step_offset + cta_delay)
+                cta_run_at = last_run_at + timedelta(minutes=cta_delay)
                 cta_dedupe_key = f"hype_{flow_id}_{today_str}_cta"
 
                 cta_payload = {

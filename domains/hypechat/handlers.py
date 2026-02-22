@@ -125,6 +125,7 @@ def handle_create_flow(handler):
         name=name,
         message_count=data.get('message_count', 3),
         interval_minutes=data.get('interval_minutes', 90),
+        interval_max_minutes=data.get('interval_max_minutes', data.get('interval_minutes', 90)),
         delay_after_cta_minutes=data.get('delay_after_cta_minutes', 10),
         active_days=data.get('active_days', 'mon-fri'),
         cta_enabled=data.get('cta_enabled', False),
