@@ -127,6 +127,13 @@ def handle_create_flow(handler):
         interval_minutes=data.get('interval_minutes', 90),
         delay_after_cta_minutes=data.get('delay_after_cta_minutes', 10),
         active_days=data.get('active_days', 'mon-fri'),
+        cta_enabled=data.get('cta_enabled', False),
+        cta_delay_minutes=data.get('cta_delay_minutes', 30),
+        cta_intro_text=data.get('cta_intro_text', ''),
+        cta_vip_label=data.get('cta_vip_label', ''),
+        cta_vip_url=data.get('cta_vip_url', ''),
+        cta_support_label=data.get('cta_support_label', ''),
+        cta_support_url=data.get('cta_support_url', ''),
     )
     if flow:
         _send_json(handler, 201, flow)

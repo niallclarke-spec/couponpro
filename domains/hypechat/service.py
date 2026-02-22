@@ -262,13 +262,13 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
             logger.warning(f"Failed to pre-generate messages for flow {flow_id}, will fallback to per-job generation")
 
         now = datetime.utcnow()
+        today_str = now.strftime("%Y-%m-%d")
         scheduled = 0
 
         for step in range(1, message_count + 1):
             offset_minutes = delay_after_cta + ((step - 1) * interval_minutes)
             run_at = now + timedelta(minutes=offset_minutes)
 
-            today_str = now.strftime("%Y-%m-%d")
             dedupe_key = f"hype_{flow_id}_{today_str}_step{step}"
 
             payload = {
@@ -292,6 +292,53 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
             if job:
                 scheduled += 1
                 logger.info(f"Scheduled hype step {step} at {run_at} for flow {flow_id}")
+
+        cta_enabled = flow.get("cta_enabled", False)
+        if cta_enabled:
+            cta_intro = flow.get("cta_intro_text", "")
+            cta_vip_label = flow.get("cta_vip_label", "")
+            cta_vip_url = flow.get("cta_vip_url", "")
+            cta_support_label = flow.get("cta_support_label", "")
+            cta_support_url = flow.get("cta_support_url", "")
+            cta_delay = flow.get("cta_delay_minutes", 30)
+
+            cta_parts = []
+            if cta_intro:
+                cta_parts.append(cta_intro)
+
+            links = []
+            if cta_vip_label and cta_vip_url:
+                links.append(f'👉 <a href="{cta_vip_url}">{cta_vip_label}</a>')
+            if cta_support_label and cta_support_url:
+                links.append(f'🟢 <a href="{cta_support_url}">{cta_support_label}</a>')
+
+            if links:
+                cta_parts.append("\n".join(links))
+
+            cta_message = "\n\n".join(cta_parts)
+
+            if cta_message.strip():
+                last_step_offset = delay_after_cta + ((message_count - 1) * interval_minutes)
+                cta_run_at = now + timedelta(minutes=last_step_offset + cta_delay)
+                cta_dedupe_key = f"hype_{flow_id}_{today_str}_cta"
+
+                cta_payload = {
+                    "flow_id": flow_id,
+                    "cta_message": cta_message,
+                    "job_sub_type": "hype_cta",
+                }
+
+                cta_job = enqueue_job(
+                    tenant_id=tenant_id,
+                    job_type="hype_cta",
+                    run_at=cta_run_at,
+                    payload=cta_payload,
+                    dedupe_key=cta_dedupe_key,
+                )
+
+                if cta_job:
+                    scheduled += 1
+                    logger.info(f"Scheduled CTA at {cta_run_at} for flow {flow_id}")
 
         return {"success": True, "messages_scheduled": scheduled}
 

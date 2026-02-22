@@ -126,7 +126,10 @@ def delete_prompt(tenant_id: str, prompt_id: str) -> bool:
 def create_flow(tenant_id: str, prompt_id: str, name: str,
                 message_count: int = 3, interval_minutes: int = 90,
                 delay_after_cta_minutes: int = 10, active_days: str = 'mon-fri',
-                status: str = 'paused') -> Optional[Dict]:
+                status: str = 'paused',
+                cta_enabled: bool = False, cta_delay_minutes: int = 30,
+                cta_intro_text: str = '', cta_vip_label: str = '', cta_vip_url: str = '',
+                cta_support_label: str = '', cta_support_url: str = '') -> Optional[Dict]:
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return None
@@ -136,13 +139,19 @@ def create_flow(tenant_id: str, prompt_id: str, name: str,
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO hype_flows (tenant_id, prompt_id, name, message_count,
-                    interval_minutes, delay_after_cta_minutes, active_days, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    interval_minutes, delay_after_cta_minutes, active_days, status,
+                    cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
+                    cta_support_label, cta_support_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, tenant_id, prompt_id, name, message_count,
                     interval_minutes, delay_after_cta_minutes, active_days, status,
-                    created_at, updated_at
+                    created_at, updated_at,
+                    cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
+                    cta_support_label, cta_support_url
             """, (tenant_id, prompt_id, name, message_count,
-                  interval_minutes, delay_after_cta_minutes, active_days, status))
+                  interval_minutes, delay_after_cta_minutes, active_days, status,
+                  cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
+                  cta_support_label, cta_support_url))
             row = cursor.fetchone()
             conn.commit()
             if row:
@@ -164,7 +173,10 @@ def list_flows(tenant_id: str) -> List[Dict]:
             cursor.execute("""
                 SELECT f.id, f.tenant_id, f.prompt_id, f.name, f.message_count,
                     f.interval_minutes, f.delay_after_cta_minutes, f.active_days, f.status,
-                    f.created_at, f.updated_at, p.name as prompt_name
+                    f.created_at, f.updated_at,
+                    f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
+                    f.cta_support_label, f.cta_support_url,
+                    p.name as prompt_name
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
                 WHERE f.tenant_id = %s
@@ -172,8 +184,8 @@ def list_flows(tenant_id: str) -> List[Dict]:
             """, (tenant_id,))
             flows = []
             for row in cursor.fetchall():
-                flow = _row_to_flow(row[:11])
-                flow['prompt_name'] = row[11]
+                flow = _row_to_flow(row[:18])
+                flow['prompt_name'] = row[18]
                 flows.append(flow)
             return flows
     except Exception as e:
@@ -192,16 +204,19 @@ def get_flow(tenant_id: str, flow_id: str) -> Optional[Dict]:
             cursor.execute("""
                 SELECT f.id, f.tenant_id, f.prompt_id, f.name, f.message_count,
                     f.interval_minutes, f.delay_after_cta_minutes, f.active_days, f.status,
-                    f.created_at, f.updated_at, p.name as prompt_name, p.custom_prompt
+                    f.created_at, f.updated_at,
+                    f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
+                    f.cta_support_label, f.cta_support_url,
+                    p.name as prompt_name, p.custom_prompt
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
                 WHERE f.tenant_id = %s AND f.id = %s
             """, (tenant_id, flow_id))
             row = cursor.fetchone()
             if row:
-                flow = _row_to_flow(row[:11])
-                flow['prompt_name'] = row[11]
-                flow['custom_prompt'] = row[12]
+                flow = _row_to_flow(row[:18])
+                flow['prompt_name'] = row[18]
+                flow['custom_prompt'] = row[19]
                 return flow
             return None
     except Exception as e:
@@ -215,7 +230,9 @@ def update_flow(tenant_id: str, flow_id: str, fields: Dict) -> Optional[Dict]:
         return None
 
     allowed_fields = {'name', 'prompt_id', 'message_count', 'interval_minutes',
-                      'delay_after_cta_minutes', 'active_days', 'status'}
+                      'delay_after_cta_minutes', 'active_days', 'status',
+                      'cta_enabled', 'cta_delay_minutes', 'cta_intro_text',
+                      'cta_vip_label', 'cta_vip_url', 'cta_support_label', 'cta_support_url'}
     update_fields = {k: v for k, v in fields.items() if k in allowed_fields}
 
     if not update_fields:
@@ -232,7 +249,9 @@ def update_flow(tenant_id: str, flow_id: str, fields: Dict) -> Optional[Dict]:
                 WHERE tenant_id = %s AND id = %s
                 RETURNING id, tenant_id, prompt_id, name, message_count,
                     interval_minutes, delay_after_cta_minutes, active_days, status,
-                    created_at, updated_at
+                    created_at, updated_at,
+                    cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
+                    cta_support_label, cta_support_url
             """, values)
             row = cursor.fetchone()
             conn.commit()
@@ -372,7 +391,10 @@ def get_active_flows(tenant_id: str) -> List[Dict]:
             cursor.execute("""
                 SELECT f.id, f.tenant_id, f.prompt_id, f.name, f.message_count,
                     f.interval_minutes, f.delay_after_cta_minutes, f.active_days, f.status,
-                    f.created_at, f.updated_at, p.name as prompt_name, p.custom_prompt
+                    f.created_at, f.updated_at,
+                    f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
+                    f.cta_support_label, f.cta_support_url,
+                    p.name as prompt_name, p.custom_prompt
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
                 WHERE f.tenant_id = %s AND f.status = 'active'
@@ -380,9 +402,9 @@ def get_active_flows(tenant_id: str) -> List[Dict]:
             """, (tenant_id,))
             flows = []
             for row in cursor.fetchall():
-                flow = _row_to_flow(row[:11])
-                flow['prompt_name'] = row[11]
-                flow['custom_prompt'] = row[12]
+                flow = _row_to_flow(row[:18])
+                flow['prompt_name'] = row[18]
+                flow['custom_prompt'] = row[19]
                 flows.append(flow)
             return flows
     except Exception as e:
@@ -403,7 +425,7 @@ def _row_to_prompt(row) -> Dict:
 
 
 def _row_to_flow(row) -> Dict:
-    return {
+    result = {
         'id': str(row[0]),
         'tenant_id': row[1],
         'prompt_id': row[2],
@@ -416,6 +438,15 @@ def _row_to_flow(row) -> Dict:
         'created_at': row[9].isoformat() if row[9] else None,
         'updated_at': row[10].isoformat() if row[10] else None,
     }
+    if len(row) > 11:
+        result['cta_enabled'] = row[11] if row[11] is not None else False
+        result['cta_delay_minutes'] = row[12] if row[12] is not None else 30
+        result['cta_intro_text'] = row[13] or ''
+        result['cta_vip_label'] = row[14] or ''
+        result['cta_vip_url'] = row[15] or ''
+        result['cta_support_label'] = row[16] or ''
+        result['cta_support_url'] = row[17] or ''
+    return result
 
 
 def _row_to_message(row) -> Dict:

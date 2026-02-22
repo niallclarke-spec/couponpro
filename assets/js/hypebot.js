@@ -112,6 +112,7 @@ window.HypeBotModule = (function() {
                         <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}min</span>
                         <span class="hype-config-item">CTA delay: ${f.delay_after_cta_minutes}min</span>
                         <span class="hype-config-item">${escapeHtml(f.active_days)}</span>
+                        ${f.cta_enabled ? '<span class="hype-config-item" style="color:#34c759;">CTA ✓</span>' : ''}
                     </div>
                     <div class="hype-card-actions">
                         ${f.status === 'paused'
@@ -389,6 +390,45 @@ window.HypeBotModule = (function() {
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Delay after CTA (min)</label><input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label><input type="text" id="hype-flow-days" value="${flow ? flow.active_days : 'mon-fri'}" placeholder="mon-fri" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                         </div>
+                        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                <label style="font-size:13px;font-weight:600;color:var(--text-primary);">CTA Message</label>
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                    <input type="checkbox" id="hype-flow-cta-enabled" ${flow && flow.cta_enabled ? 'checked' : ''} onchange="document.getElementById('hype-cta-fields').style.display=this.checked?'block':'none'" style="accent-color:#34c759;">
+                                    <span style="font-size:12px;color:var(--text-secondary);">Enabled</span>
+                                </label>
+                            </div>
+                            <div id="hype-cta-fields" style="display:${flow && flow.cta_enabled ? 'block' : 'none'};">
+                                <div style="margin-bottom:12px;">
+                                    <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Delay after last message (min)</label>
+                                    <input type="number" id="hype-flow-cta-delay" min="0" value="${flow && flow.cta_delay_minutes != null ? flow.cta_delay_minutes : 30}" style="width:100px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                </div>
+                                <div style="margin-bottom:12px;">
+                                    <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Intro Text</label>
+                                    <textarea id="hype-flow-cta-intro" rows="2" placeholder="e.g. If you're looking to approach the market with a clear process..." style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;resize:vertical;font-family:inherit;box-sizing:border-box;">${flow && flow.cta_intro_text ? escapeHtml(flow.cta_intro_text) : ''}</textarea>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">VIP Link Label</label>
+                                        <input type="text" id="hype-flow-cta-vip-label" value="${flow && flow.cta_vip_label ? escapeHtml(flow.cta_vip_label) : ''}" placeholder="Join EntryLab VIP" style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">VIP Link URL</label>
+                                        <input type="text" id="hype-flow-cta-vip-url" value="${flow && flow.cta_vip_url ? escapeHtml(flow.cta_vip_url) : ''}" placeholder="https://..." style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                    <div>
+                                        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Support Link Label</label>
+                                        <input type="text" id="hype-flow-cta-support-label" value="${flow && flow.cta_support_label ? escapeHtml(flow.cta_support_label) : ''}" placeholder="Chat With Us" style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Support Link URL</label>
+                                        <input type="text" id="hype-flow-cta-support-url" value="${flow && flow.cta_support_url ? escapeHtml(flow.cta_support_url) : ''}" placeholder="https://..." style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border-primary);">
                         <button class="btn btn-secondary" onclick="document.getElementById('hype-flow-modal').remove()">Cancel</button>
@@ -408,12 +448,19 @@ window.HypeBotModule = (function() {
         const iv = parseInt(document.getElementById('hype-flow-interval').value) || 90;
         const dl = parseInt(document.getElementById('hype-flow-delay').value) || 10;
         const days = document.getElementById('hype-flow-days').value.trim() || 'mon-fri';
+        const ctaEnabled = document.getElementById('hype-flow-cta-enabled')?.checked || false;
+        const ctaDelay = parseInt(document.getElementById('hype-flow-cta-delay')?.value) || 30;
+        const ctaIntro = document.getElementById('hype-flow-cta-intro')?.value?.trim() || '';
+        const ctaVipLabel = document.getElementById('hype-flow-cta-vip-label')?.value?.trim() || '';
+        const ctaVipUrl = document.getElementById('hype-flow-cta-vip-url')?.value?.trim() || '';
+        const ctaSupportLabel = document.getElementById('hype-flow-cta-support-label')?.value?.trim() || '';
+        const ctaSupportUrl = document.getElementById('hype-flow-cta-support-url')?.value?.trim() || '';
         if (!name) { alert('Please enter a flow name'); return; }
         try {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
             const url = editId ? `/api/hypechat/flows/${editId}` : '/api/hypechat/flows';
-            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, delay_after_cta_minutes: dl, active_days: days }) });
+            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl }) });
             if (resp.ok) { document.getElementById('hype-flow-modal')?.remove(); await loadFlows(); }
             else { const err = await resp.json(); alert(err.error || 'Failed to save'); }
         } catch (e) { console.error('Error saving flow:', e); }
@@ -442,7 +489,7 @@ window.HypeBotModule = (function() {
         const flow = flows.find(f => f.id === id);
         if (!flow) return;
         if (typeof showModalConfirm === 'function') {
-            showModalConfirm('Trigger Flow', `Manually trigger "${escapeHtml(flow.name)}"? This will schedule ${flow.message_count} messages.`, 'Trigger', async () => { await doTriggerFlow(id); });
+            showModalConfirm('Trigger Flow', `Manually trigger "${escapeHtml(flow.name)}"? This will schedule ${flow.message_count} messages${flow.cta_enabled ? ' + CTA' : ''}.`, 'Trigger', async () => { await doTriggerFlow(id); });
         } else { await doTriggerFlow(id); }
     }
     async function doTriggerFlow(id) {

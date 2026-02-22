@@ -725,6 +725,49 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             logger.exception(f"Error executing hype_message job: {e}")
             return {"success": False, "error": str(e)}
     
+    elif job_type == 'hype_cta':
+        cta_message = payload.get('cta_message', '')
+        flow_id = payload.get('flow_id', '')
+        
+        if not cta_message:
+            return {"success": False, "error": "Missing cta_message in hype_cta payload"}
+        
+        try:
+            from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+            from domains.crosspromo.repo import get_settings
+            
+            try:
+                creds = get_bot_credentials(tenant_id, "signal_bot")
+            except BotNotConfiguredError as e:
+                return {"success": False, "error": str(e)}
+            
+            settings = get_settings(tenant_id)
+            if not settings or not settings.get("free_channel_id"):
+                return {"success": False, "error": "Free channel not configured"}
+            
+            result = send_message(
+                bot_token=creds["bot_token"],
+                chat_id=settings["free_channel_id"],
+                text=cta_message,
+                parse_mode="HTML",
+            )
+            
+            if result and result.get("success"):
+                from domains.hypechat import repo as hype_repo
+                hype_repo.log_message(
+                    tenant_id=tenant_id,
+                    flow_id=flow_id,
+                    step_number=0,
+                    content_sent=cta_message,
+                    telegram_message_id=result.get("message_id"),
+                )
+                return {"success": True}
+            else:
+                return {"success": False, "error": result.get("error", "Failed to send CTA") if result else "No result"}
+        except Exception as e:
+            logger.exception(f"Error executing hype_cta job: {e}")
+            return {"success": False, "error": str(e)}
+    
     else:
         return {"success": False, "error": f"Unknown job type: {job_type}"}
 

@@ -1714,6 +1714,30 @@ class DatabasePool:
                 logger.info("hype_flows table ready")
 
                 cursor.execute("""
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name='hype_flows' AND column_name IN (
+                        'cta_enabled', 'cta_delay_minutes', 'cta_intro_text',
+                        'cta_vip_label', 'cta_vip_url', 'cta_support_label', 'cta_support_url'
+                    )
+                """)
+                existing_cta_cols = {row[0] for row in cursor.fetchall()}
+
+                for col, col_type, default in [
+                    ('cta_enabled', 'BOOLEAN', 'FALSE'),
+                    ('cta_delay_minutes', 'INTEGER', '30'),
+                    ('cta_intro_text', 'TEXT', 'NULL'),
+                    ('cta_vip_label', 'TEXT', 'NULL'),
+                    ('cta_vip_url', 'TEXT', 'NULL'),
+                    ('cta_support_label', 'TEXT', 'NULL'),
+                    ('cta_support_url', 'TEXT', 'NULL'),
+                ]:
+                    if col not in existing_cta_cols:
+                        cursor.execute(f"ALTER TABLE hype_flows ADD COLUMN {col} {col_type} DEFAULT {default}")
+                        logger.info(f"{col} column added to hype_flows")
+                    else:
+                        logger.info(f"{col} column already exists on hype_flows, skipping")
+
+                cursor.execute("""
                     CREATE TABLE IF NOT EXISTS hype_messages (
                         id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
                         flow_id VARCHAR(36) REFERENCES hype_flows(id) ON DELETE CASCADE,
