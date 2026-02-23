@@ -1,0 +1,135 @@
+Feb 23 00:08:46  [2026-02-23 00:08:46] [INFO] [generator] [tenant:entrylab] [req:74300c50] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 00:23:47  [2026-02-23 00:23:47] [INFO] [generator] [tenant:entrylab] [req:b796ee42] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 00:38:49  [2026-02-23 00:38:49] [INFO] [generator] [tenant:entrylab] [req:2d93022b] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 00:53:50  [2026-02-23 00:53:50] [INFO] [generator] [tenant:entrylab] [req:918194b4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 01:08:52  [2026-02-23 01:08:52] [INFO] [generator] [tenant:entrylab] [req:d415e5ec] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 01:23:54  [2026-02-23 01:23:54] [INFO] [generator] [tenant:entrylab] [req:1593a1d1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 01:38:55  [2026-02-23 01:38:55] [INFO] [generator] [tenant:entrylab] [req:157e1305] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 01:53:57  [2026-02-23 01:53:57] [INFO] [generator] [tenant:entrylab] [req:a5cb5c1f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 02:08:58  [2026-02-23 02:08:58] [INFO] [generator] [tenant:entrylab] [req:ad4a587a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 02:24:00  [2026-02-23 02:24:00] [INFO] [generator] [tenant:entrylab] [req:fc5e861c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 02:39:02  [2026-02-23 02:39:02] [INFO] [generator] [tenant:entrylab] [req:d70c1f81] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 02:54:03  [2026-02-23 02:54:03] [INFO] [generator] [tenant:entrylab] [req:813c7b9f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 03:09:05  [2026-02-23 03:09:05] [INFO] [generator] [tenant:entrylab] [req:760b9446] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 03:24:06  [2026-02-23 03:24:06] [INFO] [generator] [tenant:entrylab] [req:31e47600] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 03:39:08  [2026-02-23 03:39:08] [INFO] [generator] [tenant:entrylab] [req:48cb1bb8] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 03:54:10  [2026-02-23 03:54:10] [INFO] [generator] [tenant:entrylab] [req:f6ef52ee] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 04:09:11  [2026-02-23 04:09:11] [INFO] [generator] [tenant:entrylab] [req:b3a96526] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 04:24:13  [2026-02-23 04:24:13] [INFO] [generator] [tenant:entrylab] [req:cc0376b4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 04:39:14  [2026-02-23 04:39:14] [INFO] [generator] [tenant:entrylab] [req:9ba35675] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 04:54:16  [2026-02-23 04:54:16] [INFO] [generator] [tenant:entrylab] [req:ed4d7507] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 05:09:18  [2026-02-23 05:09:18] [INFO] [generator] [tenant:entrylab] [req:e6a8657d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 05:24:19  [2026-02-23 05:24:19] [INFO] [generator] [tenant:entrylab] [req:04dcdd70] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 05:39:21  [2026-02-23 05:39:21] [INFO] [generator] [tenant:entrylab] [req:d6c45f40] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 05:54:22  [2026-02-23 05:54:22] [INFO] [generator] [tenant:entrylab] [req:0f2247c8] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 06:09:24  [2026-02-23 06:09:24] [INFO] [generator] [tenant:entrylab] [req:0fb409ed] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 06:20:25  [2026-02-23 06:20:25] [INFO] [forex_scheduler] Generating morning briefing with Alpha Vantage news...
+Feb 23 06:20:25  [2026-02-23 06:20:25] [INFO] [service] Generating morning market briefing for tenant: entrylab
+Feb 23 06:20:25  [2026-02-23 06:20:25] [INFO] [briefing] Generating morning briefing for tenant: entrylab
+Feb 23 06:20:25  [2026-02-23 06:20:25] [INFO] [briefing] Computing morning briefing data from Twelve Data...
+Feb 23 06:20:26  [2026-02-23 06:20:26] [INFO] [briefing] Briefing data computed: price=$5160.32, range=tight, position=near_high
+Feb 23 06:20:29  [2026-02-23 06:20:29] [INFO] [briefing] Generated AI briefing for entrylab
+Feb 23 06:20:29  [2026-02-23 06:20:29] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 06:20:29  [2026-02-23 06:20:29] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 23 06:20:30  [2026-02-23 06:20:30] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=828
+Feb 23 06:20:30  [2026-02-23 06:20:30] [INFO] [forex_bot] Posted morning briefing
+Feb 23 06:20:30  [2026-02-23 06:20:30] [INFO] [forex_scheduler] ✅ Morning briefing posted with news
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [generator] [tenant:entrylab] [req:1e7ef233] 🔄 forex_config change detected (guardrails/indicators)
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [generator] [tenant:entrylab] [req:1e7ef233] 🔄 Reloading config...
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [forex_signals] [tenant:entrylab] [req:1e7ef233] Reloading configuration...
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [forex_signals] [tenant:entrylab] [req:1e7ef233] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [forex_signals] [tenant:entrylab] [req:1e7ef233] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [forex_signals] [tenant:entrylab] [req:1e7ef233] Strategy unchanged: raja_banks
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [runtime] [tenant:entrylab] [req:1e7ef233] Config hot-reloaded for signal engine
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [generator] [tenant:entrylab] [req:1e7ef233] ✅ Config hot-reloaded successfully
+Feb 23 06:24:30  [2026-02-23 06:24:30] [INFO] [generator] [tenant:entrylab] [req:1e7ef233] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 06:30:30  [2026-02-23 06:30:30] [INFO] [forex_scheduler] Generating detailed daily recap for yesterday...
+Feb 23 06:30:30  [2026-02-23 06:30:30] [INFO] [forex_scheduler] ⏭️ Skipping daily recap: no signals yesterday
+Feb 23 06:31:31  [2026-02-23 06:31:31] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 23 06:32:31  [2026-02-23 06:32:31] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 23 06:33:31  [2026-02-23 06:33:31] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 23 06:34:31  [2026-02-23 06:34:31] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [generator] [tenant:entrylab] [req:c87c74d1] 🔄 forex_config change detected (guardrails/indicators)
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [generator] [tenant:entrylab] [req:c87c74d1] 🔄 Reloading config...
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [forex_signals] [tenant:entrylab] [req:c87c74d1] Reloading configuration...
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [forex_signals] [tenant:entrylab] [req:c87c74d1] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [forex_signals] [tenant:entrylab] [req:c87c74d1] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [forex_signals] [tenant:entrylab] [req:c87c74d1] Strategy unchanged: raja_banks
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [runtime] [tenant:entrylab] [req:c87c74d1] Config hot-reloaded for signal engine
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [generator] [tenant:entrylab] [req:c87c74d1] ✅ Config hot-reloaded successfully
+Feb 23 06:39:31  [2026-02-23 06:39:31] [INFO] [generator] [tenant:entrylab] [req:c87c74d1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 06:42:31  [2026-02-23 06:42:31] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence (scheduled for 06:42)...
+Feb 23 06:42:31  [2026-02-23 06:42:31] [INFO] [repo] Enqueued job dafde2ab-2a14-46ce-9783-401f245d3713 type=morning_news for tenant entrylab
+Feb 23 06:42:31  [2026-02-23 06:42:31] [INFO] [repo] Enqueued job b71e9d8d-646b-4c35-a6f0-9ea767c6afd7 type=vip_soon for tenant entrylab
+Feb 23 06:42:31  [2026-02-23 06:42:31] [INFO] [repo] Enqueued job 755c9372-556b-4a1b-ac36-9a22877aa433 type=eod_pip_brag for tenant entrylab
+Feb 23 06:42:31  [2026-02-23 06:42:31] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon', 'eod_pip_brag']
+Feb 23 06:42:37  [2026-02-23 06:42:37] [INFO] [repo] Claimed 1 due jobs
+Feb 23 06:42:37  [2026-02-23 06:42:37] [INFO] [crosspromo_worker] Processing job dafde2ab-2a14-46ce-9783-401f245d3713 type=morning_news tenant=entrylab
+Feb 23 06:42:37  [2026-02-23 06:42:37] [ERROR] [crosspromo_worker] Exception processing job dafde2ab-2a14-46ce-9783-401f245d3713: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 06:42:37  Traceback (most recent call last):
+Feb 23 06:42:37    File "/workspace/domains/crosspromo/service.py", line 535, in send_job
+Feb 23 06:42:37      credentials = get_bot_credentials(tenant_id, bot_role)
+Feb 23 06:42:37                    ^^^^^^^^^^^^^^^^^^^
+Feb 23 06:42:37  UnboundLocalError: cannot access local variable 'get_bot_credentials' where it is not associated with a value
+Feb 23 06:42:37  
+Feb 23 06:42:37  During handling of the above exception, another exception occurred:
+Feb 23 06:42:37  
+Feb 23 06:42:37  Traceback (most recent call last):
+Feb 23 06:42:37    File "/workspace/scheduler/crosspromo_worker.py", line 32, in process_jobs
+Feb 23 06:42:37      result = service.send_job(job)
+Feb 23 06:42:37               ^^^^^^^^^^^^^^^^^^^^^
+Feb 23 06:42:37    File "/workspace/domains/crosspromo/service.py", line 539, in send_job
+Feb 23 06:42:37      except BotNotConfiguredError as e:
+Feb 23 06:42:37             ^^^^^^^^^^^^^^^^^^^^^
+Feb 23 06:42:37  UnboundLocalError: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 06:42:37  [2026-02-23 06:42:37] [WARNING] [repo] Job dafde2ab-2a14-46ce-9783-401f245d3713 marked as failed: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 06:42:37  [2026-02-23 06:42:37] [INFO] [crosspromo_worker] Processed 1 job(s)
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [generator] [tenant:entrylab] [req:954403b3] 🔄 forex_config change detected (guardrails/indicators)
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [generator] [tenant:entrylab] [req:954403b3] 🔄 Reloading config...
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [forex_signals] [tenant:entrylab] [req:954403b3] Reloading configuration...
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [forex_signals] [tenant:entrylab] [req:954403b3] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [forex_signals] [tenant:entrylab] [req:954403b3] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [forex_signals] [tenant:entrylab] [req:954403b3] Strategy unchanged: raja_banks
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [runtime] [tenant:entrylab] [req:954403b3] Config hot-reloaded for signal engine
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [generator] [tenant:entrylab] [req:954403b3] ✅ Config hot-reloaded successfully
+Feb 23 06:54:32  [2026-02-23 06:54:32] [INFO] [generator] [tenant:entrylab] [req:954403b3] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 07:09:34  [2026-02-23 07:09:34] [INFO] [generator] [tenant:entrylab] [req:62549aa8] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 07:24:35  [2026-02-23 07:24:35] [INFO] [generator] [tenant:entrylab] [req:1eb65087] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 07:26:16  10.244.4.249 - - [23/Feb/2026 07:26:16] code 404, message File not found
+Feb 23 07:26:16  10.244.4.249 - - [23/Feb/2026 07:26:16] "GET /.env HTTP/1.1" 404 -
+Feb 23 07:39:36  [2026-02-23 07:39:36] [INFO] [generator] [tenant:entrylab] [req:e1454924] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 07:51:05  [2026-02-23 07:51:05] [INFO] [repo] Claimed 1 due jobs
+Feb 23 07:51:05  [2026-02-23 07:51:05] [INFO] [crosspromo_worker] Processing job b71e9d8d-646b-4c35-a6f0-9ea767c6afd7 type=vip_soon tenant=entrylab
+Feb 23 07:51:05  [2026-02-23 07:51:05] [ERROR] [crosspromo_worker] Exception processing job b71e9d8d-646b-4c35-a6f0-9ea767c6afd7: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 07:51:05  Traceback (most recent call last):
+Feb 23 07:51:05    File "/workspace/domains/crosspromo/service.py", line 535, in send_job
+Feb 23 07:51:05      credentials = get_bot_credentials(tenant_id, bot_role)
+Feb 23 07:51:05                    ^^^^^^^^^^^^^^^^^^^
+Feb 23 07:51:05  UnboundLocalError: cannot access local variable 'get_bot_credentials' where it is not associated with a value
+Feb 23 07:51:05  
+Feb 23 07:51:05  During handling of the above exception, another exception occurred:
+Feb 23 07:51:05  
+Feb 23 07:51:05  Traceback (most recent call last):
+Feb 23 07:51:05    File "/workspace/scheduler/crosspromo_worker.py", line 32, in process_jobs
+Feb 23 07:51:05      result = service.send_job(job)
+Feb 23 07:51:05               ^^^^^^^^^^^^^^^^^^^^^
+Feb 23 07:51:05    File "/workspace/domains/crosspromo/service.py", line 539, in send_job
+Feb 23 07:51:05      except BotNotConfiguredError as e:
+Feb 23 07:51:05             ^^^^^^^^^^^^^^^^^^^^^
+Feb 23 07:51:05  UnboundLocalError: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 07:51:05  [2026-02-23 07:51:05] [WARNING] [repo] Job b71e9d8d-646b-4c35-a6f0-9ea767c6afd7 marked as failed: cannot access local variable 'BotNotConfiguredError' where it is not associated with a value
+Feb 23 07:51:05  [2026-02-23 07:51:05] [INFO] [crosspromo_worker] Processed 1 job(s)
+Feb 23 07:54:37  [2026-02-23 07:54:37] [INFO] [generator] [tenant:entrylab] [req:d7725137] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 08:09:38  [2026-02-23 08:09:38] [INFO] [forex_signals] [tenant:entrylab] [req:cfc5aed6] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 23 08:09:38  [2026-02-23 08:09:38] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] Checking for signals on XAU/USD 15min...
+Feb 23 08:09:38  [2026-02-23 08:09:38] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] Session: London
+Feb 23 08:09:39  [2026-02-23 08:09:39] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] No impulse breakout detected
+Feb 23 08:09:39  [2026-02-23 08:09:39] [INFO] [generator] [tenant:entrylab] [req:cfc5aed6] 📊 Checking 1-hour timeframe...
+Feb 23 08:09:39  [2026-02-23 08:09:39] [INFO] [forex_signals] [tenant:entrylab] [req:cfc5aed6] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 23 08:09:39  [2026-02-23 08:09:39] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] Checking for signals on XAU/USD 1h...
+Feb 23 08:09:39  [2026-02-23 08:09:39] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] Session: London
+Feb 23 08:09:40  [2026-02-23 08:09:40] [INFO] [raja_banks] [tenant:entrylab] [req:cfc5aed6] No impulse breakout detected
+Feb 23 08:24:41  [2026-02-23 08:24:41] [INFO] [forex_signals] [tenant:entrylab] [req:7c466a2f] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 23 08:24:41  [2026-02-23 08:24:41] [INFO] [raja_banks] [tenant:entrylab] [req:7c466a2f] Checking for signals on XAU/USD 15min...
+Feb 23 08:24:41  [2026-02-23 08:24:41] [INFO] [raja_banks] [tenant:entrylab] [req:7c466a2f] Session: London
+Feb 23 08:24:42  [2026-02-23 08:24:42] [INFO] [raja_banks] [tenant:entrylab] [req:7c466a2f] No impulse breakout detected
