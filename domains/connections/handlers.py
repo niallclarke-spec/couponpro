@@ -13,6 +13,7 @@ from core.bot_credentials import SIGNAL_BOT, MESSAGE_BOT, VALID_BOT_ROLES
 from core.telegram_sender import invalidate_connection_cache, validate_bot_credentials
 from domains.connections import repo as connections_repo
 from domains.connections.repo import DatabaseUnavailableError, DatabaseOperationError
+from domains.crosspromo import repo as crosspromo_repo
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,12 @@ def handle_connections_list(handler):
     try:
         tenant_id = getattr(handler, 'tenant_id', 'entrylab')
         connections = connections_repo.list_connections(tenant_id)
-        _send_json(handler, 200, {'connections': connections})
+        try:
+            crosspromo_settings = crosspromo_repo.get_settings(tenant_id)
+            crosspromo_enabled = bool(crosspromo_settings and crosspromo_settings.get('enabled'))
+        except Exception:
+            crosspromo_enabled = False
+        _send_json(handler, 200, {'connections': connections, 'crosspromo_enabled': crosspromo_enabled})
         
     except DatabaseUnavailableError:
         _send_json(handler, 503, {'error': 'Database not available'})

@@ -6331,7 +6331,7 @@
                                         <div class="crosspromo-subsection-header" onclick="toggleCrossPromoSection()">
                                             <span style="font-size: 16px;">📣</span>
                                             <h4>Cross Promo</h4>
-                                            <span id="crosspromo-status-label" style="margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Inactive</span>
+                                            <span id="crosspromo-status-label" style="margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;"></span>
                                             <label class="toggle-label" style="margin-right: 8px;" onclick="event.stopPropagation()">
                                                 <input type="checkbox" id="crosspromo-enabled" onchange="saveCrossPromoSettings()">
                                                 <span class="toggle-switch"></span>
@@ -9016,22 +9016,16 @@
 
         async function loadCrossPromo() {
             try {
-                const [settingsResp, jobsResp, previewResp, connectionsResp] = await Promise.all([
+                const [settingsResp, jobsResp, previewResp] = await Promise.all([
                     authedFetch('/api/crosspromo/settings'),
                     authedFetch('/api/crosspromo/jobs'),
-                    authedFetch('/api/crosspromo/preview'),
-                    authedFetch('/api/connections')
+                    authedFetch('/api/crosspromo/preview')
                 ]);
                 
                 const settings = await settingsResp.json();
                 const jobs = await jobsResp.json();
                 const preview = await previewResp.json();
-                const connections = await connectionsResp.json();
                 
-                updateCrossPromoBotDisplay(connections.connections || []);
-                
-                document.getElementById('crosspromo-enabled').checked = settings.enabled || false;
-                updateCrossPromoStatusLabel(settings.enabled || false);
                 document.getElementById('crosspromo-cta-url').value = settings.cta_url || 'https://entrylab.io/subscribe';
                 document.getElementById('crosspromo-morning-time').value = settings.morning_post_time_utc || '06:42';
                 document.getElementById('crosspromo-recap-time').value = settings.recap_forward_time_utc || '07:12';
@@ -9353,6 +9347,10 @@
                         document.getElementById(`${role}-error`).style.display = 'none';
                     }
                 }
+                
+                updateCrossPromoStatusLabel(data.crosspromo_enabled || false);
+                document.getElementById('crosspromo-enabled').checked = data.crosspromo_enabled || false;
+                updateCrossPromoBotDisplay(data.connections || []);
             } catch (e) {
                 console.error('Error loading connections:', e);
             }
