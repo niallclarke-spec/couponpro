@@ -539,13 +539,8 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
     except BotNotConfiguredError as e:
         return {"success": False, "error": str(e)}
     
-    if not vip_channel_id:
-        vip_channel_id = settings.get('vip_channel_id')
     if not free_channel_id:
-        free_channel_id = settings.get('free_channel_id')
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel ID not configured. Set it in the Connections page under Signal Bot."}
+        return {"success": False, "error": "Free channel ID not configured. Set it in Connections → Signal Bot."}
     
     if job_type == 'morning_news':
         message = build_morning_news_message(tenant_id)
@@ -738,13 +733,13 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             except BotNotConfiguredError as e:
                 return {"success": False, "error": str(e)}
             
-            cta_settings = repo.get_settings(tenant_id)
-            if not cta_settings or not cta_settings.get("free_channel_id"):
-                return {"success": False, "error": "Free channel not configured"}
+            cta_free_channel = creds.get("free_channel_id")
+            if not cta_free_channel:
+                return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
             
             result = send_message(
                 bot_token=creds["bot_token"],
-                chat_id=cta_settings["free_channel_id"],
+                chat_id=cta_free_channel,
                 text=cta_message,
                 parse_mode="HTML",
             )
@@ -939,21 +934,15 @@ def send_test_morning_message(tenant_id: str) -> Dict[str, Any]:
     Send a test morning message without enqueueing the full flow.
     For preview/testing purposes.
     """
-    settings = repo.get_settings(tenant_id)
-    if not settings:
-        return {"success": False, "error": "Cross promo settings not configured"}
-    
-    free_channel_id = settings.get('free_channel_id')
-    bot_role = settings.get('bot_role', 'signal_bot')
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel ID not configured"}
-    
     try:
-        credentials = get_bot_credentials(tenant_id, bot_role)
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
         bot_token = credentials['bot_token']
+        free_channel_id = credentials.get('free_channel_id')
     except BotNotConfiguredError as e:
         return {"success": False, "error": str(e)}
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
     
     message = build_morning_news_message(tenant_id)
     result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
@@ -971,21 +960,15 @@ def send_test_forward_promo(tenant_id: str, pips_secured: float = 179.0) -> Dict
     Send a test AI-generated promo message to the free channel.
     Simulates what would be sent after forwarding a winning signal.
     """
-    settings = repo.get_settings(tenant_id)
-    if not settings:
-        return {"success": False, "error": "Cross promo settings not configured"}
-    
-    free_channel_id = settings.get('free_channel_id')
-    bot_role = settings.get('bot_role', 'signal_bot')
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel ID not configured"}
-    
     try:
-        credentials = get_bot_credentials(tenant_id, bot_role)
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
         bot_token = credentials['bot_token']
+        free_channel_id = credentials.get('free_channel_id')
     except BotNotConfiguredError as e:
         return {"success": False, "error": str(e)}
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
     
     promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=1)
     result = send_message(bot_token, free_channel_id, promo_message)
@@ -1004,21 +987,17 @@ def send_test_cta(tenant_id: str) -> Dict[str, Any]:
     If either component fails, the endpoint reports failure.
     """
     settings = repo.get_settings(tenant_id)
-    if not settings:
-        return {"success": False, "error": "Cross promo settings not configured"}
-    
-    free_channel_id = settings.get('free_channel_id')
-    bot_role = settings.get('bot_role', 'signal_bot')
-    cta_url = settings.get('cta_url', 'https://entrylab.io/subscribe')
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel ID not configured"}
+    cta_url = settings.get('cta_url', 'https://entrylab.io/subscribe') if settings else 'https://entrylab.io/subscribe'
     
     try:
-        credentials = get_bot_credentials(tenant_id, bot_role)
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
         bot_token = credentials['bot_token']
+        free_channel_id = credentials.get('free_channel_id')
     except BotNotConfiguredError as e:
         return {"success": False, "error": str(e)}
+    
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
     
     from integrations.telegram.client import send_sticker
     

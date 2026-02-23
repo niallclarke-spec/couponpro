@@ -138,7 +138,6 @@ def preview_message(tenant_id: str, custom_prompt: str, message_count: int = 3) 
 def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_prompt: str, pre_generated_message: str = None) -> Dict:
     from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
     from integrations.telegram.client import send_message
-    from domains.crosspromo.repo import get_settings
 
     try:
         if pre_generated_message:
@@ -155,11 +154,10 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
             logger.warning(f"Bot not configured for hype: {e}")
             return {"success": False, "error": str(e)}
 
-        settings = get_settings(tenant_id)
-        if not settings or not settings.get("free_channel_id"):
-            return {"success": False, "error": "Free channel not configured in crosspromo settings"}
+        free_channel_id = creds.get("free_channel_id")
+        if not free_channel_id:
+            return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
 
-        free_channel_id = settings["free_channel_id"]
         bot_token = creds["bot_token"]
 
         def is_retryable_error(error_str: str) -> bool:

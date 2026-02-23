@@ -84,7 +84,7 @@ def get_settings(tenant_id: str) -> Optional[Dict[str, Any]]:
         with db.db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
+                SELECT tenant_id, enabled, bot_role,
                        cta_url, morning_post_time_utc, timezone, created_at, updated_at,
                        vip_soon_delay_minutes, recap_forward_time_utc, vip_soon_time_utc
                 FROM tenant_crosspromo_settings
@@ -97,16 +97,14 @@ def get_settings(tenant_id: str) -> Optional[Dict[str, Any]]:
                 'tenant_id': row[0],
                 'enabled': row[1],
                 'bot_role': row[2],
-                'vip_channel_id': row[3],
-                'free_channel_id': row[4],
-                'cta_url': row[5],
-                'morning_post_time_utc': row[6],
-                'timezone': row[7],
-                'created_at': row[8].isoformat() if row[8] else None,
-                'updated_at': row[9].isoformat() if row[9] else None,
-                'vip_soon_delay_minutes': row[10] if len(row) > 10 else 45,
-                'recap_forward_time_utc': row[11] if len(row) > 11 else '07:12',
-                'vip_soon_time_utc': row[12] if len(row) > 12 else '07:51',
+                'cta_url': row[3],
+                'morning_post_time_utc': row[4],
+                'timezone': row[5],
+                'created_at': row[6].isoformat() if row[6] else None,
+                'updated_at': row[7].isoformat() if row[7] else None,
+                'vip_soon_delay_minutes': row[8] if len(row) > 8 else 45,
+                'recap_forward_time_utc': row[9] if len(row) > 9 else '07:12',
+                'vip_soon_time_utc': row[10] if len(row) > 10 else '07:51',
             }
     except Exception as e:
         logger.exception(f"Error getting crosspromo settings: {e}")
@@ -121,8 +119,6 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
             
             enabled = kwargs.get('enabled', False)
             bot_role = kwargs.get('bot_role', 'signal_bot')
-            vip_channel_id = kwargs.get('vip_channel_id')
-            free_channel_id = kwargs.get('free_channel_id')
             cta_url = kwargs.get('cta_url', 'https://entrylab.io/subscribe')
             morning_post_time_utc = kwargs.get('morning_post_time_utc', '07:00')
             timezone = kwargs.get('timezone', 'UTC')
@@ -132,15 +128,13 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
             
             cursor.execute("""
                 INSERT INTO tenant_crosspromo_settings 
-                    (tenant_id, enabled, bot_role, vip_channel_id, free_channel_id, 
+                    (tenant_id, enabled, bot_role,
                      cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes,
                      recap_forward_time_utc, vip_soon_time_utc, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (tenant_id) DO UPDATE SET
                     enabled = EXCLUDED.enabled,
                     bot_role = EXCLUDED.bot_role,
-                    vip_channel_id = EXCLUDED.vip_channel_id,
-                    free_channel_id = EXCLUDED.free_channel_id,
                     cta_url = EXCLUDED.cta_url,
                     morning_post_time_utc = EXCLUDED.morning_post_time_utc,
                     timezone = EXCLUDED.timezone,
@@ -148,10 +142,10 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
                     recap_forward_time_utc = EXCLUDED.recap_forward_time_utc,
                     vip_soon_time_utc = EXCLUDED.vip_soon_time_utc,
                     updated_at = NOW()
-                RETURNING tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
+                RETURNING tenant_id, enabled, bot_role,
                           cta_url, morning_post_time_utc, timezone, created_at, updated_at,
                           vip_soon_delay_minutes, recap_forward_time_utc, vip_soon_time_utc
-            """, (tenant_id, enabled, bot_role, vip_channel_id, free_channel_id,
+            """, (tenant_id, enabled, bot_role,
                   cta_url, morning_post_time_utc, timezone, vip_soon_delay_minutes,
                   recap_forward_time_utc, vip_soon_time_utc))
             
@@ -166,16 +160,14 @@ def upsert_settings(tenant_id: str, **kwargs) -> Optional[Dict[str, Any]]:
                 'tenant_id': row[0],
                 'enabled': row[1],
                 'bot_role': row[2],
-                'vip_channel_id': row[3],
-                'free_channel_id': row[4],
-                'cta_url': row[5],
-                'morning_post_time_utc': row[6],
-                'timezone': row[7],
-                'created_at': row[8].isoformat() if row[8] else None,
-                'updated_at': row[9].isoformat() if row[9] else None,
-                'vip_soon_delay_minutes': row[10] if len(row) > 10 else 45,
-                'recap_forward_time_utc': row[11] if len(row) > 11 else '07:12',
-                'vip_soon_time_utc': row[12] if len(row) > 12 else '07:51',
+                'cta_url': row[3],
+                'morning_post_time_utc': row[4],
+                'timezone': row[5],
+                'created_at': row[6].isoformat() if row[6] else None,
+                'updated_at': row[7].isoformat() if row[7] else None,
+                'vip_soon_delay_minutes': row[8] if len(row) > 8 else 45,
+                'recap_forward_time_utc': row[9] if len(row) > 9 else '07:12',
+                'vip_soon_time_utc': row[10] if len(row) > 10 else '07:51',
             }
     except Exception as e:
         logger.exception(f"Error upserting crosspromo settings: {e}")
