@@ -267,9 +267,19 @@ def generate_forward_promo_message(pips_secured: float = None, tp_number: int = 
         
         pips_context = f" VIP members just secured {pips_secured:+.0f} pips on this signal." if pips_secured else ""
         
+        if tp_number == 1:
+            tp_context = "This signal just hit its FIRST take-profit target in VIP."
+            example = "Another win for our VIP fam! 🔥 This signal was live in VIP hours ago. Our members are stacking pips daily 💰"
+        elif tp_number == 2:
+            tp_context = "This signal just hit its SECOND take-profit target in VIP — and it's STILL running toward TP3!"
+            example = "TP2 smashed! 🔥 This signal is STILL running in VIP. Our members are riding this one all the way 💰"
+        else:
+            tp_context = "This signal just hit ALL THREE take-profit targets in VIP — FULL TARGET! Maximum gains secured!"
+            example = "CLEAN SWEEP! 🏆 All 3 targets hit on this one! VIP members just banked maximum gains 💰🔥"
+        
         prompt = f"""Write a SHORT (2-3 lines max) promotional message for a Telegram forex signals channel.
 
-Context: This message will appear AFTER we forward a winning VIP signal to our FREE channel.{pips_context}
+Context: This message will appear AFTER we forward a winning VIP signal to our FREE channel. {tp_context}{pips_context}
 
 Key points to convey:
 - This signal was sent earlier in our VIP group
@@ -280,7 +290,7 @@ Key points to convey:
 - Don't use hashtags
 - Don't mention specific prices or exact times
 
-Example tone: "Another win for our VIP fam! 🔥 This signal was live in VIP hours ago. Our members are stacking pips daily 💰"
+Example tone: "{example}"
 
 Write ONLY the message, nothing else:"""
 
@@ -305,16 +315,33 @@ Write ONLY the message, nothing else:"""
 
 
 def _fallback_promo_message(pips_secured: float = None, tp_number: int = 1) -> str:
-    """Fallback promo messages when AI is unavailable."""
+    """Fallback promo messages when AI is unavailable, differentiated by TP level."""
     import random
     
-    messages = [
-        "🔥 Another win for VIP! This signal was live in VIP earlier today. Our members are stacking pips daily 💰",
-        "💎 VIP members caught this one early! Join us and never miss a winning signal again 🚀",
-        "🏆 This is what VIP looks like! Our members had this signal hours ago. Ready to join the winners? 💪",
-        "⚡ VIP members are eating GOOD! This signal hit while you were waiting. Time to upgrade? 📈",
-        "🎯 Precision signals, real profits! VIP members secured this win earlier. Don't miss the next one 🔥",
-    ]
+    if tp_number == 2:
+        messages = [
+            "🔥 TP2 smashed! This signal is STILL running in VIP. Our members are riding this all the way 💰",
+            "💎 Second target hit and counting! VIP members are stacking pips on this one 🚀",
+            "⚡ TP2 locked in! VIP members are letting the rest ride to TP3. Want in? 📈",
+            "🏆 Two targets down, one to go! VIP members are banking while you watch 💪",
+            "🎯 Another target falls! VIP signals just keep delivering. Don't miss the next one 🔥",
+        ]
+    elif tp_number == 3:
+        messages = [
+            "🏆 CLEAN SWEEP! All 3 targets hit! VIP members just banked maximum gains 💰🔥",
+            "🔥 FULL TARGET! Every single TP smashed! This is what VIP precision looks like 💎",
+            "💰 All three targets destroyed! VIP members rode this one from start to finish 🚀",
+            "⚡ Triple threat! TP1, TP2, TP3 — ALL HIT! VIP members are eating GOOD 🏆",
+            "🎯 Maximum extraction! Every pip captured on this one. VIP delivers again 💪🔥",
+        ]
+    else:
+        messages = [
+            "🔥 Another win for VIP! This signal was live in VIP earlier today. Our members are stacking pips daily 💰",
+            "💎 VIP members caught this one early! Join us and never miss a winning signal again 🚀",
+            "🏆 This is what VIP looks like! Our members had this signal hours ago. Ready to join the winners? 💪",
+            "⚡ VIP members are eating GOOD! This signal hit while you were waiting. Time to upgrade? 📈",
+            "🎯 Precision signals, real profits! VIP members secured this win earlier. Don't miss the next one 🔥",
+        ]
     
     base = random.choice(messages)
     
@@ -632,26 +659,6 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"TP1 sequence forwarded with promo: signal_msg={signal_message_id}, tp1_msg={tp1_message_id}")
         return {"success": True}
     
-    elif job_type == 'forward_tp3_update':
-        if not vip_channel_id:
-            return {"success": False, "error": "VIP channel ID not configured"}
-        
-        tp3_message_id = payload.get('tp3_message_id')
-        if not tp3_message_id:
-            return {"success": False, "error": "Missing tp3_message_id"}
-        
-        tp3_result = forward_message(bot_token, vip_channel_id, free_channel_id, int(tp3_message_id))
-        if not tp3_result.get('success'):
-            return {"success": False, "error": f"Forward TP3 failed: {tp3_result.get('error')}"}
-        
-        hype_message = generate_tp3_hype_message()
-        hype_result = send_message(bot_token, free_channel_id, hype_message)
-        if not hype_result.get('success'):
-            logger.warning(f"Hype message failed but TP3 forwarded: {hype_result.get('error')}")
-        
-        logger.info(f"TP3 update forwarded: tp3_msg={tp3_message_id}")
-        return {"success": True}
-    
     elif job_type == 'forward_tp_update':
         if not vip_channel_id:
             return {"success": False, "error": "VIP channel ID not configured"}
@@ -665,6 +672,12 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         fwd_result = forward_message(bot_token, vip_channel_id, free_channel_id, int(tp_message_id))
         if not fwd_result.get('success'):
             return {"success": False, "error": f"Forward TP{tp_num} failed: {fwd_result.get('error')}"}
+        
+        if tp_num == 3:
+            hype_message = generate_tp3_hype_message()
+            hype_result = send_message(bot_token, free_channel_id, hype_message)
+            if not hype_result.get('success'):
+                logger.warning(f"TP3 hype message failed but forward succeeded: {hype_result.get('error')}")
         
         promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=tp_num)
         promo_result = send_message(bot_token, free_channel_id, promo_message)

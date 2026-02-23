@@ -66,7 +66,7 @@ def get_wins_forwarded_today(tenant_id: str) -> int:
                 SELECT COUNT(*)
                 FROM crosspromo_jobs
                 WHERE tenant_id = %s
-                AND job_type IN ('forward_tp1_sequence', 'forward_tp3_update')
+                AND job_type IN ('forward_tp1_sequence', 'forward_tp_update', 'forward_tp3_update')
                 AND status = 'sent'
                 AND run_at >= CURRENT_DATE
             """, (tenant_id,))
