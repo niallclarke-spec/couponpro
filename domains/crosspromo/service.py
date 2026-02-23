@@ -733,21 +733,18 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             return {"success": False, "error": "Missing cta_message in hype_cta payload"}
         
         try:
-            from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
-            from domains.crosspromo.repo import get_settings
-            
             try:
                 creds = get_bot_credentials(tenant_id, "signal_bot")
             except BotNotConfiguredError as e:
                 return {"success": False, "error": str(e)}
             
-            settings = get_settings(tenant_id)
-            if not settings or not settings.get("free_channel_id"):
+            cta_settings = repo.get_settings(tenant_id)
+            if not cta_settings or not cta_settings.get("free_channel_id"):
                 return {"success": False, "error": "Free channel not configured"}
             
             result = send_message(
                 bot_token=creds["bot_token"],
-                chat_id=settings["free_channel_id"],
+                chat_id=cta_settings["free_channel_id"],
                 text=cta_message,
                 parse_mode="HTML",
             )
