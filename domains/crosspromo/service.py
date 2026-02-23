@@ -633,7 +633,6 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         return {"success": True}
     
     elif job_type == 'forward_tp3_update':
-        # Forward TP3 message + AI hype message
         if not vip_channel_id:
             return {"success": False, "error": "VIP channel ID not configured"}
         
@@ -641,12 +640,10 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not tp3_message_id:
             return {"success": False, "error": "Missing tp3_message_id"}
         
-        # Forward TP3 hit message
         tp3_result = forward_message(bot_token, vip_channel_id, free_channel_id, int(tp3_message_id))
         if not tp3_result.get('success'):
             return {"success": False, "error": f"Forward TP3 failed: {tp3_result.get('error')}"}
         
-        # Generate and send AI hype message
         hype_message = generate_tp3_hype_message()
         hype_result = send_message(bot_token, free_channel_id, hype_message)
         if not hype_result.get('success'):
@@ -655,33 +652,39 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"TP3 update forwarded: tp3_msg={tp3_message_id}")
         return {"success": True}
     
-    elif job_type == 'send_cta':
-        # Send CTA message and mark signal as cross-promo complete
-        signal_id = payload.get('signal_id')
+    elif job_type == 'forward_tp_update':
+        if not vip_channel_id:
+            return {"success": False, "error": "VIP channel ID not configured"}
         
-        cta_message = build_congrats_cta_message(cta_url)
-        cta_result = send_message(bot_token, free_channel_id, cta_message, parse_mode='HTML')
+        tp_message_id = payload.get('tp_message_id')
+        tp_num = payload.get('tp_number', 2)
+        pips_secured = payload.get('pips_secured')
+        if not tp_message_id:
+            return {"success": False, "error": f"Missing tp_message_id for TP{tp_num}"}
         
-        if not cta_result.get('success'):
-            return {"success": False, "error": f"CTA message failed: {cta_result.get('error')}"}
+        fwd_result = forward_message(bot_token, vip_channel_id, free_channel_id, int(tp_message_id))
+        if not fwd_result.get('success'):
+            return {"success": False, "error": f"Forward TP{tp_num} failed: {fwd_result.get('error')}"}
         
-        # Mark signal as cross-promo complete (prevents further updates)
-        if signal_id:
-            update_crosspromo_status(signal_id, 'complete', tenant_id)
+        promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=tp_num)
+        promo_result = send_message(bot_token, free_channel_id, promo_message)
+        if not promo_result.get('success'):
+            logger.warning(f"Promo message failed but TP{tp_num} forwarded: {promo_result.get('error')}")
         
-        logger.info(f"CTA sent for signal #{signal_id}, cross-promo complete")
-        
-        try:
-            from domains.hypechat.service import trigger_flow_from_cta
-            hype_result = trigger_flow_from_cta(tenant_id)
-            if hype_result.get("success"):
-                logger.info(f"Hype flow triggered after CTA: {hype_result.get('total_messages_scheduled', 0)} messages scheduled")
-            else:
-                logger.debug(f"Hype flow not triggered: {hype_result.get('reason', hype_result.get('error', 'unknown'))}")
-        except Exception as e:
-            logger.warning(f"Hype trigger after CTA failed (non-fatal): {e}")
-        
+        logger.info(f"TP{tp_num} update forwarded: tp_msg={tp_message_id}")
         return {"success": True}
+    
+    elif job_type == 'crosspromo_finish':
+        signal_id = payload.get('signal_id')
+        logger.info(f"Cross-promo finish timer fired for signal #{signal_id}")
+        result = finish_crosspromo(tenant_id, signal_id)
+        return result
+    
+    elif job_type == 'send_cta':
+        logger.info(f"Legacy send_cta job processed as finish (migrated to crosspromo_finish)")
+        signal_id = payload.get('signal_id')
+        result = finish_crosspromo(tenant_id, signal_id)
+        return result
     
     elif job_type == 'eod_pip_brag':
         # End-of-day pip brag message - skip if wins were already forwarded today
@@ -1016,6 +1019,37 @@ def send_test_cta(tenant_id: str) -> Dict[str, Any]:
     return {"success": True, "sticker_sent": True, "cta_sent": True}
 
 
+CROSSPROMO_FINISH_DELAY_MINUTES = 30
+
+
+def finish_crosspromo(tenant_id: str, signal_id: int = None) -> Dict[str, Any]:
+    """
+    Finish the cross-promo sequence and trigger the hype bot.
+    Called when: 30-min countdown expires, TP3 hits, or SL hits after TP1.
+    Idempotent — safe to call multiple times for the same signal.
+    """
+    if signal_id:
+        status = get_crosspromo_status(signal_id, tenant_id)
+        if status and status.get('crosspromo_status') == 'complete':
+            logger.info(f"Cross-promo already complete for signal #{signal_id}, skipping duplicate finish")
+            return {"success": True, "skipped": True, "reason": "Already complete"}
+        update_crosspromo_status(signal_id, 'complete', tenant_id)
+    
+    logger.info(f"Cross-promo finished for signal #{signal_id}, triggering hype bot")
+    
+    try:
+        from domains.hypechat.service import trigger_flow_from_cta
+        hype_result = trigger_flow_from_cta(tenant_id)
+        if hype_result.get("success"):
+            logger.info(f"Hype flow triggered after cross-promo: {hype_result.get('total_messages_scheduled', 0)} messages scheduled")
+        else:
+            logger.debug(f"Hype flow not triggered: {hype_result.get('reason', hype_result.get('error', 'unknown'))}")
+        return {"success": True, "hype_triggered": hype_result.get("success", False)}
+    except Exception as e:
+        logger.warning(f"Hype trigger after cross-promo failed (non-fatal): {e}")
+        return {"success": True, "hype_triggered": False, "hype_error": str(e)}
+
+
 def trigger_tp_crosspromo(
     tenant_id: str,
     signal_id: int,
@@ -1027,30 +1061,17 @@ def trigger_tp_crosspromo(
     """
     Trigger cross-promo sequence when a TP is hit.
     
-    Rules:
-    - Only TP1 and TP3 trigger cross-promo
-    - TP1: Forward signal + TP1 message, schedule CTA for 60 mins
-    - TP3: Forward TP3 message + AI hype, cancel old CTA, reschedule new CTA
+    Lifecycle:
+    - TP1: Forward signal + TP1, schedule 30-min finish timer
+    - TP2: Forward TP2, reset 30-min finish timer
+    - TP3: Forward TP3, finish immediately (no timer)
     - Max 1 signal per day
-    - If CTA already sent (crosspromo_status='complete'), ignore
+    - If already complete, ignore
     - Only runs Monday-Friday
-    
-    Args:
-        tenant_id: Tenant ID
-        signal_id: Signal ID in forex_signals table
-        tp_number: 1 or 3 (TP2 is ignored)
-        signal_message_id: Original signal's Telegram message ID
-        tp_message_id: TP hit notification's Telegram message ID
-        pips_secured: Optional pips secured for AI promo message
-    
-    Returns:
-        dict with success status and message
     """
-    # Only TP1 and TP3 trigger cross-promo
-    if tp_number not in [1, 3]:
+    if tp_number not in [1, 2, 3]:
         return {"success": False, "skipped": True, "reason": f"TP{tp_number} does not trigger cross-promo"}
     
-    # Check settings
     settings = repo.get_settings(tenant_id)
     if not settings:
         return {"success": False, "error": "Cross promo settings not configured"}
@@ -1060,39 +1081,32 @@ def trigger_tp_crosspromo(
     
     timezone = settings.get('timezone', 'UTC')
     
-    # Only run Monday-Friday
     if not is_weekday(timezone):
         return {"success": False, "skipped": True, "reason": "Cross promo only runs Monday-Friday"}
     
-    # Check signal's current cross-promo status
     status = get_crosspromo_status(signal_id, tenant_id)
     if not status:
         return {"success": False, "error": f"Signal {signal_id} not found"}
     
     current_status = status.get('crosspromo_status', 'none')
     
-    # If CTA already sent, ignore all further updates
     if current_status == 'complete':
         logger.info(f"Signal #{signal_id} cross-promo already complete, ignoring TP{tp_number}")
         return {"success": False, "skipped": True, "reason": "Cross-promo already complete for this signal"}
     
     now = datetime.utcnow()
+    finish_dedupe = f"{tenant_id}|{signal_id}|finish"
     
     if tp_number == 1:
-        # TP1: Check daily limit and start cross-promo sequence
-        
-        # Check 1 per day limit
         today_count = get_today_crosspromo_count(tenant_id, timezone)
         if today_count >= 1:
             logger.info(f"Daily cross-promo limit reached for {tenant_id} (count={today_count})")
             return {"success": False, "skipped": True, "reason": "Daily cross-promo limit reached"}
         
-        # Validate we have the signal message ID
         if not signal_message_id:
             return {"success": False, "error": "Missing signal_message_id for TP1 sequence"}
         
-        # Enqueue TP1 sequence (forward signal + TP1 immediately)
-        tp1_job = repo.enqueue_job(
+        repo.enqueue_job(
             tenant_id=tenant_id,
             job_type='forward_tp1_sequence',
             run_at=now,
@@ -1104,56 +1118,85 @@ def trigger_tp_crosspromo(
             }
         )
         
-        # Schedule CTA for 60 minutes later
-        cta_job = repo.enqueue_job(
+        repo.enqueue_job(
             tenant_id=tenant_id,
-            job_type='send_cta',
-            run_at=now + timedelta(minutes=60),
+            job_type='crosspromo_finish',
+            run_at=now + timedelta(minutes=CROSSPROMO_FINISH_DELAY_MINUTES),
             payload={'signal_id': signal_id},
-            dedupe_key=f"{tenant_id}|{signal_id}|cta"
+            dedupe_key=finish_dedupe
         )
         
-        logger.info(f"TP1 cross-promo triggered for signal #{signal_id}")
+        logger.info(f"TP1 cross-promo triggered for signal #{signal_id}, finish timer set for {CROSSPROMO_FINISH_DELAY_MINUTES}min")
         return {
             "success": True, 
             "triggered": "tp1_sequence",
-            "cta_scheduled_at": (now + timedelta(minutes=60)).isoformat()
+            "finish_at": (now + timedelta(minutes=CROSSPROMO_FINISH_DELAY_MINUTES)).isoformat()
+        }
+    
+    elif tp_number == 2:
+        if current_status != 'started':
+            logger.info(f"TP2 hit for signal #{signal_id} but cross-promo not started (status={current_status})")
+            return {"success": False, "skipped": True, "reason": "TP2 hit but TP1 cross-promo was never triggered"}
+        
+        repo.delete_pending_jobs_by_dedupe(finish_dedupe)
+        
+        repo.enqueue_job(
+            tenant_id=tenant_id,
+            job_type='forward_tp_update',
+            run_at=now,
+            payload={
+                'signal_id': signal_id,
+                'tp_message_id': tp_message_id,
+                'tp_number': 2,
+                'pips_secured': pips_secured
+            }
+        )
+        
+        repo.enqueue_job(
+            tenant_id=tenant_id,
+            job_type='crosspromo_finish',
+            run_at=now + timedelta(minutes=CROSSPROMO_FINISH_DELAY_MINUTES),
+            payload={'signal_id': signal_id},
+            dedupe_key=finish_dedupe
+        )
+        
+        logger.info(f"TP2 cross-promo update triggered for signal #{signal_id}, finish timer reset to {CROSSPROMO_FINISH_DELAY_MINUTES}min")
+        return {
+            "success": True,
+            "triggered": "tp2_update",
+            "finish_at": (now + timedelta(minutes=CROSSPROMO_FINISH_DELAY_MINUTES)).isoformat()
         }
     
     elif tp_number == 3:
-        # TP3: Only trigger if cross-promo already started (TP1 was hit)
         if current_status != 'started':
             logger.info(f"TP3 hit for signal #{signal_id} but cross-promo not started (status={current_status})")
             return {"success": False, "skipped": True, "reason": "TP3 hit but TP1 cross-promo was never triggered"}
         
-        # Cancel existing CTA job and reschedule
-        repo.cancel_pending_jobs_by_dedupe(f"{tenant_id}|{signal_id}|cta")
+        repo.delete_pending_jobs_by_dedupe(finish_dedupe)
         
-        # Enqueue TP3 update (forward TP3 + AI hype)
-        tp3_job = repo.enqueue_job(
+        repo.enqueue_job(
             tenant_id=tenant_id,
-            job_type='forward_tp3_update',
+            job_type='forward_tp_update',
             run_at=now,
             payload={
                 'signal_id': signal_id,
-                'tp3_message_id': tp_message_id
+                'tp_message_id': tp_message_id,
+                'tp_number': 3
             }
         )
         
-        # Schedule new CTA for 60 minutes after TP3
-        cta_job = repo.enqueue_job(
+        repo.enqueue_job(
             tenant_id=tenant_id,
-            job_type='send_cta',
-            run_at=now + timedelta(minutes=60),
+            job_type='crosspromo_finish',
+            run_at=now + timedelta(seconds=5),
             payload={'signal_id': signal_id},
-            dedupe_key=f"{tenant_id}|{signal_id}|cta"
+            dedupe_key=finish_dedupe
         )
         
-        logger.info(f"TP3 cross-promo update triggered for signal #{signal_id}, CTA rescheduled")
+        logger.info(f"TP3 cross-promo update triggered for signal #{signal_id}, finishing immediately")
         return {
             "success": True,
-            "triggered": "tp3_update",
-            "cta_rescheduled_at": (now + timedelta(minutes=60)).isoformat()
+            "triggered": "tp3_update_and_finish"
         }
     
     return {"success": False, "error": "Unexpected state"}

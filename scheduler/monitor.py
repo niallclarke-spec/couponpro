@@ -19,7 +19,7 @@ from forex_ai import (
     generate_revalidation_message,
     generate_timeout_message
 )
-from domains.crosspromo.service import trigger_tp_crosspromo
+from domains.crosspromo.service import trigger_tp_crosspromo, finish_crosspromo, get_crosspromo_status
 from core.pip_calculator import PIPS_MULTIPLIER
 
 logger = get_logger(__name__)
@@ -150,10 +150,31 @@ class SignalMonitor:
             tp1_price = matching_signal.get('take_profit', 0) if matching_signal else 0
             tp2_price = matching_signal.get('take_profit_2', 0) if matching_signal else 0
             posted_at = matching_signal.get('posted_at') if matching_signal else None
-            await self.messenger.send_tp2_celebration(signal_type, pips, float(tp1_price), remaining, posted_at, matching_signal)
+            tp2_message_id = await self.messenger.send_tp2_celebration(signal_type, pips, float(tp1_price), remaining, posted_at, matching_signal)
             if remaining > 0 and tp2_price:
                 db.update_effective_sl(signal_id, float(tp2_price), tenant_id=self.tenant_id)
                 logger.info(f"🔒 Set effective_sl to TP2 (${float(tp2_price):.2f}) for signal #{signal_id}")
+            
+            if tp2_message_id and matching_signal:
+                db.update_tp_message_id(signal_id, 2, tp2_message_id, tenant_id=self.tenant_id)
+                signal_message_id = matching_signal.get('telegram_message_id')
+                logger.info(f"📣 Cross-promo TP2 check for signal #{signal_id}: tp2_msg={tp2_message_id}, signal_msg={signal_message_id}")
+                
+                if signal_message_id:
+                    crosspromo_result = trigger_tp_crosspromo(
+                        tenant_id=self.tenant_id,
+                        signal_id=signal_id,
+                        tp_number=2,
+                        signal_message_id=signal_message_id,
+                        tp_message_id=tp2_message_id,
+                        pips_secured=pips
+                    )
+                    if crosspromo_result.get('success'):
+                        logger.info(f"📢 Cross-promo TP2 update triggered for signal #{signal_id}")
+                    elif crosspromo_result.get('skipped'):
+                        logger.info(f"⏭️ Cross-promo TP2 skipped: {crosspromo_result.get('reason')}")
+                    else:
+                        logger.warning(f"⚠️ Cross-promo TP2 failed: {crosspromo_result.get('error')}")
         
         elif event == 'tp3_hit':
             posted_at = matching_signal.get('posted_at') if matching_signal else None
@@ -192,10 +213,30 @@ class SignalMonitor:
         elif event == 'sl_hit_profit_locked':
             await self.messenger.send_profit_locked_message(pips)
             logger.info(f"✅ Signal #{signal_id} closed with locked profit: +{pips} pips")
+            
+            try:
+                cp_status = get_crosspromo_status(signal_id, self.tenant_id)
+                if cp_status and cp_status.get('crosspromo_status') == 'started':
+                    from domains.crosspromo import repo as cp_repo
+                    cp_repo.delete_pending_jobs_by_dedupe(f"{self.tenant_id}|{signal_id}|finish")
+                    finish_crosspromo(self.tenant_id, signal_id)
+                    logger.info(f"📢 Cross-promo finished on SL (profit locked) for signal #{signal_id}")
+            except Exception as e:
+                logger.warning(f"Cross-promo finish on SL failed (non-fatal): {e}")
         
         elif event == 'sl_hit_breakeven':
             await self.messenger.send_breakeven_exit_message()
             logger.info(f"✅ Signal #{signal_id} closed at breakeven")
+            
+            try:
+                cp_status = get_crosspromo_status(signal_id, self.tenant_id)
+                if cp_status and cp_status.get('crosspromo_status') == 'started':
+                    from domains.crosspromo import repo as cp_repo
+                    cp_repo.delete_pending_jobs_by_dedupe(f"{self.tenant_id}|{signal_id}|finish")
+                    finish_crosspromo(self.tenant_id, signal_id)
+                    logger.info(f"📢 Cross-promo finished on SL (breakeven) for signal #{signal_id}")
+            except Exception as e:
+                logger.warning(f"Cross-promo finish on SL failed (non-fatal): {e}")
         
         elif event == 'sl_hit':
             await self.messenger.send_sl_hit_message(pips)

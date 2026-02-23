@@ -296,7 +296,7 @@ class Messenger:
         remaining: float, 
         posted_at: Optional[str] = None,
         signal_data: Optional[Dict[str, Any]] = None
-    ) -> bool:
+    ) -> Optional[int]:
         """Send TP2 hit celebration as combined photo+caption (with text-only fallback).
         
         Args:
@@ -306,6 +306,9 @@ class Messenger:
             remaining: Percentage still riding to TP3
             posted_at: ISO timestamp of original signal for elapsed time display
             signal_data: Optional signal dict with entry_price, take_profit_2, pair for showcase
+        
+        Returns:
+            Telegram message_id if successful, None otherwise
         """
         try:
             message = self.milestone_tracker.generate_tp2_celebration(signal_type, pips, tp1_price, remaining, posted_at)
@@ -317,13 +320,13 @@ class Messenger:
             
             if success:
                 logger.info(f"Posted TP2 celebration (+{pips} pips), message_id={message_id}")
-                return True
+                return message_id
             else:
                 logger.error("Failed to send TP2 celebration")
-                return False
+                return None
         except Exception as e:
             logger.exception("Failed to send TP2 celebration")
-            return False
+            return None
     
     async def send_tp3_celebration(
         self, 
