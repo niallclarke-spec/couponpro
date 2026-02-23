@@ -490,18 +490,24 @@ window.HypeBotModule = (function() {
     async function triggerFlow(id) {
         const flow = flows.find(f => f.id === id);
         if (!flow) return;
-        if (typeof showModalConfirm === 'function') {
-            showModalConfirm('Trigger Flow', `Manually trigger "${escapeHtml(flow.name)}"? This will schedule ${flow.message_count} messages${flow.cta_enabled ? ' + CTA' : ''}.`, 'Trigger', async () => { await doTriggerFlow(id); });
-        } else { await doTriggerFlow(id); }
+        const confirmed = await showModalConfirm('Trigger Flow',
+            `Manually trigger "${escapeHtml(flow.name)}"? This will schedule ${flow.message_count} messages${flow.cta_enabled ? ' + CTA' : ''}.`,
+            { confirmText: 'Trigger' });
+        if (confirmed) {
+            await doTriggerFlow(id);
+        }
     }
     async function doTriggerFlow(id) {
         try {
             const h = await getAuthHeaders(); h['Content-Type'] = 'application/json';
             const resp = await fetch(`/api/hypechat/flows/${id}/trigger`, { method:'POST', headers:h });
             const data = await resp.json();
-            if (data.success) alert(`Scheduled ${data.messages_scheduled} messages`);
-            else alert(data.error || 'Failed to trigger');
-        } catch (e) { console.error(e); }
+            if (data.success) showModalAlert('Success', `Scheduled ${data.messages_scheduled} messages`);
+            else showModalAlert('Error', data.error || 'Failed to trigger');
+        } catch (e) {
+            console.error(e);
+            showModalAlert('Error', 'Failed to trigger flow');
+        }
     }
 
     async function viewAnalytics(flowId) {
