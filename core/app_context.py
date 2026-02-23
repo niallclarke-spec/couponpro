@@ -58,6 +58,8 @@ def create_app_context() -> AppContext:
     
     ctx.coupon_bot_token = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN_TEST')
     
+    # Backward-compat: forex_bot_token from env vars gates forex_scheduler_available.
+    # Webhook setup and all runtime credential access uses tenant_bot_connections DB table.
     is_replit = os.environ.get('REPL_ID') or os.environ.get('REPLIT')
     if is_replit:
         ctx.forex_bot_token = os.environ.get('ENTRYLAB_TEST_BOT')

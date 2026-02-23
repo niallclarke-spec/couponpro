@@ -21,6 +21,61 @@ _started = False
 logger = get_logger(__name__)
 
 
+def _register_webhooks_from_db():
+    """
+    Register Telegram webhooks for all bot connections stored in the database.
+    
+    This replaces the legacy hardcoded webhook setup. The connections system
+    (tenant_bot_connections table) is the single source of truth for webhook URLs.
+    On each server start, we re-register webhooks to ensure they're correctly
+    configured with the right allowed_updates.
+    """
+    import requests
+    
+    try:
+        import db
+        if not db.db_pool or not db.db_pool.connection_pool:
+            logger.warning("Webhook registration skipped: database pool not available")
+            return
+        
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT tenant_id, bot_role, bot_token, bot_username, webhook_url
+                FROM tenant_bot_connections
+                WHERE webhook_url IS NOT NULL AND bot_token IS NOT NULL
+                ORDER BY tenant_id, bot_role
+            """)
+            connections = cursor.fetchall()
+        
+        if not connections:
+            logger.info("Webhook registration: no bot connections found in database")
+            return
+        
+        registered = 0
+        for tenant_id, bot_role, bot_token, bot_username, webhook_url in connections:
+            try:
+                url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
+                response = requests.post(url, json={
+                    'url': webhook_url,
+                    'allowed_updates': ['message', 'chat_member']
+                }, timeout=10)
+                result = response.json()
+                
+                if result.get('ok'):
+                    logger.info(f"Webhook registered: tenant={tenant_id}, role={bot_role}, bot=@{bot_username}, url={webhook_url}")
+                    registered += 1
+                else:
+                    logger.warning(f"Webhook registration failed: tenant={tenant_id}, role={bot_role}: {result.get('description')}")
+            except Exception as e:
+                logger.warning(f"Webhook registration error: tenant={tenant_id}, role={bot_role}: {e}")
+        
+        logger.info(f"Webhook registration complete: {registered}/{len(connections)} registered")
+    
+    except Exception as e:
+        logger.exception(f"Webhook registration from DB failed: {e}")
+
+
 def start_app(ctx: AppContext) -> None:
     """
     Start the application with ALL side effects.
@@ -31,7 +86,7 @@ def start_app(ctx: AppContext) -> None:
     Side effects performed:
     1. Import and initialize database module (runs schema migrations)
     2. Import and start Telegram coupon bot webhook
-    3. Import and set up Forex bot webhook
+    3. Register Telegram webhooks from DB (connections system is source of truth)
     4. Import and start Forex scheduler in background thread
     5. Initialize Stripe client
     
@@ -74,17 +129,8 @@ def start_app(ctx: AppContext) -> None:
         except Exception as e:
             logger.exception("Coupon bot startup failed")
     
-    if ctx.telegram_bot_available and ctx.forex_bot_token:
-        try:
-            import telegram_bot
-            webhook_url = "https://dash.promostack.io/api/forex-telegram-webhook"
-            success = telegram_bot.setup_forex_webhook(ctx.forex_bot_token, webhook_url)
-            if success:
-                logger.info(f"Forex bot webhook configured: {webhook_url}")
-            else:
-                logger.warning("Forex bot webhook setup failed")
-        except Exception as e:
-            logger.exception("Forex bot webhook error")
+    if ctx.database_available:
+        _register_webhooks_from_db()
     
     if ctx.database_available:
         try:
