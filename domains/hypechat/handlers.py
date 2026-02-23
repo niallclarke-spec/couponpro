@@ -214,7 +214,7 @@ def handle_trigger_flow(handler, flow_id: str):
         _send_no_tenant_context(handler)
         return
 
-    result = service.execute_flow(tenant_id, flow_id)
+    result = service.execute_flow(tenant_id, flow_id, skip_day_check=True)
     status_code = 200 if result.get("success") else 400
     _send_json(handler, status_code, result)
 

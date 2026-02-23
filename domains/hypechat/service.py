@@ -14,6 +14,23 @@ logger = get_logger(__name__)
 
 SYSTEM_PROMPT = """You are the owner of a premium forex gold signals Telegram channel called EntryLab. You run a VIP signals service that consistently delivers winning XAU/USD trades. You're confident, authentic, and results-driven. You never use hashtags. You write short, punchy Telegram messages with 2-3 emojis max."""
 
+DAY_MAP = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+
+def is_active_today(active_days: str) -> bool:
+    if not active_days or active_days.strip().lower() == 'daily':
+        return True
+    today = datetime.utcnow().weekday()
+    raw = active_days.strip().lower()
+    if '-' in raw and ',' not in raw:
+        parts = raw.split('-')
+        if len(parts) == 2 and parts[0] in DAY_MAP and parts[1] in DAY_MAP:
+            start, end = DAY_MAP[parts[0]], DAY_MAP[parts[1]]
+            if start <= end:
+                return start <= today <= end
+            return today >= start or today <= end
+    days = [d.strip() for d in raw.split(',')]
+    return any(DAY_MAP.get(d) == today for d in days)
+
 
 def build_context(tenant_id: str) -> str:
     from domains.crosspromo.repo import get_net_pips_over_days
@@ -232,7 +249,7 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
         return {"success": False, "error": str(e)}
 
 
-def execute_flow(tenant_id: str, flow_id: str) -> Dict:
+def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> Dict:
     from domains.crosspromo.repo import enqueue_job
 
     try:
@@ -247,6 +264,10 @@ def execute_flow(tenant_id: str, flow_id: str) -> Dict:
 
         if flow["status"] != "active":
             return {"success": False, "error": "Flow is not active", "messages_scheduled": 0}
+
+        if not skip_day_check and not is_active_today(flow.get("active_days", "daily")):
+            logger.info(f"Flow {flow_id} not active today (active_days={flow.get('active_days')})")
+            return {"success": False, "error": "Flow not active today", "messages_scheduled": 0}
 
         custom_prompt = flow.get("custom_prompt", "")
         if not custom_prompt:
@@ -364,9 +385,17 @@ def trigger_flow_from_cta(tenant_id: str) -> Dict:
             logger.info(f"No active hype flows for {tenant_id}")
             return {"success": False, "reason": "no_active_flows"}
 
+        eligible_flows = [f for f in active_flows if is_active_today(f.get("active_days", "daily"))]
+        skipped = len(active_flows) - len(eligible_flows)
+        if skipped > 0:
+            logger.info(f"Skipped {skipped} flow(s) not active today")
+        if not eligible_flows:
+            logger.info(f"No hype flows active today for {tenant_id}")
+            return {"success": False, "reason": "no_flows_active_today"}
+
         results = []
-        for flow in active_flows:
-            result = execute_flow(tenant_id, flow["id"])
+        for flow in eligible_flows:
+            result = execute_flow(tenant_id, flow["id"], skip_day_check=True)
             results.append({"flow_id": flow["id"], "flow_name": flow["name"], **result})
 
         total_scheduled = sum(r.get("messages_scheduled", 0) for r in results)
