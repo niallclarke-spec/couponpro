@@ -163,6 +163,7 @@ def handle_connection_save(handler):
     channel_id = data.get('channel_id')
     vip_channel_id = data.get('vip_channel_id')
     free_channel_id = data.get('free_channel_id')
+    free_channel_link = data.get('free_channel_link')
     
     if bot_role not in VALID_BOT_ROLES:
         _send_json(handler, 400, {'error': f'bot_role must be "{SIGNAL_BOT}" or "{MESSAGE_BOT}"'})
@@ -211,7 +212,8 @@ def handle_connection_save(handler):
             webhook_url=webhook_url,
             channel_id=channel_id,
             vip_channel_id=vip_channel_id,
-            free_channel_id=free_channel_id
+            free_channel_id=free_channel_id,
+            free_channel_link=free_channel_link
         )
         
         if success:
@@ -230,6 +232,7 @@ def handle_connection_save(handler):
                     'channel_id': channel_id,
                     'vip_channel_id': vip_channel_id,
                     'free_channel_id': free_channel_id,
+                    'free_channel_link': free_channel_link,
                     'updated_at': datetime.utcnow().isoformat() + 'Z'
                 }
             })

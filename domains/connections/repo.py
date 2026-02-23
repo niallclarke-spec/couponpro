@@ -54,7 +54,7 @@ def list_connections(tenant_id: str) -> List[Dict[str, Any]]:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT bot_role, bot_username, webhook_url, channel_id, 
-                       last_validated_at, last_error, vip_channel_id, free_channel_id
+                       last_validated_at, last_error, vip_channel_id, free_channel_id, free_channel_link
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
                 ORDER BY bot_role
@@ -70,7 +70,8 @@ def list_connections(tenant_id: str) -> List[Dict[str, Any]]:
                     'last_validated_at': row[4].isoformat() if row[4] else None,
                     'last_error': row[5],
                     'vip_channel_id': row[6],
-                    'free_channel_id': row[7]
+                    'free_channel_id': row[7],
+                    'free_channel_link': row[8]
                 })
             return connections
     except Exception as e:
@@ -102,7 +103,8 @@ def upsert_connection(
     webhook_url: str,
     channel_id: Optional[str] = None,
     vip_channel_id: Optional[str] = None,
-    free_channel_id: Optional[str] = None
+    free_channel_id: Optional[str] = None,
+    free_channel_link: Optional[str] = None
 ) -> bool:
     """
     Create or update a bot connection for a tenant.
@@ -115,7 +117,6 @@ def upsert_connection(
     _require_db_pool()
     
     from db import upsert_bot_connection as db_upsert_bot_connection
-    # Pass optional channel IDs as-is - db function accepts None and stores NULL
     return db_upsert_bot_connection(  # type: ignore[arg-type]
         tenant_id=tenant_id,
         bot_role=bot_role,
@@ -125,7 +126,8 @@ def upsert_connection(
         webhook_url=webhook_url,
         channel_id=channel_id,
         vip_channel_id=vip_channel_id,
-        free_channel_id=free_channel_id
+        free_channel_id=free_channel_id,
+        free_channel_link=free_channel_link
     )
 
 

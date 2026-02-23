@@ -937,6 +937,77 @@ async def create_private_channel_invite_link(channel_id, tenant_id='entrylab'):
         return None
 
 
+async def create_free_channel_invite_link(channel_id, email=None, tenant_id='entrylab'):
+    """
+    Create a unique, single-use invite link for the FREE channel with 72h expiry.
+    
+    Args:
+        channel_id (int|str): FREE channel Telegram ID
+        email (str): Email for link naming (debugging only)
+        tenant_id (str): Tenant ID
+    
+    Returns:
+        str: Invite link URL or None if error
+    """
+    try:
+        from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+        try:
+            creds = get_bot_credentials(tenant_id, 'signal_bot')
+            forex_token = creds['bot_token']
+        except BotNotConfiguredError as e:
+            print(f"[TELEGRAM] ERROR: Forex bot not configured: {e}")
+            return None
+        
+        if not forex_token:
+            print("[TELEGRAM] ERROR: Forex bot token not set, cannot create free invite link")
+            return None
+        
+        from telegram import Bot
+        from datetime import datetime, timedelta
+        import hashlib
+        bot = Bot(token=forex_token)
+        
+        expire_date = datetime.utcnow() + timedelta(hours=72)
+        
+        link_name = "Free Channel"
+        if email:
+            email_hash = hashlib.md5(email.encode()).hexdigest()[:8]
+            link_name = f"free_{email_hash}"
+        
+        invite_link = await bot.create_chat_invite_link(
+            chat_id=channel_id,
+            member_limit=1,
+            name=link_name,
+            expire_date=expire_date
+        )
+        
+        print(f"[TELEGRAM] Created FREE channel invite link: {invite_link.invite_link} (expires: {expire_date})")
+        return invite_link.invite_link
+        
+    except Exception as e:
+        print(f"[TELEGRAM] Error creating free channel invite link: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def sync_create_free_channel_invite_link(channel_id, email=None, tenant_id='entrylab'):
+    """Synchronous wrapper for creating FREE channel invite links"""
+    if _bot_loop is None:
+        print("[TELEGRAM] ERROR: Bot loop not initialized")
+        return None
+    
+    try:
+        future = asyncio.run_coroutine_threadsafe(
+            create_free_channel_invite_link(channel_id, email=email, tenant_id=tenant_id),
+            _bot_loop
+        )
+        return future.result(timeout=10)
+    except Exception as e:
+        print(f"[TELEGRAM] Error in sync_create_free_channel_invite_link: {e}")
+        return None
+
+
 async def kick_user_from_channel(channel_id, user_id, tenant_id='entrylab'):
     """
     Remove a user from the private Telegram channel.
@@ -1351,40 +1422,49 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
         try:
             creds = get_bot_credentials('entrylab', 'signal_bot')
-            forex_channel_id = creds['channel_id']
+            vip_channel_id = creds.get('vip_channel_id') or creds.get('channel_id')
+            free_channel_id = creds.get('free_channel_id')
         except BotNotConfiguredError as e:
             return {'success': False, 'error': f'Forex bot not configured: {e}'}
         
-        if not forex_channel_id:
-            return {'success': False, 'error': 'Channel ID not configured in database'}
+        try:
+            if vip_channel_id:
+                vip_channel_id = int(vip_channel_id)
+        except (ValueError, TypeError):
+            vip_channel_id = None
         
         try:
-            forex_channel_id = int(forex_channel_id)
+            if free_channel_id:
+                free_channel_id = int(free_channel_id)
         except (ValueError, TypeError):
-            return {'success': False, 'error': f'Invalid channel_id: {forex_channel_id}'}
+            free_channel_id = None
         
-        # Check if this is for our channel
+        if not vip_channel_id and not free_channel_id:
+            return {'success': False, 'error': 'No channel IDs configured in database'}
+        
         chat_id = chat_member_data.get('chat', {}).get('id')
-        if chat_id != forex_channel_id:
+        
+        is_vip_channel = chat_id == vip_channel_id
+        is_free_channel = chat_id == free_channel_id
+        
+        if not is_vip_channel and not is_free_channel:
             return {'success': True, 'message': f'Not our channel ({chat_id}), ignored'}
         
-        # Extract old and new status
         old_status = chat_member_data.get('old_chat_member', {}).get('status', 'left')
         new_status = chat_member_data.get('new_chat_member', {}).get('status', 'left')
         
-        # Check if this is a join event
         is_join = (old_status in ['left', 'kicked', 'restricted']) and (new_status in ['member', 'administrator', 'creator'])
         
         if not is_join:
-            print(f"[JOIN_TRACKER] Status change: {old_status} -> {new_status} (not a join)")
+            channel_type = 'VIP' if is_vip_channel else 'FREE'
+            print(f"[JOIN_TRACKER] {channel_type} channel status change: {old_status} -> {new_status} (not a join)")
             return {'success': True, 'message': f'Status change {old_status} -> {new_status}, not a join'}
         
-        # Extract user information
         user_data = chat_member_data.get('new_chat_member', {}).get('user', {})
         telegram_user_id = user_data.get('id')
         telegram_username = user_data.get('username')
+        first_name = user_data.get('first_name', '')
         
-        # Extract invite link if available
         invite_link = None
         invite_link_data = chat_member_data.get('invite_link')
         if invite_link_data:
@@ -1393,23 +1473,44 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         from datetime import datetime
         joined_at = datetime.utcnow()
         
-        print(f"[JOIN_TRACKER] User joined: {telegram_user_id} (@{telegram_username}), invite_link: {invite_link}")
-        
-        # Link to subscription in database
         import db
-        result = db.link_subscription_to_telegram_user(
-            invite_link,
-            telegram_user_id,
-            telegram_username,
-            joined_at
-        )
         
-        if result:
-            print(f"[JOIN_TRACKER] ✅ Successfully linked user {telegram_user_id} to subscription {result['email']}")
-            return {'success': True, 'message': f'Linked user {telegram_user_id} to {result["email"]}'}
+        if is_free_channel:
+            print(f"[JOIN_TRACKER] FREE channel join: {telegram_user_id} (@{telegram_username}), invite_link: {invite_link}")
+            
+            result = db.link_free_subscription_to_telegram_user(
+                invite_link=invite_link,
+                telegram_user_id=telegram_user_id,
+                telegram_username=telegram_username,
+                first_name=first_name,
+                joined_at=joined_at,
+                tenant_id='entrylab'
+            )
+            
+            if result:
+                print(f"[JOIN_TRACKER] ✅ FREE channel: linked user {telegram_user_id} to {result.get('email', 'unknown')}")
+                return {'success': True, 'message': f'FREE channel: linked user {telegram_user_id} to {result.get("email", "N/A")}'}
+            else:
+                print(f"[JOIN_TRACKER] ⚠️ FREE channel: user {telegram_user_id} joined but could not link to subscription")
+                return {'success': True, 'message': f'FREE channel: user {telegram_user_id} joined (untracked)'}
+        
         else:
-            print(f"[JOIN_TRACKER] ⚠️ Could not link user {telegram_user_id} (@{telegram_username}) - no matching pending subscription")
-            return {'success': True, 'message': f'User {telegram_user_id} joined but no matching subscription found'}
+            print(f"[JOIN_TRACKER] VIP channel join: {telegram_user_id} (@{telegram_username}), invite_link: {invite_link}")
+            
+            result = db.link_subscription_to_telegram_user(
+                invite_link,
+                telegram_user_id,
+                telegram_username,
+                joined_at,
+                tenant_id='entrylab'
+            )
+            
+            if result:
+                print(f"[JOIN_TRACKER] ✅ VIP channel: linked user {telegram_user_id} to subscription {result['email']}")
+                return {'success': True, 'message': f'Linked user {telegram_user_id} to {result["email"]}'}
+            else:
+                print(f"[JOIN_TRACKER] ⚠️ VIP channel: could not link user {telegram_user_id} (@{telegram_username}) - no matching pending subscription")
+                return {'success': True, 'message': f'User {telegram_user_id} joined VIP but no matching subscription found'}
         
     except Exception as e:
         print(f"[JOIN_TRACKER] ❌ Error handling forex webhook: {e}")

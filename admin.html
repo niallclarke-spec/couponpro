@@ -5555,35 +5555,47 @@
 
             <div id="forex-conversions" class="view-container">
                 <div class="content-header">
-                    <h1>Conversion Analytics</h1>
-                    <p>Track free-to-VIP conversions and marketing attribution</p>
+                    <div>
+                        <h1>Conversion Analytics</h1>
+                        <p>Track free-to-VIP conversions and marketing attribution</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="table-filter-bar" style="margin: 0; padding: 0; border: none;">
+                            <button class="table-filter-btn active" data-conv-period="all" onclick="setConversionPeriod('all')">All Time</button>
+                            <button class="table-filter-btn" data-conv-period="30d" onclick="setConversionPeriod('30d')">30d</button>
+                            <button class="table-filter-btn" data-conv-period="7d" onclick="setConversionPeriod('7d')">7d</button>
+                            <button class="table-filter-btn" data-conv-period="today" onclick="setConversionPeriod('today')">Today</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="content-body">
+                    <div class="card" style="margin-bottom: 24px; padding: 28px;">
+                        <div class="card-title" style="margin-bottom: 24px;">Conversion Funnel</div>
+                        <div id="conversionFunnel" style="display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap;">
+                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                                <div style="font-size: 32px; font-weight: 700; color: #3b82f6;" id="funnelLeads">--</div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">FREE Leads Captured</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 8px;">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="funnelJoinRate">--%</div>
+                            </div>
+                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                                <div style="font-size: 32px; font-weight: 700; color: #8b5cf6;" id="funnelJoined">--</div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">FREE Joined Channel</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 8px;">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="funnelConvRate">--%</div>
+                            </div>
+                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                                <div style="font-size: 32px; font-weight: 700; color: #10b981;" id="funnelConverted">--</div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">VIP Conversions</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="stats-grid" style="margin-bottom: 24px;">
-                        <div class="stat-card">
-                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                                </svg>
-                            </div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Free Leads</div>
-                                <div class="stat-value" id="totalFreeLeads">--</div>
-                                <div class="stat-subtext">Free signups</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-                                </svg>
-                            </div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Conversions</div>
-                                <div class="stat-value" id="totalConversions">--</div>
-                                <div class="stat-subtext">Upgraded to VIP</div>
-                            </div>
-                        </div>
                         <div class="stat-card">
                             <div class="stat-icon" style="background: rgba(79, 70, 229, 0.15); color: #6366f1;">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -5623,34 +5635,20 @@
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Leads by Source</div>
-                        <div id="leadsBySource" style="padding: 20px;">
-                            <div class="loading">Loading lead attribution...</div>
+                        <div class="card-title">UTM Attribution</div>
+                        <div id="utmAttribution" style="padding: 20px; overflow-x: auto;">
+                            <div class="loading">Loading UTM attribution...</div>
                         </div>
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Sales by Source</div>
-                        <div id="salesBySource" style="padding: 20px;">
-                            <div class="loading">Loading sales data...</div>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Best Converting Sources</div>
-                        <div id="bestConvertingSources" style="padding: 20px;">
-                            <div class="loading">Loading conversion data...</div>
+                        <div class="card-title">Recent Activity</div>
+                        <div id="recentActivity" style="padding: 20px; overflow-x: auto;">
+                            <div class="loading">Loading recent activity...</div>
                         </div>
                     </div>
                     
                     <div class="card">
-                        <div class="card-title">Recent Conversions</div>
-                        <div id="recentConversions" style="padding: 20px;">
-                            <div class="loading">Loading conversions...</div>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="margin-top: 20px;">
                         <div class="card-title">All Leads</div>
                         <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
                             <div class="loading">Loading leads...</div>
@@ -6300,6 +6298,10 @@
                                         <div class="form-group">
                                             <label><span class="channel-icon">📢</span>FREE Channel *</label>
                                             <input type="text" id="signal-free-channel-id" placeholder="-100..." />
+                                        </div>
+                                        <div class="form-group">
+                                            <label><span class="channel-icon">🔗</span>FREE Public Link</label>
+                                            <input type="text" id="signal-free-channel-link" placeholder="https://t.me/entrylab" />
                                         </div>
                                     </div>
                                     
@@ -7320,123 +7322,81 @@
         }
 
         // Conversion Analytics Functions
+        let currentConversionPeriod = 'all';
+        
+        function setConversionPeriod(period) {
+            currentConversionPeriod = period;
+            document.querySelectorAll('[data-conv-period]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.convPeriod === period);
+            });
+            invalidateCache('conversions');
+            loadConversions();
+        }
+        
         async function loadConversions() {
             try {
-                const response = await authedFetch('/api/telegram/conversion-analytics', {
-                    credentials: 'include'
-                });
+                const url = `/api/telegram/conversion-analytics?period=${currentConversionPeriod}`;
+                const response = await authedFetch(url, { credentials: 'include' });
                 if (!response.ok) throw new Error('Failed to load conversions');
                 
                 const data = await response.json();
                 const summary = data.summary || {};
                 
-                // Update stat cards
-                document.getElementById('totalFreeLeads').textContent = summary.total_free_signups || 0;
-                document.getElementById('totalConversions').textContent = summary.total_conversions || 0;
+                document.getElementById('funnelLeads').textContent = summary.total_free_signups || 0;
+                document.getElementById('funnelJoined').textContent = summary.total_joined || 0;
+                document.getElementById('funnelConverted').textContent = summary.total_conversions || 0;
+                document.getElementById('funnelJoinRate').textContent = `${(summary.join_rate || 0).toFixed(1)}%`;
+                document.getElementById('funnelConvRate').textContent = `${(summary.conversion_rate || 0).toFixed(1)}%`;
+                
                 document.getElementById('conversionRate').textContent = `${(summary.conversion_rate || 0).toFixed(1)}%`;
                 document.getElementById('avgConversionDays').textContent = summary.avg_conversion_days > 0 ? summary.avg_conversion_days.toFixed(1) : '--';
                 document.getElementById('conversionRevenue').textContent = `$${(summary.conversion_revenue || 0).toFixed(0)}`;
                 
-                // Render leads by source (free signups funnel)
-                renderLeadsBySource(data.funnel_by_source);
-                
-                // Render sales by source
-                renderSalesBySource(data.by_source);
-                
-                // Render best converting sources
-                renderBestConvertingSources(data.funnel_by_source);
-                
-                // Render recent conversions
-                renderRecentConversions(data.recent_conversions);
-                
-                // Render all leads table
+                renderUtmAttribution(data.funnel_by_source);
+                renderRecentActivity(data.recent_conversions, data.all_leads);
                 renderAllLeads(data.all_leads);
                 
+                setCacheLoaded('conversions');
             } catch (error) {
                 console.error('Error loading conversions:', error);
-                document.getElementById('salesBySource').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+                document.getElementById('utmAttribution').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
             }
         }
         
-        function renderLeadsBySource(leads) {
-            const container = document.getElementById('leadsBySource');
-            if (!leads || leads.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No leads yet. Free signups will appear here with their UTM attribution.</div>';
-                return;
-            }
-            
-            let html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Signups</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Converted</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conv. Rate</th>';
-            html += '</tr></thead><tbody>';
-            
-            leads.forEach(lead => {
-                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
-                html += `<td style="padding: 10px;">${lead.source || '(Direct)'}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${lead.signups}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${lead.converted}</td>`;
-                html += `<td style="padding: 10px; text-align: right; color: ${lead.conversion_rate > 0 ? '#48bb78' : '#718096'};">${lead.conversion_rate}%</td>`;
-                html += `</tr>`;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        
-        function renderSalesBySource(sources) {
-            const container = document.getElementById('salesBySource');
+        function renderUtmAttribution(sources) {
+            const container = document.getElementById('utmAttribution');
             if (!sources || sources.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No sales data yet. Sales will be tracked when users convert.</div>';
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No UTM data yet. Sources will appear when leads are captured with UTM parameters.</div>';
                 return;
             }
             
-            let html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Sales</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Revenue</th>';
-            html += '</tr></thead><tbody>';
-            
-            sources.forEach(source => {
-                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
-                html += `<td style="padding: 10px;">${source.source || '(Direct)'}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${source.conversions}</td>`;
-                html += `<td style="padding: 10px; text-align: right; color: #48bb78;">$${source.revenue.toFixed(0)}</td>`;
-                html += `</tr>`;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        
-        function renderBestConvertingSources(sources) {
-            const container = document.getElementById('bestConvertingSources');
-            if (!sources || sources.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No conversion data yet. Sources will be ranked by conversion rate.</div>';
-                return;
-            }
-            
-            // Sort by conversion rate descending
-            const sorted = [...sources].sort((a, b) => (b.conversion_rate || 0) - (a.conversion_rate || 0));
+            const sorted = [...sources].sort((a, b) => (b.leads || b.signups || 0) - (a.leads || a.signups || 0));
             
             let html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Leads</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Converted</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Conv. Rate</th>';
+            html += '<thead><tr style="border-bottom: 2px solid var(--border-primary);">';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">LEADS</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">JOINED</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONVERSIONS</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONV. RATE</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">REVENUE</th>';
             html += '</tr></thead><tbody>';
             
             sorted.forEach(source => {
-                const rateColor = source.conversion_rate >= 20 ? '#10b981' : source.conversion_rate >= 10 ? '#f59e0b' : '#718096';
-                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
-                html += `<td style="padding: 10px;">${source.source || '(Direct)'}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${source.signups || 0}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${source.converted || 0}</td>`;
-                html += `<td style="padding: 10px; text-align: right; color: ${rateColor}; font-weight: 600;">${source.conversion_rate || 0}%</td>`;
+                const leads = source.leads || source.signups || 0;
+                const joined = source.joined || 0;
+                const conversions = source.conversions || source.converted || 0;
+                const rate = source.conversion_rate || 0;
+                const revenue = source.revenue || 0;
+                const rateColor = rate >= 20 ? '#10b981' : rate >= 10 ? '#f59e0b' : 'var(--text-muted)';
+                
+                html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
+                html += `<td style="padding: 12px 10px; font-weight: 500;">${source.source || '(Direct)'}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right;">${leads}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right;">${joined}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right;">${conversions}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right; color: ${rateColor}; font-weight: 600;">${rate}%</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right; color: #10b981; font-weight: 500;">$${revenue.toFixed(0)}</td>`;
                 html += `</tr>`;
             });
             
@@ -7444,30 +7404,72 @@
             container.innerHTML = html;
         }
         
-        function renderRecentConversions(conversions) {
-            const container = document.getElementById('recentConversions');
-            if (!conversions || conversions.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No conversions yet. When free users upgrade to VIP, they\'ll appear here.</div>';
+        function renderRecentActivity(conversions, allLeads) {
+            const container = document.getElementById('recentActivity');
+            const activities = [];
+            
+            if (conversions) {
+                conversions.forEach(c => activities.push({
+                    type: 'conversion',
+                    email: c.email,
+                    name: c.name || '',
+                    source: c.source || 'direct',
+                    date: c.converted_at,
+                    days: c.days_to_convert,
+                    amount: c.amount || 0
+                }));
+            }
+            
+            if (allLeads) {
+                allLeads.filter(l => !l.is_converted && l.signup_date).slice(0, 10).forEach(l => activities.push({
+                    type: 'free_signup',
+                    email: l.email,
+                    name: l.name || '',
+                    source: l.source || 'direct',
+                    date: l.signup_date,
+                    days: null,
+                    amount: 0
+                }));
+            }
+            
+            activities.sort((a, b) => {
+                const da = a.date ? new Date(a.date) : new Date(0);
+                const db = b.date ? new Date(b.date) : new Date(0);
+                return db - da;
+            });
+            
+            const recent = activities.slice(0, 20);
+            
+            if (recent.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No activity yet. Free signups and conversions will appear here.</div>';
                 return;
             }
             
             let html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 1px solid #2d3748;">';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Email</th>';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Converted</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Days</th>';
-            html += '<th style="text-align: right; padding: 10px; color: #a0aec0;">Amount</th>';
-            html += '<th style="text-align: left; padding: 10px; color: #a0aec0;">Source</th>';
+            html += '<thead><tr style="border-bottom: 2px solid var(--border-primary);">';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">NAME</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">DATE</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONV. TIME</th>';
             html += '</tr></thead><tbody>';
             
-            conversions.forEach(conv => {
-                const convDate = conv.converted_at ? new Date(conv.converted_at).toLocaleDateString() : '--';
-                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
-                html += `<td style="padding: 10px;">${conv.email}</td>`;
-                html += `<td style="padding: 10px;">${convDate}</td>`;
-                html += `<td style="padding: 10px; text-align: right;">${conv.days_to_convert || '--'}</td>`;
-                html += `<td style="padding: 10px; text-align: right; color: #48bb78;">$${(conv.amount || 0).toFixed(0)}</td>`;
-                html += `<td style="padding: 10px;">${conv.source || '(Direct)'}</td>`;
+            recent.forEach(a => {
+                const dateStr = a.date ? new Date(a.date).toLocaleDateString() : '--';
+                const isConv = a.type === 'conversion';
+                const statusBadge = isConv
+                    ? '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>'
+                    : '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">FREE</span>';
+                const convTime = isConv && a.days != null ? `${a.days}d` : '<span style="color: var(--text-muted);">--</span>';
+                
+                html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
+                html += `<td style="padding: 12px 10px;">${statusBadge}</td>`;
+                html += `<td style="padding: 12px 10px;">${a.email}</td>`;
+                html += `<td style="padding: 12px 10px;">${a.name || '<span style="color: var(--text-muted);">--</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${a.source}</td>`;
+                html += `<td style="padding: 12px 10px;">${dateStr}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: right;">${convTime}</td>`;
                 html += `</tr>`;
             });
             
@@ -7478,36 +7480,41 @@
         function renderAllLeads(leads) {
             const container = document.getElementById('allLeadsTable');
             if (!leads || leads.length === 0) {
-                container.innerHTML = '<div style="color: #718096; text-align: center;">No leads yet. Sign ups will appear here.</div>';
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No leads yet. Sign ups will appear here.</div>';
                 return;
             }
             
             let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
-            html += '<thead><tr style="border-bottom: 2px solid #2d3748; background: #1a202c;">';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Status</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Email</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Name</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Source</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Campaign</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Signup Date</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: #a0aec0;">Revenue</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: #a0aec0;">Telegram</th>';
+            html += '<thead><tr style="border-bottom: 2px solid var(--border-primary); background: var(--bg-card);">';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">NAME</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CAMPAIGN</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SIGNUP DATE</th>';
+            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">REVENUE</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">TELEGRAM</th>';
             html += '</tr></thead><tbody>';
             
             leads.forEach(lead => {
                 const signupDate = lead.signup_date ? new Date(lead.signup_date).toLocaleDateString() : '--';
-                const statusTag = lead.is_converted 
-                    ? '<span style="background: #48bb78; color: #1a202c; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">SALE</span>'
-                    : '<span style="background: #4a5568; color: #e2e8f0; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
-                const revenue = lead.is_converted ? `<span style="color: #48bb78; font-weight: 600;">$${lead.amount.toFixed(0)}</span>` : '<span style="color: #718096;">--</span>';
-                const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: #718096;">--</span>';
+                let statusTag;
+                if (lead.is_converted) {
+                    statusTag = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">SALE</span>';
+                } else if (lead.has_telegram) {
+                    statusTag = '<span style="background: #8b5cf6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">JOINED</span>';
+                } else {
+                    statusTag = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
+                }
+                const revenue = lead.is_converted ? `<span style="color: #10b981; font-weight: 600;">$${lead.amount.toFixed(0)}</span>` : '<span style="color: var(--text-muted);">--</span>';
+                const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: var(--text-muted);">--</span>';
                 
-                html += `<tr style="border-bottom: 1px solid #2d3748;">`;
+                html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
                 html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
                 html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.name || '<span style="color: #718096;">--</span>'}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.source || '<span style="color: #718096;">direct</span>'}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.campaign || '<span style="color: #718096;">--</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.name || '<span style="color: var(--text-muted);">--</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.source || '<span style="color: var(--text-muted);">direct</span>'}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.campaign || '<span style="color: var(--text-muted);">--</span>'}</td>`;
                 html += `<td style="padding: 12px 10px;">${signupDate}</td>`;
                 html += `<td style="padding: 12px 10px; text-align: right;">${revenue}</td>`;
                 html += `<td style="padding: 12px 10px;">${telegram}</td>`;
@@ -9320,6 +9327,8 @@
                             if (freeDisplay) freeDisplay.value = conn.free_channel_id || '';
                             if (vipInput && conn.vip_channel_id) vipInput.value = conn.vip_channel_id;
                             if (freeInput && conn.free_channel_id) freeInput.value = conn.free_channel_id;
+                            const freeLinkInput = document.getElementById('signal-free-channel-link');
+                            if (freeLinkInput && conn.free_channel_link) freeLinkInput.value = conn.free_channel_link;
                         } else {
                             const channelDisplay = document.getElementById(`${role}-channel-id-display`);
                             if (channelDisplay) channelDisplay.value = conn.channel_id || '';
@@ -9873,8 +9882,11 @@
             if (role === 'signal') {
                 const vipChannelId = document.getElementById('signal-vip-channel-id').value.trim();
                 const freeChannelId = document.getElementById('signal-free-channel-id').value.trim();
+                const freeChannelLinkEl = document.getElementById('signal-free-channel-link');
+                const freeChannelLink = freeChannelLinkEl ? freeChannelLinkEl.value.trim() : '';
                 bodyData.vip_channel_id = vipChannelId || null;
                 bodyData.free_channel_id = freeChannelId || null;
+                bodyData.free_channel_link = freeChannelLink || null;
             } else {
                 const channelId = document.getElementById(`${role}-channel-id`).value.trim();
                 bodyData.channel_id = channelId || null;
@@ -9974,6 +9986,8 @@
                     if (role === 'signal') {
                         document.getElementById('signal-vip-channel-id').value = '';
                         document.getElementById('signal-free-channel-id').value = '';
+                        const freeLinkClear = document.getElementById('signal-free-channel-link');
+                        if (freeLinkClear) freeLinkClear.value = '';
                     } else {
                         const channelInput = document.getElementById(`${role}-channel-id`);
                         if (channelInput) channelInput.value = '';

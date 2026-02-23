@@ -171,6 +171,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_api_telegram_subscriptions(self): sub_h.handle_telegram_subscriptions(self)
     def handle_api_telegram_revenue_metrics(self): sub_h.handle_telegram_revenue_metrics(self)
     def handle_api_telegram_conversion_analytics(self): sub_h.handle_telegram_conversion_analytics(self)
+    def handle_api_telegram_backfill_conversions(self): sub_h.handle_telegram_backfill_conversions(self)
     def handle_api_telegram_billing(self): sub_h.handle_telegram_billing(self)
     def handle_api_telegram_grant_access(self): sub_h.handle_telegram_grant_access(self)
     def handle_api_telegram_clear_all(self): sub_h.handle_telegram_clear_all(self)

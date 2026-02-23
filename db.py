@@ -937,6 +937,17 @@ class DatabasePool:
                     cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN free_channel_id VARCHAR(100)")
                     logger.info("free_channel_id added to tenant_bot_connections")
                 
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema='public' AND table_name='tenant_bot_connections' AND column_name='free_channel_link'
+                """)
+                if not cursor.fetchone():
+                    logger.info("Adding free_channel_link to tenant_bot_connections...")
+                    cursor.execute("ALTER TABLE tenant_bot_connections ADD COLUMN free_channel_link VARCHAR(255)")
+                    logger.info("free_channel_link added to tenant_bot_connections")
+                else:
+                    logger.info("free_channel_link column already exists, skipping")
+                
                 # Migration: Copy legacy channel_id to vip_channel_id for signal_bot (one-time, idempotent)
                 # Only runs where vip_channel_id is NULL and channel_id has a value
                 cursor.execute("""
@@ -5519,11 +5530,17 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
                             updated_at = CURRENT_TIMESTAMP,
                             is_converted = TRUE,
                             converted_at = CURRENT_TIMESTAMP,
-                            conversion_days = %s
-                        WHERE email = %s AND tenant_id = 'entrylab'
+                            conversion_days = %s,
+                            utm_source = COALESCE(utm_source, %s),
+                            utm_medium = COALESCE(utm_medium, %s),
+                            utm_campaign = COALESCE(utm_campaign, %s),
+                            utm_content = COALESCE(utm_content, %s),
+                            utm_term = COALESCE(utm_term, %s)
+                        WHERE email = %s AND tenant_id = %s
                         RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
                     """, (name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                          conversion_days, email))
+                          conversion_days, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
+                          email, tenant_id))
                 else:
                     cursor.execute("""
                         INSERT INTO telegram_subscriptions 
@@ -5655,7 +5672,7 @@ def get_telegram_subscription_by_id(subscription_id, tenant_id):
         return None
 
 def update_telegram_subscription_invite(email, invite_link, tenant_id):
-    """Update telegram subscription with invite link"""
+    """Update telegram subscription with invite link. Preserves current status for free users."""
     try:
         if not db_pool.connection_pool:
             return False
@@ -5665,7 +5682,8 @@ def update_telegram_subscription_invite(email, invite_link, tenant_id):
             
             cursor.execute("""
                 UPDATE telegram_subscriptions
-                SET invite_link = %s, status = 'active', updated_at = CURRENT_TIMESTAMP
+                SET invite_link = %s,
+                    updated_at = CURRENT_TIMESTAMP
                 WHERE email = %s AND tenant_id = %s
             """, (invite_link, email, tenant_id))
             
@@ -6103,14 +6121,194 @@ def link_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_u
         traceback.print_exc()
         return None
 
+def link_free_subscription_to_telegram_user(invite_link, telegram_user_id, telegram_username, first_name, joined_at, tenant_id):
+    """
+    Link a FREE channel join to a telegram_subscriptions record.
+    
+    If an invite link is provided, matches by invite_link to bridge email→Telegram ID.
+    If no invite link (organic join via public link), creates a minimal record for tracking.
+    
+    Args:
+        invite_link (str): Invite link used to join (may be None for organic joins)
+        telegram_user_id (int): Telegram user ID
+        telegram_username (str): Telegram username (may be None)
+        first_name (str): Telegram first name
+        joined_at (datetime): Timestamp when user joined
+        tenant_id (str): Tenant ID
+    
+    Returns:
+        dict: Updated/created subscription record or None if error
+    """
+    try:
+        if not db_pool.connection_pool:
+            logger.info("Database not available")
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            if invite_link:
+                cursor.execute("""
+                    SELECT id, email FROM telegram_subscriptions
+                    WHERE invite_link = %s AND tenant_id = %s
+                    LIMIT 1
+                """, (invite_link, tenant_id))
+                result = cursor.fetchone()
+                
+                if result:
+                    subscription_id = result[0]
+                    email = result[1]
+                    logger.info(f"FREE join: matched invite link to email {email}")
+                    
+                    cursor.execute("""
+                        UPDATE telegram_subscriptions
+                        SET telegram_user_id = %s,
+                            telegram_username = %s,
+                            joined_at = %s,
+                            last_seen_at = %s,
+                            status = 'free_joined',
+                            free_signup_at = COALESCE(free_signup_at, %s),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = %s AND tenant_id = %s
+                        RETURNING id, email, telegram_user_id, telegram_username, status, joined_at
+                    """, (telegram_user_id, telegram_username, joined_at, joined_at, joined_at, subscription_id, tenant_id))
+                    
+                    updated = cursor.fetchone()
+                    conn.commit()
+                    
+                    if updated:
+                        logger.info(f"FREE join: linked {email} → Telegram user {telegram_user_id}")
+                        return {
+                            'id': updated[0],
+                            'email': updated[1],
+                            'telegram_user_id': updated[2],
+                            'telegram_username': updated[3],
+                            'status': updated[4],
+                            'joined_at': updated[5].isoformat() if updated[5] else None
+                        }
+                    return None
+                else:
+                    logger.warning(f"FREE join: invite link {invite_link} not found in subscriptions")
+            
+            cursor.execute("""
+                SELECT id FROM telegram_subscriptions
+                WHERE telegram_user_id = %s AND tenant_id = %s
+                LIMIT 1
+            """, (telegram_user_id, tenant_id))
+            existing = cursor.fetchone()
+            
+            if existing:
+                cursor.execute("""
+                    UPDATE telegram_subscriptions
+                    SET telegram_username = COALESCE(%s, telegram_username),
+                        status = CASE WHEN status = 'pending' THEN 'free_joined' ELSE status END,
+                        free_signup_at = COALESCE(free_signup_at, %s),
+                        last_seen_at = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s AND tenant_id = %s
+                    RETURNING id, email, telegram_user_id, telegram_username, status
+                """, (telegram_username, joined_at, joined_at, existing[0], tenant_id))
+                updated = cursor.fetchone()
+                conn.commit()
+                if updated:
+                    return {
+                        'id': updated[0],
+                        'email': updated[1],
+                        'telegram_user_id': updated[2],
+                        'telegram_username': updated[3],
+                        'status': updated[4]
+                    }
+                return None
+            
+            display_name = telegram_username or first_name or f"user_{telegram_user_id}"
+            cursor.execute("""
+                INSERT INTO telegram_subscriptions
+                (tenant_id, email, name, telegram_user_id, telegram_username, plan_type, amount_paid,
+                 status, free_signup_at, joined_at, last_seen_at, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, 'free', 0, 'free_joined', %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (tenant_id, email) DO UPDATE SET
+                    telegram_user_id = EXCLUDED.telegram_user_id,
+                    telegram_username = EXCLUDED.telegram_username,
+                    free_signup_at = COALESCE(telegram_subscriptions.free_signup_at, EXCLUDED.free_signup_at),
+                    joined_at = EXCLUDED.joined_at,
+                    last_seen_at = EXCLUDED.last_seen_at,
+                    status = 'free_joined',
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING id, email, telegram_user_id, telegram_username, status
+            """, (tenant_id, f"organic_{telegram_user_id}@telegram", display_name,
+                  telegram_user_id, telegram_username, joined_at, joined_at, joined_at))
+            
+            inserted = cursor.fetchone()
+            conn.commit()
+            
+            if inserted:
+                logger.info(f"FREE join: created organic record for user {telegram_user_id} (@{telegram_username})")
+                return {
+                    'id': inserted[0],
+                    'email': inserted[1],
+                    'telegram_user_id': inserted[2],
+                    'telegram_username': inserted[3],
+                    'status': inserted[4]
+                }
+            return None
+            
+    except Exception as e:
+        logger.exception(f"Error linking free subscription to telegram user: {e}")
+        return None
+
+
+def get_existing_free_invite_link(email, tenant_id):
+    """
+    Check if an email already has an existing, unused, non-expired invite link.
+    
+    Returns:
+        str: Existing invite link URL if still valid, None otherwise
+    """
+    try:
+        if not db_pool.connection_pool:
+            return None
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT invite_link, created_at, status, telegram_user_id
+                FROM telegram_subscriptions
+                WHERE email = %s AND tenant_id = %s AND invite_link IS NOT NULL
+                LIMIT 1
+            """, (email, tenant_id))
+            row = cursor.fetchone()
+            
+            if not row:
+                return None
+            
+            invite_link, created_at, status, telegram_user_id = row
+            
+            if telegram_user_id is not None:
+                return None
+            
+            if status not in ('pending', 'free_joined'):
+                return None
+            
+            from datetime import datetime, timedelta
+            if created_at and (datetime.utcnow() - created_at) > timedelta(hours=72):
+                return None
+            
+            return invite_link
+            
+    except Exception as e:
+        logger.exception(f"Error checking existing free invite link: {e}")
+        return None
+
+
 # ===== Conversion Analytics Functions =====
 
-def get_conversion_analytics(tenant_id):
+def get_conversion_analytics(tenant_id, period='all'):
     """
     Get comprehensive conversion analytics for free-to-VIP tracking.
     
     Args:
-        tenant_id (str): Tenant ID (default: 'entrylab')
+        tenant_id (str): Tenant ID
+        period (str): Time period filter - 'all', '30d', '7d', 'today'
     
     Returns:
         dict: Analytics data including conversion rate, top sources, etc.
@@ -6119,120 +6317,106 @@ def get_conversion_analytics(tenant_id):
         if not db_pool.connection_pool:
             return None
         
+        period_filter = ""
+        if period == 'today':
+            period_filter = "AND created_at >= CURRENT_DATE"
+        elif period == '7d':
+            period_filter = "AND created_at >= CURRENT_DATE - INTERVAL '7 days'"
+        elif period == '30d':
+            period_filter = "AND created_at >= CURRENT_DATE - INTERVAL '30 days'"
+        
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Total free signups
-            cursor.execute("""
-                SELECT COUNT(*) FROM telegram_subscriptions 
-                WHERE free_signup_at IS NOT NULL AND tenant_id = %s
+            cursor.execute(f"""
+                SELECT 
+                    COUNT(*) FILTER (WHERE free_signup_at IS NOT NULL) as total_leads,
+                    COUNT(*) FILTER (WHERE status = 'free_joined' OR (telegram_user_id IS NOT NULL AND amount_paid = 0)) as total_joined,
+                    COUNT(*) FILTER (WHERE is_converted = TRUE) as total_conversions,
+                    AVG(conversion_days) FILTER (WHERE is_converted = TRUE AND conversion_days IS NOT NULL) as avg_days,
+                    SUM(amount_paid) FILTER (WHERE is_converted = TRUE) as conv_revenue
+                FROM telegram_subscriptions 
+                WHERE tenant_id = %s {period_filter}
             """, (tenant_id,))
-            total_free_signups = cursor.fetchone()[0] or 0
+            row = cursor.fetchone()
+            total_free_signups = row[0] or 0
+            total_joined = row[1] or 0
+            total_conversions = row[2] or 0
+            avg_conversion_days = row[3] or 0
+            conversion_revenue = float(row[4] or 0)
             
-            # Total conversions
-            cursor.execute("""
-                SELECT COUNT(*) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND tenant_id = %s
-            """, (tenant_id,))
-            total_conversions = cursor.fetchone()[0] or 0
-            
-            # Conversion rate
             conversion_rate = (total_conversions / total_free_signups * 100) if total_free_signups > 0 else 0
+            join_rate = (total_joined / total_free_signups * 100) if total_free_signups > 0 else 0
             
-            # Average conversion time
-            cursor.execute("""
-                SELECT AVG(conversion_days) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND conversion_days IS NOT NULL AND tenant_id = %s
-            """, (tenant_id,))
-            avg_conversion_days = cursor.fetchone()[0] or 0
-            
-            # Total revenue from conversions
-            cursor.execute("""
-                SELECT SUM(amount_paid) FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND tenant_id = %s
-            """, (tenant_id,))
-            conversion_revenue = float(cursor.fetchone()[0] or 0)
-            
-            # Conversions by UTM source
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT 
                     COALESCE(utm_source, 'direct') as source,
-                    COUNT(*) as conversions,
-                    SUM(amount_paid) as revenue
+                    COUNT(*) FILTER (WHERE free_signup_at IS NOT NULL) as leads,
+                    COUNT(*) FILTER (WHERE status = 'free_joined' OR (telegram_user_id IS NOT NULL AND amount_paid = 0)) as joined,
+                    COUNT(*) FILTER (WHERE is_converted = TRUE) as conversions,
+                    SUM(amount_paid) FILTER (WHERE is_converted = TRUE) as revenue
                 FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND tenant_id = %s
+                WHERE tenant_id = %s {period_filter}
                 GROUP BY utm_source
-                ORDER BY conversions DESC
+                ORDER BY leads DESC
                 LIMIT 10
             """, (tenant_id,))
-            by_source = [{'source': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
-                         for row in cursor.fetchall()]
+            funnel_by_source = [
+                {
+                    'source': r[0], 
+                    'leads': r[1] or 0,
+                    'joined': r[2] or 0,
+                    'conversions': r[3] or 0,
+                    'revenue': float(r[4] or 0),
+                    'conversion_rate': round(((r[3] or 0) / r[1] * 100) if r[1] and r[1] > 0 else 0, 1)
+                } 
+                for r in cursor.fetchall()
+            ]
             
-            # Conversions by UTM campaign
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT 
                     COALESCE(utm_campaign, 'none') as campaign,
                     COUNT(*) as conversions,
                     SUM(amount_paid) as revenue
                 FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND tenant_id = %s
+                WHERE is_converted = TRUE AND tenant_id = %s {period_filter}
                 GROUP BY utm_campaign
                 ORDER BY conversions DESC
                 LIMIT 10
             """, (tenant_id,))
-            by_campaign = [{'campaign': row[0], 'conversions': row[1], 'revenue': float(row[2] or 0)} 
-                           for row in cursor.fetchall()]
+            by_campaign = [{'campaign': r[0], 'conversions': r[1], 'revenue': float(r[2] or 0)} 
+                           for r in cursor.fetchall()]
             
-            # Free signups by source (for funnel analysis)
-            cursor.execute("""
-                SELECT 
-                    COALESCE(utm_source, 'direct') as source,
-                    COUNT(*) as signups,
-                    SUM(CASE WHEN is_converted = TRUE THEN 1 ELSE 0 END) as converted
+            cursor.execute(f"""
+                SELECT email, name, utm_source, utm_campaign, amount_paid, conversion_days, 
+                       converted_at, telegram_username
                 FROM telegram_subscriptions 
-                WHERE free_signup_at IS NOT NULL AND tenant_id = %s
-                GROUP BY utm_source
-                ORDER BY signups DESC
-                LIMIT 10
-            """, (tenant_id,))
-            funnel_by_source = [
-                {
-                    'source': row[0], 
-                    'signups': row[1], 
-                    'converted': row[2],
-                    'conversion_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1)
-                } 
-                for row in cursor.fetchall()
-            ]
-            
-            # Recent conversions
-            cursor.execute("""
-                SELECT email, utm_source, utm_campaign, amount_paid, conversion_days, converted_at
-                FROM telegram_subscriptions 
-                WHERE is_converted = TRUE AND tenant_id = %s
+                WHERE is_converted = TRUE AND tenant_id = %s {period_filter}
                 ORDER BY converted_at DESC
                 LIMIT 10
             """, (tenant_id,))
             recent_conversions = [
                 {
-                    'email': row[0],
-                    'source': row[1] or 'direct',
-                    'campaign': row[2] or 'none',
-                    'amount': float(row[3] or 0),
-                    'days_to_convert': row[4],
-                    'converted_at': row[5].isoformat() if row[5] else None
+                    'email': r[0],
+                    'name': r[1] or '',
+                    'source': r[2] or 'direct',
+                    'campaign': r[3] or 'none',
+                    'amount': float(r[4] or 0),
+                    'days_to_convert': r[5],
+                    'converted_at': r[6].isoformat() if r[6] else None,
+                    'telegram': r[7] or ''
                 }
-                for row in cursor.fetchall()
+                for r in cursor.fetchall()
             ]
             
-            # All leads table (free signups with conversion status)
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT 
                     email, name, utm_source, utm_campaign, 
                     free_signup_at, is_converted, converted_at, 
-                    amount_paid, plan_type, status, telegram_username
+                    amount_paid, plan_type, status, telegram_username,
+                    joined_at, telegram_user_id
                 FROM telegram_subscriptions 
-                WHERE tenant_id = %s
+                WHERE tenant_id = %s {period_filter}
                 ORDER BY 
                     CASE WHEN is_converted = TRUE THEN 0 ELSE 1 END,
                     free_signup_at DESC NULLS LAST,
@@ -6241,30 +6425,33 @@ def get_conversion_analytics(tenant_id):
             """, (tenant_id,))
             all_leads = [
                 {
-                    'email': row[0],
-                    'name': row[1] or '',
-                    'source': row[2] or 'direct',
-                    'campaign': row[3] or '',
-                    'signup_date': row[4].isoformat() if row[4] else None,
-                    'is_converted': row[5] or False,
-                    'converted_at': row[6].isoformat() if row[6] else None,
-                    'amount': float(row[7] or 0),
-                    'plan_type': row[8] or 'Free',
-                    'status': row[9] or 'pending',
-                    'telegram': row[10] or ''
+                    'email': r[0],
+                    'name': r[1] or '',
+                    'source': r[2] or 'direct',
+                    'campaign': r[3] or '',
+                    'signup_date': r[4].isoformat() if r[4] else None,
+                    'is_converted': r[5] or False,
+                    'converted_at': r[6].isoformat() if r[6] else None,
+                    'amount': float(r[7] or 0),
+                    'plan_type': r[8] or 'Free',
+                    'status': r[9] or 'pending',
+                    'telegram': r[10] or '',
+                    'joined_at': r[11].isoformat() if r[11] else None,
+                    'has_telegram': r[12] is not None
                 }
-                for row in cursor.fetchall()
+                for r in cursor.fetchall()
             ]
             
             return {
                 'summary': {
                     'total_free_signups': total_free_signups,
+                    'total_joined': total_joined,
+                    'join_rate': round(join_rate, 1),
                     'total_conversions': total_conversions,
                     'conversion_rate': round(conversion_rate, 1),
                     'avg_conversion_days': round(float(avg_conversion_days), 1),
                     'conversion_revenue': round(conversion_revenue, 2)
                 },
-                'by_source': by_source,
                 'by_campaign': by_campaign,
                 'funnel_by_source': funnel_by_source,
                 'recent_conversions': recent_conversions,
@@ -6276,6 +6463,60 @@ def get_conversion_analytics(tenant_id):
         import traceback
         traceback.print_exc()
         return None
+
+
+def backfill_free_signups_from_bot_users(tenant_id):
+    """
+    One-time backfill: cross-reference bot_users with telegram_subscriptions
+    to populate free_signup_at for existing FREE channel users.
+    
+    Returns:
+        dict: Summary of backfill results
+    """
+    try:
+        if not db_pool.connection_pool:
+            return {'error': 'Database not available'}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions ts
+                SET free_signup_at = COALESCE(ts.free_signup_at, bu.first_used),
+                    telegram_username = COALESCE(ts.telegram_username, bu.username),
+                    updated_at = CURRENT_TIMESTAMP
+                FROM bot_users bu
+                WHERE bu.chat_id::text = ts.telegram_user_id::text
+                    AND bu.tenant_id = ts.tenant_id
+                    AND ts.tenant_id = %s
+                    AND ts.free_signup_at IS NULL
+                    AND bu.first_used IS NOT NULL
+            """, (tenant_id,))
+            updated_existing = cursor.rowcount
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions ts
+                SET conversion_days = EXTRACT(DAY FROM (ts.converted_at - ts.free_signup_at))::int
+                WHERE ts.tenant_id = %s
+                    AND ts.is_converted = TRUE
+                    AND ts.free_signup_at IS NOT NULL
+                    AND ts.conversion_days IS NULL
+                    AND ts.converted_at IS NOT NULL
+            """, (tenant_id,))
+            updated_conversion_days = cursor.rowcount
+            
+            conn.commit()
+            
+            result = {
+                'updated_free_signup_at': updated_existing,
+                'updated_conversion_days': updated_conversion_days
+            }
+            logger.info(f"Backfill complete: {result}")
+            return result
+            
+    except Exception as e:
+        logger.exception(f"Error during backfill: {e}")
+        return {'error': str(e)}
 
 
 # ===== Webhook Idempotency Functions =====
@@ -7545,7 +7786,7 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
                        webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
-                       created_at, updated_at, vip_channel_id, free_channel_id
+                       created_at, updated_at, vip_channel_id, free_channel_id, free_channel_link
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s AND bot_role = %s
             """, (tenant_id, bot_role))
@@ -7566,7 +7807,8 @@ def get_bot_connection(tenant_id: str, bot_role: str) -> dict:
                     'created_at': row[10].isoformat() if row[10] else None,
                     'updated_at': row[11].isoformat() if row[11] else None,
                     'vip_channel_id': row[12],
-                    'free_channel_id': row[13]
+                    'free_channel_id': row[13],
+                    'free_channel_link': row[14]
                 }
             return None
     except Exception as e:
@@ -7578,6 +7820,7 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
                           bot_username: str = None, webhook_secret: str = None, 
                           webhook_url: str = None, channel_id: str = None,
                           vip_channel_id: str = None, free_channel_id: str = None,
+                          free_channel_link: str = None,
                           last_error: str = None) -> bool:
     """
     Upsert a bot connection for a tenant.
@@ -7592,6 +7835,7 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
         channel_id: Telegram channel ID (legacy, for message_bot)
         vip_channel_id: VIP channel ID (for signal_bot cross promo)
         free_channel_id: FREE channel ID (for signal_bot cross promo)
+        free_channel_link: Public fallback link for free channel (e.g. https://t.me/entrylab)
         last_error: Last error message if any
         
     Returns:
@@ -7606,8 +7850,8 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
             cursor.execute("""
                 INSERT INTO tenant_bot_connections 
                     (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, 
-                     channel_id, vip_channel_id, free_channel_id, last_error, last_validated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
+                     channel_id, vip_channel_id, free_channel_id, free_channel_link, last_error, last_validated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CASE WHEN %s IS NULL THEN NOW() ELSE NULL END)
                 ON CONFLICT (tenant_id, bot_role) DO UPDATE SET
                     bot_token = COALESCE(EXCLUDED.bot_token, tenant_bot_connections.bot_token),
                     bot_username = COALESCE(EXCLUDED.bot_username, tenant_bot_connections.bot_username),
@@ -7616,11 +7860,12 @@ def upsert_bot_connection(tenant_id: str, bot_role: str, bot_token: str = None,
                     channel_id = COALESCE(EXCLUDED.channel_id, tenant_bot_connections.channel_id),
                     vip_channel_id = COALESCE(EXCLUDED.vip_channel_id, tenant_bot_connections.vip_channel_id),
                     free_channel_id = COALESCE(EXCLUDED.free_channel_id, tenant_bot_connections.free_channel_id),
+                    free_channel_link = COALESCE(EXCLUDED.free_channel_link, tenant_bot_connections.free_channel_link),
                     last_error = EXCLUDED.last_error,
                     last_validated_at = CASE WHEN EXCLUDED.last_error IS NULL THEN NOW() ELSE tenant_bot_connections.last_validated_at END,
                     updated_at = NOW()
             """, (tenant_id, bot_role, bot_token, bot_username, webhook_secret, webhook_url, 
-                  channel_id, vip_channel_id, free_channel_id, last_error, last_error))
+                  channel_id, vip_channel_id, free_channel_id, free_channel_link, last_error, last_error))
             conn.commit()
             logger.info(f"Upserted bot connection for tenant={tenant_id}, role={bot_role}")
             return True
@@ -7648,7 +7893,7 @@ def get_all_bot_connections(tenant_id: str) -> list:
             cursor.execute("""
                 SELECT id, tenant_id, bot_role, bot_token, bot_username, 
                        webhook_secret, webhook_url, channel_id, last_validated_at, last_error,
-                       created_at, updated_at, vip_channel_id, free_channel_id
+                       created_at, updated_at, vip_channel_id, free_channel_id, free_channel_link
                 FROM tenant_bot_connections
                 WHERE tenant_id = %s
                 ORDER BY bot_role
@@ -7671,7 +7916,8 @@ def get_all_bot_connections(tenant_id: str) -> list:
                     'created_at': row[10].isoformat() if row[10] else None,
                     'updated_at': row[11].isoformat() if row[11] else None,
                     'vip_channel_id': row[12],
-                    'free_channel_id': row[13]
+                    'free_channel_id': row[13],
+                    'free_channel_link': row[14]
                 })
             return connections
     except Exception as e:

@@ -88,6 +88,8 @@ GET_ROUTES: List[Route] = [
           auth_required=True),
     Route('GET', '/api/telegram/conversion-analytics', 'handle_api_telegram_conversion_analytics',
           auth_required=True),
+    Route('POST', '/api/telegram/backfill-conversions', 'handle_api_telegram_backfill_conversions',
+          auth_required=True, db_required=True),
     Route('GET', '/api/telegram/billing/', 'handle_api_telegram_billing',
           auth_required=True, is_prefix=True),
     

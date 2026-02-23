@@ -335,6 +335,18 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> 
 
             links = []
             if cta_vip_label and cta_vip_url:
+                from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+                parsed = urlparse(cta_vip_url)
+                existing_params = parse_qs(parsed.query)
+                if not any(k.startswith('utm_') for k in existing_params):
+                    utm_params = {
+                        'utm_source': 'telegram',
+                        'utm_medium': 'free_channel',
+                        'utm_campaign': 'hype_bot'
+                    }
+                    separator = '&' if parsed.query else ''
+                    new_query = parsed.query + separator + urlencode(utm_params) if parsed.query else urlencode(utm_params)
+                    cta_vip_url = urlunparse(parsed._replace(query=new_query))
                 links.append(f'👉 <a href="{cta_vip_url}">{cta_vip_label}</a>')
             if cta_support_label and cta_support_url:
                 links.append(f'🟢 <a href="{cta_support_url}">{cta_support_label}</a>')

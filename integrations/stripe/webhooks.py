@@ -181,6 +181,16 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
             customer_email = event_data.get('customer_email') if isinstance(event_data, dict) else getattr(event_data, 'customer_email', None)
             amount_total = (event_data.get('amount_total') if isinstance(event_data, dict) else getattr(event_data, 'amount_total', 0)) or 0
             
+            metadata = event_data.get('metadata', {}) if isinstance(event_data, dict) else getattr(event_data, 'metadata', {}) or {}
+            utm_source = metadata.get('utm_source')
+            utm_medium = metadata.get('utm_medium')
+            utm_campaign = metadata.get('utm_campaign')
+            utm_content = metadata.get('utm_content')
+            utm_term = metadata.get('utm_term')
+            
+            if utm_source:
+                print(f"[STRIPE WEBHOOK] UTM from checkout metadata: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
+            
             if subscription_id:
                 sub_details = get_subscription_details(subscription_id)
                 
@@ -208,11 +218,18 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                             stripe_subscription_id=subscription_id,
                             plan_type=plan_name,
                             amount_paid=amount_paid,
-                            name=name
+                            name=name,
+                            utm_source=utm_source,
+                            utm_medium=utm_medium,
+                            utm_campaign=utm_campaign,
+                            utm_content=utm_content,
+                            utm_term=utm_term
                         )
                         
                         if result:
-                            print(f"[STRIPE WEBHOOK] ✅ VIP subscription created/updated: {email} (tenant={tenant_id})")
+                            is_conversion = result.get('is_converted', False)
+                            conv_msg = " (CONVERSION from FREE!)" if is_conversion else ""
+                            print(f"[STRIPE WEBHOOK] ✅ VIP subscription created/updated: {email} (tenant={tenant_id}){conv_msg}")
                         else:
                             print(f"[STRIPE WEBHOOK] ❌ Failed to create subscription: {error}")
                 else:

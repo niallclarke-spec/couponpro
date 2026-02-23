@@ -108,6 +108,7 @@ class BotCredentialResolver:
             'webhook_url': connection.get('webhook_url'),
             'vip_channel_id': connection.get('vip_channel_id'),
             'free_channel_id': connection.get('free_channel_id'),
+            'free_channel_link': connection.get('free_channel_link'),
         }
     
     def get_signal_bot(self, tenant_id: str) -> dict:

@@ -143,7 +143,14 @@ def handle_telegram_conversion_analytics(handler):
     import server
     
     try:
-        analytics = server.db.get_conversion_analytics(tenant_id=handler.tenant_id)
+        parsed_path = urlparse(handler.path)
+        query_params = parse_qs(parsed_path.query)
+        period = query_params.get('period', ['all'])[0]
+        valid_periods = ['all', '30d', '7d', 'today']
+        if period not in valid_periods:
+            period = 'all'
+        
+        analytics = server.db.get_conversion_analytics(tenant_id=handler.tenant_id, period=period)
         
         if analytics:
             handler.send_response(200)
@@ -361,15 +368,91 @@ def handle_telegram_grant_access(handler):
         
         if is_free_user:
             logger.info(f"Free lead captured for {email}")
+            
+            public_fallback_link = 'https://t.me/entrylab'
+            creds = None
+            from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+            try:
+                creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+                configured_link = creds.get('free_channel_link')
+                if configured_link:
+                    public_fallback_link = configured_link
+            except BotNotConfiguredError:
+                pass
+            
+            existing_link = server.db.get_existing_free_invite_link(email, tenant_id=handler.tenant_id)
+            if existing_link:
+                logger.info(f"Returning existing unused invite link for {email}")
+                handler.send_response(200)
+                handler.send_header('Content-type', 'application/json')
+                handler.end_headers()
+                handler.wfile.write(json.dumps({
+                    'success': True,
+                    'inviteLink': existing_link,
+                    'message': 'Free lead captured - existing invite link returned',
+                    'isFreeUser': True
+                }).encode())
+                return
+            
+            existing_sub = server.db.get_telegram_subscription_by_email(email, tenant_id=handler.tenant_id)
+            if existing_sub and existing_sub.get('telegram_user_id'):
+                logger.info(f"Email {email} already has linked Telegram user, returning public link")
+                handler.send_response(200)
+                handler.send_header('Content-type', 'application/json')
+                handler.end_headers()
+                handler.wfile.write(json.dumps({
+                    'success': True,
+                    'inviteLink': public_fallback_link,
+                    'message': 'User already joined - public link returned',
+                    'isFreeUser': True,
+                    'fallback': True
+                }).encode())
+                return
+            
+            free_invite_link = None
+            try:
+                free_channel_id = creds.get('free_channel_id') if creds else None
+                
+                if free_channel_id:
+                    import time
+                    for attempt in range(3):
+                        free_invite_link = server.telegram_bot.sync_create_free_channel_invite_link(
+                            free_channel_id, email=email, tenant_id=handler.tenant_id
+                        )
+                        if free_invite_link:
+                            break
+                        if attempt < 2:
+                            logger.warning(f"Invite link creation attempt {attempt + 1} failed for {email}, retrying...")
+                            time.sleep(1)
+                    
+                    if free_invite_link:
+                        server.db.update_telegram_subscription_invite(email, free_invite_link, tenant_id=handler.tenant_id)
+                else:
+                    logger.warning("free_channel_id not configured in bot connections")
+            except BotNotConfiguredError:
+                logger.warning("Signal bot not configured, using public link fallback")
+            except Exception as link_err:
+                logger.exception(f"Error creating free invite link: {link_err}")
+            
+            is_fallback = free_invite_link is None
+            final_link = free_invite_link or public_fallback_link
+            
+            response_data = {
+                'success': True,
+                'inviteLink': final_link,
+                'message': 'Free lead captured successfully',
+                'isFreeUser': True
+            }
+            if is_fallback:
+                response_data['fallback'] = True
+                logger.warning(f"Using public link fallback for {email}")
+            else:
+                logger.info(f"Generated unique FREE invite link for {email}: {free_invite_link}")
+            
             handler.send_response(200)
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
-            handler.wfile.write(json.dumps({
-                'success': True,
-                'inviteLink': None,
-                'message': 'Free lead captured successfully',
-                'isFreeUser': True
-            }).encode())
+            handler.wfile.write(json.dumps(response_data).encode())
             return
         
         from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
@@ -415,6 +498,36 @@ def handle_telegram_grant_access(handler):
         handler.wfile.write(json.dumps({'success': False, 'error': 'Invalid JSON format'}).encode())
     except Exception as e:
         logger.exception("Error granting access")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+
+
+def handle_telegram_backfill_conversions(handler):
+    """POST /api/telegram/backfill-conversions"""
+    import server
+    
+    try:
+        result = server.db.backfill_free_signups_from_bot_users(tenant_id=handler.tenant_id)
+        
+        if 'error' in result:
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': False, 'error': result['error']}).encode())
+            return
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({
+            'success': True,
+            'message': 'Backfill complete',
+            'results': result
+        }).encode())
+    except Exception as e:
+        logger.exception("Backfill error")
         handler.send_response(500)
         handler.send_header('Content-type', 'application/json')
         handler.end_headers()
