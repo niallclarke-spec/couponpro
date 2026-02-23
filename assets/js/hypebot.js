@@ -403,20 +403,33 @@ window.HypeBotModule = (function() {
                                 <option value="">Select a prompt...</option>${opts}
                             </select>
                         </div>
-                        <div style="margin-bottom:16px;">
-                            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Flow Delay (min)</label>
-                            <span style="display:block;font-size:11px;color:var(--text-tertiary,#666);margin-bottom:8px;">Time between the TP hit message and the first hype message</span>
-                            <input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:100px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Messages</label><input type="number" id="hype-flow-count" min="1" max="10" value="${flow ? flow.message_count : 3}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Min Interval (min)</label><input type="number" id="hype-flow-interval" min="1" value="${flow ? flow.interval_minutes : 5}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Max Interval (min)</label><input type="number" id="hype-flow-interval-max" min="1" value="${flow ? (flow.interval_max_minutes || flow.interval_minutes) : 30}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div style="grid-column:1/-1;">
-                                <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label>
-                                <div id="hype-day-toggles" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-                                <div id="hype-day-conflicts" style="font-size:11px;color:#ff6b6b;margin-top:6px;display:none;"></div>
+                        <div style="background:var(--bg-tertiary,rgba(255,255,255,0.04));border:1px solid var(--border-primary);border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px;">Flow Delay</label>
+                            <span style="display:block;font-size:11px;color:var(--text-tertiary,#666);margin-bottom:8px;">Time between TP hit and first hype message</span>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:56px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
+                                <span style="color:var(--text-tertiary,#888);font-size:12px;">min</span>
                             </div>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;">
+                            <div style="flex:0 0 auto;background:var(--bg-tertiary,rgba(255,255,255,0.04));border:1px solid var(--border-primary);border-radius:10px;padding:10px 14px;text-align:center;">
+                                <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Messages</label>
+                                <input type="number" id="hype-flow-count" min="1" max="10" value="${flow ? flow.message_count : 3}" style="width:48px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:16px;font-weight:600;text-align:center;box-sizing:border-box;">
+                            </div>
+                            <div style="flex:1;background:var(--bg-tertiary,rgba(255,255,255,0.04));border:1px solid var(--border-primary);border-radius:10px;padding:10px 14px;">
+                                <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Interval between messages</label>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <input type="number" id="hype-flow-interval" min="1" value="${flow ? flow.interval_minutes : 5}" style="width:56px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
+                                    <span style="color:var(--text-tertiary,#888);font-size:13px;">–</span>
+                                    <input type="number" id="hype-flow-interval-max" min="1" value="${flow ? (flow.interval_max_minutes || flow.interval_minutes) : 30}" style="width:56px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
+                                    <span style="color:var(--text-tertiary,#888);font-size:12px;">min</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Active Days</label>
+                            <div id="hype-day-toggles" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+                            <div id="hype-day-conflicts" style="font-size:11px;color:#ff6b6b;margin-top:6px;display:none;"></div>
                         </div>
                         <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
