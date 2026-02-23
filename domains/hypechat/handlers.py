@@ -9,6 +9,45 @@ from domains.hypechat import repo, service
 logger = get_logger(__name__)
 
 
+ALL_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+DAY_LABELS = {'mon': 'Mon', 'tue': 'Tue', 'wed': 'Wed', 'thu': 'Thu', 'fri': 'Fri', 'sat': 'Sat', 'sun': 'Sun'}
+
+def _parse_days(active_days: str) -> set:
+    if not active_days or active_days.strip().lower() == 'daily':
+        return set(ALL_DAYS)
+    raw = active_days.strip().lower()
+    if '-' in raw and ',' not in raw:
+        parts = raw.split('-')
+        if len(parts) == 2:
+            si = ALL_DAYS.index(parts[0]) if parts[0] in ALL_DAYS else -1
+            ei = ALL_DAYS.index(parts[1]) if parts[1] in ALL_DAYS else -1
+            if si >= 0 and ei >= 0:
+                result = set()
+                i = si
+                while True:
+                    result.add(ALL_DAYS[i])
+                    if i == ei:
+                        break
+                    i = (i + 1) % 7
+                return result
+    return {d.strip() for d in raw.split(',') if d.strip() in ALL_DAYS}
+
+def _check_day_conflicts(tenant_id: str, active_days: str, exclude_flow_id: str = None) -> str:
+    requested_days = _parse_days(active_days)
+    if not requested_days:
+        return ""
+    all_flows = repo.list_flows(tenant_id)
+    for f in all_flows:
+        if f['id'] == exclude_flow_id or f['status'] != 'active':
+            continue
+        flow_days = _parse_days(f.get('active_days', ''))
+        overlap = requested_days & flow_days
+        if overlap:
+            labels = ', '.join(DAY_LABELS.get(d, d) for d in ALL_DAYS if d in overlap)
+            return f"Day conflict: {labels} already assigned to flow \"{f['name']}\""
+    return ""
+
+
 def _send_no_tenant_context(handler):
     handler.send_response(403)
     handler.send_header('Content-type', 'application/json')
@@ -119,6 +158,12 @@ def handle_create_flow(handler):
         _send_json(handler, 400, {"error": "name is required"})
         return
 
+    active_days = data.get('active_days', 'mon-fri')
+    conflict = _check_day_conflicts(tenant_id, active_days, exclude_flow_id=None)
+    if conflict:
+        _send_json(handler, 409, {"error": conflict})
+        return
+
     flow = repo.create_flow(
         tenant_id=tenant_id,
         prompt_id=prompt_id,
@@ -127,7 +172,7 @@ def handle_create_flow(handler):
         interval_minutes=data.get('interval_minutes', 90),
         interval_max_minutes=data.get('interval_max_minutes', data.get('interval_minutes', 90)),
         delay_after_cta_minutes=data.get('delay_after_cta_minutes', 10),
-        active_days=data.get('active_days', 'mon-fri'),
+        active_days=active_days,
         cta_enabled=data.get('cta_enabled', False),
         cta_delay_minutes=data.get('cta_delay_minutes', 30),
         cta_intro_text=data.get('cta_intro_text', ''),
@@ -149,6 +194,13 @@ def handle_update_flow(handler, flow_id: str):
         return
 
     data = _read_json_body(handler)
+    active_days = data.get('active_days')
+    if active_days:
+        conflict = _check_day_conflicts(tenant_id, active_days, exclude_flow_id=flow_id)
+        if conflict:
+            _send_json(handler, 409, {"error": conflict})
+            return
+
     flow = repo.update_flow(tenant_id, flow_id, data)
     if flow:
         _send_json(handler, 200, flow)

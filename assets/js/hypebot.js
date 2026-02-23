@@ -11,6 +11,25 @@ window.HypeBotModule = (function() {
 
     const TG_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>';
 
+    const ALL_DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
+    function parseDaysString(str) {
+        if (!str || str.trim().toLowerCase() === 'daily') return [...ALL_DAYS];
+        const raw = str.trim().toLowerCase();
+        if (raw.includes('-') && !raw.includes(',')) {
+            const parts = raw.split('-');
+            if (parts.length === 2) {
+                const si = ALL_DAYS.indexOf(parts[0]), ei = ALL_DAYS.indexOf(parts[1]);
+                if (si >= 0 && ei >= 0) {
+                    const result = [];
+                    for (let i = si; i !== (ei + 1) % 7; i = (i + 1) % 7) result.push(ALL_DAYS[i]);
+                    result.push(ALL_DAYS[ei]);
+                    return result;
+                }
+            }
+        }
+        return raw.split(',').map(d => d.trim()).filter(d => ALL_DAYS.includes(d));
+    }
+
     async function loadConnectionStatus() {
         const bar = document.getElementById('hype-connection-bar');
         if (!bar) return;
@@ -111,7 +130,7 @@ window.HypeBotModule = (function() {
                     <div class="hype-flow-config">
                         <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}-${f.interval_max_minutes || f.interval_minutes}min</span>
                         <span class="hype-config-item">Flow delay: ${f.delay_after_cta_minutes}min</span>
-                        <span class="hype-config-item">${escapeHtml(f.active_days)}</span>
+                        <span class="hype-config-item">${parseDaysString(f.active_days || '').map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}</span>
                         ${f.cta_enabled ? '<span class="hype-config-item" style="color:#34c759;">CTA ✓</span>' : ''}
                     </div>
                     <div class="hype-card-actions">
@@ -393,7 +412,11 @@ window.HypeBotModule = (function() {
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Messages</label><input type="number" id="hype-flow-count" min="1" max="10" value="${flow ? flow.message_count : 3}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Min Interval (min)</label><input type="number" id="hype-flow-interval" min="1" value="${flow ? flow.interval_minutes : 5}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Max Interval (min)</label><input type="number" id="hype-flow-interval-max" min="1" value="${flow ? (flow.interval_max_minutes || flow.interval_minutes) : 30}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label><input type="text" id="hype-flow-days" value="${flow ? flow.active_days : 'mon-fri'}" placeholder="mon-fri" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
+                            <div style="grid-column:1/-1;">
+                                <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label>
+                                <div id="hype-day-toggles" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+                                <div id="hype-day-conflicts" style="font-size:11px;color:#ff6b6b;margin-top:6px;display:none;"></div>
+                            </div>
                         </div>
                         <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -444,6 +467,68 @@ window.HypeBotModule = (function() {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         document.getElementById('hype-flow-modal').classList.add('active');
         document.getElementById('hype-flow-name').focus();
+
+        const allDays = ['mon','tue','wed','thu','fri','sat','sun'];
+        const dayLabels = {mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+        const currentDays = flow ? parseDaysString(flow.active_days || '') : ['mon','tue','wed','thu','fri'];
+        const takenMap = {};
+        const currentFlowId = flow ? flow.id : null;
+        flows.forEach(f => {
+            if (f.id === currentFlowId || f.status !== 'active') return;
+            parseDaysString(f.active_days || '').forEach(d => { takenMap[d] = f.name; });
+        });
+        const toggleContainer = document.getElementById('hype-day-toggles');
+        const conflictLabel = document.getElementById('hype-day-conflicts');
+        allDays.forEach(d => {
+            const isSelected = currentDays.includes(d);
+            const takenBy = takenMap[d];
+            const isTaken = takenBy && !isSelected;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.dataset.day = d;
+            btn.textContent = dayLabels[d];
+            btn.style.cssText = 'padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-primary);transition:all 0.15s;';
+            if (isTaken) {
+                btn.style.background = 'var(--bg-primary)';
+                btn.style.color = '#555';
+                btn.style.cursor = 'not-allowed';
+                btn.style.opacity = '0.5';
+                btn.style.textDecoration = 'line-through';
+                btn.disabled = true;
+            } else if (isSelected) {
+                btn.style.background = '#34c759';
+                btn.style.color = '#fff';
+                btn.style.borderColor = '#34c759';
+                btn.dataset.active = 'true';
+            } else {
+                btn.style.background = 'var(--bg-primary)';
+                btn.style.color = 'var(--text-secondary)';
+                btn.dataset.active = 'false';
+            }
+            if (!isTaken) {
+                btn.addEventListener('click', () => {
+                    const isActive = btn.dataset.active === 'true';
+                    btn.dataset.active = isActive ? 'false' : 'true';
+                    if (btn.dataset.active === 'true') {
+                        btn.style.background = '#34c759';
+                        btn.style.color = '#fff';
+                        btn.style.borderColor = '#34c759';
+                    } else {
+                        btn.style.background = 'var(--bg-primary)';
+                        btn.style.color = 'var(--text-secondary)';
+                        btn.style.borderColor = 'var(--border-primary)';
+                    }
+                });
+            }
+            toggleContainer.appendChild(btn);
+        });
+        const takenDays = Object.entries(takenMap).filter(([d]) => !currentDays.includes(d));
+        if (takenDays.length > 0) {
+            const grouped = {};
+            takenDays.forEach(([d, name]) => { if (!grouped[name]) grouped[name] = []; grouped[name].push(dayLabels[d]); });
+            conflictLabel.textContent = Object.entries(grouped).map(([name, days]) => `${days.join(', ')} used by "${name}"`).join(' · ');
+            conflictLabel.style.display = 'block';
+        }
     }
 
     async function saveFlow(editId) {
@@ -453,7 +538,9 @@ window.HypeBotModule = (function() {
         const iv = parseInt(document.getElementById('hype-flow-interval').value) || 5;
         const ivMax = parseInt(document.getElementById('hype-flow-interval-max')?.value) || iv;
         const dl = parseInt(document.getElementById('hype-flow-delay').value) || 10;
-        const days = document.getElementById('hype-flow-days').value.trim() || 'mon-fri';
+        const selectedDays = Array.from(document.querySelectorAll('#hype-day-toggles button[data-active="true"]')).map(b => b.dataset.day);
+        if (selectedDays.length === 0) { alert('Please select at least one active day'); return; }
+        const days = selectedDays.join(',');
         const ctaEnabled = document.getElementById('hype-flow-cta-enabled')?.checked || false;
         const ctaDelay = parseInt(document.getElementById('hype-flow-cta-delay')?.value) || 30;
         const ctaIntro = document.getElementById('hype-flow-cta-intro')?.value?.trim() || '';
