@@ -110,7 +110,7 @@ window.HypeBotModule = (function() {
                 <div class="hype-card-right">
                     <div class="hype-flow-config">
                         <span class="hype-config-item">${f.message_count} msgs · ${f.interval_minutes}-${f.interval_max_minutes || f.interval_minutes}min</span>
-                        <span class="hype-config-item">CTA delay: ${f.delay_after_cta_minutes}min</span>
+                        <span class="hype-config-item">Flow delay: ${f.delay_after_cta_minutes}min</span>
                         <span class="hype-config-item">${escapeHtml(f.active_days)}</span>
                         ${f.cta_enabled ? '<span class="hype-config-item" style="color:#34c759;">CTA ✓</span>' : ''}
                     </div>
@@ -384,11 +384,15 @@ window.HypeBotModule = (function() {
                                 <option value="">Select a prompt...</option>${opts}
                             </select>
                         </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Flow Delay (min)</label>
+                            <span style="display:block;font-size:11px;color:var(--text-tertiary,#666);margin-bottom:8px;">Time between the TP hit message and the first hype message</span>
+                            <input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:100px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                        </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Messages</label><input type="number" id="hype-flow-count" min="1" max="10" value="${flow ? flow.message_count : 3}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Min Interval (min)</label><input type="number" id="hype-flow-interval" min="1" value="${flow ? flow.interval_minutes : 5}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Max Interval (min)</label><input type="number" id="hype-flow-interval-max" min="1" value="${flow ? (flow.interval_max_minutes || flow.interval_minutes) : 30}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
-                            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Delay after CTA (min)</label><input type="number" id="hype-flow-delay" min="0" value="${flow ? flow.delay_after_cta_minutes : 10}" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                             <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Active Days</label><input type="text" id="hype-flow-days" value="${flow ? flow.active_days : 'mon-fri'}" placeholder="mon-fri" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;"></div>
                         </div>
                         <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
