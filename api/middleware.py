@@ -35,7 +35,8 @@ WEBHOOK_EXEMPT_ROUTES = [
     '/api/telegram-webhook',
     '/api/forex-telegram-webhook',
     '/api/bot-webhook/',
-    '/api/stripe/webhook'
+    '/api/stripe/webhook',
+    '/api/telegram/grant-access'
 ]
 
 
