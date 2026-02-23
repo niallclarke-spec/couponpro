@@ -1,0 +1,92 @@
+Feb 23 13:12:55  [2026-02-23 13:12:55] [INFO] [raja_banks] [tenant:entrylab] [req:975629ef] Checking for signals on XAU/USD 1h...
+Feb 23 13:12:55  [2026-02-23 13:12:55] [INFO] [raja_banks] [tenant:entrylab] [req:975629ef] Session: London/NY Overlap
+Feb 23 13:12:56  [2026-02-23 13:12:56] [INFO] [raja_banks] [tenant:entrylab] [req:975629ef] No impulse breakout detected
+Feb 23 13:17:15  10.244.4.249 - - [23/Feb/2026 13:17:15] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 23 13:17:15  10.244.4.249 - - [23/Feb/2026 13:17:15] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 23 13:17:15  10.244.7.214 - - [23/Feb/2026 13:17:15] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:17:15  10.244.4.249 - - [23/Feb/2026 13:17:15] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 23 13:17:15  10.244.4.249 - - [23/Feb/2026 13:17:15] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 23 13:17:15  10.244.7.214 - - [23/Feb/2026 13:17:15] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:17:19  10.244.6.27 - - [23/Feb/2026 13:17:19] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 23 13:17:19  10.244.6.27 - - [23/Feb/2026 13:17:19] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 23 13:17:19  10.244.7.214 - - [23/Feb/2026 13:17:19] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:17:19  10.244.7.214 - - [23/Feb/2026 13:17:19] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.6.27 - - [23/Feb/2026 13:26:38] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:38  [2026-02-23 13:26:38] [INFO] [service] [req:eb6c3dda] Generating morning market briefing for tenant: entrylab
+Feb 23 13:26:38  [2026-02-23 13:26:38] [INFO] [briefing] [req:eb6c3dda] Generating morning briefing for tenant: entrylab
+Feb 23 13:26:38  [2026-02-23 13:26:38] [INFO] [briefing] [req:eb6c3dda] Computing morning briefing data from Twelve Data...
+Feb 23 13:26:38  10.244.4.249 - - [23/Feb/2026 13:26:38] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.6.27 - - [23/Feb/2026 13:26:38] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.7.214 - - [23/Feb/2026 13:26:38] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.6.27 - - [23/Feb/2026 13:26:38] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.5.120 - - [23/Feb/2026 13:26:38] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.4.249 - - [23/Feb/2026 13:26:38] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.6.27 - - [23/Feb/2026 13:26:38] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.7.214 - - [23/Feb/2026 13:26:38] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 23 13:26:38  10.244.5.120 - - [23/Feb/2026 13:26:38] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 23 13:26:39  [2026-02-23 13:26:39] [INFO] [briefing] [req:eb6c3dda] Briefing data computed: price=$5147.89, range=tight, position=near_high
+Feb 23 13:26:40  10.244.4.249 - - [23/Feb/2026 13:26:40] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 23 13:26:40  10.244.4.249 - - [23/Feb/2026 13:26:40] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 23 13:26:40  10.244.7.214 - - [23/Feb/2026 13:26:40] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:26:40  10.244.4.249 - - [23/Feb/2026 13:26:40] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 23 13:26:40  10.244.4.249 - - [23/Feb/2026 13:26:40] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 23 13:26:40  10.244.7.214 - - [23/Feb/2026 13:26:40] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:26:41  [2026-02-23 13:26:41] [INFO] [briefing] [req:eb6c3dda] Generated AI briefing for entrylab
+Feb 23 13:26:41  10.244.7.214 - - [23/Feb/2026 13:26:41] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 23 13:26:42  [2026-02-23 13:26:42] [INFO] [service] [req:60dca596] Generating morning market briefing for tenant: entrylab
+Feb 23 13:26:42  [2026-02-23 13:26:42] [INFO] [briefing] [req:60dca596] Generating morning briefing for tenant: entrylab
+Feb 23 13:26:42  [2026-02-23 13:26:42] [INFO] [briefing] [req:60dca596] Computing morning briefing data from Twelve Data...
+Feb 23 13:26:42  [2026-02-23 13:26:42] [INFO] [briefing] [req:60dca596] Briefing data computed: price=$5147.89, range=tight, position=near_high
+Feb 23 13:26:44  10.244.6.27 - - [23/Feb/2026 13:26:44] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:44  10.244.7.214 - - [23/Feb/2026 13:26:44] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 23 13:26:44  10.244.7.214 - - [23/Feb/2026 13:26:44] "GET /api/hypechat/flows HTTP/1.1" 200 -
+Feb 23 13:26:44  10.244.6.27 - - [23/Feb/2026 13:26:44] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:44  10.244.7.214 - - [23/Feb/2026 13:26:44] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 23 13:26:44  10.244.7.214 - - [23/Feb/2026 13:26:44] "GET /api/hypechat/flows HTTP/1.1" 200 -
+Feb 23 13:26:45  [2026-02-23 13:26:45] [INFO] [briefing] [req:60dca596] Generated AI briefing for entrylab
+Feb 23 13:26:45  10.244.7.214 - - [23/Feb/2026 13:26:45] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 23 13:26:45  10.244.6.27 - - [23/Feb/2026 13:26:45] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:45  10.244.6.27 - - [23/Feb/2026 13:26:45] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:45  10.244.4.249 - - [23/Feb/2026 13:26:45] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 23 13:26:46  10.244.4.249 - - [23/Feb/2026 13:26:46] "GET /api/journeys/user-account HTTP/1.1" 200 -
+Feb 23 13:26:46  10.244.6.27 - - [23/Feb/2026 13:26:46] "GET /api/journeys HTTP/1.1" 200 -
+Feb 23 13:26:46  10.244.6.27 - - [23/Feb/2026 13:26:46] "GET /api/journeys HTTP/1.1" 200 -
+Feb 23 13:26:47  10.244.6.27 - - [23/Feb/2026 13:26:47] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 23 13:26:47  10.244.6.27 - - [23/Feb/2026 13:26:47] "GET /api/forex-signals?limit=100 HTTP/1.1" 200 -
+Feb 23 13:26:47  10.244.7.214 - - [23/Feb/2026 13:26:47] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:26:47  10.244.7.214 - - [23/Feb/2026 13:26:47] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 23 13:26:53  [2026-02-23 13:26:53] [INFO] [service] [req:876cc635] Generating morning market briefing for tenant: entrylab
+Feb 23 13:26:53  [2026-02-23 13:26:53] [INFO] [briefing] [req:876cc635] Generating morning briefing for tenant: entrylab
+Feb 23 13:26:53  [2026-02-23 13:26:53] [INFO] [briefing] [req:876cc635] Computing morning briefing data from Twelve Data...
+Feb 23 13:26:53  10.244.6.27 - - [23/Feb/2026 13:26:53] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.7.214 - - [23/Feb/2026 13:26:53] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.4.249 - - [23/Feb/2026 13:26:53] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.6.27 - - [23/Feb/2026 13:26:53] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.4.249 - - [23/Feb/2026 13:26:53] "GET /api/crosspromo/settings HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.6.27 - - [23/Feb/2026 13:26:53] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.5.120 - - [23/Feb/2026 13:26:53] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.6.27 - - [23/Feb/2026 13:26:53] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.7.214 - - [23/Feb/2026 13:26:53] "GET /api/crosspromo/jobs HTTP/1.1" 200 -
+Feb 23 13:26:53  10.244.5.120 - - [23/Feb/2026 13:26:53] "GET /api/telethon/status HTTP/1.1" 200 -
+Feb 23 13:26:54  [2026-02-23 13:26:54] [INFO] [briefing] [req:876cc635] Briefing data computed: price=$5147.89, range=tight, position=near_high
+Feb 23 13:26:56  10.244.6.27 - - [23/Feb/2026 13:26:56] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:56  10.244.7.214 - - [23/Feb/2026 13:26:56] "GET /api/hypechat/flows HTTP/1.1" 200 -
+Feb 23 13:26:56  10.244.7.214 - - [23/Feb/2026 13:26:56] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 23 13:26:56  10.244.6.27 - - [23/Feb/2026 13:26:56] "GET /api/connections HTTP/1.1" 200 -
+Feb 23 13:26:56  10.244.7.214 - - [23/Feb/2026 13:26:56] "GET /api/hypechat/flows HTTP/1.1" 200 -
+Feb 23 13:26:56  10.244.7.214 - - [23/Feb/2026 13:26:56] "GET /api/hypechat/prompts HTTP/1.1" 200 -
+Feb 23 13:26:56  [2026-02-23 13:26:56] [INFO] [briefing] [req:876cc635] Generated AI briefing for entrylab
+Feb 23 13:26:56  10.244.7.214 - - [23/Feb/2026 13:26:56] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 23 13:26:56  [2026-02-23 13:26:56] [INFO] [service] [req:908b6b4b] Generating morning market briefing for tenant: entrylab
+Feb 23 13:26:56  [2026-02-23 13:26:56] [INFO] [briefing] [req:908b6b4b] Generating morning briefing for tenant: entrylab
+Feb 23 13:26:56  [2026-02-23 13:26:56] [INFO] [briefing] [req:908b6b4b] Computing morning briefing data from Twelve Data...
+Feb 23 13:26:57  [2026-02-23 13:26:57] [INFO] [briefing] [req:908b6b4b] Briefing data computed: price=$5147.89, range=tight, position=near_high
+Feb 23 13:27:00  [2026-02-23 13:27:00] [INFO] [briefing] [req:908b6b4b] Generated AI briefing for entrylab
+Feb 23 13:27:00  10.244.7.214 - - [23/Feb/2026 13:27:00] "GET /api/crosspromo/preview HTTP/1.1" 200 -
+Feb 23 13:27:05  [2026-02-23 13:27:05] [INFO] [service] [req:73be821f] Generated sequence of 5 messages for tenant entrylab
+Feb 23 13:27:05  10.244.7.214 - - [23/Feb/2026 13:27:05] "POST /api/hypechat/preview HTTP/1.1" 200 -
+Feb 23 13:27:09  10.244.5.120 - - [23/Feb/2026 13:27:09] "GET /login HTTP/1.1" 200 -
+Feb 23 13:27:58  [2026-02-23 13:27:58] [INFO] [forex_signals] [tenant:entrylab] [req:2276c14d] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 23 13:27:58  [2026-02-23 13:27:58] [INFO] [raja_banks] [tenant:entrylab] [req:2276c14d] Checking for signals on XAU/USD 15min...
+Feb 23 13:27:58  [2026-02-23 13:27:58] [INFO] [raja_banks] [tenant:entrylab] [req:2276c14d] Session: London/NY Overlap
+Feb 23 13:27:59  [2026-02-23 13:27:59] [INFO] [raja_banks] [tenant:entrylab] [req:2276c14d] Counter-trend SELL rejected (no S/R confluence)
