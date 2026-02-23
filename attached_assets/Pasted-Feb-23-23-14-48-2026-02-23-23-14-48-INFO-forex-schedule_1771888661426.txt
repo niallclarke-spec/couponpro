@@ -1,0 +1,174 @@
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ============================================================
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [generator] [tenant:entrylab] [req:df123f48] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [telethon_client] Credentials loaded from DB for tenant=entrylab, phone=***4944
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_session] Session restored for tenant=entrylab <- telethon_sessions/entrylab.session
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_client] Session restored from remote storage for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [mtprotosender] Connecting to 149.154.167.92:443/TcpFull...
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [mtprotosender] Connection to 149.154.167.92:443/TcpFull complete!
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_client] Telethon connected for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_listener] Listener started for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [bootstrap] Telethon listener started for entrylab
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Grant access request for 12345!@gmail.com
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Data: plan=free, amount=$0.0, free=True
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Stripe: customer_id=None, subscription_id=None
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [db] [req:5f899654] Creating subscription: email=12345!@gmail.com, stripe_sub_id=None, plan_type=free, is_free=True
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Free lead captured for 12345!@gmail.com
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [bot_credentials] [req:5f899654] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [bot_credentials] [req:5f899654] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:15:00  [TELEGRAM] Created FREE channel invite link: https://t.me/+lNfVrl-sG2Y4OTQ8 (expires: 2026-02-26 23:15:00.186918)
+Feb 23 23:15:00  [2026-02-23 23:15:00] [INFO] [handlers] [req:5f899654] Generated unique FREE invite link for 12345!@gmail.com: https://t.me/+lNfVrl-sG2Y4OTQ8
+Feb 23 23:15:00  10.244.4.249 - - [23/Feb/2026 23:15:00] "POST /api/telegram/grant-access HTTP/1.1" 200 -
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 23 23:15:26  10.244.4.249 - - [23/Feb/2026 23:15:26] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:15:26  10.244.4.249 - - [23/Feb/2026 23:15:26] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:15:55  [2026-02-23 23:15:55] [INFO] [webhooks] [req:b5efc30a] Bot webhook: tenant=entrylab, role=signal_bot
+Feb 23 23:15:55  10.244.5.120 - - [23/Feb/2026 23:15:55] "POST /api/bot-webhook/h3Xg3h9x5r2ktOByHWWfpFqTPtzrlzoUZ_wtx4lc1pk HTTP/1.1" 200 -
+Feb 23 23:16:09  10.244.6.27 - - [23/Feb/2026 23:16:09] "GET /admin HTTP/1.1" 403 -
+Feb 23 23:16:11  10.244.7.214 - - [23/Feb/2026 23:16:11] "GET /login?signed_out=1 HTTP/1.1" 200 -
+Feb 23 23:16:11  10.244.4.249 - - [23/Feb/2026 23:16:11] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:11  10.244.4.249 - - [23/Feb/2026 23:16:11] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET / HTTP/1.1" 302 -
+Feb 23 23:16:12  [2026-02-23 23:16:12] [WARNING] [clerk_auth] [req:d9e7491c] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 23 23:16:12  10.244.6.27 - - [23/Feb/2026 23:16:12] "GET /admin HTTP/1.1" 302 -
+Feb 23 23:16:12  10.244.6.27 - - [23/Feb/2026 23:16:12] "GET /login HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET / HTTP/1.1" 302 -
+Feb 23 23:16:17  [2026-02-23 23:16:17] [WARNING] [clerk_auth] [req:268c9211] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 23 23:16:17  10.244.6.27 - - [23/Feb/2026 23:16:17] "GET /admin HTTP/1.1" 302 -
+Feb 23 23:16:17  10.244.6.27 - - [23/Feb/2026 23:16:17] "GET /login HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:18  [2026-02-23 23:16:18] [INFO] [set_auth_cookie] [req:24447a49] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Feb 23 23:16:18  [2026-02-23 23:16:18] [INFO] [set_auth_cookie] [req:24447a49] set-auth-cookie: SUCCESS - cookies set
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "GET /admin HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.5.120 - - [23/Feb/2026 23:16:18] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.7.214 - - [23/Feb/2026 23:16:18] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:19  10.244.7.214 - - [23/Feb/2026 23:16:19] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [db] [req:95bd13cc] get_all_telegram_subscriptions: found 17 rows
+Feb 23 23:16:19  10.244.5.120 - - [23/Feb/2026 23:16:19] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [db] [req:a8d89c37] get_all_telegram_subscriptions: found 17 rows
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [handlers] [req:a8d89c37] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Feb 23 23:16:19  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Feb 23 23:16:19  [Stripe] Fetching all paid invoices...
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [bot_credentials] [req:25c0db26] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [telegram_sender] [req:25c0db26] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [handlers] [req:25c0db26] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, bot=@entrylab_test_bot, token_last4=****EVbI
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Feb 23 23:16:20  [2026-02-23 23:16:20] [INFO] [handlers] [req:25c0db26] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, members=2
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Total revenue from 48 VIP invoices: $460.1999999999996
+Feb 23 23:16:22  [Stripe] Found 0 subscription IDs from invoices
+Feb 23 23:16:22  [Stripe] Also fetching active subscriptions directly from Stripe...
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:22  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [Stripe] Total subscription IDs to check: 4
+Feb 23 23:16:23  [Stripe] Checking 4 subscriptions for rebill (period: 2026-02-23 to 2028-12-31)...
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Feb 23 23:16:23  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:23  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:23  [Stripe] ✓ Rebill in period: $39.0 on 2026-03-02
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:24  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:25  [Stripe] ✓ Rebill in period: $0.78 on 2026-03-01
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:25  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 23 23:16:25  [Stripe] Active: 4, Rebill in period: $41.34
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:26  [2026-02-23 23:16:26] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:26  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Feb 23 23:16:26  [2026-02-23 23:16:26] [INFO] [handlers] [req:a8d89c37] Stripe returned: revenue=$460.2, rebill=$41.34
+Feb 23 23:16:26  10.244.6.27 - - [23/Feb/2026 23:16:26] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -

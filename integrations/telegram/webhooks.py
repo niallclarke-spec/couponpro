@@ -384,8 +384,101 @@ def handle_forex_telegram_webhook(handler, telegram_bot_available, telegram_bot_
         handler.wfile.write(json.dumps({'error': str(e)}).encode())
 
 
+def _handle_chat_member_update(webhook_data, tenant_id, connection):
+    """Handle chat_member updates for channel join/leave tracking and invite link matching."""
+    import db
+    from datetime import datetime
+    from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+    
+    chat_member_data = webhook_data['chat_member']
+    bot_role = connection['bot_role']
+    
+    try:
+        creds = get_bot_credentials(tenant_id, 'signal_bot')
+        vip_channel_id = creds.get('vip_channel_id') or creds.get('channel_id')
+        free_channel_id = creds.get('free_channel_id')
+    except BotNotConfiguredError as e:
+        logger.warning(f"Chat member update: bot not configured for tenant={tenant_id}: {e}")
+        return {'success': False, 'error': str(e)}
+    
+    try:
+        if vip_channel_id:
+            vip_channel_id = int(vip_channel_id)
+    except (ValueError, TypeError):
+        vip_channel_id = None
+    
+    try:
+        if free_channel_id:
+            free_channel_id = int(free_channel_id)
+    except (ValueError, TypeError):
+        free_channel_id = None
+    
+    if not vip_channel_id and not free_channel_id:
+        return {'success': False, 'error': 'No channel IDs configured'}
+    
+    chat_id = chat_member_data.get('chat', {}).get('id')
+    is_vip_channel = chat_id == vip_channel_id
+    is_free_channel = chat_id == free_channel_id
+    
+    if not is_vip_channel and not is_free_channel:
+        return {'success': True, 'message': f'Not a tracked channel ({chat_id}), ignored'}
+    
+    old_status = chat_member_data.get('old_chat_member', {}).get('status', 'left')
+    new_status = chat_member_data.get('new_chat_member', {}).get('status', 'left')
+    is_join = old_status in ['left', 'kicked', 'restricted'] and new_status in ['member', 'administrator', 'creator']
+    
+    if not is_join:
+        channel_type = 'VIP' if is_vip_channel else 'FREE'
+        logger.info(f"Chat member: {channel_type} status change {old_status} -> {new_status} (not a join)")
+        return {'success': True, 'message': f'Status change {old_status} -> {new_status}, not a join'}
+    
+    user_data = chat_member_data.get('new_chat_member', {}).get('user', {})
+    telegram_user_id = user_data.get('id')
+    telegram_username = user_data.get('username')
+    first_name = user_data.get('first_name', '')
+    
+    invite_link = None
+    invite_link_data = chat_member_data.get('invite_link')
+    if invite_link_data:
+        invite_link = invite_link_data.get('invite_link')
+    
+    joined_at = datetime.utcnow()
+    
+    if is_free_channel:
+        logger.info(f"Chat member: FREE channel join: user={telegram_user_id} (@{telegram_username}), invite_link={invite_link}, tenant={tenant_id}")
+        result = db.link_free_subscription_to_telegram_user(
+            invite_link=invite_link,
+            telegram_user_id=telegram_user_id,
+            telegram_username=telegram_username,
+            first_name=first_name,
+            joined_at=joined_at,
+            tenant_id=tenant_id
+        )
+        if result:
+            logger.info(f"Chat member: FREE channel linked user {telegram_user_id} to {result.get('email', 'unknown')}")
+            return {'success': True, 'message': f'FREE: linked {telegram_user_id} to {result.get("email", "N/A")}'}
+        else:
+            logger.warning(f"Chat member: FREE channel user {telegram_user_id} joined but could not link to subscription")
+            return {'success': True, 'message': f'FREE: user {telegram_user_id} joined (untracked)'}
+    else:
+        logger.info(f"Chat member: VIP channel join: user={telegram_user_id} (@{telegram_username}), invite_link={invite_link}, tenant={tenant_id}")
+        result = db.link_subscription_to_telegram_user(
+            invite_link,
+            telegram_user_id,
+            telegram_username,
+            joined_at,
+            tenant_id=tenant_id
+        )
+        if result:
+            logger.info(f"Chat member: VIP channel linked user {telegram_user_id} to {result['email']}")
+            return {'success': True, 'message': f'VIP: linked {telegram_user_id} to {result["email"]}'}
+        else:
+            logger.warning(f"Chat member: VIP channel user {telegram_user_id} could not be linked")
+            return {'success': True, 'message': f'VIP: user {telegram_user_id} joined (no matching subscription)'}
+
+
 def handle_bot_webhook(handler, webhook_secret: str):
-    """POST /api/bot-webhook/<secret> - Generic bot webhook for tenant-scoped bots (Message Bot)."""
+    """POST /api/bot-webhook/<secret> - Generic bot webhook for tenant-scoped bots."""
     start_time = time.time()
     
     try:
@@ -429,6 +522,16 @@ def handle_bot_webhook(handler, webhook_secret: str):
             handler.send_header('Content-type', 'application/json')
             handler.end_headers()
             handler.wfile.write(json.dumps({'status': 'ok', 'handler': 'journey_reply'}).encode())
+            return
+        
+        if 'chat_member' in webhook_data:
+            result = _handle_chat_member_update(webhook_data, tenant_id, connection)
+            elapsed = time.time() - start_time
+            logger.info(f"Bot webhook: chat_member handled in {elapsed:.2f}s, result: {result}")
+            handler.send_response(200)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'status': 'ok', 'handler': 'chat_member', **result}).encode())
             return
         
         elapsed = time.time() - start_time

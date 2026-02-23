@@ -7422,7 +7422,7 @@
             
             if (allLeads) {
                 allLeads.filter(l => !l.is_converted && l.signup_date).slice(0, 10).forEach(l => activities.push({
-                    type: 'free_signup',
+                    type: l.has_telegram ? 'free_joined' : 'free_signup',
                     email: l.email,
                     name: l.name || '',
                     source: l.source || 'direct',
@@ -7458,9 +7458,14 @@
             recent.forEach(a => {
                 const dateStr = a.date ? new Date(a.date).toLocaleDateString() : '--';
                 const isConv = a.type === 'conversion';
-                const statusBadge = isConv
-                    ? '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>'
-                    : '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">FREE</span>';
+                let statusBadge;
+                if (isConv) {
+                    statusBadge = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>';
+                } else if (a.type === 'free_joined') {
+                    statusBadge = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">FREE</span>';
+                } else {
+                    statusBadge = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
+                }
                 const convTime = isConv && a.days != null ? `${a.days}d` : '<span style="color: var(--text-muted);">--</span>';
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
@@ -7504,7 +7509,7 @@
                 } else if (lead.has_telegram) {
                     statusTag = '<span style="background: #8b5cf6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">JOINED</span>';
                 } else {
-                    statusTag = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
+                    statusTag = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
                 }
                 const revenue = lead.is_converted ? `<span style="color: #10b981; font-weight: 600;">$${lead.amount.toFixed(0)}</span>` : '<span style="color: var(--text-muted);">--</span>';
                 const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: var(--text-muted);">--</span>';

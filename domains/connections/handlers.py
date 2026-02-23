@@ -190,7 +190,10 @@ def handle_connection_save(handler):
     
     try:
         set_webhook_url = f"{TELEGRAM_API_BASE}{bot_token}/setWebhook"
-        response = requests.post(set_webhook_url, json={'url': webhook_url}, timeout=10)
+        response = requests.post(set_webhook_url, json={
+            'url': webhook_url,
+            'allowed_updates': ['message', 'chat_member']
+        }, timeout=10)
         webhook_data = response.json()
         
         if not webhook_data.get('ok'):
