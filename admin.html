@@ -5675,7 +5675,15 @@
                     </div>
 
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">Users</div>
+                        <div class="card-title" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                            <span>Users</span>
+                            <div id="leadsFilterBar" style="display: none; gap: 6px; flex-wrap: wrap;">
+                                <button onclick="filterLeads('all')" class="leads-filter-btn active" data-filter="all" style="padding: 4px 14px; border-radius: 16px; border: 1px solid var(--border-primary); background: rgba(255,255,255,0.1); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">All</button>
+                                <button onclick="filterLeads('lead')" class="leads-filter-btn" data-filter="lead" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #3b82f6; background: transparent; color: #3b82f6; font-size: 11px; font-weight: 600; cursor: pointer;">Lead</button>
+                                <button onclick="filterLeads('joined')" class="leads-filter-btn" data-filter="joined" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #8b5cf6; background: transparent; color: #8b5cf6; font-size: 11px; font-weight: 600; cursor: pointer;">Joined</button>
+                                <button onclick="filterLeads('vip')" class="leads-filter-btn" data-filter="vip" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #10b981; background: transparent; color: #10b981; font-size: 11px; font-weight: 600; cursor: pointer;">VIP</button>
+                            </div>
+                        </div>
                         <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
                             <div class="loading">Loading leads...</div>
                         </div>
@@ -7525,10 +7533,58 @@
             container.innerHTML = html;
         }
         
+        let _allLeadsData = [];
+        let _activeLeadsFilter = 'all';
+        
+        function filterLeads(filter) {
+            _activeLeadsFilter = filter;
+            document.querySelectorAll('.leads-filter-btn').forEach(btn => {
+                const isActive = btn.getAttribute('data-filter') === filter;
+                btn.classList.toggle('active', isActive);
+                if (isActive) {
+                    const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    btn.style.background = colors[filter] || '#fff';
+                    btn.style.color = filter === 'all' ? '#fff' : '#fff';
+                    btn.style.borderColor = colors[filter] || 'var(--border-primary)';
+                } else {
+                    const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    const c = colors[btn.getAttribute('data-filter')];
+                    btn.style.background = 'transparent';
+                    btn.style.color = btn.getAttribute('data-filter') === 'all' ? 'var(--text-muted)' : c;
+                    btn.style.borderColor = btn.getAttribute('data-filter') === 'all' ? 'var(--border-primary)' : c;
+                }
+            });
+            let filtered = _allLeadsData;
+            if (filter === 'lead') filtered = _allLeadsData.filter(l => !l.is_converted && !l.has_telegram);
+            else if (filter === 'joined') filtered = _allLeadsData.filter(l => !l.is_converted && l.has_telegram);
+            else if (filter === 'vip') filtered = _allLeadsData.filter(l => l.is_converted);
+            renderAllLeadsTable(filtered);
+        }
+        
         function renderAllLeads(leads) {
+            _allLeadsData = leads || [];
+            _activeLeadsFilter = 'all';
+            const filterBar = document.getElementById('leadsFilterBar');
             const container = document.getElementById('allLeadsTable');
             if (!leads || leads.length === 0) {
+                if (filterBar) filterBar.style.display = 'none';
                 container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No users yet. Sign ups will appear here.</div>';
+                return;
+            }
+            if (filterBar) filterBar.style.display = 'flex';
+            document.querySelectorAll('.leads-filter-btn').forEach(btn => {
+                const isAll = btn.getAttribute('data-filter') === 'all';
+                btn.classList.toggle('active', isAll);
+                if (isAll) { btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = '#fff'; }
+                else { btn.style.background = 'transparent'; }
+            });
+            renderAllLeadsTable(leads);
+        }
+        
+        function renderAllLeadsTable(leads) {
+            const container = document.getElementById('allLeadsTable');
+            if (!leads || leads.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No users match this filter.</div>';
                 return;
             }
             
