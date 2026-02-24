@@ -1519,41 +1519,6 @@ def handle_forex_webhook(webhook_data: dict, bot_token: str) -> dict:
         return {'success': False, 'error': str(e)}
 
 
-def setup_forex_webhook(bot_token: str, webhook_url: str) -> bool:
-    """
-    Set up webhook for the forex bot to receive chat_member updates.
-    
-    Args:
-        bot_token: The forex bot token
-        webhook_url: The full URL for the webhook endpoint
-        
-    Returns:
-        bool: True if webhook was set successfully
-    """
-    import requests
-    
-    try:
-        # Set webhook via Telegram API
-        url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
-        params = {
-            'url': webhook_url,
-            'allowed_updates': ['chat_member', 'message']  # Receive chat_member and message updates
-        }
-        
-        response = requests.post(url, json=params, timeout=10)
-        result = response.json()
-        
-        if result.get('ok'):
-            print(f"[JOIN_TRACKER] ✅ Webhook configured: {webhook_url}")
-            return True
-        else:
-            print(f"[JOIN_TRACKER] ❌ Failed to set webhook: {result.get('description')}")
-            return False
-            
-    except Exception as e:
-        print(f"[JOIN_TRACKER] ❌ Error setting up webhook: {e}")
-        return False
-
 
 def run_bot(bot_token):
     """
