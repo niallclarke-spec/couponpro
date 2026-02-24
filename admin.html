@@ -7492,15 +7492,16 @@
                 return;
             }
             
-            let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
+            let html = '<div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">';
+            html += '<table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px;">';
             html += '<thead><tr style="border-bottom: 2px solid var(--border-primary); background: var(--bg-card);">';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">JOIN DATE</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">TELEGRAM USERNAME</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">FIRST NAME</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
-            html += '<th style="text-align: center; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">ACTION</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">JOIN DATE</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">STATUS</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">SOURCE</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">TELEGRAM</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">NAME</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">EMAIL</th>';
+            html += '<th style="text-align: center; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">ACTION</th>';
             html += '</tr></thead><tbody>';
             
             leads.forEach(lead => {
@@ -7519,17 +7520,17 @@
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
                 const source = lead.source && lead.source !== 'direct' ? lead.source : '<span style="color: var(--text-muted);">--</span>';
-                html += `<td style="padding: 12px 10px;">${signupDate}</td>`;
-                html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
-                html += `<td style="padding: 12px 10px;">${source}</td>`;
-                html += `<td style="padding: 12px 10px;">${telegram}</td>`;
-                html += `<td style="padding: 12px 10px;">${firstName}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: center;">${actionBtn}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${signupDate}</td>`;
+                html += `<td style="padding: 10px 8px;">${statusTag}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${source}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${telegram}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${firstName}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${lead.email}</td>`;
+                html += `<td style="padding: 10px 8px; text-align: center; white-space: nowrap;">${actionBtn}</td>`;
                 html += `</tr>`;
             });
             
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         }
 
