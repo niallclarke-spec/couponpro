@@ -202,7 +202,7 @@
                     const eventDisplay = (firstTrigger?.trigger_config?.event_name) || '<em>not set</em>';
                     deepLinkHtml = `
                         <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
-                            System Event: <strong>${escapeHtml(eventDisplay)}</strong>
+                                    API Event: <strong>${escapeHtml(eventDisplay)}</strong>
                         </div>`;
                 } else if (triggerType === 'direct_message') {
                     const kwDisplay = triggerValue ? escapeHtml(triggerValue) : '<em>any message</em>';
@@ -438,16 +438,17 @@
                     const triggerValueEl = document.getElementById('journey-trigger-value');
                     const tt = trigger.trigger_type === 'direct_message' ? 'direct_message' : (trigger.trigger_type === 'api_event' ? 'api_event' : 'deep_link');
                     if (triggerTypeEl) triggerTypeEl.value = tt;
+                    onTriggerTypeChange();
                     if (tt === 'direct_message') {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.keyword || '';
                         const dmPrefill = document.getElementById('dm-prefill-message');
                         if (dmPrefill) dmPrefill.value = trigger.trigger_config?.prefill_message || '';
                     } else if (tt === 'api_event') {
-                        if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.event_name || '';
+                        const eventSel = document.getElementById('journey-trigger-event-select');
+                        if (eventSel) eventSel.value = trigger.trigger_config?.event_name || '';
                     } else {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
                     }
-                    onTriggerTypeChange();
                 }
                 
                 state.steps = (journey.steps || []).map(s => {
@@ -510,9 +511,8 @@
 
     async function saveJourney() {
         const nameInput = document.getElementById('journey-name-input');
-        const triggerValueInput = document.getElementById('journey-trigger-value');
         const name = nameInput ? nameInput.value.trim() : '';
-        const triggerValue = triggerValueInput ? triggerValueInput.value.trim() : '';
+        const triggerValue = getTriggerValue().trim();
         const status = state.selectedStatus;
         
         if (!name) {
@@ -871,6 +871,42 @@
         }
     }
 
+    function getTriggerValue() {
+        const triggerTypeEl = document.getElementById('journey-trigger-type');
+        const selectedType = triggerTypeEl ? triggerTypeEl.value : 'deep_link';
+        if (selectedType === 'api_event') {
+            const sel = document.getElementById('journey-trigger-event-select');
+            return sel ? sel.value : '';
+        }
+        const input = document.getElementById('journey-trigger-value');
+        return input ? input.value : '';
+    }
+
+    function setTriggerValue(val) {
+        const triggerTypeEl = document.getElementById('journey-trigger-type');
+        const selectedType = triggerTypeEl ? triggerTypeEl.value : 'deep_link';
+        if (selectedType === 'api_event') {
+            const sel = document.getElementById('journey-trigger-event-select');
+            if (sel) sel.value = val || '';
+        } else {
+            const input = document.getElementById('journey-trigger-value');
+            if (input) input.value = val || '';
+        }
+    }
+
+    function ensureApiEventSelect() {
+        const container = document.getElementById('trigger-value-container');
+        if (!container) return;
+        if (!document.getElementById('journey-trigger-event-select')) {
+            const sel = document.createElement('select');
+            sel.className = 'form-select';
+            sel.id = 'journey-trigger-event-select';
+            sel.style.width = '100%';
+            sel.innerHTML = '<option value="">Select an event...</option><option value="joined_vip">joined_vip — User is granted VIP access</option>';
+            container.appendChild(sel);
+        }
+    }
+
     function onTriggerTypeChange() {
         const triggerTypeEl = document.getElementById('journey-trigger-type');
         const triggerValueEl = document.getElementById('journey-trigger-value');
@@ -882,20 +918,26 @@
         const selectedType = triggerTypeEl ? triggerTypeEl.value : 'deep_link';
         const isDM = selectedType === 'direct_message';
         const isApiEvent = selectedType === 'api_event';
+
+        ensureApiEventSelect();
+        const eventSelect = document.getElementById('journey-trigger-event-select');
         
         if (isApiEvent) {
-            if (triggerValueLabel) triggerValueLabel.textContent = 'Event Name';
-            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., joined_vip';
-            if (triggerValueHint) triggerValueHint.innerHTML = 'This journey will trigger when the system event fires (e.g., when a user is granted VIP access).';
-            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered by internal system events like granting VIP access.';
+            if (triggerValueLabel) triggerValueLabel.textContent = 'API Event';
+            if (triggerValueEl) triggerValueEl.style.display = 'none';
+            if (eventSelect) eventSelect.style.display = '';
+            if (triggerValueHint) triggerValueHint.innerHTML = 'This journey will trigger automatically when the selected API event fires.';
+            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered by internal API events like granting VIP access.';
         } else if (isDM) {
+            if (triggerValueEl) { triggerValueEl.style.display = ''; triggerValueEl.placeholder = 'e.g., hello (leave empty for any message)'; }
+            if (eventSelect) eventSelect.style.display = 'none';
             if (triggerValueLabel) triggerValueLabel.textContent = 'Keyword (optional)';
-            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., hello (leave empty for any message)';
             if (triggerValueHint) triggerValueHint.innerHTML = 'If set, the journey triggers when a DM contains this keyword. Leave empty to trigger on any message.';
             if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered when someone sends a direct message to your Telegram user account.';
         } else {
+            if (triggerValueEl) { triggerValueEl.style.display = ''; triggerValueEl.placeholder = 'e.g., welcome_promo'; }
+            if (eventSelect) eventSelect.style.display = 'none';
             if (triggerValueLabel) triggerValueLabel.textContent = 'Trigger Value';
-            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., welcome_promo';
             if (triggerValueHint) triggerValueHint.innerHTML = 'The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)';
             if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered when users start the bot via a deep link.';
         }
@@ -903,7 +945,7 @@
         const warningText = document.getElementById('active-warning-text');
         if (warningText) {
             if (isApiEvent) {
-                warningText.textContent = 'Active journeys will start sending messages immediately when the system event fires.';
+                warningText.textContent = 'Active journeys will start sending messages immediately when the API event fires.';
             } else if (isDM) {
                 warningText.textContent = 'Active journeys will start sending messages immediately when someone DMs your Telegram account with the keyword.';
             } else {
