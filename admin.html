@@ -5633,6 +5633,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div class="card-title">Users</div>
+                        <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
+                            <div class="loading">Loading leads...</div>
+                        </div>
+                    </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
                         <div class="card-title">UTM Attribution</div>
@@ -5645,13 +5652,6 @@
                         <div class="card-title">Recent Activity</div>
                         <div id="recentActivity" style="padding: 20px; overflow-x: auto;">
                             <div class="loading">Loading recent activity...</div>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-title">Users</div>
-                        <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
-                            <div class="loading">Loading leads...</div>
                         </div>
                     </div>
                 </div>
@@ -7496,6 +7496,7 @@
             html += '<thead><tr style="border-bottom: 2px solid var(--border-primary); background: var(--bg-card);">';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">JOIN DATE</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">TELEGRAM USERNAME</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">FIRST NAME</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
@@ -7517,8 +7518,10 @@
                 const actionBtn = lead.is_converted ? '' : `<button onclick='showGrantVipModal(${JSON.stringify(lead).replace(/'/g, "&#39;")})' style="background: #8b5cf6; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Grant VIP</button>`;
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
+                const source = lead.source && lead.source !== 'direct' ? lead.source : '<span style="color: var(--text-muted);">--</span>';
                 html += `<td style="padding: 12px 10px;">${signupDate}</td>`;
                 html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
+                html += `<td style="padding: 12px 10px;">${source}</td>`;
                 html += `<td style="padding: 12px 10px;">${telegram}</td>`;
                 html += `<td style="padding: 12px 10px;">${firstName}</td>`;
                 html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
