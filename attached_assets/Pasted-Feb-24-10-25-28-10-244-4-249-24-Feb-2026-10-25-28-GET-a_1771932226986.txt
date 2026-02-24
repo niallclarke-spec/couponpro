@@ -1,0 +1,49 @@
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /aws-config.js HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /aws.config.js HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.6.27 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.6.27 - - [24/Feb/2026 10:25:28] "GET /_debugbar/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.5.120 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.5.120 - - [24/Feb/2026 10:25:28] "GET /debugbar/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /debug/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /info.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /test.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /.aws/credentials HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /.aws/config HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] "GET /aws-credentials HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.7.214 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.7.214 - - [24/Feb/2026 10:25:29] "GET /aws.json HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] "GET /.s3cfg HTTP/1.1" 404 -
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [forex_signals] [tenant:entrylab] [req:5f3d4ab2] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Checking for signals on XAU/USD 15min...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [generator] [tenant:entrylab] [req:5f3d4ab2] 📊 Checking 1-hour timeframe...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [forex_signals] [tenant:entrylab] [req:5f3d4ab2] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Checking for signals on XAU/USD 1h...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [forex_signals] [tenant:entrylab] [req:2e869765] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [raja_banks] [tenant:entrylab] [req:2e869765] Checking for signals on XAU/USD 15min...
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [raja_banks] [tenant:entrylab] [req:2e869765] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [forex_signals] [tenant:entrylab] [req:ad00ff6e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Checking for signals on XAU/USD 15min...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [generator] [tenant:entrylab] [req:ad00ff6e] 📊 Checking 1-hour timeframe...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [forex_signals] [tenant:entrylab] [req:ad00ff6e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Checking for signals on XAU/USD 1h...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] "GET / HTTP/1.1" 302 -
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] code 404, message File not found
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] "GET /robots.txt HTTP/1.1" 404 -
+Feb 24 11:07:53  10.244.5.120 - - [24/Feb/2026 11:07:53] "GET /app HTTP/1.1" 200 -
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [forex_signals] [tenant:entrylab] [req:d19f8b91] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [raja_banks] [tenant:entrylab] [req:d19f8b91] Checking for signals on XAU/USD 15min...
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [raja_banks] [tenant:entrylab] [req:d19f8b91] Guardrail blocked: Outside trading session (Off-hours)

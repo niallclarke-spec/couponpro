@@ -1,0 +1,936 @@
+Feb 23 23:13:56  [2026-02-23 23:13:56] [INFO] [bootstrap] Starting application...
+Feb 23 23:13:56  [2026-02-23 23:13:56] [INFO] [db] Checking if bot_usage.error_type column exists...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] error_type column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking if bot_usage.device_type column exists...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] device_type column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking if bot_users user profile columns exist...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] username column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] first_name column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] last_name column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals table for new signal bot columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] bot_type column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] telegram_message_id column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] breakeven_set column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] breakeven_price column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] guidance_count column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] last_guidance_at column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] indicators_used column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] notes column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for indicator re-validation columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] original_indicators_json column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for guidance zone columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] last_progress_zone column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] last_caution_zone column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking telegram_subscriptions for conversion tracking columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] free_signup_at column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] is_converted column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] converted_at column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] conversion_days column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] UTM columns already exist, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking for tenants table...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenants table ready, 'entrylab' tenant seeded
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_users table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_integrations table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] onboarding_state table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_stripe_settings table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_stripe_products table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_stripe_prices table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] telegram_webhook_secrets table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_bot_connections table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_telethon_credentials table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] channel_id already exists on tenant_bot_connections, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] free_channel_link column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] No signal_bot rows needed legacy channel_id migration (already migrated or no data)
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on forex_signals, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on forex_config, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on telegram_subscriptions, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on recent_phrases, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on campaigns, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on bot_usage, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on bot_users, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on broadcast_jobs, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_id already exists on bot_config, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking processed_webhook_events migration...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] processed_webhook_events swap already done or skipped
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for multi-TP columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for milestone tracking columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for close_price column...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] close_price column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for effective_sl column...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] effective_sl column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_signals for cross-promo columns...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Cross-promo columns already exist, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking bot_users unique constraint (tenant_id, chat_id)...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] uq_bot_users_tenant_chat already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking forex_config unique constraint (tenant_id, setting_key)...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] uq_forex_config_tenant_key already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking bot_config unique constraint (tenant_id, setting_key)...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] uq_bot_config_tenant_key already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking telegram_subscriptions unique constraint (tenant_id, email)...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] uq_telegram_subscriptions_tenant_email already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking for clerk_users table...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] clerk_users table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking for journeys tables...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journeys table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_triggers table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_steps table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_user_sessions table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_scheduled_messages table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_step_analytics table already exists
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_link_clicks table already exists
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] journey_inbound_dedupe table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] welcome_sent_at column already exists on journey_user_sessions, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] priority_int column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] is_locked column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] inactivity_timeout_days column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] welcome_message column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] welcome_delay_seconds column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] start_delay_seconds column already exists on journeys, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] branch_keyword column already exists on journey_steps, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] branch_true_step_id column already exists on journey_steps, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] branch_false_step_id column already exists on journey_steps, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Checking for hype chat tables...
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] hype_prompts table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] hype_flows table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_enabled column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_delay_minutes column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_intro_text column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_vip_label column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_vip_url column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_support_label column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] cta_support_url column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] interval_max_minutes column already exists on hype_flows, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] hype_messages table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] tenant_crosspromo_settings table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] crosspromo_jobs table ready
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] vip_soon_delay_minutes column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] recap_forward_time_utc column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] vip_soon_time_utc column already exists, skipping
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Crosspromo settings already up to date (no 09:00 defaults found)
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Database schema initialized
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Forex config initialized with defaults
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [db] Bot config initialized with defaults
+Feb 23 23:13:57  [2026-02-23 23:13:57] [INFO] [bootstrap] Database schema initialized
+Feb 23 23:13:59  [2026-02-23 23:13:59] [INFO] [bootstrap] Initializing coupon bot webhook...
+Feb 23 23:14:01  [TELEGRAM] ✅ Webhook configured: https://dash.promostack.io/api/telegram-webhook
+Feb 23 23:14:01  [TELEGRAM] Webhook bot initialized and ready
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Coupon bot webhook started
+Feb 23 23:14:01  [JOIN_TRACKER] ✅ Webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Forex bot webhook configured: https://dash.promostack.io/api/forex-telegram-webhook
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [leader] Leader lock using DB_HOST/DB_* vars
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [leader] Database connection established
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Leader lock not acquired, waiting for leader to terminate
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [leader] Started leader retry loop (every 10s)
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [clerk_auth] [JWKS] Dynamic issuer mode ENABLED (no allowlist - accepting any issuer)
+Feb 23 23:14:01  [2026-02-23 23:14:01] [WARNING] [clerk_auth] [JWKS] Consider setting CLERK_ALLOWED_ISSUERS for production security
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [clerk_auth] [JWKS] JWKS URL will be derived from each token's issuer claim
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Clerk JWKS prefetch complete
+Feb 23 23:14:01  [STRIPE] Using LIVE (no test keys found) mode
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Stripe client initialized
+Feb 23 23:14:01  [2026-02-23 23:14:01] [INFO] [bootstrap] Application started
+Feb 23 23:14:01  Server running at http://0.0.0.0:8080/
+Feb 23 23:14:11  [2026-02-23 23:14:11] [INFO] [leader] Retrying leader lock acquisition...
+Feb 23 23:14:11  [2026-02-23 23:14:11] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 23 23:14:21  [2026-02-23 23:14:21] [INFO] [leader] Retrying leader lock acquisition...
+Feb 23 23:14:21  [2026-02-23 23:14:21] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 23 23:14:31  [2026-02-23 23:14:31] [INFO] [leader] Retrying leader lock acquisition...
+Feb 23 23:14:31  [2026-02-23 23:14:31] [INFO] [leader] Leader lock not acquired, another instance is leader (standby mode)
+Feb 23 23:14:41  [2026-02-23 23:14:41] [INFO] [leader] Retrying leader lock acquisition...
+Feb 23 23:14:41  [2026-02-23 23:14:41] [INFO] [leader] Leader lock acquired on retry
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [bootstrap] Forex scheduler started in background thread
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] Starting forex scheduler for tenant: entrylab
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [scheduler] [JOURNEY-SCHEDULER] Started (interval=10s)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [scheduler] [JOURNEY-SCHEDULER] Background thread started
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [bootstrap] Journey scheduler started
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [crosspromo_worker] Cross Promo worker started
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [crosspromo_worker] Cross Promo worker thread started
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [bootstrap] Cross promo worker started
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_signals] Loaded strategy: Raja Banks Gold Start (raja_banks) for tenant entrylab
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ============================================================
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 🚀 FOREX SIGNALS SCHEDULER STARTED
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler]    Tenant: entrylab
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ============================================================
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 📊 Signal checks: 15min timeframe every 15 minutes
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 📊 Signal checks: 1h timeframe every 30 minutes
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 🔍 Price monitoring: Every 5 seconds
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 💡 Signal guidance: Every 5 seconds (reuses cached price, 10min cooldown)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 🔄 Stagnant re-validation: First at 90min, then every 30min
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ⏰ Signal timeout: 4 hours (atomic close in price monitor)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ☀️ Morning briefing: 6:20 AM UTC
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 📅 Daily recap: 6:30 AM UTC
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 📅 Weekly recap: Sunday 6:30 AM UTC
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] 📣 Cross promo daily: Configured time from settings (Mon-Fri)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ⏰ Trading hours: 8AM-10PM GMT (Mon-Fri only)
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [forex_scheduler] ============================================================
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [generator] [tenant:entrylab] [req:df123f48] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 23:14:48  [2026-02-23 23:14:48] [INFO] [telethon_client] Credentials loaded from DB for tenant=entrylab, phone=***4944
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_session] Session restored for tenant=entrylab <- telethon_sessions/entrylab.session
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_client] Session restored from remote storage for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [mtprotosender] Connecting to 149.154.167.92:443/TcpFull...
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [mtprotosender] Connection to 149.154.167.92:443/TcpFull complete!
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_client] Telethon connected for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [telethon_listener] Listener started for tenant=entrylab
+Feb 23 23:14:50  [2026-02-23 23:14:50] [INFO] [bootstrap] Telethon listener started for entrylab
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Grant access request for 12345!@gmail.com
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Data: plan=free, amount=$0.0, free=True
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Stripe: customer_id=None, subscription_id=None
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [db] [req:5f899654] Creating subscription: email=12345!@gmail.com, stripe_sub_id=None, plan_type=free, is_free=True
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [handlers] [req:5f899654] Free lead captured for 12345!@gmail.com
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [bot_credentials] [req:5f899654] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:14:59  [2026-02-23 23:14:59] [INFO] [bot_credentials] [req:5f899654] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:15:00  [TELEGRAM] Created FREE channel invite link: https://t.me/+lNfVrl-sG2Y4OTQ8 (expires: 2026-02-26 23:15:00.186918)
+Feb 23 23:15:00  [2026-02-23 23:15:00] [INFO] [handlers] [req:5f899654] Generated unique FREE invite link for 12345!@gmail.com: https://t.me/+lNfVrl-sG2Y4OTQ8
+Feb 23 23:15:00  10.244.4.249 - - [23/Feb/2026 23:15:00] "POST /api/telegram/grant-access HTTP/1.1" 200 -
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 23 23:15:26  [2026-02-23 23:15:26] [INFO] [clerk_auth] [req:2255fe7e] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 23 23:15:26  10.244.4.249 - - [23/Feb/2026 23:15:26] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:15:26  10.244.4.249 - - [23/Feb/2026 23:15:26] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:15:55  [2026-02-23 23:15:55] [INFO] [webhooks] [req:b5efc30a] Bot webhook: tenant=entrylab, role=signal_bot
+Feb 23 23:15:55  10.244.5.120 - - [23/Feb/2026 23:15:55] "POST /api/bot-webhook/h3Xg3h9x5r2ktOByHWWfpFqTPtzrlzoUZ_wtx4lc1pk HTTP/1.1" 200 -
+Feb 23 23:16:09  10.244.6.27 - - [23/Feb/2026 23:16:09] "GET /admin HTTP/1.1" 403 -
+Feb 23 23:16:11  10.244.7.214 - - [23/Feb/2026 23:16:11] "GET /login?signed_out=1 HTTP/1.1" 200 -
+Feb 23 23:16:11  10.244.4.249 - - [23/Feb/2026 23:16:11] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:11  10.244.4.249 - - [23/Feb/2026 23:16:11] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET / HTTP/1.1" 302 -
+Feb 23 23:16:12  [2026-02-23 23:16:12] [WARNING] [clerk_auth] [req:d9e7491c] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 23 23:16:12  10.244.6.27 - - [23/Feb/2026 23:16:12] "GET /admin HTTP/1.1" 302 -
+Feb 23 23:16:12  10.244.6.27 - - [23/Feb/2026 23:16:12] "GET /login HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:12  10.244.4.249 - - [23/Feb/2026 23:16:12] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET / HTTP/1.1" 302 -
+Feb 23 23:16:17  [2026-02-23 23:16:17] [WARNING] [clerk_auth] [req:268c9211] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 23 23:16:17  10.244.6.27 - - [23/Feb/2026 23:16:17] "GET /admin HTTP/1.1" 302 -
+Feb 23 23:16:17  10.244.6.27 - - [23/Feb/2026 23:16:17] "GET /login HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:17  10.244.4.249 - - [23/Feb/2026 23:16:17] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:18  [2026-02-23 23:16:18] [INFO] [set_auth_cookie] [req:24447a49] set-auth-cookie: user=user_36y71JwSgs7d3b4lb602hYgklL5, email=niallclarkefs@gmail.com, is_admin=True
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "POST /api/set-auth-cookie HTTP/1.1" 200 -
+Feb 23 23:16:18  [2026-02-23 23:16:18] [INFO] [set_auth_cookie] [req:24447a49] set-auth-cookie: SUCCESS - cookies set
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "GET /admin HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.5.120 - - [23/Feb/2026 23:16:18] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.6.27 - - [23/Feb/2026 23:16:18] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.7.214 - - [23/Feb/2026 23:16:18] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 23 23:16:18  10.244.4.249 - - [23/Feb/2026 23:16:18] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:16:19  10.244.7.214 - - [23/Feb/2026 23:16:19] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [db] [req:95bd13cc] get_all_telegram_subscriptions: found 17 rows
+Feb 23 23:16:19  10.244.5.120 - - [23/Feb/2026 23:16:19] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [db] [req:a8d89c37] get_all_telegram_subscriptions: found 17 rows
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [handlers] [req:a8d89c37] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Feb 23 23:16:19  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Feb 23 23:16:19  [Stripe] Fetching all paid invoices...
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [bot_credentials] [req:25c0db26] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [telegram_sender] [req:25c0db26] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [handlers] [req:25c0db26] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, bot=@entrylab_test_bot, token_last4=****EVbI
+Feb 23 23:16:19  [2026-02-23 23:16:19] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Feb 23 23:16:20  [2026-02-23 23:16:20] [INFO] [handlers] [req:25c0db26] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, members=2
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:16:20  10.244.6.27 - - [23/Feb/2026 23:16:20] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 23 23:16:22  [Stripe] Total revenue from 48 VIP invoices: $460.1999999999996
+Feb 23 23:16:22  [Stripe] Found 0 subscription IDs from invoices
+Feb 23 23:16:22  [Stripe] Also fetching active subscriptions directly from Stripe...
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:22  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:22  [2026-02-23 23:16:22] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:23  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Feb 23 23:16:23  [Stripe] Total subscription IDs to check: 4
+Feb 23 23:16:23  [Stripe] Checking 4 subscriptions for rebill (period: 2026-02-23 to 2028-12-31)...
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Feb 23 23:16:23  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:23  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:23  [Stripe] ✓ Rebill in period: $39.0 on 2026-03-02
+Feb 23 23:16:23  [2026-02-23 23:16:23] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:24  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Feb 23 23:16:24  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:24  [2026-02-23 23:16:24] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:25  [Stripe] ✓ Rebill in period: $0.78 on 2026-03-01
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 23 23:16:25  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Feb 23 23:16:25  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 23 23:16:25  [Stripe] Active: 4, Rebill in period: $41.34
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Feb 23 23:16:25  [2026-02-23 23:16:25] [INFO] [stripe] [req:a8d89c37] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 23 23:16:26  [2026-02-23 23:16:26] [INFO] [stripe] [req:a8d89c37] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 23 23:16:26  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Feb 23 23:16:26  [2026-02-23 23:16:26] [INFO] [handlers] [req:a8d89c37] Stripe returned: revenue=$460.2, rebill=$41.34
+Feb 23 23:16:26  10.244.6.27 - - [23/Feb/2026 23:16:26] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
+Feb 23 23:18:50  10.244.4.249 - - [23/Feb/2026 23:18:50] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:18:50  10.244.4.249 - - [23/Feb/2026 23:18:50] "GET /api/telegram/conversion-analytics HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.6.27 - - [23/Feb/2026 23:18:56] "GET /admin HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.5.120 - - [23/Feb/2026 23:18:56] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.7.214 - - [23/Feb/2026 23:18:56] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.4.249 - - [23/Feb/2026 23:18:56] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.6.27 - - [23/Feb/2026 23:18:56] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.4.249 - - [23/Feb/2026 23:18:56] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 23 23:18:56  10.244.4.249 - - [23/Feb/2026 23:18:56] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:18:57  10.244.7.214 - - [23/Feb/2026 23:18:57] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 23 23:18:57  10.244.6.27 - - [23/Feb/2026 23:18:57] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.6.27 - - [23/Feb/2026 23:24:39] "GET /admin HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.5.120 - - [23/Feb/2026 23:24:39] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.4.249 - - [23/Feb/2026 23:24:39] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.7.214 - - [23/Feb/2026 23:24:39] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.6.27 - - [23/Feb/2026 23:24:39] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.4.249 - - [23/Feb/2026 23:24:39] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.4.249 - - [23/Feb/2026 23:24:39] "GET /api/config HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.7.214 - - [23/Feb/2026 23:24:39] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 23 23:24:39  10.244.6.27 - - [23/Feb/2026 23:24:39] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 23 23:29:51  [2026-02-23 23:29:51] [INFO] [generator] [tenant:entrylab] [req:b369b97c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 23:31:39  10.244.6.27 - - [23/Feb/2026 23:31:39] "GET /login HTTP/1.1" 200 -
+Feb 23 23:44:53  [2026-02-23 23:44:53] [INFO] [generator] [tenant:entrylab] [req:ccc9440b] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 23 23:59:56  [2026-02-23 23:59:56] [INFO] [generator] [tenant:entrylab] [req:0ca7ce96] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 00:09:48  10.244.5.120 - - [24/Feb/2026 00:09:48] "GET / HTTP/1.1" 302 -
+Feb 24 00:09:48  10.244.6.27 - - [24/Feb/2026 00:09:48] "GET /app HTTP/1.1" 200 -
+Feb 24 00:09:49  10.244.7.214 - - [24/Feb/2026 00:09:49] "GET / HTTP/1.1" 302 -
+Feb 24 00:09:49  10.244.5.120 - - [24/Feb/2026 00:09:49] code 404, message File not found
+Feb 24 00:09:49  10.244.5.120 - - [24/Feb/2026 00:09:49] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:09:49  [2026-02-24 00:09:49] [WARNING] [clerk_auth] [req:3a6e0028] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 24 00:09:49  10.244.4.249 - - [24/Feb/2026 00:09:49] "GET /admin HTTP/1.1" 302 -
+Feb 24 00:09:49  10.244.4.249 - - [24/Feb/2026 00:09:49] "GET /login HTTP/1.1" 200 -
+Feb 24 00:09:50  10.244.5.120 - - [24/Feb/2026 00:09:50] code 404, message File not found
+Feb 24 00:09:50  10.244.5.120 - - [24/Feb/2026 00:09:50] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:09:50  10.244.4.249 - - [24/Feb/2026 00:09:50] code 404, message File not found
+Feb 24 00:09:50  10.244.4.249 - - [24/Feb/2026 00:09:50] "GET /phpinfo HTTP/1.1" 404 -
+Feb 24 00:09:51  10.244.5.120 - - [24/Feb/2026 00:09:51] code 404, message File not found
+Feb 24 00:09:51  10.244.5.120 - - [24/Feb/2026 00:09:51] "GET /phpinfo HTTP/1.1" 404 -
+Feb 24 00:09:51  10.244.6.27 - - [24/Feb/2026 00:09:51] code 404, message File not found
+Feb 24 00:09:51  10.244.6.27 - - [24/Feb/2026 00:09:51] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 24 00:09:52  10.244.4.249 - - [24/Feb/2026 00:09:52] code 404, message File not found
+Feb 24 00:09:52  10.244.4.249 - - [24/Feb/2026 00:09:52] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 24 00:09:52  10.244.6.27 - - [24/Feb/2026 00:09:52] code 404, message File not found
+Feb 24 00:09:52  10.244.6.27 - - [24/Feb/2026 00:09:52] "GET /info HTTP/1.1" 404 -
+Feb 24 00:09:54  10.244.6.27 - - [24/Feb/2026 00:09:54] code 404, message File not found
+Feb 24 00:09:54  10.244.6.27 - - [24/Feb/2026 00:09:54] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:09:54  10.244.5.120 - - [24/Feb/2026 00:09:54] code 404, message File not found
+Feb 24 00:09:54  10.244.5.120 - - [24/Feb/2026 00:09:54] "GET /info HTTP/1.1" 404 -
+Feb 24 00:09:55  10.244.4.249 - - [24/Feb/2026 00:09:55] code 404, message File not found
+Feb 24 00:09:55  10.244.4.249 - - [24/Feb/2026 00:09:55] "GET /info.php HTTP/1.1" 404 -
+Feb 24 00:09:55  10.244.4.249 - - [24/Feb/2026 00:09:55] code 404, message File not found
+Feb 24 00:09:55  10.244.4.249 - - [24/Feb/2026 00:09:55] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:09:57  10.244.6.27 - - [24/Feb/2026 00:09:57] code 404, message File not found
+Feb 24 00:09:57  10.244.6.27 - - [24/Feb/2026 00:09:57] "GET /info.php HTTP/1.1" 404 -
+Feb 24 00:09:57  10.244.6.27 - - [24/Feb/2026 00:09:57] code 404, message File not found
+Feb 24 00:09:57  10.244.6.27 - - [24/Feb/2026 00:09:57] "GET /.env HTTP/1.1" 404 -
+Feb 24 00:09:57  10.244.4.249 - - [24/Feb/2026 00:09:57] code 404, message File not found
+Feb 24 00:09:57  10.244.4.249 - - [24/Feb/2026 00:09:57] "GET /.env.production HTTP/1.1" 404 -
+Feb 24 00:09:58  10.244.7.214 - - [24/Feb/2026 00:09:58] code 404, message File not found
+Feb 24 00:09:58  10.244.7.214 - - [24/Feb/2026 00:09:58] "GET /application/.env HTTP/1.1" 404 -
+Feb 24 00:09:59  10.244.4.249 - - [24/Feb/2026 00:09:59] code 404, message File not found
+Feb 24 00:09:59  10.244.4.249 - - [24/Feb/2026 00:09:59] "GET /prod/.env HTTP/1.1" 404 -
+Feb 24 00:09:59  10.244.5.120 - - [24/Feb/2026 00:09:59] code 404, message File not found
+Feb 24 00:09:59  10.244.5.120 - - [24/Feb/2026 00:09:59] "GET /.env.save HTTP/1.1" 404 -
+Feb 24 00:09:59  10.244.5.120 - - [24/Feb/2026 00:09:59] code 404, message File not found
+Feb 24 00:09:59  10.244.5.120 - - [24/Feb/2026 00:09:59] "GET /.env HTTP/1.1" 404 -
+Feb 24 00:10:00  10.244.4.249 - - [24/Feb/2026 00:10:00] code 404, message File not found
+Feb 24 00:10:00  10.244.4.249 - - [24/Feb/2026 00:10:00] "GET /.env.production HTTP/1.1" 404 -
+Feb 24 00:10:00  10.244.5.120 - - [24/Feb/2026 00:10:00] code 404, message File not found
+Feb 24 00:10:00  10.244.5.120 - - [24/Feb/2026 00:10:00] "GET /beta/.env HTTP/1.1" 404 -
+Feb 24 00:10:00  10.244.7.214 - - [24/Feb/2026 00:10:00] code 404, message File not found
+Feb 24 00:10:00  10.244.7.214 - - [24/Feb/2026 00:10:00] "GET /application/.env HTTP/1.1" 404 -
+Feb 24 00:10:01  10.244.7.214 - - [24/Feb/2026 00:10:01] code 404, message File not found
+Feb 24 00:10:01  10.244.7.214 - - [24/Feb/2026 00:10:01] "GET /admin/.env HTTP/1.1" 404 -
+Feb 24 00:10:01  10.244.4.249 - - [24/Feb/2026 00:10:01] code 404, message File not found
+Feb 24 00:10:01  10.244.4.249 - - [24/Feb/2026 00:10:01] "GET /prod/.env HTTP/1.1" 404 -
+Feb 24 00:10:01  10.244.6.27 - - [24/Feb/2026 00:10:01] code 404, message File not found
+Feb 24 00:10:01  10.244.6.27 - - [24/Feb/2026 00:10:01] "GET /app/.env HTTP/1.1" 404 -
+Feb 24 00:10:01  10.244.7.214 - - [24/Feb/2026 00:10:01] code 404, message File not found
+Feb 24 00:10:01  10.244.7.214 - - [24/Feb/2026 00:10:01] "GET /.env.save HTTP/1.1" 404 -
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] code 404, message File not found
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] "GET /config/.env HTTP/1.1" 404 -
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] code 404, message File not found
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] "GET /beta/.env HTTP/1.1" 404 -
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] code 404, message File not found
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] "GET /admin/.env HTTP/1.1" 404 -
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] code 404, message File not found
+Feb 24 00:10:02  10.244.4.249 - - [24/Feb/2026 00:10:02] "GET /api/.env HTTP/1.1" 404 -
+Feb 24 00:10:03  10.244.7.214 - - [24/Feb/2026 00:10:03] code 404, message File not found
+Feb 24 00:10:03  10.244.7.214 - - [24/Feb/2026 00:10:03] "GET /app/.env HTTP/1.1" 404 -
+Feb 24 00:10:03  10.244.7.214 - - [24/Feb/2026 00:10:03] code 404, message File not found
+Feb 24 00:10:03  10.244.7.214 - - [24/Feb/2026 00:10:03] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 24 00:10:03  10.244.5.120 - - [24/Feb/2026 00:10:03] code 404, message File not found
+Feb 24 00:10:03  10.244.5.120 - - [24/Feb/2026 00:10:03] "GET /config/.env HTTP/1.1" 404 -
+Feb 24 00:10:04  10.244.4.249 - - [24/Feb/2026 00:10:04] "POST / HTTP/1.1" 404 -
+Feb 24 00:10:04  10.244.6.27 - - [24/Feb/2026 00:10:04] code 404, message File not found
+Feb 24 00:10:04  10.244.6.27 - - [24/Feb/2026 00:10:04] "GET /api/.env HTTP/1.1" 404 -
+Feb 24 00:10:04  10.244.5.120 - - [24/Feb/2026 00:10:04] code 404, message File not found
+Feb 24 00:10:04  10.244.5.120 - - [24/Feb/2026 00:10:04] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 24 00:10:04  10.244.6.27 - - [24/Feb/2026 00:10:04] code 404, message File not found
+Feb 24 00:10:04  10.244.6.27 - - [24/Feb/2026 00:10:04] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] code 404, message File not found
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 24 00:10:05  10.244.6.27 - - [24/Feb/2026 00:10:05] code 404, message File not found
+Feb 24 00:10:05  10.244.6.27 - - [24/Feb/2026 00:10:05] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] code 404, message File not found
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] "GET //.aws/config HTTP/1.1" 404 -
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] "POST / HTTP/1.1" 404 -
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] code 404, message File not found
+Feb 24 00:10:05  10.244.5.120 - - [24/Feb/2026 00:10:05] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:06  10.244.6.27 - - [24/Feb/2026 00:10:06] code 404, message File not found
+Feb 24 00:10:06  10.244.6.27 - - [24/Feb/2026 00:10:06] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:06  10.244.4.249 - - [24/Feb/2026 00:10:06] code 404, message File not found
+Feb 24 00:10:06  10.244.4.249 - - [24/Feb/2026 00:10:06] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 24 00:10:06  10.244.6.27 - - [24/Feb/2026 00:10:06] code 404, message File not found
+Feb 24 00:10:06  10.244.6.27 - - [24/Feb/2026 00:10:06] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:06  10.244.4.249 - - [24/Feb/2026 00:10:06] code 404, message File not found
+Feb 24 00:10:06  10.244.4.249 - - [24/Feb/2026 00:10:06] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:07  10.244.7.214 - - [24/Feb/2026 00:10:07] code 404, message File not found
+Feb 24 00:10:07  10.244.7.214 - - [24/Feb/2026 00:10:07] "GET //.aws/config HTTP/1.1" 404 -
+Feb 24 00:10:07  10.244.7.214 - - [24/Feb/2026 00:10:07] code 404, message File not found
+Feb 24 00:10:07  10.244.7.214 - - [24/Feb/2026 00:10:07] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:08  10.244.7.214 - - [24/Feb/2026 00:10:08] code 404, message File not found
+Feb 24 00:10:08  10.244.7.214 - - [24/Feb/2026 00:10:08] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:21  10.244.5.120 - - [24/Feb/2026 00:10:21] "GET / HTTP/1.1" 302 -
+Feb 24 00:10:21  10.244.6.27 - - [24/Feb/2026 00:10:21] "GET /app HTTP/1.1" 200 -
+Feb 24 00:10:21  10.244.7.214 - - [24/Feb/2026 00:10:21] "GET / HTTP/1.1" 302 -
+Feb 24 00:10:21  [2026-02-24 00:10:21] [WARNING] [clerk_auth] [req:c9ff116b] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 24 00:10:21  10.244.4.249 - - [24/Feb/2026 00:10:21] "GET /admin HTTP/1.1" 302 -
+Feb 24 00:10:21  10.244.5.120 - - [24/Feb/2026 00:10:21] code 404, message File not found
+Feb 24 00:10:21  10.244.5.120 - - [24/Feb/2026 00:10:21] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:10:21  10.244.4.249 - - [24/Feb/2026 00:10:21] "GET /login HTTP/1.1" 200 -
+Feb 24 00:10:22  10.244.5.120 - - [24/Feb/2026 00:10:22] code 404, message File not found
+Feb 24 00:10:22  10.244.5.120 - - [24/Feb/2026 00:10:22] "GET /_profiler/phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:10:22  10.244.4.249 - - [24/Feb/2026 00:10:22] code 404, message File not found
+Feb 24 00:10:22  10.244.4.249 - - [24/Feb/2026 00:10:22] "GET /phpinfo HTTP/1.1" 404 -
+Feb 24 00:10:24  10.244.6.27 - - [24/Feb/2026 00:10:24] code 404, message File not found
+Feb 24 00:10:24  10.244.6.27 - - [24/Feb/2026 00:10:24] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 24 00:10:24  10.244.5.120 - - [24/Feb/2026 00:10:24] code 404, message File not found
+Feb 24 00:10:24  10.244.5.120 - - [24/Feb/2026 00:10:24] "GET /phpinfo HTTP/1.1" 404 -
+Feb 24 00:10:26  10.244.4.249 - - [24/Feb/2026 00:10:26] code 404, message File not found
+Feb 24 00:10:26  10.244.4.249 - - [24/Feb/2026 00:10:26] "GET /_profiler/phpinfo HTTP/1.1" 404 -
+Feb 24 00:10:26  10.244.6.27 - - [24/Feb/2026 00:10:26] code 404, message File not found
+Feb 24 00:10:26  10.244.6.27 - - [24/Feb/2026 00:10:26] "GET /info HTTP/1.1" 404 -
+Feb 24 00:10:26  10.244.5.120 - - [24/Feb/2026 00:10:26] code 404, message File not found
+Feb 24 00:10:26  10.244.5.120 - - [24/Feb/2026 00:10:26] "GET /info HTTP/1.1" 404 -
+Feb 24 00:10:27  10.244.6.27 - - [24/Feb/2026 00:10:27] code 404, message File not found
+Feb 24 00:10:27  10.244.6.27 - - [24/Feb/2026 00:10:27] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:10:29  10.244.4.249 - - [24/Feb/2026 00:10:29] code 404, message File not found
+Feb 24 00:10:29  10.244.4.249 - - [24/Feb/2026 00:10:29] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 00:10:30  10.244.4.249 - - [24/Feb/2026 00:10:30] code 404, message File not found
+Feb 24 00:10:30  10.244.4.249 - - [24/Feb/2026 00:10:30] "GET /info.php HTTP/1.1" 404 -
+Feb 24 00:10:30  10.244.6.27 - - [24/Feb/2026 00:10:30] code 404, message File not found
+Feb 24 00:10:30  10.244.6.27 - - [24/Feb/2026 00:10:30] "GET /info.php HTTP/1.1" 404 -
+Feb 24 00:10:31  10.244.6.27 - - [24/Feb/2026 00:10:31] code 404, message File not found
+Feb 24 00:10:31  10.244.6.27 - - [24/Feb/2026 00:10:31] "GET /.env HTTP/1.1" 404 -
+Feb 24 00:10:31  10.244.4.249 - - [24/Feb/2026 00:10:31] code 404, message File not found
+Feb 24 00:10:31  10.244.4.249 - - [24/Feb/2026 00:10:31] "GET /.env.production HTTP/1.1" 404 -
+Feb 24 00:10:31  10.244.5.120 - - [24/Feb/2026 00:10:31] code 404, message File not found
+Feb 24 00:10:31  10.244.5.120 - - [24/Feb/2026 00:10:31] "GET /.env HTTP/1.1" 404 -
+Feb 24 00:10:31  10.244.7.214 - - [24/Feb/2026 00:10:31] code 404, message File not found
+Feb 24 00:10:31  10.244.7.214 - - [24/Feb/2026 00:10:31] "GET /application/.env HTTP/1.1" 404 -
+Feb 24 00:10:31  10.244.4.249 - - [24/Feb/2026 00:10:31] code 404, message File not found
+Feb 24 00:10:31  10.244.4.249 - - [24/Feb/2026 00:10:31] "GET /.env.production HTTP/1.1" 404 -
+Feb 24 00:10:32  10.244.4.249 - - [24/Feb/2026 00:10:32] code 404, message File not found
+Feb 24 00:10:32  10.244.4.249 - - [24/Feb/2026 00:10:32] "GET /prod/.env HTTP/1.1" 404 -
+Feb 24 00:10:32  10.244.7.214 - - [24/Feb/2026 00:10:32] code 404, message File not found
+Feb 24 00:10:32  10.244.7.214 - - [24/Feb/2026 00:10:32] "GET /application/.env HTTP/1.1" 404 -
+Feb 24 00:10:32  10.244.5.120 - - [24/Feb/2026 00:10:32] code 404, message File not found
+Feb 24 00:10:32  10.244.5.120 - - [24/Feb/2026 00:10:32] "GET /.env.save HTTP/1.1" 404 -
+Feb 24 00:10:32  10.244.4.249 - - [24/Feb/2026 00:10:32] code 404, message File not found
+Feb 24 00:10:32  10.244.4.249 - - [24/Feb/2026 00:10:32] "GET /prod/.env HTTP/1.1" 404 -
+Feb 24 00:10:32  10.244.5.120 - - [24/Feb/2026 00:10:32] code 404, message File not found
+Feb 24 00:10:32  10.244.5.120 - - [24/Feb/2026 00:10:32] "GET /beta/.env HTTP/1.1" 404 -
+Feb 24 00:10:33  10.244.7.214 - - [24/Feb/2026 00:10:33] code 404, message File not found
+Feb 24 00:10:33  10.244.7.214 - - [24/Feb/2026 00:10:33] "GET /.env.save HTTP/1.1" 404 -
+Feb 24 00:10:33  10.244.7.214 - - [24/Feb/2026 00:10:33] code 404, message File not found
+Feb 24 00:10:33  10.244.7.214 - - [24/Feb/2026 00:10:33] "GET /admin/.env HTTP/1.1" 404 -
+Feb 24 00:10:33  10.244.4.249 - - [24/Feb/2026 00:10:33] code 404, message File not found
+Feb 24 00:10:33  10.244.4.249 - - [24/Feb/2026 00:10:33] "GET /beta/.env HTTP/1.1" 404 -
+Feb 24 00:10:33  10.244.6.27 - - [24/Feb/2026 00:10:33] code 404, message File not found
+Feb 24 00:10:33  10.244.6.27 - - [24/Feb/2026 00:10:33] "GET /app/.env HTTP/1.1" 404 -
+Feb 24 00:10:33  10.244.4.249 - - [24/Feb/2026 00:10:33] code 404, message File not found
+Feb 24 00:10:33  10.244.4.249 - - [24/Feb/2026 00:10:33] "GET /admin/.env HTTP/1.1" 404 -
+Feb 24 00:10:34  10.244.4.249 - - [24/Feb/2026 00:10:34] code 404, message File not found
+Feb 24 00:10:34  10.244.4.249 - - [24/Feb/2026 00:10:34] "GET /config/.env HTTP/1.1" 404 -
+Feb 24 00:10:34  10.244.7.214 - - [24/Feb/2026 00:10:34] code 404, message File not found
+Feb 24 00:10:34  10.244.7.214 - - [24/Feb/2026 00:10:34] "GET /app/.env HTTP/1.1" 404 -
+Feb 24 00:10:34  10.244.4.249 - - [24/Feb/2026 00:10:34] code 404, message File not found
+Feb 24 00:10:34  10.244.4.249 - - [24/Feb/2026 00:10:34] "GET /api/.env HTTP/1.1" 404 -
+Feb 24 00:10:34  10.244.5.120 - - [24/Feb/2026 00:10:34] code 404, message File not found
+Feb 24 00:10:34  10.244.5.120 - - [24/Feb/2026 00:10:34] "GET /config/.env HTTP/1.1" 404 -
+Feb 24 00:10:34  10.244.7.214 - - [24/Feb/2026 00:10:34] code 404, message File not found
+Feb 24 00:10:34  10.244.7.214 - - [24/Feb/2026 00:10:34] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 24 00:10:35  10.244.6.27 - - [24/Feb/2026 00:10:35] code 404, message File not found
+Feb 24 00:10:35  10.244.6.27 - - [24/Feb/2026 00:10:35] "GET /api/.env HTTP/1.1" 404 -
+Feb 24 00:10:35  10.244.4.249 - - [24/Feb/2026 00:10:35] "POST / HTTP/1.1" 404 -
+Feb 24 00:10:35  10.244.5.120 - - [24/Feb/2026 00:10:35] code 404, message File not found
+Feb 24 00:10:35  10.244.5.120 - - [24/Feb/2026 00:10:35] "GET /laravel/.env HTTP/1.1" 404 -
+Feb 24 00:10:35  10.244.5.120 - - [24/Feb/2026 00:10:35] code 404, message File not found
+Feb 24 00:10:35  10.244.5.120 - - [24/Feb/2026 00:10:35] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.5.120 - - [24/Feb/2026 00:10:36] "POST / HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.4.249 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.4.249 - - [24/Feb/2026 00:10:36] "GET //pms?module=logging&file_name=../../../../../../~/.aws/credentials&number_of_lines=10000 HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.5.120 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.5.120 - - [24/Feb/2026 00:10:36] "GET //.aws/config HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] "GET //admin/config?cmd=cat+/root/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.5.120 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.5.120 - - [24/Feb/2026 00:10:36] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.6.27 - - [24/Feb/2026 00:10:36] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.4.249 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.4.249 - - [24/Feb/2026 00:10:36] "GET //.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:36  10.244.7.214 - - [24/Feb/2026 00:10:36] code 404, message File not found
+Feb 24 00:10:36  10.244.7.214 - - [24/Feb/2026 00:10:36] "GET //.aws/config HTTP/1.1" 404 -
+Feb 24 00:10:37  10.244.7.214 - - [24/Feb/2026 00:10:37] code 404, message File not found
+Feb 24 00:10:37  10.244.7.214 - - [24/Feb/2026 00:10:37] "GET //home/user/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:10:37  10.244.7.214 - - [24/Feb/2026 00:10:37] code 404, message File not found
+Feb 24 00:10:37  10.244.7.214 - - [24/Feb/2026 00:10:37] "GET //config/.aws/credentials HTTP/1.1" 404 -
+Feb 24 00:14:59  [2026-02-24 00:14:59] [INFO] [generator] [tenant:entrylab] [req:41a46d13] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 00:30:02  [2026-02-24 00:30:02] [INFO] [generator] [tenant:entrylab] [req:abb0b806] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 00:45:05  [2026-02-24 00:45:05] [INFO] [generator] [tenant:entrylab] [req:bbfcab19] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 01:00:07  [2026-02-24 01:00:07] [INFO] [generator] [tenant:entrylab] [req:598d0cb1] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 01:09:38  10.244.6.27 - - [24/Feb/2026 01:09:38] code 404, message File not found
+Feb 24 01:09:38  10.244.6.27 - - [24/Feb/2026 01:09:38] "GET /.env HTTP/1.1" 404 -
+Feb 24 01:15:10  [2026-02-24 01:15:10] [INFO] [generator] [tenant:entrylab] [req:b17bd28a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 01:30:13  [2026-02-24 01:30:13] [INFO] [generator] [tenant:entrylab] [req:b5ae3ce3] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 01:45:16  [2026-02-24 01:45:16] [INFO] [generator] [tenant:entrylab] [req:d2e33c60] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 02:00:20  [2026-02-24 02:00:20] [INFO] [generator] [tenant:entrylab] [req:ab897edb] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 02:15:23  [2026-02-24 02:15:23] [INFO] [generator] [tenant:entrylab] [req:080459d8] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 02:30:25  [2026-02-24 02:30:25] [INFO] [generator] [tenant:entrylab] [req:eb7ef8d4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 02:45:28  [2026-02-24 02:45:28] [INFO] [generator] [tenant:entrylab] [req:f2c0a8f4] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 03:00:31  [2026-02-24 03:00:31] [INFO] [generator] [tenant:entrylab] [req:50077f91] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 03:15:34  [2026-02-24 03:15:34] [INFO] [generator] [tenant:entrylab] [req:c2dbe3c3] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 03:30:37  [2026-02-24 03:30:37] [INFO] [generator] [tenant:entrylab] [req:a2e440ab] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 03:45:41  [2026-02-24 03:45:41] [INFO] [generator] [tenant:entrylab] [req:924c2795] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 04:00:44  [2026-02-24 04:00:44] [INFO] [generator] [tenant:entrylab] [req:ea2e9cab] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 04:15:47  [2026-02-24 04:15:47] [INFO] [generator] [tenant:entrylab] [req:f40caefd] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 04:30:50  [2026-02-24 04:30:50] [INFO] [generator] [tenant:entrylab] [req:230e032b] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 04:45:53  [2026-02-24 04:45:53] [INFO] [generator] [tenant:entrylab] [req:62804304] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 05:00:56  [2026-02-24 05:00:56] [INFO] [generator] [tenant:entrylab] [req:6e557549] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 05:15:59  [2026-02-24 05:15:59] [INFO] [generator] [tenant:entrylab] [req:172c64ae] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 05:31:03  [2026-02-24 05:31:03] [INFO] [generator] [tenant:entrylab] [req:cd1bab0a] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 05:46:05  [2026-02-24 05:46:05] [INFO] [generator] [tenant:entrylab] [req:17761189] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 06:01:08  [2026-02-24 06:01:08] [INFO] [generator] [tenant:entrylab] [req:3c5bafab] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 06:16:11  [2026-02-24 06:16:11] [INFO] [generator] [tenant:entrylab] [req:15bb3980] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 06:20:12  [2026-02-24 06:20:12] [INFO] [forex_scheduler] Generating morning briefing with Alpha Vantage news...
+Feb 24 06:20:12  [2026-02-24 06:20:12] [INFO] [service] Generating morning market briefing for tenant: entrylab
+Feb 24 06:20:12  [2026-02-24 06:20:12] [INFO] [briefing] Generating morning briefing for tenant: entrylab
+Feb 24 06:20:12  [2026-02-24 06:20:12] [INFO] [briefing] Computing morning briefing data from Twelve Data...
+Feb 24 06:20:13  [2026-02-24 06:20:13] [INFO] [briefing] Briefing data computed: price=$5181.58, range=expanded, position=mid_range
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [briefing] Generated AI briefing for entrylab
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=848
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [forex_bot] Posted morning briefing
+Feb 24 06:20:22  [2026-02-24 06:20:22] [INFO] [forex_scheduler] ✅ Morning briefing posted with news
+Feb 24 06:26:44  10.244.4.249 - - [24/Feb/2026 06:26:44] code 404, message File not found
+Feb 24 06:26:44  10.244.4.249 - - [24/Feb/2026 06:26:44] "GET /.env HTTP/1.1" 404 -
+Feb 24 06:30:24  [2026-02-24 06:30:24] [INFO] [forex_scheduler] Generating detailed daily recap for yesterday...
+Feb 24 06:30:27  [2026-02-24 06:30:27] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 06:30:27  [2026-02-24 06:30:27] [INFO] [telegram_sender] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 24 06:30:27  [2026-02-24 06:30:27] [INFO] [telegram_sender] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=849
+Feb 24 06:30:27  [2026-02-24 06:30:27] [INFO] [forex_bot] Posted detailed daily recap to VIP channel
+Feb 24 06:30:27  [2026-02-24 06:30:27] [INFO] [forex_scheduler] ✅ Daily recap posted: 4 signals, 75% win rate, +434.6 pips
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [generator] [tenant:entrylab] [req:118b7a58] 🔄 forex_config change detected (guardrails/indicators)
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [generator] [tenant:entrylab] [req:118b7a58] 🔄 Reloading config...
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [forex_signals] [tenant:entrylab] [req:118b7a58] Reloading configuration...
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [forex_signals] [tenant:entrylab] [req:118b7a58] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [forex_signals] [tenant:entrylab] [req:118b7a58] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [forex_signals] [tenant:entrylab] [req:118b7a58] Strategy unchanged: raja_banks
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [runtime] [tenant:entrylab] [req:118b7a58] Config hot-reloaded for signal engine
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [generator] [tenant:entrylab] [req:118b7a58] ✅ Config hot-reloaded successfully
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [generator] [tenant:entrylab] [req:118b7a58] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 06:31:28  [2026-02-24 06:31:28] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 24 06:32:28  [2026-02-24 06:32:28] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 24 06:33:28  [2026-02-24 06:33:28] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 24 06:34:28  [2026-02-24 06:34:28] [INFO] [forex_scheduler] Daily recap already posted today, skipping
+Feb 24 06:42:30  [2026-02-24 06:42:30] [INFO] [forex_scheduler] Enqueueing cross promo daily sequence (scheduled for 06:42)...
+Feb 24 06:42:30  [2026-02-24 06:42:30] [INFO] [repo] Enqueued job 9dd85b97-6165-4562-bf07-a8b8ed325c59 type=morning_news for tenant entrylab
+Feb 24 06:42:30  [2026-02-24 06:42:30] [INFO] [repo] Enqueued job 88430a34-e863-4e27-b76c-34e67edb4659 type=vip_soon for tenant entrylab
+Feb 24 06:42:30  [2026-02-24 06:42:30] [INFO] [repo] Enqueued job 784b8274-178e-4572-b649-5c84a19586b4 type=eod_pip_brag for tenant entrylab
+Feb 24 06:42:30  [2026-02-24 06:42:30] [INFO] [forex_scheduler] ✅ Cross promo daily sequence enqueued: ['morning_news', 'vip_soon', 'eod_pip_brag']
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [repo] Claimed 1 due jobs
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [crosspromo_worker] Processing job 9dd85b97-6165-4562-bf07-a8b8ed325c59 type=morning_news tenant=entrylab
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [service] Generating morning market briefing for tenant: entrylab
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [briefing] Generating morning briefing for tenant: entrylab
+Feb 24 06:42:31  [2026-02-24 06:42:31] [INFO] [briefing] Computing morning briefing data from Twelve Data...
+Feb 24 06:42:33  [2026-02-24 06:42:33] [INFO] [briefing] Briefing data computed: price=$5170.90, range=expanded, position=mid_range
+Feb 24 06:42:37  [2026-02-24 06:42:37] [INFO] [briefing] Generated AI briefing for entrylab
+Feb 24 06:42:37  [2026-02-24 06:42:37] [INFO] [client] Message sent to -1002501458405
+Feb 24 06:42:37  [2026-02-24 06:42:37] [INFO] [repo] Job 9dd85b97-6165-4562-bf07-a8b8ed325c59 marked as sent
+Feb 24 06:42:37  [2026-02-24 06:42:37] [INFO] [crosspromo_worker] Job 9dd85b97-6165-4562-bf07-a8b8ed325c59 completed successfully
+Feb 24 06:42:37  [2026-02-24 06:42:37] [INFO] [crosspromo_worker] Processed 1 job(s)
+Feb 24 06:46:30  [2026-02-24 06:46:30] [INFO] [generator] [tenant:entrylab] [req:bffb8fb6] 🔄 forex_config change detected (guardrails/indicators)
+Feb 24 06:46:30  [2026-02-24 06:46:30] [INFO] [generator] [tenant:entrylab] [req:bffb8fb6] 🔄 Reloading config...
+Feb 24 06:46:30  [2026-02-24 06:46:30] [INFO] [forex_signals] [tenant:entrylab] [req:bffb8fb6] Reloading configuration...
+Feb 24 06:46:30  [2026-02-24 06:46:30] [INFO] [forex_signals] [tenant:entrylab] [req:bffb8fb6] Loaded from database - RSI: 40/60, ADX: 15, SL/TP: 2.0x/4.0x
+Feb 24 06:46:30  [2026-02-24 06:46:30] [INFO] [forex_signals] [tenant:entrylab] [req:bffb8fb6] Guardrails - Loss cap: 5000.0 pips, Throttle: 30min, Session: 8-21 UTC (enabled=True)
+Feb 24 06:46:31  [2026-02-24 06:46:31] [INFO] [forex_signals] [tenant:entrylab] [req:bffb8fb6] Strategy unchanged: raja_banks
+Feb 24 06:46:31  [2026-02-24 06:46:31] [INFO] [runtime] [tenant:entrylab] [req:bffb8fb6] Config hot-reloaded for signal engine
+Feb 24 06:46:31  [2026-02-24 06:46:31] [INFO] [generator] [tenant:entrylab] [req:bffb8fb6] ✅ Config hot-reloaded successfully
+Feb 24 06:46:31  [2026-02-24 06:46:31] [INFO] [generator] [tenant:entrylab] [req:bffb8fb6] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 07:01:33  [2026-02-24 07:01:33] [INFO] [generator] [tenant:entrylab] [req:16e9149f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 07:16:36  [2026-02-24 07:16:36] [INFO] [generator] [tenant:entrylab] [req:9053224f] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 07:31:38  [2026-02-24 07:31:38] [INFO] [generator] [tenant:entrylab] [req:7a79d91c] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 07:46:41  [2026-02-24 07:46:41] [INFO] [generator] [tenant:entrylab] [req:68c26e6d] Outside trading hours (8AM-10PM GMT), skipping signal check
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [repo] Claimed 1 due jobs
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [crosspromo_worker] Processing job 88430a34-e863-4e27-b76c-34e67edb4659 type=vip_soon tenant=entrylab
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [bot_credentials] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [client] Message sent to -1002501458405
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [repo] Job 88430a34-e863-4e27-b76c-34e67edb4659 marked as sent
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [crosspromo_worker] Job 88430a34-e863-4e27-b76c-34e67edb4659 completed successfully
+Feb 24 07:51:06  [2026-02-24 07:51:06] [INFO] [crosspromo_worker] Processed 1 job(s)
+Feb 24 08:01:44  [2026-02-24 08:01:44] [INFO] [forex_signals] [tenant:entrylab] [req:597127c3] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:01:44  [2026-02-24 08:01:44] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] Checking for signals on XAU/USD 15min...
+Feb 24 08:01:44  [2026-02-24 08:01:44] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] Session: London
+Feb 24 08:01:47  [2026-02-24 08:01:47] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] No impulse breakout detected
+Feb 24 08:01:47  [2026-02-24 08:01:47] [INFO] [generator] [tenant:entrylab] [req:597127c3] 📊 Checking 1-hour timeframe...
+Feb 24 08:01:47  [2026-02-24 08:01:47] [INFO] [forex_signals] [tenant:entrylab] [req:597127c3] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:01:47  [2026-02-24 08:01:47] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] Checking for signals on XAU/USD 1h...
+Feb 24 08:01:47  [2026-02-24 08:01:47] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] Session: London
+Feb 24 08:01:49  [2026-02-24 08:01:49] [INFO] [raja_banks] [tenant:entrylab] [req:597127c3] No impulse breakout detected
+Feb 24 08:16:52  [2026-02-24 08:16:52] [INFO] [forex_signals] [tenant:entrylab] [req:23007a17] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:16:52  [2026-02-24 08:16:52] [INFO] [raja_banks] [tenant:entrylab] [req:23007a17] Checking for signals on XAU/USD 15min...
+Feb 24 08:16:52  [2026-02-24 08:16:52] [INFO] [raja_banks] [tenant:entrylab] [req:23007a17] Session: London
+Feb 24 08:16:53  [2026-02-24 08:16:53] [INFO] [raja_banks] [tenant:entrylab] [req:23007a17] No impulse breakout detected
+Feb 24 08:31:56  [2026-02-24 08:31:56] [INFO] [forex_signals] [tenant:entrylab] [req:68d0da81] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:31:56  [2026-02-24 08:31:56] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] Checking for signals on XAU/USD 15min...
+Feb 24 08:31:56  [2026-02-24 08:31:56] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] Session: London
+Feb 24 08:31:57  [2026-02-24 08:31:57] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] No impulse breakout detected
+Feb 24 08:31:57  [2026-02-24 08:31:57] [INFO] [generator] [tenant:entrylab] [req:68d0da81] 📊 Checking 1-hour timeframe...
+Feb 24 08:31:57  [2026-02-24 08:31:57] [INFO] [forex_signals] [tenant:entrylab] [req:68d0da81] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:31:57  [2026-02-24 08:31:57] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] Checking for signals on XAU/USD 1h...
+Feb 24 08:31:57  [2026-02-24 08:31:57] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] Session: London
+Feb 24 08:31:58  [2026-02-24 08:31:58] [INFO] [raja_banks] [tenant:entrylab] [req:68d0da81] No impulse breakout detected
+Feb 24 08:47:01  [2026-02-24 08:47:01] [INFO] [forex_signals] [tenant:entrylab] [req:b87b0f05] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 08:47:01  [2026-02-24 08:47:01] [INFO] [raja_banks] [tenant:entrylab] [req:b87b0f05] Checking for signals on XAU/USD 15min...
+Feb 24 08:47:01  [2026-02-24 08:47:01] [INFO] [raja_banks] [tenant:entrylab] [req:b87b0f05] Session: London
+Feb 24 08:47:03  [2026-02-24 08:47:03] [INFO] [raja_banks] [tenant:entrylab] [req:b87b0f05] No impulse breakout detected
+Feb 24 09:02:06  [2026-02-24 09:02:06] [INFO] [forex_signals] [tenant:entrylab] [req:8cc2fee8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:02:06  [2026-02-24 09:02:06] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] Checking for signals on XAU/USD 15min...
+Feb 24 09:02:06  [2026-02-24 09:02:06] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] Session: London
+Feb 24 09:02:07  [2026-02-24 09:02:07] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] No impulse breakout detected
+Feb 24 09:02:07  [2026-02-24 09:02:07] [INFO] [generator] [tenant:entrylab] [req:8cc2fee8] 📊 Checking 1-hour timeframe...
+Feb 24 09:02:07  [2026-02-24 09:02:07] [INFO] [forex_signals] [tenant:entrylab] [req:8cc2fee8] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:02:07  [2026-02-24 09:02:07] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] Checking for signals on XAU/USD 1h...
+Feb 24 09:02:07  [2026-02-24 09:02:07] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] Session: London
+Feb 24 09:02:09  [2026-02-24 09:02:09] [INFO] [raja_banks] [tenant:entrylab] [req:8cc2fee8] No impulse breakout detected
+Feb 24 09:17:12  [2026-02-24 09:17:12] [INFO] [forex_signals] [tenant:entrylab] [req:b4323b1b] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:17:12  [2026-02-24 09:17:12] [INFO] [raja_banks] [tenant:entrylab] [req:b4323b1b] Checking for signals on XAU/USD 15min...
+Feb 24 09:17:12  [2026-02-24 09:17:12] [INFO] [raja_banks] [tenant:entrylab] [req:b4323b1b] Session: London
+Feb 24 09:17:13  [2026-02-24 09:17:13] [INFO] [raja_banks] [tenant:entrylab] [req:b4323b1b] No impulse breakout detected
+Feb 24 09:32:16  [2026-02-24 09:32:16] [INFO] [forex_signals] [tenant:entrylab] [req:c4fa41f3] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:32:16  [2026-02-24 09:32:16] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] Checking for signals on XAU/USD 15min...
+Feb 24 09:32:16  [2026-02-24 09:32:16] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] Session: London
+Feb 24 09:32:17  [2026-02-24 09:32:17] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] No impulse breakout detected
+Feb 24 09:32:17  [2026-02-24 09:32:17] [INFO] [generator] [tenant:entrylab] [req:c4fa41f3] 📊 Checking 1-hour timeframe...
+Feb 24 09:32:17  [2026-02-24 09:32:17] [INFO] [forex_signals] [tenant:entrylab] [req:c4fa41f3] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:32:17  [2026-02-24 09:32:17] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] Checking for signals on XAU/USD 1h...
+Feb 24 09:32:17  [2026-02-24 09:32:17] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] Session: London
+Feb 24 09:32:18  [2026-02-24 09:32:18] [INFO] [raja_banks] [tenant:entrylab] [req:c4fa41f3] No impulse breakout detected
+Feb 24 09:47:21  [2026-02-24 09:47:21] [INFO] [forex_signals] [tenant:entrylab] [req:33514854] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 09:47:21  [2026-02-24 09:47:21] [INFO] [raja_banks] [tenant:entrylab] [req:33514854] Checking for signals on XAU/USD 15min...
+Feb 24 09:47:21  [2026-02-24 09:47:21] [INFO] [raja_banks] [tenant:entrylab] [req:33514854] Session: London
+Feb 24 09:47:22  [2026-02-24 09:47:22] [INFO] [raja_banks] [tenant:entrylab] [req:33514854] No impulse breakout detected
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [forex_signals] [tenant:entrylab] [req:7ca373b9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [raja_banks] [tenant:entrylab] [req:7ca373b9] Checking for signals on XAU/USD 15min...
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [raja_banks] [tenant:entrylab] [req:7ca373b9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [generator] [tenant:entrylab] [req:7ca373b9] 📊 Checking 1-hour timeframe...
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [forex_signals] [tenant:entrylab] [req:7ca373b9] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [raja_banks] [tenant:entrylab] [req:7ca373b9] Checking for signals on XAU/USD 1h...
+Feb 24 10:02:25  [2026-02-24 10:02:25] [INFO] [raja_banks] [tenant:entrylab] [req:7ca373b9] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:17:27  [2026-02-24 10:17:27] [INFO] [forex_signals] [tenant:entrylab] [req:9f4d7afa] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:17:27  [2026-02-24 10:17:27] [INFO] [raja_banks] [tenant:entrylab] [req:9f4d7afa] Checking for signals on XAU/USD 15min...
+Feb 24 10:17:27  [2026-02-24 10:17:27] [INFO] [raja_banks] [tenant:entrylab] [req:9f4d7afa] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:23:54  10.244.7.214 - - [24/Feb/2026 10:23:54] "GET / HTTP/1.1" 302 -
+Feb 24 10:23:54  10.244.5.120 - - [24/Feb/2026 10:23:54] code 404, message File not found
+Feb 24 10:23:54  10.244.5.120 - - [24/Feb/2026 10:23:54] "GET /robots.txt HTTP/1.1" 404 -
+Feb 24 10:23:54  [2026-02-24 10:23:54] [WARNING] [clerk_auth] [req:fd2937be] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 24 10:23:54  10.244.5.120 - - [24/Feb/2026 10:23:54] "GET /admin HTTP/1.1" 302 -
+Feb 24 10:23:54  10.244.4.249 - - [24/Feb/2026 10:23:54] "GET /login HTTP/1.1" 200 -
+Feb 24 10:25:26  10.244.6.27 - - [24/Feb/2026 10:25:26] "GET / HTTP/1.1" 302 -
+Feb 24 10:25:27  [2026-02-24 10:25:27] [WARNING] [clerk_auth] [req:5ea4095d] Auth failure: reason=missing_auth_header path=/admin host=admin.promostack.io source=none
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] "GET /admin HTTP/1.1" 302 -
+Feb 24 10:25:27  10.244.5.120 - - [24/Feb/2026 10:25:27] "GET /login HTTP/1.1" 200 -
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] code 404, message File not found
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] "GET /.env HTTP/1.1" 404 -
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] code 404, message File not found
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] "GET /.env.bak HTTP/1.1" 404 -
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] code 404, message File not found
+Feb 24 10:25:27  10.244.6.27 - - [24/Feb/2026 10:25:27] "GET /.env.save HTTP/1.1" 404 -
+Feb 24 10:25:27  10.244.4.249 - - [24/Feb/2026 10:25:27] code 404, message File not found
+Feb 24 10:25:27  10.244.4.249 - - [24/Feb/2026 10:25:27] "GET /.env.backup HTTP/1.1" 404 -
+Feb 24 10:25:27  10.244.7.214 - - [24/Feb/2026 10:25:27] code 404, message File not found
+Feb 24 10:25:27  10.244.7.214 - - [24/Feb/2026 10:25:27] "GET /backend/.env HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /admin/.env HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.6.27 - - [24/Feb/2026 10:25:28] "GET /.git/config HTTP/1.1" 200 -
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] "GET /wp-config.php HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /config.js HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /aws-config.js HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /aws.config.js HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.6.27 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.6.27 - - [24/Feb/2026 10:25:28] "GET /_debugbar/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.5.120 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.5.120 - - [24/Feb/2026 10:25:28] "GET /debugbar/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.4.249 - - [24/Feb/2026 10:25:28] "GET /debug/ HTTP/1.1" 404 -
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] code 404, message File not found
+Feb 24 10:25:28  10.244.7.214 - - [24/Feb/2026 10:25:28] "GET /phpinfo.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /info.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /test.php HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /.aws/credentials HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.6.27 - - [24/Feb/2026 10:25:29] "GET /.aws/config HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] "GET /aws-credentials HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.7.214 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.7.214 - - [24/Feb/2026 10:25:29] "GET /aws.json HTTP/1.1" 404 -
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] code 404, message File not found
+Feb 24 10:25:29  10.244.5.120 - - [24/Feb/2026 10:25:29] "GET /.s3cfg HTTP/1.1" 404 -
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [forex_signals] [tenant:entrylab] [req:5f3d4ab2] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Checking for signals on XAU/USD 15min...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [generator] [tenant:entrylab] [req:5f3d4ab2] 📊 Checking 1-hour timeframe...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [forex_signals] [tenant:entrylab] [req:5f3d4ab2] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Checking for signals on XAU/USD 1h...
+Feb 24 10:32:30  [2026-02-24 10:32:30] [INFO] [raja_banks] [tenant:entrylab] [req:5f3d4ab2] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [forex_signals] [tenant:entrylab] [req:2e869765] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [raja_banks] [tenant:entrylab] [req:2e869765] Checking for signals on XAU/USD 15min...
+Feb 24 10:47:33  [2026-02-24 10:47:33] [INFO] [raja_banks] [tenant:entrylab] [req:2e869765] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [forex_signals] [tenant:entrylab] [req:ad00ff6e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Checking for signals on XAU/USD 15min...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [generator] [tenant:entrylab] [req:ad00ff6e] 📊 Checking 1-hour timeframe...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [forex_signals] [tenant:entrylab] [req:ad00ff6e] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Checking for signals on XAU/USD 1h...
+Feb 24 11:02:37  [2026-02-24 11:02:37] [INFO] [raja_banks] [tenant:entrylab] [req:ad00ff6e] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] "GET / HTTP/1.1" 302 -
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] code 404, message File not found
+Feb 24 11:07:52  10.244.6.27 - - [24/Feb/2026 11:07:52] "GET /robots.txt HTTP/1.1" 404 -
+Feb 24 11:07:53  10.244.5.120 - - [24/Feb/2026 11:07:53] "GET /app HTTP/1.1" 200 -
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [forex_signals] [tenant:entrylab] [req:d19f8b91] Using strategy: Raja Banks Gold Start (raja_banks)
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [raja_banks] [tenant:entrylab] [req:d19f8b91] Checking for signals on XAU/USD 15min...
+Feb 24 11:17:40  [2026-02-24 11:17:40] [INFO] [raja_banks] [tenant:entrylab] [req:d19f8b91] Guardrail blocked: Outside trading session (Off-hours)
+Feb 24 11:25:47  10.244.6.27 - - [24/Feb/2026 11:25:47] "GET / HTTP/1.1" 302 -
+Feb 24 11:25:47  10.244.6.27 - - [24/Feb/2026 11:25:47] "GET /admin HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.6.27 - - [24/Feb/2026 11:25:47] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.4.249 - - [24/Feb/2026 11:25:47] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.5.120 - - [24/Feb/2026 11:25:47] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.5.120 - - [24/Feb/2026 11:25:47] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.7.214 - - [24/Feb/2026 11:25:47] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 24 11:25:47  10.244.6.27 - - [24/Feb/2026 11:25:47] "GET /api/config HTTP/1.1" 200 -
+Feb 24 11:25:48  10.244.5.120 - - [24/Feb/2026 11:25:48] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [db] [req:e1e0f19f] get_all_telegram_subscriptions: found 17 rows
+Feb 24 11:25:48  10.244.7.214 - - [24/Feb/2026 11:25:48] "GET /api/telegram-subscriptions?include_test=true HTTP/1.1" 200 -
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [db] [req:13430265] get_all_telegram_subscriptions: found 17 rows
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [handlers] [req:13430265] Fetching metrics for 4 PromoStack subscriptions (period: all)...
+Feb 24 11:25:48  [Stripe] Fetching revenue metrics from Stripe (filter: 'VIP', period: 'all')...
+Feb 24 11:25:48  [Stripe] Fetching all paid invoices...
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [bot_credentials] [req:3f332030] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [telegram_sender] [req:3f332030] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [handlers] [req:3f332030] [STATS] Fetching stats: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, bot=@entrylab_test_bot, token_last4=****EVbI
+Feb 24 11:25:48  [2026-02-24 11:25:48] [INFO] [handlers] [req:3f332030] [STATS] Success: tenant=entrylab, channel_type=vip, channel_id=-1003343226469, members=2
+Feb 24 11:25:48  10.244.6.27 - - [24/Feb/2026 11:25:48] "GET /api/telegram-channel-stats?channel=vip HTTP/1.1" 200 -
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/invoices?status=paid&limit=100&expand[0]=data.lines.data&expand[1]=data.subscription response_code=200
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $39.0 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $0.78 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Invoice: $3.12 - 1 × 7 Day VIP Plan (at $39.00 / week) (no sub)
+Feb 24 11:25:50  [Stripe] Total revenue from 48 VIP invoices: $460.1999999999996
+Feb 24 11:25:50  [Stripe] Found 0 subscription IDs from invoices
+Feb 24 11:25:50  [Stripe] Also fetching active subscriptions directly from Stripe...
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=active&limit=100
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=active&limit=100 response_code=200
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 24 11:25:50  [Stripe] Found active VIP sub: sub_1SbpefQfYsm... - 7 Day VIP Plan
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 24 11:25:50  [Stripe] Found active VIP sub: sub_1SaJHlQfYsm... - 7 Day VIP Plan
+Feb 24 11:25:50  [2026-02-24 11:25:50] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 24 11:25:51  [Stripe] Found active VIP sub: sub_1Sa3rUQfYsm... - 7 Day VIP Plan
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 24 11:25:51  [Stripe] Found active VIP sub: sub_1SZYNIQfYsm... - 7 Day VIP Plan
+Feb 24 11:25:51  [Stripe] Total subscription IDs to check: 4
+Feb 24 11:25:51  [Stripe] Checking 4 subscriptions for rebill (period: 2026-02-24 to 2028-12-31)...
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SZYNIQfYsmULFjZZ7iFBNwM response_code=200
+Feb 24 11:25:51  [Stripe] Sub sub_1SZYNIQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 24 11:25:51  10.244.7.214 - - [24/Feb/2026 11:25:51] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 24 11:25:51  10.244.6.27 - - [24/Feb/2026 11:25:51] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 24 11:25:51  10.244.6.27 - - [24/Feb/2026 11:25:51] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 24 11:25:51  10.244.7.214 - - [24/Feb/2026 11:25:51] "GET /api/signal-bot/status HTTP/1.1" 200 -
+Feb 24 11:25:51  10.244.6.27 - - [24/Feb/2026 11:25:51] "GET /api/forex-tp-config HTTP/1.1" 200 -
+Feb 24 11:25:51  10.244.6.27 - - [24/Feb/2026 11:25:51] "GET /api/forex-config HTTP/1.1" 200 -
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 24 11:25:51  [Stripe] Sub sub_1SZYNIQfYsm... status=active, cancel_at_end=False
+Feb 24 11:25:51  [Stripe] ✓ Rebill in period: $39.0 on 2026-03-02
+Feb 24 11:25:51  [2026-02-24 11:25:51] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SaJHlQfYsmULFjZu8Zpji3z response_code=200
+Feb 24 11:25:52  [Stripe] Sub sub_1SaJHlQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 24 11:25:52  [Stripe] Sub sub_1SaJHlQfYsm... status=active, cancel_at_end=False
+Feb 24 11:25:52  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SbpefQfYsmULFjZfR4OaPsm response_code=200
+Feb 24 11:25:52  [Stripe] Sub sub_1SbpefQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 24 11:25:52  [2026-02-24 11:25:52] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 24 11:25:53  [Stripe] Sub sub_1SbpefQfYsm... status=active, cancel_at_end=False
+Feb 24 11:25:53  [Stripe] ✓ Rebill in period: $0.78 on 2026-03-01
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1Sa3rUQfYsmULFjZjCq5iq1l response_code=200
+Feb 24 11:25:53  [Stripe] Sub sub_1Sa3rUQfYsm... missing current_period_end, using Invoice.create_preview()
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=post url=https://api.stripe.com/v1/invoices/create_preview
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/invoices/create_preview response_code=200
+Feb 24 11:25:53  [Stripe] Sub sub_1Sa3rUQfYsm... status=active, cancel_at_end=False
+Feb 24 11:25:53  [Stripe] ✓ Rebill in period: $0.78 on 2026-02-25
+Feb 24 11:25:53  [Stripe] Active: 4, Rebill in period: $41.34
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/subscriptions?status=canceled&limit=100 response_code=200
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Request to Stripe api' method=get url=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [stripe] [req:13430265] message='Stripe API response' path=https://api.stripe.com/v1/products/prod_TUsFSUtlwN9RHc response_code=200
+Feb 24 11:25:53  [Stripe] Churn: 1 cancelled out of ~5 = 20.0%
+Feb 24 11:25:53  [2026-02-24 11:25:53] [INFO] [handlers] [req:13430265] Stripe returned: revenue=$460.2, rebill=$41.34
+Feb 24 11:25:53  10.244.5.120 - - [24/Feb/2026 11:25:53] "GET /api/telegram/revenue-metrics?period=all HTTP/1.1" 200 -
