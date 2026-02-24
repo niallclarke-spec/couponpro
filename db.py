@@ -715,6 +715,14 @@ class DatabasePool:
                 else:
                     logger.info("UTM columns already exist, skipping")
                 
+                if 'gclid' not in existing_sub_columns:
+                    logger.info("Adding ad click tracking columns...")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN gclid VARCHAR(255)")
+                    cursor.execute("ALTER TABLE telegram_subscriptions ADD COLUMN fbclid VARCHAR(255)")
+                    logger.info("Ad click tracking columns added (gclid, fbclid)")
+                else:
+                    logger.info("Ad click tracking columns already exist, skipping")
+                
                 # Create index on is_converted for quick conversion queries
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_telegram_subscriptions_is_converted 
@@ -5430,7 +5438,7 @@ def cleanup_old_phrases(tenant_id, days_to_keep=7):
 
 # ===== Telegram Subscriptions Functions =====
 
-def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None):
+def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stripe_subscription_id=None, plan_type='premium', amount_paid=49.00, name=None, utm_source=None, utm_medium=None, utm_campaign=None, utm_content=None, utm_term=None, gclid=None, fbclid=None):
     """
     Create or update a telegram subscription record (UPSERT) with conversion tracking.
     
@@ -5511,9 +5519,10 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
                 cursor.execute("""
                     INSERT INTO telegram_subscriptions 
                     (tenant_id, email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
-                     status, created_at, updated_at, free_signup_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
+                     status, created_at, updated_at, free_signup_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
+                     gclid, fbclid)
                     VALUES ('entrylab', %s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
-                            CURRENT_TIMESTAMP, %s, %s, %s, %s, %s)
+                            CURRENT_TIMESTAMP, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (tenant_id, email) DO UPDATE SET
                         name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
                         plan_type = EXCLUDED.plan_type,
@@ -5524,10 +5533,12 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
                         utm_medium = COALESCE(telegram_subscriptions.utm_medium, EXCLUDED.utm_medium),
                         utm_campaign = COALESCE(telegram_subscriptions.utm_campaign, EXCLUDED.utm_campaign),
                         utm_content = COALESCE(telegram_subscriptions.utm_content, EXCLUDED.utm_content),
-                        utm_term = COALESCE(telegram_subscriptions.utm_term, EXCLUDED.utm_term)
+                        utm_term = COALESCE(telegram_subscriptions.utm_term, EXCLUDED.utm_term),
+                        gclid = COALESCE(telegram_subscriptions.gclid, EXCLUDED.gclid),
+                        fbclid = COALESCE(telegram_subscriptions.fbclid, EXCLUDED.fbclid)
                     RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
                 """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                      utm_source, utm_medium, utm_campaign, utm_content, utm_term))
+                      utm_source, utm_medium, utm_campaign, utm_content, utm_term, gclid, fbclid))
             else:
                 # For paid signups, also handle conversion tracking
                 if is_conversion:
@@ -5547,29 +5558,34 @@ def create_telegram_subscription(email, tenant_id, stripe_customer_id=None, stri
                             utm_medium = COALESCE(utm_medium, %s),
                             utm_campaign = COALESCE(utm_campaign, %s),
                             utm_content = COALESCE(utm_content, %s),
-                            utm_term = COALESCE(utm_term, %s)
+                            utm_term = COALESCE(utm_term, %s),
+                            gclid = COALESCE(gclid, %s),
+                            fbclid = COALESCE(fbclid, %s)
                         WHERE email = %s AND tenant_id = %s
                         RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
                     """, (name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
                           conversion_days, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
-                          email, tenant_id))
+                          gclid, fbclid, email, tenant_id))
                 else:
                     cursor.execute("""
                         INSERT INTO telegram_subscriptions 
                         (tenant_id, email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid, 
-                         status, created_at, updated_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term)
+                         status, created_at, updated_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
+                         gclid, fbclid)
                         VALUES ('entrylab', %s, %s, %s, %s, %s, %s, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
-                                %s, %s, %s, %s, %s)
+                                %s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT (tenant_id, email) DO UPDATE SET
                             name = COALESCE(EXCLUDED.name, telegram_subscriptions.name),
                             stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, telegram_subscriptions.stripe_customer_id),
                             stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, telegram_subscriptions.stripe_subscription_id),
                             plan_type = EXCLUDED.plan_type,
                             amount_paid = EXCLUDED.amount_paid,
-                            updated_at = CURRENT_TIMESTAMP
+                            updated_at = CURRENT_TIMESTAMP,
+                            gclid = COALESCE(telegram_subscriptions.gclid, EXCLUDED.gclid),
+                            fbclid = COALESCE(telegram_subscriptions.fbclid, EXCLUDED.fbclid)
                         RETURNING id, email, stripe_customer_id, stripe_subscription_id, status, created_at, is_converted
                     """, (email, name, stripe_customer_id, stripe_subscription_id, plan_type, amount_paid,
-                          utm_source, utm_medium, utm_campaign, utm_content, utm_term))
+                          utm_source, utm_medium, utm_campaign, utm_content, utm_term, gclid, fbclid))
             
             result = cursor.fetchone()
             conn.commit()
@@ -6426,7 +6442,8 @@ def get_conversion_analytics(tenant_id, period='all'):
                     id, email, name, utm_source, utm_campaign, 
                     free_signup_at, is_converted, converted_at, 
                     amount_paid, plan_type, status, telegram_username,
-                    joined_at, telegram_user_id, conversion_days
+                    joined_at, telegram_user_id, conversion_days,
+                    gclid, fbclid
                 FROM telegram_subscriptions 
                 WHERE tenant_id = %s {period_filter}
                 ORDER BY 
@@ -6451,7 +6468,9 @@ def get_conversion_analytics(tenant_id, period='all'):
                     'telegram': r[11] or '',
                     'joined_at': r[12].isoformat() if r[12] else None,
                     'has_telegram': r[13] is not None,
-                    'conversion_days': r[14]
+                    'conversion_days': r[14],
+                    'gclid': r[15],
+                    'fbclid': r[16]
                 }
                 for r in cursor.fetchall()
             ]

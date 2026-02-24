@@ -187,6 +187,8 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
             utm_campaign = metadata.get('utm_campaign')
             utm_content = metadata.get('utm_content')
             utm_term = metadata.get('utm_term')
+            gclid = metadata.get('gclid')
+            fbclid = metadata.get('fbclid')
             
             if utm_source:
                 print(f"[STRIPE WEBHOOK] UTM from checkout metadata: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
@@ -223,7 +225,9 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                             utm_medium=utm_medium,
                             utm_campaign=utm_campaign,
                             utm_content=utm_content,
-                            utm_term=utm_term
+                            utm_term=utm_term,
+                            gclid=gclid,
+                            fbclid=fbclid
                         )
                         
                         if result:

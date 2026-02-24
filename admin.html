@@ -7617,10 +7617,12 @@
                 const actionBtn = lead.is_converted ? '' : `<button onclick='showGrantVipModal(${JSON.stringify(lead).replace(/'/g, "&#39;")})' style="background: #10b981; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Grant VIP</button>`;
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
-                const source = lead.source && lead.source !== 'direct' ? lead.source : '<span style="color: var(--text-muted);">--</span>';
+                let sourceHtml = lead.source && lead.source !== 'direct' ? lead.source : '<span style="color: var(--text-muted);">--</span>';
+                if (lead.gclid) sourceHtml += ' <span title="Google Click ID: ' + lead.gclid + '" style="color: #4285f4; font-size: 10px; cursor: help;">G</span>';
+                if (lead.fbclid) sourceHtml += ' <span title="Meta Click ID: ' + lead.fbclid + '" style="color: #1877f2; font-size: 10px; cursor: help;">M</span>';
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${signupDate}</td>`;
                 html += `<td style="padding: 10px 8px;">${statusTag}</td>`;
-                html += `<td style="padding: 10px 8px; white-space: nowrap;">${source}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap;">${sourceHtml}</td>`;
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${telegram}</td>`;
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${firstName}</td>`;
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${lead.email}</td>`;

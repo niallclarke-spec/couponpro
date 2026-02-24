@@ -319,6 +319,8 @@ def handle_telegram_grant_access(handler):
         utm_campaign = data.get('utmCampaign') or data.get('utm_campaign')
         utm_content = data.get('utmContent') or data.get('utm_content')
         utm_term = data.get('utmTerm') or data.get('utm_term')
+        gclid = data.get('gclid')
+        fbclid = data.get('fbclid')
         
         raw_amount = data.get('amountPaid')
         if raw_amount is not None:
@@ -341,6 +343,8 @@ def handle_telegram_grant_access(handler):
         logger.info(f"Stripe: customer_id={stripe_customer_id}, subscription_id={stripe_subscription_id}")
         if utm_source or utm_campaign:
             logger.info(f"UTM: source={utm_source}, medium={utm_medium}, campaign={utm_campaign}")
+        if gclid or fbclid:
+            logger.info(f"Click IDs: gclid={gclid}, fbclid={fbclid}")
         
         subscription, db_error = server.db.create_telegram_subscription(
             email=email,
@@ -354,6 +358,8 @@ def handle_telegram_grant_access(handler):
             utm_campaign=utm_campaign,
             utm_content=utm_content,
             utm_term=utm_term,
+            gclid=gclid,
+            fbclid=fbclid,
             tenant_id=handler.tenant_id
         )
         
