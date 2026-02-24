@@ -6387,17 +6387,18 @@ def get_conversion_analytics(tenant_id, period='all'):
                 WHERE tenant_id = %s {period_filter}
                 GROUP BY utm_source
                 ORDER BY leads DESC
-                LIMIT 10
+                LIMIT 5
             """, (tenant_id,))
             funnel_by_source = [
                 {
-                    'source': r[0], 
+                    'source': r[0],
                     'leads': r[1] or 0,
                     'joined': r[2] or 0,
                     'conversions': r[3] or 0,
                     'revenue': float(r[4] or 0),
-                    'conversion_rate': round(((r[3] or 0) / r[1] * 100) if r[1] and r[1] > 0 else 0, 1)
-                } 
+                    'lead_to_free_rate': round(((r[2] or 0) / r[1] * 100) if r[1] and r[1] > 0 else 0, 1),
+                    'free_to_vip_rate': round(((r[3] or 0) / r[2] * 100) if r[2] and r[2] > 0 else 0, 1)
+                }
                 for r in cursor.fetchall()
             ]
             

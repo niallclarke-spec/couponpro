@@ -5690,9 +5690,9 @@
                     </div>
                     
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-title">UTM Attribution</div>
+                        <div class="card-title">Top Sources</div>
                         <div id="utmAttribution" style="padding: 20px; overflow-x: auto;">
-                            <div class="loading">Loading UTM attribution...</div>
+                            <div class="loading">Loading top sources...</div>
                         </div>
                     </div>
                     
@@ -7417,40 +7417,50 @@
         function renderUtmAttribution(sources) {
             const container = document.getElementById('utmAttribution');
             if (!sources || sources.length === 0) {
-                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No UTM data yet. Sources will appear when leads are captured with UTM parameters.</div>';
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px 0;">No source data yet. Leads with UTM parameters will appear here.</div>';
                 return;
             }
-            
-            const sorted = [...sources].sort((a, b) => (b.leads || b.signups || 0) - (a.leads || a.signups || 0));
-            
-            let html = '<table style="width: 100%; border-collapse: collapse;">';
+
+            const sorted = [...sources].sort((a, b) => (b.leads || 0) - (a.leads || 0)).slice(0, 5);
+            const maxLeads = sorted[0]?.leads || 1;
+
+            let html = '<table style="width: 100%; border-collapse: collapse; font-size: 11px;">';
             html += '<thead><tr style="border-bottom: 2px solid var(--border-primary);">';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">LEADS</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">JOINED</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONVERSIONS</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONV. RATE</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">REVENUE</th>';
+            html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">SOURCE</th>';
+            html += '<th style="text-align: right; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">LEADS</th>';
+            html += '<th style="text-align: right; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">FREE JOINS</th>';
+            html += '<th style="text-align: right; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">VIP</th>';
+            html += '<th style="text-align: right; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">LEAD→FREE</th>';
+            html += '<th style="text-align: right; padding: 10px 8px; color: var(--text-muted); font-size: 11px;">FREE→VIP</th>';
             html += '</tr></thead><tbody>';
-            
-            sorted.forEach(source => {
-                const leads = source.leads || source.signups || 0;
+
+            sorted.forEach((source, i) => {
+                const leads = source.leads || 0;
                 const joined = source.joined || 0;
-                const conversions = source.conversions || source.converted || 0;
-                const rate = source.conversion_rate || 0;
-                const revenue = source.revenue || 0;
-                const rateColor = rate >= 20 ? '#10b981' : rate >= 10 ? '#f59e0b' : 'var(--text-muted)';
-                
+                const conversions = source.conversions || 0;
+                const l2f = source.lead_to_free_rate || 0;
+                const f2v = source.free_to_vip_rate || 0;
+                const barWidth = Math.round((leads / maxLeads) * 100);
+                const sourceName = source.source === 'direct' ? '(Direct)' : source.source;
+
+                const l2fColor = l2f >= 50 ? '#10b981' : l2f >= 25 ? '#f59e0b' : 'var(--text-muted)';
+                const f2vColor = f2v >= 20 ? '#10b981' : f2v >= 10 ? '#f59e0b' : 'var(--text-muted)';
+
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
-                html += `<td style="padding: 12px 10px; font-weight: 500;">${source.source || '(Direct)'}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right;">${leads}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right;">${joined}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right;">${conversions}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right; color: ${rateColor}; font-weight: 600;">${rate}%</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right; color: #10b981; font-weight: 500;">$${revenue.toFixed(0)}</td>`;
+                html += `<td style="padding: 10px 8px;">
+                    <div style="font-weight: 600; font-size: 11px; margin-bottom: 4px;">${sourceName}</div>
+                    <div style="height: 3px; background: var(--border-primary); border-radius: 2px; width: 100%;">
+                        <div style="height: 3px; background: #3b82f6; border-radius: 2px; width: ${barWidth}%;"></div>
+                    </div>
+                </td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; font-weight: 600;">${leads}</td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; color: #8b5cf6; font-weight: 600;">${joined}</td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; color: #10b981; font-weight: 600;">${conversions}</td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; color: ${l2fColor}; font-weight: 600;">${l2f}%</td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; color: ${f2vColor}; font-weight: 600;">${f2v}%</td>`;
                 html += `</tr>`;
             });
-            
+
             html += '</tbody></table>';
             container.innerHTML = html;
         }
