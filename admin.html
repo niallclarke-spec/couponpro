@@ -5678,7 +5678,7 @@
                         <div class="card-title" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                             <span>Users</span>
                             <div id="leadsFilterBar" style="display: none; gap: 6px; flex-wrap: wrap;">
-                                <button onclick="filterLeads('all')" class="leads-filter-btn active" data-filter="all" style="padding: 4px 14px; border-radius: 16px; border: 1px solid var(--border-primary); background: rgba(255,255,255,0.1); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">All</button>
+                                <button onclick="filterLeads('all')" class="leads-filter-btn active" data-filter="all" style="padding: 4px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">All</button>
                                 <button onclick="filterLeads('lead')" class="leads-filter-btn" data-filter="lead" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #3b82f6; background: transparent; color: #3b82f6; font-size: 11px; font-weight: 600; cursor: pointer;">Lead</button>
                                 <button onclick="filterLeads('joined')" class="leads-filter-btn" data-filter="joined" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #8b5cf6; background: transparent; color: #8b5cf6; font-size: 11px; font-weight: 600; cursor: pointer;">Joined</button>
                                 <button onclick="filterLeads('vip')" class="leads-filter-btn" data-filter="vip" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #10b981; background: transparent; color: #10b981; font-size: 11px; font-weight: 600; cursor: pointer;">VIP</button>
@@ -7542,16 +7542,17 @@
                 const isActive = btn.getAttribute('data-filter') === filter;
                 btn.classList.toggle('active', isActive);
                 if (isActive) {
-                    const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    const colors = { all: 'rgba(255,255,255,0.15)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    const borderColors = { all: 'rgba(255,255,255,0.3)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
                     btn.style.background = colors[filter] || '#fff';
-                    btn.style.color = filter === 'all' ? '#fff' : '#fff';
-                    btn.style.borderColor = colors[filter] || 'var(--border-primary)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = borderColors[filter] || 'var(--border-primary)';
                 } else {
                     const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
-                    const c = colors[btn.getAttribute('data-filter')];
+                    const f = btn.getAttribute('data-filter');
                     btn.style.background = 'transparent';
-                    btn.style.color = btn.getAttribute('data-filter') === 'all' ? 'var(--text-muted)' : c;
-                    btn.style.borderColor = btn.getAttribute('data-filter') === 'all' ? 'var(--border-primary)' : c;
+                    btn.style.color = f === 'all' ? 'var(--text-muted)' : colors[f];
+                    btn.style.borderColor = f === 'all' ? 'var(--border-primary)' : colors[f];
                 }
             });
             let filtered = _allLeadsData;
