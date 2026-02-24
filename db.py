@@ -6451,7 +6451,7 @@ def get_conversion_analytics(tenant_id, period='all'):
                     CASE WHEN is_converted = TRUE THEN 0 ELSE 1 END,
                     free_signup_at DESC NULLS LAST,
                     created_at DESC
-                LIMIT 200
+                LIMIT 500
             """, (tenant_id,))
             all_leads = [
                 {
