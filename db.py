@@ -6229,7 +6229,7 @@ def link_free_subscription_to_telegram_user(invite_link, telegram_user_id, teleg
                 cursor.execute("""
                     UPDATE telegram_subscriptions
                     SET telegram_username = COALESCE(%s, telegram_username),
-                        status = CASE WHEN status = 'pending' THEN 'free_joined' ELSE status END,
+                        status = CASE WHEN status IN ('pending', 'abandoned') THEN 'free_joined' ELSE status END,
                         free_signup_at = COALESCE(free_signup_at, %s),
                         last_seen_at = %s,
                         updated_at = CURRENT_TIMESTAMP
@@ -6283,6 +6283,46 @@ def link_free_subscription_to_telegram_user(invite_link, telegram_user_id, teleg
     except Exception as e:
         logger.exception(f"Error linking free subscription to telegram user: {e}")
         return None
+
+
+def mark_subscription_abandoned(telegram_user_id, tenant_id):
+    """Mark a FREE channel member as abandoned when they leave the channel."""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 0
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET status = 'abandoned', updated_at = CURRENT_TIMESTAMP
+                WHERE telegram_user_id = %s AND tenant_id = %s AND status = 'free_joined'
+            """, (telegram_user_id, tenant_id))
+            affected = cursor.rowcount
+            conn.commit()
+            return affected
+    except Exception as e:
+        logger.exception(f"Error marking subscription abandoned: {e}")
+        return 0
+
+
+def mark_subscription_left_vip(telegram_user_id, tenant_id):
+    """Mark a VIP member as left when they leave the VIP channel (preserves is_converted history)."""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 0
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET status = 'left', updated_at = CURRENT_TIMESTAMP
+                WHERE telegram_user_id = %s AND tenant_id = %s AND is_converted = TRUE
+            """, (telegram_user_id, tenant_id))
+            affected = cursor.rowcount
+            conn.commit()
+            return affected
+    except Exception as e:
+        logger.exception(f"Error marking subscription left VIP: {e}")
+        return 0
 
 
 def get_existing_free_invite_link(email, tenant_id):

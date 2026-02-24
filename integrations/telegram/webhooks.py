@@ -426,12 +426,13 @@ def _handle_chat_member_update(webhook_data, tenant_id, connection):
     old_status = chat_member_data.get('old_chat_member', {}).get('status', 'left')
     new_status = chat_member_data.get('new_chat_member', {}).get('status', 'left')
     is_join = old_status in ['left', 'kicked', 'restricted'] and new_status in ['member', 'administrator', 'creator']
-    
-    if not is_join:
+    is_leave = old_status in ['member', 'administrator', 'creator'] and new_status in ['left', 'kicked', 'banned']
+
+    if not is_join and not is_leave:
         channel_type = 'VIP' if is_vip_channel else 'FREE'
-        logger.info(f"Chat member: {channel_type} status change {old_status} -> {new_status} (not a join)")
-        return {'success': True, 'message': f'Status change {old_status} -> {new_status}, not a join'}
-    
+        logger.info(f"Chat member: {channel_type} status change {old_status} -> {new_status} (ignored)")
+        return {'success': True, 'message': f'Status change {old_status} -> {new_status}, ignored'}
+
     user_data = chat_member_data.get('new_chat_member', {}).get('user', {})
     telegram_user_id = user_data.get('id')
     telegram_username = user_data.get('username')
@@ -443,7 +444,19 @@ def _handle_chat_member_update(webhook_data, tenant_id, connection):
         invite_link = invite_link_data.get('invite_link')
     
     joined_at = datetime.utcnow()
-    
+
+    if is_leave:
+        channel_type = 'VIP' if is_vip_channel else 'FREE'
+        logger.info(f"Chat member: {channel_type} channel leave: user={telegram_user_id} (@{telegram_username}), tenant={tenant_id}")
+        if is_free_channel:
+            affected = db.mark_subscription_abandoned(telegram_user_id, tenant_id)
+            logger.info(f"Chat member: FREE leave — marked abandoned for user {telegram_user_id} ({affected} rows)")
+            return {'success': True, 'message': f'FREE: user {telegram_user_id} marked abandoned'}
+        else:
+            affected = db.mark_subscription_left_vip(telegram_user_id, tenant_id)
+            logger.info(f"Chat member: VIP leave — marked left for user {telegram_user_id} ({affected} rows)")
+            return {'success': True, 'message': f'VIP: user {telegram_user_id} marked left'}
+
     if is_free_channel:
         logger.info(f"Chat member: FREE channel join: user={telegram_user_id} (@{telegram_username}), invite_link={invite_link}, tenant={tenant_id}")
         result = db.link_free_subscription_to_telegram_user(

@@ -5683,6 +5683,8 @@
                                     <button onclick="filterLeads('lead')" class="leads-filter-btn" data-filter="lead" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #3b82f6; background: transparent; color: #3b82f6; font-size: 11px; font-weight: 600; cursor: pointer;">Lead</button>
                                     <button onclick="filterLeads('joined')" class="leads-filter-btn" data-filter="joined" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #8b5cf6; background: transparent; color: #8b5cf6; font-size: 11px; font-weight: 600; cursor: pointer;">Joined</button>
                                     <button onclick="filterLeads('vip')" class="leads-filter-btn" data-filter="vip" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #10b981; background: transparent; color: #10b981; font-size: 11px; font-weight: 600; cursor: pointer;">VIP</button>
+                                    <button onclick="filterLeads('abandoned')" class="leads-filter-btn" data-filter="abandoned" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #f59e0b; background: transparent; color: #f59e0b; font-size: 11px; font-weight: 600; cursor: pointer;">Abandoned</button>
+                                    <button onclick="filterLeads('left')" class="leads-filter-btn" data-filter="left" style="padding: 4px 14px; border-radius: 16px; border: 1px solid #ef4444; background: transparent; color: #ef4444; font-size: 11px; font-weight: 600; cursor: pointer;">Left</button>
                                 </div>
                                 <button id="leadsExportBtn" onclick="exportLeads()" style="display: none; padding: 4px 14px; border-radius: 6px; border: 1px solid var(--border-primary); background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer;">↓ Export CSV</button>
                             </div>
@@ -7485,15 +7487,22 @@
             }
             
             if (allLeads) {
-                allLeads.filter(l => !l.is_converted && l.signup_date).slice(0, 50).forEach(l => activities.push({
-                    type: l.has_telegram ? 'free_joined' : 'free_signup',
-                    email: l.email,
-                    name: l.name || '',
-                    source: l.source || 'direct',
-                    date: l.signup_date,
-                    days: null,
-                    amount: 0
-                }));
+                allLeads.filter(l => l.signup_date).slice(0, 50).forEach(l => {
+                    let type;
+                    if (l.status === 'abandoned') type = 'abandoned';
+                    else if (l.status === 'left') type = 'left';
+                    else if (l.is_converted) return;
+                    else type = l.has_telegram ? 'free_joined' : 'free_signup';
+                    activities.push({
+                        type,
+                        email: l.email,
+                        name: l.name || '',
+                        source: l.source || 'direct',
+                        date: l.signup_date,
+                        days: null,
+                        amount: 0
+                    });
+                });
             }
             
             activities.sort((a, b) => {
@@ -7529,6 +7538,10 @@
                     statusBadge = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>';
                 } else if (a.type === 'free_joined') {
                     statusBadge = '<span style="background: #8b5cf6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Joined</span>';
+                } else if (a.type === 'abandoned') {
+                    statusBadge = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Abandoned</span>';
+                } else if (a.type === 'left') {
+                    statusBadge = '<span style="background: #ef4444; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Left</span>';
                 } else {
                     statusBadge = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Lead</span>';
                 }
@@ -7555,9 +7568,11 @@
         const _SCROLL_THRESHOLD = 400;
 
         function _getFilteredLeads() {
-            if (_activeLeadsFilter === 'lead') return _allLeadsData.filter(l => !l.is_converted && !l.has_telegram);
-            if (_activeLeadsFilter === 'joined') return _allLeadsData.filter(l => !l.is_converted && l.has_telegram);
-            if (_activeLeadsFilter === 'vip') return _allLeadsData.filter(l => l.is_converted);
+            if (_activeLeadsFilter === 'lead') return _allLeadsData.filter(l => !l.is_converted && !l.has_telegram && l.status !== 'abandoned' && l.status !== 'left');
+            if (_activeLeadsFilter === 'joined') return _allLeadsData.filter(l => !l.is_converted && l.has_telegram && l.status !== 'abandoned' && l.status !== 'left');
+            if (_activeLeadsFilter === 'vip') return _allLeadsData.filter(l => l.is_converted && l.status !== 'left');
+            if (_activeLeadsFilter === 'abandoned') return _allLeadsData.filter(l => l.status === 'abandoned');
+            if (_activeLeadsFilter === 'left') return _allLeadsData.filter(l => l.status === 'left');
             return _allLeadsData;
         }
 
@@ -7568,13 +7583,13 @@
                 const isActive = btn.getAttribute('data-filter') === filter;
                 btn.classList.toggle('active', isActive);
                 if (isActive) {
-                    const colors = { all: 'rgba(255,255,255,0.15)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
-                    const borderColors = { all: 'rgba(255,255,255,0.3)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    const colors = { all: 'rgba(255,255,255,0.15)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981', abandoned: '#f59e0b', left: '#ef4444' };
+                    const borderColors = { all: 'rgba(255,255,255,0.3)', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981', abandoned: '#f59e0b', left: '#ef4444' };
                     btn.style.background = colors[filter] || '#fff';
                     btn.style.color = '#fff';
                     btn.style.borderColor = borderColors[filter] || 'var(--border-primary)';
                 } else {
-                    const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981' };
+                    const colors = { all: '#fff', lead: '#3b82f6', joined: '#8b5cf6', vip: '#10b981', abandoned: '#f59e0b', left: '#ef4444' };
                     const f = btn.getAttribute('data-filter');
                     btn.style.background = 'transparent';
                     btn.style.color = f === 'all' ? 'var(--text-muted)' : colors[f];
@@ -7594,7 +7609,7 @@
             if (!data.length) return;
             const headers = ['Join Date', 'Status', 'Source', 'Telegram', 'Name', 'Email', 'Days to Convert'];
             const rows = data.map(l => {
-                const status = l.is_converted ? 'VIP' : l.has_telegram ? 'Joined' : 'Lead';
+                const status = l.status === 'abandoned' ? 'Abandoned' : l.status === 'left' ? 'Left' : l.is_converted ? 'VIP' : l.has_telegram ? 'Joined' : 'Lead';
                 const date = l.signup_date ? new Date(l.signup_date).toLocaleDateString() : '';
                 const source = l.source && l.source !== 'direct' ? l.source : '';
                 const days = l.is_converted && l.conversion_days != null ? l.conversion_days : '';
@@ -7653,7 +7668,11 @@
             rows.forEach(lead => {
                 const signupDate = lead.signup_date ? new Date(lead.signup_date).toLocaleDateString() : '--';
                 let statusTag;
-                if (lead.is_converted) {
+                if (lead.status === 'abandoned') {
+                    statusTag = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Abandoned</span>';
+                } else if (lead.status === 'left') {
+                    statusTag = '<span style="background: #ef4444; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Left</span>';
+                } else if (lead.is_converted) {
                     statusTag = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>';
                 } else if (lead.has_telegram) {
                     statusTag = '<span style="background: #8b5cf6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Joined</span>';
