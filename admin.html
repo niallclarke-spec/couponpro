@@ -7541,6 +7541,7 @@
             html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">TELEGRAM</th>';
             html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">NAME</th>';
             html += '<th style="text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">EMAIL</th>';
+            html += '<th style="text-align: center; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">DAYS</th>';
             html += '<th style="text-align: center; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap;">ACTION</th>';
             html += '</tr></thead><tbody>';
             
@@ -7556,7 +7557,7 @@
                 }
                 const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: var(--text-muted);">--</span>';
                 const firstName = lead.name || '<span style="color: var(--text-muted);">--</span>';
-                const actionBtn = lead.is_converted ? '' : `<button onclick='showGrantVipModal(${JSON.stringify(lead).replace(/'/g, "&#39;")})' style="background: #8b5cf6; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Grant VIP</button>`;
+                const actionBtn = lead.is_converted ? '' : `<button onclick='showGrantVipModal(${JSON.stringify(lead).replace(/'/g, "&#39;")})' style="background: #10b981; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Grant VIP</button>`;
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
                 const source = lead.source && lead.source !== 'direct' ? lead.source : '<span style="color: var(--text-muted);">--</span>';
@@ -7566,6 +7567,8 @@
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${telegram}</td>`;
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${firstName}</td>`;
                 html += `<td style="padding: 10px 8px; white-space: nowrap;">${lead.email}</td>`;
+                const convDays = lead.is_converted && lead.conversion_days != null ? `<span style="color: #10b981; font-weight: 600;">${lead.conversion_days}d</span>` : '<span style="color: var(--text-muted);">--</span>';
+                html += `<td style="padding: 10px 8px; text-align: center; white-space: nowrap;">${convDays}</td>`;
                 html += `<td style="padding: 10px 8px; text-align: center; white-space: nowrap;">${actionBtn}</td>`;
                 html += `</tr>`;
             });
@@ -12308,7 +12311,7 @@
                 <p id="grant-vip-body" style="color: #a0aec0; font-size: 14px; line-height: 1.6; margin-bottom: 20px;"></p>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button onclick="closeGrantVipModal()" style="background: transparent; color: #a0aec0; border: 1px solid #4a5568; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancel</button>
-                    <button id="grant-vip-confirm-btn" onclick="confirmGrantVip()" style="background: #8b5cf6; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">Confirm Grant VIP</button>
+                    <button id="grant-vip-confirm-btn" onclick="confirmGrantVip()" style="background: #10b981; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">Confirm Grant VIP</button>
                 </div>
             </div>
         </div>

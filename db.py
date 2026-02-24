@@ -6426,7 +6426,7 @@ def get_conversion_analytics(tenant_id, period='all'):
                     id, email, name, utm_source, utm_campaign, 
                     free_signup_at, is_converted, converted_at, 
                     amount_paid, plan_type, status, telegram_username,
-                    joined_at, telegram_user_id
+                    joined_at, telegram_user_id, conversion_days
                 FROM telegram_subscriptions 
                 WHERE tenant_id = %s {period_filter}
                 ORDER BY 
@@ -6450,7 +6450,8 @@ def get_conversion_analytics(tenant_id, period='all'):
                     'status': r[10] or 'pending',
                     'telegram': r[11] or '',
                     'joined_at': r[12].isoformat() if r[12] else None,
-                    'has_telegram': r[13] is not None
+                    'has_telegram': r[13] is not None,
+                    'conversion_days': r[14]
                 }
                 for r in cursor.fetchall()
             ]
