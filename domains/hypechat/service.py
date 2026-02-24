@@ -352,7 +352,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> 
                 links.append(f'🟢 <a href="{cta_support_url}">{cta_support_label}</a>')
 
             if links:
-                cta_parts.append("\n".join(links))
+                cta_parts.append("\n\n".join(links))
 
             cta_message = "\n\n".join(cta_parts)
 
