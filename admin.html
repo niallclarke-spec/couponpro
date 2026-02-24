@@ -642,6 +642,27 @@
         }
 
         /* Stats Cards - New Design */
+        .conversion-funnel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+        .funnel-step {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        .funnel-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .funnel-arrow-icon {
+            display: block;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2290,6 +2311,27 @@
                 width: 100%;
                 max-width: 100%;
                 box-sizing: border-box;
+            }
+
+            .conversion-funnel {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .funnel-step {
+                min-width: unset;
+                width: 100%;
+                padding: 8px 0;
+            }
+            .funnel-step div:first-child {
+                font-size: 28px !important;
+            }
+            .funnel-arrow {
+                flex-direction: row;
+                gap: 6px;
+                padding: 0;
+            }
+            .funnel-arrow-icon {
+                transform: rotate(90deg);
             }
 
             .stats-grid {
@@ -5571,24 +5613,24 @@
                 <div class="content-body">
                     <div class="card" style="margin-bottom: 24px; padding: 28px;">
                         <div class="card-title" style="margin-bottom: 24px;">Conversion Funnel</div>
-                        <div id="conversionFunnel" style="display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap;">
-                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                        <div id="conversionFunnel" class="conversion-funnel">
+                            <div class="funnel-step">
                                 <div style="font-size: 32px; font-weight: 700; color: #3b82f6;" id="funnelLeads">--</div>
                                 <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">FREE Leads Captured</div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 8px;">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                            <div class="funnel-arrow">
+                                <svg class="funnel-arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
                                 <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="funnelJoinRate">--%</div>
                             </div>
-                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div class="funnel-step">
                                 <div style="font-size: 32px; font-weight: 700; color: #8b5cf6;" id="funnelJoined">--</div>
                                 <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">FREE Joined Channel</div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 8px;">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                            <div class="funnel-arrow">
+                                <svg class="funnel-arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
                                 <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="funnelConvRate">--%</div>
                             </div>
-                            <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div class="funnel-step">
                                 <div style="font-size: 32px; font-weight: 700; color: #10b981;" id="funnelConverted">--</div>
                                 <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">VIP Conversions</div>
                             </div>
