@@ -576,7 +576,8 @@ def handle_telegram_grant_vip(handler):
                         journey=journey,
                         telegram_chat_id=telegram_chat_id,
                         telegram_user_id=telegram_user_id,
-                        first_name=result.get('name', '')
+                        first_name=result.get('name', ''),
+                        vip_link=invite_link or ''
                     )
                     journey_started = session is not None
                     logger.info(f"Journey 'joined_vip' started={journey_started} for user {telegram_user_id}")

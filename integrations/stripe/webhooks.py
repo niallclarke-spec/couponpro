@@ -237,6 +237,29 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                             
                             telegram_user_id = result.get('telegram_user_id')
                             if telegram_user_id:
+                                vip_invite_link = ''
+                                try:
+                                    from core.bot_credentials import get_bot_credentials
+                                    import requests as _req, time as _time
+                                    creds = get_bot_credentials(tenant_id, 'signal_bot')
+                                    bot_token = creds.get('bot_token')
+                                    vip_channel_id = creds.get('channel_id')
+                                    if bot_token and vip_channel_id:
+                                        _resp = _req.post(
+                                            f"https://api.telegram.org/bot{bot_token}/createChatInviteLink",
+                                            json={
+                                                'chat_id': vip_channel_id,
+                                                'member_limit': 1,
+                                                'expire_date': int(_time.time()) + 72 * 3600,
+                                                'name': f"VIP Stripe: {email}"
+                                            }, timeout=10)
+                                        _link_result = _resp.json()
+                                        if _link_result.get('ok'):
+                                            vip_invite_link = _link_result['result']['invite_link']
+                                            print(f"[STRIPE WEBHOOK] Generated VIP invite link for {email}")
+                                except Exception as e:
+                                    print(f"[STRIPE WEBHOOK] Could not generate VIP invite link: {e}")
+
                                 try:
                                     from domains.journeys import repo as journey_repo
                                     from domains.journeys.engine import JourneyEngine
@@ -249,7 +272,8 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                                             journey=journey,
                                             telegram_chat_id=telegram_chat_id,
                                             telegram_user_id=telegram_user_id,
-                                            first_name=result.get('name', '')
+                                            first_name=result.get('name', ''),
+                                            vip_link=vip_invite_link
                                         )
                                         print(f"[STRIPE WEBHOOK] Journey 'stripe_payment_successful' triggered for user {telegram_user_id}")
                                 except Exception as e:

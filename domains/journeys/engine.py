@@ -44,7 +44,7 @@ class JourneyEngine:
     
     def start_journey_for_user(self, tenant_id: str, journey: Dict, 
                                 telegram_chat_id: int, telegram_user_id: int,
-                                first_name: str = '') -> Optional[Dict]:
+                                first_name: str = '', vip_link: str = '') -> Optional[Dict]:
         """
         Start a journey for a user, handling re-entry policy.
         
@@ -88,7 +88,8 @@ class JourneyEngine:
             telegram_chat_id=telegram_chat_id,
             telegram_user_id=telegram_user_id,
             first_step_id=first_step['id'],
-            first_name=first_name
+            first_name=first_name,
+            vip_link=vip_link
         )
         
         if session:
@@ -205,6 +206,9 @@ class JourneyEngine:
         first_name = answers.get('_first_name', '')
         if first_name and text:
             text = text.replace('{first_name}', first_name)
+        vip_link = answers.get('_vip_link', '')
+        if vip_link and text:
+            text = text.replace('{vip_link}', vip_link)
         
         delay = config.get('delay_seconds', 0)
         if delay and delay > 15:
@@ -236,6 +240,9 @@ class JourneyEngine:
         first_name = answers.get('_first_name', '')
         if first_name and text:
             text = text.replace('{first_name}', first_name)
+        vip_link = answers.get('_vip_link', '')
+        if vip_link and text:
+            text = text.replace('{vip_link}', vip_link)
         
         delay = config.get('delay_seconds', 0)
         if delay and delay > 15:

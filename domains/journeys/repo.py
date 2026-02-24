@@ -818,7 +818,8 @@ def get_active_session(tenant_id: str, journey_id: str, telegram_user_id: int) -
 
 
 def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int, 
-                   telegram_user_id: int, first_step_id: str = None, first_name: str = '') -> Optional[Dict]:
+                   telegram_user_id: int, first_step_id: str = None, first_name: str = '',
+                   vip_link: str = '') -> Optional[Dict]:
     """Create a new journey session for a user."""
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
@@ -827,7 +828,12 @@ def create_session(tenant_id: str, journey_id: str, telegram_chat_id: int,
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
-            initial_answers = json.dumps({'_first_name': first_name}) if first_name else None
+            initial_data = {}
+            if first_name:
+                initial_data['_first_name'] = first_name
+            if vip_link:
+                initial_data['_vip_link'] = vip_link
+            initial_answers = json.dumps(initial_data) if initial_data else None
             cursor.execute("""
                 INSERT INTO journey_user_sessions 
                 (tenant_id, journey_id, telegram_chat_id, telegram_user_id, current_step_id, status, answers)
