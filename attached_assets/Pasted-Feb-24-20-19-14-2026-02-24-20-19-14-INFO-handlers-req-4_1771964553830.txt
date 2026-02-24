@@ -1,0 +1,25 @@
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Grant access request for pootang@gmail.com
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Data: plan=free, amount=$0.0, free=True
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Stripe: customer_id=None, subscription_id=None
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Click IDs: gclid=test_google_123, fbclid=test_meta_456
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [db] [req:4af997e4] Creating subscription: email=pootang@gmail.com, stripe_sub_id=None, plan_type=free, is_free=True
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Free lead captured for pootang@gmail.com
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [bot_credentials] [req:4af997e4] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [bot_credentials] [req:4af997e4] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:19:14  [TELEGRAM] Created FREE channel invite link: https://t.me/+UegN4fCU3fFkZGI0 (expires: 2026-02-27 20:19:14.298690)
+Feb 24 20:19:14  [2026-02-24 20:19:14] [INFO] [handlers] [req:4af997e4] Generated unique FREE invite link for pootang@gmail.com: https://t.me/+UegN4fCU3fFkZGI0
+Feb 24 20:19:14  10.244.6.27 - - [24/Feb/2026 20:19:14] "POST /api/telegram/grant-access HTTP/1.1" 200 -
+Feb 24 20:19:57  [2026-02-24 20:19:57] [INFO] [clerk_auth] [req:024ebc3e] [JWKS] Creating client for issuer: https://clerk.promostack.io (force_refresh=False)
+Feb 24 20:19:57  [2026-02-24 20:19:57] [INFO] [clerk_auth] [req:024ebc3e] [JWKS] JWKS URL derived from token issuer: https://clerk.promostack.io/.well-known/jwks.json
+Feb 24 20:19:57  [2026-02-24 20:19:57] [INFO] [clerk_auth] [req:024ebc3e] [JWKS] Fetched 1 signing keys for https://clerk.promostack.io
+Feb 24 20:19:57  10.244.7.214 - - [24/Feb/2026 20:19:57] "GET /admin HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.5.120 - - [24/Feb/2026 20:19:57] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.4.249 - - [24/Feb/2026 20:19:57] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.7.214 - - [24/Feb/2026 20:19:57] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.5.120 - - [24/Feb/2026 20:19:57] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.6.27 - - [24/Feb/2026 20:19:57] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.5.120 - - [24/Feb/2026 20:19:57] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 24 20:19:57  10.244.6.27 - - [24/Feb/2026 20:19:57] "GET /api/config HTTP/1.1" 200 -
+Feb 24 20:19:58  10.244.5.120 - - [24/Feb/2026 20:19:58] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 24 20:19:58  10.244.6.27 - - [24/Feb/2026 20:19:58] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
+Feb 24 20:22:07  [2026-02-24 20:22:07] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 15 leads to check

@@ -1,0 +1,33 @@
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Grant access request for testniall@gmail.com
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Data: plan=free, amount=$0.0, free=True
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Stripe: customer_id=None, subscription_id=None
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Click IDs: gclid=test_google_124, fbclid=
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [db] [req:4544c989] Creating subscription: email=testniall@gmail.com, stripe_sub_id=None, plan_type=free, is_free=True
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Free lead captured for testniall@gmail.com
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [bot_credentials] [req:4544c989] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [bot_credentials] [req:4544c989] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:26:39  [TELEGRAM] Created FREE channel invite link: https://t.me/+_ehZxLJOBhM4ZTFk (expires: 2026-02-27 20:26:39.319068)
+Feb 24 20:26:39  [2026-02-24 20:26:39] [INFO] [handlers] [req:4544c989] Generated unique FREE invite link for testniall@gmail.com: https://t.me/+_ehZxLJOBhM4ZTFk
+Feb 24 20:26:39  10.244.4.249 - - [24/Feb/2026 20:26:39] "POST /api/telegram/grant-access HTTP/1.1" 200 -
+Feb 24 20:27:08  [2026-02-24 20:27:08] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 15 leads to check
+Feb 24 20:27:12  [2026-02-24 20:27:12] [INFO] [webhooks] [req:c8dd27f2] Bot webhook: tenant=entrylab, role=signal_bot
+Feb 24 20:27:12  [2026-02-24 20:27:12] [INFO] [bot_credentials] [req:c8dd27f2] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:27:12  [2026-02-24 20:27:12] [INFO] [webhooks] [req:c8dd27f2] Chat member: FREE status change member -> left (not a join)
+Feb 24 20:27:12  [2026-02-24 20:27:12] [INFO] [webhooks] [req:c8dd27f2] Bot webhook: chat_member handled in 0.01s, result: {'success': True, 'message': 'Status change member -> left, not a join'}
+Feb 24 20:27:12  10.244.6.27 - - [24/Feb/2026 20:27:12] "POST /api/bot-webhook/h3Xg3h9x5r2ktOByHWWfpFqTPtzrlzoUZ_wtx4lc1pk HTTP/1.1" 200 -
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [webhooks] [req:fc00f7f2] Bot webhook: tenant=entrylab, role=signal_bot
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [bot_credentials] [req:fc00f7f2] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [webhooks] [req:fc00f7f2] Chat member: FREE channel join: user=8353845821 (@Entrylab_Team), invite_link=None, tenant=entrylab
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [db] [req:fc00f7f2] FREE join: created organic record for user 8353845821 (@Entrylab_Team)
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [webhooks] [req:fc00f7f2] Chat member: FREE channel linked user 8353845821 to organic_8353845821@telegram
+Feb 24 20:27:31  [2026-02-24 20:27:31] [INFO] [webhooks] [req:fc00f7f2] Bot webhook: chat_member handled in 0.03s, result: {'success': True, 'message': 'FREE: linked 8353845821 to organic_8353845821@telegram'}
+Feb 24 20:27:31  10.244.6.27 - - [24/Feb/2026 20:27:31] "POST /api/bot-webhook/h3Xg3h9x5r2ktOByHWWfpFqTPtzrlzoUZ_wtx4lc1pk HTTP/1.1" 200 -
+Feb 24 20:27:41  10.244.7.214 - - [24/Feb/2026 20:27:41] "GET /admin HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.5.120 - - [24/Feb/2026 20:27:42] "GET /assets/js/auth.js HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.4.249 - - [24/Feb/2026 20:27:42] "GET /assets/css/journeys.css HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.7.214 - - [24/Feb/2026 20:27:42] "GET /assets/promostack-logo.png HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.5.120 - - [24/Feb/2026 20:27:42] "GET /assets/js/journeys.js HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.6.27 - - [24/Feb/2026 20:27:42] "GET /assets/js/hypebot.js HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.6.27 - - [24/Feb/2026 20:27:42] "GET /api/config HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.5.120 - - [24/Feb/2026 20:27:42] "GET /api/check-auth?email=niallclarkefs%40gmail.com HTTP/1.1" 200 -
+Feb 24 20:27:42  10.244.6.27 - - [24/Feb/2026 20:27:42] "GET /api/telegram/conversion-analytics?period=all HTTP/1.1" 200 -
