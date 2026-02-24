@@ -375,7 +375,7 @@ def handle_telegram_grant_access(handler):
         if is_free_user:
             logger.info(f"Free lead captured for {email}")
             
-            public_fallback_link = 'https://t.me/entrylab'
+            public_fallback_link = None
             creds = None
             from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
             try:
@@ -451,7 +451,13 @@ def handle_telegram_grant_access(handler):
             }
             if is_fallback:
                 response_data['fallback'] = True
-                logger.warning(f"Using public link fallback for {email}")
+                if final_link:
+                    logger.warning(f"Using configured fallback link for {email}")
+                else:
+                    logger.error(
+                        f"No invite link could be generated and no fallback link is configured for {email}. "
+                        f"Set a Free Channel Link in Connections to handle invite link failures."
+                    )
             else:
                 logger.info(f"Generated unique FREE invite link for {email}: {free_invite_link}")
             
