@@ -7485,7 +7485,7 @@
             }
             
             if (allLeads) {
-                allLeads.filter(l => !l.is_converted && l.signup_date).slice(0, 10).forEach(l => activities.push({
+                allLeads.filter(l => !l.is_converted && l.signup_date).slice(0, 50).forEach(l => activities.push({
                     type: l.has_telegram ? 'free_joined' : 'free_signup',
                     email: l.email,
                     name: l.name || '',
@@ -7502,21 +7502,23 @@
                 return db - da;
             });
             
-            const recent = activities.slice(0, 20);
+            const recent = activities.slice(0, 50);
             
             if (recent.length === 0) {
                 container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No activity yet. Free signups and conversions will appear here.</div>';
                 return;
             }
-            
-            let html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 2px solid var(--border-primary);">';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">NAME</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">DATE</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CONV. TIME</th>';
+
+            const thStyle = 'text-align: left; padding: 10px 8px; color: var(--text-muted); font-size: 11px; white-space: nowrap; position: sticky; top: 0; background: var(--bg-card); z-index: 1;';
+            let html = '<div style="max-height: 420px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">';
+            html += '<table style="width: 100%; border-collapse: collapse; font-size: 11px; min-width: 600px;">';
+            html += `<thead><tr style="border-bottom: 2px solid var(--border-primary);">`;
+            html += `<th style="${thStyle}">STATUS</th>`;
+            html += `<th style="${thStyle}">EMAIL</th>`;
+            html += `<th style="${thStyle}">NAME</th>`;
+            html += `<th style="${thStyle}">SOURCE</th>`;
+            html += `<th style="${thStyle}">DATE</th>`;
+            html += `<th style="${thStyle} text-align: right;">CONV. TIME</th>`;
             html += '</tr></thead><tbody>';
             
             recent.forEach(a => {
@@ -7531,18 +7533,18 @@
                     statusBadge = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Lead</span>';
                 }
                 const convTime = isConv && a.days != null ? `${a.days}d` : '<span style="color: var(--text-muted);">--</span>';
-                
+                const sourceTxt = a.source && a.source !== 'direct' ? a.source : '<span style="color: var(--text-muted);">--</span>';
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
-                html += `<td style="padding: 12px 10px;">${statusBadge}</td>`;
-                html += `<td style="padding: 12px 10px;">${a.email}</td>`;
-                html += `<td style="padding: 12px 10px;">${a.name || '<span style="color: var(--text-muted);">--</span>'}</td>`;
-                html += `<td style="padding: 12px 10px;">${a.source}</td>`;
-                html += `<td style="padding: 12px 10px;">${dateStr}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right;">${convTime}</td>`;
+                html += `<td style="padding: 10px 8px;">${statusBadge}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap; color: var(--text-muted); font-size: 10px;">${a.email}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap; color: var(--text-muted); font-size: 10px;">${a.name || '<span style="color: var(--text-muted);">--</span>'}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap; color: var(--text-muted); font-size: 10px;">${sourceTxt}</td>`;
+                html += `<td style="padding: 10px 8px; white-space: nowrap; color: var(--text-muted); font-size: 10px;">${dateStr}</td>`;
+                html += `<td style="padding: 10px 8px; text-align: right; white-space: nowrap;">${convTime}</td>`;
                 html += `</tr>`;
             });
             
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         }
         
