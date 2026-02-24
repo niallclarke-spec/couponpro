@@ -902,7 +902,12 @@
             sel.className = 'form-select';
             sel.id = 'journey-trigger-event-select';
             sel.style.width = '100%';
-            sel.innerHTML = '<option value="">Select an event...</option><option value="joined_vip">joined_vip — User is granted VIP access</option>';
+            sel.innerHTML = '<option value="">Select an event...</option>' +
+                '<option value="joined_vip">joined_vip — User is granted VIP access</option>' +
+                '<option value="stripe_payment_successful">stripe_payment_successful — Stripe payment completed</option>' +
+                '<option value="stripe_sub_cancelled">stripe_sub_cancelled — Subscription cancelled</option>' +
+                '<option value="email_only_captured">email_only_captured — Lead captured email but didn\'t join Telegram (24h)</option>' +
+                '<option value="joined_free_channel">joined_free_channel — User joined FREE channel</option>';
             container.appendChild(sel);
         }
     }
@@ -927,7 +932,7 @@
             if (triggerValueEl) triggerValueEl.style.display = 'none';
             if (eventSelect) eventSelect.style.display = '';
             if (triggerValueHint) triggerValueHint.innerHTML = 'This journey will trigger automatically when the selected API event fires.';
-            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered by internal API events like granting VIP access.';
+            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered by API events like payments, signups, and channel joins.';
         } else if (isDM) {
             if (triggerValueEl) { triggerValueEl.style.display = ''; triggerValueEl.placeholder = 'e.g., hello (leave empty for any message)'; }
             if (eventSelect) eventSelect.style.display = 'none';

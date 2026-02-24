@@ -456,6 +456,24 @@ def _handle_chat_member_update(webhook_data, tenant_id, connection):
         )
         if result:
             logger.info(f"Chat member: FREE channel linked user {telegram_user_id} to {result.get('email', 'unknown')}")
+            
+            try:
+                from domains.journeys import repo as journey_repo
+                from domains.journeys.engine import JourneyEngine
+                journey = journey_repo.get_active_journey_by_api_event(tenant_id, 'joined_free_channel')
+                if journey:
+                    engine = JourneyEngine()
+                    engine.start_journey_for_user(
+                        tenant_id=tenant_id,
+                        journey=journey,
+                        telegram_chat_id=telegram_user_id,
+                        telegram_user_id=telegram_user_id,
+                        first_name=first_name
+                    )
+                    logger.info(f"Chat member: Journey 'joined_free_channel' triggered for user {telegram_user_id}")
+            except Exception as e:
+                logger.warning(f"Chat member: Journey trigger failed for joined_free_channel: {e}")
+            
             return {'success': True, 'message': f'FREE: linked {telegram_user_id} to {result.get("email", "N/A")}'}
         else:
             logger.warning(f"Chat member: FREE channel user {telegram_user_id} joined but could not link to subscription")

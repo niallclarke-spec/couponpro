@@ -1603,6 +1603,18 @@ class DatabasePool:
                 logger.info("journey_inbound_dedupe table ready")
                 
                 cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journey_api_event_fired (
+                        id SERIAL PRIMARY KEY,
+                        tenant_id VARCHAR(100) NOT NULL,
+                        event_name VARCHAR(100) NOT NULL,
+                        user_identifier VARCHAR(255) NOT NULL,
+                        fired_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE (tenant_id, event_name, user_identifier)
+                    )
+                """)
+                logger.info("journey_api_event_fired table ready")
+                
+                cursor.execute("""
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = 'journey_user_sessions' 
                     AND column_name = 'wait_timeout_at'

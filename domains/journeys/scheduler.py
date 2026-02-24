@@ -22,6 +22,7 @@ _scheduler_thread: Optional[threading.Thread] = None
 _scheduler_running = False
 _scheduler_lock = threading.Lock()
 _last_dedupe_cleanup = 0
+_last_email_only_check = 0
 
 
 def process_due_messages() -> int:
@@ -277,9 +278,64 @@ def _send_scheduled_message(msg: dict, engine) -> bool:
     return True
 
 
+def check_email_only_captured_triggers():
+    """Check for leads who captured email 24h+ ago but never joined Telegram. Fire once per user."""
+    from . import repo
+    
+    try:
+        from db import db_pool
+        if not db_pool or not db_pool.connection_pool:
+            return
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT ts.id, ts.email, ts.tenant_id
+                FROM telegram_subscriptions ts
+                WHERE ts.telegram_user_id IS NULL
+                  AND ts.telegram_username IS NULL
+                  AND ts.created_at < NOW() - INTERVAL '24 hours'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM journey_api_event_fired
+                      WHERE tenant_id = ts.tenant_id
+                        AND event_name = 'email_only_captured'
+                        AND user_identifier = ts.email
+                  )
+            """)
+            leads = cursor.fetchall()
+        
+        if not leads:
+            return
+        
+        logger.info(f"[JOURNEY-SCHEDULER] email_only_captured: found {len(leads)} leads to check")
+        
+        for lead_id, email, tenant_id in leads:
+            journey = repo.get_active_journey_by_api_event(tenant_id, 'email_only_captured')
+            if not journey:
+                continue
+            
+            try:
+                with db_pool.get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT INTO journey_api_event_fired (tenant_id, event_name, user_identifier, fired_at)
+                        VALUES (%s, 'email_only_captured', %s, NOW())
+                        ON CONFLICT (tenant_id, event_name, user_identifier) DO NOTHING
+                    """, (tenant_id, email))
+                    if cursor.rowcount == 0:
+                        continue
+                    conn.commit()
+                
+                logger.info(f"[JOURNEY-SCHEDULER] email_only_captured: lead {email} (tenant={tenant_id}) - event recorded (no telegram_user_id, journey message deferred)")
+            except Exception as e:
+                logger.warning(f"[JOURNEY-SCHEDULER] email_only_captured error for {email}: {e}")
+    except Exception as e:
+        logger.exception(f"[JOURNEY-SCHEDULER] email_only_captured check failed: {e}")
+
+
 def _scheduler_loop(interval_seconds: int):
     """Main scheduler loop."""
-    global _scheduler_running, _last_dedupe_cleanup
+    global _scheduler_running, _last_dedupe_cleanup, _last_email_only_check
     
     logger.info(f"[JOURNEY-SCHEDULER] Started (interval={interval_seconds}s)")
     
@@ -288,8 +344,16 @@ def _scheduler_loop(interval_seconds: int):
             process_due_messages()
             process_wait_timeouts()
             
-            # Hourly dedupe table cleanup
             now = time.time()
+            if now - _last_email_only_check > 300:  # Every 5 minutes
+                try:
+                    check_email_only_captured_triggers()
+                    _last_email_only_check = now
+                except Exception as e:
+                    logger.exception(f"[JOURNEY-SCHEDULER] email_only_captured check error: {e}")
+                    _last_email_only_check = now
+            
+            # Hourly dedupe table cleanup
             if now - _last_dedupe_cleanup > 3600:  # Once per hour
                 try:
                     from . import repo

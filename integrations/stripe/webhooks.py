@@ -230,6 +230,26 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                             is_conversion = result.get('is_converted', False)
                             conv_msg = " (CONVERSION from FREE!)" if is_conversion else ""
                             print(f"[STRIPE WEBHOOK] ✅ VIP subscription created/updated: {email} (tenant={tenant_id}){conv_msg}")
+                            
+                            telegram_user_id = result.get('telegram_user_id')
+                            if telegram_user_id:
+                                try:
+                                    from domains.journeys import repo as journey_repo
+                                    from domains.journeys.engine import JourneyEngine
+                                    journey = journey_repo.get_active_journey_by_api_event(tenant_id, 'stripe_payment_successful')
+                                    if journey:
+                                        engine = JourneyEngine()
+                                        telegram_chat_id = result.get('telegram_chat_id') or telegram_user_id
+                                        engine.start_journey_for_user(
+                                            tenant_id=tenant_id,
+                                            journey=journey,
+                                            telegram_chat_id=telegram_chat_id,
+                                            telegram_user_id=telegram_user_id,
+                                            first_name=result.get('name', '')
+                                        )
+                                        print(f"[STRIPE WEBHOOK] Journey 'stripe_payment_successful' triggered for user {telegram_user_id}")
+                                except Exception as e:
+                                    print(f"[STRIPE WEBHOOK] Journey trigger failed for stripe_payment_successful: {e}")
                         else:
                             print(f"[STRIPE WEBHOOK] ❌ Failed to create subscription: {error}")
                 else:
@@ -330,6 +350,24 @@ def handle_stripe_webhook(handler, stripe_available, telegram_bot_available, db_
                     'subscription_canceled'
                 )
                 print(f"[STRIPE WEBHOOK] Revoked access for {sub_details['email']} (tenant={tenant_id})")
+                
+                if telegram_user_id:
+                    try:
+                        from domains.journeys import repo as journey_repo
+                        from domains.journeys.engine import JourneyEngine
+                        journey = journey_repo.get_active_journey_by_api_event(tenant_id, 'stripe_sub_cancelled')
+                        if journey:
+                            engine = JourneyEngine()
+                            engine.start_journey_for_user(
+                                tenant_id=tenant_id,
+                                journey=journey,
+                                telegram_chat_id=telegram_user_id,
+                                telegram_user_id=telegram_user_id,
+                                first_name=''
+                            )
+                            print(f"[STRIPE WEBHOOK] Journey 'stripe_sub_cancelled' triggered for user {telegram_user_id}")
+                    except Exception as e:
+                        print(f"[STRIPE WEBHOOK] Journey trigger failed for stripe_sub_cancelled: {e}")
                 
                 if telegram_user_id and telegram_bot_available:
                     try:
