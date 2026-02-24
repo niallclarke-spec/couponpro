@@ -6411,7 +6411,7 @@ def get_conversion_analytics(tenant_id, period='all'):
             
             cursor.execute(f"""
                 SELECT 
-                    email, name, utm_source, utm_campaign, 
+                    id, email, name, utm_source, utm_campaign, 
                     free_signup_at, is_converted, converted_at, 
                     amount_paid, plan_type, status, telegram_username,
                     joined_at, telegram_user_id
@@ -6421,23 +6421,24 @@ def get_conversion_analytics(tenant_id, period='all'):
                     CASE WHEN is_converted = TRUE THEN 0 ELSE 1 END,
                     free_signup_at DESC NULLS LAST,
                     created_at DESC
-                LIMIT 50
+                LIMIT 200
             """, (tenant_id,))
             all_leads = [
                 {
-                    'email': r[0],
-                    'name': r[1] or '',
-                    'source': r[2] or 'direct',
-                    'campaign': r[3] or '',
-                    'signup_date': r[4].isoformat() if r[4] else None,
-                    'is_converted': r[5] or False,
-                    'converted_at': r[6].isoformat() if r[6] else None,
-                    'amount': float(r[7] or 0),
-                    'plan_type': r[8] or 'Free',
-                    'status': r[9] or 'pending',
-                    'telegram': r[10] or '',
-                    'joined_at': r[11].isoformat() if r[11] else None,
-                    'has_telegram': r[12] is not None
+                    'id': str(r[0]),
+                    'email': r[1],
+                    'name': r[2] or '',
+                    'source': r[3] or 'direct',
+                    'campaign': r[4] or '',
+                    'signup_date': r[5].isoformat() if r[5] else None,
+                    'is_converted': r[6] or False,
+                    'converted_at': r[7].isoformat() if r[7] else None,
+                    'amount': float(r[8] or 0),
+                    'plan_type': r[9] or 'Free',
+                    'status': r[10] or 'pending',
+                    'telegram': r[11] or '',
+                    'joined_at': r[12].isoformat() if r[12] else None,
+                    'has_telegram': r[13] is not None
                 }
                 for r in cursor.fetchall()
             ]
@@ -6463,6 +6464,61 @@ def get_conversion_analytics(tenant_id, period='all'):
         import traceback
         traceback.print_exc()
         return None
+
+
+def grant_vip_access(email, tenant_id):
+    """Grant VIP access to a user by email. Updates subscription status."""
+    try:
+        if not db_pool.connection_pool:
+            return {'success': False, 'error': 'Database not available'}
+        
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, telegram_user_id, name, free_signup_at, status, is_converted
+                FROM telegram_subscriptions
+                WHERE email = %s AND tenant_id = %s
+            """, (email, tenant_id))
+            row = cursor.fetchone()
+            
+            if not row:
+                return {'success': False, 'error': 'Subscription not found'}
+            
+            sub_id, telegram_user_id, name, free_signup_at, current_status, already_converted = row
+            
+            if already_converted:
+                return {'success': False, 'error': 'User is already VIP'}
+            
+            conversion_days = None
+            if free_signup_at:
+                from datetime import datetime
+                delta = datetime.utcnow() - free_signup_at
+                conversion_days = delta.days
+            
+            cursor.execute("""
+                UPDATE telegram_subscriptions
+                SET status = 'active',
+                    plan_type = 'premium',
+                    is_converted = TRUE,
+                    converted_at = NOW(),
+                    conversion_days = %s
+                WHERE id = %s
+            """, (conversion_days, sub_id))
+            
+            conn.commit()
+            
+            return {
+                'success': True,
+                'telegram_user_id': telegram_user_id,
+                'telegram_chat_id': telegram_user_id,
+                'name': name or '',
+                'conversion_days': conversion_days
+            }
+    
+    except Exception as e:
+        logger.exception(f"Error granting VIP access: {e}")
+        return {'success': False, 'error': str(e)}
 
 
 def backfill_free_signups_from_bot_users(tenant_id):

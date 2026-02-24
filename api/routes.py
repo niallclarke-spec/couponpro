@@ -217,6 +217,8 @@ POST_ROUTES: List[Route] = [
     
     # Telegram management
     Route('POST', '/api/telegram/grant-access', 'handle_api_telegram_grant_access'),
+    Route('POST', '/api/telegram/grant-vip', 'handle_api_telegram_grant_vip',
+          auth_required=True, db_required=True),
     Route('POST', '/api/telegram/clear-all', 'handle_api_telegram_clear_all'),
     Route('POST', '/api/telegram/cleanup-test-data', 'handle_api_telegram_cleanup_test_data',
           auth_required=True),

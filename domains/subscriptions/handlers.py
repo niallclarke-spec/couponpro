@@ -504,6 +504,100 @@ def handle_telegram_grant_access(handler):
         handler.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
 
 
+def handle_telegram_grant_vip(handler):
+    """POST /api/telegram/grant-vip"""
+    import server
+    
+    try:
+        content_length = int(handler.headers['Content-Length'])
+        post_data = handler.rfile.read(content_length)
+        data = json.loads(post_data.decode('utf-8'))
+        
+        email = data.get('email')
+        if not email:
+            handler.send_response(400)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': False, 'error': 'Email required'}).encode())
+            return
+        
+        result = server.db.grant_vip_access(email=email, tenant_id=handler.tenant_id)
+        
+        if not result or not result.get('success'):
+            error_msg = result.get('error', 'Failed to grant VIP access') if result else 'Database error'
+            handler.send_response(500)
+            handler.send_header('Content-type', 'application/json')
+            handler.end_headers()
+            handler.wfile.write(json.dumps({'success': False, 'error': error_msg}).encode())
+            return
+        
+        invite_link = None
+        try:
+            from core.bot_credentials import get_bot_credentials, BotNotConfiguredError
+            import requests as req
+            creds = get_bot_credentials(handler.tenant_id, 'signal_bot')
+            bot_token = creds.get('bot_token')
+            vip_channel_id = creds.get('channel_id')
+            
+            if bot_token and vip_channel_id:
+                url = f"https://api.telegram.org/bot{bot_token}/createChatInviteLink"
+                resp = req.post(url, json={
+                    'chat_id': vip_channel_id,
+                    'member_limit': 1,
+                    'expire_date': int(__import__('time').time()) + 72 * 3600,
+                    'name': f"VIP Grant: {email}"
+                }, timeout=10)
+                link_result = resp.json()
+                if link_result.get('ok'):
+                    invite_link = link_result['result']['invite_link']
+        except Exception as e:
+            logger.warning(f"Could not generate VIP invite link: {e}")
+        
+        telegram_user_id = result.get('telegram_user_id')
+        telegram_chat_id = result.get('telegram_chat_id') or telegram_user_id
+        journey_started = False
+        
+        if telegram_user_id:
+            try:
+                from domains.journeys import repo as journey_repo
+                from domains.journeys.engine import JourneyEngine
+                
+                journey = journey_repo.get_active_journey_by_api_event(handler.tenant_id, 'joined_vip')
+                if journey:
+                    engine = JourneyEngine()
+                    session = engine.start_journey_for_user(
+                        tenant_id=handler.tenant_id,
+                        journey=journey,
+                        telegram_chat_id=telegram_chat_id,
+                        telegram_user_id=telegram_user_id,
+                        first_name=result.get('name', '')
+                    )
+                    journey_started = session is not None
+                    logger.info(f"Journey 'joined_vip' started={journey_started} for user {telegram_user_id}")
+            except Exception as e:
+                logger.warning(f"Journey trigger failed for joined_vip: {e}")
+        
+        response = {
+            'success': True,
+            'invite_link': invite_link,
+            'journey_started': journey_started,
+            'has_telegram': telegram_user_id is not None,
+            'email': email
+        }
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps(response).encode())
+        
+    except Exception as e:
+        logger.exception(f"Error granting VIP: {e}")
+        handler.send_response(500)
+        handler.send_header('Content-type', 'application/json')
+        handler.end_headers()
+        handler.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+
+
 def handle_telegram_backfill_conversions(handler):
     """POST /api/telegram/backfill-conversions"""
     import server

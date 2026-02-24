@@ -328,6 +328,30 @@ def check_active_trigger_keyword_conflict(tenant_id: str, journey_id: str) -> Op
                                 'conflict_journey_name': row[1],
                                 'keyword': param
                             }
+                
+                elif trigger_type == 'api_event':
+                    event_name = config.get('event_name', '')
+                    if event_name:
+                        cursor.execute("""
+                            SELECT j.id, j.name
+                            FROM journeys j
+                            JOIN journey_triggers t ON t.journey_id = j.id
+                            WHERE j.tenant_id = %s
+                              AND j.status = 'active'
+                              AND j.id != %s
+                              AND t.is_active = true
+                              AND t.trigger_type = 'api_event'
+                              AND t.trigger_config->>'event_name' = %s
+                        """, (tenant_id, journey_id, event_name))
+                        conflict = cursor.fetchone()
+                        if conflict:
+                            return {
+                                'conflict': True,
+                                'conflicting_journey_id': str(conflict[0]),
+                                'conflicting_journey_name': conflict[1],
+                                'trigger_type': 'api_event',
+                                'event_name': event_name
+                            }
             
             return None
     except Exception as e:
@@ -662,6 +686,43 @@ def get_active_journey_by_deeplink(tenant_id: str, bot_id: str, start_param: str
             return None
     except Exception as e:
         logger.exception(f"Error finding journey by deeplink: {e}")
+        return None
+
+
+def get_active_journey_by_api_event(tenant_id: str, event_name: str) -> Optional[Dict]:
+    """Find an active journey matching an api_event trigger for a given event name."""
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT j.id, j.name, j.status, j.re_entry_policy, j.bot_id,
+                       j.start_delay_seconds
+                FROM journeys j
+                JOIN journey_triggers t ON t.journey_id = j.id
+                WHERE j.tenant_id = %s
+                  AND j.status = 'active'
+                  AND t.is_active = true
+                  AND t.trigger_type = 'api_event'
+                  AND t.trigger_config->>'event_name' = %s
+                LIMIT 1
+            """, (tenant_id, event_name))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'id': str(row[0]),
+                    'name': row[1],
+                    'status': row[2],
+                    're_entry_policy': row[3] or 'block',
+                    'bot_id': row[4],
+                    'start_delay_seconds': row[5] or 0
+                }
+            return None
+    except Exception as e:
+        logger.exception(f"Error finding journey by api_event '{event_name}': {e}")
         return None
 
 

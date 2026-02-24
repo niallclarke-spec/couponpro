@@ -198,7 +198,13 @@
                 const deepLinkUrl = getDeepLinkUrl(triggerValue);
                 
                 let deepLinkHtml = '';
-                if (triggerType === 'direct_message') {
+                if (triggerType === 'api_event') {
+                    const eventDisplay = (firstTrigger?.trigger_config?.event_name) || '<em>not set</em>';
+                    deepLinkHtml = `
+                        <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
+                            System Event: <strong>${escapeHtml(eventDisplay)}</strong>
+                        </div>`;
+                } else if (triggerType === 'direct_message') {
                     const kwDisplay = triggerValue ? escapeHtml(triggerValue) : '<em>any message</em>';
                     deepLinkHtml = `
                         <div class="journey-deeplink" style="font-size:12px;color:var(--text-secondary);">
@@ -430,12 +436,14 @@
                     const trigger = triggers[0];
                     const triggerTypeEl = document.getElementById('journey-trigger-type');
                     const triggerValueEl = document.getElementById('journey-trigger-value');
-                    const tt = trigger.trigger_type === 'direct_message' ? 'direct_message' : 'deep_link';
+                    const tt = trigger.trigger_type === 'direct_message' ? 'direct_message' : (trigger.trigger_type === 'api_event' ? 'api_event' : 'deep_link');
                     if (triggerTypeEl) triggerTypeEl.value = tt;
                     if (tt === 'direct_message') {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.keyword || '';
                         const dmPrefill = document.getElementById('dm-prefill-message');
                         if (dmPrefill) dmPrefill.value = trigger.trigger_config?.prefill_message || '';
+                    } else if (tt === 'api_event') {
+                        if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.event_name || '';
                     } else {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.start_param || trigger.trigger_config?.value || '';
                     }
@@ -558,6 +566,17 @@
                     body: JSON.stringify({
                         trigger_type: 'direct_message',
                         trigger_config: { keyword: triggerValue, prefill_message: (document.getElementById('dm-prefill-message') || {}).value?.trim() || '' },
+                        is_active: true
+                    }),
+                    credentials: 'include'
+                });
+            } else if (selectedTriggerType === 'api_event' && triggerValue) {
+                await fetch(`/api/journeys/${journeyId}/triggers`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        trigger_type: 'api_event',
+                        trigger_config: { event_name: triggerValue },
                         is_active: true
                     }),
                     credentials: 'include'
@@ -860,23 +879,39 @@
         const triggerTypeHint = document.getElementById('trigger-type-hint');
         const preview = document.getElementById('deeplink-preview');
         
-        const isDM = triggerTypeEl && triggerTypeEl.value === 'direct_message';
+        const selectedType = triggerTypeEl ? triggerTypeEl.value : 'deep_link';
+        const isDM = selectedType === 'direct_message';
+        const isApiEvent = selectedType === 'api_event';
         
-        if (triggerValueLabel) triggerValueLabel.textContent = isDM ? 'Keyword (optional)' : 'Trigger Value';
-        if (triggerValueEl) triggerValueEl.placeholder = isDM ? 'e.g., hello (leave empty for any message)' : 'e.g., welcome_promo';
-        if (triggerValueHint) triggerValueHint.innerHTML = isDM 
-            ? 'If set, the journey triggers when a DM contains this keyword. Leave empty to trigger on any message.'
-            : 'The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)';
-        if (triggerTypeHint) triggerTypeHint.textContent = isDM
-            ? 'Journeys are triggered when someone sends a direct message to your Telegram user account.'
-            : 'Journeys are triggered when users start the bot via a deep link.';
+        if (isApiEvent) {
+            if (triggerValueLabel) triggerValueLabel.textContent = 'Event Name';
+            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., joined_vip';
+            if (triggerValueHint) triggerValueHint.innerHTML = 'This journey will trigger when the system event fires (e.g., when a user is granted VIP access).';
+            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered by internal system events like granting VIP access.';
+        } else if (isDM) {
+            if (triggerValueLabel) triggerValueLabel.textContent = 'Keyword (optional)';
+            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., hello (leave empty for any message)';
+            if (triggerValueHint) triggerValueHint.innerHTML = 'If set, the journey triggers when a DM contains this keyword. Leave empty to trigger on any message.';
+            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered when someone sends a direct message to your Telegram user account.';
+        } else {
+            if (triggerValueLabel) triggerValueLabel.textContent = 'Trigger Value';
+            if (triggerValueEl) triggerValueEl.placeholder = 'e.g., welcome_promo';
+            if (triggerValueHint) triggerValueHint.innerHTML = 'The start parameter value (e.g., t.me/bot?start=<strong>welcome_promo</strong>)';
+            if (triggerTypeHint) triggerTypeHint.textContent = 'Journeys are triggered when users start the bot via a deep link.';
+        }
         
         const warningText = document.getElementById('active-warning-text');
-        if (warningText) warningText.textContent = isDM
-            ? 'Active journeys will start sending messages immediately when someone DMs your Telegram account with the keyword.'
-            : 'Active journeys will start sending messages to users immediately when they join via the deep link.';
+        if (warningText) {
+            if (isApiEvent) {
+                warningText.textContent = 'Active journeys will start sending messages immediately when the system event fires.';
+            } else if (isDM) {
+                warningText.textContent = 'Active journeys will start sending messages immediately when someone DMs your Telegram account with the keyword.';
+            } else {
+                warningText.textContent = 'Active journeys will start sending messages to users immediately when they join via the deep link.';
+            }
+        }
         
-        if (isDM && preview) {
+        if ((isDM || isApiEvent) && preview) {
             preview.style.display = 'none';
         } else {
             updateDeepLinkPreview();

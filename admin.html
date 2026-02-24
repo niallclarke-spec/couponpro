@@ -5649,7 +5649,7 @@
                     </div>
                     
                     <div class="card">
-                        <div class="card-title">All Leads</div>
+                        <div class="card-title">Users</div>
                         <div id="allLeadsTable" style="padding: 20px; overflow-x: auto;">
                             <div class="loading">Loading leads...</div>
                         </div>
@@ -6635,6 +6635,7 @@
                     <select class="form-select" id="journey-trigger-type" onchange="window.JourneysModule.onTriggerTypeChange && window.JourneysModule.onTriggerTypeChange()">
                         <option value="deep_link">Deep Link</option>
                         <option value="direct_message">Direct Message</option>
+                        <option value="api_event">System Event</option>
                     </select>
                     <div class="form-hint" id="trigger-type-hint">Journeys are triggered when users start the bot via a deep link.</div>
                 </div>
@@ -7485,44 +7486,41 @@
         function renderAllLeads(leads) {
             const container = document.getElementById('allLeadsTable');
             if (!leads || leads.length === 0) {
-                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No leads yet. Sign ups will appear here.</div>';
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center;">No users yet. Sign ups will appear here.</div>';
                 return;
             }
             
             let html = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">';
             html += '<thead><tr style="border-bottom: 2px solid var(--border-primary); background: var(--bg-card);">';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">JOIN DATE</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">STATUS</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">TELEGRAM USERNAME</th>';
+            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">FIRST NAME</th>';
             html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">EMAIL</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">NAME</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SOURCE</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">CAMPAIGN</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">SIGNUP DATE</th>';
-            html += '<th style="text-align: right; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">REVENUE</th>';
-            html += '<th style="text-align: left; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">TELEGRAM</th>';
+            html += '<th style="text-align: center; padding: 12px 10px; color: var(--text-muted); font-size: 12px;">ACTION</th>';
             html += '</tr></thead><tbody>';
             
             leads.forEach(lead => {
                 const signupDate = lead.signup_date ? new Date(lead.signup_date).toLocaleDateString() : '--';
                 let statusTag;
                 if (lead.is_converted) {
-                    statusTag = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">SALE</span>';
+                    statusTag = '<span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">VIP</span>';
                 } else if (lead.has_telegram) {
-                    statusTag = '<span style="background: #8b5cf6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">JOINED</span>';
+                    statusTag = '<span style="background: #3b82f6; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Free</span>';
                 } else {
-                    statusTag = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">LEAD</span>';
+                    statusTag = '<span style="background: #f59e0b; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">Lead</span>';
                 }
-                const revenue = lead.is_converted ? `<span style="color: #10b981; font-weight: 600;">$${lead.amount.toFixed(0)}</span>` : '<span style="color: var(--text-muted);">--</span>';
                 const telegram = lead.telegram ? `@${lead.telegram}` : '<span style="color: var(--text-muted);">--</span>';
+                const firstName = lead.name || '<span style="color: var(--text-muted);">--</span>';
+                const actionBtn = lead.is_converted ? '' : `<button onclick='showGrantVipModal(${JSON.stringify(lead).replace(/'/g, "&#39;")})' style="background: #8b5cf6; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Grant VIP</button>`;
                 
                 html += `<tr style="border-bottom: 1px solid var(--border-primary);">`;
-                html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.name || '<span style="color: var(--text-muted);">--</span>'}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.source || '<span style="color: var(--text-muted);">direct</span>'}</td>`;
-                html += `<td style="padding: 12px 10px;">${lead.campaign || '<span style="color: var(--text-muted);">--</span>'}</td>`;
                 html += `<td style="padding: 12px 10px;">${signupDate}</td>`;
-                html += `<td style="padding: 12px 10px; text-align: right;">${revenue}</td>`;
+                html += `<td style="padding: 12px 10px;">${statusTag}</td>`;
                 html += `<td style="padding: 12px 10px;">${telegram}</td>`;
+                html += `<td style="padding: 12px 10px;">${firstName}</td>`;
+                html += `<td style="padding: 12px 10px;">${lead.email}</td>`;
+                html += `<td style="padding: 12px 10px; text-align: center;">${actionBtn}</td>`;
                 html += `</tr>`;
             });
             
@@ -12256,5 +12254,80 @@
             </div>
         </div>
     </div>
+
+    <div id="grant-vip-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-card, #1a1f2e); border-radius: 12px; padding: 30px; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 1px solid var(--border-primary, #2d3748);">
+            <div id="grant-vip-content">
+                <h3 style="margin: 0 0 16px; color: #fff; font-size: 18px;">Grant VIP Access</h3>
+                <p id="grant-vip-body" style="color: #a0aec0; font-size: 14px; line-height: 1.6; margin-bottom: 20px;"></p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="closeGrantVipModal()" style="background: transparent; color: #a0aec0; border: 1px solid #4a5568; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancel</button>
+                    <button id="grant-vip-confirm-btn" onclick="confirmGrantVip()" style="background: #8b5cf6; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">Confirm Grant VIP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let _grantVipLead = null;
+        function showGrantVipModal(lead) {
+            _grantVipLead = lead;
+            const displayName = lead.name || lead.email;
+            document.getElementById('grant-vip-body').innerHTML = 
+                `Are you sure you want to grant VIP access to <strong>${displayName}</strong>?<br><br>This will:<br>` +
+                `&bull; Update their status to VIP<br>` +
+                `&bull; Generate a VIP channel invite link<br>` +
+                `&bull; Trigger any connected welcome journeys`;
+            const btn = document.getElementById('grant-vip-confirm-btn');
+            btn.textContent = 'Confirm Grant VIP';
+            btn.disabled = false;
+            const modal = document.getElementById('grant-vip-modal');
+            modal.style.display = 'flex';
+        }
+        function closeGrantVipModal() {
+            document.getElementById('grant-vip-modal').style.display = 'none';
+            _grantVipLead = null;
+        }
+        async function confirmGrantVip() {
+            if (!_grantVipLead) return;
+            const btn = document.getElementById('grant-vip-confirm-btn');
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+            try {
+                const resp = await authedFetch('/api/telegram/grant-vip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: _grantVipLead.email, subscription_id: _grantVipLead.id }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    let msg = '<span style="color:#10b981;font-weight:600;">VIP access granted successfully!</span>';
+                    if (data.invite_link) {
+                        msg += `<br><br><strong>Invite Link:</strong><br><input type="text" value="${data.invite_link}" readonly style="width:100%;padding:8px;background:#2d3748;border:1px solid #4a5568;color:#fff;border-radius:6px;margin-top:6px;" onclick="this.select()">`;
+                    }
+                    if (data.journey_started) {
+                        msg += '<br><br><span style="color:#8b5cf6;">Welcome journey triggered.</span>';
+                    }
+                    document.getElementById('grant-vip-body').innerHTML = msg;
+                    btn.style.display = 'none';
+                    setTimeout(() => {
+                        closeGrantVipModal();
+                        btn.style.display = '';
+                        invalidateCache('conversions');
+                        if (typeof loadConversions === 'function') loadConversions(true);
+                    }, 2000);
+                } else {
+                    document.getElementById('grant-vip-body').innerHTML = `<span style="color:#ef4444;">Error: ${data.error || 'Failed to grant VIP'}</span>`;
+                    btn.textContent = 'Confirm Grant VIP';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                document.getElementById('grant-vip-body').innerHTML = `<span style="color:#ef4444;">Error: ${err.message}</span>`;
+                btn.textContent = 'Confirm Grant VIP';
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
