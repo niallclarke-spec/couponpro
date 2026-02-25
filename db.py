@@ -4886,7 +4886,7 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                     FROM forex_signals
                     WHERE tenant_id = %s
                       AND telegram_message_id IS NOT NULL
-                      AND updated_at > NOW() - INTERVAL '48 hours'
+                      AND updated_at > NOW() - INTERVAL '24 hours'
                     ORDER BY updated_at DESC
                     LIMIT 1
                 """, (tenant_id,))
@@ -5000,7 +5000,7 @@ def get_bump_message_id(tenant_id: str, preset: str) -> int | None:
                     FROM forex_signals
                     WHERE tenant_id = %s
                       AND telegram_message_id IS NOT NULL
-                      AND updated_at > NOW() - INTERVAL '48 hours'
+                      AND updated_at > NOW() - INTERVAL '24 hours'
                     ORDER BY updated_at DESC
                     LIMIT 1
                 """, (tenant_id,))
