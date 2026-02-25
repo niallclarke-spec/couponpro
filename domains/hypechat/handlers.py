@@ -38,7 +38,7 @@ def _check_day_conflicts(tenant_id: str, active_days: str, exclude_flow_id: str 
         return ""
     all_flows = repo.list_flows(tenant_id)
     for f in all_flows:
-        if f['id'] == exclude_flow_id or f['status'] != 'active':
+        if f['id'] == exclude_flow_id or f['status'] != 'active' or f.get('trigger_after_flow_id'):
             continue
         flow_days = _parse_days(f.get('active_days', ''))
         overlap = requested_days & flow_days
@@ -159,10 +159,11 @@ def handle_create_flow(handler):
         return
 
     active_days = data.get('active_days', 'mon-fri')
-    conflict = _check_day_conflicts(tenant_id, active_days, exclude_flow_id=None)
-    if conflict:
-        _send_json(handler, 409, {"error": conflict})
-        return
+    if not data.get('trigger_after_flow_id'):
+        conflict = _check_day_conflicts(tenant_id, active_days, exclude_flow_id=None)
+        if conflict:
+            _send_json(handler, 409, {"error": conflict})
+            return
 
     flow = repo.create_flow(
         tenant_id=tenant_id,
