@@ -776,6 +776,28 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             logger.exception(f"Error executing hype_cta job: {e}")
             return {"success": False, "error": str(e)}
     
+    elif job_type == 'hype_bump':
+        preset = payload.get('preset')
+        if not preset:
+            return {"success": True, "skipped": True, "reason": "No preset configured"}
+
+        if not vip_channel_id:
+            return {"success": False, "error": "VIP channel not configured for bump"}
+
+        from db import get_bump_message_id
+        message_id = get_bump_message_id(tenant_id, preset)
+
+        if not message_id:
+            logger.info(f"hype_bump: no message ID for preset='{preset}', skipping silently")
+            return {"success": True, "skipped": True, "reason": f"No message available for preset '{preset}'"}
+
+        result = forward_message(bot_token, vip_channel_id, free_channel_id, message_id)
+        if result.get('success'):
+            logger.info(f"hype_bump: forwarded preset={preset} msg_id={message_id} to FREE channel")
+        else:
+            logger.warning(f"hype_bump: forward failed preset={preset}: {result.get('error')}")
+        return result
+
     else:
         return {"success": False, "error": f"Unknown job type: {job_type}"}
 

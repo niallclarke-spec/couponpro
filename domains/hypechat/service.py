@@ -287,6 +287,24 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> 
         now = datetime.utcnow()
         today_str = now.strftime("%Y-%m-%d")
         scheduled = 0
+
+        bump_enabled = flow.get('bump_enabled', False)
+        bump_preset = flow.get('bump_preset') or ''
+        if bump_enabled and bump_preset:
+            bump_delay = flow.get('bump_delay_minutes', 0) or 0
+            bump_run_at = now + timedelta(minutes=bump_delay)
+            bump_dedupe_key = f"hype_bump_{flow_id}_{today_str}"
+            bump_job = enqueue_job(
+                tenant_id=tenant_id,
+                job_type='hype_bump',
+                run_at=bump_run_at,
+                payload={'preset': bump_preset},
+                dedupe_key=bump_dedupe_key,
+            )
+            if bump_job:
+                scheduled += 1
+                logger.info(f"Scheduled bump job preset={bump_preset} at {bump_run_at} for flow {flow_id}")
+
         cumulative_offset = delay_after_cta
         last_run_at = now + timedelta(minutes=cumulative_offset)
 

@@ -130,7 +130,9 @@ def create_flow(tenant_id: str, prompt_id: str, name: str,
                 status: str = 'paused',
                 cta_enabled: bool = False, cta_delay_minutes: int = 30,
                 cta_intro_text: str = '', cta_vip_label: str = '', cta_vip_url: str = '',
-                cta_support_label: str = '', cta_support_url: str = '') -> Optional[Dict]:
+                cta_support_label: str = '', cta_support_url: str = '',
+                bump_enabled: bool = False, bump_preset: str = None,
+                bump_delay_minutes: int = 0) -> Optional[Dict]:
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:
         return None
@@ -142,17 +144,20 @@ def create_flow(tenant_id: str, prompt_id: str, name: str,
                 INSERT INTO hype_flows (tenant_id, prompt_id, name, message_count,
                     interval_minutes, interval_max_minutes, delay_after_cta_minutes, active_days, status,
                     cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
-                    cta_support_label, cta_support_url)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    cta_support_label, cta_support_url,
+                    bump_enabled, bump_preset, bump_delay_minutes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, tenant_id, prompt_id, name, message_count,
                     interval_minutes, interval_max_minutes, delay_after_cta_minutes, active_days, status,
                     created_at, updated_at,
                     cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
-                    cta_support_label, cta_support_url
+                    cta_support_label, cta_support_url,
+                    bump_enabled, bump_preset, bump_delay_minutes
             """, (tenant_id, prompt_id, name, message_count,
                   interval_minutes, interval_max_minutes, delay_after_cta_minutes, active_days, status,
                   cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
-                  cta_support_label, cta_support_url))
+                  cta_support_label, cta_support_url,
+                  bump_enabled, bump_preset, bump_delay_minutes))
             row = cursor.fetchone()
             conn.commit()
             if row:
@@ -177,6 +182,7 @@ def list_flows(tenant_id: str) -> List[Dict]:
                     f.created_at, f.updated_at,
                     f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
                     f.cta_support_label, f.cta_support_url,
+                    f.bump_enabled, f.bump_preset, f.bump_delay_minutes,
                     p.name as prompt_name
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
@@ -185,8 +191,8 @@ def list_flows(tenant_id: str) -> List[Dict]:
             """, (tenant_id,))
             flows = []
             for row in cursor.fetchall():
-                flow = _row_to_flow(row[:19])
-                flow['prompt_name'] = row[19]
+                flow = _row_to_flow(row[:22])
+                flow['prompt_name'] = row[22]
                 flows.append(flow)
             return flows
     except Exception as e:
@@ -208,6 +214,7 @@ def get_flow(tenant_id: str, flow_id: str) -> Optional[Dict]:
                     f.created_at, f.updated_at,
                     f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
                     f.cta_support_label, f.cta_support_url,
+                    f.bump_enabled, f.bump_preset, f.bump_delay_minutes,
                     p.name as prompt_name, p.custom_prompt
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
@@ -215,9 +222,9 @@ def get_flow(tenant_id: str, flow_id: str) -> Optional[Dict]:
             """, (tenant_id, flow_id))
             row = cursor.fetchone()
             if row:
-                flow = _row_to_flow(row[:19])
-                flow['prompt_name'] = row[19]
-                flow['custom_prompt'] = row[20]
+                flow = _row_to_flow(row[:22])
+                flow['prompt_name'] = row[22]
+                flow['custom_prompt'] = row[23]
                 return flow
             return None
     except Exception as e:
@@ -233,7 +240,8 @@ def update_flow(tenant_id: str, flow_id: str, fields: Dict) -> Optional[Dict]:
     allowed_fields = {'name', 'prompt_id', 'message_count', 'interval_minutes',
                       'interval_max_minutes', 'delay_after_cta_minutes', 'active_days', 'status',
                       'cta_enabled', 'cta_delay_minutes', 'cta_intro_text',
-                      'cta_vip_label', 'cta_vip_url', 'cta_support_label', 'cta_support_url'}
+                      'cta_vip_label', 'cta_vip_url', 'cta_support_label', 'cta_support_url',
+                      'bump_enabled', 'bump_preset', 'bump_delay_minutes'}
     update_fields = {k: v for k, v in fields.items() if k in allowed_fields}
 
     if not update_fields:
@@ -252,7 +260,8 @@ def update_flow(tenant_id: str, flow_id: str, fields: Dict) -> Optional[Dict]:
                     interval_minutes, interval_max_minutes, delay_after_cta_minutes, active_days, status,
                     created_at, updated_at,
                     cta_enabled, cta_delay_minutes, cta_intro_text, cta_vip_label, cta_vip_url,
-                    cta_support_label, cta_support_url
+                    cta_support_label, cta_support_url,
+                    bump_enabled, bump_preset, bump_delay_minutes
             """, values)
             row = cursor.fetchone()
             conn.commit()
@@ -395,6 +404,7 @@ def get_active_flows(tenant_id: str) -> List[Dict]:
                     f.created_at, f.updated_at,
                     f.cta_enabled, f.cta_delay_minutes, f.cta_intro_text, f.cta_vip_label, f.cta_vip_url,
                     f.cta_support_label, f.cta_support_url,
+                    f.bump_enabled, f.bump_preset, f.bump_delay_minutes,
                     p.name as prompt_name, p.custom_prompt
                 FROM hype_flows f
                 LEFT JOIN hype_prompts p ON p.id = f.prompt_id
@@ -403,9 +413,9 @@ def get_active_flows(tenant_id: str) -> List[Dict]:
             """, (tenant_id,))
             flows = []
             for row in cursor.fetchall():
-                flow = _row_to_flow(row[:19])
-                flow['prompt_name'] = row[19]
-                flow['custom_prompt'] = row[20]
+                flow = _row_to_flow(row[:22])
+                flow['prompt_name'] = row[22]
+                flow['custom_prompt'] = row[23]
                 flows.append(flow)
             return flows
     except Exception as e:
@@ -448,6 +458,14 @@ def _row_to_flow(row) -> Dict:
         result['cta_vip_url'] = row[16] or ''
         result['cta_support_label'] = row[17] or ''
         result['cta_support_url'] = row[18] or ''
+    if len(row) > 19:
+        result['bump_enabled'] = row[19] if row[19] is not None else False
+        result['bump_preset'] = row[20]
+        result['bump_delay_minutes'] = row[21] if row[21] is not None else 0
+    else:
+        result['bump_enabled'] = False
+        result['bump_preset'] = None
+        result['bump_delay_minutes'] = 0
     return result
 
 

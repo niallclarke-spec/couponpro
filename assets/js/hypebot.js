@@ -432,6 +432,35 @@ window.HypeBotModule = (function() {
                             <div id="hype-day-conflicts" style="font-size:11px;color:#ff6b6b;margin-top:6px;display:none;"></div>
                         </div>
                         <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                <label style="font-size:13px;font-weight:600;color:var(--text-primary);">Bump Message</label>
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                    <input type="checkbox" id="hype-flow-bump-enabled" ${flow && flow.bump_enabled ? 'checked' : ''} onchange="document.getElementById('hype-bump-fields').style.display=this.checked?'block':'none'" style="accent-color:#34c759;">
+                                    <span style="font-size:12px;color:var(--text-secondary);">Enabled</span>
+                                </label>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Re-forwards a message from the VIP channel into the FREE feed before the hype sequence starts.</div>
+                            <div id="hype-bump-fields" style="display:${flow && flow.bump_enabled ? 'block' : 'none'};">
+                                <div style="margin-bottom:12px;">
+                                    <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Message to Bump</label>
+                                    <select id="hype-flow-bump-preset" style="width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                        <option value="best_tp" ${!flow || !flow.bump_preset || flow.bump_preset === 'best_tp' ? 'selected' : ''}>Best TP hit (smart: TP3 → TP2 → TP1)</option>
+                                        <option value="tp3" ${flow && flow.bump_preset === 'tp3' ? 'selected' : ''}>TP3 Full Target Hit</option>
+                                        <option value="tp2" ${flow && flow.bump_preset === 'tp2' ? 'selected' : ''}>TP2 Hit</option>
+                                        <option value="tp1" ${flow && flow.bump_preset === 'tp1' ? 'selected' : ''}>TP1 Hit</option>
+                                        <option value="signal" ${flow && flow.bump_preset === 'signal' ? 'selected' : ''}>Signal Entry</option>
+                                        <option value="daily_recap" ${flow && flow.bump_preset === 'daily_recap' ? 'selected' : ''}>Yesterday's Recap</option>
+                                        <option value="weekly_recap" ${flow && flow.bump_preset === 'weekly_recap' ? 'selected' : ''}>Weekly Recap</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom:12px;">
+                                    <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Delay (min)</label>
+                                    <input type="number" id="hype-flow-bump-delay" min="0" value="${flow && flow.bump_delay_minutes != null ? flow.bump_delay_minutes : 0}" style="width:100px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    <span style="font-size:11px;color:var(--text-muted);margin-left:6px;">0 = bumps immediately when the flow starts</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                                 <label style="font-size:13px;font-weight:600;color:var(--text-primary);">CTA Message</label>
                                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -561,12 +590,15 @@ window.HypeBotModule = (function() {
         const ctaVipUrl = document.getElementById('hype-flow-cta-vip-url')?.value?.trim() || '';
         const ctaSupportLabel = document.getElementById('hype-flow-cta-support-label')?.value?.trim() || '';
         const ctaSupportUrl = document.getElementById('hype-flow-cta-support-url')?.value?.trim() || '';
+        const bumpEnabled = document.getElementById('hype-flow-bump-enabled')?.checked || false;
+        const bumpPreset = document.getElementById('hype-flow-bump-preset')?.value || 'best_tp';
+        const bumpDelay = parseInt(document.getElementById('hype-flow-bump-delay')?.value) || 0;
         if (!name) { alert('Please enter a flow name'); return; }
         try {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
             const url = editId ? `/api/hypechat/flows/${editId}` : '/api/hypechat/flows';
-            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, interval_max_minutes: ivMax, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl }) });
+            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, interval_max_minutes: ivMax, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl, bump_enabled: bumpEnabled, bump_preset: bumpPreset, bump_delay_minutes: bumpDelay }) });
             if (resp.ok) { document.getElementById('hype-flow-modal')?.remove(); await loadFlows(); }
             else { const err = await resp.json(); alert(err.error || 'Failed to save'); }
         } catch (e) { console.error('Error saving flow:', e); }

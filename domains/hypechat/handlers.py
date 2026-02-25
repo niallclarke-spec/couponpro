@@ -180,6 +180,9 @@ def handle_create_flow(handler):
         cta_vip_url=data.get('cta_vip_url', ''),
         cta_support_label=data.get('cta_support_label', ''),
         cta_support_url=data.get('cta_support_url', ''),
+        bump_enabled=data.get('bump_enabled', False),
+        bump_preset=data.get('bump_preset'),
+        bump_delay_minutes=data.get('bump_delay_minutes', 0),
     )
     if flow:
         _send_json(handler, 201, flow)

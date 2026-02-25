@@ -1274,6 +1274,16 @@ class DatabasePool:
                     logger.info("Cross-promo columns added successfully")
                 else:
                     logger.info("Cross-promo columns already exist, skipping")
+
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name='forex_signals' AND column_name = 'tp2_message_id'
+                """)
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE forex_signals ADD COLUMN tp2_message_id BIGINT")
+                    logger.info("tp2_message_id column added to forex_signals")
+                else:
+                    logger.info("tp2_message_id column already exists on forex_signals, skipping")
                 
                 # ============================================================
                 # Phase 2B: Add unique constraints (tenant_id + natural_key)
@@ -1776,6 +1786,24 @@ class DatabasePool:
                     logger.info("interval_max_minutes column added to hype_flows")
                 else:
                     logger.info("interval_max_minutes column already exists on hype_flows, skipping")
+
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name='hype_flows' AND column_name IN (
+                        'bump_enabled', 'bump_preset', 'bump_delay_minutes'
+                    )
+                """)
+                existing_bump_cols = {row[0] for row in cursor.fetchall()}
+                for col, col_type, default in [
+                    ('bump_enabled', 'BOOLEAN', 'FALSE'),
+                    ('bump_preset', 'VARCHAR(50)', 'NULL'),
+                    ('bump_delay_minutes', 'INTEGER', '0'),
+                ]:
+                    if col not in existing_bump_cols:
+                        cursor.execute(f"ALTER TABLE hype_flows ADD COLUMN {col} {col_type} DEFAULT {default}")
+                        logger.info(f"{col} column added to hype_flows")
+                    else:
+                        logger.info(f"{col} column already exists on hype_flows, skipping")
 
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS hype_messages (
@@ -4706,17 +4734,17 @@ def update_tp_message_id(signal_id: int, tp_level: int, message_id: int, tenant_
     
     Args:
         signal_id: Signal ID
-        tp_level: 1 or 3 (only TP1 and TP3 are stored for cross-promo)
+        tp_level: 1, 2, or 3
         message_id: Telegram message ID from the TP hit notification
         tenant_id: Tenant ID
     
     Returns:
         bool: True if successful
     """
-    if tp_level not in [1, 3]:
+    if tp_level not in [1, 2, 3]:
         return False
     
-    column = 'tp1_message_id' if tp_level == 1 else 'tp3_message_id'
+    column = {1: 'tp1_message_id', 2: 'tp2_message_id', 3: 'tp3_message_id'}[tp_level]
     
     try:
         if not db_pool.connection_pool:
@@ -4784,7 +4812,7 @@ def get_crosspromo_status(signal_id: int, tenant_id: str) -> dict | None:
     Get the cross-promo status and message IDs for a signal.
     
     Returns:
-        dict with status, tp1_message_id, tp3_message_id, crosspromo_started_at
+        dict with status, tp1_message_id, tp2_message_id, tp3_message_id, crosspromo_started_at
         or None if signal not found
     """
     try:
@@ -4794,7 +4822,7 @@ def get_crosspromo_status(signal_id: int, tenant_id: str) -> dict | None:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT telegram_message_id, tp1_message_id, tp3_message_id, 
+                SELECT telegram_message_id, tp1_message_id, tp2_message_id, tp3_message_id,
                        crosspromo_status, crosspromo_started_at
                 FROM forex_signals
                 WHERE id = %s AND tenant_id = %s
@@ -4807,12 +4835,73 @@ def get_crosspromo_status(signal_id: int, tenant_id: str) -> dict | None:
             return {
                 'signal_message_id': row[0],
                 'tp1_message_id': row[1],
-                'tp3_message_id': row[2],
-                'crosspromo_status': row[3] or 'none',
-                'crosspromo_started_at': row[4].isoformat() if row[4] else None
+                'tp2_message_id': row[2],
+                'tp3_message_id': row[3],
+                'crosspromo_status': row[4] or 'none',
+                'crosspromo_started_at': row[5].isoformat() if row[5] else None
             }
     except Exception as e:
         logger.exception(f"Error getting crosspromo status for signal {signal_id}: {e}")
+        return None
+
+
+def get_bump_message_id(tenant_id: str, preset: str) -> int | None:
+    """
+    Resolve a bump preset to a Telegram message ID from the most recent relevant signal or recap.
+    
+    Args:
+        tenant_id: Tenant ID
+        preset: One of 'best_tp', 'tp1', 'tp2', 'tp3', 'signal', 'daily_recap', 'weekly_recap'
+    
+    Returns:
+        int message ID, or None if not available (caller should skip gracefully)
+    """
+    if preset in ('best_tp', 'tp1', 'tp2', 'tp3', 'signal'):
+        try:
+            if not db_pool.connection_pool:
+                return None
+            with db_pool.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT telegram_message_id, tp1_message_id, tp2_message_id, tp3_message_id
+                    FROM forex_signals
+                    WHERE tenant_id = %s
+                      AND telegram_message_id IS NOT NULL
+                      AND updated_at > NOW() - INTERVAL '48 hours'
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                """, (tenant_id,))
+                row = cursor.fetchone()
+                if not row:
+                    return None
+                signal_msg_id, tp1_msg_id, tp2_msg_id, tp3_msg_id = row
+                if preset == 'signal':
+                    return int(signal_msg_id) if signal_msg_id else None
+                elif preset == 'tp1':
+                    return int(tp1_msg_id) if tp1_msg_id else None
+                elif preset == 'tp2':
+                    return int(tp2_msg_id) if tp2_msg_id else None
+                elif preset == 'tp3':
+                    return int(tp3_msg_id) if tp3_msg_id else None
+                elif preset == 'best_tp':
+                    for msg_id in (tp3_msg_id, tp2_msg_id, tp1_msg_id):
+                        if msg_id:
+                            return int(msg_id)
+                    return None
+        except Exception as e:
+            logger.exception(f"Error resolving bump message ID for preset={preset}: {e}")
+            return None
+
+    elif preset == 'daily_recap':
+        raw = get_last_recap_date('daily_msg_id', tenant_id)
+        return int(raw) if raw else None
+
+    elif preset == 'weekly_recap':
+        raw = get_last_recap_date('weekly_recap_msg_id', tenant_id)
+        return int(raw) if raw else None
+
+    else:
+        logger.warning(f"Unknown bump preset: {preset}")
         return None
 
 

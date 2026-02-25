@@ -192,9 +192,11 @@ class ForexSchedulerRunner:
                         return
                     
                     bot = self.runtime.get_telegram_bot()
-                    await bot.post_detailed_recap(message)
+                    daily_msg_id = await bot.post_detailed_recap(message)
                     
                     db.set_last_recap_date('daily', current_date_str, tenant_id=self.tenant_id)
+                    if daily_msg_id:
+                        db.set_last_recap_date('daily_msg_id', str(daily_msg_id), tenant_id=self.tenant_id)
                     logger.info(f"✅ Daily recap posted: {total_signals} signals, {win_rate:.0f}% win rate, {stats.get('total_pips', 0):+.1f} pips")
                 else:
                     logger.info("Daily recap already posted today, skipping")

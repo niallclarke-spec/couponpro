@@ -256,8 +256,8 @@ class ForexTelegramBot:
                 )
                 logger.info(f"Posted TP{tp_number} notification for signal #{signal_id} (msg_id: {result.message_id})")
                 
-                # Store message ID for cross-promo (TP1 and TP3 only)
-                if tp_number in [1, 3] and result.message_id:
+                # Store message ID for cross-promo (TP1, TP2, and TP3)
+                if tp_number in [1, 2, 3] and result.message_id:
                     update_tp_message_id(signal_id, tp_number, result.message_id, self.tenant_id)
                     logger.debug(f"Stored TP{tp_number} message ID {result.message_id} for signal #{signal_id}")
                 
@@ -671,7 +671,7 @@ No signals posted today. Markets were quiet."""
             logger.exception(f"Failed to post daily recap: {e}")
             return False
     
-    async def post_detailed_recap(self, message: str) -> bool:
+    async def post_detailed_recap(self, message: str):
         """
         Post a pre-formatted detailed recap message to the VIP channel.
         
@@ -679,24 +679,24 @@ No signals posted today. Markets were quiet."""
             message: Pre-formatted HTML message from generate_detailed_daily_recap()
         
         Returns:
-            bool: True if posted successfully
+            int: Telegram message ID if posted successfully, None otherwise
         """
         if not self.is_configured():
-            return False
+            return None
         
         try:
             result = await self._send(message)
             
             if result.success:
                 logger.info("Posted detailed daily recap to VIP channel")
-                return True
+                return result.message_id
             else:
                 logger.error(f"Failed to post detailed recap: {result.error}")
-                return False
+                return None
             
         except Exception as e:
             logger.exception(f"Failed to post detailed recap: {e}")
-            return False
+            return None
     
     async def post_weekly_recap(self, recap_data, week_str=None, ai_message=None):
         """
