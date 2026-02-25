@@ -1806,6 +1806,26 @@ class DatabasePool:
                         logger.info(f"{col} column already exists on hype_flows, skipping")
 
                 cursor.execute("""
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name='hype_flows' AND column_name IN (
+                        'trigger_after_flow_id', 'trigger_delay_minutes'
+                    )
+                """)
+                existing_trigger_cols = {row[0] for row in cursor.fetchall()}
+                if 'trigger_after_flow_id' not in existing_trigger_cols:
+                    cursor.execute("ALTER TABLE hype_flows ADD COLUMN trigger_after_flow_id VARCHAR(36) REFERENCES hype_flows(id) ON DELETE SET NULL")
+                    conn.commit()
+                    logger.info("trigger_after_flow_id column added to hype_flows")
+                else:
+                    logger.info("trigger_after_flow_id column already exists on hype_flows, skipping")
+                if 'trigger_delay_minutes' not in existing_trigger_cols:
+                    cursor.execute("ALTER TABLE hype_flows ADD COLUMN trigger_delay_minutes INTEGER DEFAULT 0")
+                    conn.commit()
+                    logger.info("trigger_delay_minutes column added to hype_flows")
+                else:
+                    logger.info("trigger_delay_minutes column already exists on hype_flows, skipping")
+
+                cursor.execute("""
                     CREATE TABLE IF NOT EXISTS hype_messages (
                         id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
                         flow_id VARCHAR(36) REFERENCES hype_flows(id) ON DELETE CASCADE,
@@ -4843,6 +4863,119 @@ def get_crosspromo_status(signal_id: int, tenant_id: str) -> dict | None:
     except Exception as e:
         logger.exception(f"Error getting crosspromo status for signal {signal_id}: {e}")
         return None
+
+
+def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
+    """
+    Resolve a bump preset to a Telegram message ID AND a human-readable signal context string
+    for injecting into OpenAI so hype messages can reference the specific trade result.
+
+    Returns: (message_id: int|None, context_str: str|None)
+    context_str is None for recap presets or when no signal is found.
+    """
+    if preset in ('best_tp', 'tp1', 'tp2', 'tp3', 'signal'):
+        try:
+            if not db_pool.connection_pool:
+                return None, None
+            with db_pool.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT telegram_message_id, tp1_message_id, tp2_message_id, tp3_message_id,
+                           signal_type, pair, entry_price, take_profit, take_profit_2, take_profit_3,
+                           result_pips, close_price, posted_at
+                    FROM forex_signals
+                    WHERE tenant_id = %s
+                      AND telegram_message_id IS NOT NULL
+                      AND updated_at > NOW() - INTERVAL '48 hours'
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                """, (tenant_id,))
+                row = cursor.fetchone()
+                if not row:
+                    return None, None
+
+                signal_msg_id = row[0]
+                tp1_msg_id, tp2_msg_id, tp3_msg_id = row[1], row[2], row[3]
+                signal_type = row[4] or 'BUY'
+                pair = row[5] or 'XAU/USD'
+                entry_price = row[6]
+                take_profit = row[7]
+                take_profit_2 = row[8]
+                take_profit_3 = row[9]
+                result_pips = row[10]
+                posted_at = row[12]
+
+                message_id = None
+                tp_level_hit = None
+                tp_price_hit = None
+
+                if preset == 'signal':
+                    message_id = int(signal_msg_id) if signal_msg_id else None
+                elif preset == 'tp1':
+                    message_id = int(tp1_msg_id) if tp1_msg_id else None
+                    tp_level_hit, tp_price_hit = 1, take_profit
+                elif preset == 'tp2':
+                    message_id = int(tp2_msg_id) if tp2_msg_id else None
+                    tp_level_hit, tp_price_hit = 2, take_profit_2
+                elif preset == 'tp3':
+                    message_id = int(tp3_msg_id) if tp3_msg_id else None
+                    tp_level_hit, tp_price_hit = 3, take_profit_3
+                elif preset == 'best_tp':
+                    for level, msg_id, tp_price in [
+                        (3, tp3_msg_id, take_profit_3),
+                        (2, tp2_msg_id, take_profit_2),
+                        (1, tp1_msg_id, take_profit),
+                    ]:
+                        if msg_id:
+                            message_id = int(msg_id)
+                            tp_level_hit, tp_price_hit = level, tp_price
+                            break
+
+                if not message_id:
+                    return None, None
+
+                context_parts = ["Signal being highlighted:"]
+                entry_str = f"{float(entry_price):,.2f}" if entry_price else "N/A"
+
+                if preset == 'signal':
+                    context_parts.append(f"{pair} {signal_type} — Signal entry posted")
+                    context_parts.append(f"Entry: {entry_str}")
+                else:
+                    tp_labels = {1: 'TP1 hit', 2: 'TP2 hit', 3: 'TP3 full target hit'}
+                    label = tp_labels.get(tp_level_hit, 'TP hit')
+                    hit_str = f"{float(tp_price_hit):,.2f}" if tp_price_hit else "N/A"
+                    context_parts.append(f"{pair} {signal_type} — {label}")
+                    context_parts.append(f"Entry: {entry_str} → Hit: {hit_str}")
+                    if result_pips:
+                        context_parts.append(f"Result: {float(result_pips):+.1f} pips")
+
+                if posted_at:
+                    from datetime import datetime as _dt
+                    now_utc = _dt.utcnow()
+                    posted_naive = posted_at.replace(tzinfo=None) if hasattr(posted_at, 'tzinfo') and posted_at.tzinfo else posted_at
+                    age_minutes = int((now_utc - posted_naive).total_seconds() / 60)
+                    if age_minutes < 60:
+                        context_parts.append(f"Posted: {age_minutes} min ago")
+                    else:
+                        context_parts.append(f"Posted: {age_minutes // 60}h {age_minutes % 60}min ago")
+
+                return message_id, "\n".join(context_parts)
+
+        except Exception as e:
+            logger.exception(f"Error resolving bump signal context for preset={preset}: {e}")
+            return None, None
+
+    elif preset == 'daily_recap':
+        raw = get_last_recap_date('daily_msg_id', tenant_id)
+        return (int(raw) if raw else None), None
+
+    elif preset == 'weekly_recap':
+        raw = get_last_recap_date('weekly_recap_msg_id', tenant_id)
+        return (int(raw) if raw else None), None
+
+    else:
+        logger.warning(f"Unknown bump preset: {preset}")
+        return None, None
 
 
 def get_bump_message_id(tenant_id: str, preset: str) -> int | None:

@@ -132,6 +132,7 @@ window.HypeBotModule = (function() {
                         <span class="hype-config-item">Flow delay: ${f.delay_after_cta_minutes}min</span>
                         <span class="hype-config-item">${parseDaysString(f.active_days || '').map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}</span>
                         ${f.cta_enabled ? '<span class="hype-config-item" style="color:#34c759;">CTA ✓</span>' : ''}
+                        <span class="hype-config-item" style="color:var(--text-muted,#777);">${(() => { const parent = f.trigger_after_flow_id ? flows.find(p => p.id === f.trigger_after_flow_id) : null; return f.trigger_after_flow_id ? `↳ ${f.trigger_delay_minutes || 0}min after ${parent ? escapeHtml(parent.name) : 'deleted flow'}` : (f.trigger_delay_minutes > 0 ? `Fires ${f.trigger_delay_minutes}min after Cross Promo` : 'Fires from Cross Promo'); })()}</span>
                     </div>
                     <div class="hype-card-actions">
                         ${f.status === 'paused'
@@ -393,6 +394,18 @@ window.HypeBotModule = (function() {
                 <div class="modal-content" style="max-width:520px;max-height:90vh;display:flex;flex-direction:column;">
                     <div class="modal-header"><h3>${title}</h3><button class="modal-close" onclick="document.getElementById('hype-flow-modal').remove()">&times;</button></div>
                     <div class="modal-body" style="overflow-y:auto;flex:1;">
+                        <div style="margin-bottom:16px;background:var(--bg-tertiary,rgba(255,255,255,0.04));border:1px solid var(--border-primary);border-radius:10px;padding:10px 14px;">
+                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Trigger</label>
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <span style="font-size:13px;color:var(--text-secondary);">Fire</span>
+                                <input type="number" id="hype-flow-trigger-delay" min="0" value="${flow ? (flow.trigger_delay_minutes || 0) : 0}" style="width:56px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
+                                <span style="font-size:13px;color:var(--text-secondary);">min after</span>
+                                <select id="hype-flow-trigger-after" style="flex:1;min-width:140px;padding:6px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                                    <option value="">Cross Promo</option>
+                                    ${flows.filter(f => f.id !== editId && f.status === 'active').map(f => `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
                         <div style="margin-bottom:16px;">
                             <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Name</label>
                             <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}" placeholder="e.g. Post-CTA Hype" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;">
@@ -593,12 +606,14 @@ window.HypeBotModule = (function() {
         const bumpEnabled = document.getElementById('hype-flow-bump-enabled')?.checked || false;
         const bumpPreset = document.getElementById('hype-flow-bump-preset')?.value || 'best_tp';
         const bumpDelay = parseInt(document.getElementById('hype-flow-bump-delay')?.value) || 0;
+        const triggerAfterFlowId = document.getElementById('hype-flow-trigger-after')?.value || null;
+        const triggerDelayMinutes = parseInt(document.getElementById('hype-flow-trigger-delay')?.value) || 0;
         if (!name) { alert('Please enter a flow name'); return; }
         try {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
             const url = editId ? `/api/hypechat/flows/${editId}` : '/api/hypechat/flows';
-            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, interval_max_minutes: ivMax, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl, bump_enabled: bumpEnabled, bump_preset: bumpPreset, bump_delay_minutes: bumpDelay }) });
+            const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify({ name, prompt_id: promptId || null, message_count: mc, interval_minutes: iv, interval_max_minutes: ivMax, delay_after_cta_minutes: dl, active_days: days, cta_enabled: ctaEnabled, cta_delay_minutes: ctaDelay, cta_intro_text: ctaIntro, cta_vip_label: ctaVipLabel, cta_vip_url: ctaVipUrl, cta_support_label: ctaSupportLabel, cta_support_url: ctaSupportUrl, bump_enabled: bumpEnabled, bump_preset: bumpPreset, bump_delay_minutes: bumpDelay, trigger_after_flow_id: triggerAfterFlowId || null, trigger_delay_minutes: triggerDelayMinutes }) });
             if (resp.ok) { document.getElementById('hype-flow-modal')?.remove(); await loadFlows(); }
             else { const err = await resp.json(); alert(err.error || 'Failed to save'); }
         } catch (e) { console.error('Error saving flow:', e); }

@@ -32,7 +32,7 @@ def is_active_today(active_days: str) -> bool:
     return any(DAY_MAP.get(d) == today for d in days)
 
 
-def build_context(tenant_id: str) -> str:
+def build_context(tenant_id: str, signal_context: str = None) -> str:
     from domains.crosspromo.repo import get_net_pips_over_days
 
     try:
@@ -49,6 +49,10 @@ def build_context(tenant_id: str) -> str:
             context_parts.append(f"Pips earned past 7 days: {pips_7d:+.1f}")
         else:
             context_parts.append("No closed signals in the past 7 days")
+
+        if signal_context:
+            context_parts.append("")
+            context_parts.append(signal_context)
 
         return "\n".join(context_parts)
     except Exception as e:
@@ -67,7 +71,7 @@ def _get_arc_instruction(step: int, total: int) -> str:
         return "Build on what you said before, add a new angle or detail."
 
 
-def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3) -> tuple:
+def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None) -> tuple:
     from openai import OpenAI
 
     try:
@@ -79,7 +83,7 @@ def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_coun
             return [], "OpenAI API key not configured. Set OPENAI_API_KEY in your environment."
 
         client = OpenAI(api_key=api_key, base_url=base_url)
-        context = build_context(tenant_id)
+        context = build_context(tenant_id, signal_context=signal_context)
         messages_result = []
 
         conversation = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -125,15 +129,15 @@ Write ONLY the Telegram message, nothing else:"""
         return [], f"{error_type}: {error_detail}"
 
 
-def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3) -> List[str]:
-    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count)
+def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None) -> List[str]:
+    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count, signal_context=signal_context)
     if error:
         logger.warning(f"generate_message_sequence failed for tenant {tenant_id}: {error}")
     return messages
 
 
-def generate_message(tenant_id: str, custom_prompt: str) -> str:
-    result = generate_message_sequence(tenant_id, custom_prompt, 1)
+def generate_message(tenant_id: str, custom_prompt: str, signal_context: str = None) -> str:
+    result = generate_message_sequence(tenant_id, custom_prompt, 1, signal_context=signal_context)
     return result[0] if result else ""
 
 
@@ -249,12 +253,20 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
         return {"success": False, "error": str(e)}
 
 
-def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> Dict:
+def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
+                 base_time: datetime = None, _visited: set = None) -> Dict:
     from domains.crosspromo.repo import enqueue_job
+
+    if _visited is None:
+        _visited = set()
+    if flow_id in _visited:
+        logger.warning(f"Circular chain detected at flow {flow_id}, stopping")
+        return {"success": False, "skipped": True, "messages_scheduled": 0}
+    _visited.add(flow_id)
 
     try:
         today_count = repo.get_today_hype_count(tenant_id)
-        if today_count > 0:
+        if today_count > 0 and len(_visited) == 1:
             logger.info(f"Hype already triggered today for {tenant_id} ({today_count} messages)")
             return {"success": False, "error": "Hype already triggered today", "messages_scheduled": 0}
 
@@ -280,33 +292,39 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> 
             interval_max = interval_min
         delay_after_cta = flow.get("delay_after_cta_minutes", 10)
 
-        pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count)
-        if not pre_generated_messages:
-            logger.warning(f"Failed to pre-generate messages for flow {flow_id}, will fallback to per-job generation")
-
-        now = datetime.utcnow()
+        now = base_time or datetime.utcnow()
         today_str = now.strftime("%Y-%m-%d")
         scheduled = 0
+        last_run_at = now
 
         bump_enabled = flow.get('bump_enabled', False)
         bump_preset = flow.get('bump_preset') or ''
+        signal_context = None
         if bump_enabled and bump_preset:
-            bump_delay = flow.get('bump_delay_minutes', 0) or 0
-            bump_run_at = now + timedelta(minutes=bump_delay)
-            bump_dedupe_key = f"hype_bump_{flow_id}_{today_str}"
-            bump_job = enqueue_job(
-                tenant_id=tenant_id,
-                job_type='hype_bump',
-                run_at=bump_run_at,
-                payload={'preset': bump_preset},
-                dedupe_key=bump_dedupe_key,
-            )
-            if bump_job:
-                scheduled += 1
-                logger.info(f"Scheduled bump job preset={bump_preset} at {bump_run_at} for flow {flow_id}")
+            from db import get_bump_signal_context
+            bump_msg_id, signal_context = get_bump_signal_context(tenant_id, bump_preset)
+            if bump_msg_id:
+                bump_delay = flow.get('bump_delay_minutes', 0) or 0
+                bump_run_at = now + timedelta(minutes=bump_delay)
+                bump_dedupe_key = f"hype_bump_{flow_id}_{today_str}"
+                bump_job = enqueue_job(
+                    tenant_id=tenant_id,
+                    job_type='hype_bump',
+                    run_at=bump_run_at,
+                    payload={'preset': bump_preset},
+                    dedupe_key=bump_dedupe_key,
+                )
+                if bump_job:
+                    scheduled += 1
+                    logger.info(f"Scheduled bump job preset={bump_preset} at {bump_run_at} for flow {flow_id}")
+            else:
+                logger.info(f"Bump enabled for flow {flow_id} but no message found for preset={bump_preset}, skipping bump")
+
+        pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count, signal_context=signal_context)
+        if not pre_generated_messages:
+            logger.warning(f"Failed to pre-generate messages for flow {flow_id}, will fallback to per-job generation")
 
         cumulative_offset = delay_after_cta
-        last_run_at = now + timedelta(minutes=cumulative_offset)
 
         for step in range(1, message_count + 1):
             if step > 1:
@@ -396,6 +414,21 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False) -> 
                     scheduled += 1
                     logger.info(f"Scheduled CTA at {cta_run_at} for flow {flow_id}")
 
+        child_flows = [f for f in repo.get_active_flows(tenant_id)
+                       if f.get('trigger_after_flow_id') == flow_id]
+        for child in child_flows:
+            child_delay = child.get('trigger_delay_minutes', 0) or 0
+            child_base = last_run_at + timedelta(minutes=child_delay)
+            child_result = execute_flow(
+                tenant_id, child['id'],
+                skip_day_check=False,
+                base_time=child_base,
+                _visited=set(_visited),
+            )
+            child_scheduled = child_result.get('messages_scheduled', 0)
+            scheduled += child_scheduled
+            logger.info(f"Chained child flow '{child.get('name')}' starting at {child_base} — {child_scheduled} jobs scheduled")
+
         return {"success": True, "messages_scheduled": scheduled}
 
     except Exception as e:
@@ -415,17 +448,20 @@ def trigger_flow_from_cta(tenant_id: str) -> Dict:
             logger.info(f"No active hype flows for {tenant_id}")
             return {"success": False, "reason": "no_active_flows"}
 
-        eligible_flows = [f for f in active_flows if is_active_today(f.get("active_days", "daily"))]
-        skipped = len(active_flows) - len(eligible_flows)
+        root_flows = [f for f in active_flows if not f.get('trigger_after_flow_id')]
+        eligible_flows = [f for f in root_flows if is_active_today(f.get("active_days", "daily"))]
+        skipped = len(root_flows) - len(eligible_flows)
         if skipped > 0:
-            logger.info(f"Skipped {skipped} flow(s) not active today")
+            logger.info(f"Skipped {skipped} root flow(s) not active today")
         if not eligible_flows:
-            logger.info(f"No hype flows active today for {tenant_id}")
+            logger.info(f"No root hype flows active today for {tenant_id}")
             return {"success": False, "reason": "no_flows_active_today"}
 
         results = []
         for flow in eligible_flows:
-            result = execute_flow(tenant_id, flow["id"], skip_day_check=True)
+            root_delay = flow.get('trigger_delay_minutes', 0) or 0
+            root_base = datetime.utcnow() + timedelta(minutes=root_delay)
+            result = execute_flow(tenant_id, flow["id"], skip_day_check=True, base_time=root_base)
             results.append({"flow_id": flow["id"], "flow_name": flow["name"], **result})
 
         total_scheduled = sum(r.get("messages_scheduled", 0) for r in results)

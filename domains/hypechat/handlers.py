@@ -183,6 +183,8 @@ def handle_create_flow(handler):
         bump_enabled=data.get('bump_enabled', False),
         bump_preset=data.get('bump_preset'),
         bump_delay_minutes=data.get('bump_delay_minutes', 0),
+        trigger_after_flow_id=data.get('trigger_after_flow_id'),
+        trigger_delay_minutes=data.get('trigger_delay_minutes', 0),
     )
     if flow:
         _send_json(handler, 201, flow)
