@@ -485,6 +485,210 @@ def _row_to_flow(row) -> Dict:
     return result
 
 
+def list_steps(flow_id: str) -> List[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return []
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, flow_id, step_order, delay_minutes, step_type,
+                       reforward_preset, message_text,
+                       cta_intro_text, cta_vip_label, cta_vip_url,
+                       cta_support_label, cta_support_url, created_at
+                FROM hype_flow_steps
+                WHERE flow_id = %s
+                ORDER BY step_order ASC
+            """, (flow_id,))
+            return [_row_to_step(row) for row in cursor.fetchall()]
+    except Exception as e:
+        logger.exception(f"Error listing steps: {e}")
+        return []
+
+
+def create_step(flow_id: str, step_order: int, delay_minutes: int, step_type: str,
+                reforward_preset: str = None, message_text: str = None,
+                cta_intro_text: str = None, cta_vip_label: str = None,
+                cta_vip_url: str = None, cta_support_label: str = None,
+                cta_support_url: str = None) -> Optional[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO hype_flow_steps
+                    (flow_id, step_order, delay_minutes, step_type,
+                     reforward_preset, message_text,
+                     cta_intro_text, cta_vip_label, cta_vip_url,
+                     cta_support_label, cta_support_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, flow_id, step_order, delay_minutes, step_type,
+                          reforward_preset, message_text,
+                          cta_intro_text, cta_vip_label, cta_vip_url,
+                          cta_support_label, cta_support_url, created_at
+            """, (flow_id, step_order, delay_minutes, step_type,
+                  reforward_preset, message_text,
+                  cta_intro_text, cta_vip_label, cta_vip_url,
+                  cta_support_label, cta_support_url))
+            row = cursor.fetchone()
+            conn.commit()
+            return _row_to_step(row) if row else None
+    except Exception as e:
+        logger.exception(f"Error creating step: {e}")
+        return None
+
+
+def update_step(step_id: str, flow_id: str, **fields) -> Optional[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    allowed = {'delay_minutes', 'step_type', 'reforward_preset', 'message_text',
+               'cta_intro_text', 'cta_vip_label', 'cta_vip_url',
+               'cta_support_label', 'cta_support_url'}
+    update_fields = {k: v for k, v in fields.items() if k in allowed}
+    if not update_fields:
+        return None
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            set_clause = ', '.join(f"{k} = %s" for k in update_fields)
+            values = list(update_fields.values()) + [step_id, flow_id]
+            cursor.execute(f"""
+                UPDATE hype_flow_steps
+                SET {set_clause}
+                WHERE id = %s AND flow_id = %s
+                RETURNING id, flow_id, step_order, delay_minutes, step_type,
+                          reforward_preset, message_text,
+                          cta_intro_text, cta_vip_label, cta_vip_url,
+                          cta_support_label, cta_support_url, created_at
+            """, values)
+            row = cursor.fetchone()
+            conn.commit()
+            return _row_to_step(row) if row else None
+    except Exception as e:
+        logger.exception(f"Error updating step: {e}")
+        return None
+
+
+def delete_step(step_id: str, flow_id: str) -> bool:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM hype_flow_steps
+                WHERE id = %s AND flow_id = %s
+                RETURNING id
+            """, (step_id, flow_id))
+            result = cursor.fetchone()
+            conn.commit()
+            return result is not None
+    except Exception as e:
+        logger.exception(f"Error deleting step: {e}")
+        return False
+
+
+def reorder_steps(flow_id: str, ordered_ids: list) -> bool:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return False
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            for idx, step_id in enumerate(ordered_ids):
+                cursor.execute("""
+                    UPDATE hype_flow_steps
+                    SET step_order = %s
+                    WHERE id = %s AND flow_id = %s
+                """, (idx, step_id, flow_id))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.exception(f"Error reordering steps: {e}")
+        return False
+
+
+def insert_step_after(flow_id: str, after_step_id: Optional[str], step_data: dict) -> Optional[Dict]:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return None
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            if after_step_id is None:
+                insert_order = 0
+                cursor.execute("""
+                    UPDATE hype_flow_steps
+                    SET step_order = step_order + 1
+                    WHERE flow_id = %s
+                """, (flow_id,))
+            else:
+                cursor.execute("""
+                    SELECT step_order FROM hype_flow_steps
+                    WHERE id = %s AND flow_id = %s
+                """, (after_step_id, flow_id))
+                row = cursor.fetchone()
+                if not row:
+                    return None
+                insert_order = row[0] + 1
+                cursor.execute("""
+                    UPDATE hype_flow_steps
+                    SET step_order = step_order + 1
+                    WHERE flow_id = %s AND step_order >= %s
+                """, (flow_id, insert_order))
+
+            cursor.execute("""
+                INSERT INTO hype_flow_steps
+                    (flow_id, step_order, delay_minutes, step_type,
+                     reforward_preset, message_text,
+                     cta_intro_text, cta_vip_label, cta_vip_url,
+                     cta_support_label, cta_support_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, flow_id, step_order, delay_minutes, step_type,
+                          reforward_preset, message_text,
+                          cta_intro_text, cta_vip_label, cta_vip_url,
+                          cta_support_label, cta_support_url, created_at
+            """, (flow_id, insert_order,
+                  step_data.get('delay_minutes', 0),
+                  step_data.get('step_type', 'message'),
+                  step_data.get('reforward_preset'),
+                  step_data.get('message_text'),
+                  step_data.get('cta_intro_text'),
+                  step_data.get('cta_vip_label'),
+                  step_data.get('cta_vip_url'),
+                  step_data.get('cta_support_label'),
+                  step_data.get('cta_support_url')))
+            result = cursor.fetchone()
+            conn.commit()
+            return _row_to_step(result) if result else None
+    except Exception as e:
+        logger.exception(f"Error inserting step: {e}")
+        return None
+
+
+def _row_to_step(row) -> Dict:
+    return {
+        'id': str(row[0]),
+        'flow_id': str(row[1]),
+        'step_order': row[2],
+        'delay_minutes': row[3],
+        'step_type': row[4],
+        'reforward_preset': row[5],
+        'message_text': row[6] or '',
+        'cta_intro_text': row[7] or '',
+        'cta_vip_label': row[8] or '',
+        'cta_vip_url': row[9] or '',
+        'cta_support_label': row[10] or '',
+        'cta_support_url': row[11] or '',
+        'created_at': row[12].isoformat() if row[12] else None,
+    }
+
+
 def _row_to_message(row) -> Dict:
     return {
         'id': str(row[0]),

@@ -447,6 +447,32 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.hypechat import handlers as hc_h
         hc_h.handle_flow_analytics(self, urlparse(self.path).path.split('/')[4])
 
+    def handle_api_hypechat_flow_steps_list(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_list_steps(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_step_create(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_create_step(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_step_insert(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_insert_step(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_step_reorder(self):
+        from domains.hypechat import handlers as hc_h
+        hc_h.handle_reorder_steps(self, urlparse(self.path).path.split('/')[4])
+
+    def handle_api_hypechat_flow_step_update(self):
+        from domains.hypechat import handlers as hc_h
+        parts = urlparse(self.path).path.split('/')
+        hc_h.handle_update_step(self, parts[4], parts[6])
+
+    def handle_api_hypechat_flow_step_delete(self):
+        from domains.hypechat import handlers as hc_h
+        parts = urlparse(self.path).path.split('/')
+        hc_h.handle_delete_step(self, parts[4], parts[6])
+
     def handle_api_hypechat_preview(self):
         from domains.hypechat import handlers as hc_h
         hc_h.handle_preview_message(self)

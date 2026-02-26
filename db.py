@@ -1842,6 +1842,26 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_messages_tenant ON hype_messages(tenant_id, sent_at)")
                 logger.info("hype_messages table ready")
 
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS hype_flow_steps (
+                        id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+                        flow_id VARCHAR(36) NOT NULL REFERENCES hype_flows(id) ON DELETE CASCADE,
+                        step_order INTEGER NOT NULL DEFAULT 0,
+                        delay_minutes INTEGER NOT NULL DEFAULT 0,
+                        step_type VARCHAR(20) NOT NULL DEFAULT 'message',
+                        reforward_preset VARCHAR(50),
+                        message_text TEXT,
+                        cta_intro_text TEXT,
+                        cta_vip_label VARCHAR(200),
+                        cta_vip_url VARCHAR(500),
+                        cta_support_label VARCHAR(200),
+                        cta_support_url VARCHAR(500),
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_hype_flow_steps_flow ON hype_flow_steps(flow_id, step_order)")
+                logger.info("hype_flow_steps table ready")
+
                 # Cross Promo tables
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS tenant_crosspromo_settings (

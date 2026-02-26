@@ -253,6 +253,94 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
         return {"success": False, "error": str(e)}
 
 
+def _build_cta_message(cta_intro: str, cta_vip_label: str, cta_vip_url: str,
+                        cta_support_label: str, cta_support_url: str) -> str:
+    from urllib.parse import urlparse as _urlparse, urlencode, parse_qs, urlunparse
+    cta_parts = []
+    if cta_intro:
+        cta_parts.append(cta_intro)
+    links = []
+    if cta_vip_label and cta_vip_url:
+        parsed = _urlparse(cta_vip_url)
+        existing_params = parse_qs(parsed.query)
+        if not any(k.startswith('utm_') for k in existing_params):
+            utm_params = {'utm_source': 'telegram', 'utm_medium': 'free_channel', 'utm_campaign': 'hype_bot'}
+            new_query = (parsed.query + '&' if parsed.query else '') + urlencode(utm_params)
+            cta_vip_url = urlunparse(parsed._replace(query=new_query))
+        links.append(f'👉 <a href="{cta_vip_url}">{cta_vip_label}</a>')
+    if cta_support_label and cta_support_url:
+        links.append(f'🟢 <a href="{cta_support_url}">{cta_support_label}</a>')
+    if links:
+        cta_parts.append("\n\n".join(links))
+    return "\n\n".join(cta_parts)
+
+
+def _execute_flow_legacy(tenant_id: str, flow: dict, now: datetime, today_str: str,
+                          custom_prompt: str, _visited: set) -> tuple:
+    from domains.crosspromo.repo import enqueue_job
+    scheduled = 0
+    last_run_at = now
+
+    message_count = flow.get("message_count", 3)
+    interval_min = flow.get("interval_minutes", 90)
+    interval_max = flow.get("interval_max_minutes", interval_min)
+    if interval_max < interval_min:
+        interval_max = interval_min
+    delay_after_cta = flow.get("delay_after_cta_minutes", 10)
+    flow_id = flow['id']
+
+    bump_enabled = flow.get('bump_enabled', False)
+    bump_preset = flow.get('bump_preset') or ''
+    signal_context = None
+    if bump_enabled and bump_preset:
+        from db import get_bump_signal_context
+        bump_msg_id, signal_context = get_bump_signal_context(tenant_id, bump_preset)
+        if bump_msg_id:
+            bump_delay = flow.get('bump_delay_minutes', 0) or 0
+            bump_run_at = now + timedelta(minutes=bump_delay)
+            bump_dedupe_key = f"hype_bump_{flow_id}_{today_str}"
+            bump_job = enqueue_job(tenant_id=tenant_id, job_type='hype_bump',
+                                   run_at=bump_run_at, payload={'preset': bump_preset},
+                                   dedupe_key=bump_dedupe_key)
+            if bump_job:
+                scheduled += 1
+                logger.info(f"[legacy] Scheduled bump preset={bump_preset} at {bump_run_at}")
+        else:
+            logger.info(f"[legacy] No bump message found for preset={bump_preset}")
+
+    pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count, signal_context=signal_context)
+    cumulative_offset = delay_after_cta
+    for step in range(1, message_count + 1):
+        if step > 1:
+            cumulative_offset += random.randint(interval_min, interval_max)
+        run_at = now + timedelta(minutes=cumulative_offset)
+        last_run_at = run_at
+        payload = {"flow_id": flow_id, "step_number": step, "custom_prompt": custom_prompt, "job_sub_type": "hype_message"}
+        if pre_generated_messages and step <= len(pre_generated_messages):
+            payload["pre_generated_message"] = pre_generated_messages[step - 1]
+        job = enqueue_job(tenant_id=tenant_id, job_type="hype_message", run_at=run_at,
+                          payload=payload, dedupe_key=f"hype_{flow_id}_{today_str}_step{step}")
+        if job:
+            scheduled += 1
+            logger.info(f"[legacy] Scheduled step {step} at {run_at}")
+
+    if flow.get("cta_enabled"):
+        cta_message = _build_cta_message(
+            flow.get("cta_intro_text", ""), flow.get("cta_vip_label", ""),
+            flow.get("cta_vip_url", ""), flow.get("cta_support_label", ""), flow.get("cta_support_url", ""))
+        if cta_message.strip():
+            cta_run_at = last_run_at + timedelta(minutes=flow.get("cta_delay_minutes", 30))
+            cta_job = enqueue_job(tenant_id=tenant_id, job_type="hype_cta",
+                                  run_at=cta_run_at,
+                                  payload={"flow_id": flow_id, "cta_message": cta_message, "job_sub_type": "hype_cta"},
+                                  dedupe_key=f"hype_{flow_id}_{today_str}_cta")
+            if cta_job:
+                scheduled += 1
+                logger.info(f"[legacy] Scheduled CTA at {cta_run_at}")
+
+    return scheduled, last_run_at
+
+
 def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                  base_time: datetime = None, _visited: set = None) -> Dict:
     from domains.crosspromo.repo import enqueue_job
@@ -281,138 +369,99 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
             logger.info(f"Flow {flow_id} not active today (active_days={flow.get('active_days')})")
             return {"success": False, "error": "Flow not active today", "messages_scheduled": 0}
 
-        custom_prompt = flow.get("custom_prompt", "")
-        if not custom_prompt:
-            return {"success": False, "error": "No prompt configured for flow", "messages_scheduled": 0}
-
-        message_count = flow.get("message_count", 3)
-        interval_min = flow.get("interval_minutes", 90)
-        interval_max = flow.get("interval_max_minutes", interval_min)
-        if interval_max < interval_min:
-            interval_max = interval_min
-        delay_after_cta = flow.get("delay_after_cta_minutes", 10)
-
         now = base_time or datetime.utcnow()
         today_str = now.strftime("%Y-%m-%d")
         scheduled = 0
         last_run_at = now
 
-        bump_enabled = flow.get('bump_enabled', False)
-        bump_preset = flow.get('bump_preset') or ''
-        signal_context = None
-        if bump_enabled and bump_preset:
-            from db import get_bump_signal_context
-            bump_msg_id, signal_context = get_bump_signal_context(tenant_id, bump_preset)
-            if bump_msg_id:
-                bump_delay = flow.get('bump_delay_minutes', 0) or 0
-                bump_run_at = now + timedelta(minutes=bump_delay)
-                bump_dedupe_key = f"hype_bump_{flow_id}_{today_str}"
-                bump_job = enqueue_job(
-                    tenant_id=tenant_id,
-                    job_type='hype_bump',
-                    run_at=bump_run_at,
-                    payload={'preset': bump_preset},
-                    dedupe_key=bump_dedupe_key,
-                )
-                if bump_job:
-                    scheduled += 1
-                    logger.info(f"Scheduled bump job preset={bump_preset} at {bump_run_at} for flow {flow_id}")
-            else:
-                logger.info(f"Bump enabled for flow {flow_id} but no message found for preset={bump_preset}, skipping bump")
+        steps = repo.list_steps(flow_id)
 
-        pre_generated_messages = generate_message_sequence(tenant_id, custom_prompt, message_count, signal_context=signal_context)
-        if not pre_generated_messages:
-            logger.warning(f"Failed to pre-generate messages for flow {flow_id}, will fallback to per-job generation")
+        if not steps:
+            custom_prompt = flow.get("custom_prompt", "")
+            if not custom_prompt:
+                return {"success": False, "error": "No prompt configured for flow", "messages_scheduled": 0}
+            scheduled, last_run_at = _execute_flow_legacy(tenant_id, flow, now, today_str, custom_prompt, _visited)
+            logger.info(f"[legacy] Flow {flow_id} executed with legacy path ({scheduled} jobs)")
+        else:
+            custom_prompt = flow.get("custom_prompt", "")
 
-        cumulative_offset = delay_after_cta
+            signal_context = None
+            has_reforward = any(s['step_type'] == 'reforward' for s in steps)
+            has_ai_hype = any(s['step_type'] == 'ai_hype' for s in steps)
+            if has_reforward or has_ai_hype:
+                reforward_preset = next((s['reforward_preset'] for s in steps if s['step_type'] == 'reforward'), None)
+                if reforward_preset:
+                    from db import get_bump_signal_context
+                    _, signal_context = get_bump_signal_context(tenant_id, reforward_preset)
 
-        for step in range(1, message_count + 1):
-            if step > 1:
-                cumulative_offset += random.randint(interval_min, interval_max)
-            run_at = now + timedelta(minutes=cumulative_offset)
-            last_run_at = run_at
+            ai_steps = [s for s in steps if s['step_type'] == 'ai_hype']
+            ai_messages = []
+            if ai_steps and custom_prompt:
+                ai_messages = generate_message_sequence(tenant_id, custom_prompt, len(ai_steps), signal_context=signal_context)
+                if not ai_messages:
+                    logger.warning(f"Failed to pre-generate {len(ai_steps)} AI messages for flow {flow_id}")
 
-            dedupe_key = f"hype_{flow_id}_{today_str}_step{step}"
+            ai_idx = 0
+            offset = 0
+            step_num = 0
 
-            payload = {
-                "flow_id": flow_id,
-                "step_number": step,
-                "custom_prompt": custom_prompt,
-                "job_sub_type": "hype_message",
-            }
+            for step in steps:
+                offset += step['delay_minutes']
+                run_at = now + timedelta(minutes=offset)
+                last_run_at = run_at
+                step_num += 1
+                stype = step['step_type']
 
-            if pre_generated_messages and step <= len(pre_generated_messages):
-                payload["pre_generated_message"] = pre_generated_messages[step - 1]
+                if stype == 'reforward':
+                    preset = step.get('reforward_preset')
+                    if preset:
+                        dedupe_key = f"hype_bump_{flow_id}_{today_str}_s{step_num}"
+                        job = enqueue_job(tenant_id=tenant_id, job_type='hype_bump',
+                                          run_at=run_at, payload={'preset': preset},
+                                          dedupe_key=dedupe_key)
+                        if job:
+                            scheduled += 1
+                            logger.info(f"Flow {flow_id} step {step_num}: reforward preset={preset} at {run_at}")
 
-            job = enqueue_job(
-                tenant_id=tenant_id,
-                job_type="hype_message",
-                run_at=run_at,
-                payload=payload,
-                dedupe_key=dedupe_key,
-            )
+                elif stype == 'ai_hype':
+                    text = ai_messages[ai_idx] if ai_idx < len(ai_messages) else None
+                    ai_idx += 1
+                    if text:
+                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}"
+                        payload = {"flow_id": flow_id, "step_number": step_num,
+                                   "custom_prompt": custom_prompt, "job_sub_type": "hype_message",
+                                   "pre_generated_message": text}
+                        job = enqueue_job(tenant_id=tenant_id, job_type="hype_message",
+                                          run_at=run_at, payload=payload, dedupe_key=dedupe_key)
+                        if job:
+                            scheduled += 1
+                            logger.info(f"Flow {flow_id} step {step_num}: ai_hype at {run_at}")
 
-            if job:
-                scheduled += 1
-                logger.info(f"Scheduled hype step {step} at {run_at} for flow {flow_id}")
+                elif stype == 'message':
+                    text = step.get('message_text', '').strip()
+                    if text:
+                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}"
+                        payload = {"flow_id": flow_id, "step_number": step_num,
+                                   "job_sub_type": "hype_message", "pre_generated_message": text}
+                        job = enqueue_job(tenant_id=tenant_id, job_type="hype_message",
+                                          run_at=run_at, payload=payload, dedupe_key=dedupe_key)
+                        if job:
+                            scheduled += 1
+                            logger.info(f"Flow {flow_id} step {step_num}: message at {run_at}")
 
-        cta_enabled = flow.get("cta_enabled", False)
-        if cta_enabled:
-            cta_intro = flow.get("cta_intro_text", "")
-            cta_vip_label = flow.get("cta_vip_label", "")
-            cta_vip_url = flow.get("cta_vip_url", "")
-            cta_support_label = flow.get("cta_support_label", "")
-            cta_support_url = flow.get("cta_support_url", "")
-            cta_delay = flow.get("cta_delay_minutes", 30)
-
-            cta_parts = []
-            if cta_intro:
-                cta_parts.append(cta_intro)
-
-            links = []
-            if cta_vip_label and cta_vip_url:
-                from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
-                parsed = urlparse(cta_vip_url)
-                existing_params = parse_qs(parsed.query)
-                if not any(k.startswith('utm_') for k in existing_params):
-                    utm_params = {
-                        'utm_source': 'telegram',
-                        'utm_medium': 'free_channel',
-                        'utm_campaign': 'hype_bot'
-                    }
-                    separator = '&' if parsed.query else ''
-                    new_query = parsed.query + separator + urlencode(utm_params) if parsed.query else urlencode(utm_params)
-                    cta_vip_url = urlunparse(parsed._replace(query=new_query))
-                links.append(f'👉 <a href="{cta_vip_url}">{cta_vip_label}</a>')
-            if cta_support_label and cta_support_url:
-                links.append(f'🟢 <a href="{cta_support_url}">{cta_support_label}</a>')
-
-            if links:
-                cta_parts.append("\n\n".join(links))
-
-            cta_message = "\n\n".join(cta_parts)
-
-            if cta_message.strip():
-                cta_run_at = last_run_at + timedelta(minutes=cta_delay)
-                cta_dedupe_key = f"hype_{flow_id}_{today_str}_cta"
-
-                cta_payload = {
-                    "flow_id": flow_id,
-                    "cta_message": cta_message,
-                    "job_sub_type": "hype_cta",
-                }
-
-                cta_job = enqueue_job(
-                    tenant_id=tenant_id,
-                    job_type="hype_cta",
-                    run_at=cta_run_at,
-                    payload=cta_payload,
-                    dedupe_key=cta_dedupe_key,
-                )
-
-                if cta_job:
-                    scheduled += 1
-                    logger.info(f"Scheduled CTA at {cta_run_at} for flow {flow_id}")
+                elif stype == 'cta':
+                    cta_message = _build_cta_message(
+                        step.get('cta_intro_text', ''), step.get('cta_vip_label', ''),
+                        step.get('cta_vip_url', ''), step.get('cta_support_label', ''),
+                        step.get('cta_support_url', ''))
+                    if cta_message.strip():
+                        dedupe_key = f"hype_{flow_id}_{today_str}_cta_s{step_num}"
+                        cta_payload = {"flow_id": flow_id, "cta_message": cta_message, "job_sub_type": "hype_cta"}
+                        job = enqueue_job(tenant_id=tenant_id, job_type="hype_cta",
+                                          run_at=run_at, payload=cta_payload, dedupe_key=dedupe_key)
+                        if job:
+                            scheduled += 1
+                            logger.info(f"Flow {flow_id} step {step_num}: CTA at {run_at}")
 
         child_flows = [f for f in repo.get_active_flows(tenant_id)
                        if f.get('trigger_after_flow_id') == flow_id]

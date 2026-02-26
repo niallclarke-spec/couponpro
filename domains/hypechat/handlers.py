@@ -277,6 +277,149 @@ def handle_trigger_flow(handler, flow_id: str):
     _send_json(handler, status_code, result)
 
 
+def handle_list_steps(handler, flow_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    steps = repo.list_steps(flow_id)
+    _send_json(handler, 200, {"steps": steps})
+
+
+def _validate_step_data(data: dict) -> str:
+    step_type = data.get('step_type', '')
+    if step_type not in ('reforward', 'cta', 'message', 'ai_hype'):
+        return "step_type must be one of: reforward, cta, message, ai_hype"
+    if step_type == 'reforward':
+        preset = data.get('reforward_preset', '')
+        if preset not in ('best_tp', 'daily_recap', 'weekly_recap', 'signal'):
+            return "reforward_preset must be one of: best_tp, daily_recap, weekly_recap, signal"
+    if step_type == 'cta':
+        if not data.get('cta_vip_label') and not data.get('cta_support_label'):
+            return "CTA step requires at least one link (VIP or Support)"
+    if step_type == 'message':
+        if not data.get('message_text', '').strip():
+            return "message step requires message_text"
+    return ""
+
+
+def handle_create_step(handler, flow_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    data = _read_json_body(handler)
+    err = _validate_step_data(data)
+    if err:
+        _send_json(handler, 400, {"error": err})
+        return
+    existing = repo.list_steps(flow_id)
+    next_order = max((s['step_order'] for s in existing), default=-1) + 1
+    step = repo.create_step(
+        flow_id=flow_id,
+        step_order=next_order,
+        delay_minutes=int(data.get('delay_minutes', 0)),
+        step_type=data['step_type'],
+        reforward_preset=data.get('reforward_preset'),
+        message_text=data.get('message_text', ''),
+        cta_intro_text=data.get('cta_intro_text', ''),
+        cta_vip_label=data.get('cta_vip_label', ''),
+        cta_vip_url=data.get('cta_vip_url', ''),
+        cta_support_label=data.get('cta_support_label', ''),
+        cta_support_url=data.get('cta_support_url', ''),
+    )
+    if step:
+        _send_json(handler, 201, step)
+    else:
+        _send_json(handler, 500, {"error": "Failed to create step"})
+
+
+def handle_update_step(handler, flow_id: str, step_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    data = _read_json_body(handler)
+    allowed = {'delay_minutes', 'step_type', 'reforward_preset', 'message_text',
+               'cta_intro_text', 'cta_vip_label', 'cta_vip_url',
+               'cta_support_label', 'cta_support_url'}
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    step = repo.update_step(step_id, flow_id, **update_data)
+    if step:
+        _send_json(handler, 200, step)
+    else:
+        _send_json(handler, 404, {"error": "Step not found"})
+
+
+def handle_delete_step(handler, flow_id: str, step_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    if repo.delete_step(step_id, flow_id):
+        _send_json(handler, 200, {"success": True})
+    else:
+        _send_json(handler, 404, {"error": "Step not found"})
+
+
+def handle_reorder_steps(handler, flow_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    data = _read_json_body(handler)
+    ordered_ids = data.get('ordered_ids', [])
+    if not ordered_ids:
+        _send_json(handler, 400, {"error": "ordered_ids is required"})
+        return
+    if repo.reorder_steps(flow_id, ordered_ids):
+        _send_json(handler, 200, {"success": True})
+    else:
+        _send_json(handler, 500, {"error": "Failed to reorder steps"})
+
+
+def handle_insert_step(handler, flow_id: str):
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    flow = repo.get_flow(tenant_id, flow_id)
+    if not flow:
+        _send_json(handler, 404, {"error": "Flow not found"})
+        return
+    data = _read_json_body(handler)
+    after_step_id = data.get('after_step_id')
+    err = _validate_step_data(data)
+    if err:
+        _send_json(handler, 400, {"error": err})
+        return
+    step = repo.insert_step_after(flow_id, after_step_id, data)
+    if step:
+        _send_json(handler, 201, step)
+    else:
+        _send_json(handler, 500, {"error": "Failed to insert step"})
+
+
 def handle_flow_analytics(handler, flow_id: str):
     tenant_id = getattr(handler, 'tenant_id', None)
     if not tenant_id:

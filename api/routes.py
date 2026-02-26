@@ -160,6 +160,8 @@ GET_ROUTES: List[Route] = [
     # Hype Chat
     Route('GET', '/api/hypechat/flows/', 'handle_api_hypechat_flow_analytics',
           auth_required=True, db_required=True, is_prefix=True, contains='/analytics'),
+    Route('GET', '/api/hypechat/flows/', 'handle_api_hypechat_flow_steps_list',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps'),
     Route('GET', '/api/hypechat/flows/', 'handle_api_hypechat_flow_get',
           auth_required=True, db_required=True, is_prefix=True),
     Route('GET', '/api/hypechat/flows', 'handle_api_hypechat_flows_list',
@@ -325,6 +327,12 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True, is_prefix=True, contains='/status'),
     Route('POST', '/api/hypechat/flows/', 'handle_api_hypechat_flow_trigger',
           auth_required=True, db_required=True, is_prefix=True, contains='/trigger'),
+    Route('POST', '/api/hypechat/flows/', 'handle_api_hypechat_flow_step_insert',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps/insert'),
+    Route('POST', '/api/hypechat/flows/', 'handle_api_hypechat_flow_step_reorder',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps/reorder'),
+    Route('POST', '/api/hypechat/flows/', 'handle_api_hypechat_flow_step_create',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps'),
     Route('POST', '/api/hypechat/flows', 'handle_api_hypechat_flow_create',
           auth_required=True, db_required=True),
     Route('POST', '/api/hypechat/prompts', 'handle_api_hypechat_prompt_create',
@@ -348,6 +356,8 @@ PUT_ROUTES: List[Route] = [
     # Hype Chat
     Route('PUT', '/api/hypechat/prompts/', 'handle_api_hypechat_prompt_update',
           auth_required=True, db_required=True, is_prefix=True),
+    Route('PUT', '/api/hypechat/flows/', 'handle_api_hypechat_flow_step_update',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps/'),
     Route('PUT', '/api/hypechat/flows/', 'handle_api_hypechat_flow_update',
           auth_required=True, db_required=True, is_prefix=True),
 ]
@@ -369,6 +379,8 @@ DELETE_ROUTES: List[Route] = [
     # Hype Chat
     Route('DELETE', '/api/hypechat/prompts/', 'handle_api_hypechat_prompt_delete',
           auth_required=True, db_required=True, is_prefix=True),
+    Route('DELETE', '/api/hypechat/flows/', 'handle_api_hypechat_flow_step_delete',
+          auth_required=True, db_required=True, is_prefix=True, contains='/steps/'),
     Route('DELETE', '/api/hypechat/flows/', 'handle_api_hypechat_flow_delete',
           auth_required=True, db_required=True, is_prefix=True),
 ]
