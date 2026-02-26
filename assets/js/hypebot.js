@@ -466,66 +466,89 @@ window.HypeBotModule = (function() {
         });
     }
 
+    let _activeStep = { flowId: null, editStepId: null, afterStepId: null };
+
+    function _stepPanelPlaceholder() {
+        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center;gap:12px;">
+            <div style="font-size:32px;opacity:0.3;">↩ 🔗 💬 ✨</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-secondary);">No step selected</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Click <strong>+</strong> on the pipeline to add a step,<br>or click <strong>✏</strong> on an existing step to edit it.</div>
+        </div>`;
+    }
+
     function openFlowModal(editId) {
         const flow = editId ? flows.find(f => f.id === editId) : null;
-        const title = flow ? 'Edit Flow' : 'New Flow';
+        const title = flow ? `Edit Flow: ${escapeHtml(flow.name)}` : 'New Flow';
         const opts = prompts.map(p => `<option value="${p.id}" ${flow && flow.prompt_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
         const isChildFlow = !!(flow && flow.trigger_after_flow_id);
 
+        const inputStyle = 'width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;';
+        const labelStyle = 'display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;';
+
+        const leftPanel = `
+            <div style="flex-shrink:0;width:300px;border-right:1px solid var(--border-primary);overflow-y:auto;display:flex;flex-direction:column;padding:16px;gap:12px;background:var(--bg-secondary,rgba(0,0,0,0.15));">
+
+                <div>
+                    <label style="${labelStyle}">Name</label>
+                    <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}" placeholder="e.g. Post-CTA Hype" style="${inputStyle}">
+                </div>
+
+                <div>
+                    <label style="${labelStyle}">Trigger</label>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <input type="number" id="hype-flow-trigger-delay" min="0" value="${flow ? (flow.trigger_delay_minutes || 0) : 0}" style="width:52px;padding:7px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;text-align:center;box-sizing:border-box;">
+                        <span style="font-size:12px;color:var(--text-muted);">min after</span>
+                        <select id="hype-flow-trigger-after" style="flex:1;min-width:110px;padding:7px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
+                            <option value="">Cross Promo</option>
+                            ${flows.filter(f => f.id !== editId && f.status === 'active').map(f => `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="${labelStyle}">Prompt <span style="font-weight:400;text-transform:none;letter-spacing:0;">(AI Hype steps)</span></label>
+                    <select id="hype-flow-prompt" style="${inputStyle}">
+                        <option value="">Select a prompt…</option>${opts}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="${labelStyle}">Active Days</label>
+                    <div id="hype-day-toggles" data-flow-id="${editId || ''}" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+                </div>
+
+                <button class="btn" onclick="window.HypeBotModule.saveFlow('${editId || ''}')" style="width:100%;margin-top:4px;">Save Settings</button>
+
+                ${editId ? `
+                <div style="border-top:1px solid var(--border-primary);padding-top:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <span style="font-size:11px;font-weight:600;color:var(--text-tertiary,#888);text-transform:uppercase;letter-spacing:0.4px;">Steps</span>
+                        <span id="hype-step-count-badge" style="font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;padding:1px 7px;">0 steps</span>
+                    </div>
+                    <div id="hype-steps-list"></div>
+                </div>` : `
+                <div style="border-top:1px solid var(--border-primary);padding-top:12px;">
+                    <div style="font-size:12px;color:var(--text-muted);font-style:italic;">Save settings first to add steps.</div>
+                </div>`}
+            </div>`;
+
+        const rightPanel = `
+            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;">
+                <div id="hype-step-panel" style="flex:1;display:flex;flex-direction:column;">
+                    ${editId ? _stepPanelPlaceholder() : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);">Fill in the flow settings and click<br><strong>Save Settings</strong> to start adding steps.</div></div>`}
+                </div>
+            </div>`;
+
         const modalHtml = `
             <div class="modal-overlay" id="hype-flow-modal" onclick="if(event.target===this)this.remove()">
-                <div class="modal-content" style="max-width:560px;max-height:92vh;display:flex;flex-direction:column;">
-                    <div class="modal-header">
-                        <h3>${title}</h3>
+                <div class="modal-content" style="max-width:860px;width:95vw;height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+                    <div class="modal-header" style="flex-shrink:0;">
+                        <h3 style="font-size:16px;">${title}</h3>
                         <button class="modal-close" onclick="document.getElementById('hype-flow-modal').remove()">&times;</button>
                     </div>
-                    <div class="modal-body" style="overflow-y:auto;flex:1;padding:16px 24px;">
-
-                        <!-- Settings section -->
-                        <div style="background:var(--bg-tertiary,rgba(255,255,255,0.04));border:1px solid var(--border-primary);border-radius:10px;padding:10px 14px;margin-bottom:14px;">
-                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Trigger</label>
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <span style="font-size:13px;color:var(--text-secondary);">Fire</span>
-                                <input type="number" id="hype-flow-trigger-delay" min="0" value="${flow ? (flow.trigger_delay_minutes || 0) : 0}" style="width:56px;padding:6px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
-                                <span style="font-size:13px;color:var(--text-secondary);">min after</span>
-                                <select id="hype-flow-trigger-after" style="flex:1;min-width:140px;padding:6px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:6px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
-                                    <option value="">Cross Promo</option>
-                                    ${flows.filter(f => f.id !== editId && f.status === 'active').map(f => `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom:14px;">
-                            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Name</label>
-                            <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}" placeholder="e.g. Post-CTA Hype" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;">
-                        </div>
-
-                        <div style="margin-bottom:14px;">
-                            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Prompt <span style="font-size:11px;color:var(--text-muted);">(used by AI Hype steps)</span></label>
-                            <select id="hype-flow-prompt" style="width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;box-sizing:border-box;">
-                                <option value="">Select a prompt...</option>${opts}
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom:0;">
-                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Active Days</label>
-                            <div id="hype-day-toggles" data-flow-id="${editId || ''}" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-                        </div>
-
-                        ${editId ? `
-                        <!-- Step builder section -->
-                        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-primary);">
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">Steps</span>
-                                <span id="hype-step-count-badge" style="font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;padding:1px 7px;">0 steps</span>
-                            </div>
-                            <div id="hype-steps-list" style="min-height:32px;"></div>
-                        </div>` : ''}
-
-                    </div>
-                    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border-primary);">
-                        <button class="btn btn-secondary" onclick="document.getElementById('hype-flow-modal').remove()">Cancel</button>
-                        <button class="btn" onclick="window.HypeBotModule.saveFlow('${editId || ''}')">Save Flow Settings</button>
+                    <div style="display:flex;flex:1;overflow:hidden;">
+                        ${leftPanel}
+                        ${rightPanel}
                     </div>
                 </div>
             </div>`;
@@ -714,44 +737,45 @@ window.HypeBotModule = (function() {
     }
 
     function openStepModal(flowId, editStepId, afterStepId) {
+        const panel = document.getElementById('hype-step-panel');
+        if (!panel) return;
+
+        _activeStep = { flowId, editStepId: editStepId || null, afterStepId: afterStepId || null };
+
         const existingSteps = flowSteps[flowId] || [];
         const editStep = editStepId ? existingSteps.find(s => s.id === editStepId) : null;
         const isEdit = !!editStep;
-        const title = isEdit ? 'Edit Step' : 'Add Step';
+        const title = isEdit ? 'Edit Step' : 'Choose Step Type';
 
-        const modalHtml = `
-            <div class="modal-overlay" id="hype-step-modal" onclick="if(event.target===this)this.remove()" style="z-index:1100;">
-                <div class="modal-content" style="max-width:480px;max-height:88vh;display:flex;flex-direction:column;z-index:1101;">
-                    <div class="modal-header">
-                        <h3>${title}</h3>
-                        <button class="modal-close" onclick="document.getElementById('hype-step-modal').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body" id="hype-step-modal-body" style="overflow-y:auto;flex:1;padding:16px 24px;">
-                        ${!isEdit ? `
-                        <div style="margin-bottom:16px;">
-                            <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Step Type</label>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="hype-step-type-picker">
-                                ${[['reforward','↩','Re-forward'],['cta','🔗','CTA'],['message','💬','Plain Text'],['ai_hype','✨','AI Hype']].map(([t,icon,label]) => `
-                                <button type="button" data-type="${t}"
-                                    onclick="window.HypeBotModule._selectStepType('${t}')"
-                                    style="padding:12px 8px;border:1px solid var(--border-primary);border-radius:8px;background:var(--bg-primary);color:var(--text-secondary);font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s;">
-                                    <div style="font-size:20px;margin-bottom:4px;">${icon}</div>
-                                    <div style="font-weight:500;">${label}</div>
-                                </button>`).join('')}
-                            </div>
-                        </div>` : `<input type="hidden" id="hype-step-type-value" value="${editStep.step_type}">`}
-                        <div id="hype-step-type-fields" style="${!isEdit ? 'display:none;' : ''}">
-                            ${isEdit ? _buildStepTypeFields(editStep.step_type, editStep) : ''}
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border-primary);">
-                        <button class="btn btn-secondary" onclick="document.getElementById('hype-step-modal').remove()">Cancel</button>
-                        <button class="btn" id="hype-step-save-btn" onclick="window.HypeBotModule.saveStep('${flowId}','${editStepId || ''}','${afterStepId || ''}')" ${!isEdit ? 'style="display:none;"' : ''}>Save Step</button>
+        const typePickerHtml = !isEdit ? `
+            <div style="margin-bottom:20px;">
+                <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;">${title}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="hype-step-type-picker">
+                    ${[['reforward','↩','Re-forward'],['cta','🔗','CTA'],['message','💬','Plain Text'],['ai_hype','✨','AI Hype']].map(([t,icon,label]) => `
+                    <button type="button" data-type="${t}"
+                        onclick="window.HypeBotModule._selectStepType('${t}')"
+                        style="padding:14px 8px;border:1px solid var(--border-primary);border-radius:10px;background:var(--bg-primary);color:var(--text-secondary);font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s;">
+                        <div style="font-size:22px;margin-bottom:5px;">${icon}</div>
+                        <div style="font-weight:500;">${label}</div>
+                    </button>`).join('')}
+                </div>
+            </div>` : `
+            <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:16px;">${title}: ${STEP_TYPE_ICON[editStep.step_type]} ${STEP_TYPE_LABEL[editStep.step_type]}</div>
+            <input type="hidden" id="hype-step-type-value" value="${editStep.step_type}">`;
+
+        panel.innerHTML = `
+            <div style="display:flex;flex-direction:column;height:100%;">
+                <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+                    ${typePickerHtml}
+                    <div id="hype-step-type-fields" style="${!isEdit ? 'display:none;' : ''}">
+                        ${isEdit ? _buildStepTypeFields(editStep.step_type, editStep) : ''}
                     </div>
                 </div>
+                <div style="flex-shrink:0;display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border-primary);">
+                    <button class="btn btn-secondary" onclick="window.HypeBotModule._cancelStepEdit()">Cancel</button>
+                    <button class="btn" id="hype-step-save-btn" onclick="window.HypeBotModule.saveStep()" ${!isEdit ? 'style="display:none;"' : ''}>Save Step</button>
+                </div>
             </div>`;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.getElementById('hype-step-modal').classList.add('active');
     }
 
     function _buildStepTypeFields(stepType, step) {
@@ -827,6 +851,12 @@ window.HypeBotModule = (function() {
         return common;
     }
 
+    function _cancelStepEdit() {
+        const panel = document.getElementById('hype-step-panel');
+        if (panel) panel.innerHTML = _stepPanelPlaceholder();
+        _activeStep = { flowId: null, editStepId: null, afterStepId: null };
+    }
+
     function _selectStepType(type) {
         const picker = document.getElementById('hype-step-type-picker');
         if (picker) {
@@ -849,7 +879,7 @@ window.HypeBotModule = (function() {
             hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.id = 'hype-step-type-value';
-            document.getElementById('hype-step-modal-body').appendChild(hiddenInput);
+            document.getElementById('hype-step-panel').appendChild(hiddenInput);
         }
         hiddenInput.value = type;
     }
@@ -880,14 +910,15 @@ window.HypeBotModule = (function() {
         return data;
     }
 
-    async function saveStep(flowId, editStepId, afterStepId) {
+    async function saveStep() {
+        const { flowId, editStepId, afterStepId } = _activeStep;
+        if (!flowId) return;
         const data = _collectStepData();
         if (!data) return;
         try {
             const headers = await getAuthHeaders();
             headers['Content-Type'] = 'application/json';
-            let url, method;
-            let body;
+            let url, method, body;
             if (editStepId) {
                 url = `/api/hypechat/flows/${flowId}/steps/${editStepId}`;
                 method = 'PUT';
@@ -903,7 +934,7 @@ window.HypeBotModule = (function() {
             }
             const resp = await fetch(url, { method, headers, body: JSON.stringify(body) });
             if (resp.ok) {
-                document.getElementById('hype-step-modal')?.remove();
+                _cancelStepEdit();
                 await renderStepsSection(flowId);
                 await loadFlows();
             } else {
@@ -998,7 +1029,7 @@ window.HypeBotModule = (function() {
         openFlowModal, saveFlow, editFlow, deleteFlow,
         setFlowStatus, triggerFlow, viewAnalytics,
         openStepModal, saveStep, deleteStep, moveStep,
-        _selectStepType,
+        _selectStepType, _cancelStepEdit,
         renderStepsSection,
     };
 })();
