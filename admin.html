@@ -6260,40 +6260,8 @@
             </div>
 
             <div id="forex-hype-bot" class="view-container">
-                <div class="content-header">
-                    <h1>Hype Bot</h1>
-                    <p>AI-powered motivational messages for your FREE channel</p>
-                </div>
-                <div class="content-body" id="hype-bot-content" style="padding:0;display:flex;flex-direction:column;min-height:0;">
-                    <div id="hype-list-view" style="padding:var(--content-padding,24px);">
-                        <div id="hype-connection-bar"></div>
-                        <div class="hype-section">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                                <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Prompts</h3>
-                                <button class="btn btn-sm" onclick="window.HypeBotModule.openPromptModal()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                    New Prompt
-                                </button>
-                            </div>
-                            <div id="hype-prompts-list"></div>
-                        </div>
-                        <div style="border-top: 1px solid var(--border-primary); margin: 24px 0;"></div>
-                        <div class="hype-section">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                                <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Flows</h3>
-                                <button class="btn btn-sm" id="create-flow-btn" onclick="window.HypeBotModule.openFlowModal()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                    New Flow
-                                </button>
-                            </div>
-                            <div id="hype-flows-list"></div>
-                        </div>
-                        <div style="border-top: 1px solid var(--border-primary); margin: 24px 0;"></div>
-                        <div class="hype-section">
-                            <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Recent Messages</h3>
-                            <div id="hype-messages-list"></div>
-                        </div>
-                    </div>
+                <div class="content-body" id="hype-bot-content" style="padding:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+                    <div id="hype-list-view" style="flex:1;overflow-y:auto;"></div>
                     <div id="hype-editor-view" style="display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden;"></div>
                 </div>
             </div>
