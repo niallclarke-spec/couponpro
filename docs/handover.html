@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromoStack / EntryLab — Technical Handover Document</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1f2e;
+    --ink-light: #374151;
+    --ink-muted: #6b7280;
+    --accent: #1e40af;
+    --accent-light: #dbeafe;
+    --border: #e5e7eb;
+    --code-bg: #f3f4f6;
+    --page-max: 860px;
+  }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: #fff;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Download button ──────────────────────────────────────── */
+  #download-btn {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    z-index: 9999;
+    transition: background .15s;
+  }
+  #download-btn:hover { background: #1e3a8a; }
+
+  /* ── Page wrapper ─────────────────────────────────────────── */
+  .page {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding-top: 40px;
+  }
+
+  /* ── Cover block ──────────────────────────────────────────── */
+  .cover {
+    border-left: 5px solid var(--accent);
+    padding: 32px 32px 28px;
+    margin-bottom: 48px;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+  }
+  .cover h1 {
+    font-size: 28px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: -.5px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+  .cover .meta {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .cover .meta span { margin-right: 24px; }
+
+  /* ── Table of contents ────────────────────────────────────── */
+  .toc { margin-bottom: 48px; }
+  .toc h2 { font-size: 13px; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-muted); margin-bottom: 12px; }
+  .toc ol { padding-left: 22px; }
+  .toc li { margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 14px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── Section headings ─────────────────────────────────────── */
+  h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 56px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent-light);
+    letter-spacing: -.3px;
+  }
+  h3 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 28px 0 10px;
+  }
+  h4 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-light);
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  /* ── Body text ────────────────────────────────────────────── */
+  p { margin-bottom: 14px; }
+  ul, ol { padding-left: 24px; margin-bottom: 14px; }
+  li { margin-bottom: 5px; }
+  strong { color: var(--ink); }
+
+  /* ── Tables ───────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* ── Code ─────────────────────────────────────────────────── */
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #b91c1c;
+  }
+  pre {
+    background: #1e2432;
+    color: #d1d5db;
+    padding: 18px 20px;
+    border-radius: 8px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin-bottom: 18px;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── Callout boxes ────────────────────────────────────────── */
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-light);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 18px;
+    font-size: 14px;
+  }
+  .callout.warn {
+    border-color: #d97706;
+    background: #fef3c7;
+  }
+
+  /* ── Badge ────────────────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    vertical-align: middle;
+  }
+  .badge.green { background: #059669; }
+  .badge.amber { background: #d97706; }
+  .badge.red   { background: #dc2626; }
+
+  /* ── Divider ──────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  /* ── PRINT ────────────────────────────────────────────────── */
+  @media print {
+    #download-btn { display: none !important; }
+    body { padding: 0; font-size: 11pt; }
+    .page { max-width: 100%; padding-top: 0; }
+
+    @page { margin: 2cm; size: A4; }
+
+    h2 {
+      page-break-before: always;
+      font-size: 16pt;
+    }
+    h2:first-of-type { page-break-before: avoid; }
+    .cover { page-break-before: avoid; page-break-after: always; }
+    .toc { page-break-after: always; }
+
+    h3, h4 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    pre { page-break-inside: avoid; white-space: pre-wrap; word-break: break-all; }
+    .callout { page-break-inside: avoid; }
+
+    a { color: var(--accent); text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<button id="download-btn" onclick="window.print()">⬇ Download PDF</button>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- COVER                                                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <h1>PromoStack / EntryLab</h1>
+  <p class="subtitle">Technical Handover Document — Complete System Reference</p>
+  <p class="meta">
+    <span>Version 1.0</span>
+    <span>February 2026</span>
+    <span>Confidential</span>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">Platform Overview</a></li>
+    <li><a href="#s2">System Architecture</a></li>
+    <li><a href="#s3">Repository Structure</a></li>
+    <li><a href="#s4">Authentication &amp; Access Control</a></li>
+    <li><a href="#s5">Database Schema</a></li>
+    <li><a href="#s6">Domain Modules</a></li>
+    <li><a href="#s7">Forex Signals Bot</a></li>
+    <li><a href="#s8">Journeys System</a></li>
+    <li><a href="#s9">Hype Bot (Hypechat)</a></li>
+    <li><a href="#s10">Cross Promo Automation</a></li>
+    <li><a href="#s11">Telegram Infrastructure</a></li>
+    <li><a href="#s12">Environment Variables</a></li>
+    <li><a href="#s13">Deployment &amp; Operations</a></li>
+    <li><a href="#s14">Known Limitations &amp; Roadmap</a></li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S1: PLATFORM OVERVIEW                                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. Platform Overview</h2>
+
+<p>PromoStack is a multi-tenant SaaS marketing automation platform with two primary products delivered under the <strong>EntryLab</strong> brand:</p>
+
+<ul>
+  <li><strong>PromoStack Coupon Bot</strong> — Telegram bot for branded promotional image generation, used by marketing teams to create coupons at speed.</li>
+  <li><strong>EntryLab Forex Signals</strong> — Automated XAU/USD (gold) trading signals with AI-powered narrative messages, delivered to paying VIP subscribers via Telegram.</li>
+</ul>
+
+<p>The platform also ships a suite of supporting sub-systems: a <strong>Journeys / Support Chat</strong> engine (multi-step Telegram conversational flows), a <strong>Hype Bot</strong> (AI-powered free-channel marketing automation), a <strong>Cross Promo</strong> worker (automated drip of VIP teasers into the free channel), and a <strong>Conversion Tracking</strong> pipeline (email → free Telegram invite → paid VIP).</p>
+
+<h3>URLs</h3>
+<div class="table-wrap"><table>
+  <tr><th>Subdomain</th><th>Purpose</th><th>Who can access</th></tr>
+  <tr><td><code>admin.promostack.io</code></td><td>Admin dashboard (templates, journeys, hype bot, forex config, analytics)</td><td>Admin emails only (allowlisted)</td></tr>
+  <tr><td><code>dash.promostack.io</code></td><td>Client dashboard for tenants</td><td>Authenticated tenant members</td></tr>
+  <tr><td><code>dash.promostack.io/handover</code></td><td>This document</td><td>No auth required</td></tr>
+</table></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S2: SYSTEM ARCHITECTURE                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. System Architecture</h2>
+
+<h3>Technology Stack</h3>
+<div class="table-wrap"><table>
+  <tr><th>Layer</th><th>Technology</th><th>Notes</th></tr>
+  <tr><td>Backend</td><td>Python 3.11 — stdlib <code>http.server</code></td><td>No framework (Flask/Django); thin dispatcher pattern</td></tr>
+  <tr><td>Database</td><td>PostgreSQL (DigitalOcean managed)</td><td>Neon on Replit for development</td></tr>
+  <tr><td>Object Storage</td><td>DigitalOcean Spaces (S3-compatible)</td><td>CDN-backed; used for template images and meta.json backups</td></tr>
+  <tr><td>Frontend</td><td>Pure HTML, CSS, vanilla JS</td><td>No framework; canvas-based image generation</td></tr>
+  <tr><td>Auth</td><td>Clerk JWT + legacy HMAC cookie</td><td>Dynamic JWKS from token <code>iss</code> claim</td></tr>
+  <tr><td>AI</td><td>OpenAI gpt-4o-mini</td><td>Via Replit's OpenAI integration</td></tr>
+  <tr><td>Telegram bots</td><td><code>python-telegram-bot</code> + Telethon</td><td>Bot API for most; Telethon User Client for DM journeys</td></tr>
+  <tr><td>Payments</td><td>Stripe</td><td>Subscriptions + webhook events</td></tr>
+  <tr><td>Market data</td><td>Twelve Data API / Metals API</td><td>XAU/USD real-time + gold news</td></tr>
+  <tr><td>Deployment</td><td>DigitalOcean App Platform</td><td><code>.do/app.yaml</code></td></tr>
+</table></div>
+
+<h3>Request Flow</h3>
+<pre><code>Client Request
+     │
+     ▼
+server.py  (MyHTTPRequestHandler)
+     │  route table lookup (api/routes.py)
+     ├──► API handler   → api/dispatch.py → middleware → domain handler → repo
+     └──► Page handler  → handlers/pages.py → serve HTML file</code></pre>
+
+<h3>Background Workers (Leader-gated)</h3>
+<p>All background workers are gated by a <strong>PostgreSQL advisory lock</strong> (<code>core/leader.py</code>). Only one server instance holds the lock at a time. Standby instances handle HTTP requests but skip scheduling work. Leader failover happens within 10 seconds.</p>
+<div class="table-wrap"><table>
+  <tr><th>Worker</th><th>File</th><th>Interval</th></tr>
+  <tr><td>Forex Scheduler</td><td><code>forex_scheduler.py</code></td><td>1 min (price), 15 min (signals), 30 min (1h signals)</td></tr>
+  <tr><td>Journey Scheduler</td><td><code>domains/journeys/scheduler.py</code></td><td>10 s polling</td></tr>
+  <tr><td>Cross Promo Worker</td><td><code>domains/crosspromo/service.py</code></td><td>Event-driven + scheduled times UTC</td></tr>
+  <tr><td>Telethon Listener</td><td><code>integrations/telethon/</code></td><td>Always-on event listener</td></tr>
+</table></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S3: REPOSITORY STRUCTURE                                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. Repository Structure</h2>
+
+<pre><code>/
+├── server.py                  # Main HTTP server — thin dispatcher
+├── db.py                      # PostgreSQL pool + schema init
+├── forex_scheduler.py         # Forex background scheduler runner
+├── admin.html                 # Admin SPA
+├── app.html                   # Tenant dashboard SPA
+├── api/
+│   ├── routes.py              # All route definitions (Route dataclass)
+│   ├── dispatch.py            # Central API router
+│   └── middleware.py          # Auth, logging, CORS
+├── auth/
+│   └── clerk_auth.py          # Clerk JWT verification helpers
+├── core/
+│   ├── bootstrap.py           # App startup: webhooks, schedulers
+│   ├── config.py              # Env var getters (single source of truth)
+│   ├── leader.py              # PostgreSQL advisory lock for leader election
+│   ├── runtime.py             # TenantRuntime container
+│   └── bot_credentials.py    # BotCredentialResolver
+├── domains/
+│   ├── journeys/              # Support Chat journey engine
+│   │   ├── handlers.py
+│   │   ├── repo.py
+│   │   ├── engine.py          # Step execution
+│   │   └── scheduler.py      # Delayed message queue
+│   ├── connections/           # Tenant bot token management
+│   │   └── handlers.py
+│   ├── crosspromo/            # Cross-promo automation
+│   │   ├── handlers.py
+│   │   ├── service.py
+│   │   └── repo.py
+│   └── hypechat/              # Hype Bot
+│       ├── handlers.py
+│       ├── service.py
+│       └── repo.py
+├── handlers/
+│   ├── pages.py               # HTML page handlers
+│   ├── forex.py               # Forex API handlers
+│   └── stripe.py              # Stripe webhook handlers
+├── strategies/                # Forex trading strategies
+│   ├── base_strategy.py
+│   ├── raja_banks.py          # Raja Banks Gold strategy
+│   └── strategy_loader.py
+├── integrations/
+│   ├── telegram/              # Bot API helpers
+│   └── market_data/           # Twelve Data price feed
+├── bots/core/
+│   └── milestone_tracker.py   # Signal progress notifications
+├── assets/
+│   ├── css/
+│   └── js/
+│       └── hypebot.js         # Hype Bot Klaviyo-style inline editor
+├── docs/                      # This and other reference docs
+└── .do/app.yaml               # DigitalOcean App Platform config</code></pre>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S4: AUTHENTICATION                                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. Authentication &amp; Access Control</h2>
+
+<h3>Primary Auth — Clerk JWT</h3>
+<ul>
+  <li>Token carried in <code>Authorization: Bearer &lt;token&gt;</code> header or <code>__session</code> cookie.</li>
+  <li>JWKS URL is derived <em>dynamically</em> from the token's <code>iss</code> claim — no hardcoded issuer needed.</li>
+  <li>Email extracted from <code>X-Clerk-User-Email</code> header or <code>clerk_user_email</code> cookie fallback.</li>
+</ul>
+
+<h3>Legacy Auth — HMAC Cookie</h3>
+<ul>
+  <li>Cookie name: <code>admin_session</code></li>
+  <li>Signed with <code>ADMIN_PASSWORD</code> secret via HMAC-SHA256.</li>
+  <li>Still accepted for backward compatibility but not issued to new sessions.</li>
+</ul>
+
+<h3>Access Rules</h3>
+<div class="table-wrap"><table>
+  <tr><th>Resource</th><th>Rule</th></tr>
+  <tr><td><code>/admin</code></td><td>Valid Clerk JWT + email in admin allowlist + <code>role = 'admin'</code> in <code>tenant_users</code></td></tr>
+  <tr><td><code>/app</code></td><td>Valid Clerk JWT + any tenant membership</td></tr>
+  <tr><td>API routes with <code>auth_required=True</code></td><td>Valid Clerk JWT (checked by middleware)</td></tr>
+  <tr><td><code>/handover</code></td><td>Public — no auth</td></tr>
+  <tr><td>Admin on <code>dash</code> subdomain (prod)</td><td>Redirect to <code>admin.promostack.io/admin</code></td></tr>
+</table></div>
+
+<h3>Host-Aware Routing</h3>
+<p><code>core/host_context.py</code> inspects the <code>Host</code> header to determine <code>HostType.ADMIN</code> or <code>HostType.DASH</code> and adjusts redirects accordingly. In development both subdomains map to the same instance.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S5: DATABASE SCHEMA                                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. Database Schema</h2>
+
+<div class="callout">All tenant-scoped tables include a <code>tenant_id</code> column. <strong>Every query must filter by tenant_id.</strong> This is the Tenant Isolation Pattern enforced throughout the codebase.</div>
+
+<h3>Core / Auth Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr>
+  <tr><td><code>tenants</code></td><td>Master tenant registry</td><td><code>id</code> (varchar, e.g. <code>'entrylab'</code>), <code>name</code>, <code>created_at</code></td></tr>
+  <tr><td><code>tenant_users</code></td><td>Clerk users → tenant + role</td><td><code>clerk_user_id</code>, <code>email</code>, <code>role</code> ('admin'|'member')</td></tr>
+  <tr><td><code>clerk_users</code></td><td>Clerk user cache</td><td><code>id</code> (Clerk ID), <code>email</code>, <code>updated_at</code></td></tr>
+  <tr><td><code>tenant_bot_connections</code></td><td>Bot tokens per tenant+role</td><td><code>bot_role</code>, <code>bot_token</code>, <code>channel_id</code>, <code>webhook_secret</code>, <code>free_channel_link</code></td></tr>
+</table></div>
+
+<h3>Forex / Signals Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr>
+  <tr><td><code>forex_signals</code></td><td>Full signal lifecycle</td><td><code>direction</code> (BUY/SELL), <code>timeframe</code>, <code>entry_price</code>, <code>stop_loss</code>, <code>take_profit_1/2/3</code>, <code>status</code></td></tr>
+  <tr><td><code>forex_config</code></td><td>Key-value strategy config per tenant</td><td><code>setting_key</code>, <code>setting_value</code> — unique on (tenant_id, setting_key)</td></tr>
+  <tr><td><code>telegram_subscriptions</code></td><td>VIP subscriber records</td><td><code>email</code>, <code>stripe_customer_id</code>, <code>plan_type</code>, <code>telegram_user_id</code>, <code>status</code>, <code>is_converted</code></td></tr>
+</table></div>
+
+<h3>Bot / Usage Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr>
+  <tr><td><code>bot_users</code></td><td>Telegram users who interacted</td><td><code>chat_id</code>, <code>first_name</code>, <code>username</code> — unique on (tenant_id, chat_id)</td></tr>
+  <tr><td><code>bot_usage</code></td><td>Generation analytics</td><td><code>template_slug</code>, <code>coupon_code</code>, <code>success</code>, <code>device_type</code></td></tr>
+  <tr><td><code>broadcast_jobs</code></td><td>Broadcast message queue</td><td><code>message</code>, <code>status</code> (pending/processing/completed)</td></tr>
+</table></div>
+
+<h3>Journeys Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr>
+  <tr><td><code>journeys</code></td><td>Journey definitions</td><td><code>id</code> (uuid), <code>name</code>, <code>is_active</code>, <code>start_delay_seconds</code>, <code>inactivity_timeout_days</code>, <code>priority_int</code>, <code>is_locked</code></td></tr>
+  <tr><td><code>journey_triggers</code></td><td>Events that start journeys</td><td><code>trigger_type</code> (deep_link/keyword), <code>trigger_config</code> (jsonb)</td></tr>
+  <tr><td><code>journey_steps</code></td><td>Ordered steps in a journey</td><td><code>step_type</code> (message/question/delay/wait_for_reply), <code>config</code> (jsonb), <code>branch_keyword</code>, <code>branch_true_step_id</code>, <code>branch_false_step_id</code></td></tr>
+  <tr><td><code>journey_user_sessions</code></td><td>Per-user progress state</td><td><code>telegram_chat_id</code>, <code>current_step_id</code>, <code>status</code>, <code>answers</code> (jsonb)</td></tr>
+  <tr><td><code>journey_scheduled_messages</code></td><td>Deferred message queue</td><td><code>scheduled_for</code>, <code>status</code> (pending/sent/failed)</td></tr>
+  <tr><td><code>journey_inbound_dedupe</code></td><td>Inbound message deduplication</td><td>Prevents double-processing on retry</td></tr>
+</table></div>
+
+<h3>Hype Bot Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr>
+  <tr><td><code>hype_prompts</code></td><td>Named AI system prompts</td><td><code>name</code>, <code>prompt_text</code></td></tr>
+  <tr><td><code>hype_flows</code></td><td>Flow definitions</td><td><code>name</code>, <code>is_active</code>, <code>trigger_delay_minutes</code>, <code>trigger_after_flow_id</code>, <code>active_days</code> (jsonb)</td></tr>
+  <tr><td><code>hype_flow_steps</code></td><td>Steps within a flow</td><td><code>step_type</code> (reforward/cta/message/ai_hype), <code>delay_minutes</code>, <code>config</code> (jsonb)</td></tr>
+  <tr><td><code>hype_flow_analytics</code></td><td>Per-flow execution stats</td><td><code>sends</code>, <code>last_triggered_at</code></td></tr>
+</table></div>
+
+<h3>Cross Promo &amp; Stripe Tables</h3>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Purpose</th></tr>
+  <tr><td><code>tenant_crosspromo_settings</code></td><td>Cross promo config per tenant (enabled, channels, CTA URL, post times)</td></tr>
+  <tr><td><code>crosspromo_jobs</code></td><td>Job queue: pending → claimed → completed/failed. Atomically claimed with <code>FOR UPDATE SKIP LOCKED</code></td></tr>
+  <tr><td><code>tenant_stripe_settings</code></td><td>Stripe account + product/price IDs per tenant</td></tr>
+  <tr><td><code>processed_webhook_events</code></td><td>Idempotency table for Stripe webhook events</td></tr>
+  <tr><td><code>campaigns</code></td><td>Marketing campaign definitions (title, dates, prize, status)</td></tr>
+</table></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S6: DOMAIN MODULES                                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. Domain Modules</h2>
+
+<p>Each domain under <code>domains/</code> follows the same structure:</p>
+<ul>
+  <li><code>handlers.py</code> — HTTP request handlers (thin, delegate to service/repo)</li>
+  <li><code>repo.py</code> — All database queries for this domain</li>
+  <li><code>service.py</code> — Business logic (if needed)</li>
+</ul>
+
+<h3>Core Services</h3>
+
+<h4>TenantRuntime (<code>core/runtime.py</code>)</h4>
+<p>Container for all tenant-scoped operations. Ensures every service call is isolated to a single tenant. Provides lazy-loaded access to signal engine, AI engine, and Telegram client.</p>
+
+<h4>BotCredentialResolver (<code>core/bot_credentials.py</code>)</h4>
+<p>Single source of truth for bot tokens. Raises <code>BotNotConfiguredError</code> with a user-actionable message if a bot is not configured. Callers should never hard-code tokens.</p>
+<pre><code>resolver = BotCredentialResolver(tenant_id='entrylab')
+creds = resolver.get_bot_credentials('signal_bot')
+# → {'token': '...', 'channel_id': '...', 'username': '...'}</code></pre>
+
+<h4>Leader Election (<code>core/leader.py</code>)</h4>
+<p>Uses <code>pg_try_advisory_lock()</code>. Only the lock-holder runs background workers. Other instances poll every 10 seconds for failover.</p>
+
+<h3>Connections Domain (<code>domains/connections/</code>)</h3>
+<p>Manages <code>tenant_bot_connections</code>. On save: validates token via Telegram <code>getMe</code>, stores credentials, registers webhook with unique secret. On server startup, <code>core/bootstrap.py</code> re-registers all webhooks from the table.</p>
+
+<div class="table-wrap"><table>
+  <tr><th>Bot Role</th><th>Purpose</th></tr>
+  <tr><td><code>signal_bot</code></td><td>Posts forex signals to VIP + FREE channels</td></tr>
+  <tr><td><code>message_bot</code></td><td>(Legacy) Journey DMs via bot label</td></tr>
+</table></div>
+
+<p>The generic webhook handler at <code>/api/bot-webhook/&lt;secret&gt;</code> handles: journey triggers, journey replies, AND channel join tracking (<code>chat_member</code> events for invite link matching).</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S7: FOREX SIGNALS BOT                                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. Forex Signals Bot</h2>
+
+<h3>Signal Lifecycle</h3>
+<pre><code>Price data (Twelve Data)
+      │
+      ▼
+Indicator calculation (RSI, ADX, MACD, ATR, EMA, Stoch)
+      │
+      ▼
+Strategy rules (raja_banks.py or active_strategy)
+      │  signal generated?
+      ▼
+POST to VIP Telegram channel
+      │
+      ▼  price monitoring (1 min)
+TP1 hit → forward signal to FREE (cross promo lifecycle begins)
+TP2 hit → forward TP2 update
+TP3 hit → forward TP3, finish cross promo, trigger Hype Bot
+SL  hit → finish, trigger hype recap</code></pre>
+
+<h3>Signal Statuses</h3>
+<div class="table-wrap"><table>
+  <tr><th>Status</th><th>Meaning</th></tr>
+  <tr><td>ACTIVE</td><td>Live — watching for TP/SL hits</td></tr>
+  <tr><td>TP1_HIT / TP2_HIT / TP3_HIT</td><td>Partial closes</td></tr>
+  <tr><td>STOPPED</td><td>Stop loss triggered</td></tr>
+  <tr><td>CLOSED</td><td>Signal expired or manually closed</td></tr>
+</table></div>
+
+<h3>Scheduler Schedule (UTC)</h3>
+<div class="table-wrap"><table>
+  <tr><th>Task</th><th>Frequency</th></tr>
+  <tr><td>Signal check (15-min timeframe)</td><td>Every 15 min</td></tr>
+  <tr><td>Signal check (1-hour timeframe)</td><td>Every 30 min</td></tr>
+  <tr><td>Price monitoring + TP/SL check</td><td>Every 1 min</td></tr>
+  <tr><td>Signal guidance update</td><td>Every 1 min (10 min cooldown)</td></tr>
+  <tr><td>Stagnant re-validation</td><td>90 min after signal, then every 30 min</td></tr>
+  <tr><td>Hard timeout close</td><td>3 hours per signal</td></tr>
+  <tr><td>Morning briefing</td><td>06:20 UTC</td></tr>
+  <tr><td>Daily recap</td><td>06:30 UTC</td></tr>
+  <tr><td>Weekly recap</td><td>06:30 UTC (Mondays)</td></tr>
+</table></div>
+
+<h3>Strategies</h3>
+<p>Strategies live in <code>strategies/</code> and implement <code>base_strategy.py</code>. The active strategy is configured via <code>forex_config.setting_key = 'active_strategy'</code>. Strategy files are dynamically loaded by <code>strategy_loader.py</code>.</p>
+
+<h3>Multi-TP Dynamic TP/SL</h3>
+<p>Take-profit levels and stop-loss are computed from ATR multipliers configurable in <code>forex_config</code>: <code>sl_multiplier</code>, <code>tp_multiplier</code>. Risk:reward ratios adjust dynamically per timeframe.</p>
+
+<h3>API Endpoints</h3>
+<div class="table-wrap"><table>
+  <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/api/forex/signals</code></td><td>List signals with filters</td></tr>
+  <tr><td>POST</td><td><code>/api/forex/check</code></td><td>Trigger manual signal check</td></tr>
+  <tr><td>GET</td><td><code>/api/forex/config</code></td><td>Get forex config</td></tr>
+  <tr><td>PUT</td><td><code>/api/forex/config</code></td><td>Update forex config</td></tr>
+  <tr><td>GET</td><td><code>/api/forex/analytics</code></td><td>Signal performance stats</td></tr>
+</table></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S8: JOURNEYS SYSTEM                                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. Journeys System (Support Chat)</h2>
+
+<p>Event-triggered, multi-step conversational flows for Telegram bots. Triggered via deep links (<code>t.me/bot?start=code</code>) or direct keyword messages.</p>
+
+<h3>Step Types</h3>
+<div class="table-wrap"><table>
+  <tr><th>Type</th><th>Behaviour</th></tr>
+  <tr><td><code>message</code></td><td>Send message → advance immediately</td></tr>
+  <tr><td><code>question</code></td><td>Send message → wait for user reply</td></tr>
+  <tr><td><code>delay</code></td><td>Schedule next step in the future</td></tr>
+  <tr><td><code>wait_for_reply</code></td><td>Pause until reply or inactivity timeout</td></tr>
+</table></div>
+
+<h3>Journey Lifecycle States</h3>
+<p><span class="badge amber">Draft</span> — Editable, not triggering. &nbsp; <span class="badge green">Active</span> — Live, triggers for new users. &nbsp; <span class="badge red">Stopped</span> — No new triggers; in-progress users finish.</p>
+
+<h3>Production Reliability Features</h3>
+<ul>
+  <li><strong>Per-user async locking</strong> — LRU-evicting, max 1000 locks. Prevents race conditions.</li>
+  <li><strong>Message deduplication</strong> — <code>journey_inbound_dedupe</code> table prevents double-processing on webhook retries.</li>
+  <li><strong>Session auto-heal</strong> — Broken sessions are marked and fall through to DM triggers.</li>
+  <li><strong>Inactivity auto-complete</strong> — Configurable <code>inactivity_timeout_days</code> per journey, enforced in both listener and scheduler.</li>
+  <li><strong>Stale job guard</strong> — Scheduler validates session status + step match before sending.</li>
+  <li><strong>Journey priority</strong> — <code>priority_int</code> column; highest priority wins on trigger match.</li>
+  <li><strong>Journey locking</strong> — <code>is_locked = true</code> prevents edits; duplicate endpoint clones the journey+steps+triggers.</li>
+  <li><strong>Inline step delays</strong> — Delays ≤15 s executed inline (exact timing); &gt;15 s deferred to scheduler.</li>
+</ul>
+
+<h3>Start Delay</h3>
+<p>Configurable <code>start_delay_seconds</code> (0–180 min). If 0, step 1 executes immediately on trigger. If &gt;0, step 1 is scheduled via the scheduler after the configured delay. Single code path for all delays.</p>
+
+<h3>Await-Reply Keyword Branching</h3>
+<p>Each <code>wait_for_reply</code> step supports: <code>branch_keyword</code> (matched case-insensitively), <code>branch_true_step_id</code> (matched), <code>branch_false_step_id</code> (unmatched). Allows simple yes/no flows.</p>
+
+<h3>Placeholder Support</h3>
+<p><code>{first_name}</code> in any message or question step text is replaced with the user's Telegram first name at execution time (stored as <code>_first_name</code> in session <code>answers</code> JSON at journey start).</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S9: HYPE BOT                                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s9">9. Hype Bot (Hypechat)</h2>
+
+<p>AI-powered motivational messaging system for the FREE Telegram channel. Posts scheduled content to nurture free subscribers and drive VIP upgrades. Domain: <code>domains/hypechat/</code>.</p>
+
+<h3>Concepts</h3>
+<ul>
+  <li><strong>Prompts</strong> — Named AI system prompts defining the message angle/style (e.g. "Daily motivation", "Urgency"). Admin creates and names these in the UI.</li>
+  <li><strong>Flows</strong> — Named sequences of steps triggered after an event (e.g. after cross promo TP1). Flows chain together via <code>trigger_after_flow_id</code>.</li>
+  <li><strong>Steps</strong> — Individual actions within a flow, executed in sequence with per-step delays.</li>
+</ul>
+
+<h3>Step Types</h3>
+<div class="table-wrap"><table>
+  <tr><th>Type</th><th>Icon</th><th>What it does</th></tr>
+  <tr><td><code>reforward</code></td><td>↩</td><td>Forwards a saved message from VIP to FREE. Presets: <code>best_tp</code>, <code>daily_recap</code>, <code>weekly_recap</code>, <code>signal</code>.</td></tr>
+  <tr><td><code>cta</code></td><td>🔗</td><td>Posts a call-to-action message with the VIP upgrade URL (UTM params auto-appended).</td></tr>
+  <tr><td><code>message</code></td><td>💬</td><td>Posts a plain-text message (no AI).</td></tr>
+  <tr><td><code>ai_hype</code></td><td>✨</td><td>Posts an AI-generated message using the flow's prompt + live pip performance context.</td></tr>
+</table></div>
+
+<h3>Flow Chaining</h3>
+<p>Every flow has <code>trigger_after_flow_id</code> (NULL = root, triggered by Cross Promo) and <code>trigger_delay_minutes</code>. Root flows fire from cross promo; child flows dispatch recursively after their delay. Circular chains are protected via a <code>_visited</code> set.</p>
+
+<h3>Signal Context Injection</h3>
+<p>For <code>ai_hype</code> and <code>reforward</code> steps, the live pip performance context (today + 7-day) is injected into the AI prompt automatically.</p>
+
+<h3>Legacy Flows</h3>
+<p>Flows with no steps fall back to <code>_execute_flow_legacy()</code> in <code>service.py</code> — backward-compatible with flows created before the step sequencer was built.</p>
+
+<h3>AI Message Generation</h3>
+<p>Uses <code>gpt-4o-mini</code> with a fixed EntryLab system prompt. For <code>ai_hype</code> steps, all messages in a flow's AI steps are pre-generated as a batch for narrative arc coherence before any are posted.</p>
+
+<h3>Admin UI</h3>
+<p>The Hype Bot admin is at <code>#forex/hype-bot</code> in <code>admin.html</code>, powered by <code>assets/js/hypebot.js</code>. The flow editor uses a <strong>Klaviyo-style full-page inline editor</strong> — clicking a flow replaces the page content with an editor where "+" and "✏" expand inline forms directly in the pipeline. No nested modals.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S10: CROSS PROMO                                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s10">10. Cross Promo Automation</h2>
+
+<p>Automated system for cross-promoting VIP signals in the FREE channel. Domain: <code>domains/crosspromo/</code>.</p>
+
+<h3>Morning Sequence (UTC)</h3>
+<div class="table-wrap"><table>
+  <tr><th>Default Time</th><th>Action</th></tr>
+  <tr><td>06:42</td><td>Post gold morning news (Alpha Vantage)</td></tr>
+  <tr><td>07:12</td><td>Forward weekly recap (if available) from VIP → FREE</td></tr>
+  <tr><td>07:51</td><td>Post VIP teaser message</td></tr>
+  <tr><td>20:00</td><td>End-of-day pip brag</td></tr>
+</table></div>
+
+<h3>TP-Triggered Lifecycle</h3>
+<pre><code>TP1 hit → forward signal + TP1 update to FREE
+         → start 30-min countdown
+TP2 hit → forward TP2, reset countdown
+TP3 hit → forward TP3, finish cross promo immediately
+           → trigger Hype Bot flow chain
+
+Countdown expires OR SL after TP1 → finish cross promo → trigger Hype Bot</code></pre>
+
+<h3>Job Queue</h3>
+<p>Jobs stored in <code>crosspromo_jobs</code>. Claimed atomically with <code>FOR UPDATE SKIP LOCKED</code>. Job dedupe uses DELETE (not UPDATE) to free slots for rescheduling. Old CTA job removed — Hype Bot flow chain replaces it.</p>
+
+<h3>Admin UI</h3>
+<p>Cross Promo settings are embedded within the Signal Bot connection card on the Connections page (<code>#forex/connections</code>). No standalone page.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S11: TELEGRAM INFRASTRUCTURE                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s11">11. Telegram Infrastructure</h2>
+
+<h3>Bot API (python-telegram-bot)</h3>
+<ul>
+  <li>Uses <code>AIORateLimiter</code> to stay within Telegram's 30 msg/s global limit.</li>
+  <li>Short-lived <code>telegram.Bot</code> instances with a 60 s TTL cache for bot connections.</li>
+  <li>Explicit cache invalidation when bot tokens change.</li>
+  <li>Webhook URLs registered at startup from <code>tenant_bot_connections</code> table.</li>
+  <li>Single-process webhook architecture (no long polling).</li>
+</ul>
+
+<h3>Telethon User Client</h3>
+<p>Used for Journey messaging without the bot label (appears as a user sending DMs). Features:</p>
+<ul>
+  <li>Singleton client per tenant.</li>
+  <li>Rate limiting: soft 1200/hard 1500 daily sends. <code>get_level()</code> for scheduler pacing.</li>
+  <li>Session persistence across restarts.</li>
+  <li>Handles private messages for journey reply detection.</li>
+</ul>
+
+<h3>Conversion Tracking</h3>
+<p>Full customer lifecycle tracking via unique Telegram invite links:</p>
+<ol>
+  <li>Landing page captures email + UTMs → <code>POST /api/telegram/grant-access</code> with <code>amountPaid=0</code></li>
+  <li>Server generates a single-use FREE channel invite link (72 h expiry, <code>member_limit=1</code>)</li>
+  <li>User joins FREE channel → webhook matches invite link to email (bridges email ↔ Telegram identity)</li>
+  <li>User pays for VIP → Stripe webhook detects free→VIP conversion, sets <code>is_converted=TRUE</code>, calculates <code>conversion_days</code></li>
+</ol>
+<p>Fallback: configurable public link (<code>free_channel_link</code> on <code>tenant_bot_connections</code>). Retry logic: 3 attempts with 1 s delay.</p>
+
+<h3>UTM Auto-append</h3>
+<p>Hype Bot CTA URLs have UTM params auto-appended: <code>utm_source=telegram&amp;utm_medium=free_channel&amp;utm_campaign=hype_bot</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S12: ENVIRONMENT VARIABLES                                 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s12">12. Environment Variables</h2>
+
+<div class="callout warn">All env vars are accessed through <code>core/config.py</code>. Never read <code>os.environ</code> directly in domain code.</div>
+
+<h3>Database</h3>
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Where</th><th>Description</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td>Replit / dev</td><td>Full PostgreSQL connection string</td></tr>
+  <tr><td><code>DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD</code></td><td>DigitalOcean</td><td>Managed DB credentials</td></tr>
+  <tr><td><code>DB_SSLMODE</code></td><td>Optional</td><td>Default: <code>require</code></td></tr>
+</table></div>
+
+<h3>Telegram</h3>
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Where</th><th>Description</th></tr>
+  <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Both</td><td>Coupon bot token</td></tr>
+  <tr><td><code>FOREX_BOT_TOKEN</code></td><td>Production</td><td>Forex signal bot token</td></tr>
+  <tr><td><code>ENTRYLAB_TEST_BOT</code></td><td>Dev</td><td>Forex bot token for development</td></tr>
+  <tr><td><code>TELEGRAM_API_ID / TELEGRAM_API_HASH / TELEGRAM_PHONE</code></td><td>Both</td><td>Telethon user client credentials</td></tr>
+</table></div>
+
+<h3>Stripe</h3>
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Where</th><th>Description</th></tr>
+  <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Production</td><td>Live Stripe secret</td></tr>
+  <tr><td><code>TEST_STRIPE_SECRET</code></td><td>Dev</td><td>Test mode Stripe key</td></tr>
+  <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Production</td><td>Webhook signature verification</td></tr>
+</table></div>
+
+<h3>DigitalOcean Spaces</h3>
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Description</th></tr>
+  <tr><td><code>SPACES_ACCESS_KEY</code></td><td>S3 access key</td></tr>
+  <tr><td><code>SPACES_SECRET_KEY</code></td><td>S3 secret key</td></tr>
+  <tr><td><code>SPACES_BUCKET</code></td><td>Bucket name (default: <code>couponpro-templates</code>)</td></tr>
+  <tr><td><code>SPACES_REGION</code></td><td>Region (default: <code>lon1</code>)</td></tr>
+</table></div>
+
+<h3>Other</h3>
+<div class="table-wrap"><table>
+  <tr><th>Variable</th><th>Description</th></tr>
+  <tr><td><code>ADMIN_PASSWORD</code></td><td>HMAC key for legacy cookie auth</td></tr>
+  <tr><td><code>TENANT_ID</code></td><td>Tenant for forex scheduler (e.g. <code>entrylab</code>)</td></tr>
+  <tr><td><code>METALS_API_KEY</code></td><td>Gold price / news data</td></tr>
+  <tr><td><code>FUNDERPRO_PRODUCT_ID</code></td><td>FunderPro coupon validation</td></tr>
+  <tr><td><code>CLERK_ALLOWED_ISSUERS</code></td><td>Comma-separated Clerk issuer allowlist (production security)</td></tr>
+  <tr><td><code>AI_INTEGRATIONS_OPENAI_API_KEY</code></td><td>Auto-populated by Replit OpenAI integration</td></tr>
+  <tr><td><code>LOG_LEVEL</code></td><td>Default: <code>INFO</code></td></tr>
+  <tr><td><code>PORT</code></td><td>Default: 5000 (Replit), 8080 (DigitalOcean)</td></tr>
+</table></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S13: DEPLOYMENT & OPERATIONS                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s13">13. Deployment &amp; Operations</h2>
+
+<h3>DigitalOcean App Platform</h3>
+<p>Production is configured in <code>.do/app.yaml</code>. The app runs as a single service with the command <code>python3 server.py</code>. Secrets are marked <code>type: SECRET, scope: RUN_TIME</code>.</p>
+
+<h3>Dev vs Production</h3>
+<div class="table-wrap"><table>
+  <tr><th>Concern</th><th>Development (Replit)</th><th>Production (DigitalOcean)</th></tr>
+  <tr><td>Database</td><td><code>DATABASE_URL</code> (Neon)</td><td><code>DB_*</code> variables</td></tr>
+  <tr><td>Forex bot token</td><td><code>ENTRYLAB_TEST_BOT</code></td><td><code>FOREX_BOT_TOKEN</code></td></tr>
+  <tr><td>Stripe</td><td><code>TEST_STRIPE_SECRET</code></td><td><code>STRIPE_SECRET_KEY</code></td></tr>
+  <tr><td>OpenAI</td><td>Auto via Replit integration</td><td>Must set <code>AI_INTEGRATIONS_OPENAI_*</code></td></tr>
+</table></div>
+
+<h3>Startup Sequence</h3>
+<ol>
+  <li><code>server.py</code> starts <code>MyHTTPRequestHandler</code> on configured port.</li>
+  <li><code>db.py</code> initialises connection pool and runs <code>CREATE TABLE IF NOT EXISTS</code> for all tables.</li>
+  <li><code>core/bootstrap.py</code> re-registers all Telegram webhooks from <code>tenant_bot_connections</code> table.</li>
+  <li>Leader election begins. Winner starts all background workers.</li>
+</ol>
+
+<h3>Logging</h3>
+<p>All modules use <code>core/logging.get_logger(__name__)</code>. Log level controlled by <code>LOG_LEVEL</code> env var. Logs go to stdout (captured by DigitalOcean App Platform log stream).</p>
+
+<h3>Adding a New Route</h3>
+<ol>
+  <li>Add a <code>Route(...)</code> to the appropriate list in <code>api/routes.py</code>.</li>
+  <li>Add the handler function to the appropriate domain <code>handlers.py</code>.</li>
+  <li>Add <code>def handle_xxx(self): domain.handle_xxx(self)</code> to <code>MyHTTPRequestHandler</code> in <code>server.py</code>.</li>
+  <li>Validate at startup — server logs an error if any route's handler method is missing.</li>
+</ol>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- S14: KNOWN LIMITATIONS & ROADMAP                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="s14">14. Known Limitations &amp; Roadmap</h2>
+
+<h3>Current Limitations</h3>
+<div class="table-wrap"><table>
+  <tr><th>Limitation</th><th>Impact</th><th>Workaround</th></tr>
+  <tr><td>Forex scheduler is single-tenant only</td><td>Only <code>entrylab</code> gets signals</td><td>Set <code>TENANT_ID=entrylab</code> env var</td></tr>
+  <tr><td>No hot reload</td><td>Code changes require restart</td><td>Restart workflow / re-deploy</td></tr>
+  <tr><td>Telethon session stored locally</td><td>Ephemeral in some hosting configs</td><td>Use DigitalOcean App Platform with persistent volumes or store session in DB</td></tr>
+  <tr><td>No multi-instance DB connection pooling coordination</td><td>Pool per instance; scale-out increases connections</td><td>Monitor and adjust pool size in <code>db.py</code></td></tr>
+</table></div>
+
+<h3>Planned: Multi-Tenant Forex Orchestrator</h3>
+<p>Full design in <code>docs/MULTI_TENANT_FOREX_ROADMAP.md</code>. Summary:</p>
+<ol>
+  <li><strong>Tenant Discovery</strong> — query <code>tenant_bot_connections</code> for all <code>signal_bot</code> rows.</li>
+  <li><strong>TenantOrchestrator</strong> — spawns one <code>ForexSchedulerRunner</code> per active tenant as an asyncio task.</li>
+  <li><strong>Health monitoring</strong> — heartbeats every minute; restart unhealthy schedulers after 5 min silence.</li>
+  <li><strong>Bootstrap integration</strong> — switch <code>core/bootstrap.py</code> to use orchestrator when <code>TENANT_ID</code> is unset.</li>
+</ol>
+<p>Estimated effort: ~4 hours.</p>
+
+<h3>Planned: Bot Hub Marketplace</h3>
+<p>Multi-tenant SaaS marketplace where independent operators can plug in their own Telegram bots. Architecture is already multi-tenant — the main work is the tenant onboarding wizard, billing isolation, and UI whitelabelling.</p>
+
+<hr>
+<p style="font-size:12px; color:#9ca3af; text-align:center; margin-top:32px;">
+  PromoStack / EntryLab · Technical Handover · February 2026 · Confidential
+</p>
+
+</div><!-- .page -->
+</body>
+</html>

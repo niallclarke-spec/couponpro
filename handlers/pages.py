@@ -193,3 +193,22 @@ def serve_campaign(handler):
         handler.send_error(404, "Campaign page not found")
     except Exception as e:
         handler.send_error(500, f"Server error: {str(e)}")
+
+
+def serve_handover(handler):
+    """
+    GET /handover - Serve the technical handover document (no auth required).
+    """
+    try:
+        with open('docs/handover.html', 'r') as f:
+            content = f.read()
+        
+        handler.send_response(200)
+        handler.send_header('Content-type', 'text/html; charset=utf-8')
+        handler.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        handler.end_headers()
+        handler.wfile.write(content.encode('utf-8'))
+    except FileNotFoundError:
+        handler.send_error(404, "Handover document not found")
+    except Exception as e:
+        handler.send_error(500, f"Server error: {str(e)}")

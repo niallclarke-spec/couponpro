@@ -69,6 +69,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_page_setup(self): pages.serve_setup(self)
     def handle_page_coupon(self): pages.serve_coupon(self)
     def handle_page_campaign(self): pages.serve_campaign(self)
+    def handle_page_handover(self): pages.serve_handover(self)
 
     # Auth handlers
     def handle_auth_me(self):

@@ -397,6 +397,7 @@ PAGE_ROUTES: List[Route] = [
     Route('GET', '/setup', 'handle_page_setup'),
     Route('GET', '/coupon', 'handle_page_coupon'),
     Route('GET', '/campaign/', 'handle_page_campaign', is_prefix=True),
+    Route('GET', '/handover', 'handle_page_handover'),
     Route('GET', '/auth/me', 'handle_auth_me', db_required=True),
 ]
 
