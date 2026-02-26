@@ -1,0 +1,65 @@
+You can use the below prompt to get all is needed to get cookin... 
+
+
+I need you to generate a complete technical overview of this entire codebase for a developer who is taking over the project. Please be thorough and cover ALL of the following sections:
+
+## 1. Project Overview
+- What does this platform do? Summarize the core purpose and key features.
+- Who are the end users and what are their primary workflows?
+
+## 2. Tech Stack
+- List every language, framework, library, and service used (frontend, backend, database, APIs, auth, hosting, etc.)
+- Include version numbers where possible.
+
+## 3. Architecture & System Design
+- Describe the overall architecture (monolith, microservices, serverless, etc.)
+- How does the frontend communicate with the backend? (REST, WebSocket, GraphQL, etc.)
+- Draw out the data flow: user action → frontend → backend → database → response.
+- Are there any background jobs, cron tasks, queues, or event-driven processes?
+
+## 4. Database Schema
+- List ALL database tables/collections with their fields, types, and relationships.
+- Include any indexes, foreign keys, or unique constraints.
+- Describe the data model in plain English — how do entities relate to each other?
+
+## 5. API Endpoints / Routes
+- List every API endpoint with: method, path, purpose, request params/body, and response shape.
+- Note which endpoints require authentication.
+
+## 6. Authentication & Authorization
+- How do users sign up, log in, and manage sessions?
+- What auth provider/method is used (JWT, sessions, OAuth, etc.)?
+- Are there different user roles or permission levels? If so, list them and what each can access.
+
+## 7. Third-Party Integrations
+- List ALL external services, APIs, or webhooks integrated (payment providers, TradingView, signal providers, data feeds, etc.)
+- For each: what does it do, how is it connected, and where in the code is it handled?
+
+## 8. Trading Signals Logic
+- How are trading signals received, processed, stored, and displayed?
+- What is the signal data model (fields like symbol, direction, entry, stop loss, take profit, status, etc.)?
+- Is there any automation or webhook integration (e.g., from TradingView)?
+- How are signals distributed to users/subscribers?
+
+## 9. File & Folder Structure
+- Provide a tree view of the entire project directory structure.
+- Briefly describe the purpose of each major folder and key files.
+
+## 10. Environment Variables & Configuration
+- List ALL environment variables used (names only, NOT values) and what each one is for.
+- Are there different configs for dev/staging/production?
+
+## 11. Deployment & Infrastructure
+- How is the app currently deployed? (Replit hosting, custom domain, etc.)
+- Are there any CI/CD pipelines or deployment scripts?
+- What needs to happen to deploy a new version?
+
+## 12. Known Issues, Technical Debt & Limitations
+- Are there any known bugs, incomplete features, or hacky workarounds?
+- What areas of the code would you flag as needing improvement?
+- Are there any scaling concerns with the current architecture?
+
+## 13. Future Features / Roadmap
+- List any planned features or partially built functionality that isn't live yet.
+
+Please output this as a structured markdown document. Be as detailed as possible — this will be used as the primary handover document for rebuilding this into a multi-tenant SaaS platform.
