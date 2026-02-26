@@ -2,6 +2,7 @@ window.HypeBotModule = (function() {
     let prompts = [];
     let flows = [];
     let flowSteps = {};
+    let _editorFlowId = null;
 
     function escapeHtml(text) {
         if (!text) return '';
@@ -60,6 +61,10 @@ window.HypeBotModule = (function() {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // CONNECTION STATUS
+    // ─────────────────────────────────────────────────────────────
+
     async function loadConnectionStatus() {
         const bar = document.getElementById('hype-connection-bar');
         if (!bar) return;
@@ -92,6 +97,10 @@ window.HypeBotModule = (function() {
     async function loadHypeBot() {
         await Promise.all([loadPrompts(), loadFlows(), loadConnectionStatus()]);
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // PROMPTS
+    // ─────────────────────────────────────────────────────────────
 
     async function loadPrompts() {
         try {
@@ -201,6 +210,10 @@ window.HypeBotModule = (function() {
         }).join('');
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // PROMPT MODAL
+    // ─────────────────────────────────────────────────────────────
+
     function openPromptModal(editId) {
         const prompt = editId ? prompts.find(p => p.id === editId) : null;
         const title = prompt ? 'Edit Prompt' : 'New Prompt';
@@ -254,6 +267,10 @@ window.HypeBotModule = (function() {
     async function doDeletePrompt(id) {
         try { const h = await getAuthHeaders(); await fetch(`/api/hypechat/prompts/${id}`, { method:'DELETE', headers:h }); await loadPrompts(); } catch(e) { console.error(e); }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // PREVIEW
+    // ─────────────────────────────────────────────────────────────
 
     function _getArcLabel(step, total) {
         if (total === 1) return 'Single';
@@ -428,17 +445,40 @@ window.HypeBotModule = (function() {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // FLOW MODAL (settings + step builder)
+    // VIEW SWITCHING
     // ─────────────────────────────────────────────────────────────
 
-    function _buildDayToggles(container, conflictLabel, currentDays, isChildFlow) {
+    function _showListView() {
+        _editorFlowId = null;
+        const listView = document.getElementById('hype-list-view');
+        const editorView = document.getElementById('hype-editor-view');
+        if (listView) listView.style.display = '';
+        if (editorView) { editorView.style.display = 'none'; editorView.innerHTML = ''; }
+        // Refresh the header title
+        const headerEl = document.querySelector('#forex-hype-bot .content-header h1');
+        if (headerEl) headerEl.textContent = 'Hype Bot';
+        loadFlows();
+    }
+
+    function _showEditorView() {
+        const listView = document.getElementById('hype-list-view');
+        const editorView = document.getElementById('hype-editor-view');
+        if (listView) listView.style.display = 'none';
+        if (editorView) editorView.style.display = 'flex';
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FLOW EDITOR — full-page inline builder
+    // ─────────────────────────────────────────────────────────────
+
+    function _buildDayToggles(container, currentDays) {
         ALL_DAYS.forEach(d => {
             const isSelected = currentDays.includes(d);
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.dataset.day = d;
             btn.textContent = DAY_LABELS[d];
-            btn.style.cssText = 'padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-primary);transition:all 0.15s;';
+            btn.style.cssText = 'padding:5px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border-primary);transition:all 0.15s;';
             if (isSelected) {
                 btn.style.background = '#34c759';
                 btn.style.color = '#fff';
@@ -466,107 +506,69 @@ window.HypeBotModule = (function() {
         });
     }
 
-    let _activeStep = { flowId: null, editStepId: null, afterStepId: null };
-
-    function _stepPanelPlaceholder() {
-        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center;gap:12px;">
-            <div style="font-size:32px;opacity:0.3;">↩ 🔗 💬 ✨</div>
-            <div style="font-size:14px;font-weight:500;color:var(--text-secondary);">No step selected</div>
-            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Click <strong>+</strong> on the pipeline to add a step,<br>or click <strong>✏</strong> on an existing step to edit it.</div>
-        </div>`;
-    }
-
     function openFlowModal(editId) {
         const flow = editId ? flows.find(f => f.id === editId) : null;
-        const title = flow ? `Edit Flow: ${escapeHtml(flow.name)}` : 'New Flow';
+        _editorFlowId = editId || null;
+
         const opts = prompts.map(p => `<option value="${p.id}" ${flow && flow.prompt_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
-        const isChildFlow = !!(flow && flow.trigger_after_flow_id);
+        const otherFlows = flows.filter(f => f.id !== editId && f.status === 'active');
+        const triggerOpts = otherFlows.map(f => `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('');
 
-        const inputStyle = 'width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;';
-        const labelStyle = 'display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;';
+        const inputStyle = 'padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:7px;color:var(--text-primary);font-size:13px;box-sizing:border-box;';
+        const labelStyle = 'font-size:11px;font-weight:600;color:var(--text-tertiary,#888);text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;';
 
-        const leftPanel = `
-            <div style="flex-shrink:0;width:300px;border-right:1px solid var(--border-primary);overflow-y:auto;display:flex;flex-direction:column;padding:16px;gap:12px;background:var(--bg-secondary,rgba(0,0,0,0.15));">
+        const editorView = document.getElementById('hype-editor-view');
+        if (!editorView) return;
 
-                <div>
-                    <label style="${labelStyle}">Name</label>
-                    <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}" placeholder="e.g. Post-CTA Hype" style="${inputStyle}">
-                </div>
-
-                <div>
-                    <label style="${labelStyle}">Trigger</label>
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                        <input type="number" id="hype-flow-trigger-delay" min="0" value="${flow ? (flow.trigger_delay_minutes || 0) : 0}" style="width:52px;padding:7px 4px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;text-align:center;box-sizing:border-box;">
-                        <span style="font-size:12px;color:var(--text-muted);">min after</span>
-                        <select id="hype-flow-trigger-after" style="flex:1;min-width:110px;padding:7px 8px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:13px;box-sizing:border-box;">
-                            <option value="">Cross Promo</option>
-                            ${flows.filter(f => f.id !== editId && f.status === 'active').map(f => `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="${labelStyle}">Prompt <span style="font-weight:400;text-transform:none;letter-spacing:0;">(AI Hype steps)</span></label>
-                    <select id="hype-flow-prompt" style="${inputStyle}">
-                        <option value="">Select a prompt…</option>${opts}
+        editorView.innerHTML = `
+            <div style="flex-shrink:0;border-bottom:1px solid var(--border-primary);background:var(--bg-secondary,rgba(0,0,0,0.15));">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;flex-wrap:wrap;">
+                    <button onclick="window.HypeBotModule._showListView()"
+                        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border-primary);border-radius:7px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;">
+                        ← Flows
+                    </button>
+                    <input type="text" id="hype-flow-name" value="${flow ? escapeHtml(flow.name) : ''}"
+                        placeholder="Flow name…"
+                        style="${inputStyle}font-size:15px;font-weight:600;flex:1;min-width:140px;max-width:320px;">
+                    <span style="${labelStyle}">Trigger</span>
+                    <input type="number" id="hype-flow-trigger-delay" min="0" value="${flow ? (flow.trigger_delay_minutes || 0) : 0}"
+                        style="${inputStyle}width:52px;text-align:center;">
+                    <span style="font-size:12px;color:var(--text-muted);">min after</span>
+                    <select id="hype-flow-trigger-after" style="${inputStyle}">
+                        <option value="">Cross Promo</option>
+                        ${triggerOpts}
                     </select>
+                    <span style="${labelStyle}">Prompt</span>
+                    <select id="hype-flow-prompt" style="${inputStyle}">
+                        <option value="">None</option>${opts}
+                    </select>
+                    <span style="${labelStyle}">Days</span>
+                    <div id="hype-day-toggles" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+                    <button onclick="window.HypeBotModule.saveFlowSettings()"
+                        class="btn" style="flex-shrink:0;padding:7px 16px;">
+                        Save Settings
+                    </button>
                 </div>
-
-                <div>
-                    <label style="${labelStyle}">Active Days</label>
-                    <div id="hype-day-toggles" data-flow-id="${editId || ''}" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
-                </div>
-
-                <button class="btn" onclick="window.HypeBotModule.saveFlow('${editId || ''}')" style="width:100%;margin-top:4px;">Save Settings</button>
-
-                ${editId ? `
-                <div style="border-top:1px solid var(--border-primary);padding-top:12px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <span style="font-size:11px;font-weight:600;color:var(--text-tertiary,#888);text-transform:uppercase;letter-spacing:0.4px;">Steps</span>
-                        <span id="hype-step-count-badge" style="font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;padding:1px 7px;">0 steps</span>
-                    </div>
-                    <div id="hype-steps-list"></div>
-                </div>` : `
-                <div style="border-top:1px solid var(--border-primary);padding-top:12px;">
-                    <div style="font-size:12px;color:var(--text-muted);font-style:italic;">Save settings first to add steps.</div>
-                </div>`}
-            </div>`;
-
-        const rightPanel = `
-            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;">
-                <div id="hype-step-panel" style="flex:1;display:flex;flex-direction:column;">
-                    ${editId ? _stepPanelPlaceholder() : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);">Fill in the flow settings and click<br><strong>Save Settings</strong> to start adding steps.</div></div>`}
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:32px 20px;">
+                <div id="hype-editor-pipeline" style="max-width:560px;margin:0 auto;">
+                    ${editId ? '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Loading steps…</div>' : '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;font-style:italic;">Save settings to start adding steps.</div>'}
                 </div>
             </div>`;
 
-        const modalHtml = `
-            <div class="modal-overlay" id="hype-flow-modal" onclick="if(event.target===this)this.remove()">
-                <div class="modal-content" style="max-width:860px;width:95vw;height:85vh;display:flex;flex-direction:column;overflow:hidden;">
-                    <div class="modal-header" style="flex-shrink:0;">
-                        <h3 style="font-size:16px;">${title}</h3>
-                        <button class="modal-close" onclick="document.getElementById('hype-flow-modal').remove()">&times;</button>
-                    </div>
-                    <div style="display:flex;flex:1;overflow:hidden;">
-                        ${leftPanel}
-                        ${rightPanel}
-                    </div>
-                </div>
-            </div>`;
-
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.getElementById('hype-flow-modal').classList.add('active');
-        document.getElementById('hype-flow-name').focus();
+        _showEditorView();
 
         const currentDays = flow ? parseDaysString(flow.active_days || '') : ['mon','tue','wed','thu','fri'];
         const toggleContainer = document.getElementById('hype-day-toggles');
-        _buildDayToggles(toggleContainer, null, currentDays, isChildFlow);
+        _buildDayToggles(toggleContainer, currentDays);
 
         if (editId) {
-            renderStepsSection(editId);
+            _refreshEditorPipeline(editId);
         }
     }
 
-    async function saveFlow(editId) {
+    async function saveFlowSettings() {
+        const editId = _editorFlowId;
         const name = document.getElementById('hype-flow-name').value.trim();
         const promptId = document.getElementById('hype-flow-prompt').value;
         const triggerAfterFlowId = document.getElementById('hype-flow-trigger-after')?.value || null;
@@ -595,10 +597,15 @@ window.HypeBotModule = (function() {
             const resp = await fetch(url, { method: editId ? 'PUT' : 'POST', headers, body: JSON.stringify(payload) });
             if (resp.ok) {
                 const data = await resp.json();
-                document.getElementById('hype-flow-modal')?.remove();
-                await loadFlows();
                 if (!editId && data.id) {
+                    _editorFlowId = data.id;
+                    await loadFlows();
                     openFlowModal(data.id);
+                } else {
+                    await loadFlows();
+                    // Flash the save button
+                    const btn = document.querySelector('#hype-editor-view button.btn');
+                    if (btn) { const orig = btn.textContent; btn.textContent = 'Saved ✓'; setTimeout(() => { btn.textContent = orig; }, 1500); }
                 }
             } else {
                 const err = await resp.json();
@@ -606,6 +613,9 @@ window.HypeBotModule = (function() {
             }
         } catch (e) { console.error('Error saving flow:', e); }
     }
+
+    // Backward compat: saveFlow is called from old inline onclick attributes
+    function saveFlow(editId) { return saveFlowSettings(); }
 
     function editFlow(id) { openFlowModal(id); }
 
@@ -652,130 +662,230 @@ window.HypeBotModule = (function() {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // STEP BUILDER
+    // INLINE PIPELINE BUILDER
     // ─────────────────────────────────────────────────────────────
 
-    function _pipelineConnector() {
-        return '<div style="width:2px;height:18px;background:var(--border-primary);margin:0 auto;"></div>';
-    }
-
-    function _pipelineInsertBtn(flowId, afterStepId) {
-        const safeAfter = afterStepId ? `'${afterStepId}'` : 'null';
-        return `<div style="display:flex;justify-content:center;position:relative;">
-            <button type="button"
-                onclick="window.HypeBotModule.openStepModal('${flowId}', null, ${safeAfter})"
-                style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border-primary);background:var(--bg-primary);color:var(--text-muted);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;z-index:1;"
-                onmouseover="this.style.borderColor='var(--accent,#007aff)';this.style.color='var(--accent,#007aff)';this.style.background='rgba(0,122,255,0.08)'"
-                onmouseout="this.style.borderColor='var(--border-primary)';this.style.color='var(--text-muted)';this.style.background='var(--bg-primary)'">+</button>
-        </div>`;
-    }
-
-    async function renderStepsSection(flowId) {
-        const listEl = document.getElementById('hype-steps-list');
-        if (!listEl) return;
-        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;text-align:center;">Loading…</div>';
+    async function _refreshEditorPipeline(flowId) {
+        const pipelineEl = document.getElementById('hype-editor-pipeline');
+        if (!pipelineEl) return;
+        pipelineEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Loading…</div>';
         try {
             const headers = await getAuthHeaders();
             const resp = await fetch(`/api/hypechat/flows/${flowId}/steps`, { headers });
             const data = await resp.json();
             const steps = data.steps || [];
             flowSteps[flowId] = steps;
-            _renderPipeline(flowId, steps);
+            _renderPipelineNodes(flowId, steps);
         } catch (e) {
-            console.error('Error loading steps:', e);
-            listEl.innerHTML = '<div style="font-size:12px;color:#ff453a;text-align:center;">Failed to load steps</div>';
+            const pEl = document.getElementById('hype-editor-pipeline');
+            if (pEl) pEl.innerHTML = '<div style="font-size:12px;color:#ff453a;text-align:center;padding:20px;">Failed to load steps</div>';
         }
     }
 
-    function _renderPipeline(flowId, steps) {
-        const listEl = document.getElementById('hype-steps-list');
-        const badgeEl = document.getElementById('hype-step-count-badge');
-        if (!listEl) return;
-        if (badgeEl) badgeEl.textContent = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
+    function _connector() {
+        return '<div style="width:2px;height:22px;background:var(--border-primary);margin:0 auto;"></div>';
+    }
+
+    function _addZoneHtml(flowId, afterStepId) {
+        const zoneId = 'hype-add-' + (afterStepId || 'start');
+        return `<div id="${zoneId}" style="display:flex;justify-content:center;position:relative;">
+            <button type="button"
+                onclick="window.HypeBotModule.insertStepInline('${flowId}', ${afterStepId ? `'${afterStepId}'` : 'null'})"
+                style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-primary);background:var(--bg-secondary,rgba(255,255,255,0.04));color:var(--text-muted);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"
+                onmouseover="this.style.borderColor='var(--accent,#007aff)';this.style.color='var(--accent,#007aff)';this.style.background='rgba(0,122,255,0.1)'"
+                onmouseout="this.style.borderColor='var(--border-primary)';this.style.color='var(--text-muted)';this.style.background='var(--bg-secondary,rgba(255,255,255,0.04))'">+</button>
+        </div>`;
+    }
+
+    function _stepCardHtml(flowId, step, idx) {
+        const cardId = 'hype-step-card-' + step.id;
+        const delayLabel = `+${step.delay_minutes || 0} min`;
+        const summary = stepSummary(step);
+        const truncated = summary.length > 65 ? summary.slice(0, 64) + '…' : summary;
+        return `<div id="${cardId}">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--bg-secondary,rgba(255,255,255,0.03));border:1px solid var(--border-primary);border-radius:10px;padding:12px 14px;">
+                <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--bg-tertiary,rgba(255,255,255,0.08));border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);">${idx + 1}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(truncated)}</div>
+                </div>
+                <div style="flex-shrink:0;padding:2px 8px;background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;font-size:11px;color:var(--text-muted);white-space:nowrap;">${delayLabel}</div>
+                <button onclick="window.HypeBotModule.editStepInline('${flowId}','${step.id}')"
+                    style="flex-shrink:0;padding:5px 9px;font-size:13px;background:none;border:1px solid var(--border-primary);border-radius:6px;color:var(--text-secondary);cursor:pointer;line-height:1;" title="Edit step">✏</button>
+                <button onclick="window.HypeBotModule.deleteStep('${flowId}','${step.id}')"
+                    style="flex-shrink:0;padding:5px 8px;font-size:13px;background:none;border:1px solid rgba(255,69,58,0.4);border-radius:6px;color:#ff453a;cursor:pointer;line-height:1;" title="Remove">✕</button>
+            </div>
+        </div>`;
+    }
+
+    function _renderPipelineNodes(flowId, steps) {
+        const pipelineEl = document.getElementById('hype-editor-pipeline');
+        if (!pipelineEl) return;
 
         const startNode = `<div style="display:flex;justify-content:center;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid var(--border-primary);border-radius:20px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 18px;border:1px solid var(--border-primary);border-radius:20px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;">
                 ▶ Start
             </div>
         </div>`;
 
-        let parts = [startNode];
+        let parts = [startNode, _connector(), _addZoneHtml(flowId, null)];
+
+        steps.forEach((step, idx) => {
+            parts.push(_connector());
+            parts.push(_stepCardHtml(flowId, step, idx));
+            parts.push(_connector());
+            parts.push(_addZoneHtml(flowId, step.id));
+        });
 
         if (!steps.length) {
-            parts.push(_pipelineConnector());
-            parts.push(_pipelineInsertBtn(flowId, null));
-            parts.push(`<div style="text-align:center;font-size:12px;color:var(--text-muted);font-style:italic;margin-top:8px;">Add your first step</div>`);
-        } else {
-            parts.push(_pipelineConnector());
-            parts.push(_pipelineInsertBtn(flowId, null));
-
-            steps.forEach((step, idx) => {
-                const delayLabel = step.delay_minutes > 0 ? `+${step.delay_minutes} min` : '+0 min';
-                const summary = stepSummary(step);
-                const truncated = summary.length > 55 ? summary.slice(0, 54) + '…' : summary;
-
-                parts.push(`
-                    ${_pipelineConnector()}
-                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-secondary,rgba(255,255,255,0.03));border:1px solid var(--border-primary);border-radius:10px;padding:10px 12px;">
-                        <div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--bg-tertiary,rgba(255,255,255,0.08));border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);">${idx + 1}</div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:13px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(truncated)}</div>
-                        </div>
-                        <div style="flex-shrink:0;padding:2px 8px;background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;font-size:11px;color:var(--text-muted);white-space:nowrap;">${delayLabel}</div>
-                        <button onclick="window.HypeBotModule.openStepModal('${flowId}','${step.id}',null)"
-                            style="flex-shrink:0;padding:4px 8px;font-size:13px;background:none;border:1px solid var(--border-primary);border-radius:5px;color:var(--text-secondary);cursor:pointer;line-height:1;" title="Edit">✏</button>
-                        <button onclick="window.HypeBotModule.deleteStep('${flowId}','${step.id}')"
-                            style="flex-shrink:0;padding:4px 7px;font-size:13px;background:none;border:1px solid rgba(255,69,58,0.4);border-radius:5px;color:#ff453a;cursor:pointer;line-height:1;" title="Remove">✕</button>
-                    </div>`);
-
-                parts.push(_pipelineConnector());
-                parts.push(_pipelineInsertBtn(flowId, step.id));
-            });
+            parts.push(`<div style="text-align:center;font-size:12px;color:var(--text-muted);font-style:italic;margin-top:10px;padding-bottom:8px;">Click + to add your first step</div>`);
         }
 
-        listEl.innerHTML = `<div style="display:flex;flex-direction:column;padding:4px 0 8px;">${parts.join('')}</div>`;
+        pipelineEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:0;">${parts.join('')}</div>`;
     }
 
-    function openStepModal(flowId, editStepId, afterStepId) {
-        const panel = document.getElementById('hype-step-panel');
-        if (!panel) return;
+    // ─── Inline step form — replaces the add zone or step card ───
 
-        _activeStep = { flowId, editStepId: editStepId || null, afterStepId: afterStepId || null };
-
-        const existingSteps = flowSteps[flowId] || [];
-        const editStep = editStepId ? existingSteps.find(s => s.id === editStepId) : null;
+    function _inlineFormHtml(flowId, editStep, afterStepId) {
         const isEdit = !!editStep;
-        const title = isEdit ? 'Edit Step' : 'Choose Step Type';
+        const cancelFn = `window.HypeBotModule.cancelInlineStep('${flowId}')`;
+        const saveFn = `window.HypeBotModule.saveInlineStep('${flowId}')`;
 
-        const typePickerHtml = !isEdit ? `
-            <div style="margin-bottom:20px;">
-                <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;">${title}</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="hype-step-type-picker">
+        const typePicker = !isEdit ? `
+            <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary,#888);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;">Step Type</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;" id="hype-inline-type-picker">
                     ${[['reforward','↩','Re-forward'],['cta','🔗','CTA'],['message','💬','Plain Text'],['ai_hype','✨','AI Hype']].map(([t,icon,label]) => `
                     <button type="button" data-type="${t}"
-                        onclick="window.HypeBotModule._selectStepType('${t}')"
-                        style="padding:14px 8px;border:1px solid var(--border-primary);border-radius:10px;background:var(--bg-primary);color:var(--text-secondary);font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s;">
-                        <div style="font-size:22px;margin-bottom:5px;">${icon}</div>
+                        onclick="window.HypeBotModule._selectInlineStepType('${t}')"
+                        style="padding:12px 6px;border:1px solid var(--border-primary);border-radius:9px;background:var(--bg-primary);color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:center;transition:all 0.15s;">
+                        <div style="font-size:20px;margin-bottom:4px;">${icon}</div>
                         <div style="font-weight:500;">${label}</div>
                     </button>`).join('')}
                 </div>
             </div>` : `
-            <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:16px;">${title}: ${STEP_TYPE_ICON[editStep.step_type]} ${STEP_TYPE_LABEL[editStep.step_type]}</div>
-            <input type="hidden" id="hype-step-type-value" value="${editStep.step_type}">`;
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                <span style="font-size:18px;">${STEP_TYPE_ICON[editStep.step_type]}</span>
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">${STEP_TYPE_LABEL[editStep.step_type]}</span>
+            </div>
+            <input type="hidden" id="hype-inline-type-value" value="${editStep.step_type}">`;
 
-        panel.innerHTML = `
-            <div style="display:flex;flex-direction:column;height:100%;">
-                <div style="flex:1;overflow-y:auto;padding:20px 24px;">
-                    ${typePickerHtml}
-                    <div id="hype-step-type-fields" style="${!isEdit ? 'display:none;' : ''}">
-                        ${isEdit ? _buildStepTypeFields(editStep.step_type, editStep) : ''}
+        const fieldsHtml = isEdit ? _buildStepTypeFields(editStep.step_type, editStep) : '';
+        const saveDisplay = isEdit ? '' : 'display:none;';
+
+        return `
+            <div style="border:1.5px solid var(--accent,#007aff);border-radius:12px;background:var(--bg-secondary,rgba(0,0,0,0.2));overflow:hidden;">
+                <div style="padding:16px 18px 4px;">
+                    ${typePicker}
+                    <div id="hype-inline-type-fields" style="${!isEdit ? 'display:none;' : ''}">
+                        ${fieldsHtml}
                     </div>
+                    ${afterStepId ? `<input type="hidden" id="hype-inline-after-step" value="${afterStepId}">` : ''}
                 </div>
-                <div style="flex-shrink:0;display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border-primary);">
-                    <button class="btn btn-secondary" onclick="window.HypeBotModule._cancelStepEdit()">Cancel</button>
-                    <button class="btn" id="hype-step-save-btn" onclick="window.HypeBotModule.saveStep()" ${!isEdit ? 'style="display:none;"' : ''}>Save Step</button>
+                <div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--border-primary);">
+                    <button type="button" class="btn btn-secondary" onclick="${cancelFn}">Cancel</button>
+                    <button type="button" class="btn" id="hype-inline-save-btn" style="${saveDisplay}" onclick="${saveFn}">Save Step</button>
                 </div>
             </div>`;
+    }
+
+    function insertStepInline(flowId, afterStepId) {
+        const zoneId = 'hype-add-' + (afterStepId || 'start');
+        const zoneEl = document.getElementById(zoneId);
+        if (!zoneEl) return;
+        // Collapse any other open form first
+        _collapseOtherInlineForms(flowId, zoneId);
+        zoneEl.innerHTML = _inlineFormHtml(flowId, null, afterStepId);
+    }
+
+    function editStepInline(flowId, stepId) {
+        const cardId = 'hype-step-card-' + stepId;
+        const cardEl = document.getElementById(cardId);
+        if (!cardEl) return;
+        const existingSteps = flowSteps[flowId] || [];
+        const editStep = existingSteps.find(s => s.id === stepId);
+        if (!editStep) return;
+        _collapseOtherInlineForms(flowId, cardId);
+        cardEl.innerHTML = _inlineFormHtml(flowId, editStep, null) +
+            `<input type="hidden" id="hype-inline-edit-step-id" value="${stepId}">`;
+    }
+
+    function _collapseOtherInlineForms(flowId, exceptId) {
+        // If there's already an open inline form elsewhere, cancel it by re-rendering the pipeline
+        const pipeline = document.getElementById('hype-editor-pipeline');
+        if (!pipeline) return;
+        const existingForm = pipeline.querySelector('#hype-inline-type-picker, #hype-inline-type-value');
+        if (existingForm) {
+            const steps = flowSteps[flowId] || [];
+            _renderPipelineNodes(flowId, steps);
+        }
+    }
+
+    function cancelInlineStep(flowId) {
+        const steps = flowSteps[flowId] || [];
+        _renderPipelineNodes(flowId, steps);
+    }
+
+    async function saveInlineStep(flowId) {
+        const data = _collectInlineStepData();
+        if (!data) return;
+
+        const editStepId = document.getElementById('hype-inline-edit-step-id')?.value || null;
+        const afterStepId = document.getElementById('hype-inline-after-step')?.value || null;
+
+        try {
+            const headers = await getAuthHeaders();
+            headers['Content-Type'] = 'application/json';
+            let url, method, body;
+            if (editStepId) {
+                url = `/api/hypechat/flows/${flowId}/steps/${editStepId}`;
+                method = 'PUT';
+                body = data;
+            } else if (afterStepId) {
+                url = `/api/hypechat/flows/${flowId}/steps/insert`;
+                method = 'POST';
+                body = { ...data, after_step_id: afterStepId };
+            } else {
+                url = `/api/hypechat/flows/${flowId}/steps`;
+                method = 'POST';
+                body = data;
+            }
+            const resp = await fetch(url, { method, headers, body: JSON.stringify(body) });
+            if (resp.ok) {
+                await _refreshEditorPipeline(flowId);
+                await loadFlows();
+            } else {
+                const err = await resp.json();
+                alert(err.error || 'Failed to save step');
+            }
+        } catch (e) { console.error('Error saving step:', e); }
+    }
+
+    function _selectInlineStepType(type) {
+        const picker = document.getElementById('hype-inline-type-picker');
+        if (picker) {
+            picker.querySelectorAll('button').forEach(b => {
+                const isSelected = b.dataset.type === type;
+                b.style.background = isSelected ? 'var(--accent,#007aff)' : 'var(--bg-primary)';
+                b.style.color = isSelected ? '#fff' : 'var(--text-secondary)';
+                b.style.borderColor = isSelected ? 'var(--accent,#007aff)' : 'var(--border-primary)';
+            });
+        }
+        const fieldsEl = document.getElementById('hype-inline-type-fields');
+        if (fieldsEl) {
+            fieldsEl.style.display = 'block';
+            fieldsEl.innerHTML = _buildStepTypeFields(type, null);
+        }
+        const saveBtn = document.getElementById('hype-inline-save-btn');
+        if (saveBtn) saveBtn.style.display = '';
+        let hiddenInput = document.getElementById('hype-inline-type-value');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'hype-inline-type-value';
+            const pipeline = document.getElementById('hype-editor-pipeline');
+            if (pipeline) pipeline.appendChild(hiddenInput);
+        }
+        hiddenInput.value = type;
     }
 
     function _buildStepTypeFields(stepType, step) {
@@ -851,42 +961,9 @@ window.HypeBotModule = (function() {
         return common;
     }
 
-    function _cancelStepEdit() {
-        const panel = document.getElementById('hype-step-panel');
-        if (panel) panel.innerHTML = _stepPanelPlaceholder();
-        _activeStep = { flowId: null, editStepId: null, afterStepId: null };
-    }
-
-    function _selectStepType(type) {
-        const picker = document.getElementById('hype-step-type-picker');
-        if (picker) {
-            picker.querySelectorAll('button').forEach(b => {
-                const isSelected = b.dataset.type === type;
-                b.style.background = isSelected ? 'var(--accent,#007aff)' : 'var(--bg-primary)';
-                b.style.color = isSelected ? '#fff' : 'var(--text-secondary)';
-                b.style.borderColor = isSelected ? 'var(--accent,#007aff)' : 'var(--border-primary)';
-            });
-        }
-        const fieldsEl = document.getElementById('hype-step-type-fields');
-        if (fieldsEl) {
-            fieldsEl.style.display = 'block';
-            fieldsEl.innerHTML = _buildStepTypeFields(type, null);
-        }
-        const saveBtn = document.getElementById('hype-step-save-btn');
-        if (saveBtn) saveBtn.style.display = '';
-        let hiddenInput = document.getElementById('hype-step-type-value');
-        if (!hiddenInput) {
-            hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.id = 'hype-step-type-value';
-            document.getElementById('hype-step-panel').appendChild(hiddenInput);
-        }
-        hiddenInput.value = type;
-    }
-
-    function _collectStepData() {
-        const stepType = document.getElementById('hype-step-type-value')?.value;
-        if (!stepType) return null;
+    function _collectInlineStepData() {
+        const stepType = document.getElementById('hype-inline-type-value')?.value;
+        if (!stepType) { alert('Please select a step type'); return null; }
         const delay = parseInt(document.getElementById('hype-step-delay')?.value || '1') || 1;
         const delayErr = document.getElementById('hype-step-delay-error');
         if (delay < 1) {
@@ -910,39 +987,9 @@ window.HypeBotModule = (function() {
         return data;
     }
 
-    async function saveStep() {
-        const { flowId, editStepId, afterStepId } = _activeStep;
-        if (!flowId) return;
-        const data = _collectStepData();
-        if (!data) return;
-        try {
-            const headers = await getAuthHeaders();
-            headers['Content-Type'] = 'application/json';
-            let url, method, body;
-            if (editStepId) {
-                url = `/api/hypechat/flows/${flowId}/steps/${editStepId}`;
-                method = 'PUT';
-                body = data;
-            } else if (afterStepId) {
-                url = `/api/hypechat/flows/${flowId}/steps/insert`;
-                method = 'POST';
-                body = { ...data, after_step_id: afterStepId };
-            } else {
-                url = `/api/hypechat/flows/${flowId}/steps`;
-                method = 'POST';
-                body = data;
-            }
-            const resp = await fetch(url, { method, headers, body: JSON.stringify(body) });
-            if (resp.ok) {
-                _cancelStepEdit();
-                await renderStepsSection(flowId);
-                await loadFlows();
-            } else {
-                const err = await resp.json();
-                alert(err.error || 'Failed to save step');
-            }
-        } catch (e) { console.error('Error saving step:', e); }
-    }
+    // ─────────────────────────────────────────────────────────────
+    // STEP CRUD (delete / move)
+    // ─────────────────────────────────────────────────────────────
 
     async function deleteStep(flowId, stepId) {
         if (typeof showModalConfirm === 'function') {
@@ -957,7 +1004,7 @@ window.HypeBotModule = (function() {
         try {
             const h = await getAuthHeaders();
             await fetch(`/api/hypechat/flows/${flowId}/steps/${stepId}`, { method:'DELETE', headers:h });
-            await renderStepsSection(flowId);
+            await _refreshEditorPipeline(flowId);
             await loadFlows();
         } catch (e) { console.error(e); }
     }
@@ -978,10 +1025,14 @@ window.HypeBotModule = (function() {
                 method: 'POST', headers: h,
                 body: JSON.stringify({ ordered_ids: orderedIds })
             });
-            await renderStepsSection(flowId);
+            await _refreshEditorPipeline(flowId);
             await loadFlows();
         } catch (e) { console.error(e); }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // ANALYTICS
+    // ─────────────────────────────────────────────────────────────
 
     async function viewAnalytics(flowId) {
         try {
@@ -1022,14 +1073,29 @@ window.HypeBotModule = (function() {
         } catch (e) { console.error(e); }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // BACKWARD COMPAT SHIMS
+    // ─────────────────────────────────────────────────────────────
+
+    function renderStepsSection(flowId) { return _refreshEditorPipeline(flowId); }
+    function openStepModal(flowId, editStepId, afterStepId) {
+        if (editStepId) editStepInline(flowId, editStepId);
+        else insertStepInline(flowId, afterStepId);
+    }
+    function saveStep() { if (_editorFlowId) saveInlineStep(_editorFlowId); }
+    function _cancelStepEdit() { if (_editorFlowId) cancelInlineStep(_editorFlowId); }
+    function _selectStepType(type) { _selectInlineStepType(type); }
+
     return {
         loadHypeBot, loadPrompts, loadFlows,
         openPromptModal, savePrompt, editPrompt, deletePrompt,
         previewPrompt, previewFlow, regeneratePreview, regenerateFlowPreview,
-        openFlowModal, saveFlow, editFlow, deleteFlow,
+        openFlowModal, saveFlow, saveFlowSettings, editFlow, deleteFlow,
         setFlowStatus, triggerFlow, viewAnalytics,
         openStepModal, saveStep, deleteStep, moveStep,
-        _selectStepType, _cancelStepEdit,
+        insertStepInline, editStepInline, cancelInlineStep, saveInlineStep,
+        _selectStepType, _selectInlineStepType, _cancelStepEdit,
+        _showListView, _showEditorView,
         renderStepsSection,
     };
 })();
