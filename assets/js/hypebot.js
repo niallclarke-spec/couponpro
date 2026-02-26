@@ -432,31 +432,14 @@ window.HypeBotModule = (function() {
     // ─────────────────────────────────────────────────────────────
 
     function _buildDayToggles(container, conflictLabel, currentDays, isChildFlow) {
-        const takenMap = {};
-        if (!isChildFlow) {
-            const currentFlowId = container.dataset.flowId;
-            flows.forEach(f => {
-                if (f.id === currentFlowId || f.status !== 'active') return;
-                parseDaysString(f.active_days || '').forEach(d => { takenMap[d] = f.name; });
-            });
-        }
         ALL_DAYS.forEach(d => {
             const isSelected = currentDays.includes(d);
-            const takenBy = takenMap[d];
-            const isTaken = !isChildFlow && takenBy && !isSelected;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.dataset.day = d;
             btn.textContent = DAY_LABELS[d];
             btn.style.cssText = 'padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-primary);transition:all 0.15s;';
-            if (isTaken) {
-                btn.style.background = 'var(--bg-primary)';
-                btn.style.color = '#555';
-                btn.style.cursor = 'not-allowed';
-                btn.style.opacity = '0.5';
-                btn.style.textDecoration = 'line-through';
-                btn.disabled = true;
-            } else if (isSelected) {
+            if (isSelected) {
                 btn.style.background = '#34c759';
                 btn.style.color = '#fff';
                 btn.style.borderColor = '#34c759';
@@ -466,32 +449,21 @@ window.HypeBotModule = (function() {
                 btn.style.color = 'var(--text-secondary)';
                 btn.dataset.active = 'false';
             }
-            if (!isTaken) {
-                btn.addEventListener('click', () => {
-                    const isActive = btn.dataset.active === 'true';
-                    btn.dataset.active = isActive ? 'false' : 'true';
-                    if (btn.dataset.active === 'true') {
-                        btn.style.background = '#34c759';
-                        btn.style.color = '#fff';
-                        btn.style.borderColor = '#34c759';
-                    } else {
-                        btn.style.background = 'var(--bg-primary)';
-                        btn.style.color = 'var(--text-secondary)';
-                        btn.style.borderColor = 'var(--border-primary)';
-                    }
-                });
-            }
+            btn.addEventListener('click', () => {
+                const isActive = btn.dataset.active === 'true';
+                btn.dataset.active = isActive ? 'false' : 'true';
+                if (btn.dataset.active === 'true') {
+                    btn.style.background = '#34c759';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#34c759';
+                } else {
+                    btn.style.background = 'var(--bg-primary)';
+                    btn.style.color = 'var(--text-secondary)';
+                    btn.style.borderColor = 'var(--border-primary)';
+                }
+            });
             container.appendChild(btn);
         });
-        if (!isChildFlow && conflictLabel) {
-            const takenDays = Object.entries(takenMap).filter(([d]) => !currentDays.includes(d));
-            if (takenDays.length > 0) {
-                const grouped = {};
-                takenDays.forEach(([d, name]) => { if (!grouped[name]) grouped[name] = []; grouped[name].push(DAY_LABELS[d]); });
-                conflictLabel.textContent = Object.entries(grouped).map(([name, days]) => `${days.join(', ')} used by "${name}"`).join(' · ');
-                conflictLabel.style.display = 'block';
-            }
-        }
     }
 
     function openFlowModal(editId) {
@@ -538,7 +510,6 @@ window.HypeBotModule = (function() {
                         <div style="margin-bottom:0;">
                             <label style="display:block;font-size:11px;font-weight:600;color:var(--text-tertiary,#888);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Active Days</label>
                             <div id="hype-day-toggles" data-flow-id="${editId || ''}" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-                            ${!isChildFlow ? '<div id="hype-day-conflicts" style="font-size:11px;color:#ff6b6b;margin-top:6px;display:none;"></div>' : ''}
                         </div>
 
                         ${editId ? `
@@ -565,8 +536,7 @@ window.HypeBotModule = (function() {
 
         const currentDays = flow ? parseDaysString(flow.active_days || '') : ['mon','tue','wed','thu','fri'];
         const toggleContainer = document.getElementById('hype-day-toggles');
-        const conflictLabel = document.getElementById('hype-day-conflicts');
-        _buildDayToggles(toggleContainer, conflictLabel, currentDays, isChildFlow);
+        _buildDayToggles(toggleContainer, null, currentDays, isChildFlow);
 
         if (editId) {
             renderStepsSection(editId);
@@ -662,77 +632,85 @@ window.HypeBotModule = (function() {
     // STEP BUILDER
     // ─────────────────────────────────────────────────────────────
 
-    function _insertZone(flowId, afterStepId, label) {
+    function _pipelineConnector() {
+        return '<div style="width:2px;height:18px;background:var(--border-primary);margin:0 auto;"></div>';
+    }
+
+    function _pipelineInsertBtn(flowId, afterStepId) {
         const safeAfter = afterStepId ? `'${afterStepId}'` : 'null';
-        return `<div onclick="window.HypeBotModule.openStepModal('${flowId}', null, ${safeAfter})"
-            style="text-align:center;padding:6px 0;font-size:12px;color:var(--text-muted);cursor:pointer;border:1px dashed var(--border-primary);border-radius:6px;margin-bottom:6px;transition:all 0.15s;"
-            onmouseover="this.style.borderColor='var(--accent,#007aff)';this.style.color='var(--accent,#007aff)'"
-            onmouseout="this.style.borderColor='var(--border-primary)';this.style.color='var(--text-muted)'">
-            ${label || '+ Insert step here'}
+        return `<div style="display:flex;justify-content:center;position:relative;">
+            <button type="button"
+                onclick="window.HypeBotModule.openStepModal('${flowId}', null, ${safeAfter})"
+                style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border-primary);background:var(--bg-primary);color:var(--text-muted);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;z-index:1;"
+                onmouseover="this.style.borderColor='var(--accent,#007aff)';this.style.color='var(--accent,#007aff)';this.style.background='rgba(0,122,255,0.08)'"
+                onmouseout="this.style.borderColor='var(--border-primary)';this.style.color='var(--text-muted)';this.style.background='var(--bg-primary)'">+</button>
         </div>`;
     }
 
     async function renderStepsSection(flowId) {
         const listEl = document.getElementById('hype-steps-list');
         if (!listEl) return;
-        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">Loading steps…</div>';
+        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;text-align:center;">Loading…</div>';
         try {
             const headers = await getAuthHeaders();
             const resp = await fetch(`/api/hypechat/flows/${flowId}/steps`, { headers });
             const data = await resp.json();
             const steps = data.steps || [];
             flowSteps[flowId] = steps;
-            _renderStepCards(flowId, steps);
+            _renderPipeline(flowId, steps);
         } catch (e) {
             console.error('Error loading steps:', e);
-            listEl.innerHTML = '<div style="font-size:12px;color:#ff453a;">Failed to load steps</div>';
+            listEl.innerHTML = '<div style="font-size:12px;color:#ff453a;text-align:center;">Failed to load steps</div>';
         }
     }
 
-    function _renderStepCards(flowId, steps) {
+    function _renderPipeline(flowId, steps) {
         const listEl = document.getElementById('hype-steps-list');
         const badgeEl = document.getElementById('hype-step-count-badge');
         if (!listEl) return;
         if (badgeEl) badgeEl.textContent = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
 
+        const startNode = `<div style="display:flex;justify-content:center;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid var(--border-primary);border-radius:20px;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;">
+                ▶ Start
+            </div>
+        </div>`;
+
+        let parts = [startNode];
+
         if (!steps.length) {
-            listEl.innerHTML = `
-                <div style="font-size:12px;color:var(--text-muted);font-style:italic;padding:6px 0;margin-bottom:6px;">No steps yet — add your first step below</div>
-                ${_insertZone(flowId, null, '+ Add first step')}`;
-            return;
+            parts.push(_pipelineConnector());
+            parts.push(_pipelineInsertBtn(flowId, null));
+            parts.push(`<div style="text-align:center;font-size:12px;color:var(--text-muted);font-style:italic;margin-top:8px;">Add your first step</div>`);
+        } else {
+            parts.push(_pipelineConnector());
+            parts.push(_pipelineInsertBtn(flowId, null));
+
+            steps.forEach((step, idx) => {
+                const delayLabel = step.delay_minutes > 0 ? `+${step.delay_minutes} min` : '+0 min';
+                const summary = stepSummary(step);
+                const truncated = summary.length > 55 ? summary.slice(0, 54) + '…' : summary;
+
+                parts.push(`
+                    ${_pipelineConnector()}
+                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-secondary,rgba(255,255,255,0.03));border:1px solid var(--border-primary);border-radius:10px;padding:10px 12px;">
+                        <div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--bg-tertiary,rgba(255,255,255,0.08));border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);">${idx + 1}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(truncated)}</div>
+                        </div>
+                        <div style="flex-shrink:0;padding:2px 8px;background:var(--bg-tertiary,rgba(255,255,255,0.06));border:1px solid var(--border-primary);border-radius:10px;font-size:11px;color:var(--text-muted);white-space:nowrap;">${delayLabel}</div>
+                        <button onclick="window.HypeBotModule.openStepModal('${flowId}','${step.id}',null)"
+                            style="flex-shrink:0;padding:4px 8px;font-size:13px;background:none;border:1px solid var(--border-primary);border-radius:5px;color:var(--text-secondary);cursor:pointer;line-height:1;" title="Edit">✏</button>
+                        <button onclick="window.HypeBotModule.deleteStep('${flowId}','${step.id}')"
+                            style="flex-shrink:0;padding:4px 7px;font-size:13px;background:none;border:1px solid rgba(255,69,58,0.4);border-radius:5px;color:#ff453a;cursor:pointer;line-height:1;" title="Remove">✕</button>
+                    </div>`);
+
+                parts.push(_pipelineConnector());
+                parts.push(_pipelineInsertBtn(flowId, step.id));
+            });
         }
 
-        let html = _insertZone(flowId, null, '+ Insert before step 1');
-        steps.forEach((step, idx) => {
-            const isFirst = idx === 0;
-            const isLast = idx === steps.length - 1;
-            const delayLabel = step.delay_minutes > 0 ? `+${step.delay_minutes}min` : 'Immediate';
-            html += `
-                <div style="background:var(--bg-secondary,rgba(255,255,255,0.03));border:1px solid var(--border-primary);border-radius:8px;padding:10px 12px;margin-bottom:4px;display:flex;align-items:center;gap:10px;">
-                    <div style="flex-shrink:0;display:flex;flex-direction:column;gap:2px;">
-                        <button onclick="window.HypeBotModule.moveStep('${flowId}','${step.id}',-1)"
-                            style="padding:1px 5px;font-size:11px;line-height:1;background:none;border:1px solid var(--border-primary);border-radius:3px;color:var(--text-muted);cursor:pointer;${isFirst ? 'opacity:0.3;cursor:default;' : ''}"
-                            ${isFirst ? 'disabled' : ''}>▲</button>
-                        <button onclick="window.HypeBotModule.moveStep('${flowId}','${step.id}',1)"
-                            style="padding:1px 5px;font-size:11px;line-height:1;background:none;border:1px solid var(--border-primary);border-radius:3px;color:var(--text-muted);cursor:pointer;${isLast ? 'opacity:0.3;cursor:default;' : ''}"
-                            ${isLast ? 'disabled' : ''}>▼</button>
-                    </div>
-                    <div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--bg-tertiary,rgba(255,255,255,0.08));border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);">${idx + 1}</div>
-                    <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(stepSummary(step))}</div>
-                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${delayLabel} delay</div>
-                    </div>
-                    <div style="display:flex;gap:6px;flex-shrink:0;">
-                        <button onclick="window.HypeBotModule.openStepModal('${flowId}','${step.id}',null)"
-                            style="padding:4px 8px;font-size:12px;background:none;border:1px solid var(--border-primary);border-radius:5px;color:var(--text-secondary);cursor:pointer;">Edit</button>
-                        <button onclick="window.HypeBotModule.deleteStep('${flowId}','${step.id}')"
-                            style="padding:4px 8px;font-size:12px;background:none;border:1px solid rgba(255,69,58,0.4);border-radius:5px;color:#ff453a;cursor:pointer;">✕</button>
-                    </div>
-                </div>
-                ${_insertZone(flowId, step.id, '+ Insert step after')}`;
-        });
-
-        listEl.innerHTML = html;
+        listEl.innerHTML = `<div style="display:flex;flex-direction:column;padding:4px 0 8px;">${parts.join('')}</div>`;
     }
 
     function openStepModal(flowId, editStepId, afterStepId) {
@@ -777,14 +755,15 @@ window.HypeBotModule = (function() {
     }
 
     function _buildStepTypeFields(stepType, step) {
-        const delay = step ? step.delay_minutes : 0;
+        const defaultDelay = step ? Math.max(1, step.delay_minutes) : 1;
         const common = `
             <div style="margin-bottom:14px;">
                 <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Delay before this step</label>
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <input type="number" id="hype-step-delay" min="0" value="${delay}" style="width:72px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
+                    <input type="number" id="hype-step-delay" min="1" value="${defaultDelay}" style="width:72px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:8px;color:var(--text-primary);font-size:14px;text-align:center;box-sizing:border-box;">
                     <span style="font-size:13px;color:var(--text-muted);">minutes (relative to previous step)</span>
                 </div>
+                <div id="hype-step-delay-error" style="font-size:11px;color:#ff453a;margin-top:4px;display:none;">Minimum delay is 1 minute</div>
             </div>`;
 
         if (stepType === 'reforward') {
@@ -878,7 +857,13 @@ window.HypeBotModule = (function() {
     function _collectStepData() {
         const stepType = document.getElementById('hype-step-type-value')?.value;
         if (!stepType) return null;
-        const delay = parseInt(document.getElementById('hype-step-delay')?.value || '0') || 0;
+        const delay = parseInt(document.getElementById('hype-step-delay')?.value || '1') || 1;
+        const delayErr = document.getElementById('hype-step-delay-error');
+        if (delay < 1) {
+            if (delayErr) delayErr.style.display = 'block';
+            return null;
+        }
+        if (delayErr) delayErr.style.display = 'none';
         const data = { step_type: stepType, delay_minutes: delay };
         if (stepType === 'reforward') {
             data.reforward_preset = document.getElementById('hype-step-reforward-preset')?.value || 'best_tp';
