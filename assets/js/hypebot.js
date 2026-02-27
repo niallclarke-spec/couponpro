@@ -655,10 +655,6 @@ window.HypeBotModule = (function() {
         const triggerOpts = otherFlows.map(f =>
             `<option value="${f.id}" ${flow && flow.trigger_after_flow_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`
         ).join('');
-        const promptOpts = prompts.map(p =>
-            `<option value="${p.id}" ${flow && flow.prompt_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`
-        ).join('');
-
         const sIn = 'width:100%;padding:7px 10px;background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:7px;color:var(--text-primary);font-size:13px;box-sizing:border-box;';
         const sLbl = 'font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;';
         const sSec = 'margin-bottom:22px;';
@@ -754,19 +750,6 @@ window.HypeBotModule = (function() {
                     <div style="${sSec}">
                         <label style="${sLbl}">Active Days</label>
                         <div id="hype-day-toggles" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
-                    </div>
-                    <div style="${sSec}">
-                        <label style="${sLbl}">Prompt</label>
-                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:7px;">Used by AI Hype steps in this flow</div>
-                        <select id="hype-flow-prompt" style="${sIn}">
-                            <option value="">None</option>${promptOpts}
-                        </select>
-                        <div style="margin-top:7px;">
-                            <button onclick="window.HypeBotModule.openPromptModal()"
-                                style="font-size:11px;color:var(--accent,#007aff);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">
-                                + New Prompt
-                            </button>
-                        </div>
                     </div>
                     <button onclick="window.HypeBotModule.saveFlowSettings()"
                         id="hype-sidebar-save-btn"
@@ -890,7 +873,6 @@ window.HypeBotModule = (function() {
     async function saveFlowSettings() {
         const editId = _editorFlowId;
         const name = (document.getElementById('hype-flow-name')?.value || '').trim();
-        const promptId = document.getElementById('hype-flow-prompt')?.value || null;
         const triggerAfterFlowId = document.getElementById('hype-flow-trigger-after')?.value || null;
         const triggerDelayMinutes = parseInt(document.getElementById('hype-flow-trigger-delay')?.value) || 0;
         const selectedDays = Array.from(document.querySelectorAll('#hype-day-toggles button[data-active="true"]')).map(b => b.dataset.day);
@@ -900,7 +882,6 @@ window.HypeBotModule = (function() {
 
         const payload = {
             name,
-            prompt_id: promptId || null,
             active_days: selectedDays.join(','),
             trigger_after_flow_id: triggerAfterFlowId || null,
             trigger_delay_minutes: triggerDelayMinutes,
