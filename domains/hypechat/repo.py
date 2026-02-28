@@ -399,6 +399,26 @@ def get_today_hype_count(tenant_id: str) -> int:
         return 0
 
 
+def get_total_hype_count_for_flow(tenant_id: str, flow_id: str) -> int:
+    db_pool = _get_db_pool()
+    if not db_pool or not db_pool.connection_pool:
+        return 0
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM hype_messages
+                WHERE tenant_id = %s AND flow_id = %s
+            """, (tenant_id, flow_id))
+            row = cursor.fetchone()
+            return int(row[0]) if row and row[0] else 0
+    except Exception as e:
+        logger.exception(f"Error getting total hype count for flow: {e}")
+        return 0
+
+
 def get_active_flows(tenant_id: str) -> List[Dict]:
     db_pool = _get_db_pool()
     if not db_pool or not db_pool.connection_pool:

@@ -840,17 +840,6 @@ window.HypeBotModule = (function() {
             const h = await getAuthHeaders();
             const resp = await fetch(`/api/hypechat/flows/${flowId}/analytics`, { headers: h });
             const data = await resp.json();
-            const msgs = data.messages || [];
-            const msgsHtml = msgs.length ? msgs.map(m => `
-                <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:var(--text-primary);line-height:1.55;margin-bottom:8px;">${escapeHtml(m.content_sent || '')}</div>
-                    <div style="display:flex;gap:12px;font-size:11px;color:var(--text-muted);">
-                        <span>Step ${m.step_number}</span>
-                        <span>${new Date(m.sent_at).toLocaleString()}</span>
-                    </div>
-                </div>`).join('')
-                : '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:40px 20px;font-style:italic;">No messages sent yet</div>';
-
             container.innerHTML = `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
                     <div style="background:var(--bg-primary);border:1px solid var(--border-primary);border-radius:12px;padding:22px;text-align:center;">
@@ -861,9 +850,7 @@ window.HypeBotModule = (function() {
                         <div style="font-size:34px;font-weight:700;color:var(--text-primary);">${data.today_message_count || 0}</div>
                         <div style="font-size:12px;color:var(--text-muted);margin-top:5px;">Today</div>
                     </div>
-                </div>
-                <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin:0 0 14px 0;">Recent Messages</h4>
-                ${msgsHtml}`;
+                </div>`;
         } catch (e) {
             const c = document.getElementById('hype-analytics-inline');
             if (c) c.innerHTML = '<div style="text-align:center;color:#ff453a;padding:60px 24px;font-size:13px;">Failed to load analytics</div>';

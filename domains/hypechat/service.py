@@ -230,7 +230,7 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
             tenant_id=tenant_id,
             flow_id=flow_id,
             step_number=step_number,
-            content_sent=message_text,
+            content_sent=None,
             telegram_message_id=telegram_message_id,
         )
 

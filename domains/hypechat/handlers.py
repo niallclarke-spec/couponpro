@@ -386,12 +386,11 @@ def handle_flow_analytics(handler, flow_id: str):
         _send_json(handler, 404, {"error": "Flow not found"})
         return
 
-    messages = repo.get_flow_messages(tenant_id, flow_id, limit=50)
     today_count = repo.get_today_hype_count(tenant_id)
+    total_count = repo.get_total_hype_count_for_flow(tenant_id, flow_id)
 
     _send_json(handler, 200, {
         "flow": flow,
-        "messages": messages,
         "today_message_count": today_count,
-        "total_messages": len(messages),
+        "total_messages": total_count,
     })
