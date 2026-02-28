@@ -459,25 +459,6 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom:20px;display:none;" id="dm-message-group">
-                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:10px;">Pre-fill Message</div>
-                    <textarea class="form-textarea" id="dm-prefill-message" placeholder="e.g., Hey, I'd like to learn more about VIP signals" style="width:100%;font-size:13px;box-sizing:border-box;min-height:72px;" oninput="window.JourneysModule.updateDmLinkPreview && window.JourneysModule.updateDmLinkPreview()"></textarea>
-                    <div class="form-hint" style="margin-top:4px;font-size:12px;">Pre-filled when users click the link. They just tap send.</div>
-                    <div class="deeplink-preview" id="dm-link-preview" style="display:none;margin-top:10px;">
-                        <div class="deeplink-preview-label" style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Your DM Link:</div>
-                        <div class="deeplink-preview-url" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                            <code id="dm-link-preview-url" style="font-size:11px;word-break:break-all;color:var(--accent-color);flex:1;"></code>
-                            <button class="btn-copy" onclick="window.JourneysModule.copyDmLink()" title="Copy link" style="flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            </button>
-                            <a id="dm-link-preview-test" href="#" target="_blank" class="btn-test" title="Test link" style="flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            </a>
-                        </div>
-                        <div class="deeplink-preview-warning" id="dm-link-preview-warning" style="display:none;font-size:12px;color:#f59e0b;margin-top:4px;">Telethon user account not connected. Configure it to generate DM links.</div>
-                    </div>
-                </div>
-
                 <div style="margin-bottom:20px;">
                     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:10px;">Start Delay <span style="font-weight:400;opacity:.5;">(optional)</span></div>
                     <div style="display:flex;gap:8px;align-items:center;">
@@ -631,7 +612,7 @@
                     headers,
                     body: JSON.stringify({
                         trigger_type: 'direct_message',
-                        trigger_config: { keyword: triggerValue, prefill_message: (document.getElementById('dm-prefill-message') || {}).value?.trim() || '' },
+                        trigger_config: { keyword: triggerValue },
                         is_active: true
                     }),
                     credentials: 'include'
@@ -734,8 +715,6 @@
                     onTriggerTypeChange();
                     if (tt === 'direct_message') {
                         if (triggerValueEl) triggerValueEl.value = trigger.trigger_config?.keyword || '';
-                        const dmPrefill = document.getElementById('dm-prefill-message');
-                        if (dmPrefill) dmPrefill.value = trigger.trigger_config?.prefill_message || '';
                     } else if (tt === 'api_event') {
                         const eventSel = document.getElementById('journey-trigger-event-select');
                         if (eventSel) eventSel.value = trigger.trigger_config?.event_name || '';
@@ -1178,13 +1157,6 @@
             updateDeepLinkPreview();
         }
 
-        const dmMessageGroup = document.getElementById('dm-message-group');
-        if (dmMessageGroup) {
-            dmMessageGroup.style.display = isDM ? 'block' : 'none';
-        }
-        if (isDM) {
-            updateDmLinkPreview();
-        }
     }
 
     function updateDeepLinkPreview() {
