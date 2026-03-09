@@ -265,8 +265,7 @@ def generate_forward_promo_message(pips_secured: float = None, tp_number: int = 
         
         client = OpenAI(api_key=api_key, base_url=base_url)
         
-        # Only include pips if meaningful (> 0)
-        pips_context = f" VIP members just secured {pips_secured:+.0f} pips on this signal." if (pips_secured and pips_secured > 0) else ""
+        pips_context = f" VIP members just secured {pips_secured:+.0f} pips on this signal." if pips_secured else ""
         
         if tp_number == 1:
             tp_context = "This signal just hit its FIRST take-profit target in VIP."
@@ -290,7 +289,6 @@ Key points to convey:
 - Keep it punchy and motivational
 - Don't use hashtags
 - Don't mention specific prices or exact times
-- IMPORTANT: Do NOT mention pips unless they were provided in the context above
 
 Example tone: "{example}"
 
@@ -1150,10 +1148,9 @@ def trigger_tp_crosspromo(
             payload={
                 'signal_id': signal_id,
                 'signal_message_id': signal_message_id,
-                'tp1_message_id': tp1_message_id,
+                'tp1_message_id': tp_message_id,
                 'pips_secured': pips_secured
-            },
-            dedupe_key=f"{tenant_id}|{signal_id}|tp1_forward"
+            }
         )
         
         repo.enqueue_job(
@@ -1187,8 +1184,7 @@ def trigger_tp_crosspromo(
                 'tp_message_id': tp_message_id,
                 'tp_number': 2,
                 'pips_secured': pips_secured
-            },
-            dedupe_key=f"{tenant_id}|{signal_id}|tp2_forward"
+            }
         )
         
         repo.enqueue_job(
@@ -1221,8 +1217,7 @@ def trigger_tp_crosspromo(
                 'signal_id': signal_id,
                 'tp_message_id': tp_message_id,
                 'tp_number': 3
-            },
-            dedupe_key=f"{tenant_id}|{signal_id}|tp3_forward"
+            }
         )
         
         repo.enqueue_job(
