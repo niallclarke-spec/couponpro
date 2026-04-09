@@ -143,6 +143,7 @@ class TelethonUserClient:
         self._client: Optional[TelegramClient] = None
         self._lock = asyncio.Lock()
         self._rate = RateLimitState()
+        self._manually_disconnected = False
 
         self.status = 'disconnected'
         self.last_heartbeat: Optional[float] = None
@@ -207,6 +208,7 @@ class TelethonUserClient:
         )
 
     async def connect(self):
+        self._manually_disconnected = False
         async with self._lock:
             if self._client and self._client.is_connected():
                 if await self._client.is_user_authorized():
@@ -277,9 +279,11 @@ class TelethonUserClient:
                 finally:
                     self._client = None
                     self.status = 'disconnected'
+                    self._manually_disconnected = True
                     logger.info(f"Telethon disconnected for tenant={self.tenant_id}")
 
     async def reconnect(self):
+        self._manually_disconnected = False
         await self.disconnect()
         return await self.connect()
 
@@ -324,6 +328,9 @@ class TelethonUserClient:
         return {'success': False, 'error': 'Max retries exhausted'}
 
     async def _reconnect_internal(self) -> bool:
+        if self._manually_disconnected:
+            logger.info(f"Skipping auto-reconnect for tenant={self.tenant_id}: manually disconnected")
+            return False
         try:
             if self._client:
                 try:
