@@ -3412,6 +3412,11 @@
             max-width: 300px;
         }
 
+        .preview-frame.feed {
+            aspect-ratio: 1080 / 1440;
+            max-width: 320px;
+        }
+
         .preview-hint {
             position: absolute;
             top: 50%;
@@ -5288,8 +5293,84 @@
                                 </div>
                             </div>
 
+                            <div class="template-section">
+                                <div class="section-title">IG Feed Image (1080×1440)</div>
+
+                                <div class="section-grid">
+                                    <div class="controls-column">
+                                        <div class="form-group">
+                                            <label for="feedImage">IG Feed PNG (optional)</label>
+                                            <input type="file" id="feedImage" accept="image/png">
+                                            <div class="hint">1080×1440 — Instagram feed format</div>
+                                        </div>
+
+                                        <div class="row" style="display: none;">
+                                            <div class="form-group">
+                                                <input type="number" id="feedLeftPct" value="5" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="feedTopPct" value="78" min="0" max="100" step="0.1" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" id="feedWidthPct" value="25" min="0" max="100" step="0.1" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" style="display: none;">
+                                            <input type="number" id="feedHeightPct" value="12" min="0" max="100" step="0.1" required>
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label for="feedMaxFontPx">Font Size</label>
+                                            <input type="range" id="feedMaxFontPxSlider" min="8" max="200" step="1" value="80" class="slider">
+                                            <input type="number" id="feedMaxFontPx" value="80" min="8" max="200" step="1" required style="max-width: 100px; margin: 8px auto 0; display: block;">
+                                        </div>
+
+                                        <div class="form-group" style="text-align: center;">
+                                            <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#2d3748;margin:0;padding:10px 0;">
+                                                <input id="feedShowLogo" type="checkbox" style="width:auto;margin:0;" checked />
+                                                <span>Show Logo</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="nudge-controls">
+                                            <label class="nudge-controls-label">Fine-Tune Position</label>
+                                            <div class="nudge-buttons">
+                                                <button type="button" class="nudge-btn nudge-up" onclick="nudgePosition('feed', 'up')">↑</button>
+                                                <button type="button" class="nudge-btn nudge-left" onclick="nudgePosition('feed', 'left')">←</button>
+                                                <button type="button" class="nudge-btn nudge-right" onclick="nudgePosition('feed', 'right')">→</button>
+                                                <button type="button" class="nudge-btn nudge-down" onclick="nudgePosition('feed', 'down')">↓</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="color-picker-group" style="margin-top: 16px;">
+                                            <label>Text Color</label>
+                                            <div class="color-swatches">
+                                                <div>
+                                                    <div class="color-swatch red selected" data-color="#FF273E" data-variant="feed" onclick="selectColor('#FF273E', 'feed')"></div>
+                                                    <div class="color-swatch-label">Red</div>
+                                                </div>
+                                                <div>
+                                                    <div class="color-swatch white" data-color="#FFFFFF" data-variant="feed" onclick="selectColor('#FFFFFF', 'feed')"></div>
+                                                    <div class="color-swatch-label">White</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-column">
+                                        <div class="preview-label">Preview</div>
+                                        <div class="preview-frame feed">
+                                            <div class="preview-hint">ℹ️ Click and draw coupon area</div>
+                                            <canvas id="previewFeed"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <input type="hidden" id="squareFontColor" value="#FF273E">
                             <input type="hidden" id="storyFontColor" value="#FF273E">
+                            <input type="hidden" id="feedFontColor" value="#FF273E">
                             <input type="hidden" id="isEditing" value="false">
 
                             <div style="display: flex; gap: 12px;">
@@ -10426,9 +10507,11 @@
             
             previewImages.square = null;
             previewImages.story = null;
+            previewImages.feed = null;
             
             document.getElementById('squareFontColor').value = '#FF273E';
             document.getElementById('storyFontColor').value = '#FF273E';
+            document.getElementById('feedFontColor').value = '#FF273E';
             
             document.querySelectorAll('.color-swatch').forEach(swatch => {
                 swatch.classList.remove('selected');
@@ -10439,6 +10522,7 @@
             
             const squareCanvas = document.getElementById('previewSquare');
             const storyCanvas = document.getElementById('previewStory');
+            const feedCanvas = document.getElementById('previewFeed');
             if (squareCanvas) {
                 const ctx = squareCanvas.getContext('2d');
                 ctx.clearRect(0, 0, squareCanvas.width, squareCanvas.height);
@@ -10446,6 +10530,10 @@
             if (storyCanvas) {
                 const ctx = storyCanvas.getContext('2d');
                 ctx.clearRect(0, 0, storyCanvas.width, storyCanvas.height);
+            }
+            if (feedCanvas) {
+                const ctx = feedCanvas.getContext('2d');
+                ctx.clearRect(0, 0, feedCanvas.width, feedCanvas.height);
             }
             
             document.getElementById('isEditing').value = 'false';
@@ -10471,8 +10559,10 @@
             
             const squareFile = document.getElementById('squareImage').files[0];
             const storyFile = document.getElementById('storyImage').files[0];
+            const feedFile = document.getElementById('feedImage').files[0];
             if (squareFile) formData.append('squareImage', squareFile);
             if (storyFile) formData.append('storyImage', storyFile);
+            if (feedFile) formData.append('feedImage', feedFile);
             
             formData.append('squareLeftPct', document.getElementById('squareLeftPct').value);
             formData.append('squareTopPct', document.getElementById('squareTopPct').value);
@@ -10491,9 +10581,19 @@
             formData.append('storyVAlign', 'middle');
             formData.append('storyMaxFontPx', document.getElementById('storyMaxFontPx').value);
             formData.append('storyShowLogo', document.getElementById('storyShowLogo').checked);
-            
+
+            formData.append('feedLeftPct', document.getElementById('feedLeftPct').value);
+            formData.append('feedTopPct', document.getElementById('feedTopPct').value);
+            formData.append('feedWidthPct', document.getElementById('feedWidthPct').value);
+            formData.append('feedHeightPct', document.getElementById('feedHeightPct').value);
+            formData.append('feedHAlign', 'center');
+            formData.append('feedVAlign', 'middle');
+            formData.append('feedMaxFontPx', document.getElementById('feedMaxFontPx').value);
+            formData.append('feedShowLogo', document.getElementById('feedShowLogo').checked);
+
             formData.append('squareFontColor', document.getElementById('squareFontColor').value);
             formData.append('storyFontColor', document.getElementById('storyFontColor').value);
+            formData.append('feedFontColor', document.getElementById('feedFontColor').value);
 
             try {
                 const authHeaders = await getAuthHeaders();
@@ -10513,6 +10613,7 @@
                     isEditingTemplate = false;
                     drawingState.square.hasDrawnBox = false;
                     drawingState.story.hasDrawnBox = false;
+                    drawingState.feed.hasDrawnBox = false;
                     updatePreviewsImmediate();
                     loadAssets();
                 } else {
@@ -10625,17 +10726,30 @@
                 document.getElementById('storyHeightPct').value = meta.story?.box?.heightPct || meta.story?.heightPct || 12;
                 document.getElementById('storyMaxFontPx').value = meta.story?.maxFontPx || 80;
                 document.getElementById('storyShowLogo').checked = meta.story?.showLogo !== false;
-                
+
+                document.getElementById('feedLeftPct').value = meta.feed?.box?.leftPct || meta.feed?.leftPct || 5;
+                document.getElementById('feedTopPct').value = meta.feed?.box?.topPct || meta.feed?.topPct || 78;
+                document.getElementById('feedWidthPct').value = meta.feed?.box?.widthPct || meta.feed?.widthPct || 90;
+                document.getElementById('feedHeightPct').value = meta.feed?.box?.heightPct || meta.feed?.heightPct || 12;
+                document.getElementById('feedMaxFontPx').value = meta.feed?.maxFontPx || 80;
+                document.getElementById('feedShowLogo').checked = meta.feed?.showLogo !== false;
+
                 const squareFontColor = meta.square?.fontColor || '#FF273E';
                 const storyFontColor = meta.story?.fontColor || '#FF273E';
+                const feedFontColor = meta.feed?.fontColor || '#FF273E';
                 document.getElementById('squareFontColor').value = squareFontColor;
                 document.getElementById('storyFontColor').value = storyFontColor;
+                document.getElementById('feedFontColor').value = feedFontColor;
                 selectColor(squareFontColor, 'square');
                 selectColor(storyFontColor, 'story');
-                
+                selectColor(feedFontColor, 'feed');
+
                 drawingState.square.hasDrawnBox = true;
                 if (meta.story) {
                     drawingState.story.hasDrawnBox = true;
+                }
+                if (meta.feed) {
+                    drawingState.feed.hasDrawnBox = true;
                 }
                 
                 const squareImg = new Image();
@@ -10673,7 +10787,26 @@
                         storyImg.src = `/assets/templates/${slug}/story.png?ts=${Date.now()}`;
                     }
                 }
-                
+
+                if (meta.feed) {
+                    const feedImg = new Image();
+                    feedImg.onload = async function() {
+                        try {
+                            await feedImg.decode();
+                            previewImages.feed = feedImg;
+                            renderPreview('feed');
+                        } catch(e) {
+                            console.error('Feed image decode failed:', e);
+                        }
+                    };
+
+                    try {
+                        feedImg.src = `https://couponpro-templates.lon1.cdn.digitaloceanspaces.com/templates/${slug}/feed.png?ts=${Date.now()}`;
+                    } catch (_) {
+                        feedImg.src = `/assets/templates/${slug}/feed.png?ts=${Date.now()}`;
+                    }
+                }
+
                 document.getElementById('submitBtn').textContent = 'Update Template';
                 
             } catch (error) {
@@ -10829,17 +10962,38 @@
         // Canvas preview setup
         const previewSquareCanvas = document.getElementById('previewSquare');
         const previewStoryCanvas = document.getElementById('previewStory');
+        const previewFeedCanvas = document.getElementById('previewFeed');
         const ctxSquare = previewSquareCanvas.getContext('2d');
         const ctxStory = previewStoryCanvas.getContext('2d');
+        const ctxFeed = previewFeedCanvas.getContext('2d');
+
+        const previewCanvases = {
+            square: previewSquareCanvas,
+            story: previewStoryCanvas,
+            feed: previewFeedCanvas
+        };
+        const previewContexts = {
+            square: ctxSquare,
+            story: ctxStory,
+            feed: ctxFeed
+        };
 
         const previewImages = {
             square: null,
-            story: null
+            story: null,
+            feed: null
+        };
+
+        const variantDefaults = {
+            square: { w: 1080, h: 1080 },
+            story:  { w: 1080, h: 1920 },
+            feed:   { w: 1080, h: 1440 }
         };
 
         const drawingState = {
             square: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false },
-            story: { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false }
+            story:  { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false },
+            feed:   { isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, hasDrawnBox: false }
         };
 
         function computeAutoFontPx(ctx, text, maxWidth, maxHeight, minPx) {
@@ -10897,12 +11051,13 @@
         }
 
         function renderPreview(variant, showBoundingBox = false) {
-            const canvas = variant === 'square' ? previewSquareCanvas : previewStoryCanvas;
-            const ctx = variant === 'square' ? ctxSquare : ctxStory;
+            const canvas = previewCanvases[variant];
+            const ctx = previewContexts[variant];
             const img = previewImages[variant];
 
-            const natW = img && img.naturalWidth ? img.naturalWidth : 1080;
-            const natH = img && img.naturalHeight ? img.naturalHeight : (variant === 'square' ? 1080 : 1920);
+            const defaults = variantDefaults[variant] || variantDefaults.square;
+            const natW = img && img.naturalWidth ? img.naturalWidth : defaults.w;
+            const natH = img && img.naturalHeight ? img.naturalHeight : defaults.h;
 
             const off = document.createElement('canvas');
             off.width = natW;
@@ -10917,7 +11072,7 @@
                 og.fillRect(0, 0, natW, natH);
             }
 
-            const prefix = variant === 'square' ? 'square' : 'story';
+            const prefix = variant;
             const box = {
                 leftPct: parseFloat(document.getElementById(prefix + 'LeftPct').value) || 5,
                 topPct: parseFloat(document.getElementById(prefix + 'TopPct').value) || 78,
@@ -10979,12 +11134,14 @@
             updatePreviewsTimeout = setTimeout(() => {
                 renderPreview('square');
                 renderPreview('story');
+                renderPreview('feed');
             }, 50);
         }
         
         function updatePreviewsImmediate() {
             renderPreview('square');
             renderPreview('story');
+            renderPreview('feed');
         }
 
         // Image upload handlers
@@ -11026,6 +11183,25 @@
             }
         });
 
+        document.getElementById('feedImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                drawingState.feed.hasDrawnBox = false;
+
+                const img = new Image();
+                img.onload = async function() {
+                    try {
+                        await img.decode();
+                        previewImages.feed = img;
+                        renderPreview('feed');
+                    } catch(e) {
+                        console.error('Feed upload decode failed:', e);
+                    }
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
         // Slider sync
         function setupSliderSync(sliderId, inputId) {
             const slider = document.getElementById(sliderId);
@@ -11049,6 +11225,7 @@
 
         setupSliderSync('squareMaxFontPxSlider', 'squareMaxFontPx');
         setupSliderSync('storyMaxFontPxSlider', 'storyMaxFontPx');
+        setupSliderSync('feedMaxFontPxSlider', 'feedMaxFontPx');
 
         // Drag-to-draw
         function setupDragToDraw(canvasId, variant) {
@@ -11068,8 +11245,9 @@
                 const canvasDisplayHeight = rect.height;
 
                 const img = previewImages[variant];
-                const natW = img && img.naturalWidth ? img.naturalWidth : (variant === 'square' ? 1080 : 1080);
-                const natH = img && img.naturalHeight ? img.naturalHeight : (variant === 'square' ? 1080 : 1920);
+                const defaults = variantDefaults[variant] || variantDefaults.square;
+                const natW = img && img.naturalWidth ? img.naturalWidth : defaults.w;
+                const natH = img && img.naturalHeight ? img.naturalHeight : defaults.h;
 
                 const scale = Math.min(canvasDisplayWidth / natW, canvasDisplayHeight / natH);
                 const scaledImageWidth = natW * scale;
@@ -11094,7 +11272,7 @@
             function drawDragRectangle() {
                 if (!state.isDrawing) return;
 
-                const ctx = variant === 'square' ? ctxSquare : ctxStory;
+                const ctx = previewContexts[variant];
                 
                 renderPreview(variant, true);
 
@@ -11151,7 +11329,7 @@
                     state.currentX, state.currentY
                 );
 
-                const prefix = variant === 'square' ? 'square' : 'story';
+                const prefix = variant;
                 document.getElementById(prefix + 'LeftPct').value = percentages.leftPct.toFixed(1);
                 document.getElementById(prefix + 'TopPct').value = percentages.topPct.toFixed(1);
                 document.getElementById(prefix + 'WidthPct').value = percentages.widthPct.toFixed(1);
@@ -11172,10 +11350,11 @@
 
         setupDragToDraw('previewSquare', 'square');
         setupDragToDraw('previewStory', 'story');
+        setupDragToDraw('previewFeed', 'feed');
 
         // Nudge controls
         function nudgePosition(variant, direction) {
-            const prefix = variant === 'square' ? 'square' : 'story';
+            const prefix = variant;
             const leftInput = document.getElementById(prefix + 'LeftPct');
             const topInput = document.getElementById(prefix + 'TopPct');
             

@@ -123,7 +123,12 @@ class ObjectStorageService:
             self.delete_file(f"templates/{slug}/story.png")
         except Exception as e:
             print(f"Warning: Could not delete story.png for {slug}: {e}")
-        
+
+        try:
+            self.delete_file(f"templates/{slug}/feed.png")
+        except Exception as e:
+            print(f"Warning: Could not delete feed.png for {slug}: {e}")
+
         try:
             self.delete_file(f"templates/{slug}/meta.json")
         except Exception as e:

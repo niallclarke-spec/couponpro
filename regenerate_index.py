@@ -54,9 +54,13 @@ def regenerate_templates_index():
                     if "story" in meta and isinstance(meta["story"], dict):
                         if "imageUrl" in meta["story"]:
                             template_data["story"] = meta["story"]["imageUrl"]
-                    
+
+                    if "feed" in meta and isinstance(meta["feed"], dict):
+                        if "imageUrl" in meta["feed"]:
+                            template_data["feed"] = meta["feed"]["imageUrl"]
+
                     # Only include templates that have at least one variant
-                    if "square" in template_data or "story" in template_data:
+                    if "square" in template_data or "story" in template_data or "feed" in template_data:
                         templates.append(template_data)
                         print(f"[INDEX] Added template: {slug}")
                     
@@ -101,7 +105,8 @@ def regenerate_templates_index():
             
             square_img = None
             story_img = None
-            
+            feed_img = None
+
             if meta_file.exists():
                 try:
                     with open(meta_file, 'r') as f:
@@ -117,7 +122,11 @@ def regenerate_templates_index():
                         if "story" in meta and isinstance(meta["story"], dict):
                             if "imageUrl" in meta["story"]:
                                 story_img = meta["story"]["imageUrl"]
-                        
+
+                        if "feed" in meta and isinstance(meta["feed"], dict):
+                            if "imageUrl" in meta["feed"]:
+                                feed_img = meta["feed"]["imageUrl"]
+
                 except Exception as e:
                     print(f"[INDEX] Warning: Could not read meta.json for {slug}: {e}")
             
@@ -125,8 +134,10 @@ def regenerate_templates_index():
                 template_data["square"] = square_img
             if story_img:
                 template_data["story"] = story_img
-            
-            if square_img or story_img:
+            if feed_img:
+                template_data["feed"] = feed_img
+
+            if square_img or story_img or feed_img:
                 templates.append(template_data)
             else:
                 print(f"[INDEX] Warning: No images found for template '{slug}'")

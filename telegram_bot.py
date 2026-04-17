@@ -180,7 +180,7 @@ async def handle_coupon_input(update: Update, context: ContextTypes.DEFAULT_TYPE
     for template in templates:
         template_name = template.get('name', template.get('slug', 'Template'))
         template_slug = template.get('slug')
-        preview_url = template.get('square') or template.get('story')
+        preview_url = template.get('square') or template.get('story') or template.get('feed')
         
         # Create button for this template
         keyboard = [[InlineKeyboardButton(
@@ -304,11 +304,13 @@ def _generate_image_sync(template_slug, coupon_code):
         
         metadata = json.loads(meta_content.decode('utf-8'))
         
-        # Smart fallback: prefer square, then story
+        # Smart fallback: prefer square, then story, then feed
         variant = 'square'
         if 'square' not in metadata:
             if 'story' in metadata:
                 variant = 'story'
+            elif 'feed' in metadata:
+                variant = 'feed'
             else:
                 return None, 'no_variants'
         
@@ -466,7 +468,7 @@ async def generate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for template in templates:
         template_name = template.get('name', template.get('slug', 'Template'))
         template_slug = template.get('slug')
-        preview_url = template.get('square') or template.get('story')
+        preview_url = template.get('square') or template.get('story') or template.get('feed')
         
         # Create button for this template
         keyboard = [[InlineKeyboardButton(

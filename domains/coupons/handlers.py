@@ -627,10 +627,11 @@ def handle_upload_template(handler):
         
         has_square_image = 'squareImage' in files and files['squareImage'].get('filename')
         has_story_image = 'storyImage' in files and files['storyImage'].get('filename')
+        has_feed_image = 'feedImage' in files and files['feedImage'].get('filename')
         
         if not is_existing_template:
-            if not has_square_image and not has_story_image:
-                raise ValueError('At least one variant (square or portrait) image is required for new templates')
+            if not has_square_image and not has_story_image and not has_feed_image:
+                raise ValueError('At least one variant (square, portrait, or IG feed) image is required for new templates')
         
         square_coords = {
             'leftPct': float(fields.get('squareLeftPct')),
@@ -649,14 +650,25 @@ def handle_upload_template(handler):
             'hAlign': fields.get('storyHAlign'),
             'vAlign': fields.get('storyVAlign')
         }
-        
+
+        feed_coords = {
+            'leftPct': float(fields.get('feedLeftPct', 5)),
+            'topPct': float(fields.get('feedTopPct', 78)),
+            'widthPct': float(fields.get('feedWidthPct', 90)),
+            'heightPct': float(fields.get('feedHeightPct', 12)),
+            'hAlign': fields.get('feedHAlign') or 'center',
+            'vAlign': fields.get('feedVAlign') or 'middle'
+        }
+
         square_max_font = int(float(fields.get('squareMaxFontPx')))
         story_max_font = int(float(fields.get('storyMaxFontPx')))
+        feed_max_font = int(float(fields.get('feedMaxFontPx', 80)))
         
         square_font_color = fields.get('squareFontColor') or '#FF273E'
         story_font_color = fields.get('storyFontColor') or '#FF273E'
+        feed_font_color = fields.get('feedFontColor') or '#FF273E'
         
-        if not server.OBJECT_STORAGE_AVAILABLE and (has_square_image or has_story_image):
+        if not server.OBJECT_STORAGE_AVAILABLE and (has_square_image or has_story_image or has_feed_image):
             raise ValueError('Template uploads are only available on Replit. Please use the Replit admin panel to upload templates.')
         
         from object_storage import ObjectStorageService
@@ -665,8 +677,10 @@ def handle_upload_template(handler):
         
         existing_square_url = None
         existing_story_url = None
+        existing_feed_url = None
         existing_square_data = None
         existing_story_data = None
+        existing_feed_data = None
         existing_meta = None
         if is_existing_template:
             meta_path = os.path.join(template_dir, 'meta.json')
@@ -696,6 +710,9 @@ def handle_upload_template(handler):
                 if 'story' in existing_meta and isinstance(existing_meta['story'], dict):
                     existing_story_data = existing_meta['story']
                     existing_story_url = existing_story_data.get('imageUrl') or existing_story_data.get('image')
+                if 'feed' in existing_meta and isinstance(existing_meta['feed'], dict):
+                    existing_feed_data = existing_meta['feed']
+                    existing_feed_url = existing_feed_data.get('imageUrl') or existing_feed_data.get('image')
         
         if has_square_image and storage_service:
             square_data = files['squareImage']['data']
@@ -704,11 +721,16 @@ def handle_upload_template(handler):
         if has_story_image and storage_service:
             story_data = files['storyImage']['data']
             image_urls['story'] = storage_service.upload_file(story_data, f"templates/{slug}/story.png")
-        
+
+        if has_feed_image and storage_service:
+            feed_data = files['feedImage']['data']
+            image_urls['feed'] = storage_service.upload_file(feed_data, f"templates/{slug}/feed.png")
+
         os.makedirs(template_dir, exist_ok=True)
         
         square_image_url = image_urls.get('square') or existing_square_url
         story_image_url = image_urls.get('story') or existing_story_url
+        feed_image_url = image_urls.get('feed') or existing_feed_url
         
         existing_telegram_enabled = existing_meta.get('telegramEnabled', True) if existing_meta else True
         
@@ -732,9 +754,17 @@ def handle_upload_template(handler):
                 'fontColor': story_font_color,
                 'imageUrl': story_image_url or existing_story_url or f'assets/templates/{slug}/story.png'
             }
-        
-        if 'square' not in meta and 'story' not in meta:
-            raise ValueError('Template must have at least one variant (square or portrait)')
+
+        if feed_image_url or has_feed_image or existing_feed_data:
+            meta['feed'] = {
+                'box': feed_coords,
+                'maxFontPx': feed_max_font,
+                'fontColor': feed_font_color,
+                'imageUrl': feed_image_url or existing_feed_url or f'assets/templates/{slug}/feed.png'
+            }
+
+        if 'square' not in meta and 'story' not in meta and 'feed' not in meta:
+            raise ValueError('Template must have at least one variant (square, portrait, or IG feed)')
         
         meta_path = os.path.join(template_dir, 'meta.json')
         with open(meta_path, 'w') as f:
