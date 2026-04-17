@@ -276,43 +276,94 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Parse callback data
     callback_data = query.data
+
+    # Variant selection callback (user picked a specific size)
+    if callback_data.startswith('variant:'):
+        parts = callback_data.replace('variant:', '').split(':', 1)
+        if len(parts) != 2:
+            return
+        template_slug, chosen_variant = parts
+        if chosen_variant not in ('square', 'story', 'feed'):
+            await query.message.reply_text("❌ Invalid size selection.")
+            return
+        variant_label = {'square': 'Square', 'story': 'Story', 'feed': 'IG Feed'}.get(chosen_variant, chosen_variant)
+        print(f"[TELEGRAM] Generating {template_slug} ({chosen_variant})")
+        await query.message.reply_text(f"🎨 Generating {template_slug} ({variant_label}) with coupon {coupon_code}...")
+        await _generate_and_send(query.message, chat_id, template_slug, coupon_code, variant=chosen_variant)
+        print(f"[TELEGRAM] Generation complete for {template_slug} ({chosen_variant})")
+        return
+
     if not callback_data.startswith('template:'):
         return
-    
-    template_selection = callback_data.replace('template:', '')
-    
-    # Handle single template selection
-    template_slug = template_selection
+
+    template_slug = callback_data.replace('template:', '')
+
+    # Inspect available variants — if more than one, show size picker
+    available_variants = []
+    try:
+        from object_storage import download_from_spaces
+        meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
+        if meta_content:
+            metadata = json.loads(meta_content.decode('utf-8'))
+            for v in ('square', 'story', 'feed'):
+                if v in metadata and isinstance(metadata[v], dict):
+                    available_variants.append(v)
+    except Exception as e:
+        print(f"[TELEGRAM] Could not inspect variants for {template_slug}: {e}", flush=True)
+
+    if len(available_variants) > 1:
+        variant_labels = {
+            'square': '📐 Square (1080×1080)',
+            'story':  '📱 Story (1080×1920)',
+            'feed':   '🖼️ IG Feed (1080×1440)'
+        }
+        keyboard = [
+            [InlineKeyboardButton(variant_labels[v], callback_data=f"variant:{template_slug}:{v}")]
+            for v in available_variants
+        ]
+        await query.message.reply_text(
+            f"📏 *Choose a size for {template_slug}:*",
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+
+    # Single variant available — generate immediately
     print(f"[TELEGRAM] Generating single template: {template_slug}")
     await query.message.reply_text(f"🎨 Generating {template_slug} with coupon {coupon_code}...")
     await _generate_and_send(query.message, chat_id, template_slug, coupon_code)
     print(f"[TELEGRAM] Generation complete for {template_slug}")
 
 
-def _generate_image_sync(template_slug, coupon_code):
+def _generate_image_sync(template_slug, coupon_code, variant=None):
     """
     Synchronous helper to perform blocking image generation.
+    If `variant` is provided and present in the template metadata, that variant
+    is rendered. Otherwise falls back to the first available of square > story > feed.
     Returns: (image_bio, error_message) tuple
     """
     from object_storage import download_from_spaces
-    
+
     try:
         # Download template metadata
         meta_content = download_from_spaces(f'templates/{template_slug}/meta.json')
         if not meta_content:
             return None, 'template_not_found'
-        
+
         metadata = json.loads(meta_content.decode('utf-8'))
-        
-        # Smart fallback: prefer square, then story, then feed
-        variant = 'square'
-        if 'square' not in metadata:
-            if 'story' in metadata:
-                variant = 'story'
-            elif 'feed' in metadata:
-                variant = 'feed'
-            else:
-                return None, 'no_variants'
+
+        # Use the explicit variant if it exists, else smart fallback
+        if variant and variant in metadata and isinstance(metadata[variant], dict):
+            pass
+        else:
+            variant = 'square'
+            if 'square' not in metadata:
+                if 'story' in metadata:
+                    variant = 'story'
+                elif 'feed' in metadata:
+                    variant = 'feed'
+                else:
+                    return None, 'no_variants'
         
         variant_data = metadata.get(variant, {})
         
@@ -347,22 +398,22 @@ def _generate_image_sync(template_slug, coupon_code):
         return None, 'generation_failed'
 
 
-async def _generate_and_send(message, chat_id, template_slug, coupon_code):
+async def _generate_and_send(message, chat_id, template_slug, coupon_code, variant=None):
     """
     Internal helper to generate and send a template image.
     Runs blocking I/O in thread to keep event loop responsive.
     """
     import asyncio
     import sys
-    
-    msg = f"[TELEGRAM] _generate_and_send called: template={template_slug}, coupon={coupon_code}, chat_id={chat_id}"
+
+    msg = f"[TELEGRAM] _generate_and_send called: template={template_slug}, coupon={coupon_code}, variant={variant}, chat_id={chat_id}"
     print(msg, flush=True)
     sys.stdout.flush()
-    
+
     try:
         # Run blocking image generation in thread
         print(f"[TELEGRAM] Starting image generation...")
-        image_bio, error = await asyncio.to_thread(_generate_image_sync, template_slug, coupon_code)
+        image_bio, error = await asyncio.to_thread(_generate_image_sync, template_slug, coupon_code, variant)
         print(f"[TELEGRAM] Image generation finished: error={error}")
         
         if error:
