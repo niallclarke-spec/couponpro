@@ -55,7 +55,7 @@ def _cache_result(coupon_code, result):
         print(f"[COUPON] 💾 Cached validation for '{coupon_code}'")
 
 
-def validate_coupon(coupon_code, timeout=10, max_retries=3):
+def validate_coupon(coupon_code, timeout=6, max_retries=2):
     """
     Validate a coupon code against FunderPro's CRM API with retry logic.
     

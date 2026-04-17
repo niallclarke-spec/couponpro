@@ -1,0 +1,74 @@
+Apr 17 12:58:29  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325867270 in 0.12s, result: {'status': 'ok'}
+Apr 17 12:58:29  100.127.2.110 - - [17/Apr/2026 12:58:29] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Apr 17 12:58:32  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Apr 17 12:58:32  [WEBHOOK-ENDPOINT] Received 337 bytes
+Apr 17 12:58:32  [WEBHOOK-ENDPOINT] Processing update_id: 325867271
+Apr 17 12:58:32  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Apr 17 12:58:32  [WEBHOOK] Received update_id: 325867271
+Apr 17 12:58:32  [WEBHOOK] Processing: type=Message, text=alpha
+Apr 17 12:58:32  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Apr 17 12:58:32  [COUPON-HANDLER] Processing coupon: ALPHA, chat_id: 5262022632
+Apr 17 12:58:32  [COUPON] Validating 'ALPHA' (attempt 1/3)...
+Apr 17 12:58:42  [COUPON] ⏱️ Timeout, retrying in 1s...
+Apr 17 12:58:43  [COUPON] Validating 'ALPHA' (attempt 2/3)...
+Apr 17 12:58:53  [COUPON] ⏱️ Timeout, retrying in 2s...
+Apr 17 12:58:55  [COUPON] Validating 'ALPHA' (attempt 3/3)...
+Apr 17 12:59:02  [WEBHOOK] ❌ Error processing update: 
+Apr 17 12:59:02  Traceback (most recent call last):
+Apr 17 12:59:02    File "/workspace/telegram_bot.py", line 928, in handle_telegram_webhook
+Apr 17 12:59:02      future.result(timeout=30)
+Apr 17 12:59:02    File "/workspace/.heroku/python/lib/python3.11/concurrent/futures/_base.py", line 458, in result
+Apr 17 12:59:02      raise TimeoutError()
+Apr 17 12:59:02  TimeoutError
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325867271 in 30.01s, result: {'status': 'ok'}
+Apr 17 12:59:02  100.127.2.110 - - [17/Apr/2026 12:59:02] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] Received 396 bytes
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] Processing update_id: 325867272
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Apr 17 12:59:02  [WEBHOOK] Received update_id: 325867272
+Apr 17 12:59:02  [WEBHOOK] Processing: type=Message, text=/start
+Apr 17 12:59:02  [WEBHOOK] ✅ Update processed successfully
+Apr 17 12:59:02  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325867272 in 0.18s, result: {'status': 'ok'}
+Apr 17 12:59:02  100.127.2.110 - - [17/Apr/2026 12:59:02] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Apr 17 12:59:06  [COUPON] ❌ Timeout after 3 attempts
+Apr 17 12:59:06  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=5262022632, template=None, coupon=ALPHA, success=False, device=unknown
+Apr 17 12:59:06  [2026-04-17 12:59:06] [INFO] [db] [req:da98fd38] Attempting to log: chat_id=5262022632, template=None, coupon=ALPHA, success=False, error=invalid_coupon, device=unknown
+Apr 17 12:59:06  [2026-04-17 12:59:06] [INFO] [db] [req:da98fd38] Successfully logged usage
+Apr 17 12:59:06  [BOT_USAGE] ✅ Successfully logged usage to database
+Apr 17 12:59:06  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Apr 17 12:59:06  [WEBHOOK-ENDPOINT] Received 337 bytes
+Apr 17 12:59:06  [WEBHOOK-ENDPOINT] Processing update_id: 325867273
+Apr 17 12:59:06  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Apr 17 12:59:06  [WEBHOOK] Received update_id: 325867273
+Apr 17 12:59:06  [WEBHOOK] Processing: type=Message, text=alpha
+Apr 17 12:59:06  [COUPON-HANDLER] ⚡ handle_coupon_input called!
+Apr 17 12:59:06  [COUPON-HANDLER] Processing coupon: ALPHA, chat_id: 5262022632
+Apr 17 12:59:06  [COUPON] Validating 'ALPHA' (attempt 1/3)...
+Apr 17 12:59:16  [COUPON] ⏱️ Timeout, retrying in 1s...
+Apr 17 12:59:17  [COUPON] Validating 'ALPHA' (attempt 2/3)...
+Apr 17 12:59:27  [COUPON] ⏱️ Timeout, retrying in 2s...
+Apr 17 12:59:29  [COUPON] Validating 'ALPHA' (attempt 3/3)...
+Apr 17 12:59:36  [WEBHOOK] ❌ Error processing update: 
+Apr 17 12:59:36  Traceback (most recent call last):
+Apr 17 12:59:36    File "/workspace/telegram_bot.py", line 928, in handle_telegram_webhook
+Apr 17 12:59:36      future.result(timeout=30)
+Apr 17 12:59:36    File "/workspace/.heroku/python/lib/python3.11/concurrent/futures/_base.py", line 458, in result
+Apr 17 12:59:36      raise TimeoutError()
+Apr 17 12:59:36  TimeoutError
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325867273 in 30.01s, result: {'status': 'ok'}
+Apr 17 12:59:36  100.127.2.110 - - [17/Apr/2026 12:59:36] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] ⚡ Webhook endpoint called!
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] Received 396 bytes
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] Processing update_id: 325867274
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] Dev fallback: tenant=entrylab, bot=default
+Apr 17 12:59:36  [WEBHOOK] Received update_id: 325867274
+Apr 17 12:59:36  [WEBHOOK] Processing: type=Message, text=/start
+Apr 17 12:59:36  [WEBHOOK] ✅ Update processed successfully
+Apr 17 12:59:36  [WEBHOOK-ENDPOINT] ✅ Completed update_id 325867274 in 0.09s, result: {'status': 'ok'}
+Apr 17 12:59:36  100.127.2.110 - - [17/Apr/2026 12:59:36] "POST /api/telegram-webhook HTTP/1.1" 200 -
+Apr 17 12:59:39  [COUPON] ❌ Timeout after 3 attempts
+Apr 17 12:59:39  [BOT_USAGE] Attempting to log: tenant=entrylab, chat_id=5262022632, template=None, coupon=ALPHA, success=False, device=unknown
+Apr 17 12:59:39  [2026-04-17 12:59:39] [INFO] [db] [req:6221310e] Attempting to log: chat_id=5262022632, template=None, coupon=ALPHA, success=False, error=invalid_coupon, device=unknown
+Apr 17 12:59:39  [2026-04-17 12:59:39] [INFO] [db] [req:6221310e] Successfully logged usage
+Apr 17 12:59:39  [BOT_USAGE] ✅ Successfully logged usage to database
