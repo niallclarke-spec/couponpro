@@ -4906,8 +4906,8 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                     FROM forex_signals
                     WHERE tenant_id = %s
                       AND telegram_message_id IS NOT NULL
-                      AND updated_at > NOW() - INTERVAL '14 hours'
-                    ORDER BY updated_at DESC
+                      AND COALESCE(closed_at, posted_at) > NOW() - INTERVAL '14 hours'
+                    ORDER BY COALESCE(closed_at, posted_at) DESC
                     LIMIT 1
                 """, (tenant_id,))
                 row = cursor.fetchone()

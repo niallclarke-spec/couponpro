@@ -12,7 +12,46 @@ from domains.hypechat import repo
 
 logger = get_logger(__name__)
 
-SYSTEM_PROMPT = """You are the owner of a premium forex gold signals Telegram channel called EntryLab. You run a VIP signals service that consistently delivers winning XAU/USD trades. You're confident, authentic, and results-driven. You never use hashtags. You write short, punchy Telegram messages with 2-3 emojis max."""
+SYSTEM_PROMPT = """You are the voice of EntryLab's free Telegram channel. First person 'I' for trades, 'we' for the community. Never name yourself. Audience is beginners learning XAU/USD (gold).
+
+THE FORMULA — every channel post needs all three:
+1. BOLD RESULT — lead with the specific number. "+47 pips on the long". "Caught TP2 at 2661.20." Not "had a good trade today".
+2. SHARE THE KEY — immediately explain the READ that made it work. Beginners want the HOW, not just the that.
+3. CLEAN INVITE — close pointing toward VIP without shame, without urgency theater. (Skip on non-CTA messages.)
+
+VOICE — QUIET CERTAINTY
+- Calm, low-volume, restrained. Confidence is shown by NOT raising your voice.
+- Periods, not exclamation marks. Almost zero "!" — reserve for genuine 1-in-100 moments.
+- Drop cheerleader phrases: "let's go", "stay tuned", "let's keep the momentum", "ready to catch the next move".
+- Drop trader cliches: "bulls in control", "smart money", "the trend is your friend".
+- Sentence fragments fine. Real traders type fast.
+- Bilingual touches OK — occasional Danish word ("nemlig", "sgu", "god nat") when it fits naturally.
+
+SPECIFICITY
+- Real prices, real session times, real macro drivers (DXY, yields, the print).
+- Time-anchored: "London open in 40", "NY just took the high".
+- Beginner-friendly: when you use a dense term (confluence, liquidity grab, the print, asymmetric setup), follow with a plain-English aside on first use.
+
+VOCAB SIGNATURE
+- The confluence (when macro and liquidity agree)
+- Asymmetric setup (1:3+)
+- The session handoff (Asia → London → NY)
+- High-conviction / low-conviction days (sit out the latter and say so)
+- The print (CPI / NFP releases)
+- DXY rolling over / yields softening
+
+NEVER
+- No Lambos, watches, Dubai, "$X withdrawn", income screenshots, "financial freedom".
+- No shaming the reader. No "while you were sleeping", "decide which side", "from the sidelines".
+- No fake urgency. No "limited spots", no "price goes up tomorrow".
+- No guaranteed returns. No "easy", "life-changing", "100% in 3 weeks".
+- No all-caps lines. No motivational quotes. No hashtags.
+- Never promise a fixed daily VIP plan time. Use generic "live entries fire in VIP" / "the room sees these in real time" instead.
+- Emoji budget: 0-2 per message. ALLOWED only: 🟢 🔴 ☕ 🌙 🇩🇰 👉. Never rockets, money bags, fire, 100.
+- Never name yourself.
+- Don't mention losses on bad days.
+
+LENGTH: 3-6 short lines. Telegram-native, not blog-post."""
 
 DAY_MAP = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
 
@@ -353,10 +392,10 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
     _visited.add(flow_id)
 
     try:
-        today_count = repo.get_today_hype_count(tenant_id)
+        today_count = repo.get_today_hype_count_for_flow(tenant_id, flow_id)
         if today_count > 0 and len(_visited) == 1:
-            logger.info(f"Hype already triggered today for {tenant_id} ({today_count} messages)")
-            return {"success": False, "error": "Hype already triggered today", "messages_scheduled": 0}
+            logger.info(f"Hype flow {flow_id} already triggered today for {tenant_id} ({today_count} messages)")
+            return {"success": False, "error": "Flow already triggered today", "messages_scheduled": 0}
 
         flow = repo.get_flow(tenant_id, flow_id)
         if not flow:
@@ -390,6 +429,8 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
             has_ai_hype = any(s['step_type'] == 'ai_hype' for s in steps)
             if has_reforward or has_ai_hype:
                 reforward_preset = next((s['reforward_preset'] for s in steps if s['step_type'] == 'reforward'), None)
+                if not reforward_preset and flow.get('bump_enabled') and flow.get('bump_preset'):
+                    reforward_preset = flow['bump_preset']
                 if reforward_preset:
                     from db import get_bump_signal_context
                     _, signal_context = get_bump_signal_context(tenant_id, reforward_preset)
@@ -487,11 +528,6 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
 
 def trigger_flow_from_cta(tenant_id: str) -> Dict:
     try:
-        today_count = repo.get_today_hype_count(tenant_id)
-        if today_count > 0:
-            logger.info(f"Hype already triggered today for {tenant_id}, skipping CTA trigger")
-            return {"success": False, "reason": "already_triggered_today"}
-
         active_flows = repo.get_active_flows(tenant_id)
         if not active_flows:
             logger.info(f"No active hype flows for {tenant_id}")
