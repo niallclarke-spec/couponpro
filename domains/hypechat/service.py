@@ -54,6 +54,10 @@ ANTI-TEMPLATE — DAILY VARIATION
 - Vary cadence: sometimes a one-line punch, sometimes a fragment, sometimes a slow build.
 - Avoid these template smells: "Runners are live." (twice in a row), "ongoing bullish sentiment", "let's keep the momentum", "as we move forward".
 
+ABSENCE RULE — CRITICAL
+- NEVER mention zero, quiet days, slow days, "no signals", "no closes", "no opportunities", "consecutive day of nothing", or any phrasing that draws attention to absence. If a number isn't in your context, it doesn't exist for you. Pivot to what IS in context (the live signal, the positive streak window if shown, the read).
+- NEVER glue a positive number to a negative phrase. If you see "Pips earned today: +47" you do NOT then say "consecutive day of no closes" — those are contradictions.
+
 NEVER
 - No emojis in your body. None. The system appends one CTA arrow on the final message — that's it. Never use 🚀 💰 🔥 💯 ✅ 📈 📉 🟢 🔴, never anything.
 - No Lambos, watches, Dubai, "$X withdrawn", income screenshots, "financial freedom".
@@ -98,27 +102,67 @@ def _fmt_pips(n: float) -> str:
     return f"{f:+.1f}"
 
 
+def _pick_positive_streak(tenant_id: str) -> Optional[Dict]:
+    """Find the best positive performance window worth bragging about.
+
+    Cascading thresholds — only return a window if its total clears the bar:
+      - Yesterday > 200 pips → use it
+      - else past 7 days > 600 pips → use it
+      - else past 14 days > 1200 pips → use it
+      - else None (don't mention any historical number)
+
+    Returns dict {label, pips} or None.
+    """
+    try:
+        from domains.crosspromo.repo import get_net_pips_yesterday_utc, get_net_pips_over_days
+        y = get_net_pips_yesterday_utc(tenant_id)
+        if y > 200:
+            return {"label": "yesterday", "pips": y}
+        w = get_net_pips_over_days(tenant_id, 7)
+        if w > 600:
+            return {"label": "past 7 days", "pips": w}
+        m = get_net_pips_over_days(tenant_id, 14)
+        if m > 1200:
+            return {"label": "past 14 days", "pips": m}
+    except Exception as e:
+        logger.warning(f"_pick_positive_streak failed: {e}")
+    return None
+
+
 def build_context(tenant_id: str, signal_context: str = None) -> str:
-    from domains.crosspromo.repo import get_net_pips_over_days
+    """Build the LIVE CONTEXT block for Markus.
+
+    Hard rule: NEVER include "no signals" / "zero" / "quiet day" lines. If a
+    number isn't strong enough to brag about, we simply omit it from context
+    so the model can't echo it back as a negative.
+    """
+    from domains.crosspromo.repo import get_net_pips_today_utc
 
     try:
-        pips_today = get_net_pips_over_days(tenant_id, 1)
-        pips_7d = get_net_pips_over_days(tenant_id, 7)
-
         context_parts = []
-        if pips_today != 0:
-            context_parts.append(f"Pips earned today: {_fmt_pips(pips_today)}")
-        else:
-            context_parts.append("No closed signals yet today")
 
-        if pips_7d != 0:
-            context_parts.append(f"Pips earned past 7 days: {_fmt_pips(pips_7d)}")
-        else:
-            context_parts.append("No closed signals in the past 7 days")
+        pips_today = get_net_pips_today_utc(tenant_id)
+        if pips_today > 0:
+            context_parts.append(f"Pips earned today: {_fmt_pips(pips_today)}")
+        # If today is 0 or negative, omit entirely — model is forbidden from
+        # mentioning empty/red days (see SYSTEM_PROMPT).
+
+        streak = _pick_positive_streak(tenant_id)
+        if streak:
+            context_parts.append(
+                f"Positive streak to highlight ({streak['label']}): {_fmt_pips(streak['pips'])} pips"
+            )
 
         if signal_context:
-            context_parts.append("")
+            if context_parts:
+                context_parts.append("")
             context_parts.append(signal_context)
+
+        if not context_parts:
+            # Genuinely nothing to say — return a minimal placeholder rather
+            # than empty so the prompt still has structure. Model is told below
+            # that absence of numbers means: don't invent any.
+            return "(No performance numbers to share right now — focus on the live signal context only.)"
 
         return "\n".join(context_parts)
     except Exception as e:
@@ -164,16 +208,23 @@ def _get_arc_instruction(step: int, total: int) -> str:
                     "table for the runners. Lightly motivating, never hypey. Still in scene. "
                     "NO CTA line, NO link.")
         if step == 3:
-            return ("MESSAGE 3 of 3 — THE CTA (posted ~5 min after #2).\n"
+            return ("MESSAGE 3 of 3 — THE SALES BEAT (posted ~5 min after #2). This is where Markus converts.\n"
                     "Do NOT repeat ANY opener or closing line from messages 1 or 2.\n"
-                    "Start fresh — restate today's net pips number from context (use the EXACT number) "
-                    "and the 7-day streak number (use the EXACT number) in ONE quiet line.\n"
-                    "Then ONE clean invite line — 'the room sees these in real time' OR "
-                    "'live entries fire in VIP' OR similar restrained energy. NEVER fixed plan time, "
-                    "NEVER urgency theater, NEVER shame.\n"
-                    "Do NOT include any link, URL, or HTML — the system appends the canonical "
-                    "Open VIP link automatically. Just the body text.\n"
-                    "Length: 3-4 short lines. Quiet. The link does the work.")
+                    "Structure (4-5 short lines):\n"
+                    "  (a) ONE quiet positivity line. If context has 'Positive streak to highlight', "
+                    "use that EXACT number and label (e.g. 'past 7 days closed +840 pips'). If no "
+                    "streak block is in context, skip this line entirely — DO NOT invent a streak, "
+                    "DO NOT mention zero, DO NOT mention quiet days.\n"
+                    "  (b) ONE pointed sales line — frame today's win as proof of the process, then "
+                    "name the gap: 'this was just one signal in the free channel today — most of the "
+                    "entries fire inside VIP' or 'free gets the highlights, VIP gets every entry as "
+                    "it happens'. The angle is: free channel = sample, VIP = the actual flow.\n"
+                    "  (c) ONE quiet invite line — 'door's open' / 'the room is already at the desk' / "
+                    "'live entries fire in VIP' energy. NEVER urgency theater, NEVER shame, NEVER a "
+                    "fixed plan time.\n"
+                    "Do NOT include any link, URL, or HTML — the system appends the canonical Join VIP "
+                    "+ Chat with Us buttons automatically. Just the body text.\n"
+                    "Lightly salesy, never hypey. Quiet certainty wins the click.")
     # Generic fallback for arcs of other lengths
     if step == 1:
         return "MESSAGE 1 — Set the tone, lead with the result from context."

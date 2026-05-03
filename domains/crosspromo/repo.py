@@ -42,6 +42,29 @@ def get_net_pips_today_utc(tenant_id: str) -> float:
         return 0.0
 
 
+def get_net_pips_yesterday_utc(tenant_id: str) -> float:
+    """Net pips closed during yesterday's UTC calendar day. Excludes test seeds."""
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            return 0.0
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COALESCE(SUM(result_pips), 0)
+                FROM forex_signals
+                WHERE tenant_id = %s
+                AND closed_at >= ((NOW() AT TIME ZONE 'UTC')::date - INTERVAL '1 day')
+                AND closed_at <  (NOW() AT TIME ZONE 'UTC')::date
+                AND result_pips IS NOT NULL
+                AND (notes IS NULL OR notes NOT LIKE '[TEST_SEED]%%')
+            """, (tenant_id,))
+            row = cursor.fetchone()
+            return float(row[0]) if row and row[0] else 0.0
+    except Exception as e:
+        logger.exception(f"Error getting yesterday's UTC net pips: {e}")
+        return 0.0
+
+
 def get_net_pips_over_days(tenant_id: str, days: int) -> float:
     """
     Get net pips (sum of result_pips) over the past N days.
