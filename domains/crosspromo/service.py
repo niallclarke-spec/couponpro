@@ -169,6 +169,97 @@ def build_morning_news_message(tenant_id: str) -> str:
     return generate_morning_briefing(tenant_id)
 
 
+MARKUS_MORNING_PROMPT = """Write the Morning Macro post for the FREE Telegram channel. ONE message only.
+
+- It is around 06:00 UTC. London opens in ~2 hours, Asia is winding down.
+- Open with a quiet personal anchor (coffee, cycle to the desk, the desk is awake) — ONE line, not a paragraph.
+- Drop the macro read for gold today using the LIVE XAU/USD spot from context. Reference one specific level you're watching at the London open.
+- High-conviction or low-conviction call. If conviction is low, sit out and say so honestly.
+- Close with a quiet invite — "the room is already at the desk" / "live entries fire in VIP" energy. Never urgency theater.
+- End with this exact link line:
+👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
+
+4-6 short lines total. Quiet certainty. Periods, not exclamations.
+Use HTML for links only — no <b>, no <i>, no other tags.
+"""
+
+
+MARKUS_EOD_PROMPT = """Write the End-of-Day recap post for the FREE Telegram channel. ONE message only.
+
+- London close just hit (~16:00 UTC). The day was green (today's net pips are positive — see context).
+- Lead with today's net pips number from context. Use the EXACT number you see in context — do not round, do not invent, do not infer. If context says "+47.0" you write "+47 pips". Same for the 7-day number.
+- One line on the read that worked today (you can be general — "DXY rolled over", "London open broke the overnight high", "the print was the catalyst" — pick what fits).
+- Reference the 7-day pips number from context as a quiet streak line — again, exact number from context, no invention.
+- Close with a quiet invite — "the room sees these in real time" energy. Never "don't miss out".
+- End with this exact link line:
+👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
+
+4-6 short lines total. Quiet certainty. Periods, not exclamations.
+Use HTML for links only — no <b>, no <i>, no other tags.
+"""
+
+
+CTA_LINK_LINE = '👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>'
+
+
+def _sanitize_markus_html(message: str) -> str:
+    """Strip raw HTML tags from AI body, then re-append the canonical CTA link.
+
+    The AI is instructed to emit the Open VIP <a href> line at the end, but we
+    cannot trust the model not to inject stray < or > characters elsewhere,
+    which would crash Telegram's parse_mode='HTML'. This escapes the body and
+    guarantees the CTA link is present and well-formed.
+    """
+    import html
+    import re
+
+    # Drop any existing CTA link line(s) the model produced (we'll re-append a clean one)
+    body = re.sub(r'(?im)^[^\n]*<a\s[^>]*entrylab\.io/subscribe[^>]*>.*?</a>[^\n]*\n?', '', message)
+    # Drop any other anchor tags entirely (keep their text)
+    body = re.sub(r'<a\s[^>]*>(.*?)</a>', r'\1', body, flags=re.IGNORECASE | re.DOTALL)
+    # Strip any other HTML tags the model may have invented
+    body = re.sub(r'<[^>]+>', '', body)
+    # Now escape any remaining literal < > & in the body
+    body = html.escape(body, quote=False).rstrip()
+    return f"{body}\n\n{CTA_LINK_LINE}"
+
+
+def build_markus_morning_message(tenant_id: str) -> str:
+    """Markus-voice Morning Macro post. Uses live XAU/USD as ground truth."""
+    from domains.hypechat import service as hype_service
+    from domains.crosspromo.macro_data import fetch_xau_context
+
+    xau_ctx = fetch_xau_context()
+    if not xau_ctx:
+        logger.info("Morning Macro: no live XAU context, AI will write from pip stats only")
+
+    logger.info(f"Generating Markus morning macro for tenant: {tenant_id}")
+    message = hype_service.generate_message(
+        tenant_id=tenant_id,
+        custom_prompt=MARKUS_MORNING_PROMPT,
+        signal_context=xau_ctx,
+    )
+    if not message:
+        logger.warning("Markus morning generation returned empty, using fallback")
+        return _fallback_morning_message()
+    return _sanitize_markus_html(message)
+
+
+def build_markus_eod_message(tenant_id: str) -> str:
+    """Markus-voice End-of-Day recap. Caller MUST gate on green day before calling."""
+    from domains.hypechat import service as hype_service
+
+    logger.info(f"Generating Markus EoD recap for tenant: {tenant_id}")
+    message = hype_service.generate_message(
+        tenant_id=tenant_id,
+        custom_prompt=MARKUS_EOD_PROMPT,
+    )
+    if not message:
+        logger.warning("Markus EoD generation returned empty")
+        return ""
+    return _sanitize_markus_html(message)
+
+
 def _generate_ai_morning_message(headlines: List[str]) -> str:
     """
     Use AI to generate a conversational morning briefing from headlines.
@@ -570,7 +661,9 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         return {"success": False, "error": "Free channel ID not configured. Set it in Connections → Signal Bot."}
     
     if job_type == 'morning_news':
-        message = build_morning_news_message(tenant_id)
+        message = build_markus_morning_message(tenant_id)
+        if not message:
+            return {"success": False, "error": "Morning macro generation returned empty"}
         result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
         return result
     
@@ -700,7 +793,20 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         return result
     
     elif job_type == 'eod_pip_brag':
-        # End-of-day pip brag message - skip if wins were already forwarded today
+        # Markus EoD recap — green-only gate (UTC calendar-day net pips must be > 0)
+        pips_today = repo.get_net_pips_today_utc(tenant_id)
+        if pips_today <= 0:
+            logger.info(f"Skipping Markus EoD - UTC-today net pips {pips_today:+.1f} not green")
+            return {"success": True, "skipped": True, "reason": f"Day not green ({pips_today:+.1f} pips)"}
+
+        message = build_markus_eod_message(tenant_id)
+        if not message:
+            return {"success": False, "error": "EoD generation returned empty"}
+        result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
+        return result
+
+    elif job_type == 'eod_pip_brag_legacy':
+        # Legacy lookback-based brag (kept for manual triggers / back-compat, not scheduled)
         wins_today = repo.get_wins_forwarded_today(tenant_id)
         if wins_today > 0:
             logger.info(f"Skipping EOD brag - {wins_today} wins already forwarded today")
@@ -805,10 +911,10 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
 def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     """
     Enqueue today's daily sequence with fixed UTC times.
-    - morning_news: at morning_post_time_utc (default 06:42)
+    - morning_news: at morning_post_time_utc (default 06:00, Markus voice)
     - forward_recap: at recap_forward_time_utc (default 07:12) - only if recent recap exists
     - vip_soon: at vip_soon_time_utc (default 07:51)
-    - eod_pip_brag: at 20:00 UTC (end of trading day)
+    - eod_pip_brag: at 16:00 UTC (London close, Markus voice, green-only gate)
     
     Only works Mon-Fri. Returns result dict.
     """
@@ -832,7 +938,7 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
     utc_now = datetime.utcnow()
     utc_today_str = utc_now.strftime('%Y-%m-%d')
     
-    morning_time_str = settings.get('morning_post_time_utc', '06:42')
+    morning_time_str = settings.get('morning_post_time_utc', '06:00')
     recap_time_str = settings.get('recap_forward_time_utc', '07:12')
     vip_soon_time_str = settings.get('vip_soon_time_utc', '07:51')
     
@@ -843,7 +949,7 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
         except (ValueError, IndexError):
             return default_h, default_m
     
-    morning_h, morning_m = parse_time(morning_time_str, 6, 42)
+    morning_h, morning_m = parse_time(morning_time_str, 6, 0)
     recap_h, recap_m = parse_time(recap_time_str, 7, 12)
     vip_soon_h, vip_soon_m = parse_time(vip_soon_time_str, 7, 51)
     
@@ -891,8 +997,8 @@ def enqueue_daily_sequence(tenant_id: str) -> Dict[str, Any]:
         dedupe_key=f"{tenant_id}|{utc_today_str}|vip_soon"
     )
     
-    eod_time = utc_now.replace(hour=20, minute=0, second=0, microsecond=0)
-    if utc_now.hour >= 20:
+    eod_time = utc_now.replace(hour=16, minute=0, second=0, microsecond=0)
+    if utc_now.hour >= 16:
         eod_job = None
     else:
         eod_job = repo.enqueue_job(
