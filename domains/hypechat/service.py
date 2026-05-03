@@ -384,7 +384,7 @@ def _execute_flow_legacy(tenant_id: str, flow: dict, now: datetime, today_str: s
 
 
 def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
-                 base_time: datetime = None, _visited: set = None) -> Dict:
+                 base_time: datetime = None, _visited: set = None, force: bool = False) -> Dict:
     from domains.crosspromo.repo import enqueue_job
 
     if _visited is None:
@@ -394,11 +394,18 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
         return {"success": False, "skipped": True, "messages_scheduled": 0}
     _visited.add(flow_id)
 
+    # When force=True (test seeds), suffix dedupe keys with a per-call nonce
+    # so we don't collide with prior real or test runs from today.
+    dedupe_suffix = f"_force{int(datetime.utcnow().timestamp())}" if force else ""
+
     try:
-        today_count = repo.get_today_hype_count_for_flow(tenant_id, flow_id)
-        if today_count > 0 and len(_visited) == 1:
-            logger.info(f"Hype flow {flow_id} already triggered today for {tenant_id} ({today_count} messages)")
-            return {"success": False, "error": "Flow already triggered today", "messages_scheduled": 0}
+        if not force:
+            today_count = repo.get_today_hype_count_for_flow(tenant_id, flow_id)
+            if today_count > 0 and len(_visited) == 1:
+                logger.info(f"Hype flow {flow_id} already triggered today for {tenant_id} ({today_count} messages)")
+                return {"success": False, "error": "Flow already triggered today", "messages_scheduled": 0}
+        else:
+            logger.info(f"[FORCE] Bypassing daily-trigger guard for flow {flow_id} (test seed)")
 
         flow = repo.get_flow(tenant_id, flow_id)
         if not flow:
@@ -459,7 +466,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                 if stype == 'reforward':
                     preset = step.get('reforward_preset')
                     if preset:
-                        dedupe_key = f"hype_bump_{flow_id}_{today_str}_s{step_num}"
+                        dedupe_key = f"hype_bump_{flow_id}_{today_str}_s{step_num}{dedupe_suffix}"
                         job = enqueue_job(tenant_id=tenant_id, job_type='hype_bump',
                                           run_at=run_at, payload={'preset': preset},
                                           dedupe_key=dedupe_key)
@@ -471,7 +478,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                     text = ai_messages[ai_idx] if ai_idx < len(ai_messages) else None
                     ai_idx += 1
                     if text:
-                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}"
+                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}{dedupe_suffix}"
                         payload = {"flow_id": flow_id, "step_number": step_num,
                                    "custom_prompt": custom_prompt, "job_sub_type": "hype_message",
                                    "pre_generated_message": text}
@@ -484,7 +491,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                 elif stype == 'message':
                     text = step.get('message_text', '').strip()
                     if text:
-                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}"
+                        dedupe_key = f"hype_{flow_id}_{today_str}_s{step_num}{dedupe_suffix}"
                         payload = {"flow_id": flow_id, "step_number": step_num,
                                    "job_sub_type": "hype_message", "pre_generated_message": text}
                         job = enqueue_job(tenant_id=tenant_id, job_type="hype_message",
@@ -499,7 +506,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                         step.get('cta_vip_url', ''), step.get('cta_support_label', ''),
                         step.get('cta_support_url', ''))
                     if cta_message.strip():
-                        dedupe_key = f"hype_{flow_id}_{today_str}_cta_s{step_num}"
+                        dedupe_key = f"hype_{flow_id}_{today_str}_cta_s{step_num}{dedupe_suffix}"
                         cta_payload = {"flow_id": flow_id, "cta_message": cta_message, "job_sub_type": "hype_cta"}
                         job = enqueue_job(tenant_id=tenant_id, job_type="hype_cta",
                                           run_at=run_at, payload=cta_payload, dedupe_key=dedupe_key)
@@ -517,6 +524,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
                 skip_day_check=False,
                 base_time=child_base,
                 _visited=set(_visited),
+                force=force,
             )
             child_scheduled = child_result.get('messages_scheduled', 0)
             scheduled += child_scheduled
@@ -529,7 +537,7 @@ def execute_flow(tenant_id: str, flow_id: str, skip_day_check: bool = False,
         return {"success": False, "error": str(e), "messages_scheduled": 0}
 
 
-def trigger_flow_from_cta(tenant_id: str) -> Dict:
+def trigger_flow_from_cta(tenant_id: str, force: bool = False) -> Dict:
     try:
         active_flows = repo.get_active_flows(tenant_id)
         if not active_flows:
@@ -549,7 +557,7 @@ def trigger_flow_from_cta(tenant_id: str) -> Dict:
         for flow in eligible_flows:
             root_delay = flow.get('trigger_delay_minutes', 0) or 0
             root_base = datetime.utcnow() + timedelta(minutes=root_delay)
-            result = execute_flow(tenant_id, flow["id"], skip_day_check=True, base_time=root_base)
+            result = execute_flow(tenant_id, flow["id"], skip_day_check=True, base_time=root_base, force=force)
             results.append({"flow_id": flow["id"], "flow_name": flow["name"], **result})
 
         total_scheduled = sum(r.get("messages_scheduled", 0) for r in results)

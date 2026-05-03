@@ -1380,7 +1380,7 @@ def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = N
         logger.exception(f"[TEST_SEED] Failed to insert fake signal: {e}")
         return {"success": False, "error": f"Failed to seed signal: {e}"}
 
-    finish_result = finish_crosspromo(tenant_id, signal_id)
+    finish_result = finish_crosspromo(tenant_id, signal_id, force=True)
     return {
         "success": True,
         "seeded_signal_id": signal_id,
@@ -1396,7 +1396,7 @@ def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = N
 CROSSPROMO_FINISH_DELAY_MINUTES = 30
 
 
-def finish_crosspromo(tenant_id: str, signal_id: int = None) -> Dict[str, Any]:
+def finish_crosspromo(tenant_id: str, signal_id: int = None, force: bool = False) -> Dict[str, Any]:
     """
     Finish the cross-promo sequence and trigger the hype bot.
     Called when: 30-min countdown expires, TP3 hits, or SL hits after TP1.
@@ -1413,7 +1413,7 @@ def finish_crosspromo(tenant_id: str, signal_id: int = None) -> Dict[str, Any]:
     
     try:
         from domains.hypechat.service import trigger_flow_from_cta
-        hype_result = trigger_flow_from_cta(tenant_id)
+        hype_result = trigger_flow_from_cta(tenant_id, force=force)
         if hype_result.get("success"):
             logger.info(f"Hype flow triggered after cross-promo: {hype_result.get('total_messages_scheduled', 0)} messages scheduled")
         else:
