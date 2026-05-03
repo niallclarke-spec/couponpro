@@ -56,13 +56,17 @@ ANTI-TEMPLATE — DAILY VARIATION
 - Also avoid: "ongoing bullish sentiment", "let's keep the momentum", "as we move forward", "stay focused on the setups ahead".
 
 LIGHT VIP FOMO — used sparingly across messages 1 and 2 (and pointedly in message 3)
-- The angle: VIP members are getting up to 5 of these signals each day. Free channel only sees the highlights.
-- Example phrasings (rotate, never reuse the same one twice in a single arc):
-    "VIP got the live entry on this one — and four others today."
-    "Inside VIP we're seeing up to 5 of these a day. Free sees the highlight."
-    "This is one of up to five signals firing inside VIP today."
-    "Free channel gets the win post. VIP got the entry alert in real time."
-- Quiet, factual, never desperate. One line per message at most.
+- The angle: free channel sees the highlight, VIP gets every entry alert in real time.
+- TRUTH RULE — CRITICAL: NEVER fabricate counts of signals ("4 others today", "five signals today", "three more closed this morning"). The only number you may quote is what's in the LIVE CONTEXT block.
+- If context has a "Positive streak to highlight (LABEL): +X pips" line, you MAY weave THAT exact label + number into a FOMO line. Examples:
+    "VIP closed +840 pips across the past 7 days — free channel saw maybe two of them."
+    "Yesterday VIP banked +247 pips. Free saw the highlight; the rest fired live in the room."
+    "Past 14 days VIP is +1,460 pips. Free sees the wins. VIP sees the entries."
+- If NO streak block is in context, fall back to a number-free factual line. Examples:
+    "Free channel gets the win post. VIP gets the entry alert in real time."
+    "Inside VIP, entries fire live. Out here you see them after the fact."
+    "VIP saw this one at the entry. Free sees it now, at the close."
+- One FOMO line per message, max. Quiet, factual, never desperate. NEVER invent a count.
 
 ABSENCE RULE — CRITICAL
 - NEVER mention zero, quiet days, slow days, "no signals", "no closes", "no opportunities", "consecutive day of nothing", or any phrasing that draws attention to absence. If a number isn't in your context, it doesn't exist for you. Pivot to what IS in context (the live signal, the positive streak window if shown, the read).
@@ -205,9 +209,12 @@ def _get_arc_instruction(step: int, total: int) -> str:
                     f"In one or two short lines, share the read that made it work — "
                     f"reference the strategy block specifics (RSI level, EMA touch, ADX read, engulfing, pullback). "
                     f"Use the EXACT entry/TP prices from context if you mention any price.\n"
-                    f"Close with ONE light VIP FOMO line — frame it factually: VIP members are getting "
-                    f"up to 5 of these signals a day, free channel sees the highlight. Pick a fresh "
-                    f"phrasing (do not say 'runners' or anything about runners — that concept is BANNED).\n"
+                    f"Close with ONE light VIP FOMO line. TRUTH RULE: the only number you can quote "
+                    f"is the EXACT 'Positive streak to highlight' label+number if it appears in context "
+                    f"(e.g. 'VIP closed +840 pips across the past 7 days — free saw the highlights'). "
+                    f"If no streak block is in context, use a number-free factual line ('Free channel "
+                    f"gets the win post. VIP gets the entry alert in real time.'). NEVER fabricate "
+                    f"counts like '4 others today' or 'five signals today'. NEVER mention 'runners'.\n"
                     f"NO CTA button, NO link on this message.")
         if step == 2:
             return ("MESSAGE 2 of 3 — THE QUIET-SALESY BEAT (posted ~1 min after #1).\n"
@@ -217,9 +224,11 @@ def _get_arc_instruction(step: int, total: int) -> str:
                     "move could be (no runners talk), (b) a brief lived-experience anchor — the years "
                     "of waiting for setups like this, the boring-consistent grind, what it took to learn "
                     "to sit on hands when the setup wasn't there (NEVER state biography outright, just "
-                    "let it bleed through in 1-2 lines), or (c) a light VIP FOMO beat — different "
-                    "phrasing than message 1 — naming that VIP is seeing up to 5 of these a day in "
-                    "real time. Lightly motivating, never hypey. Still in scene. NO CTA button, NO link.")
+                    "let it bleed through in 1-2 lines), or (c) a light VIP FOMO beat — DIFFERENT "
+                    "phrasing than message 1. TRUTH RULE applies: only quote the 'Positive streak to "
+                    "highlight' label+number from context if present, otherwise stay number-free. "
+                    "NEVER fabricate signal counts. Lightly motivating, never hypey. Still in scene. "
+                    "NO CTA button, NO link.")
         if step == 3:
             return ("MESSAGE 3 of 3 — THE SALES BEAT (posted ~5 min after #2). This is where Markus converts.\n"
                     "Do NOT repeat ANY opener or closing line from messages 1 or 2.\n"
