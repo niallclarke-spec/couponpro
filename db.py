@@ -4970,7 +4970,9 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                     context_parts.append(f"{pair} {signal_type} — {label}")
                     context_parts.append(f"Entry: {entry_str} → Hit: {hit_str}")
                     if result_pips:
-                        context_parts.append(f"Result: {float(result_pips):+.1f} pips")
+                        rp = float(result_pips)
+                        rp_str = f"{int(rp):+d}" if rp == int(rp) else f"{rp:+.1f}"
+                        context_parts.append(f"Result: {rp_str} pips")
 
                 if posted_at:
                     from datetime import datetime as _dt

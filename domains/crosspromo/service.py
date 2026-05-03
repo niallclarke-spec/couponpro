@@ -264,7 +264,8 @@ def _get_today_winning_reads(tenant_id: str, limit: int = 3) -> str:
             # Strip [TEST_SEED] prefix from displayed notes if present
             if note.startswith('[TEST_SEED]'):
                 note = note[len('[TEST_SEED]'):].strip()
-            piece = f"- {signal_type or 'BUY'} {float(pips):+.1f} pips — {bt_label}"
+            from domains.hypechat.service import _fmt_pips
+            piece = f"- {signal_type or 'BUY'} {_fmt_pips(pips)} pips — {bt_label}"
             if note:
                 piece += f": {note}"
             lines.append(piece)
@@ -313,13 +314,14 @@ def _sanitize_markus_html(message: str) -> str:
 
 
 def _build_pips_context_lines(pips_today: float, pips_7d: float) -> List[str]:
+    from domains.hypechat.service import _fmt_pips
     lines = []
     if pips_today != 0:
-        lines.append(f"Pips earned today: {pips_today:+.1f}")
+        lines.append(f"Pips earned today: {_fmt_pips(pips_today)}")
     else:
         lines.append("No closed signals yet today")
     if pips_7d != 0:
-        lines.append(f"Pips earned past 7 days: {pips_7d:+.1f}")
+        lines.append(f"Pips earned past 7 days: {_fmt_pips(pips_7d)}")
     else:
         lines.append("No closed signals in the past 7 days")
     return lines
