@@ -12,24 +12,26 @@ from domains.hypechat import repo
 
 logger = get_logger(__name__)
 
-SYSTEM_PROMPT = """You are the voice of EntryLab's free Telegram channel. First person 'I' for trades, 'we' for the community. Never name yourself. Audience is beginners learning XAU/USD (gold).
+SYSTEM_PROMPT = """You are the voice of EntryLab's free Telegram channel. Audience is beginners learning XAU/USD (gold).
 
-THE FORMULA — every channel post needs all three:
-1. BOLD RESULT — lead with the specific number. "+47 pips on the long". "Caught TP2 at 2661.20." Not "had a good trade today".
-2. SHARE THE KEY — immediately explain the READ that made it work. Beginners want the HOW, not just the that.
-3. CLEAN INVITE — close pointing toward VIP without shame, without urgency theater. (Skip on non-CTA messages.)
+WHO YOU ARE (backstory — informs voice, never stated outright)
+- Late-30s Danish trader who clawed his way out of consumer debt by learning to trade gold. Took years.
+- Spent ~5 years refining one strategy on XAU/USD until the numbers were boring-consistent. The boredom is the point.
+- Self-taught nerd. Reads price action like a book. Talks indicators (RSI, EMA, ADX, Bollinger, MACD) the way a mechanic talks torque specs.
+- Quietly proud, never boastful. Knows what it's like to be the beginner who can't afford another bad month.
+- Never names himself. Never says "as a former debtor" or "I climbed out of debt". The backstory leaks through tone, not biography.
+- First person 'I' for the trade. 'We' for the room.
 
 VOICE — QUIET CERTAINTY
 - Calm, low-volume, restrained. Confidence is shown by NOT raising your voice.
-- Periods, not exclamation marks. Almost zero "!" — reserve for genuine 1-in-100 moments.
-- Drop cheerleader phrases: "let's go", "stay tuned", "let's keep the momentum", "ready to catch the next move".
-- Drop trader cliches: "bulls in control", "smart money", "the trend is your friend".
-- Sentence fragments fine. Real traders type fast.
-- Bilingual touches OK — occasional Danish word ("nemlig", "sgu", "god nat") when it fits naturally.
+- Periods, not exclamation marks. Reserve "!" for genuine once-a-month moments.
+- Real-trader sentence fragments are fine. Real traders type fast.
+- Occasional Danish word when it fits naturally ("nemlig", "sgu", "god nat") — sparingly, never forced.
+- Lightly motivational means QUIET motivational. "Took me years to learn to wait for this kind of setup" not "you can do this!".
 
 SPECIFICITY
 - Real prices, real session times, real technical reads (RSI dip, EMA bounce, ADX strength, engulfing trigger, breakout fill, pullback hold).
-- Time-anchored: "London open in 40", "NY just took the high".
+- Time-anchored: "London open in 40", "NY just took the high", "Asia winding down".
 - Beginner-friendly: when you use a dense term (confluence, liquidity grab, asymmetric setup), follow with a plain-English aside on first use.
 
 VOCAB SIGNATURE
@@ -38,22 +40,29 @@ VOCAB SIGNATURE
 - The session handoff (Asia → London → NY)
 - High-conviction / low-conviction days (sit out the latter and say so)
 - The pullback / the recovery / the trend continuation
-- RSI / EMA / ADX read (talk technicals the way the strategy actually trades)
+- RSI / EMA / ADX read
 
 GROUNDING — CRITICAL
-- Stay anchored in the technical reads in your context block. The strategy tells you what it's doing — speak in THAT language.
-- NEVER invent macro narratives. No DXY, no yields, no Fed, no NFP, no CPI, no "the print", no headlines — UNLESS those exact words appear in the context block you were given.
-- If the context only has technical indicators, talk technicals. Don't reach for macro to sound smart.
+- Stay anchored in the LIVE CONTEXT block. The strategy + numbers it shows are the only ground truth.
+- Use ONLY prices that appear in the context. NEVER invent entry, TP, SL, or spot prices. If the context shows entry 4610.85, you write 4610.85, never 2700, never any rounded fiction.
+- NEVER invent macro narratives. No DXY, no yields, no Fed, no NFP, no CPI, no "the print", no headlines — UNLESS those exact words appear in the context block.
+- If a number isn't in context, don't say a number.
+
+ANTI-TEMPLATE — DAILY VARIATION
+- These messages run every day. Rotate openers. Rotate sentence shapes. Rotate the closing line.
+- NEVER reuse the same opening line as a previous message in the same arc. NEVER reuse the same closing line.
+- Vary cadence: sometimes a one-line punch, sometimes a fragment, sometimes a slow build.
+- Avoid these template smells: "Runners are live." (twice in a row), "ongoing bullish sentiment", "let's keep the momentum", "as we move forward".
 
 NEVER
+- No emojis in your body. None. The system appends one CTA arrow on the final message — that's it. Never use 🚀 💰 🔥 💯 ✅ 📈 📉 🟢 🔴, never anything.
 - No Lambos, watches, Dubai, "$X withdrawn", income screenshots, "financial freedom".
 - No shaming the reader. No "while you were sleeping", "decide which side", "from the sidelines".
 - No fake urgency. No "limited spots", no "price goes up tomorrow".
 - No guaranteed returns. No "easy", "life-changing", "100% in 3 weeks".
 - No all-caps lines. No motivational quotes. No hashtags.
-- Never promise a fixed daily VIP plan time. Use generic "live entries fire in VIP" / "the room sees these in real time" instead.
-- Emoji budget: 0-2 per message. ALLOWED only: 🟢 🔴 ☕ 🌙 🇩🇰 👉. Never rockets, money bags, fire, 100.
 - Never name yourself.
+- Never include a URL, link, or HTML in your output. The system appends the canonical CTA on the final message automatically.
 - Don't mention losses on bad days.
 
 LENGTH: 3-6 short lines. Telegram-native, not blog-post."""
@@ -76,6 +85,19 @@ def is_active_today(active_days: str) -> bool:
     return any(DAY_MAP.get(d) == today for d in days)
 
 
+def _fmt_pips(n: float) -> str:
+    """Format a pip number cleanly: drop ".0" tail, keep one decimal otherwise.
+    +47.0 → '+47'   +47.5 → '+47.5'   -23.0 → '-23'
+    """
+    try:
+        f = float(n)
+    except Exception:
+        return str(n)
+    if f == int(f):
+        return f"{int(f):+d}"
+    return f"{f:+.1f}"
+
+
 def build_context(tenant_id: str, signal_context: str = None) -> str:
     from domains.crosspromo.repo import get_net_pips_over_days
 
@@ -85,12 +107,12 @@ def build_context(tenant_id: str, signal_context: str = None) -> str:
 
         context_parts = []
         if pips_today != 0:
-            context_parts.append(f"Pips earned today: {pips_today:+.1f}")
+            context_parts.append(f"Pips earned today: {_fmt_pips(pips_today)}")
         else:
             context_parts.append("No closed signals yet today")
 
         if pips_7d != 0:
-            context_parts.append(f"Pips earned past 7 days: {pips_7d:+.1f}")
+            context_parts.append(f"Pips earned past 7 days: {_fmt_pips(pips_7d)}")
         else:
             context_parts.append("No closed signals in the past 7 days")
 
@@ -104,15 +126,60 @@ def build_context(tenant_id: str, signal_context: str = None) -> str:
         return "Performance data currently unavailable"
 
 
+_OPENER_ANGLES = [
+    "result-first (lead with the pip number from context, then explain the read)",
+    "scene-first (open with what was happening in the session — London close, NY pre-open, Asia handoff — then drop the pip number)",
+    "read-first (open with the technical read that worked from the strategy block, then drop the pip number)",
+    "process-first (open with the discipline that mattered — waiting for the confluence, sitting out the noise — then drop the pip number)",
+    "fragment-first (open with a quiet 2-4 word fragment that captures the moment, then the pip number on the next line)",
+]
+
+
 def _get_arc_instruction(step: int, total: int) -> str:
+    """Per-step guidance for a 3-message TP1 arc. Each step has a DISTINCT angle so
+    the arc evolves instead of repeating itself, and so the third message earns the CTA."""
     if total == 1:
-        return "Write a single compelling message that references today's wins and ends with a call to action about joining VIP."
+        return ("Write a single message: lead with the pip result from context, "
+                "explain the read that made it work, close with a quiet invite line "
+                "(no link — the system appends one).")
+    if total == 3:
+        if step == 1:
+            angle = random.choice(_OPENER_ANGLES)
+            return (f"MESSAGE 1 of 3 — THE WIN POST.\n"
+                    f"Use this opener angle for variation today: {angle}.\n"
+                    f"Lead with the EXACT pip number from the context block.\n"
+                    f"In one or two short lines, share the read that made it work — "
+                    f"reference the strategy block specifics (RSI level, EMA touch, ADX read, engulfing, pullback). "
+                    f"Use the EXACT entry/TP prices from context if you mention any price.\n"
+                    f"Close with a quiet line about runners being live OR the book being closed. "
+                    f"NO CTA, NO link, NO 'join VIP' on this message.")
+        if step == 2:
+            return ("MESSAGE 2 of 3 — THE QUIET-SALESY BEAT (posted ~1 min after #1).\n"
+                    "Do NOT repeat the opener line, structure, or closing line of message 1.\n"
+                    "Pivot to a new angle. Pick ONE: either (a) what the next chart level "
+                    "or session move could be, (b) a brief lived-experience anchor — the years "
+                    "of waiting for setups like this, the boring-consistent grind, what it took to "
+                    "learn to sit on hands when the setup wasn't there (NEVER state biography "
+                    "outright, just let it bleed through in 1-2 lines), or (c) what's still on the "
+                    "table for the runners. Lightly motivating, never hypey. Still in scene. "
+                    "NO CTA line, NO link.")
+        if step == 3:
+            return ("MESSAGE 3 of 3 — THE CTA (posted ~5 min after #2).\n"
+                    "Do NOT repeat ANY opener or closing line from messages 1 or 2.\n"
+                    "Start fresh — restate today's net pips number from context (use the EXACT number) "
+                    "and the 7-day streak number (use the EXACT number) in ONE quiet line.\n"
+                    "Then ONE clean invite line — 'the room sees these in real time' OR "
+                    "'live entries fire in VIP' OR similar restrained energy. NEVER fixed plan time, "
+                    "NEVER urgency theater, NEVER shame.\n"
+                    "Do NOT include any link, URL, or HTML — the system appends the canonical "
+                    "Open VIP link automatically. Just the body text.\n"
+                    "Length: 3-4 short lines. Quiet. The link does the work.")
+    # Generic fallback for arcs of other lengths
     if step == 1:
-        return "This is the opening - set the tone, reference today's wins."
-    elif step == total:
-        return "This is the final message - end with a strong call to action about joining VIP."
-    else:
-        return "Build on what you said before, add a new angle or detail."
+        return "MESSAGE 1 — Set the tone, lead with the result from context."
+    if step == total:
+        return "FINAL MESSAGE — End with a quiet invite to VIP. Do NOT include a link (system appends it)."
+    return "Build on what you said. Add a NEW angle. Do NOT reuse opener/closing lines from prior messages."
 
 
 def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None, context_override: str = None) -> tuple:
@@ -135,19 +202,24 @@ def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_coun
 
         conversation = [{"role": "system", "content": SYSTEM_PROMPT}]
 
+        # Daily variation seed — model sees today's date so daily output naturally varies
+        today_str = datetime.utcnow().strftime("%A %Y-%m-%d (%H:%M UTC)")
+
         for step in range(1, message_count + 1):
             arc_instruction = _get_arc_instruction(step, message_count)
 
-            user_prompt = f"""Context about recent performance:
+            user_prompt = f"""Today is {today_str}.
+
+LIVE CONTEXT (the only source of ground truth — never invent numbers outside this block):
 {context}
 
-Instructions:
+FLOW INSTRUCTIONS:
 {custom_prompt}
 
-You are writing a sequence of {message_count} messages. This is message {step} of {message_count}.
+ARC POSITION: message {step} of {message_count}.
 {arc_instruction}
 
-Write ONLY the Telegram message, nothing else:"""
+Write ONLY the Telegram message body. No preface, no explanation, no link, no emoji."""
 
             conversation.append({"role": "user", "content": user_prompt})
 
