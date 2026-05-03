@@ -288,6 +288,27 @@ def send_hype_message(tenant_id: str, flow_id: str, step_number: int, custom_pro
         if not message_text:
             return {"success": False, "error": "Failed to generate message"}
 
+        # Inline-append CTA on the final step of the flow (Markus arcs etc.)
+        # so the call-to-action lives in the same bubble as the closing message,
+        # instead of being a separate Telegram bubble. Uses the flow's stored
+        # cta_vip_* / cta_support_* fields as the single source of truth.
+        try:
+            flow = repo.get_flow(tenant_id, flow_id)
+            if flow:
+                total_steps = int(flow.get('message_count') or 0)
+                if total_steps and step_number >= total_steps:
+                    cta_block = _build_cta_message(
+                        cta_intro='',
+                        cta_vip_label=flow.get('cta_vip_label', '') or '',
+                        cta_vip_url=flow.get('cta_vip_url', '') or '',
+                        cta_support_label=flow.get('cta_support_label', '') or '',
+                        cta_support_url=flow.get('cta_support_url', '') or '',
+                    )
+                    if cta_block.strip():
+                        message_text = f"{message_text.rstrip()}\n\n{cta_block}"
+        except Exception as _cta_err:
+            logger.warning(f"send_hype_message: failed to append CTA on final step: {_cta_err}")
+
         try:
             creds = get_bot_credentials(tenant_id, "signal_bot")
         except BotNotConfiguredError as e:
