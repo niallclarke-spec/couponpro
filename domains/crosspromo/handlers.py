@@ -223,6 +223,51 @@ def handle_test_cta(handler):
     _send_json(handler, 200, {"success": True, "message": "Test CTA sent to free channel"})
 
 
+def handle_test_markus_morning(handler):
+    """POST /api/crosspromo/test-markus-morning - Fire Morning Macro NOW (real codepath)."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    result = service.send_test_markus_morning(tenant_id)
+    if not result.get('success'):
+        error = result.get('error', 'Unknown error')
+        code = 503 if 'not configured' in error.lower() else 400
+        _send_json(handler, code, {"error": error})
+        return
+    _send_json(handler, 200, result)
+
+
+def handle_test_markus_eod(handler):
+    """POST /api/crosspromo/test-markus-eod - Fire EoD Recap NOW (gate bypassed)."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    result = service.send_test_markus_eod(tenant_id)
+    if not result.get('success'):
+        error = result.get('error', 'Unknown error')
+        code = 503 if 'not configured' in error.lower() else 400
+        _send_json(handler, code, {"error": error})
+        return
+    _send_json(handler, 200, result)
+
+
+def handle_test_markus_tp1_realistic(handler):
+    """POST /api/crosspromo/test-markus-tp1 - Seed fake TP1 signal + trigger finish_crosspromo."""
+    tenant_id = getattr(handler, 'tenant_id', None)
+    if not tenant_id:
+        _send_no_tenant_context(handler)
+        return
+    result = service.send_test_markus_tp1_realistic(tenant_id)
+    if not result.get('success'):
+        error = result.get('error', 'Unknown error')
+        code = 503 if 'not configured' in error.lower() else 400
+        _send_json(handler, code, {"error": error})
+        return
+    _send_json(handler, 200, result)
+
+
 def handle_test_forward_promo(handler):
     """POST /api/crosspromo/test-forward-promo - Send test AI promo message to free channel."""
     tenant_id = getattr(handler, 'tenant_id', None)

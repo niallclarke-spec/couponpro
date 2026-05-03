@@ -6487,6 +6487,22 @@
                                                                 <button class="btn-primary" onclick="runDailySequence()" style="font-size: 12px; padding: 7px 12px;">Run Today's Sequence</button>
                                                                 <button class="btn-secondary" onclick="sendTestMorning()" style="font-size: 12px; padding: 7px 12px;">Send Test Morning</button>
                                                             </div>
+
+                                                            <div style="border-top: 1px solid var(--border-primary); margin: 14px 0 12px; padding-top: 12px;">
+                                                                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                                                                    <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">🎤 Markus Test Console</span>
+                                                                    <span style="font-size: 10px; padding: 2px 6px; background: rgba(255,193,7,0.15); color: #ffc107; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px;">LIVE FREE CHANNEL</span>
+                                                                </div>
+                                                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.5;">
+                                                                    Each button fires the Markus message via the <strong>real production codepath</strong> (real OpenAI gen, real send) and posts publicly to your live FREE channel. Use sparingly.
+                                                                </div>
+                                                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                                    <button class="btn-secondary" onclick="testMarkusTp1()" style="font-size: 12px; padding: 7px 12px;">TP1 Win (full seed)</button>
+                                                                    <button class="btn-secondary" onclick="testMarkusMorning()" style="font-size: 12px; padding: 7px 12px;">Morning Macro</button>
+                                                                    <button class="btn-secondary" onclick="testMarkusEod()" style="font-size: 12px; padding: 7px 12px;">EoD Recap (force)</button>
+                                                                </div>
+                                                                <pre id="markus-test-result" style="display:none; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; white-space: pre-wrap; font-family: ui-monospace, monospace; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 11px; margin-top: 10px; max-height: 180px; overflow-y: auto;"></pre>
+                                                            </div>
                                                             
                                                             <pre id="crosspromo-preview" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; white-space: pre-wrap; font-family: inherit; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 12px; margin-bottom: 12px; max-height: 150px; overflow-y: auto;">Loading preview...</pre>
 
@@ -9338,6 +9354,62 @@
             }
         }
         
+        function _markusTestShow(payload, isError) {
+            const el = document.getElementById('markus-test-result');
+            if (!el) return;
+            el.style.display = 'block';
+            el.style.borderColor = isError ? 'rgba(220,53,69,0.5)' : 'var(--border-primary)';
+            try {
+                el.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+            } catch (_) {
+                el.textContent = String(payload);
+            }
+        }
+
+        async function _markusTestCall(path, label, confirmMsg) {
+            if (confirmMsg && !confirm(confirmMsg)) return;
+            try {
+                _markusTestShow(`Sending ${label}…`, false);
+                const resp = await authedFetch(path, { method: 'POST' });
+                const data = await resp.json();
+                if (resp.ok) {
+                    showToast(`${label} fired ✓`);
+                    _markusTestShow(data, false);
+                } else {
+                    showToast(data.error || `${label} failed`, 'error');
+                    _markusTestShow(data, true);
+                }
+            } catch (e) {
+                console.error(`${label} error:`, e);
+                showToast(`${label} error`, 'error');
+                _markusTestShow(String(e), true);
+            }
+        }
+
+        function testMarkusTp1() {
+            _markusTestCall(
+                '/api/crosspromo/test-markus-tp1',
+                'TP1 Win',
+                'TP1 Win test will:\n• Insert a fake +28 pip closed signal in your DB\n• Trigger the real finish_crosspromo() flow\n• Enqueue 3 Markus messages to your LIVE FREE channel (over ~30 min)\n\nProceed?'
+            );
+        }
+
+        function testMarkusMorning() {
+            _markusTestCall(
+                '/api/crosspromo/test-markus-morning',
+                'Morning Macro',
+                'Morning Macro test will post Markus to your LIVE FREE channel right now. Proceed?'
+            );
+        }
+
+        function testMarkusEod() {
+            _markusTestCall(
+                '/api/crosspromo/test-markus-eod',
+                'EoD Recap',
+                'EoD Recap test will post Markus to your LIVE FREE channel right now (green-day gate bypassed). Proceed?'
+            );
+        }
+
         async function publishWinSequence() {
             const signalId = document.getElementById('crosspromo-signal-id').value;
             const winId = document.getElementById('crosspromo-win-id').value;

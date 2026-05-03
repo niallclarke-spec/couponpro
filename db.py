@@ -5081,6 +5081,7 @@ def get_today_crosspromo_count(tenant_id: str, timezone: str = 'UTC') -> int:
                 WHERE tenant_id = %s 
                   AND crosspromo_status != 'none'
                   AND crosspromo_started_at >= (CURRENT_DATE AT TIME ZONE %s)
+                  AND (notes IS NULL OR notes NOT LIKE '[TEST_SEED]%%')
             """, (tenant_id, timezone))
             
             result = cursor.fetchone()

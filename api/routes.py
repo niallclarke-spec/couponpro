@@ -321,6 +321,12 @@ POST_ROUTES: List[Route] = [
           auth_required=True, db_required=True),
     Route('POST', '/api/crosspromo/test-forward-promo', 'handle_api_crosspromo_test_forward_promo',
           auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/test-markus-morning', 'handle_api_crosspromo_test_markus_morning',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/test-markus-eod', 'handle_api_crosspromo_test_markus_eod',
+          auth_required=True, db_required=True),
+    Route('POST', '/api/crosspromo/test-markus-tp1', 'handle_api_crosspromo_test_markus_tp1',
+          auth_required=True, db_required=True),
 
     # Hype Chat
     Route('POST', '/api/hypechat/flows/', 'handle_api_hypechat_flow_status',

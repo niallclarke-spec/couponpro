@@ -398,6 +398,18 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         from domains.crosspromo import handlers as cp_h
         cp_h.handle_test_forward_promo(self)
 
+    def handle_api_crosspromo_test_markus_morning(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_test_markus_morning(self)
+
+    def handle_api_crosspromo_test_markus_eod(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_test_markus_eod(self)
+
+    def handle_api_crosspromo_test_markus_tp1(self):
+        from domains.crosspromo import handlers as cp_h
+        cp_h.handle_test_markus_tp1_realistic(self)
+
     # Hype Chat
     def handle_api_hypechat_prompts_list(self):
         from domains.hypechat import handlers as hc_h

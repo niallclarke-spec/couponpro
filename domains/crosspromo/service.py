@@ -1160,6 +1160,122 @@ def send_test_cta(tenant_id: str) -> Dict[str, Any]:
     return {"success": True, "sticker_sent": True, "cta_sent": True}
 
 
+def send_test_markus_morning(tenant_id: str) -> Dict[str, Any]:
+    """
+    TEST: Fire the Markus Morning Macro NOW via the real codepath.
+    Hits OpenAI + live XAU price + sanitizer + send. No gating.
+    """
+    try:
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
+        bot_token = credentials['bot_token']
+        free_channel_id = credentials.get('free_channel_id')
+    except BotNotConfiguredError as e:
+        return {"success": False, "error": str(e)}
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
+
+    message = build_markus_morning_message(tenant_id)
+    if not message:
+        return {"success": False, "error": "Markus morning generation returned empty"}
+    result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
+    if result.get('success'):
+        return {"success": True, "message_sent": message}
+    return result
+
+
+def send_test_markus_eod(tenant_id: str) -> Dict[str, Any]:
+    """
+    TEST: Fire the Markus EoD Recap NOW via the real codepath.
+    BYPASSES the green-day gate (so it fires even on red/flat days for testing).
+    Hits OpenAI + sanitizer + send.
+    """
+    try:
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
+        bot_token = credentials['bot_token']
+        free_channel_id = credentials.get('free_channel_id')
+    except BotNotConfiguredError as e:
+        return {"success": False, "error": str(e)}
+    if not free_channel_id:
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
+
+    message = build_markus_eod_message(tenant_id)
+    if not message:
+        return {"success": False, "error": "Markus EoD generation returned empty"}
+    result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
+    if result.get('success'):
+        return {"success": True, "message_sent": message, "gate_bypassed": True}
+    return result
+
+
+def send_test_markus_tp1_realistic(tenant_id: str) -> Dict[str, Any]:
+    """
+    TEST: Realistic TP1 Win flow.
+    1. INSERT a fake closed XAU/USD BUY signal (TP1 hit, +28 pips, fresh timestamp)
+       with fake telegram_message_id + tp1_message_id so get_bump_signal_context()
+       can pick it up as the most recent signal.
+    2. Set crosspromo_status='active' so finish_crosspromo() flips it to 'complete'.
+    3. Call finish_crosspromo(), which calls trigger_flow_from_cta() — the real
+       prod entry point — enqueuing the 3-message Markus arc.
+    The crosspromo worker will pick them up on its next tick.
+    """
+    try:
+        credentials = get_bot_credentials(tenant_id, "signal_bot")
+    except BotNotConfiguredError as e:
+        return {"success": False, "error": str(e)}
+    if not credentials.get('free_channel_id'):
+        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
+
+    from db import db_pool
+    if not db_pool.connection_pool:
+        return {"success": False, "error": "Database not available"}
+
+    entry = 2650.00
+    tp1_price = 2652.80
+    sl_price = 2647.00
+    fake_tg_msg_id = int(datetime.utcnow().timestamp())
+    fake_tp1_msg_id = fake_tg_msg_id + 1
+
+    try:
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO forex_signals
+                    (tenant_id, signal_type, pair, timeframe,
+                     entry_price, take_profit, stop_loss,
+                     status, posted_at, closed_at, close_price, result_pips,
+                     tp1_hit, tp1_hit_at,
+                     telegram_message_id, tp1_message_id,
+                     crosspromo_status, crosspromo_started_at,
+                     bot_type, notes)
+                VALUES
+                    (%s, 'BUY', 'XAU/USD', '1H',
+                     %s, %s, %s,
+                     'closed', NOW(), NOW(), %s, 28,
+                     TRUE, NOW(),
+                     %s, %s,
+                     'started', NOW(),
+                     'legacy', '[TEST_SEED] Markus TP1 test from admin')
+                RETURNING id
+            """, (tenant_id, entry, tp1_price, sl_price, tp1_price,
+                  fake_tg_msg_id, fake_tp1_msg_id))
+            row = cursor.fetchone()
+            conn.commit()
+            signal_id = int(row[0])
+            logger.info(f"[TEST_SEED] Inserted fake closed TP1 signal id={signal_id} for {tenant_id}")
+    except Exception as e:
+        logger.exception(f"[TEST_SEED] Failed to insert fake signal: {e}")
+        return {"success": False, "error": f"Failed to seed signal: {e}"}
+
+    finish_result = finish_crosspromo(tenant_id, signal_id)
+    return {
+        "success": True,
+        "seeded_signal_id": signal_id,
+        "fake_telegram_message_id": fake_tg_msg_id,
+        "finish_crosspromo": finish_result,
+        "note": "Hype flow enqueued. Worker will send 3 Markus messages over ~30 min.",
+    }
+
+
 CROSSPROMO_FINISH_DELAY_MINUTES = 30
 
 
