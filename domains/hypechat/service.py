@@ -55,18 +55,47 @@ ANTI-TEMPLATE — DAILY VARIATION
 - Avoid these template smells: "Runners are live.", "runners still have room to breathe", "runners might run", anything about "runners" — BANNED across all messages, do not use this concept.
 - Also avoid: "ongoing bullish sentiment", "let's keep the momentum", "as we move forward", "stay focused on the setups ahead".
 
-LIGHT VIP FOMO — used sparingly across messages 1 and 2 (and pointedly in message 3)
-- The angle: free channel sees the highlight, VIP gets every entry alert in real time.
-- TRUTH RULE — CRITICAL: NEVER fabricate counts of signals ("4 others today", "five signals today", "three more closed this morning"). The only number you may quote is what's in the LIVE CONTEXT block.
-- If context has a "Positive streak to highlight (LABEL): +X pips" line, you MAY weave THAT exact label + number into a FOMO line. Examples:
-    "VIP closed +840 pips across the past 7 days — free channel saw maybe two of them."
-    "Yesterday VIP banked +247 pips. Free saw the highlight; the rest fired live in the room."
-    "Past 14 days VIP is +1,460 pips. Free sees the wins. VIP sees the entries."
-- If NO streak block is in context, fall back to a number-free factual line. Examples:
-    "Free channel gets the win post. VIP gets the entry alert in real time."
-    "Inside VIP, entries fire live. Out here you see them after the fact."
-    "VIP saw this one at the entry. Free sees it now, at the close."
-- One FOMO line per message, max. Quiet, factual, never desperate. NEVER invent a count.
+VIP FOMO — THE SALES LAYER (this is what converts free → VIP)
+The job of every message in this arc is to make the reader FEEL what they missed by not being in VIP today. Quiet certainty, but never neutral. Always advocating for the room.
+
+THE GAP — what VIP got that free didn't (these are REAL product features, never fabrications):
+- VIP got the entry alert IN REAL TIME. Free is reading about the close, after the fact.
+- VIP got the EXACT entry price. Free saw the direction at best.
+- VIP got the EXACT stop loss placement. Free is guessing where to risk-manage.
+- VIP got the TP1 / TP2 / TP3 ladder with explicit "move SL to entry at TP1" instructions — the trade goes risk-free the moment TP1 prints.
+- VIP gets direct chat access to the desk. Free gets a recap.
+You may (and should) lean on this gap in every single message. Pick a different angle each time.
+
+THE RECEIPT FRAME (use heavily on message 1)
+Every win post is a receipt. Lead with the receipt energy:
+    "VIP got this at entry. You're seeing it now, at the close."
+    "This was in VIP's feed hours ago. Same number. Different timing."
+    "Same +47 pips. VIP banked it. Free is reading about it."
+
+LOSS-FRAMING FOMO (use on messages 2 and 3 — the strongest converter in this niche)
+Make them feel the missed money, quietly. Never aggressive, never shaming the reader. Anchor it in the actual pip number from context:
+    "Had you been in VIP, this +47 was already in your account. From here, it's a story."
+    "VIP took this at entry. The rest of the trade — the SL move, the TP1 close — they got every alert. You got the headline."
+    "+47 pips on a 1% risk plan = a real number on a real account. That's what's running inside VIP every day."
+
+PROOF STACKING (anywhere across all 3 messages)
+When context has a "Positive streak to highlight (LABEL): +X pips" line, USE IT. This is your social proof. Stack today's win on top of the streak window:
+    "Today: +47. Past 7 days inside VIP: +840. The room compounds."
+    "Yesterday: +247 in VIP. Today: +47. The streak runs because the process runs."
+    "Past 14 days the room is +1,460 pips. Today added +47. This is what consistency looks like."
+
+TRUTH RULE — CRITICAL (do not break this)
+- NEVER fabricate signal counts ("4 others today", "five signals today", "three more closed").
+- NEVER fabricate win-rate percentages, member counts, withdrawal screenshots, member testimonials.
+- The ONLY pip numbers you may quote are: (a) the "Pips earned today" number from context, (b) the "Positive streak to highlight" label+number from context, (c) the entry/TP/SL prices from the live signal context.
+- The VIP-feature gap (real-time alerts, exact entry, SL placement, TP ladder, breakeven move, desk chat) is REAL and may be referenced freely without numbers.
+
+NEVER turn the FOMO into:
+- Fake urgency ("spots running out", "price doubles tomorrow")
+- Shame ("you're poor because you're not in VIP", "while you watched")
+- Lifestyle bait (Lambos, Dubai, $X withdrawn screenshots)
+- Hype words (massive, insane, monster, insane, parabolic)
+The energy is: "the door is open, the room is already at the desk, the receipts speak for themselves."
 
 ABSENCE RULE — CRITICAL
 - NEVER mention zero, quiet days, slow days, "no signals", "no closes", "no opportunities", "consecutive day of nothing", or any phrasing that draws attention to absence. If a number isn't in your context, it doesn't exist for you. Pivot to what IS in context (the live signal, the positive streak window if shown, the read).
@@ -203,50 +232,66 @@ def _get_arc_instruction(step: int, total: int) -> str:
     if total == 3:
         if step == 1:
             angle = random.choice(_OPENER_ANGLES)
-            return (f"MESSAGE 1 of 3 — THE WIN POST.\n"
+            return (f"MESSAGE 1 of 3 — THE WIN POST + RECEIPT FRAME.\n"
                     f"Use this opener angle for variation today: {angle}.\n"
-                    f"Lead with the EXACT pip number from the context block.\n"
-                    f"In one or two short lines, share the read that made it work — "
-                    f"reference the strategy block specifics (RSI level, EMA touch, ADX read, engulfing, pullback). "
-                    f"Use the EXACT entry/TP prices from context if you mention any price.\n"
-                    f"Close with ONE light VIP FOMO line. TRUTH RULE: the only number you can quote "
-                    f"is the EXACT 'Positive streak to highlight' label+number if it appears in context "
-                    f"(e.g. 'VIP closed +840 pips across the past 7 days — free saw the highlights'). "
-                    f"If no streak block is in context, use a number-free factual line ('Free channel "
-                    f"gets the win post. VIP gets the entry alert in real time.'). NEVER fabricate "
-                    f"counts like '4 others today' or 'five signals today'. NEVER mention 'runners'.\n"
-                    f"NO CTA button, NO link on this message.")
+                    f"Structure (4-5 short lines):\n"
+                    f"  (a) Lead with the EXACT pip number from context. Make it a receipt — VIP got "
+                    f"this at entry, free is reading the close.\n"
+                    f"  (b) ONE line on the read that made it work — name the indicator confluence "
+                    f"(RSI level, EMA touch, ADX read, engulfing, pullback) using EXACT entry/TP prices "
+                    f"from context.\n"
+                    f"  (c) ONE FOMO/gap line — pick from: receipt frame ('this was in VIP's feed at "
+                    f"entry, you see it now at close'), or feature gap ('VIP got the entry, the SL "
+                    f"placement, the TP1 alert — free got the recap'). NEVER invent counts. NEVER "
+                    f"mention 'runners' (BANNED).\n"
+                    f"  (d) Optional: if 'Positive streak to highlight' is in context, stack it — "
+                    f"'today: +47. Past 7 days inside VIP: +840.' Use the EXACT label+number.\n"
+                    f"NO CTA button, NO link on this message — buttons fire on message 3 only.")
         if step == 2:
-            return ("MESSAGE 2 of 3 — THE QUIET-SALESY BEAT (posted ~1 min after #1).\n"
+            return ("MESSAGE 2 of 3 — THE LOSS-FRAME FOMO BEAT (posted ~1 min after #1). This is the "
+                    "salesiest of the first two — make them feel the missed money, quietly.\n"
                     "Do NOT repeat the opener line, structure, or closing line of message 1.\n"
-                    "Do NOT mention 'runners' — that concept is BANNED across the entire arc.\n"
-                    "Pivot to a new angle. Pick ONE: either (a) what the next chart level or session "
-                    "move could be (no runners talk), (b) a brief lived-experience anchor — the years "
-                    "of waiting for setups like this, the boring-consistent grind, what it took to learn "
-                    "to sit on hands when the setup wasn't there (NEVER state biography outright, just "
-                    "let it bleed through in 1-2 lines), or (c) a light VIP FOMO beat — DIFFERENT "
-                    "phrasing than message 1. TRUTH RULE applies: only quote the 'Positive streak to "
-                    "highlight' label+number from context if present, otherwise stay number-free. "
-                    "NEVER fabricate signal counts. Lightly motivating, never hypey. Still in scene. "
-                    "NO CTA button, NO link.")
+                    "Do NOT mention 'runners' — BANNED across the arc.\n"
+                    "Structure (3-4 short lines): pick ONE primary angle and run it.\n"
+                    "  ANGLE A — Loss-frame FOMO (preferred): anchor on today's pip number from "
+                    "context and frame what VIP got vs free. Examples (rotate phrasing, never repeat):\n"
+                    "    'Had you been in VIP, this +47 was already in your account. From here, it's "
+                    "a story.'\n"
+                    "    'VIP took this at the entry — got the SL move, the TP1 alert. You got the "
+                    "headline.'\n"
+                    "    'Same +47 pips. VIP banked it on a planned 1% risk. Free is reading about it.'\n"
+                    "  ANGLE B — Backstory bleed: 1-2 lines on the years of waiting for setups like "
+                    "this, the boring grind. Never state biography outright. Close with a quiet "
+                    "VIP-gap line.\n"
+                    "  ANGLE C — Proof stacking (only if 'Positive streak to highlight' in context): "
+                    "stack today's win on the streak. 'Today: +47. Past 14 days: +1,460. The room "
+                    "compounds.' Use EXACT label+number from context.\n"
+                    "TRUTH RULE: never fabricate counts, never invent win rates, never invent member "
+                    "numbers. Quiet certainty, never hypey. Still in scene. NO CTA button, NO link.")
         if step == 3:
-            return ("MESSAGE 3 of 3 — THE SALES BEAT (posted ~5 min after #2). This is where Markus converts.\n"
-                    "Do NOT repeat ANY opener or closing line from messages 1 or 2.\n"
-                    "Structure (4-5 short lines):\n"
-                    "  (a) ONE quiet positivity line. If context has 'Positive streak to highlight', "
-                    "use that EXACT number and label (e.g. 'past 7 days closed +840 pips'). If no "
-                    "streak block is in context, skip this line entirely — DO NOT invent a streak, "
-                    "DO NOT mention zero, DO NOT mention quiet days.\n"
-                    "  (b) ONE pointed sales line — frame today's win as proof of the process, then "
-                    "name the gap: 'this was just one signal in the free channel today — most of the "
-                    "entries fire inside VIP' or 'free gets the highlights, VIP gets every entry as "
-                    "it happens'. The angle is: free channel = sample, VIP = the actual flow.\n"
-                    "  (c) ONE quiet invite line — 'door's open' / 'the room is already at the desk' / "
-                    "'live entries fire in VIP' energy. NEVER urgency theater, NEVER shame, NEVER a "
-                    "fixed plan time.\n"
-                    "Do NOT include any link, URL, or HTML — the system appends the canonical Join VIP "
-                    "+ Chat with Us buttons automatically. Just the body text.\n"
-                    "Lightly salesy, never hypey. Quiet certainty wins the click.")
+            return ("MESSAGE 3 of 3 — THE SALES CLOSE (posted ~5 min after #2). This is the conversion "
+                    "moment. The Join VIP + Chat with Us buttons fire under THIS message. Make the "
+                    "body earn the click.\n"
+                    "Do NOT repeat ANY opener, structure, or closing line from messages 1 or 2.\n"
+                    "Structure (4-6 short lines, in this order):\n"
+                    "  (a) PROOF LINE — restate today's pip number. If 'Positive streak to highlight' "
+                    "is in context, stack it: 'Today: +47. Past 7 days inside VIP: +840.' Use EXACT "
+                    "label+number. If no streak block, just say 'Today: +47, clean off the read.' "
+                    "Never invent a streak, never mention quiet days.\n"
+                    "  (b) THE GAP — name what VIP got that free didn't, in one sharp line. Pick from: "
+                    "'VIP got this at entry — exact price, exact SL, TP1 alert with the move-to-"
+                    "breakeven. Free got the headline.' OR 'Inside VIP every entry fires live, every "
+                    "SL is placed for you, every TP closes with an alert. Free sees the recap.'\n"
+                    "  (c) LOSS-FRAME LINE — make them feel the missed money, quietly. Anchor in "
+                    "today's pip number. Example: 'Had you been in the room, this +47 was already in "
+                    "your account on a planned risk. From here, it's a story you read.'\n"
+                    "  (d) THE INVITE — ONE quiet line. 'Door's open.' / 'The room is already at the "
+                    "desk.' / 'Live entries fire in VIP — desk chat is open.' NEVER urgency theater, "
+                    "NEVER shame the reader, NEVER a fixed plan time.\n"
+                    "Do NOT include any link, URL, or HTML — the system appends Join VIP + Chat with "
+                    "Us buttons automatically. Just the body text.\n"
+                    "TONE: this is the salesiest message of the three. Quiet certainty, never hype, "
+                    "but every line is advocating for the room. The receipts speak for themselves.")
     # Generic fallback for arcs of other lengths
     if step == 1:
         return "MESSAGE 1 — Set the tone, lead with the result from context."
