@@ -66,6 +66,7 @@ def get_net_pips_over_days(tenant_id: str, days: int) -> float:
                 WHERE tenant_id = %s
                 AND closed_at >= NOW() - INTERVAL '%s days'
                 AND result_pips IS NOT NULL
+                AND (notes IS NULL OR notes NOT LIKE '[TEST_SEED]%%')
             """, (tenant_id, days))
             
             row = cursor.fetchone()
