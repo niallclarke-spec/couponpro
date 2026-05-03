@@ -4318,6 +4318,85 @@
             color: var(--status-warning);
         }
 
+        .ai-test-card {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .ai-test-card-header {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .ai-test-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .ai-test-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .ai-test-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .ai-test-sub code {
+            background: rgba(255,255,255,0.06);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .ai-test-fields {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+        }
+        .ai-test-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .ai-test-field label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .ai-test-hint {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 10px;
+        }
+        .ai-test-field input,
+        .ai-test-field select {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            padding: 7px 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .ai-test-field input:focus,
+        .ai-test-field select:focus {
+            outline: none;
+            border-color: var(--accent-primary, #6366f1);
+        }
+        .ai-test-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
         .crosspromo-subsection {
             margin-top: 16px;
             border-top: 1px solid var(--border-primary);
@@ -6316,6 +6395,112 @@
                 </div>
             </div>
 
+            <div id="forex-ai-messages" class="view-container">
+                <div class="content-header">
+                    <h1>AI Messages</h1>
+                    <p>Fire each Markus message via the real production codepath (OpenAI + send). Posts publicly to your <strong style="color:#ffc107;">live FREE Telegram channel</strong>.</p>
+                </div>
+                <div class="content-body">
+                    <div style="display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 1200px;">
+
+                        <!-- TP1 Win Card -->
+                        <div class="ai-test-card">
+                            <div class="ai-test-card-header">
+                                <span class="ai-test-icon">🎯</span>
+                                <div>
+                                    <div class="ai-test-title">TP1 Win Flow</div>
+                                    <div class="ai-test-sub">Seeds a fake closed signal, then triggers the real <code>finish_crosspromo()</code> path. The crosspromo worker will send 3 Markus messages over ~30 min.</div>
+                                </div>
+                            </div>
+                            <div class="ai-test-fields">
+                                <div class="ai-test-field">
+                                    <label>Direction</label>
+                                    <select id="aim-tp1-direction">
+                                        <option value="BUY">BUY</option>
+                                        <option value="SELL">SELL</option>
+                                    </select>
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>Entry price</label>
+                                    <input type="number" step="0.01" id="aim-tp1-entry" placeholder="2650.00">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>TP1 price</label>
+                                    <input type="number" step="0.01" id="aim-tp1-tp" placeholder="2652.80">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>Pips secured</label>
+                                    <input type="number" step="0.1" id="aim-tp1-pips" placeholder="28">
+                                </div>
+                            </div>
+                            <button class="btn-primary ai-test-btn" onclick="aimFireTp1()">Fire TP1 Win →</button>
+                        </div>
+
+                        <!-- Morning Macro Card -->
+                        <div class="ai-test-card">
+                            <div class="ai-test-card-header">
+                                <span class="ai-test-icon">☀️</span>
+                                <div>
+                                    <div class="ai-test-title">Morning Macro</div>
+                                    <div class="ai-test-sub">Pulls live XAU/USD from metals-api + your real pip stats, generates Markus's morning post, sends immediately.</div>
+                                </div>
+                            </div>
+                            <div class="ai-test-fields">
+                                <div class="ai-test-field">
+                                    <label>XAU/USD spot <span class="ai-test-hint">(blank = live)</span></label>
+                                    <input type="number" step="0.01" id="aim-morn-xau" placeholder="Live from metals-api">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>24h change % <span class="ai-test-hint">(signed)</span></label>
+                                    <input type="number" step="0.01" id="aim-morn-chg" placeholder="e.g. -0.42">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>Pips today <span class="ai-test-hint">(blank = real)</span></label>
+                                    <input type="number" step="0.1" id="aim-morn-ptoday" placeholder="Real DB value">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>Pips 7d <span class="ai-test-hint">(blank = real)</span></label>
+                                    <input type="number" step="0.1" id="aim-morn-p7d" placeholder="Real DB value">
+                                </div>
+                            </div>
+                            <button class="btn-primary ai-test-btn" onclick="aimFireMorning()">Fire Morning Macro →</button>
+                        </div>
+
+                        <!-- EoD Recap Card -->
+                        <div class="ai-test-card">
+                            <div class="ai-test-card-header">
+                                <span class="ai-test-icon">🌆</span>
+                                <div>
+                                    <div class="ai-test-title">EoD Recap</div>
+                                    <div class="ai-test-sub">End-of-day green-day recap. <strong>Gate bypassed</strong> here so it fires even on red/flat days.</div>
+                                </div>
+                            </div>
+                            <div class="ai-test-fields">
+                                <div class="ai-test-field">
+                                    <label>Pips today <span class="ai-test-hint">(blank = real)</span></label>
+                                    <input type="number" step="0.1" id="aim-eod-ptoday" placeholder="Real DB value">
+                                </div>
+                                <div class="ai-test-field">
+                                    <label>Pips 7d <span class="ai-test-hint">(blank = real)</span></label>
+                                    <input type="number" step="0.1" id="aim-eod-p7d" placeholder="Real DB value">
+                                </div>
+                            </div>
+                            <button class="btn-primary ai-test-btn" onclick="aimFireEod()">Fire EoD Recap →</button>
+                        </div>
+
+                    </div>
+
+                    <!-- Result panel -->
+                    <div id="aim-result-panel" style="display:none; margin-top: 20px; max-width: 1200px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                            <div style="font-size:13px; font-weight:600; color: var(--text-primary);">Result</div>
+                            <button class="btn-text" onclick="document.getElementById('aim-result-panel').style.display='none'" style="font-size:11px;">Dismiss</button>
+                        </div>
+                        <pre id="aim-result-body" style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 12px; max-height: 320px; overflow-y: auto; margin: 0;"></pre>
+                    </div>
+                </div>
+            </div>
+
             <div id="forex-hype-bot" class="view-container">
                 <div class="content-body" id="hype-bot-content" style="padding:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
                     <div id="hype-list-view" style="flex:1;overflow-y:auto;"></div>
@@ -6488,21 +6673,6 @@
                                                                 <button class="btn-secondary" onclick="sendTestMorning()" style="font-size: 12px; padding: 7px 12px;">Send Test Morning</button>
                                                             </div>
 
-                                                            <div style="border-top: 1px solid var(--border-primary); margin: 14px 0 12px; padding-top: 12px;">
-                                                                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                                                                    <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">🎤 Markus Test Console</span>
-                                                                    <span style="font-size: 10px; padding: 2px 6px; background: rgba(255,193,7,0.15); color: #ffc107; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px;">LIVE FREE CHANNEL</span>
-                                                                </div>
-                                                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.5;">
-                                                                    Each button fires the Markus message via the <strong>real production codepath</strong> (real OpenAI gen, real send) and posts publicly to your live FREE channel. Use sparingly.
-                                                                </div>
-                                                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                                                    <button class="btn-secondary" onclick="testMarkusTp1()" style="font-size: 12px; padding: 7px 12px;">TP1 Win (full seed)</button>
-                                                                    <button class="btn-secondary" onclick="testMarkusMorning()" style="font-size: 12px; padding: 7px 12px;">Morning Macro</button>
-                                                                    <button class="btn-secondary" onclick="testMarkusEod()" style="font-size: 12px; padding: 7px 12px;">EoD Recap (force)</button>
-                                                                </div>
-                                                                <pre id="markus-test-result" style="display:none; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; white-space: pre-wrap; font-family: ui-monospace, monospace; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 11px; margin-top: 10px; max-height: 180px; overflow-y: auto;"></pre>
-                                                            </div>
                                                             
                                                             <pre id="crosspromo-preview" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; white-space: pre-wrap; font-family: inherit; color: var(--text-primary); border: 1px solid var(--border-primary); font-size: 12px; margin-bottom: 12px; max-height: 150px; overflow-y: auto;">Loading preview...</pre>
 
@@ -6815,6 +6985,7 @@
                 { id: 'signals', label: 'Signals Monitor', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
                 { id: 'support-chat', label: 'Support Chat', icon: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M12 11h4 M12 16h4 M8 11h.01 M8 16h.01', group: 'Journeys' },
                 { id: 'hype-bot', label: 'Hype Bot', icon: 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75', group: 'Journeys' },
+                { id: 'ai-messages', label: 'AI Messages', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', group: 'Journeys' },
                 { id: 'connections', label: 'Connections', icon: 'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244' },
                 { id: 'settings', label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' }
             ],
@@ -9354,59 +9525,91 @@
             }
         }
         
-        function _markusTestShow(payload, isError) {
-            const el = document.getElementById('markus-test-result');
-            if (!el) return;
-            el.style.display = 'block';
-            el.style.borderColor = isError ? 'rgba(220,53,69,0.5)' : 'var(--border-primary)';
-            try {
-                el.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
-            } catch (_) {
-                el.textContent = String(payload);
-            }
+        function _aimFieldVal(id) {
+            const el = document.getElementById(id);
+            if (!el) return '';
+            const v = (el.value || '').trim();
+            return v === '' ? null : v;
         }
 
-        async function _markusTestCall(path, label, confirmMsg) {
+        function _aimShow(payload, isError) {
+            const panel = document.getElementById('aim-result-panel');
+            const body = document.getElementById('aim-result-body');
+            if (!panel || !body) return;
+            panel.style.display = 'block';
+            body.style.borderColor = isError ? 'rgba(220,53,69,0.5)' : 'var(--border-primary)';
+            try {
+                body.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+            } catch (_) {
+                body.textContent = String(payload);
+            }
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function _aimFire(path, label, body, confirmMsg) {
             if (confirmMsg && !confirm(confirmMsg)) return;
             try {
-                _markusTestShow(`Sending ${label}…`, false);
-                const resp = await authedFetch(path, { method: 'POST' });
+                _aimShow(`Sending ${label}…`, false);
+                const resp = await authedFetch(path, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body || {}),
+                });
                 const data = await resp.json();
                 if (resp.ok) {
                     showToast(`${label} fired ✓`);
-                    _markusTestShow(data, false);
+                    _aimShow(data, false);
                 } else {
                     showToast(data.error || `${label} failed`, 'error');
-                    _markusTestShow(data, true);
+                    _aimShow(data, true);
                 }
             } catch (e) {
                 console.error(`${label} error:`, e);
                 showToast(`${label} error`, 'error');
-                _markusTestShow(String(e), true);
+                _aimShow(String(e), true);
             }
         }
 
-        function testMarkusTp1() {
-            _markusTestCall(
+        function aimFireTp1() {
+            const body = {
+                direction: _aimFieldVal('aim-tp1-direction') || 'BUY',
+                entry_price: _aimFieldVal('aim-tp1-entry'),
+                tp1_price: _aimFieldVal('aim-tp1-tp'),
+                pips_secured: _aimFieldVal('aim-tp1-pips'),
+            };
+            _aimFire(
                 '/api/crosspromo/test-markus-tp1',
                 'TP1 Win',
-                'TP1 Win test will:\n• Insert a fake +28 pip closed signal in your DB\n• Trigger the real finish_crosspromo() flow\n• Enqueue 3 Markus messages to your LIVE FREE channel (over ~30 min)\n\nProceed?'
+                body,
+                'This will:\n• Insert a fake closed signal in your DB (tagged [TEST_SEED])\n• Trigger the real finish_crosspromo() flow\n• Send 3 Markus messages to your LIVE FREE channel over ~30 min\n\nProceed?'
             );
         }
 
-        function testMarkusMorning() {
-            _markusTestCall(
+        function aimFireMorning() {
+            const body = {
+                xau_spot: _aimFieldVal('aim-morn-xau'),
+                xau_change_pct: _aimFieldVal('aim-morn-chg'),
+                pips_today: _aimFieldVal('aim-morn-ptoday'),
+                pips_7d: _aimFieldVal('aim-morn-p7d'),
+            };
+            _aimFire(
                 '/api/crosspromo/test-markus-morning',
                 'Morning Macro',
-                'Morning Macro test will post Markus to your LIVE FREE channel right now. Proceed?'
+                body,
+                'Posts Markus Morning Macro to your LIVE FREE channel right now. Proceed?'
             );
         }
 
-        function testMarkusEod() {
-            _markusTestCall(
+        function aimFireEod() {
+            const body = {
+                pips_today: _aimFieldVal('aim-eod-ptoday'),
+                pips_7d: _aimFieldVal('aim-eod-p7d'),
+            };
+            _aimFire(
                 '/api/crosspromo/test-markus-eod',
                 'EoD Recap',
-                'EoD Recap test will post Markus to your LIVE FREE channel right now (green-day gate bypassed). Proceed?'
+                body,
+                'Posts Markus EoD Recap to your LIVE FREE channel right now (green-day gate bypassed). Proceed?'
             );
         }
 

@@ -223,13 +223,42 @@ def handle_test_cta(handler):
     _send_json(handler, 200, {"success": True, "message": "Test CTA sent to free channel"})
 
 
+def _coerce_float(v):
+    """Convert an incoming override value to float, or None for blank/invalid."""
+    if v is None or v == '' or (isinstance(v, str) and not v.strip()):
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _safe_read_body(handler):
+    """Read JSON body, returning ({}, None) on empty/missing or (None, error_str) on malformed."""
+    try:
+        body = _read_json_body(handler)
+        return (body or {}), None
+    except Exception as e:
+        return None, f"Invalid JSON body: {e}"
+
+
 def handle_test_markus_morning(handler):
     """POST /api/crosspromo/test-markus-morning - Fire Morning Macro NOW (real codepath)."""
     tenant_id = getattr(handler, 'tenant_id', None)
     if not tenant_id:
         _send_no_tenant_context(handler)
         return
-    result = service.send_test_markus_morning(tenant_id)
+    body, err = _safe_read_body(handler)
+    if err:
+        _send_json(handler, 400, {"error": err})
+        return
+    overrides = {
+        'xau_spot': _coerce_float(body.get('xau_spot')),
+        'xau_change_pct': _coerce_float(body.get('xau_change_pct')),
+        'pips_today': _coerce_float(body.get('pips_today')),
+        'pips_7d': _coerce_float(body.get('pips_7d')),
+    }
+    result = service.send_test_markus_morning(tenant_id, overrides=overrides)
     if not result.get('success'):
         error = result.get('error', 'Unknown error')
         code = 503 if 'not configured' in error.lower() else 400
@@ -244,7 +273,15 @@ def handle_test_markus_eod(handler):
     if not tenant_id:
         _send_no_tenant_context(handler)
         return
-    result = service.send_test_markus_eod(tenant_id)
+    body, err = _safe_read_body(handler)
+    if err:
+        _send_json(handler, 400, {"error": err})
+        return
+    overrides = {
+        'pips_today': _coerce_float(body.get('pips_today')),
+        'pips_7d': _coerce_float(body.get('pips_7d')),
+    }
+    result = service.send_test_markus_eod(tenant_id, overrides=overrides)
     if not result.get('success'):
         error = result.get('error', 'Unknown error')
         code = 503 if 'not configured' in error.lower() else 400
@@ -259,7 +296,20 @@ def handle_test_markus_tp1_realistic(handler):
     if not tenant_id:
         _send_no_tenant_context(handler)
         return
-    result = service.send_test_markus_tp1_realistic(tenant_id)
+    body, err = _safe_read_body(handler)
+    if err:
+        _send_json(handler, 400, {"error": err})
+        return
+    direction = body.get('direction')
+    if isinstance(direction, str):
+        direction = direction.strip().upper() or None
+    overrides = {
+        'direction': direction,
+        'entry_price': _coerce_float(body.get('entry_price')),
+        'tp1_price': _coerce_float(body.get('tp1_price')),
+        'pips_secured': _coerce_float(body.get('pips_secured')),
+    }
+    result = service.send_test_markus_tp1_realistic(tenant_id, overrides=overrides)
     if not result.get('success'):
         error = result.get('error', 'Unknown error')
         code = 503 if 'not configured' in error.lower() else 400

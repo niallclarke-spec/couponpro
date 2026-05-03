@@ -110,7 +110,7 @@ def _get_arc_instruction(step: int, total: int) -> str:
         return "Build on what you said before, add a new angle or detail."
 
 
-def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None) -> tuple:
+def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None, context_override: str = None) -> tuple:
     from openai import OpenAI
 
     try:
@@ -122,7 +122,10 @@ def _generate_messages_internal(tenant_id: str, custom_prompt: str, message_coun
             return [], "OpenAI API key not configured. Set OPENAI_API_KEY in your environment."
 
         client = OpenAI(api_key=api_key, base_url=base_url)
-        context = build_context(tenant_id, signal_context=signal_context)
+        if context_override is not None:
+            context = context_override
+        else:
+            context = build_context(tenant_id, signal_context=signal_context)
         messages_result = []
 
         conversation = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -168,15 +171,15 @@ Write ONLY the Telegram message, nothing else:"""
         return [], f"{error_type}: {error_detail}"
 
 
-def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None) -> List[str]:
-    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count, signal_context=signal_context)
+def generate_message_sequence(tenant_id: str, custom_prompt: str, message_count: int = 3, signal_context: str = None, context_override: str = None) -> List[str]:
+    messages, error = _generate_messages_internal(tenant_id, custom_prompt, message_count, signal_context=signal_context, context_override=context_override)
     if error:
         logger.warning(f"generate_message_sequence failed for tenant {tenant_id}: {error}")
     return messages
 
 
-def generate_message(tenant_id: str, custom_prompt: str, signal_context: str = None) -> str:
-    result = generate_message_sequence(tenant_id, custom_prompt, 1, signal_context=signal_context)
+def generate_message(tenant_id: str, custom_prompt: str, signal_context: str = None, context_override: str = None) -> str:
+    result = generate_message_sequence(tenant_id, custom_prompt, 1, signal_context=signal_context, context_override=context_override)
     return result[0] if result else ""
 
 

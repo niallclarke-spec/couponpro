@@ -224,20 +224,97 @@ def _sanitize_markus_html(message: str) -> str:
     return f"{body}\n\n{CTA_LINK_LINE}"
 
 
-def build_markus_morning_message(tenant_id: str) -> str:
-    """Markus-voice Morning Macro post. Uses live XAU/USD as ground truth."""
+def _build_pips_context_lines(pips_today: float, pips_7d: float) -> List[str]:
+    lines = []
+    if pips_today != 0:
+        lines.append(f"Pips earned today: {pips_today:+.1f}")
+    else:
+        lines.append("No closed signals yet today")
+    if pips_7d != 0:
+        lines.append(f"Pips earned past 7 days: {pips_7d:+.1f}")
+    else:
+        lines.append("No closed signals in the past 7 days")
+    return lines
+
+
+def _resolve_pips(tenant_id: str, pips_today_override=None, pips_7d_override=None):
+    """Return (pips_today, pips_7d), preferring overrides when provided."""
+    from domains.crosspromo.repo import get_net_pips_over_days
+    pt = pips_today_override if pips_today_override is not None else get_net_pips_over_days(tenant_id, 1)
+    p7 = pips_7d_override if pips_7d_override is not None else get_net_pips_over_days(tenant_id, 7)
+    return pt, p7
+
+
+def build_markus_morning_message(
+    tenant_id: str,
+    xau_spot_override: float = None,
+    xau_change_pct_override: float = None,
+    pips_today_override: float = None,
+    pips_7d_override: float = None,
+) -> str:
+    """Markus-voice Morning Macro post. Uses live XAU/USD as ground truth.
+
+    All overrides optional — when provided, replace the auto-fetched value
+    (used by the AI Messages test console).
+    """
     from domains.hypechat import service as hype_service
     from domains.crosspromo.macro_data import fetch_xau_context
 
-    xau_ctx = fetch_xau_context()
-    if not xau_ctx:
-        logger.info("Morning Macro: no live XAU context, AI will write from pip stats only")
+    live_xau_ctx = None
+    if xau_spot_override is None or xau_change_pct_override is None:
+        # We need at least one live value (for the field that wasn't overridden)
+        live_xau_ctx = fetch_xau_context()
+
+    if xau_spot_override is not None or xau_change_pct_override is not None:
+        # Parse live spot/change out of the live ctx if either field was NOT overridden
+        live_spot = None
+        live_change = None
+        if live_xau_ctx:
+            import re
+            m = re.search(r'XAU/USD spot:\s*([\d.]+)', live_xau_ctx)
+            if m:
+                try: live_spot = float(m.group(1))
+                except ValueError: pass
+            m = re.search(r'24h change:\s*(up|down)\s*([\d.]+)', live_xau_ctx)
+            if m:
+                try:
+                    val = float(m.group(2))
+                    live_change = val if m.group(1) == 'up' else -val
+                except ValueError: pass
+
+        spot = xau_spot_override if xau_spot_override is not None else live_spot
+        change = xau_change_pct_override if xau_change_pct_override is not None else live_change
+
+        xau_lines = ["LIVE MARKET DATA (manual override):"]
+        if spot is not None:
+            xau_lines.append(f"- XAU/USD spot: {spot:.2f}")
+        if change is not None:
+            direction = "up" if change >= 0 else "down"
+            xau_lines.append(f"- 24h change: {direction} {abs(change):.2f}%")
+        xau_ctx = "\n".join(xau_lines) if len(xau_lines) > 1 else None
+    else:
+        xau_ctx = live_xau_ctx
+        if not xau_ctx:
+            logger.info("Morning Macro: no live XAU context, AI will write from pip stats only")
+
+    use_override = pips_today_override is not None or pips_7d_override is not None
+    context_override = None
+    signal_context = xau_ctx
+    if use_override:
+        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
+        parts = _build_pips_context_lines(pt, p7)
+        if xau_ctx:
+            parts.append("")
+            parts.append(xau_ctx)
+        context_override = "\n".join(parts)
+        signal_context = None
 
     logger.info(f"Generating Markus morning macro for tenant: {tenant_id}")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_MORNING_PROMPT,
-        signal_context=xau_ctx,
+        signal_context=signal_context,
+        context_override=context_override,
     )
     if not message:
         logger.warning("Markus morning generation returned empty, using fallback")
@@ -245,14 +322,27 @@ def build_markus_morning_message(tenant_id: str) -> str:
     return _sanitize_markus_html(message)
 
 
-def build_markus_eod_message(tenant_id: str) -> str:
-    """Markus-voice End-of-Day recap. Caller MUST gate on green day before calling."""
+def build_markus_eod_message(
+    tenant_id: str,
+    pips_today_override: float = None,
+    pips_7d_override: float = None,
+) -> str:
+    """Markus-voice End-of-Day recap. Caller MUST gate on green day before calling.
+
+    Overrides optional — when provided, replace DB-fetched pip totals.
+    """
     from domains.hypechat import service as hype_service
+
+    context_override = None
+    if pips_today_override is not None or pips_7d_override is not None:
+        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
+        context_override = "\n".join(_build_pips_context_lines(pt, p7))
 
     logger.info(f"Generating Markus EoD recap for tenant: {tenant_id}")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_EOD_PROMPT,
+        context_override=context_override,
     )
     if not message:
         logger.warning("Markus EoD generation returned empty")
@@ -1160,11 +1250,15 @@ def send_test_cta(tenant_id: str) -> Dict[str, Any]:
     return {"success": True, "sticker_sent": True, "cta_sent": True}
 
 
-def send_test_markus_morning(tenant_id: str) -> Dict[str, Any]:
+def send_test_markus_morning(tenant_id: str, overrides: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     TEST: Fire the Markus Morning Macro NOW via the real codepath.
     Hits OpenAI + live XAU price + sanitizer + send. No gating.
+
+    Optional overrides (from AI Messages test console):
+      xau_spot, xau_change_pct, pips_today, pips_7d
     """
+    overrides = overrides or {}
     try:
         credentials = get_bot_credentials(tenant_id, "signal_bot")
         bot_token = credentials['bot_token']
@@ -1174,21 +1268,30 @@ def send_test_markus_morning(tenant_id: str) -> Dict[str, Any]:
     if not free_channel_id:
         return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
 
-    message = build_markus_morning_message(tenant_id)
+    message = build_markus_morning_message(
+        tenant_id,
+        xau_spot_override=overrides.get('xau_spot'),
+        xau_change_pct_override=overrides.get('xau_change_pct'),
+        pips_today_override=overrides.get('pips_today'),
+        pips_7d_override=overrides.get('pips_7d'),
+    )
     if not message:
         return {"success": False, "error": "Markus morning generation returned empty"}
     result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
     if result.get('success'):
-        return {"success": True, "message_sent": message}
+        return {"success": True, "message_sent": message, "overrides_applied": {k: v for k, v in overrides.items() if v is not None}}
     return result
 
 
-def send_test_markus_eod(tenant_id: str) -> Dict[str, Any]:
+def send_test_markus_eod(tenant_id: str, overrides: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     TEST: Fire the Markus EoD Recap NOW via the real codepath.
     BYPASSES the green-day gate (so it fires even on red/flat days for testing).
     Hits OpenAI + sanitizer + send.
+
+    Optional overrides: pips_today, pips_7d
     """
+    overrides = overrides or {}
     try:
         credentials = get_bot_credentials(tenant_id, "signal_bot")
         bot_token = credentials['bot_token']
@@ -1198,16 +1301,20 @@ def send_test_markus_eod(tenant_id: str) -> Dict[str, Any]:
     if not free_channel_id:
         return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
 
-    message = build_markus_eod_message(tenant_id)
+    message = build_markus_eod_message(
+        tenant_id,
+        pips_today_override=overrides.get('pips_today'),
+        pips_7d_override=overrides.get('pips_7d'),
+    )
     if not message:
         return {"success": False, "error": "Markus EoD generation returned empty"}
     result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
     if result.get('success'):
-        return {"success": True, "message_sent": message, "gate_bypassed": True}
+        return {"success": True, "message_sent": message, "gate_bypassed": True, "overrides_applied": {k: v for k, v in overrides.items() if v is not None}}
     return result
 
 
-def send_test_markus_tp1_realistic(tenant_id: str) -> Dict[str, Any]:
+def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     TEST: Realistic TP1 Win flow.
     1. INSERT a fake closed XAU/USD BUY signal (TP1 hit, +28 pips, fresh timestamp)
@@ -1229,9 +1336,16 @@ def send_test_markus_tp1_realistic(tenant_id: str) -> Dict[str, Any]:
     if not db_pool.connection_pool:
         return {"success": False, "error": "Database not available"}
 
-    entry = 2650.00
-    tp1_price = 2652.80
-    sl_price = 2647.00
+    overrides = overrides or {}
+    direction = (overrides.get('direction') or 'BUY').upper()
+    if direction not in ('BUY', 'SELL'):
+        direction = 'BUY'
+    entry = float(overrides.get('entry_price') or 2650.00)
+    tp1_price = float(overrides.get('tp1_price') or 2652.80)
+    pips_secured = float(overrides.get('pips_secured') or 28)
+    # SL placed conservatively opposite the trade direction
+    sl_offset = abs(tp1_price - entry) * 1.07
+    sl_price = round(entry - sl_offset, 2) if direction == 'BUY' else round(entry + sl_offset, 2)
     fake_tg_msg_id = int(datetime.utcnow().timestamp())
     fake_tp1_msg_id = fake_tg_msg_id + 1
 
@@ -1248,15 +1362,15 @@ def send_test_markus_tp1_realistic(tenant_id: str) -> Dict[str, Any]:
                      crosspromo_status, crosspromo_started_at,
                      bot_type, notes)
                 VALUES
-                    (%s, 'BUY', 'XAU/USD', '1H',
+                    (%s, %s, 'XAU/USD', '1H',
                      %s, %s, %s,
-                     'closed', NOW(), NOW(), %s, 28,
+                     'closed', NOW(), NOW(), %s, %s,
                      TRUE, NOW(),
                      %s, %s,
                      'started', NOW(),
                      'legacy', '[TEST_SEED] Markus TP1 test from admin')
                 RETURNING id
-            """, (tenant_id, entry, tp1_price, sl_price, tp1_price,
+            """, (tenant_id, direction, entry, tp1_price, sl_price, tp1_price, pips_secured,
                   fake_tg_msg_id, fake_tp1_msg_id))
             row = cursor.fetchone()
             conn.commit()
@@ -1270,6 +1384,9 @@ def send_test_markus_tp1_realistic(tenant_id: str) -> Dict[str, Any]:
     return {
         "success": True,
         "seeded_signal_id": signal_id,
+        "seeded_values": {"direction": direction, "entry_price": entry,
+                          "tp1_price": tp1_price, "pips_secured": pips_secured,
+                          "stop_loss": sl_price},
         "fake_telegram_message_id": fake_tg_msg_id,
         "finish_crosspromo": finish_result,
         "note": "Hype flow enqueued. Worker will send 3 Markus messages over ~30 min.",
