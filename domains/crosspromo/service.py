@@ -1466,13 +1466,35 @@ def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = N
     fake_tp1_msg_id = fake_tg_msg_id + 1
 
     # Strategy reason — flows through get_bump_signal_context() into Markus prompt.
-    # Also used to set bot_type so Markus references the right strategy by name.
+    # Default bot_type to whatever strategy is CURRENTLY ACTIVE in forex_config so
+    # Markus references the same setup the live bot is actually trading. Override
+    # only if the admin explicitly passed bot_type in the request body.
     strategy_reason_override = (overrides.get('strategy_reason') or '').strip()
-    seed_bot_type = (overrides.get('bot_type') or 'trend_pullback_multi_tp').strip() or 'trend_pullback_multi_tp'
+    override_bot_type = (overrides.get('bot_type') or '').strip()
+    if override_bot_type:
+        seed_bot_type = override_bot_type
+    else:
+        try:
+            from db import get_bot_config
+            _cfg = get_bot_config(tenant_id) or {}
+            seed_bot_type = _cfg.get('active_bot_type') or 'aggressive'
+        except Exception as _e:
+            logger.warning(f"[TEST_SEED] Could not resolve active bot_type, defaulting to aggressive: {_e}")
+            seed_bot_type = 'aggressive'
+
+    # Default note text per strategy so the auto-seeded read matches the
+    # technicals the active bot actually trades on.
+    DEFAULT_READS_BY_BOT = {
+        'aggressive': "RSI extreme rejection (40/60), MACD confirmation, Bollinger touch with ADX>15",
+        'conservative': "RSI + MACD + Bollinger alignment, ADX>25 trend strength",
+        'raja_banks': "Session-open breakout (London/NY), EMA50/200 trend alignment, ATR-based entry",
+        'trend_pullback_multi_tp': "RSI dip-recovery 38-48, EMA200 1H trend hold, 15M engulfing trigger",
+    }
     if strategy_reason_override:
         seed_notes = f"[TEST_SEED] {strategy_reason_override}"
     else:
-        seed_notes = "[TEST_SEED] RSI dip-recovery confirmed, EMA200 trend holding, engulfing entry trigger"
+        default_read = DEFAULT_READS_BY_BOT.get(seed_bot_type, DEFAULT_READS_BY_BOT['aggressive'])
+        seed_notes = f"[TEST_SEED] {default_read}"
 
     try:
         with db_pool.get_connection() as conn:
