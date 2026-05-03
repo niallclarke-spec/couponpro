@@ -32,6 +32,7 @@ def get_net_pips_today_utc(tenant_id: str) -> float:
                 AND closed_at >= (NOW() AT TIME ZONE 'UTC')::date
                 AND closed_at <  ((NOW() AT TIME ZONE 'UTC')::date + INTERVAL '1 day')
                 AND result_pips IS NOT NULL
+                AND (notes IS NULL OR notes NOT LIKE '[TEST_SEED]%%')
             """, (tenant_id,))
 
             row = cursor.fetchone()

@@ -9560,6 +9560,11 @@
 
         async function _aimFire(path, label, body, confirmMsg) {
             if (confirmMsg && !confirm(confirmMsg)) return;
+            // Disable all AI Messages buttons while one is in flight to prevent
+            // accidental spam to the LIVE channel (each TP1 fire = 3 jobs).
+            const btns = Array.from(document.querySelectorAll('.ai-test-btn'));
+            const originalLabels = btns.map(b => b.textContent);
+            btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed'; });
             try {
                 _aimShow(`Sending ${label}…`, false);
                 const resp = await authedFetch(path, {
@@ -9579,6 +9584,17 @@
                 console.error(`${label} error:`, e);
                 showToast(`${label} error`, 'error');
                 _aimShow(String(e), true);
+            } finally {
+                // Re-enable after a short cooldown so the user cannot triple-click
+                // the same fire before the toast/result panel has rendered.
+                setTimeout(() => {
+                    btns.forEach((b, i) => {
+                        b.disabled = false;
+                        b.style.opacity = '';
+                        b.style.cursor = '';
+                        if (originalLabels[i]) b.textContent = originalLabels[i];
+                    });
+                }, 2500);
             }
         }
 

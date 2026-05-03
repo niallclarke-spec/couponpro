@@ -154,7 +154,7 @@ Write ONLY the Telegram message, nothing else:"""
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=conversation,
-                max_tokens=100,
+                max_tokens=220,
             )
 
             message = response.choices[0].message.content.strip()

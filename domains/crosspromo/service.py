@@ -176,15 +176,13 @@ MARKUS_MORNING_PROMPT = """Write the Morning Macro post for the FREE Telegram ch
 - The "ACTIVE STRATEGY" block in context tells you exactly what setup the bot is hunting today. Reference THAT setup in plain words — what indicators or conditions you're waiting for, anchored to the live XAU/USD spot from context if a level is implied.
 - High-conviction or low-conviction call. If conviction is low, sit out and say so honestly.
 - Close with a quiet invite — "the room is already at the desk" / "live entries fire in VIP" energy. Never urgency theater.
-- End with this exact link line:
-👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
 
 HARD RULES:
 - Do NOT invent macro narratives. No DXY, no Fed, no NFP, no CPI, no yields, no "the print", no headlines — UNLESS those words appear explicitly in the context block.
 - Stay grounded in the strategy read from context. Talk technicals (RSI, EMA, ADX, breakouts, pullbacks) the way the strategy actually trades.
+- Do NOT include any link, URL, or HTML in your output. The system appends the canonical "Open VIP" link automatically. Just write the body text.
 
 4-6 short lines total. Quiet certainty. Periods, not exclamations.
-Use HTML for links only — no <b>, no <i>, no other tags.
 """
 
 
@@ -195,15 +193,13 @@ MARKUS_EOD_PROMPT = """Write the End-of-Day recap post for the FREE Telegram cha
 - One line on the read that worked today, taken from the "TODAY'S WINNING READS" block in context. Reference the actual technical reason (RSI recovery, EMA bounce, engulfing trigger, breakout fill, pullback hold, etc.). If no reads block is present, keep it general but stay technical (the setup, the entry confirmation) — NOT macro.
 - Reference the 7-day pips number from context as a quiet streak line — again, exact number from context, no invention.
 - Close with a quiet invite — "the room sees these in real time" energy. Never "don't miss out".
-- End with this exact link line:
-👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
 
 HARD RULES:
 - Do NOT invent macro narratives. No DXY, no Fed, no NFP, no CPI, no yields, no "the print", no headlines — UNLESS those words appear explicitly in the context block.
 - Stay grounded in the strategy reads from context. Talk technicals.
+- Do NOT include any link, URL, or HTML in your output. The system appends the canonical "Open VIP" link automatically. Just write the body text.
 
 4-6 short lines total. Quiet certainty. Periods, not exclamations.
-Use HTML for links only — no <b>, no <i>, no other tags.
 """
 
 
@@ -254,6 +250,7 @@ def _get_today_winning_reads(tenant_id: str, limit: int = 3) -> str:
                   AND status = 'closed'
                   AND closed_at >= date_trunc('day', NOW())
                   AND result_pips > 0
+                  AND (notes IS NULL OR notes NOT LIKE '[TEST_SEED]%%')
                 ORDER BY closed_at DESC
                 LIMIT %s
             """, (tenant_id, limit))
@@ -281,23 +278,36 @@ CTA_LINK_LINE = '👉 <a href="https://entrylab.io/subscribe?utm_source=telegram
 
 
 def _sanitize_markus_html(message: str) -> str:
-    """Strip raw HTML tags from AI body, then re-append the canonical CTA link.
+    """Strip raw HTML/links from AI body, then re-append the canonical CTA link.
 
-    The AI is instructed to emit the Open VIP <a href> line at the end, but we
-    cannot trust the model not to inject stray < or > characters elsewhere,
-    which would crash Telegram's parse_mode='HTML'. This escapes the body and
-    guarantees the CTA link is present and well-formed.
+    The AI is instructed NOT to include any link or HTML, but we belt-and-
+    suspenders sanitize because:
+      - max_tokens can truncate mid-tag, leaving orphan `<a href...` that breaks Telegram's HTML parser.
+      - Models occasionally still try to inject anchors despite instructions.
+    Strategy: aggressively strip every angle-bracket region (closed AND
+    truncated), drop URLs and entrylab.io invite lines, escape what's left,
+    then append the canonical CTA.
     """
     import html
     import re
 
-    # Drop any existing CTA link line(s) the model produced (we'll re-append a clean one)
-    body = re.sub(r'(?im)^[^\n]*<a\s[^>]*entrylab\.io/subscribe[^>]*>.*?</a>[^\n]*\n?', '', message)
-    # Drop any other anchor tags entirely (keep their text)
+    body = message or ""
+    # 1. Drop any line that even *mentions* entrylab.io subscribe (truncated or not)
+    body = re.sub(r'(?im)^[^\n]*entrylab\.io/subscribe[^\n]*\n?', '', body)
+    # 2. Drop closed anchor tags, keeping their inner text
     body = re.sub(r'<a\s[^>]*>(.*?)</a>', r'\1', body, flags=re.IGNORECASE | re.DOTALL)
-    # Strip any other HTML tags the model may have invented
+    # 3. Drop any closed HTML tags the model invented
     body = re.sub(r'<[^>]+>', '', body)
-    # Now escape any remaining literal < > & in the body
+    # 4. Drop any TRUNCATED tag (orphan `<TAG...` with no matching `>`).
+    # Only triggers when `<` is followed by an HTML-tag-like char (letter or `/`) so
+    # legitimate technical text like "RSI < 30" or "ADX > 25" survives untouched.
+    body = re.sub(r'<[a-zA-Z/][^<>\n]*$', '', body, flags=re.MULTILINE)
+    # 5. Drop any bare URL the model dropped in (CTA pointer arrow + link)
+    body = re.sub(r'(?im)^[^\n]*https?://[^\s\n]*entrylab\.io[^\n]*\n?', '', body)
+    body = re.sub(r'https?://\S+', '', body)
+    # 6. Strip the dangling 👉 arrow if it's now alone on a line
+    body = re.sub(r'(?m)^\s*👉\s*$\n?', '', body)
+    # 7. Now escape any remaining literal < > & for Telegram HTML safety
     body = html.escape(body, quote=False).rstrip()
     return f"{body}\n\n{CTA_LINK_LINE}"
 
