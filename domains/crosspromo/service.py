@@ -173,11 +173,15 @@ MARKUS_MORNING_PROMPT = """Write the Morning Macro post for the FREE Telegram ch
 
 - It is around 06:00 UTC. London opens in ~2 hours, Asia is winding down.
 - Open with a quiet personal anchor (coffee, cycle to the desk, the desk is awake) — ONE line, not a paragraph.
-- Drop the macro read for gold today using the LIVE XAU/USD spot from context. Reference one specific level you're watching at the London open.
+- The "ACTIVE STRATEGY" block in context tells you exactly what setup the bot is hunting today. Reference THAT setup in plain words — what indicators or conditions you're waiting for, anchored to the live XAU/USD spot from context if a level is implied.
 - High-conviction or low-conviction call. If conviction is low, sit out and say so honestly.
 - Close with a quiet invite — "the room is already at the desk" / "live entries fire in VIP" energy. Never urgency theater.
 - End with this exact link line:
 👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
+
+HARD RULES:
+- Do NOT invent macro narratives. No DXY, no Fed, no NFP, no CPI, no yields, no "the print", no headlines — UNLESS those words appear explicitly in the context block.
+- Stay grounded in the strategy read from context. Talk technicals (RSI, EMA, ADX, breakouts, pullbacks) the way the strategy actually trades.
 
 4-6 short lines total. Quiet certainty. Periods, not exclamations.
 Use HTML for links only — no <b>, no <i>, no other tags.
@@ -188,15 +192,89 @@ MARKUS_EOD_PROMPT = """Write the End-of-Day recap post for the FREE Telegram cha
 
 - London close just hit (~16:00 UTC). The day was green (today's net pips are positive — see context).
 - Lead with today's net pips number from context. Use the EXACT number you see in context — do not round, do not invent, do not infer. If context says "+47.0" you write "+47 pips". Same for the 7-day number.
-- One line on the read that worked today (you can be general — "DXY rolled over", "London open broke the overnight high", "the print was the catalyst" — pick what fits).
+- One line on the read that worked today, taken from the "TODAY'S WINNING READS" block in context. Reference the actual technical reason (RSI recovery, EMA bounce, engulfing trigger, breakout fill, pullback hold, etc.). If no reads block is present, keep it general but stay technical (the setup, the entry confirmation) — NOT macro.
 - Reference the 7-day pips number from context as a quiet streak line — again, exact number from context, no invention.
 - Close with a quiet invite — "the room sees these in real time" energy. Never "don't miss out".
 - End with this exact link line:
 👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>
 
+HARD RULES:
+- Do NOT invent macro narratives. No DXY, no Fed, no NFP, no CPI, no yields, no "the print", no headlines — UNLESS those words appear explicitly in the context block.
+- Stay grounded in the strategy reads from context. Talk technicals.
+
 4-6 short lines total. Quiet certainty. Periods, not exclamations.
 Use HTML for links only — no <b>, no <i>, no other tags.
 """
+
+
+# Strategy-aware "what we're hunting today" briefs, keyed by bot_type.
+# These get injected into Morning Macro context so Markus references the
+# actual technical setup the active strategy uses (no generic macro talk).
+STRATEGY_BRIEFS = {
+    'aggressive': "Aggressive momentum strategy. Looking for RSI extremes (40/60), MACD confirmation, Bollinger Band touches with ADX above 15.",
+    'conservative': "Conservative confluence strategy. Need RSI + MACD + Bollinger alignment with ADX above 25 — slow setup, high conviction only.",
+    'raja_banks': "Raja Banks session-open breakout. Watching London/NY opens for impulse breaks of overnight high/low, EMA50/200 trend filter, ATR stops.",
+    'trend_pullback_multi_tp': "Trend Pullback strategy. Need 1H EMA200 trend, then 15M RSI dip into 38-48 zone with engulfing recovery, ADX above 20.",
+    'legacy': "Discretionary read. Watching the 1H structure for clean continuation or reversal setups, no auto-trigger.",
+}
+
+
+def _get_active_strategy_brief(tenant_id: str) -> str:
+    """Return a one-line description of the active strategy's setup for today.
+
+    Reads forex_config.bot_active_bot_type and looks up STRATEGY_BRIEFS.
+    Returns empty string if config unavailable.
+    """
+    try:
+        from db import get_bot_config
+        config = get_bot_config(tenant_id) or {}
+        bot_type = config.get('active_bot_type') or 'aggressive'
+        return STRATEGY_BRIEFS.get(bot_type, STRATEGY_BRIEFS.get('aggressive', ''))
+    except Exception as e:
+        logger.warning(f"Could not resolve active strategy brief: {e}")
+        return ""
+
+
+def _get_today_winning_reads(tenant_id: str, limit: int = 3) -> str:
+    """Aggregate today's winning (green) closed signals' strategy reasons.
+
+    Returns a multi-line string suitable for context injection, or empty
+    string if no reads are available.
+    """
+    try:
+        from db import db_pool
+        if not db_pool.connection_pool:
+            return ""
+        with db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT bot_type, signal_type, result_pips, notes
+                FROM forex_signals
+                WHERE tenant_id = %s
+                  AND status = 'closed'
+                  AND closed_at >= date_trunc('day', NOW())
+                  AND result_pips > 0
+                ORDER BY closed_at DESC
+                LIMIT %s
+            """, (tenant_id, limit))
+            rows = cursor.fetchall() or []
+        if not rows:
+            return ""
+        lines = []
+        for bot_type, signal_type, pips, notes in rows:
+            bt_label = (bot_type or 'legacy').replace('_', ' ')
+            note = (notes or '').strip()
+            # Strip [TEST_SEED] prefix from displayed notes if present
+            if note.startswith('[TEST_SEED]'):
+                note = note[len('[TEST_SEED]'):].strip()
+            piece = f"- {signal_type or 'BUY'} {float(pips):+.1f} pips — {bt_label}"
+            if note:
+                piece += f": {note}"
+            lines.append(piece)
+        return "TODAY'S WINNING READS:\n" + "\n".join(lines)
+    except Exception as e:
+        logger.warning(f"Could not aggregate today's winning reads: {e}")
+        return ""
 
 
 CTA_LINK_LINE = '👉 <a href="https://entrylab.io/subscribe?utm_source=telegram&utm_medium=free_channel&utm_campaign=hype_bot">Open VIP</a>'
@@ -251,6 +329,7 @@ def build_markus_morning_message(
     xau_change_pct_override: float = None,
     pips_today_override: float = None,
     pips_7d_override: float = None,
+    strategy_brief_override: str = None,
 ) -> str:
     """Markus-voice Morning Macro post. Uses live XAU/USD as ground truth.
 
@@ -297,19 +376,30 @@ def build_markus_morning_message(
         if not xau_ctx:
             logger.info("Morning Macro: no live XAU context, AI will write from pip stats only")
 
-    use_override = pips_today_override is not None or pips_7d_override is not None
+    # Active strategy brief — what the bot is hunting today (overridable for tests)
+    if strategy_brief_override is not None and str(strategy_brief_override).strip():
+        strategy_brief = str(strategy_brief_override).strip()
+    else:
+        strategy_brief = _get_active_strategy_brief(tenant_id)
+    strategy_block = f"ACTIVE STRATEGY:\n{strategy_brief}" if strategy_brief else ""
+
+    use_override = (pips_today_override is not None or pips_7d_override is not None
+                    or strategy_block)
     context_override = None
     signal_context = xau_ctx
     if use_override:
         pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
         parts = _build_pips_context_lines(pt, p7)
+        if strategy_block:
+            parts.append("")
+            parts.append(strategy_block)
         if xau_ctx:
             parts.append("")
             parts.append(xau_ctx)
         context_override = "\n".join(parts)
         signal_context = None
 
-    logger.info(f"Generating Markus morning macro for tenant: {tenant_id}")
+    logger.info(f"Generating Markus morning macro for tenant: {tenant_id} (strategy_brief={'override' if strategy_brief_override else 'auto'})")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_MORNING_PROMPT,
@@ -326,19 +416,33 @@ def build_markus_eod_message(
     tenant_id: str,
     pips_today_override: float = None,
     pips_7d_override: float = None,
+    strategy_reason_override: str = None,
 ) -> str:
     """Markus-voice End-of-Day recap. Caller MUST gate on green day before calling.
 
-    Overrides optional — when provided, replace DB-fetched pip totals.
+    Overrides optional — when provided, replace DB-fetched pip totals or the
+    auto-aggregated "today's winning reads" block.
     """
     from domains.hypechat import service as hype_service
 
-    context_override = None
-    if pips_today_override is not None or pips_7d_override is not None:
-        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
-        context_override = "\n".join(_build_pips_context_lines(pt, p7))
+    # Strategy reads — the technical reasons today's winners worked
+    if strategy_reason_override is not None and str(strategy_reason_override).strip():
+        reads_block = "TODAY'S WINNING READS:\n" + str(strategy_reason_override).strip()
+    else:
+        reads_block = _get_today_winning_reads(tenant_id)
 
-    logger.info(f"Generating Markus EoD recap for tenant: {tenant_id}")
+    use_override = (pips_today_override is not None or pips_7d_override is not None
+                    or reads_block)
+    context_override = None
+    if use_override:
+        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
+        parts = _build_pips_context_lines(pt, p7)
+        if reads_block:
+            parts.append("")
+            parts.append(reads_block)
+        context_override = "\n".join(parts)
+
+    logger.info(f"Generating Markus EoD recap for tenant: {tenant_id} (reads={'override' if strategy_reason_override else 'auto'})")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_EOD_PROMPT,
@@ -1274,6 +1378,7 @@ def send_test_markus_morning(tenant_id: str, overrides: Dict[str, Any] = None) -
         xau_change_pct_override=overrides.get('xau_change_pct'),
         pips_today_override=overrides.get('pips_today'),
         pips_7d_override=overrides.get('pips_7d'),
+        strategy_brief_override=overrides.get('strategy_brief'),
     )
     if not message:
         return {"success": False, "error": "Markus morning generation returned empty"}
@@ -1305,6 +1410,7 @@ def send_test_markus_eod(tenant_id: str, overrides: Dict[str, Any] = None) -> Di
         tenant_id,
         pips_today_override=overrides.get('pips_today'),
         pips_7d_override=overrides.get('pips_7d'),
+        strategy_reason_override=overrides.get('strategy_reason'),
     )
     if not message:
         return {"success": False, "error": "Markus EoD generation returned empty"}
@@ -1349,6 +1455,15 @@ def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = N
     fake_tg_msg_id = int(datetime.utcnow().timestamp())
     fake_tp1_msg_id = fake_tg_msg_id + 1
 
+    # Strategy reason — flows through get_bump_signal_context() into Markus prompt.
+    # Also used to set bot_type so Markus references the right strategy by name.
+    strategy_reason_override = (overrides.get('strategy_reason') or '').strip()
+    seed_bot_type = (overrides.get('bot_type') or 'trend_pullback_multi_tp').strip() or 'trend_pullback_multi_tp'
+    if strategy_reason_override:
+        seed_notes = f"[TEST_SEED] {strategy_reason_override}"
+    else:
+        seed_notes = "[TEST_SEED] RSI dip-recovery confirmed, EMA200 trend holding, engulfing entry trigger"
+
     try:
         with db_pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -1368,10 +1483,10 @@ def send_test_markus_tp1_realistic(tenant_id: str, overrides: Dict[str, Any] = N
                      TRUE, NOW(),
                      %s, %s,
                      'started', NOW(),
-                     'legacy', '[TEST_SEED] Markus TP1 test from admin')
+                     %s, %s)
                 RETURNING id
             """, (tenant_id, direction, entry, tp1_price, sl_price, tp1_price, pips_secured,
-                  fake_tg_msg_id, fake_tp1_msg_id))
+                  fake_tg_msg_id, fake_tp1_msg_id, seed_bot_type, seed_notes))
             row = cursor.fetchone()
             conn.commit()
             signal_id = int(row[0])

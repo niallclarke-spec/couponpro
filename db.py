@@ -4902,7 +4902,8 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                 cursor.execute("""
                     SELECT telegram_message_id, tp1_message_id, tp2_message_id, tp3_message_id,
                            signal_type, pair, entry_price, take_profit, take_profit_2, take_profit_3,
-                           result_pips, close_price, posted_at
+                           result_pips, close_price, posted_at,
+                           bot_type, notes
                     FROM forex_signals
                     WHERE tenant_id = %s
                       AND telegram_message_id IS NOT NULL
@@ -4924,6 +4925,8 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                 take_profit_3 = row[9]
                 result_pips = row[10]
                 posted_at = row[12]
+                signal_bot_type = row[13] or 'legacy'
+                signal_notes = (row[14] or '').strip()
 
                 message_id = None
                 tp_level_hit = None
@@ -4978,6 +4981,16 @@ def get_bump_signal_context(tenant_id: str, preset: str) -> tuple:
                         context_parts.append(f"Posted: {age_minutes} min ago")
                     else:
                         context_parts.append(f"Posted: {age_minutes // 60}h {age_minutes % 60}min ago")
+
+                # Strategy read — what the bot was actually doing on this trade
+                bt_label = signal_bot_type.replace('_', ' ')
+                read_note = signal_notes
+                if read_note.startswith('[TEST_SEED]'):
+                    read_note = read_note[len('[TEST_SEED]'):].strip()
+                if read_note:
+                    context_parts.append(f"Strategy read: {bt_label} — {read_note}")
+                elif bt_label and bt_label != 'legacy':
+                    context_parts.append(f"Strategy read: {bt_label}")
 
                 return message_id, "\n".join(context_parts)
 

@@ -6432,6 +6432,10 @@
                                     <label>Pips secured</label>
                                     <input type="number" step="0.1" id="aim-tp1-pips" placeholder="28">
                                 </div>
+                                <div class="ai-test-field" style="grid-column: 1 / -1;">
+                                    <label>Strategy read <span class="ai-test-hint">(why the trade worked — blank = default trend pullback read)</span></label>
+                                    <input type="text" id="aim-tp1-reason" placeholder="e.g. RSI dip-recovery confirmed, EMA200 holding, engulfing trigger" maxlength="240">
+                                </div>
                             </div>
                             <button class="btn-primary ai-test-btn" onclick="aimFireTp1()">Fire TP1 Win →</button>
                         </div>
@@ -6462,6 +6466,10 @@
                                     <label>Pips 7d <span class="ai-test-hint">(blank = real)</span></label>
                                     <input type="number" step="0.1" id="aim-morn-p7d" placeholder="Real DB value">
                                 </div>
+                                <div class="ai-test-field" style="grid-column: 1 / -1;">
+                                    <label>Active strategy brief <span class="ai-test-hint">(what we're hunting today — blank = auto from active bot)</span></label>
+                                    <input type="text" id="aim-morn-strat" placeholder="e.g. Trend Pullback. Need 1H EMA200 trend + 15M RSI dip 38-48 + engulfing recovery." maxlength="240">
+                                </div>
                             </div>
                             <button class="btn-primary ai-test-btn" onclick="aimFireMorning()">Fire Morning Macro →</button>
                         </div>
@@ -6483,6 +6491,10 @@
                                 <div class="ai-test-field">
                                     <label>Pips 7d <span class="ai-test-hint">(blank = real)</span></label>
                                     <input type="number" step="0.1" id="aim-eod-p7d" placeholder="Real DB value">
+                                </div>
+                                <div class="ai-test-field" style="grid-column: 1 / -1;">
+                                    <label>Today's winning reads <span class="ai-test-hint">(why today's wins worked — blank = auto from today's green signals)</span></label>
+                                    <input type="text" id="aim-eod-reads" placeholder="e.g. Two pullback entries on RSI recovery, both held EMA200 trend." maxlength="240">
                                 </div>
                             </div>
                             <button class="btn-primary ai-test-btn" onclick="aimFireEod()">Fire EoD Recap →</button>
@@ -9576,6 +9588,7 @@
                 entry_price: _aimFieldVal('aim-tp1-entry'),
                 tp1_price: _aimFieldVal('aim-tp1-tp'),
                 pips_secured: _aimFieldVal('aim-tp1-pips'),
+                strategy_reason: _aimFieldVal('aim-tp1-reason'),
             };
             _aimFire(
                 '/api/crosspromo/test-markus-tp1',
@@ -9591,6 +9604,7 @@
                 xau_change_pct: _aimFieldVal('aim-morn-chg'),
                 pips_today: _aimFieldVal('aim-morn-ptoday'),
                 pips_7d: _aimFieldVal('aim-morn-p7d'),
+                strategy_brief: _aimFieldVal('aim-morn-strat'),
             };
             _aimFire(
                 '/api/crosspromo/test-markus-morning',
@@ -9604,6 +9618,7 @@
             const body = {
                 pips_today: _aimFieldVal('aim-eod-ptoday'),
                 pips_7d: _aimFieldVal('aim-eod-p7d'),
+                strategy_reason: _aimFieldVal('aim-eod-reads'),
             };
             _aimFire(
                 '/api/crosspromo/test-markus-eod',
