@@ -269,7 +269,7 @@ def _get_arc_instruction(step: int, total: int) -> str:
                     "TRUTH RULE: never fabricate counts, never invent win rates, never invent member "
                     "numbers. Quiet certainty, never hypey. Still in scene. NO CTA button, NO link.")
         if step == 3:
-            return ("MESSAGE 3 of 3 — THE SALES CLOSE (posted ~5 min after #2). This is the conversion "
+            return ("MESSAGE 3 of 3 — THE SALES CLOSE (posted ~3 min after #2). This is the conversion "
                     "moment. The Join VIP + Chat with Us buttons fire under THIS message. Make the "
                     "body earn the click.\n"
                     "Do NOT repeat ANY opener, structure, or closing line from messages 1 or 2.\n"
