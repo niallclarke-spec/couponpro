@@ -545,107 +545,15 @@ This is the kind of precision you can expect every day in VIP.
 👉 <a href="{cta_url}">Join VIP Members – Where Precision Meets Profit</a>"""
 
 
-def generate_forward_promo_message(pips_secured: float = None, tp_number: int = 1) -> str:
-    """
-    Generate an AI-powered promotional message for forwarded VIP signals.
-    Short, motivational, with emojis - emphasizes this was sent earlier in VIP.
-    """
-    import os
-    from openai import OpenAI
-    
-    try:
-        api_key = os.environ.get("AI_INTEGRATIONS_OPENAI_API_KEY")
-        base_url = os.environ.get("AI_INTEGRATIONS_OPENAI_BASE_URL")
-        
-        if not api_key or not base_url:
-            return _fallback_promo_message(pips_secured, tp_number)
-        
-        client = OpenAI(api_key=api_key, base_url=base_url)
-        
-        pips_context = f" VIP members just secured {pips_secured:+.0f} pips on this signal." if pips_secured else ""
-        
-        if tp_number == 1:
-            tp_context = "This signal just hit its FIRST take-profit target in VIP."
-            example = "Another win for our VIP fam! 🔥 This signal was live in VIP hours ago. Our members are stacking pips daily 💰"
-        elif tp_number == 2:
-            tp_context = "This signal just hit its SECOND take-profit target in VIP — and it's STILL running toward TP3!"
-            example = "TP2 smashed! 🔥 This signal is STILL running in VIP. Our members are riding this one all the way 💰"
-        else:
-            tp_context = "This signal just hit ALL THREE take-profit targets in VIP — FULL TARGET! Maximum gains secured!"
-            example = "CLEAN SWEEP! 🏆 All 3 targets hit on this one! VIP members just banked maximum gains 💰🔥"
-        
-        prompt = f"""Write a SHORT (2-3 lines max) promotional message for a Telegram forex signals channel.
-
-Context: This message will appear AFTER we forward a winning VIP signal to our FREE channel. {tp_context}{pips_context}
-
-Key points to convey:
-- This signal was sent earlier in our VIP group
-- VIP members are already profiting from signals like this
-- Create FOMO to encourage joining VIP
-- Use 2-3 relevant emojis (fire, money, chart, rocket, trophy)
-- Keep it punchy and motivational
-- Don't use hashtags
-- Don't mention specific prices or exact times
-
-Example tone: "{example}"
-
-Write ONLY the message, nothing else:"""
-
-        # the newest OpenAI model is "gpt-5" which was released August 7, 2025.
-        # do not change this unless explicitly requested by the user
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=150
-        )
-        
-        message = response.choices[0].message.content.strip()
-        
-        if len(message) > 10:
-            return message
-        else:
-            return _fallback_promo_message(pips_secured, tp_number)
-            
-    except Exception as e:
-        logger.warning(f"AI promo message generation failed: {e}")
-        return _fallback_promo_message(pips_secured, tp_number)
-
-
-def _fallback_promo_message(pips_secured: float = None, tp_number: int = 1) -> str:
-    """Fallback promo messages when AI is unavailable, differentiated by TP level."""
-    import random
-    
-    if tp_number == 2:
-        messages = [
-            "🔥 TP2 smashed! This signal is STILL running in VIP. Our members are riding this all the way 💰",
-            "💎 Second target hit and counting! VIP members are stacking pips on this one 🚀",
-            "⚡ TP2 locked in! VIP members are letting the rest ride to TP3. Want in? 📈",
-            "🏆 Two targets down, one to go! VIP members are banking while you watch 💪",
-            "🎯 Another target falls! VIP signals just keep delivering. Don't miss the next one 🔥",
-        ]
-    elif tp_number == 3:
-        messages = [
-            "🏆 CLEAN SWEEP! All 3 targets hit! VIP members just banked maximum gains 💰🔥",
-            "🔥 FULL TARGET! Every single TP smashed! This is what VIP precision looks like 💎",
-            "💰 All three targets destroyed! VIP members rode this one from start to finish 🚀",
-            "⚡ Triple threat! TP1, TP2, TP3 — ALL HIT! VIP members are eating GOOD 🏆",
-            "🎯 Maximum extraction! Every pip captured on this one. VIP delivers again 💪🔥",
-        ]
-    else:
-        messages = [
-            "🔥 Another win for VIP! This signal was live in VIP earlier today. Our members are stacking pips daily 💰",
-            "💎 VIP members caught this one early! Join us and never miss a winning signal again 🚀",
-            "🏆 This is what VIP looks like! Our members had this signal hours ago. Ready to join the winners? 💪",
-            "⚡ VIP members are eating GOOD! This signal hit while you were waiting. Time to upgrade? 📈",
-            "🎯 Precision signals, real profits! VIP members secured this win earlier. Don't miss the next one 🔥",
-        ]
-    
-    base = random.choice(messages)
-    
-    if pips_secured and pips_secured > 0:
-        base = f"+{pips_secured:.0f} pips secured! " + base
-    
-    return base
+# NOTE: generate_forward_promo_message and _fallback_promo_message were
+# removed in the AI Voice Unification pass. Those functions ran a second,
+# unmoderated OpenAI call (no system prompt, mandated emojis + FOMO) right
+# after every TP forward, producing off-voice "VIP members are eating GOOD"
+# style intruder bubbles that clashed with the Markus arc. The TP1 forward
+# sequence now relies entirely on:
+#   1. The forwarded VIP signal + TP-hit message (the receipt)
+#   2. The 3-message Markus arc fired via trigger_flow_from_cta()
+# This keeps a single, validated voice on the FREE channel.
 
 
 # ============================================================================
@@ -786,49 +694,10 @@ def get_fallback_hype_message() -> str:
     return random.choice(messages)
 
 
-def generate_tp3_hype_message() -> str:
-    """
-    Generate a short AI-powered hype message for TP3 (full target) hit.
-    Falls back to static message if OpenAI fails.
-    """
-    fallback_messages = [
-        "🔥 Full target reached! Another perfect trade in VIP!",
-        "🎯 Boom! That's how we do it in VIP! Full TP hit!",
-        "💰 Another winner! VIP members just banked gains!",
-        "🚀 Clean sweep! All targets hit! That's VIP precision!",
-        "✨ Perfect execution! Full profit locked in!"
-    ]
-    
-    import random
-    try:
-        from openai import OpenAI
-        client = OpenAI()
-        
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a hype-man for a forex trading VIP channel. Generate ONE short, exciting celebration message (max 15 words) for hitting a full take-profit target on gold (XAU/USD). Use 1-2 emojis. Be energetic but professional. No hashtags."
-                },
-                {
-                    "role": "user", 
-                    "content": "Generate a hype message celebrating a full target hit on gold."
-                }
-            ],
-            max_tokens=50,
-            temperature=0.9
-        )
-        
-        content = response.choices[0].message.content
-        message = content.strip() if content else random.choice(fallback_messages)
-        logger.info(f"AI generated TP3 hype: {message}")
-        return message
-        
-    except Exception as e:
-        logger.warning(f"OpenAI hype generation failed, using fallback: {e}")
-        import random
-        return random.choice(fallback_messages)
+# NOTE: generate_tp3_hype_message was removed in the AI Voice Unification pass.
+# It ran a third independent OpenAI call ("you are a hype-man... use emojis,
+# be energetic") that contradicted the Markus voice. TP3 hits now rely on the
+# forwarded TP3 message itself plus any Markus flow you wire to that event.
 
 
 def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
@@ -945,12 +814,10 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not tp1_result.get('success'):
             return {"success": False, "error": f"Forward TP1 failed: {tp1_result.get('error')}"}
         
-        # Send AI-generated promo message after the forwards
-        promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=1)
-        promo_result = send_message(bot_token, free_channel_id, promo_message)
-        if not promo_result.get('success'):
-            logger.warning(f"Promo message failed but forwards succeeded: {promo_result.get('error')}")
-        
+        # NOTE: rogue promo bubble removed. The forwarded VIP signal + TP1
+        # message is the receipt; the Markus 3-arc (fired via trigger_flow_from_cta
+        # at finish_crosspromo) is the only voice on the FREE channel after a win.
+
         # Mark signal as cross-promo started
         if signal_id:
             update_crosspromo_status(signal_id, 'started', tenant_id)
@@ -972,17 +839,10 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         if not fwd_result.get('success'):
             return {"success": False, "error": f"Forward TP{tp_num} failed: {fwd_result.get('error')}"}
         
-        if tp_num == 3:
-            hype_message = generate_tp3_hype_message()
-            hype_result = send_message(bot_token, free_channel_id, hype_message)
-            if not hype_result.get('success'):
-                logger.warning(f"TP3 hype message failed but forward succeeded: {hype_result.get('error')}")
-        
-        promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=tp_num)
-        promo_result = send_message(bot_token, free_channel_id, promo_message)
-        if not promo_result.get('success'):
-            logger.warning(f"Promo message failed but TP{tp_num} forwarded: {promo_result.get('error')}")
-        
+        # NOTE: rogue TP3 hype + per-TP promo bubbles removed (AI Voice
+        # Unification). The forwarded TP message is the receipt — voice
+        # consistency comes from the Markus arcs wired to those events.
+
         logger.info(f"TP{tp_num} update forwarded: tp_msg={tp_message_id}")
         return {"success": True}
     
@@ -1307,25 +1167,15 @@ def get_morning_preview(tenant_id: str) -> str:
 
 def send_test_forward_promo(tenant_id: str, pips_secured: float = 179.0) -> Dict[str, Any]:
     """
-    Send a test AI-generated promo message to the free channel.
-    Simulates what would be sent after forwarding a winning signal.
+    DEPRECATED — the standalone forward-promo bubble was removed in the AI
+    Voice Unification pass. Use send_test_markus_tp1_realistic() instead,
+    which fires the real TP1 Win Markus 3-arc through the production
+    codepath (trigger_flow_from_cta).
     """
-    try:
-        credentials = get_bot_credentials(tenant_id, "signal_bot")
-        bot_token = credentials['bot_token']
-        free_channel_id = credentials.get('free_channel_id')
-    except BotNotConfiguredError as e:
-        return {"success": False, "error": str(e)}
-    
-    if not free_channel_id:
-        return {"success": False, "error": "Free channel not configured. Set it in Connections → Signal Bot."}
-    
-    promo_message = generate_forward_promo_message(pips_secured=pips_secured, tp_number=1)
-    result = send_message(bot_token, free_channel_id, promo_message)
-    
-    if result.get('success'):
-        return {"success": True, "message_sent": promo_message}
-    return result
+    return send_test_markus_tp1_realistic(
+        tenant_id,
+        overrides={"pips_secured": float(pips_secured)},
+    )
 
 
 def send_test_cta(tenant_id: str) -> Dict[str, Any]:

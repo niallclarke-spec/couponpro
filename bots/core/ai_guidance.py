@@ -2,10 +2,28 @@
 AI Guidance System
 Generates intelligent trade guidance using OpenAI
 Provides breakeven recommendations, mid-trade updates, and close guidance
+
+Voice: Markus-aligned VIP-desk voice — quiet certainty, no emojis, no hype.
+Single voice across the brand (FREE channel hypechat + VIP mid-trade updates).
 """
 import os
 from typing import Dict, Any, Optional
 from openai import OpenAI
+
+
+# Shared system prompt for every AI call in this module so all VIP-channel
+# trade updates speak in the same Markus-aligned voice. Mirrors the bans
+# enforced in domains/hypechat/service.py SYSTEM_PROMPT.
+_VIP_DESK_VOICE = (
+    "You write VIP-channel trade updates for a XAU/USD desk. "
+    "Voice: quiet certainty. Calm, restrained, low-volume. "
+    "Periods, not exclamation marks. NO emojis. NO hype words "
+    "(massive, insane, monster, parabolic, smashed, crushed). "
+    "NO shame words (sidelines, spectator, 'watching from outside'). "
+    "Real-trader cadence — short lines, sentence fragments OK. "
+    "Reference the technical read (RSI, EMA, ADX, the pullback, the breakout) "
+    "when it fits. Never invent prices or numbers — only use what's given."
+)
 
 
 class AIGuidance:
@@ -38,7 +56,7 @@ class AIGuidance:
         
         if self.client:
             try:
-                prompt = f"""You are a professional forex trading analyst. Generate a brief, confident update for traders about a trade that's been open for {hours_elapsed:.1f} hours.
+                prompt = f"""Live trade — running {hours_elapsed:.1f} hours, no TP or SL hit yet.
 
 Trade details:
 - Direction: {signal_type}
@@ -46,18 +64,16 @@ Trade details:
 - Current Price: ${current_price:.2f}
 - Current P/L: {current_pips:+.2f} pips
 
-The trade has been open for over 4 hours without hitting TP or SL. We're moving the stop loss to breakeven (entry price) to protect the trade.
+We are moving the stop loss to breakeven (entry price) — the trade goes risk-free from here.
 
-Write a 2-3 sentence update that:
-1. Acknowledges the trade situation
-2. Explains we're moving SL to breakeven to protect gains/minimize risk
-3. Maintains confident, professional tone
-
-Do not use emojis. Keep it concise and professional."""
+Write a 2-3 sentence update in the Markus voice that names the SL-to-breakeven move and what it protects. Quiet certainty. No emojis."""
 
                 response = self.client.chat.completions.create(
                     model="gpt-4o",
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[
+                        {"role": "system", "content": _VIP_DESK_VOICE},
+                        {"role": "user", "content": prompt},
+                    ],
                     max_tokens=150,
                     temperature=0.7
                 )
@@ -84,7 +100,7 @@ Do not use emojis. Keep it concise and professional."""
         
         if self.client:
             try:
-                prompt = f"""You are a professional forex trading analyst. Generate a brief mid-trade update for traders.
+                prompt = f"""Mid-trade status check.
 
 Trade details:
 - Direction: {signal_type}
@@ -93,15 +109,14 @@ Trade details:
 - Current P/L: {current_pips:+.2f} pips
 - Time in trade: {hours_elapsed:.1f} hours
 
-Write a 2 sentence status update that:
-1. Reports current position status
-2. Maintains confidence in the trade thesis
-
-Do not use emojis. Keep it brief and professional."""
+Write a 1-2 sentence status update in the Markus voice. Where price sits vs entry, the read still holding. Quiet certainty. No emojis."""
 
                 response = self.client.chat.completions.create(
                     model="gpt-4o",
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[
+                        {"role": "system", "content": _VIP_DESK_VOICE},
+                        {"role": "user", "content": prompt},
+                    ],
                     max_tokens=100,
                     temperature=0.7
                 )
@@ -127,16 +142,16 @@ Do not use emojis. Keep it brief and professional."""
         if self.client:
             try:
                 if action == 'tp_hit':
-                    tone = "celebratory and confident"
-                    context = "Take Profit hit - successful trade"
+                    nuance = "Quiet certainty, mild satisfaction — the read worked, the process held. No celebration theatrics."
+                    context = "Take Profit hit — clean execution."
                 elif action == 'sl_hit':
-                    tone = "professional and composed"
-                    context = "Stop Loss hit - risk was managed properly"
+                    nuance = "Composed, matter-of-fact. Risk was planned and respected. Onwards to the next setup."
+                    context = "Stop Loss hit — risk was managed properly."
                 else:
-                    tone = "matter-of-fact and professional"
-                    context = f"Trade closed at 5-hour timeout with {pips:+.2f} pips"
-                
-                prompt = f"""You are a professional forex trading analyst. Generate a trade close message.
+                    nuance = "Matter-of-fact, no drama. The clock ran out, the trade is closed."
+                    context = f"Trade closed at 5-hour timeout with {pips:+.2f} pips."
+
+                prompt = f"""Trade close — write a 2-3 sentence close note in the Markus voice.
 
 Trade result:
 - Direction: {signal_type}
@@ -145,16 +160,15 @@ Trade result:
 - Result: {pips:+.2f} pips ({status.upper()})
 - Context: {context}
 
-Write a 2-3 sentence close message that:
-1. Reports the final result
-2. Maintains {tone} tone
-3. Looks forward to next opportunity
-
-Do not use emojis. Keep it professional."""
+Tone nuance: {nuance}
+Quiet certainty. No emojis. No hype. Brief look-forward to the next setup is fine."""
 
                 response = self.client.chat.completions.create(
                     model="gpt-4o",
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[
+                        {"role": "system", "content": _VIP_DESK_VOICE},
+                        {"role": "user", "content": prompt},
+                    ],
                     max_tokens=120,
                     temperature=0.7
                 )

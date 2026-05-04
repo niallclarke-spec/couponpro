@@ -201,39 +201,168 @@ def build_context(tenant_id: str, signal_context: str = None) -> str:
     Hard rule: NEVER include "no signals" / "zero" / "quiet day" lines. If a
     number isn't strong enough to brag about, we simply omit it from context
     so the model can't echo it back as a negative.
+
+    Each pip number is wrapped in a hard-labeled block with explicit
+    "TIME WINDOW" + "DO NOT call this 'today'" framing. This prevents the
+    label-fusion bug where GPT would read "Positive streak (past 7 days):
+    +734.5" and write "Today: +734.5 over the last 7 days".
     """
     from domains.crosspromo.repo import get_net_pips_today_utc
 
     try:
-        context_parts = []
+        blocks = []
 
         pips_today = get_net_pips_today_utc(tenant_id)
         if pips_today > 0:
-            context_parts.append(f"Pips earned today: {_fmt_pips(pips_today)}")
+            blocks.append(
+                "=== PIP NUMBER #1 ===\n"
+                f"VALUE: {_fmt_pips(pips_today)} pips\n"
+                "TIME WINDOW: TODAY (UTC calendar day)\n"
+                "HOW TO REFERENCE THIS: 'Today: +X' / 'today's +X' / "
+                "'we banked +X today'\n"
+                "=== END PIP NUMBER #1 ==="
+            )
         # If today is 0 or negative, omit entirely — model is forbidden from
         # mentioning empty/red days (see SYSTEM_PROMPT).
 
         streak = _pick_positive_streak(tenant_id)
         if streak:
-            context_parts.append(
-                f"Positive streak to highlight ({streak['label']}): {_fmt_pips(streak['pips'])} pips"
+            label = streak['label']  # 'yesterday' / 'past 7 days' / 'past 14 days'
+            blocks.append(
+                "=== PIP NUMBER #2 (STREAK WINDOW) ===\n"
+                f"VALUE: {_fmt_pips(streak['pips'])} pips\n"
+                f"TIME WINDOW: {label.upper()}\n"
+                "DO NOT call this 'today' or 'today's pips' — "
+                f"it covers {label}, not today.\n"
+                "HOW TO REFERENCE THIS: "
+                f"'{label.capitalize()}: +X' / 'over the {label}: +X' / "
+                f"'the room is +X across the {label}'\n"
+                "If you also reference PIP NUMBER #1, the format is:\n"
+                f"  'Today: +<#1>. {label.capitalize()}: +<#2>.'\n"
+                f"NEVER write: 'Today: +<#2>' — that number is {label}, not today.\n"
+                "=== END PIP NUMBER #2 ==="
             )
 
         if signal_context:
-            if context_parts:
-                context_parts.append("")
-            context_parts.append(signal_context)
+            blocks.append("=== LIVE SIGNAL ===\n" + signal_context.strip() + "\n=== END LIVE SIGNAL ===")
 
-        if not context_parts:
+        if not blocks:
             # Genuinely nothing to say — return a minimal placeholder rather
             # than empty so the prompt still has structure. Model is told below
             # that absence of numbers means: don't invent any.
             return "(No performance numbers to share right now — focus on the live signal context only.)"
 
-        return "\n".join(context_parts)
+        return "\n\n".join(blocks)
     except Exception as e:
         logger.warning(f"Error building context: {e}")
         return "Performance data currently unavailable"
+
+
+# ============================================================================
+# POST-GENERATION VALIDATOR — programmatic guardrail layer
+# ============================================================================
+# The SYSTEM_PROMPT bans phrases textually, but GPT routinely violates ban
+# lists by finding synonyms ("from the sidelines" -> "watching from outside").
+# This validator runs AFTER each generation and triggers a regeneration with
+# a corrective system message when violations are detected. Caps at 2 retries
+# to bound token spend, then falls back to a curated static line.
+
+import re
+
+# Pattern families — covers synonym drift, not just the literal banned phrase.
+_BANNED_PATTERNS = [
+    (re.compile(r'\bsidelin\w*\b', re.IGNORECASE), "'sidelines' family"),
+    (re.compile(r'\bspectator\w*\b', re.IGNORECASE), "'spectator' family"),
+    (re.compile(r'\bwatching from\b', re.IGNORECASE), "'watching from'"),
+    (re.compile(r'\bstop watching\b', re.IGNORECASE), "'stop watching'"),
+    (re.compile(r'\bstart participating\b', re.IGNORECASE), "'start participating'"),
+    (re.compile(r'\banother\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b', re.IGNORECASE),
+        "'another <weekday>' shame frame"),
+    (re.compile(r'\bthe room (keeps|is) moving\b', re.IGNORECASE), "'the room keeps/is moving'"),
+    (re.compile(r'\bthe room is (already )?at the desk\b', re.IGNORECASE), "'the room is at the desk'"),
+    # Only fires when "door's open" is the WHOLE clause — abstract poetry.
+    # Contextual uses like "door's open below" or "door's open — tap VIP" are
+    # acceptable invite phrasing and explicitly survive this pattern.
+    (re.compile(r"(^|[\.\!\?\n])\s*(the\s+)?door'?s? (is )?open\s*[\.\!\?\n]", re.IGNORECASE),
+        "'door is open' as a standalone abstract closer"),
+    (re.compile(r'\bstep inside\b', re.IGNORECASE), "'step inside'"),
+    (re.compile(r'\binner circle\b', re.IGNORECASE), "'inner circle'"),
+    (re.compile(r'\bwhile you (were sleeping|watched|waited)\b', re.IGNORECASE), "'while you were ...' shame"),
+    (re.compile(r'\brunners\b', re.IGNORECASE), "'runners' (BANNED concept)"),
+    (re.compile(r'\bdon\'?t (stay|sit) on\b', re.IGNORECASE), "'don\'t stay on ...' shame"),
+    (re.compile(r'\beating good\b', re.IGNORECASE), "'eating good' (rogue old prompt language)"),
+    (re.compile(r'[\U0001F300-\U0001FAFF\U00002600-\U000027BF]', re.UNICODE), "emoji in body"),
+    (re.compile(r'\b(massive|insane|monster|parabolic)\b', re.IGNORECASE), "hype words"),
+]
+
+# Label-fusion: detect when the model writes "today" near a pip number AND
+# qualifies that SAME pip number with a multi-day window — i.e. the bug case
+# "Today: +734.5 over the last 7 days" where +734.5 was actually the 7-day
+# streak, not today's pips.
+#
+# Critical: legitimate two-metric constructions like
+#   "Today: +47. Past 7 days: +734."
+# must SURVIVE — they correctly attribute each number to its own window. We
+# enforce this by requiring NO sentence break (period / newline / "."  before
+# "Past N days") between "today" and the multi-day phrase.
+_LABEL_FUSION_PATTERNS = [
+    # "today ... <pips> ... over/across/in the (last|past) 7 days" with NO
+    # period/newline between — this is the fusion case. The two-metric form
+    # always uses a period, so this won't match it.
+    re.compile(
+        r'\btoday[^.\n]{0,60}[+-]?\s*[\d,.]+\s*(pips?\s*)?[^.\n]{0,40}\b(over|across|in)\s+the\s+(last|past)\s+(7|seven|14|fourteen)\s+days?',
+        re.IGNORECASE,
+    ),
+    # "today's ... over/across the past N days" — same shape, no number gap.
+    re.compile(
+        r"\btoday'?s\b[^.\n]{0,60}\b(over|across|in)\s+the\s+(past|last)\s+(7|seven|14|fourteen)\s+days?",
+        re.IGNORECASE,
+    ),
+]
+
+# Curated last-resort fallback — used only if the model fails validation
+# twice in a row. Quiet certainty, no banned phrases, no emojis.
+_FALLBACK_LINES = [
+    "Same setup the desk has been hunting all week. VIP got the alert at entry, free is reading the close. Tap below for the next entry, in real time.",
+    "Receipts on the board. VIP took this trade live — exact entry, exact stop, TP alerts. Free saw the headline. The next entry is one tap below.",
+    "Took years to learn to wait for this kind of confluence. Now it's a process. VIP gets every entry alert; free gets the recap. Tap below to be in the room.",
+]
+
+
+def _validate_message(message: str, context: str) -> Optional[str]:
+    """Return None if message is clean; otherwise a short reason string.
+
+    The reason string is fed back into the regeneration prompt as a corrective
+    system message so the model knows exactly what to fix.
+    """
+    if not message or len(message.strip()) < 10:
+        return "Message was empty or too short."
+
+    for pattern, label in _BANNED_PATTERNS:
+        m = pattern.search(message)
+        if m:
+            return (
+                f"Your last draft contained {label} (matched: '{m.group(0)}'). "
+                "This is on the BANNED list. Rewrite the message without that phrase, "
+                "concept, or any synonym. Quiet certainty only."
+            )
+
+    for pattern in _LABEL_FUSION_PATTERNS:
+        m = pattern.search(message)
+        if m:
+            return (
+                f"Your last draft fused 'today' with a streak-window pip number "
+                f"(matched: '{m.group(0)}'). Each pip number in the LIVE CONTEXT "
+                "block has its own TIME WINDOW label. NEVER call a 7-day or 14-day "
+                "number 'today'. If you reference both, format strictly as: "
+                "'Today: +<today's #>. Past 7 days: +<streak #>.'"
+            )
+
+    return None
+
+
+def _fallback_line() -> str:
+    return random.choice(_FALLBACK_LINES)
 
 
 _OPENER_ANGLES = [
@@ -368,19 +497,56 @@ Write ONLY the Telegram message body. No preface, no explanation, no link, no em
 
             conversation.append({"role": "user", "content": user_prompt})
 
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=conversation,
-                max_tokens=220,
-            )
+            # Generate + validate + regenerate up to 2 retries.
+            # Each retry pushes a corrective system message so the model
+            # knows exactly which rule it broke.
+            message = ""
+            attempt_conversation = list(conversation)
+            MAX_ATTEMPTS = 3  # initial + 2 retries
+            for attempt in range(1, MAX_ATTEMPTS + 1):
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=attempt_conversation,
+                    max_tokens=220,
+                )
 
-            message = response.choices[0].message.content.strip()
+                candidate = (response.choices[0].message.content or "").strip()
 
-            if len(message) < 10 or len(message) > 2100:
-                logger.warning(f"Generated message {step}/{message_count} length out of range: {len(message)}")
-                message = ""
+                if len(candidate) < 10 or len(candidate) > 2100:
+                    logger.warning(
+                        f"Generated message {step}/{message_count} length out of range: "
+                        f"{len(candidate)} (attempt {attempt}/{MAX_ATTEMPTS})"
+                    )
+                    candidate = ""
+
+                violation = _validate_message(candidate, context) if candidate else "Empty draft."
+                if not violation:
+                    message = candidate
+                    break
+
+                logger.info(
+                    f"Markus validator rejected step {step} attempt {attempt}: {violation}"
+                )
+
+                if attempt < MAX_ATTEMPTS:
+                    # Push the rejected draft + corrective message into the
+                    # conversation for the retry. Use system role so the
+                    # correction has higher salience than another user turn.
+                    attempt_conversation.append({"role": "assistant", "content": candidate})
+                    attempt_conversation.append({"role": "system", "content": violation})
+                else:
+                    # Exhausted retries — fall back to a curated static line so
+                    # we ship SOMETHING in the Markus voice rather than a
+                    # banned-phrase draft or an empty bubble.
+                    logger.warning(
+                        f"Markus validator exhausted {MAX_ATTEMPTS} attempts for "
+                        f"step {step}/{message_count} — using static fallback line."
+                    )
+                    message = _fallback_line()
 
             messages_result.append(message)
+            # Keep the *accepted* assistant message in the running conversation
+            # so subsequent steps see the actual arc, not the rejected drafts.
             conversation.append({"role": "assistant", "content": message})
 
         logger.info(f"Generated sequence of {len(messages_result)} messages for tenant {tenant_id}")

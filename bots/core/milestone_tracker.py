@@ -252,21 +252,37 @@ class MilestoneTracker:
             try:
                 # the newest OpenAI model is "gpt-5" which was released August 7, 2025.
                 # do not change this unless explicitly requested by the user
+                # Markus-aligned voice (quiet certainty, no emojis, no hype).
+                # Single voice across FREE channel arcs (hypechat) and VIP
+                # mid-trade updates so the brand doesn't sound like two bots.
                 response = self.openai_client.chat.completions.create(
                     model="gpt-5",
                     messages=[{
                         "role": "system",
-                        "content": "You are a professional forex trading assistant. Generate a short, motivational 1-2 sentence message for traders. Be positive but professional. No emojis in the text itself. Keep it under 100 characters."
+                        "content": (
+                            "You write VIP-channel mid-trade updates for a XAU/USD desk. "
+                            "Voice: quiet certainty. Calm, restrained, low-volume. "
+                            "Periods, not exclamation marks. NO emojis. NO hype words "
+                            "(massive, insane, monster, parabolic). NO shame words "
+                            "(sidelines, spectator, watching from). Real-trader cadence — "
+                            "one or two short lines, max ~100 characters total. "
+                            "Reference the technical read (RSI, EMA, ADX, the pullback) "
+                            "where it fits, never invented numbers."
+                        )
                     }, {
-                        "role": "user", 
-                        "content": f"Our gold {direction} trade is up +{current_pips:.2f} pips, {progress:.0f}% toward TP1. Generate a unique motivational message."
+                        "role": "user",
+                        "content": (
+                            f"Live XAU/USD {direction} trade: currently +{current_pips:.2f} pips, "
+                            f"{progress:.0f}% of the way to TP1. Write a single short status "
+                            "line in Markus's quiet-certainty voice — no emojis, no hype."
+                        )
                     }],
                     max_completion_tokens=60
                 )
                 ai_message = response.choices[0].message.content.strip()
             except Exception as e:
                 logger.warning(f"AI message failed: {e}")
-                ai_message = "Trade progressing nicely. Stay focused."
+                ai_message = "Trade working as planned. Sitting with it."
         else:
             ai_message = "Trade progressing nicely. Stay focused."
         
