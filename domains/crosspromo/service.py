@@ -314,16 +314,30 @@ def _sanitize_markus_html(message: str) -> str:
 
 
 def _build_pips_context_lines(pips_today: float, pips_7d: float) -> List[str]:
+    """Build pip stat lines for the Markus context block.
+
+    Hard rule (mirrors build_context in domains/hypechat/service.py): NEVER
+    feed Markus a negative or zero pip total. If a number isn't strong enough
+    to brag about, omit it entirely so the model can't echo it back as a
+    "Down 227 pips today" line that violates the quiet-certainty voice.
+
+    EoD already gates on green day before this is called, so the omission is
+    a no-op there. Morning Macro fires daily regardless of color, so this is
+    the only thing standing between a red day and a self-deprecating leak.
+    """
     from domains.hypechat.service import _fmt_pips
     lines = []
-    if pips_today != 0:
+    if pips_today > 0:
         lines.append(f"Pips earned today: {_fmt_pips(pips_today)}")
-    else:
-        lines.append("No closed signals yet today")
-    if pips_7d != 0:
+    # Today <= 0: omit entirely. Markus is told elsewhere to never invent
+    # numbers, so absence of this line means "don't reference today's pips".
+    if pips_7d > 0:
         lines.append(f"Pips earned past 7 days: {_fmt_pips(pips_7d)}")
-    else:
-        lines.append("No closed signals in the past 7 days")
+    # Same omission rule for the 7-day window.
+    if not lines:
+        # Genuinely nothing positive to share. Tell Markus explicitly so he
+        # focuses on the strategy/setup block instead of inventing pip stats.
+        lines.append("(No positive pip totals to reference today — focus on the live setup and strategy block only.)")
     return lines
 
 
