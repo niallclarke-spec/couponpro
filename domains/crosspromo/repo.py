@@ -10,6 +10,109 @@ from core.logging import get_logger
 logger = get_logger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Markus signal-generation pause
+#
+# Cooperative gate so the forex signal generator skips a scan round while a
+# Markus AI message is being generated and sent. The row's expires_at is a
+# hard safety net: if the Markus job crashes before clearing the pause, the
+# generator resumes automatically when the TTL elapses — signal generation
+# can never be locked out indefinitely.
+# ---------------------------------------------------------------------------
+
+def set_signal_pause(tenant_id: str, reason: str, ttl_seconds: int,
+                     owner_id: Optional[str] = None) -> str:
+    """UPSERT a pause row. Returns the owner_id the caller should pass to
+    `clear_signal_pause` so it only clears its own pause (avoids one Markus
+    surface stomping on another's lock when they overlap).
+
+    UPSERT semantics: if a pause already exists, the latest caller wins —
+    this is intentional. Concurrent Markus jobs are rare, but when they
+    happen we want the most recently-started one to extend the window.
+    """
+    owner_id = owner_id or uuid.uuid4().hex
+    expires_at = datetime.utcnow() + timedelta(seconds=max(1, int(ttl_seconds)))
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            logger.warning("DB pool unavailable; skipping signal pause set")
+            return owner_id
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO markus_signal_pause (tenant_id, reason, owner_id, expires_at)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (tenant_id) DO UPDATE
+                SET reason = EXCLUDED.reason,
+                    owner_id = EXCLUDED.owner_id,
+                    started_at = NOW(),
+                    expires_at = EXCLUDED.expires_at
+            """, (tenant_id, reason, owner_id, expires_at))
+            conn.commit()
+    except Exception as e:
+        logger.exception(f"Failed to set signal pause for {tenant_id}: {e}")
+    return owner_id
+
+
+def clear_signal_pause(tenant_id: str, owner_id: Optional[str] = None) -> bool:
+    """Delete the pause row. If owner_id is given, only delete when it
+    matches — this prevents a stale finally-block from clearing a newer
+    pause owned by a different Markus surface.
+
+    Returns True if a row was deleted.
+    """
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            return False
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            if owner_id:
+                cursor.execute(
+                    "DELETE FROM markus_signal_pause WHERE tenant_id = %s AND owner_id = %s",
+                    (tenant_id, owner_id),
+                )
+            else:
+                cursor.execute(
+                    "DELETE FROM markus_signal_pause WHERE tenant_id = %s",
+                    (tenant_id,),
+                )
+            deleted = cursor.rowcount or 0
+            conn.commit()
+            return deleted > 0
+    except Exception as e:
+        logger.exception(f"Failed to clear signal pause for {tenant_id}: {e}")
+        return False
+
+
+def get_active_signal_pause(tenant_id: str) -> Optional[Dict[str, Any]]:
+    """Return the active pause row (expires_at > NOW()) or None.
+
+    Expired rows are silently ignored — they get cleaned up the next time a
+    new pause UPSERTs over them.
+    """
+    try:
+        if not db.db_pool or not db.db_pool.connection_pool:
+            return None
+        with db.db_pool.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT reason, owner_id, started_at, expires_at
+                FROM markus_signal_pause
+                WHERE tenant_id = %s AND expires_at > NOW()
+            """, (tenant_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "reason": row[0],
+                "owner_id": row[1],
+                "started_at": row[2],
+                "expires_at": row[3],
+            }
+    except Exception as e:
+        logger.exception(f"Failed to read signal pause for {tenant_id}: {e}")
+        return None
+
+
 def get_net_pips_today_utc(tenant_id: str) -> float:
     """
     Get net pips closed during the current UTC calendar day.

@@ -1896,6 +1896,23 @@ class DatabasePool:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_crosspromo_jobs_tenant_status ON crosspromo_jobs(tenant_id, status, run_at)")
                 cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_crosspromo_jobs_dedupe ON crosspromo_jobs(tenant_id, dedupe_key) WHERE dedupe_key IS NOT NULL")
                 logger.info("crosspromo_jobs table ready")
+
+                # markus_signal_pause: cooperative gate that tells the forex
+                # signal generator to skip a scan round while a Markus AI
+                # message is mid-flight (generation + send). One row per
+                # tenant; expires_at is the safety-net TTL so a crashed
+                # Markus job can never lock signal generation forever.
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS markus_signal_pause (
+                        tenant_id VARCHAR PRIMARY KEY,
+                        reason VARCHAR NOT NULL,
+                        owner_id VARCHAR NOT NULL,
+                        started_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                        expires_at TIMESTAMP NOT NULL
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_markus_signal_pause_expires ON markus_signal_pause(expires_at)")
+                logger.info("markus_signal_pause table ready")
                 
                 cursor.execute("""
                     SELECT 1 FROM information_schema.columns 

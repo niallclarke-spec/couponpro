@@ -790,6 +790,52 @@ def get_fallback_hype_message() -> str:
 # forwarded TP3 message itself plus any Markus flow you wire to that event.
 
 
+from contextlib import contextmanager
+
+
+# Default pause TTL per Markus surface (seconds). Sized to comfortably cover
+# OpenAI generation latency + Telegram send round-trip + a small grace
+# window. Conservative: better to skip one 15-min scan than race a Markus
+# narrative with a fresh entry alert.
+_MARKUS_PAUSE_TTL_SHORT = 120  # morning macro / EoD recap (single-message)
+_MARKUS_PAUSE_TTL_HYPE_STEP = 90  # one arc step of the TP1 3-arc
+
+
+@contextmanager
+def _markus_signal_pause(tenant_id: str, reason: str, ttl_seconds: int = _MARKUS_PAUSE_TTL_SHORT):
+    """Context manager that pauses forex signal generation while a Markus AI
+    message is being generated and sent.
+
+    Acquired right BEFORE we call OpenAI; released right AFTER Telegram
+    confirms the send (or raises). The DB row carries an expires_at TTL as
+    a hard safety net — even if this process crashes inside the with-block,
+    signal generation auto-resumes when the TTL elapses.
+
+    Idempotent on failure: we always attempt to clear the pause in finally,
+    but if the clear itself fails we log and let the TTL handle it.
+    """
+    owner_id = repo.set_signal_pause(tenant_id, reason, ttl_seconds)
+    logger.info(
+        f"⏸️ Markus pause acquired for tenant={tenant_id} reason='{reason}' "
+        f"ttl={ttl_seconds}s owner={owner_id[:8]}"
+    )
+    try:
+        yield
+    finally:
+        try:
+            cleared = repo.clear_signal_pause(tenant_id, owner_id)
+            if cleared:
+                logger.info(f"▶️ Markus pause released for tenant={tenant_id} reason='{reason}'")
+            # If not cleared, a newer Markus pause has already taken over —
+            # leave it alone. The TTL on this owner's row was overwritten by
+            # the UPSERT, so there's nothing stale to worry about.
+        except Exception as e:
+            logger.warning(
+                f"Failed to clear Markus pause for {tenant_id} ({reason}): {e} "
+                f"— will auto-expire in <={ttl_seconds}s"
+            )
+
+
 def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
     """
     Execute a cross promo job. Returns result dict with success/error.
@@ -826,11 +872,15 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         return {"success": False, "error": "Free channel ID not configured. Set it in Connections → Signal Bot."}
     
     if job_type == 'morning_news':
-        message = build_markus_morning_message(tenant_id)
-        if not message:
-            return {"success": False, "error": "Morning macro generation returned empty"}
-        result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
-        return result
+        # Pause signal generation around the Morning Macro: the OpenAI call
+        # plus the Telegram send. A fresh VIP entry alert during this
+        # window would step on the morning narrative on the FREE channel.
+        with _markus_signal_pause(tenant_id, 'morning_macro', _MARKUS_PAUSE_TTL_SHORT):
+            message = build_markus_morning_message(tenant_id)
+            if not message:
+                return {"success": False, "error": "Morning macro generation returned empty"}
+            result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
+            return result
     
     elif job_type == 'vip_soon':
         message = build_vip_soon_message()
@@ -955,11 +1005,15 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
             logger.info(f"Skipping Markus EoD - UTC-today net pips {pips_today:+.1f} not green")
             return {"success": True, "skipped": True, "reason": f"Day not green ({pips_today:+.1f} pips)"}
 
-        message = build_markus_eod_message(tenant_id)
-        if not message:
-            return {"success": False, "error": "EoD generation returned empty"}
-        result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
-        return result
+        # Pause signal generation around the EoD send. We acquire the pause
+        # AFTER the green-gate so red days don't waste a pause window for
+        # a message that won't be sent anyway.
+        with _markus_signal_pause(tenant_id, 'eod_recap', _MARKUS_PAUSE_TTL_SHORT):
+            message = build_markus_eod_message(tenant_id)
+            if not message:
+                return {"success": False, "error": "EoD generation returned empty"}
+            result = send_message(bot_token, free_channel_id, message, parse_mode='HTML')
+            return result
 
     elif job_type == 'eod_pip_brag_legacy':
         # Legacy lookback-based brag (kept for manual triggers / back-compat, not scheduled)
@@ -986,13 +1040,19 @@ def send_job(job: Dict[str, Any]) -> Dict[str, Any]:
         step_number = payload.get('step_number', 1)
         custom_prompt = payload.get('custom_prompt', '')
         pre_generated_message = payload.get('pre_generated_message', '')
-        
+
         if not flow_id or not custom_prompt:
             return {"success": False, "error": "Missing flow_id or custom_prompt in hype_message payload"}
-        
+
+        # Pause signal generation around each Markus arc step (one
+        # generation + one send). Between arcs the gap is typically minutes,
+        # so the pause naturally lapses and signals can flow in those gaps —
+        # by intent: the user wanted the pause "while a Markus message is
+        # running", not the entire 30-min flow.
         try:
             from domains.hypechat.service import send_hype_message
-            result = send_hype_message(tenant_id, flow_id, step_number, custom_prompt, pre_generated_message=pre_generated_message)
+            with _markus_signal_pause(tenant_id, f'hype_arc_step{step_number}', _MARKUS_PAUSE_TTL_HYPE_STEP):
+                result = send_hype_message(tenant_id, flow_id, step_number, custom_prompt, pre_generated_message=pre_generated_message)
             return result
         except Exception as e:
             logger.exception(f"Error executing hype_message job: {e}")

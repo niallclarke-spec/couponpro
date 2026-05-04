@@ -105,7 +105,27 @@ class SignalGenerator:
                 if not self.signal_engine.is_trading_hours():
                     logger.info("Outside trading hours (8AM-10PM GMT), skipping signal check")
                     return None
-                
+
+                # Markus pause gate — skip this scan round if a Markus AI
+                # message is mid-flight on the FREE channel. Prevents a
+                # fresh VIP entry alert (and its TP-forward sequence) from
+                # racing with an in-progress Morning Macro / EoD Recap /
+                # TP1 arc. The pause has a hard TTL in DB so a crashed
+                # Markus job can never lock generation indefinitely — the
+                # next 15-min scan will resume normally once it expires.
+                try:
+                    from domains.crosspromo.repo import get_active_signal_pause
+                    pause = get_active_signal_pause(self.tenant_id)
+                except Exception as e:
+                    logger.warning(f"Could not check Markus pause gate: {e}")
+                    pause = None
+                if pause:
+                    logger.info(
+                        f"⏸️ Signal generation paused: {pause['reason']} "
+                        f"(expires {pause['expires_at']} UTC) — skipping this scan round"
+                    )
+                    return None
+
                 pending_signals = self.runtime.get_forex_signals(status='pending')
                 if pending_signals and len(pending_signals) > 0:
                     signal = pending_signals[0]
