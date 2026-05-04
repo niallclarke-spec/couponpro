@@ -293,6 +293,14 @@ _BANNED_PATTERNS = [
     (re.compile(r'\beating good\b', re.IGNORECASE), "'eating good' (rogue old prompt language)"),
     (re.compile(r'[\U0001F300-\U0001FAFF\U00002600-\U000027BF]', re.UNICODE), "emoji in body"),
     (re.compile(r'\b(massive|insane|monster|parabolic)\b', re.IGNORECASE), "hype words"),
+    # Morning Macro failure modes (each previously observed in live previews):
+    # 1) Literal placeholder — model wrote "Yesterday: +X pips" with X intact
+    #    instead of omitting the beat when no real number was available.
+    (re.compile(r'\b(Yesterday|Today|Past\s+\d+\s+days?)\s*:\s*[+\-]?\s*[XN]\b', re.IGNORECASE),
+        "literal '+X' / '+N' placeholder in a pip beat (model invented a fake variable instead of omitting)"),
+    # 2) % sign fused to a pip beat — XAU/USD 24h price change is NOT pips.
+    (re.compile(r'\b(Yesterday|Today|Past\s+\d+\s+days?)\s*:\s*[+\-]?\s*\d[\d,.]*\s*%', re.IGNORECASE),
+        "'%' sign attached to a pip beat (price-change %% is not pips — never fuse the two)"),
 ]
 
 # Label-fusion: detect when the model writes "today" near a pip number AND

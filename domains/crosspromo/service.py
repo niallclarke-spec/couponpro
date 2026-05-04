@@ -171,10 +171,25 @@ def build_morning_news_message(tenant_id: str) -> str:
 
 MARKUS_MORNING_PROMPT = """Write the Morning Macro post for the FREE Telegram channel. ONE message only.
 
+TIME FRAMING (CRITICAL):
 - It is around 06:00 UTC. London opens in ~2 hours, Asia is winding down.
+- TODAY HAS NOT STARTED YET — there are no "today's pips" to reference. The day is ahead of us, not behind us.
+- NEVER write "Today: +X pips" in a Morning Macro.
+
+PIP REFERENCE RULES (READ TWICE):
+- The ONLY pip numbers you may quote are the ones in the "PIP STATS" block in context.
+- If "PIP STATS" lists a "Yesterday's UTC calendar day" line, you may write "Yesterday: +N." using that exact number.
+- If "PIP STATS" lists a "Past 7 UTC days" line, you may write "Past 7 days: +N." using that exact number.
+- NEVER swap labels — the yesterday number goes ONLY with the word "Yesterday", the 7-day number goes ONLY with "Past 7 days".
+- If "PIP STATS" says "(none ...)" or contains a HARD SKIP directive, you write NO "Yesterday: ...", NO "Past 7 days: ...", NO "+X pips" line — skip the pip beat entirely.
+- The "LIVE MARKET DATA" block contains XAU/USD spot and a 24h price change %. The % is a PRICE percentage, NOT pips. NEVER attach "%" to a "Yesterday:" or "Past 7 days:" line. NEVER call a percentage figure "pips".
+- NEVER write a literal placeholder like "+X pips" or "+N pips" — if you don't have a real number, omit the beat.
+
+WHAT TO WRITE:
 - Open with a quiet personal anchor (coffee, cycle to the desk, the desk is awake) — ONE line, not a paragraph.
+- Optional pip beat ONLY if PIP STATS has explicit numbers (see rules above). Format strictly: "Yesterday: +N." or "Past 7 days: +N."
 - The "ACTIVE STRATEGY" block in context tells you exactly what setup the bot is hunting today. Reference THAT setup in plain words — what indicators or conditions you're waiting for, anchored to the live XAU/USD spot from context if a level is implied.
-- High-conviction or low-conviction call. If conviction is low, sit out and say so honestly.
+- High-conviction or low-conviction call. If conviction is low, sit out and say so honestly — but never reference a losing day.
 - Close with a quiet invite — "the room is already at the desk" / "live entries fire in VIP" energy. Never urgency theater.
 
 HARD RULES:
@@ -313,54 +328,111 @@ def _sanitize_markus_html(message: str) -> str:
     return f"{body}\n\n{CTA_LINK_LINE}"
 
 
-def _build_pips_context_lines(pips_today: float, pips_7d: float) -> List[str]:
-    """Build pip stat lines for the Markus context block.
+def _build_eod_pips_context_lines(pips_today: float, pips_7d: float) -> List[str]:
+    """Build pip stat lines for the EoD recap context block.
 
     Hard rule (mirrors build_context in domains/hypechat/service.py): NEVER
-    feed Markus a negative or zero pip total. If a number isn't strong enough
-    to brag about, omit it entirely so the model can't echo it back as a
+    feed Markus a non-positive pip total. If a number isn't strong enough to
+    reference, omit it entirely so the model can't echo it back as a
     "Down 227 pips today" line that violates the quiet-certainty voice.
 
-    EoD already gates on green day before this is called, so the omission is
-    a no-op there. Morning Macro fires daily regardless of color, so this is
-    the only thing standing between a red day and a self-deprecating leak.
+    EoD already gates on green day before this is called, so the today >= 0
+    omission is a no-op in production — but the helper still enforces it as
+    defense-in-depth in case the gate is ever bypassed by a manual call.
     """
     from domains.hypechat.service import _fmt_pips
     lines = []
     if pips_today > 0:
         lines.append(f"Pips earned today: {_fmt_pips(pips_today)}")
-    # Today <= 0: omit entirely. Markus is told elsewhere to never invent
-    # numbers, so absence of this line means "don't reference today's pips".
     if pips_7d > 0:
         lines.append(f"Pips earned past 7 days: {_fmt_pips(pips_7d)}")
-    # Same omission rule for the 7-day window.
     if not lines:
-        # Genuinely nothing positive to share. Tell Markus explicitly so he
-        # focuses on the strategy/setup block instead of inventing pip stats.
-        lines.append("(No positive pip totals to reference today — focus on the live setup and strategy block only.)")
+        lines.append("(No positive pip totals to reference — focus on the live setup and strategy block only.)")
     return lines
 
 
-def _resolve_pips(tenant_id: str, pips_today_override=None, pips_7d_override=None):
-    """Return (pips_today, pips_7d), preferring overrides when provided."""
-    from domains.crosspromo.repo import get_net_pips_over_days
-    pt = pips_today_override if pips_today_override is not None else get_net_pips_over_days(tenant_id, 1)
+def _build_morning_pips_context_lines(pips_yesterday: float, pips_7d: float) -> List[str]:
+    """Build the PIP STATS block for the Morning Macro context.
+
+    Failure modes this guards against (each previously observed in live
+    previews):
+      1. Label-fusion: given one surviving pip number, the model slaps it
+         on a "Yesterday: +X" line regardless of which window it came from.
+      2. Cross-block confusion: the model picks up the XAU/USD 24h price
+         change % and reframes it as "Yesterday: +1.94%" — a % is not pips.
+      3. Hallucinated placeholders: when no numbers are available, the
+         model writes literal "Yesterday: +X pips." with X intact.
+
+    Defenses applied:
+      - One explicit, fully-labeled block ("PIP STATS — UTC CALENDAR DAYS")
+        so labels can't drift.
+      - Each line carries the window in parentheses ("(yesterday's UTC
+        calendar day)") so the model can't substitute one window for
+        another.
+      - When no positive numbers exist, we emit a hard SKIP directive that
+        forbids writing any "Yesterday:" or "Past 7 days:" frame at all.
+    """
+    from domains.hypechat.service import _fmt_pips
+    available = []
+    if pips_yesterday > 0:
+        available.append(f"- Yesterday's UTC calendar day: {_fmt_pips(pips_yesterday)} pips")
+    if pips_7d > 0:
+        available.append(f"- Past 7 UTC days (rolling): {_fmt_pips(pips_7d)} pips")
+
+    header = "PIP STATS (UTC calendar windows — these are the ONLY pip numbers you may reference):"
+    if available:
+        lines = [header] + available
+        lines.append('Format rule: when you reference these, use the EXACT label and number from the line above. Never call yesterday\'s number "Past 7 days" or vice versa. Never attach a "%" sign — these are pips, not price changes.')
+    else:
+        lines = [
+            header,
+            "(none — neither yesterday nor the past 7 days have a positive net pip total to share.)",
+            'HARD SKIP: do NOT write any "Yesterday: ...", "Past 7 days: ...", or "+X pips" line in your output. Do NOT invent a placeholder like "+X". Skip the pip beat entirely and go straight to the active strategy + live spot.',
+        ]
+    return lines
+
+
+def _resolve_eod_pips(tenant_id: str, pips_today_override=None, pips_7d_override=None):
+    """Return (pips_today_utc, pips_past_7_days). Used by EoD recap.
+
+    Today is the strict UTC calendar day (matches the green-gate query).
+    """
+    from domains.crosspromo.repo import get_net_pips_today_utc, get_net_pips_over_days
+    pt = pips_today_override if pips_today_override is not None else get_net_pips_today_utc(tenant_id)
     p7 = pips_7d_override if pips_7d_override is not None else get_net_pips_over_days(tenant_id, 7)
     return pt, p7
+
+
+def _resolve_morning_pips(tenant_id: str, pips_yesterday_override=None, pips_7d_override=None):
+    """Return (pips_yesterday_utc, pips_past_7_days). Used by Morning Macro.
+
+    Yesterday is the previous UTC calendar day (00:00–24:00) — not a rolling
+    24h window — so the number is stable across the whole morning post.
+    """
+    from domains.crosspromo.repo import get_net_pips_yesterday_utc, get_net_pips_over_days
+    py = pips_yesterday_override if pips_yesterday_override is not None else get_net_pips_yesterday_utc(tenant_id)
+    p7 = pips_7d_override if pips_7d_override is not None else get_net_pips_over_days(tenant_id, 7)
+    return py, p7
 
 
 def build_markus_morning_message(
     tenant_id: str,
     xau_spot_override: float = None,
     xau_change_pct_override: float = None,
-    pips_today_override: float = None,
+    pips_today_override: float = None,  # DEPRECATED: kept for back-compat with the
+                                        # admin test console. Routed to yesterday.
     pips_7d_override: float = None,
     strategy_brief_override: str = None,
 ) -> str:
     """Markus-voice Morning Macro post. Uses live XAU/USD as ground truth.
 
-    All overrides optional — when provided, replace the auto-fetched value
-    (used by the AI Messages test console).
+    Pip framing: this is a MORNING post fired at ~06:00 UTC, so the current
+    UTC calendar day has barely started. The post anchors on YESTERDAY'S
+    close and the PAST 7 DAYS — never on "today". The legacy
+    `pips_today_override` arg is mapped to `pips_yesterday_override` so the
+    admin test console still works without a frontend change.
+
+    All overrides optional — when provided, replace the auto-fetched value.
     """
     from domains.hypechat import service as hype_service
     from domains.crosspromo.macro_data import fetch_xau_context
@@ -409,23 +481,26 @@ def build_markus_morning_message(
         strategy_brief = _get_active_strategy_brief(tenant_id)
     strategy_block = f"ACTIVE STRATEGY:\n{strategy_brief}" if strategy_brief else ""
 
-    use_override = (pips_today_override is not None or pips_7d_override is not None
-                    or strategy_block)
-    context_override = None
-    signal_context = xau_ctx
-    if use_override:
-        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
-        parts = _build_pips_context_lines(pt, p7)
-        if strategy_block:
-            parts.append("")
-            parts.append(strategy_block)
-        if xau_ctx:
-            parts.append("")
-            parts.append(xau_ctx)
-        context_override = "\n".join(parts)
-        signal_context = None
+    # The legacy `pips_today_override` admin field actually means "the
+    # number Markus should anchor the morning on" — which after this
+    # refactor is yesterday's close. Map it transparently.
+    pips_yesterday_override = pips_today_override
 
-    logger.info(f"Generating Markus morning macro for tenant: {tenant_id} (strategy_brief={'override' if strategy_brief_override else 'auto'})")
+    # Always build a context_override for the morning so we can guarantee
+    # the prompt sees yesterday + past-7-days framing (not the default
+    # "today" framing from build_context).
+    py, p7 = _resolve_morning_pips(tenant_id, pips_yesterday_override, pips_7d_override)
+    parts = _build_morning_pips_context_lines(py, p7)
+    if strategy_block:
+        parts.append("")
+        parts.append(strategy_block)
+    if xau_ctx:
+        parts.append("")
+        parts.append(xau_ctx)
+    context_override = "\n".join(parts)
+    signal_context = None
+
+    logger.info(f"Generating Markus morning macro for tenant: {tenant_id} (yesterday_pips={py:+.1f}, 7d_pips={p7:+.1f}, strategy_brief={'override' if strategy_brief_override else 'auto'})")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_MORNING_PROMPT,
@@ -457,18 +532,19 @@ def build_markus_eod_message(
     else:
         reads_block = _get_today_winning_reads(tenant_id)
 
-    use_override = (pips_today_override is not None or pips_7d_override is not None
-                    or reads_block)
-    context_override = None
-    if use_override:
-        pt, p7 = _resolve_pips(tenant_id, pips_today_override, pips_7d_override)
-        parts = _build_pips_context_lines(pt, p7)
-        if reads_block:
-            parts.append("")
-            parts.append(reads_block)
-        context_override = "\n".join(parts)
+    # Always build a context_override for the EoD so we can guarantee the
+    # prompt sees the strict UTC-today + past-7-days numbers (matches the
+    # green-gate query). build_context's default would otherwise use the
+    # rolling "streak" picker which can return yesterday's number under
+    # some shapes.
+    pt, p7 = _resolve_eod_pips(tenant_id, pips_today_override, pips_7d_override)
+    parts = _build_eod_pips_context_lines(pt, p7)
+    if reads_block:
+        parts.append("")
+        parts.append(reads_block)
+    context_override = "\n".join(parts)
 
-    logger.info(f"Generating Markus EoD recap for tenant: {tenant_id} (reads={'override' if strategy_reason_override else 'auto'})")
+    logger.info(f"Generating Markus EoD recap for tenant: {tenant_id} (today_pips={pt:+.1f}, 7d_pips={p7:+.1f}, reads={'override' if strategy_reason_override else 'auto'})")
     message = hype_service.generate_message(
         tenant_id=tenant_id,
         custom_prompt=MARKUS_EOD_PROMPT,
