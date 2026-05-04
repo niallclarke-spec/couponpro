@@ -1,0 +1,180 @@
+May 04 14:19:40  [2026-05-04 14:19:40] [INFO] [forex_signals] [tenant:entrylab] [req:a729f259] Checking 1 active signals...
+May 04 14:19:40  [2026-05-04 14:19:40] [INFO] [forex_signals] [tenant:entrylab] [req:a729f259] Current XAU/USD price: 4567.67
+May 04 14:19:40  [2026-05-04 14:19:40] [INFO] [monitor] [tenant:entrylab] [req:de791898] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:19:45  [2026-05-04 14:19:45] [INFO] [forex_signals] [tenant:entrylab] [req:a37a7a03] Checking 1 active signals...
+May 04 14:19:45  [2026-05-04 14:19:45] [INFO] [forex_signals] [tenant:entrylab] [req:a37a7a03] Current XAU/USD price: 4567.67
+May 04 14:19:45  [2026-05-04 14:19:45] [INFO] [monitor] [tenant:entrylab] [req:8c3c2e06] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:19:50  [2026-05-04 14:19:50] [INFO] [forex_signals] [tenant:entrylab] [req:1b80382c] Checking 1 active signals...
+May 04 14:19:51  [2026-05-04 14:19:51] [INFO] [forex_signals] [tenant:entrylab] [req:1b80382c] Current XAU/USD price: 4567.67
+May 04 14:19:51  [2026-05-04 14:19:51] [INFO] [monitor] [tenant:entrylab] [req:2fdbfeb1] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:19:56  [2026-05-04 14:19:56] [INFO] [forex_signals] [tenant:entrylab] [req:c9bdd1f7] Checking 1 active signals...
+May 04 14:19:56  [2026-05-04 14:19:56] [INFO] [forex_signals] [tenant:entrylab] [req:c9bdd1f7] Current XAU/USD price: 4567.67
+May 04 14:19:56  [2026-05-04 14:19:56] [INFO] [monitor] [tenant:entrylab] [req:cde964c2] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:01  [2026-05-04 14:20:01] [INFO] [forex_signals] [tenant:entrylab] [req:ed49f4f7] Checking 1 active signals...
+May 04 14:20:02  [2026-05-04 14:20:02] [INFO] [forex_signals] [tenant:entrylab] [req:ed49f4f7] Current XAU/USD price: 4567.67
+May 04 14:20:02  [2026-05-04 14:20:02] [INFO] [monitor] [tenant:entrylab] [req:7d404f70] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:07  [2026-05-04 14:20:07] [INFO] [forex_signals] [tenant:entrylab] [req:91b48972] Checking 1 active signals...
+May 04 14:20:07  [2026-05-04 14:20:07] [INFO] [forex_signals] [tenant:entrylab] [req:91b48972] Current XAU/USD price: 4569.34
+May 04 14:20:07  [2026-05-04 14:20:07] [INFO] [monitor] [tenant:entrylab] [req:a70bd9de] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:12  [2026-05-04 14:20:12] [INFO] [forex_signals] [tenant:entrylab] [req:72c7fc3b] Checking 1 active signals...
+May 04 14:20:13  [2026-05-04 14:20:13] [INFO] [forex_signals] [tenant:entrylab] [req:72c7fc3b] Current XAU/USD price: 4571.01
+May 04 14:20:13  [2026-05-04 14:20:13] [INFO] [monitor] [tenant:entrylab] [req:6829ff8e] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:18  [2026-05-04 14:20:18] [INFO] [forex_signals] [tenant:entrylab] [req:b27ed1a7] Checking 1 active signals...
+May 04 14:20:18  [2026-05-04 14:20:18] [INFO] [forex_signals] [tenant:entrylab] [req:b27ed1a7] Current XAU/USD price: 4570.59
+May 04 14:20:18  [2026-05-04 14:20:18] [INFO] [monitor] [tenant:entrylab] [req:5be89967] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:23  [2026-05-04 14:20:23] [INFO] [forex_signals] [tenant:entrylab] [req:3b30d09b] Checking 1 active signals...
+May 04 14:20:23  [2026-05-04 14:20:23] [INFO] [forex_signals] [tenant:entrylab] [req:3b30d09b] Current XAU/USD price: 4571.22
+May 04 14:20:23  [2026-05-04 14:20:23] [INFO] [monitor] [tenant:entrylab] [req:7cbe722b] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:28  [2026-05-04 14:20:28] [INFO] [forex_signals] [tenant:entrylab] [req:38ade7e5] Checking 1 active signals...
+May 04 14:20:28  [2026-05-04 14:20:28] [INFO] [forex_signals] [tenant:entrylab] [req:38ade7e5] Current XAU/USD price: 4569.76
+May 04 14:20:28  [2026-05-04 14:20:28] [INFO] [monitor] [tenant:entrylab] [req:04644c31] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:33  [2026-05-04 14:20:33] [INFO] [forex_signals] [tenant:entrylab] [req:954e4250] Checking 1 active signals...
+May 04 14:20:34  [2026-05-04 14:20:34] [INFO] [forex_signals] [tenant:entrylab] [req:954e4250] Current XAU/USD price: 4570.38
+May 04 14:20:34  [2026-05-04 14:20:34] [INFO] [monitor] [tenant:entrylab] [req:53874762] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:39  [2026-05-04 14:20:39] [INFO] [forex_signals] [tenant:entrylab] [req:e926bda5] Checking 1 active signals...
+May 04 14:20:39  [2026-05-04 14:20:39] [INFO] [forex_signals] [tenant:entrylab] [req:e926bda5] Current XAU/USD price: 4571.01
+May 04 14:20:39  [2026-05-04 14:20:39] [INFO] [monitor] [tenant:entrylab] [req:b46e7322] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:44  [2026-05-04 14:20:44] [INFO] [generator] [tenant:entrylab] [req:8107ed9a] ⏸️ Active signal #511 still pending - skipping new signal check
+May 04 14:20:44  [2026-05-04 14:20:44] [INFO] [generator] [tenant:entrylab] [req:8107ed9a] Entry: $4560.17, TP: $4576.27, SL: $4533.34
+May 04 14:20:44  [2026-05-04 14:20:44] [INFO] [forex_signals] [tenant:entrylab] [req:5420444c] Checking 1 active signals...
+May 04 14:20:44  [2026-05-04 14:20:44] [INFO] [forex_signals] [tenant:entrylab] [req:5420444c] Current XAU/USD price: 4567.46
+May 04 14:20:44  [2026-05-04 14:20:44] [INFO] [monitor] [tenant:entrylab] [req:586897f8] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:49  [2026-05-04 14:20:49] [INFO] [forex_signals] [tenant:entrylab] [req:29986d65] Checking 1 active signals...
+May 04 14:20:50  [2026-05-04 14:20:50] [INFO] [forex_signals] [tenant:entrylab] [req:29986d65] Current XAU/USD price: 4567.46
+May 04 14:20:50  [2026-05-04 14:20:50] [INFO] [monitor] [tenant:entrylab] [req:3313a168] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:20:55  [2026-05-04 14:20:55] [INFO] [forex_signals] [tenant:entrylab] [req:81b83395] Checking 1 active signals...
+May 04 14:20:55  [2026-05-04 14:20:55] [INFO] [forex_signals] [tenant:entrylab] [req:81b83395] Current XAU/USD price: 4569.97
+May 04 14:20:55  [2026-05-04 14:20:55] [INFO] [monitor] [tenant:entrylab] [req:03160d7f] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:21:00  [2026-05-04 14:21:00] [INFO] [forex_signals] [tenant:entrylab] [req:d00a4014] Checking 1 active signals...
+May 04 14:21:00  [2026-05-04 14:21:00] [INFO] [forex_signals] [tenant:entrylab] [req:d00a4014] Current XAU/USD price: 4567.46
+May 04 14:21:00  [2026-05-04 14:21:00] [INFO] [monitor] [tenant:entrylab] [req:d287d73d] ⏭️ Milestone tp1_40 already claimed for signal #511
+May 04 14:21:05  [2026-05-04 14:21:05] [INFO] [forex_signals] [tenant:entrylab] [req:afb31b97] Checking 1 active signals...
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [forex_signals] [tenant:entrylab] [req:afb31b97] Current XAU/USD price: 4574.15
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [bot_credentials] [tenant:entrylab] [req:e9119312] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [telegram_sender] [tenant:entrylab] [req:e9119312] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [telegram_sender] [tenant:entrylab] [req:e9119312] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=1929
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [messenger] [tenant:entrylab] [req:e9119312] Posted milestone: tp1_70_breakeven
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [db] [tenant:entrylab] [req:e9119312] Updated signal 511 effective_sl to 4560.17
+May 04 14:21:06  [2026-05-04 14:21:06] [INFO] [monitor] [tenant:entrylab] [req:e9119312] 🔒 Set effective_sl to entry (breakeven) for signal #511
+May 04 14:21:11  [2026-05-04 14:21:11] [INFO] [forex_signals] [tenant:entrylab] [req:34a31f98] Checking 1 active signals...
+May 04 14:21:11  [2026-05-04 14:21:11] [INFO] [forex_signals] [tenant:entrylab] [req:34a31f98] Current XAU/USD price: 4571.85
+May 04 14:21:11  [2026-05-04 14:21:11] [INFO] [monitor] [tenant:entrylab] [req:3a83ab8e] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:16  [2026-05-04 14:21:16] [INFO] [forex_signals] [tenant:entrylab] [req:cbea9f4b] Checking 1 active signals...
+May 04 14:21:16  [2026-05-04 14:21:16] [INFO] [forex_signals] [tenant:entrylab] [req:cbea9f4b] Current XAU/USD price: 4572.68
+May 04 14:21:16  [2026-05-04 14:21:16] [INFO] [monitor] [tenant:entrylab] [req:cc27b0fc] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:21  [2026-05-04 14:21:21] [INFO] [forex_signals] [tenant:entrylab] [req:dbe47b43] Checking 1 active signals...
+May 04 14:21:22  [2026-05-04 14:21:22] [INFO] [forex_signals] [tenant:entrylab] [req:dbe47b43] Current XAU/USD price: 4572.06
+May 04 14:21:22  [2026-05-04 14:21:22] [INFO] [monitor] [tenant:entrylab] [req:e1a59d07] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:27  [2026-05-04 14:21:27] [INFO] [forex_signals] [tenant:entrylab] [req:f8d1d65e] Checking 1 active signals...
+May 04 14:21:27  [2026-05-04 14:21:27] [INFO] [forex_signals] [tenant:entrylab] [req:f8d1d65e] Current XAU/USD price: 4572.06
+May 04 14:21:27  [2026-05-04 14:21:27] [INFO] [monitor] [tenant:entrylab] [req:5a5b6d3e] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:32  [2026-05-04 14:21:32] [INFO] [forex_signals] [tenant:entrylab] [req:1635ceac] Checking 1 active signals...
+May 04 14:21:32  [2026-05-04 14:21:32] [INFO] [forex_signals] [tenant:entrylab] [req:1635ceac] Current XAU/USD price: 4573.52
+May 04 14:21:32  [2026-05-04 14:21:32] [INFO] [monitor] [tenant:entrylab] [req:fb9af820] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:37  [2026-05-04 14:21:37] [INFO] [forex_signals] [tenant:entrylab] [req:a4a0add3] Checking 1 active signals...
+May 04 14:21:38  [2026-05-04 14:21:38] [INFO] [forex_signals] [tenant:entrylab] [req:a4a0add3] Current XAU/USD price: 4573.52
+May 04 14:21:38  [2026-05-04 14:21:38] [INFO] [monitor] [tenant:entrylab] [req:487ccf02] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:43  [2026-05-04 14:21:43] [INFO] [forex_signals] [tenant:entrylab] [req:79625df2] Checking 1 active signals...
+May 04 14:21:43  [2026-05-04 14:21:43] [INFO] [forex_signals] [tenant:entrylab] [req:79625df2] Current XAU/USD price: 4572.47
+May 04 14:21:43  [2026-05-04 14:21:43] [INFO] [monitor] [tenant:entrylab] [req:80d48dc3] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:48  [2026-05-04 14:21:48] [INFO] [forex_signals] [tenant:entrylab] [req:b14cd508] Checking 1 active signals...
+May 04 14:21:48  [2026-05-04 14:21:48] [INFO] [forex_signals] [tenant:entrylab] [req:b14cd508] Current XAU/USD price: 4572.68
+May 04 14:21:48  [2026-05-04 14:21:48] [INFO] [monitor] [tenant:entrylab] [req:9466a93a] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:53  [2026-05-04 14:21:53] [INFO] [forex_signals] [tenant:entrylab] [req:65ff6e84] Checking 1 active signals...
+May 04 14:21:53  [2026-05-04 14:21:53] [INFO] [forex_signals] [tenant:entrylab] [req:65ff6e84] Current XAU/USD price: 4572.68
+May 04 14:21:53  [2026-05-04 14:21:53] [INFO] [monitor] [tenant:entrylab] [req:57d3ed4f] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:21:58  [2026-05-04 14:21:58] [INFO] [forex_signals] [tenant:entrylab] [req:a3601330] Checking 1 active signals...
+May 04 14:21:59  [2026-05-04 14:21:59] [INFO] [forex_signals] [tenant:entrylab] [req:a3601330] Current XAU/USD price: 4573.52
+May 04 14:21:59  [2026-05-04 14:21:59] [INFO] [monitor] [tenant:entrylab] [req:3daf14ae] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:04  [2026-05-04 14:22:04] [INFO] [forex_signals] [tenant:entrylab] [req:99bcfff4] Checking 1 active signals...
+May 04 14:22:04  [2026-05-04 14:22:04] [INFO] [forex_signals] [tenant:entrylab] [req:99bcfff4] Current XAU/USD price: 4575.40
+May 04 14:22:04  [2026-05-04 14:22:04] [INFO] [monitor] [tenant:entrylab] [req:ff9ec10a] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:09  [2026-05-04 14:22:09] [INFO] [forex_signals] [tenant:entrylab] [req:551011b7] Checking 1 active signals...
+May 04 14:22:09  [2026-05-04 14:22:09] [INFO] [forex_signals] [tenant:entrylab] [req:551011b7] Current XAU/USD price: 4575.19
+May 04 14:22:09  [2026-05-04 14:22:09] [INFO] [monitor] [tenant:entrylab] [req:09ceab00] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:14  [2026-05-04 14:22:14] [INFO] [forex_signals] [tenant:entrylab] [req:95de1120] Checking 1 active signals...
+May 04 14:22:15  [2026-05-04 14:22:15] [INFO] [forex_signals] [tenant:entrylab] [req:95de1120] Current XAU/USD price: 4574.57
+May 04 14:22:15  [2026-05-04 14:22:15] [INFO] [monitor] [tenant:entrylab] [req:1b06b3cc] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:20  [2026-05-04 14:22:20] [INFO] [forex_signals] [tenant:entrylab] [req:42885b46] Checking 1 active signals...
+May 04 14:22:20  [2026-05-04 14:22:20] [INFO] [forex_signals] [tenant:entrylab] [req:42885b46] Current XAU/USD price: 4574.77
+May 04 14:22:20  [2026-05-04 14:22:20] [INFO] [monitor] [tenant:entrylab] [req:7e83e72c] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:25  [2026-05-04 14:22:25] [INFO] [forex_signals] [tenant:entrylab] [req:556c0226] Checking 1 active signals...
+May 04 14:22:25  [2026-05-04 14:22:25] [INFO] [forex_signals] [tenant:entrylab] [req:556c0226] Current XAU/USD price: 4574.57
+May 04 14:22:25  [2026-05-04 14:22:25] [INFO] [monitor] [tenant:entrylab] [req:bdc0f69a] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:30  [2026-05-04 14:22:30] [INFO] [forex_signals] [tenant:entrylab] [req:13e435f6] Checking 1 active signals...
+May 04 14:22:31  [2026-05-04 14:22:31] [INFO] [forex_signals] [tenant:entrylab] [req:13e435f6] Current XAU/USD price: 4574.36
+May 04 14:22:31  [2026-05-04 14:22:31] [INFO] [monitor] [tenant:entrylab] [req:767c4610] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:36  [2026-05-04 14:22:36] [INFO] [forex_signals] [tenant:entrylab] [req:eab32861] Checking 1 active signals...
+May 04 14:22:36  [2026-05-04 14:22:36] [INFO] [forex_signals] [tenant:entrylab] [req:eab32861] Current XAU/USD price: 4575.19
+May 04 14:22:36  [2026-05-04 14:22:36] [INFO] [monitor] [tenant:entrylab] [req:2682bb7f] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:41  [2026-05-04 14:22:41] [INFO] [forex_signals] [tenant:entrylab] [req:ff2fe1f1] Checking 1 active signals...
+May 04 14:22:41  [2026-05-04 14:22:41] [INFO] [forex_signals] [tenant:entrylab] [req:ff2fe1f1] Current XAU/USD price: 4574.98
+May 04 14:22:41  [2026-05-04 14:22:41] [INFO] [monitor] [tenant:entrylab] [req:55304cc4] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:46  [2026-05-04 14:22:46] [INFO] [forex_signals] [tenant:entrylab] [req:15f11846] Checking 1 active signals...
+May 04 14:22:46  [2026-05-04 14:22:46] [INFO] [forex_signals] [tenant:entrylab] [req:15f11846] Current XAU/USD price: 4574.15
+May 04 14:22:46  [2026-05-04 14:22:46] [INFO] [monitor] [tenant:entrylab] [req:d83e84b4] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:51  [2026-05-04 14:22:51] [INFO] [forex_signals] [tenant:entrylab] [req:f8d9357d] Checking 1 active signals...
+May 04 14:22:52  [2026-05-04 14:22:52] [INFO] [forex_signals] [tenant:entrylab] [req:f8d9357d] Current XAU/USD price: 4574.57
+May 04 14:22:52  [2026-05-04 14:22:52] [INFO] [monitor] [tenant:entrylab] [req:0d1b01bf] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:22:57  [2026-05-04 14:22:57] [INFO] [forex_signals] [tenant:entrylab] [req:05441f98] Checking 1 active signals...
+May 04 14:22:57  [2026-05-04 14:22:57] [INFO] [forex_signals] [tenant:entrylab] [req:05441f98] Current XAU/USD price: 4574.15
+May 04 14:22:57  [2026-05-04 14:22:57] [INFO] [monitor] [tenant:entrylab] [req:04d26343] ⏭️ Milestone tp1_70 already claimed for signal #511
+May 04 14:23:02  [2026-05-04 14:23:02] [INFO] [forex_signals] [tenant:entrylab] [req:bd3cc03e] Checking 1 active signals...
+May 04 14:23:02  [2026-05-04 14:23:02] [INFO] [forex_signals] [tenant:entrylab] [req:bd3cc03e] Current XAU/USD price: 4578.75
+May 04 14:23:02  [2026-05-04 14:23:02] [INFO] [forex_signals] [tenant:entrylab] [req:bd3cc03e] ✅ Signal #511 TP1 HIT! +161.0 pips (50% closed)
+May 04 14:23:02  [2026-05-04 14:23:02] [INFO] [bot_credentials] [tenant:entrylab] [req:bd3cc03e] Bot credentials retrieved: tenant_id=entrylab, bot_role=signal_bot, bot_username=@entrylab_test_bot
+May 04 14:23:02  [2026-05-04 14:23:02] [INFO] [telegram_sender] [tenant:entrylab] [req:bd3cc03e] Connection resolved: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, token=8353839473:****, vip_channel=-1003343226469, free_channel=-1002501458405
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [telegram_sender] [tenant:entrylab] [req:bd3cc03e] PHOTO SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=1930
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [messenger] [tenant:entrylab] [req:bd3cc03e] Sent TP1 photo+caption to vip, msg_id=1930
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [messenger] [tenant:entrylab] [req:bd3cc03e] Posted TP1 celebration (+161.0 pips), message_id=1930
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [db] [tenant:entrylab] [req:bd3cc03e] Updated signal 511 effective_sl to 4576.27
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [monitor] [tenant:entrylab] [req:bd3cc03e] 🔒 Set effective_sl to TP1 ($4576.27) for signal #511
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [monitor] [tenant:entrylab] [req:bd3cc03e] 📣 Cross-promo check for signal #511: tp1_msg=1930, signal_msg=1927
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [service] [tenant:entrylab] [req:bd3cc03e] Daily cross-promo limit reached for entrylab (count=1)
+May 04 14:23:03  [2026-05-04 14:23:03] [INFO] [monitor] [tenant:entrylab] [req:bd3cc03e] ⏭️ Cross-promo skipped: Daily cross-promo limit reached
+May 04 14:23:08  [2026-05-04 14:23:08] [INFO] [forex_signals] [tenant:entrylab] [req:5a288320] Checking 1 active signals...
+May 04 14:23:08  [2026-05-04 14:23:08] [INFO] [forex_signals] [tenant:entrylab] [req:5a288320] Current XAU/USD price: 4578.75
+May 04 14:23:13  [2026-05-04 14:23:13] [INFO] [forex_signals] [tenant:entrylab] [req:9fb0ba49] Checking 1 active signals...
+May 04 14:23:13  [2026-05-04 14:23:13] [INFO] [forex_signals] [tenant:entrylab] [req:9fb0ba49] Current XAU/USD price: 4579.38
+May 04 14:23:18  [2026-05-04 14:23:18] [INFO] [forex_signals] [tenant:entrylab] [req:502d0b7d] Checking 1 active signals...
+May 04 14:23:19  [2026-05-04 14:23:19] [INFO] [forex_signals] [tenant:entrylab] [req:502d0b7d] Current XAU/USD price: 4578.34
+May 04 14:23:24  [2026-05-04 14:23:24] [INFO] [forex_signals] [tenant:entrylab] [req:7d059ad7] Checking 1 active signals...
+May 04 14:23:24  [2026-05-04 14:23:24] [INFO] [forex_signals] [tenant:entrylab] [req:7d059ad7] Current XAU/USD price: 4576.66
+May 04 14:23:29  [2026-05-04 14:23:29] [INFO] [forex_signals] [tenant:entrylab] [req:e0060b6c] Checking 1 active signals...
+May 04 14:23:29  [2026-05-04 14:23:29] [INFO] [forex_signals] [tenant:entrylab] [req:e0060b6c] Current XAU/USD price: 4577.71
+May 04 14:23:34  [2026-05-04 14:23:34] [INFO] [forex_signals] [tenant:entrylab] [req:dc532ed5] Checking 1 active signals...
+May 04 14:23:35  [2026-05-04 14:23:35] [INFO] [forex_signals] [tenant:entrylab] [req:dc532ed5] Current XAU/USD price: 4578.13
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [forex_signals] [tenant:entrylab] [req:64b4cf78] Checking 1 active signals...
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [forex_signals] [tenant:entrylab] [req:64b4cf78] Current XAU/USD price: 4575.82
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [forex_signals] [tenant:entrylab] [req:64b4cf78] ✅ Signal #511 SL (effective) HIT @ $4576.27! Locked profit: +161.0 pips
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [telegram_sender] [tenant:entrylab] [req:64b4cf78] SEND OK: tenant=entrylab, role=signal_bot, bot=@entrylab_test_bot, chat=-1003343226469, msg_id=1931
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [messenger] [tenant:entrylab] [req:64b4cf78] Posted profit-locked notification (+161.0 pips)
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [monitor] [tenant:entrylab] [req:64b4cf78] ✅ Signal #511 closed with locked profit: +161.0 pips
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [forex_signals] [tenant:entrylab] [req:64b4cf78] Loaded strategy: Aggressive (aggressive) for tenant entrylab
+May 04 14:23:40  [2026-05-04 14:23:40] [INFO] [monitor] [tenant:entrylab] [req:64b4cf78] Strategy reloaded after signal #511 closed
+May 04 14:24:12  [2026-05-04 14:24:12] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:29:13  [2026-05-04 14:29:13] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:34:13  [2026-05-04 14:34:13] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:35:56  [2026-05-04 14:35:56] [INFO] [forex_signals] [tenant:entrylab] [req:32404d18] Using strategy: Aggressive (aggressive)
+May 04 14:35:56  [2026-05-04 14:35:56] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] Checking for signals on XAU/USD 15min...
+May 04 14:35:58  [2026-05-04 14:35:58] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] Price: 4576.87, RSI: 54.67, MACD: -2.7934, ADX: 23.52
+May 04 14:35:58  [2026-05-04 14:35:58] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] No signal - RSI=54.67 (thresholds: 40/60)
+May 04 14:35:58  [2026-05-04 14:35:58] [INFO] [generator] [tenant:entrylab] [req:32404d18] 📊 Checking 1-hour timeframe...
+May 04 14:35:58  [2026-05-04 14:35:58] [INFO] [forex_signals] [tenant:entrylab] [req:32404d18] Using strategy: Aggressive (aggressive)
+May 04 14:35:58  [2026-05-04 14:35:58] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] Checking for signals on XAU/USD 1h...
+May 04 14:36:00  [2026-05-04 14:36:00] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] Price: 4576.87, RSI: 37.96, MACD: -11.8273, ADX: 46.13
+May 04 14:36:00  [2026-05-04 14:36:00] [INFO] [aggressive] [tenant:entrylab] [req:32404d18] No signal - RSI=37.96 (thresholds: 40/60)
+May 04 14:39:14  [2026-05-04 14:39:14] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:40:39  100.127.2.110 - - [04/May/2026 14:40:39] code 404, message File not found
+May 04 14:40:39  100.127.2.110 - - [04/May/2026 14:40:39] "GET /robots.txt HTTP/1.1" 404 -
+May 04 14:44:14  [2026-05-04 14:44:14] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:49:15  [2026-05-04 14:49:15] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:51:02  [2026-05-04 14:51:02] [INFO] [forex_signals] [tenant:entrylab] [req:557d0f8a] Using strategy: Aggressive (aggressive)
+May 04 14:51:02  [2026-05-04 14:51:02] [INFO] [aggressive] [tenant:entrylab] [req:557d0f8a] Checking for signals on XAU/USD 15min...
+May 04 14:51:04  [2026-05-04 14:51:04] [INFO] [aggressive] [tenant:entrylab] [req:557d0f8a] Price: 4572.68, RSI: 51.52, MACD: -2.2563, ADX: 22.25
+May 04 14:51:04  [2026-05-04 14:51:04] [INFO] [aggressive] [tenant:entrylab] [req:557d0f8a] No signal - RSI=51.52 (thresholds: 40/60)
+May 04 14:54:16  [2026-05-04 14:54:16] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 14:56:42  100.127.2.110 - - [04/May/2026 14:56:42] code 404, message File not found
+May 04 14:56:42  100.127.2.110 - - [04/May/2026 14:56:42] "GET /wp-json/gravitysmtp/v1/tests/mock-data?page=gravitysmtp-settings HTTP/1.1" 404 -
+May 04 14:59:16  [2026-05-04 14:59:16] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
+May 04 15:04:17  [2026-05-04 15:04:17] [INFO] [scheduler] [JOURNEY-SCHEDULER] email_only_captured: found 24 leads to check
